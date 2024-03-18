@@ -329,9 +329,16 @@ func sweepFirewallRuleGroups(region string) error {
 		}
 
 		for _, v := range page.FirewallRuleGroups {
+			id := aws.StringValue(v.Id)
+
+			if shareStatus := aws.StringValue(v.ShareStatus); shareStatus == route53resolver.ShareStatusSharedWithMe {
+				log.Printf("[INFO] Skipping Route53 Resolver Firewall Rule Group %s: ShareStatus=%s", id, shareStatus)
+				continue
+			}
+
 			r := ResourceFirewallRuleGroup()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.Id))
+			d.SetId(id)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -374,8 +381,15 @@ func sweepFirewallRules(region string) error {
 		}
 
 		for _, v := range page.FirewallRuleGroups {
+			id := aws.StringValue(v.Id)
+
+			if shareStatus := aws.StringValue(v.ShareStatus); shareStatus == route53resolver.ShareStatusSharedWithMe {
+				log.Printf("[INFO] Skipping Route53 Resolver Firewall Rule Group %s: ShareStatus=%s", id, shareStatus)
+				continue
+			}
+
 			input := &route53resolver.ListFirewallRulesInput{
-				FirewallRuleGroupId: v.Id,
+				FirewallRuleGroupId: aws.String(id),
 			}
 
 			err := conn.ListFirewallRulesPagesWithContext(ctx, input, func(page *route53resolver.ListFirewallRulesOutput, lastPage bool) bool {

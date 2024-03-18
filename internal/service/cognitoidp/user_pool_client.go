@@ -39,24 +39,24 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource
-func newResourceUserPoolClient(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceUserPoolClient{}
+// @FrameworkResource(name="User Pool Client")
+func newUserPoolClientResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &userPoolClientResource{}
 	r.SetMigratedFromPluginSDK(true)
 
 	return r, nil
 }
 
-type resourceUserPoolClient struct {
+type userPoolClientResource struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourceUserPoolClient) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+func (r *userPoolClientResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
 	response.TypeName = "aws_cognito_user_pool_client"
 }
 
 // Schema returns the schema for this resource.
-func (r *resourceUserPoolClient) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *userPoolClientResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"access_token_validity": schema.Int64Attribute{
@@ -333,7 +333,7 @@ func (r *resourceUserPoolClient) Schema(ctx context.Context, request resource.Sc
 	response.Schema = s
 }
 
-func (r *resourceUserPoolClient) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+func (r *userPoolClientResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	conn := r.Meta().CognitoIDPConn(ctx)
 
 	var config resourceUserPoolClientData
@@ -395,7 +395,7 @@ func (r *resourceUserPoolClient) Create(ctx context.Context, request resource.Cr
 	response.Diagnostics.Append(response.State.Set(ctx, &config)...)
 }
 
-func (r *resourceUserPoolClient) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+func (r *userPoolClientResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var state resourceUserPoolClientData
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 	if response.Diagnostics.HasError() {
@@ -436,8 +436,7 @@ func (r *resourceUserPoolClient) Read(ctx context.Context, request resource.Read
 	state.RefreshTokenValidity = flex.Int64ToFramework(ctx, poolClient.RefreshTokenValidity)
 	state.SupportedIdentityProviders = flex.FlattenFrameworkStringSetLegacy(ctx, poolClient.SupportedIdentityProviders)
 	if state.TokenValidityUnits.IsNull() && isDefaultTokenValidityUnits(poolClient.TokenValidityUnits) {
-		attributeTypes := flex.AttributeTypesMust[tokenValidityUnits](ctx)
-		elemType := types.ObjectType{AttrTypes: attributeTypes}
+		elemType := fwtypes.NewObjectTypeOf[tokenValidityUnits](ctx).ObjectType
 		state.TokenValidityUnits = types.ListNull(elemType)
 	} else {
 		state.TokenValidityUnits = flattenTokenValidityUnits(ctx, poolClient.TokenValidityUnits)
@@ -452,7 +451,7 @@ func (r *resourceUserPoolClient) Read(ctx context.Context, request resource.Read
 	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
 }
 
-func (r *resourceUserPoolClient) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+func (r *userPoolClientResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	var config resourceUserPoolClientData
 	response.Diagnostics.Append(request.Config.Get(ctx, &config)...)
 	if response.Diagnostics.HasError() {
@@ -518,8 +517,7 @@ func (r *resourceUserPoolClient) Update(ctx context.Context, request resource.Up
 	config.RefreshTokenValidity = flex.Int64ToFramework(ctx, poolClient.RefreshTokenValidity)
 	config.SupportedIdentityProviders = flex.FlattenFrameworkStringSetLegacy(ctx, poolClient.SupportedIdentityProviders)
 	if !state.TokenValidityUnits.IsNull() && plan.TokenValidityUnits.IsNull() && isDefaultTokenValidityUnits(poolClient.TokenValidityUnits) {
-		attributeTypes := flex.AttributeTypesMust[tokenValidityUnits](ctx)
-		elemType := types.ObjectType{AttrTypes: attributeTypes}
+		elemType := fwtypes.NewObjectTypeOf[tokenValidityUnits](ctx).ObjectType
 		config.TokenValidityUnits = types.ListNull(elemType)
 	} else {
 		config.TokenValidityUnits = flattenTokenValidityUnits(ctx, poolClient.TokenValidityUnits)
@@ -534,7 +532,7 @@ func (r *resourceUserPoolClient) Update(ctx context.Context, request resource.Up
 	response.Diagnostics.Append(response.State.Set(ctx, &config)...)
 }
 
-func (r *resourceUserPoolClient) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+func (r *userPoolClientResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var state resourceUserPoolClientData
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 	if response.Diagnostics.HasError() {
@@ -564,7 +562,7 @@ func (r *resourceUserPoolClient) Delete(ctx context.Context, request resource.De
 	}
 }
 
-func (r *resourceUserPoolClient) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+func (r *userPoolClientResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	parts := strings.Split(request.ID, "/")
 	if len(parts) != 2 {
 		response.Diagnostics.AddError("Resource Import Invalid ID", fmt.Sprintf("wrong format of import ID (%s), use: 'user-pool-id/client-id'", request.ID))
@@ -576,7 +574,7 @@ func (r *resourceUserPoolClient) ImportState(ctx context.Context, request resour
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("user_pool_id"), userPoolId)...)
 }
 
-func (r *resourceUserPoolClient) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
+func (r *userPoolClientResource) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
 	return []resource.ConfigValidator{
 		resourceUserPoolClientAccessTokenValidityValidator{
 			resourceUserPoolClientValidityValidator{
@@ -730,7 +728,7 @@ func expandAnaylticsConfiguration(ctx context.Context, list types.List, diags *d
 }
 
 func flattenAnaylticsConfiguration(ctx context.Context, ac *cognitoidentityprovider.AnalyticsConfigurationType) types.List {
-	attributeTypes := flex.AttributeTypesMust[analyticsConfiguration](ctx)
+	attributeTypes := fwtypes.AttributeTypesMust[analyticsConfiguration](ctx)
 	elemType := types.ObjectType{AttrTypes: attributeTypes}
 
 	if ac == nil {
@@ -796,7 +794,7 @@ func expandTokenValidityUnits(ctx context.Context, list types.List, diags *diag.
 }
 
 func flattenTokenValidityUnits(ctx context.Context, tvu *cognitoidentityprovider.TokenValidityUnitsType) types.List {
-	attributeTypes := flex.AttributeTypesMust[tokenValidityUnits](ctx)
+	attributeTypes := fwtypes.AttributeTypesMust[tokenValidityUnits](ctx)
 	elemType := types.ObjectType{AttrTypes: attributeTypes}
 
 	if tvu == nil || (tvu.AccessToken == nil && tvu.IdToken == nil && tvu.RefreshToken == nil) {

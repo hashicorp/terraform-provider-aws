@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -52,6 +53,8 @@ func ResourceGraph() *schema.Resource {
 }
 
 func resourceGraphCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	const (
 		timeout = 4 * time.Minute
 	)
@@ -66,15 +69,17 @@ func resourceGraphCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}, detective.ErrCodeInternalServerException)
 
 	if err != nil {
-		return diag.Errorf("creating Detective Graph: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Detective Graph: %s", err)
 	}
 
 	d.SetId(aws.StringValue(outputRaw.(*detective.CreateGraphOutput).GraphArn))
 
-	return resourceGraphRead(ctx, d, meta)
+	return append(diags, resourceGraphRead(ctx, d, meta)...)
 }
 
 func resourceGraphRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
 	graph, err := FindGraphByARN(ctx, conn, d.Id())
@@ -82,17 +87,17 @@ func resourceGraphRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Detective Graph (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Detective Graph (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Detective Graph (%s): %s", d.Id(), err)
 	}
 
 	d.Set("created_time", aws.TimeValue(graph.CreatedTime).Format(time.RFC3339))
 	d.Set("graph_arn", graph.Arn)
 
-	return nil
+	return diags
 }
 
 func resourceGraphUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -101,6 +106,8 @@ func resourceGraphUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceGraphDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).DetectiveConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Detective Graph: %s", d.Id())
@@ -109,14 +116,14 @@ func resourceGraphDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	})
 
 	if tfawserr.ErrCodeEquals(err, detective.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Detective Graph (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Detective Graph (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindGraphByARN(ctx context.Context, conn *detective.Detective, arn string) (*detective.Graph, error) {

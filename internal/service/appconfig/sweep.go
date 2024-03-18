@@ -24,6 +24,7 @@ func RegisterSweepers() {
 		Dependencies: []string{
 			"aws_appconfig_configuration_profile",
 			"aws_appconfig_environment",
+			"aws_appconfig_extension_association",
 		},
 	})
 
@@ -31,6 +32,7 @@ func RegisterSweepers() {
 		Name: "aws_appconfig_configuration_profile",
 		F:    sweepConfigurationProfiles,
 		Dependencies: []string{
+			"aws_appconfig_extension_association",
 			"aws_appconfig_hosted_configuration_version",
 		},
 	})
@@ -43,44 +45,41 @@ func RegisterSweepers() {
 	resource.AddTestSweepers("aws_appconfig_environment", &resource.Sweeper{
 		Name: "aws_appconfig_environment",
 		F:    sweepEnvironments,
+		Dependencies: []string{
+			"aws_appconfig_extension_association",
+		},
 	})
 
 	resource.AddTestSweepers("aws_appconfig_hosted_configuration_version", &resource.Sweeper{
 		Name: "aws_appconfig_hosted_configuration_version",
 		F:    sweepHostedConfigurationVersions,
 	})
+
+	resource.AddTestSweepers("aws_appconfig_extension_association", &resource.Sweeper{
+		Name: "aws_appconfig_extension_association",
+		F:    sweepExtensionAssociations,
+	})
 }
 
 func sweepApplications(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-
 	conn := client.AppConfigConn(ctx)
-	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
-
 	input := &appconfig.ListApplicationsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListApplicationsPagesWithContext(ctx, input, func(page *appconfig.ListApplicationsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, item := range page.Items {
-			if item == nil {
-				continue
-			}
-
-			id := aws.StringValue(item.Id)
-
-			log.Printf("[INFO] Deleting AppConfig Application (%s)", id)
+		for _, v := range page.Items {
 			r := ResourceApplication()
 			d := r.Data(nil)
-			d.SetId(id)
+			d.SetId(aws.StringValue(v.Id))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -88,68 +87,51 @@ func sweepApplications(region string) error {
 		return !lastPage
 	})
 
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing AppConfig Applications: %w", err))
-	}
-
-	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping AppConfig Applications for %s: %w", region, err))
-	}
-
-	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping AppConfig Applications sweep for %s: %s", region, errs)
+	if awsv1.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping AppConfig Application sweep for %s: %s", region, err)
 		return nil
 	}
 
-	return errs.ErrorOrNil()
+	if err != nil {
+		return fmt.Errorf("error listing AppConfig Applications (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping AppConfig Applications (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func sweepConfigurationProfiles(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-
 	conn := client.AppConfigConn(ctx)
-	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
-
 	input := &appconfig.ListApplicationsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+	var sweeperErrs *multierror.Error
 
 	err = conn.ListApplicationsPagesWithContext(ctx, input, func(page *appconfig.ListApplicationsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, item := range page.Items {
-			if item == nil {
-				continue
+		for _, v := range page.Items {
+			appID := aws.StringValue(v.Id)
+			input := &appconfig.ListConfigurationProfilesInput{
+				ApplicationId: aws.String(appID),
 			}
 
-			appId := aws.StringValue(item.Id)
-
-			profilesInput := &appconfig.ListConfigurationProfilesInput{
-				ApplicationId: item.Id,
-			}
-
-			err := conn.ListConfigurationProfilesPagesWithContext(ctx, profilesInput, func(page *appconfig.ListConfigurationProfilesOutput, lastPage bool) bool {
-				if page == nil {
-					return !lastPage
-				}
-
-				for _, item := range page.Items {
-					if item == nil {
-						continue
-					}
-
-					id := fmt.Sprintf("%s:%s", aws.StringValue(item.Id), appId)
-
-					log.Printf("[INFO] Deleting AppConfig Configuration Profile (%s)", id)
+			err := conn.ListConfigurationProfilesPagesWithContext(ctx, input, func(page *appconfig.ListConfigurationProfilesOutput, lastPage bool) bool {
+				for _, v := range page.Items {
 					r := ResourceConfigurationProfile()
 					d := r.Data(nil)
-					d.SetId(id)
+					d.SetId(fmt.Sprintf("%s:%s", aws.StringValue(v.Id), appID))
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 				}
@@ -157,55 +139,53 @@ func sweepConfigurationProfiles(region string) error {
 				return !lastPage
 			})
 
+			if awsv1.SkipSweepError(err) {
+				continue
+			}
+
 			if err != nil {
-				errs = multierror.Append(errs, fmt.Errorf("error listing AppConfig Configuration Profiles for Application (%s): %w", appId, err))
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing AppConfig Configuration Profiles (%s): %w", region, err))
 			}
 		}
 
 		return !lastPage
 	})
 
+	if awsv1.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping AppConfig Configuration Profile sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil()
+	}
+
 	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing AppConfig Applications: %w", err))
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing AppConfig Applications (%s): %w", region, err))
 	}
 
-	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping AppConfig Configuration Profiles for %s: %w", region, err))
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping AppConfig Configuration Profiles (%s): %w", region, err))
 	}
 
-	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping AppConfig Configuration Profiles sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
+	return sweeperErrs.ErrorOrNil()
 }
 
 func sweepDeploymentStrategies(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-
 	conn := client.AppConfigConn(ctx)
-	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
-
 	input := &appconfig.ListDeploymentStrategiesInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	err = conn.ListDeploymentStrategiesPagesWithContext(ctx, input, func(page *appconfig.ListDeploymentStrategiesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, item := range page.Items {
-			if item == nil {
-				continue
-			}
-
-			id := aws.StringValue(item.Id)
+		for _, v := range page.Items {
+			id := aws.StringValue(v.Id)
 
 			// Deleting AppConfig Predefined Strategies is not supported; returns BadRequestException
 			if regexache.MustCompile(`^AppConfig\.[0-9A-Za-z]{9,40}$`).MatchString(id) {
@@ -213,7 +193,6 @@ func sweepDeploymentStrategies(region string) error {
 				continue
 			}
 
-			log.Printf("[INFO] Deleting AppConfig Deployment Strategy (%s)", id)
 			r := ResourceDeploymentStrategy()
 			d := r.Data(nil)
 			d.SetId(id)
@@ -224,158 +203,134 @@ func sweepDeploymentStrategies(region string) error {
 		return !lastPage
 	})
 
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing AppConfig Deployment Strategies: %w", err))
-	}
-
-	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping AppConfig Deployment Strategies for %s: %w", region, err))
-	}
-
-	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping AppConfig Deployment Strategies sweep for %s: %s", region, errs)
+	if awsv1.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping AppConfig Deployment Strategy sweep for %s: %s", region, err)
 		return nil
 	}
 
-	return errs.ErrorOrNil()
+	if err != nil {
+		return fmt.Errorf("error listing AppConfig Deployment Strategies (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping AppConfig Deployment Strategies (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func sweepEnvironments(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-
 	conn := client.AppConfigConn(ctx)
-	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
-
 	input := &appconfig.ListApplicationsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+	var sweeperErrs *multierror.Error
 
 	err = conn.ListApplicationsPagesWithContext(ctx, input, func(page *appconfig.ListApplicationsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, item := range page.Items {
-			if item == nil {
-				continue
+		for _, v := range page.Items {
+			appID := aws.StringValue(v.Id)
+			input := &appconfig.ListEnvironmentsInput{
+				ApplicationId: aws.String(appID),
 			}
 
-			appId := aws.StringValue(item.Id)
-
-			envInput := &appconfig.ListEnvironmentsInput{
-				ApplicationId: item.Id,
-			}
-
-			err := conn.ListEnvironmentsPagesWithContext(ctx, envInput, func(page *appconfig.ListEnvironmentsOutput, lastPage bool) bool {
+			err := conn.ListEnvironmentsPagesWithContext(ctx, input, func(page *appconfig.ListEnvironmentsOutput, lastPage bool) bool {
 				if page == nil {
 					return !lastPage
 				}
 
-				for _, item := range page.Items {
-					if item == nil {
-						continue
-					}
-
+				for _, v := range page.Items {
 					sweepResources = append(sweepResources, framework.NewSweepResource(newResourceEnvironment, client,
-						framework.NewAttribute("application_id", aws.StringValue(item.ApplicationId)),
-						framework.NewAttribute("environment_id", aws.StringValue(item.Id)),
+						framework.NewAttribute("application_id", aws.StringValue(v.ApplicationId)),
+						framework.NewAttribute("environment_id", aws.StringValue(v.Id)),
 					))
 				}
 
 				return !lastPage
 			})
 
+			if awsv1.SkipSweepError(err) {
+				continue
+			}
+
 			if err != nil {
-				errs = multierror.Append(errs, fmt.Errorf("error listing AppConfig Environments for Application (%s): %w", appId, err))
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing AppConfig Environments (%s): %w", region, err))
 			}
 		}
 
 		return !lastPage
 	})
 
+	if awsv1.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping AppConfig Environment sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil()
+	}
+
 	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing AppConfig Applications: %w", err))
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing AppConfig Applications (%s): %w", region, err))
 	}
 
-	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping AppConfig Environments for %s: %w", region, err))
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping AppConfig Environments (%s): %w", region, err))
 	}
 
-	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping AppConfig Environments sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
+	return sweeperErrs.ErrorOrNil()
 }
 
 func sweepHostedConfigurationVersions(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-
 	conn := client.AppConfigConn(ctx)
-	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
-
 	input := &appconfig.ListApplicationsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+	var sweeperErrs *multierror.Error
 
 	err = conn.ListApplicationsPagesWithContext(ctx, input, func(page *appconfig.ListApplicationsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, item := range page.Items {
-			if item == nil {
-				continue
+		for _, v := range page.Items {
+			appID := aws.StringValue(v.Id)
+			input := &appconfig.ListConfigurationProfilesInput{
+				ApplicationId: aws.String(appID),
 			}
 
-			appId := aws.StringValue(item.Id)
-
-			profilesInput := &appconfig.ListConfigurationProfilesInput{
-				ApplicationId: item.Id,
-			}
-
-			err := conn.ListConfigurationProfilesPagesWithContext(ctx, profilesInput, func(page *appconfig.ListConfigurationProfilesOutput, lastPage bool) bool {
+			err := conn.ListConfigurationProfilesPagesWithContext(ctx, input, func(page *appconfig.ListConfigurationProfilesOutput, lastPage bool) bool {
 				if page == nil {
 					return !lastPage
 				}
 
-				for _, item := range page.Items {
-					if item == nil {
-						continue
+				for _, v := range page.Items {
+					profileID := aws.StringValue(v.Id)
+					input := &appconfig.ListHostedConfigurationVersionsInput{
+						ApplicationId:          aws.String(appID),
+						ConfigurationProfileId: aws.String(profileID),
 					}
 
-					profId := aws.StringValue(item.Id)
-
-					versionInput := &appconfig.ListHostedConfigurationVersionsInput{
-						ApplicationId:          aws.String(appId),
-						ConfigurationProfileId: aws.String(profId),
-					}
-
-					err := conn.ListHostedConfigurationVersionsPagesWithContext(ctx, versionInput, func(page *appconfig.ListHostedConfigurationVersionsOutput, lastPage bool) bool {
+					err := conn.ListHostedConfigurationVersionsPagesWithContext(ctx, input, func(page *appconfig.ListHostedConfigurationVersionsOutput, lastPage bool) bool {
 						if page == nil {
 							return !lastPage
 						}
 
-						for _, item := range page.Items {
-							if item == nil {
-								continue
-							}
-
-							id := fmt.Sprintf("%s/%s/%d", appId, profId, aws.Int64Value(item.VersionNumber))
-
-							log.Printf("[INFO] Deleting AppConfig Hosted Configuration Version (%s)", id)
+						for _, v := range page.Items {
 							r := ResourceHostedConfigurationVersion()
 							d := r.Data(nil)
-							d.SetId(id)
+							d.SetId(fmt.Sprintf("%s/%s/%d", appID, profileID, aws.Int64Value(v.VersionNumber)))
 
 							sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 						}
@@ -383,34 +338,88 @@ func sweepHostedConfigurationVersions(region string) error {
 						return !lastPage
 					})
 
+					if awsv1.SkipSweepError(err) {
+						continue
+					}
+
 					if err != nil {
-						errs = multierror.Append(errs, fmt.Errorf("error listing AppConfig Hosted Configuration Versions for Application (%s) and Configuration Profile (%s): %w", appId, profId, err))
+						sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing AppConfig Hosted Configuration Versions (%s): %w", region, err))
 					}
 				}
 
 				return !lastPage
 			})
 
+			if awsv1.SkipSweepError(err) {
+				continue
+			}
+
 			if err != nil {
-				errs = multierror.Append(errs, fmt.Errorf("error listing AppConfig Configuration Profiles for Application (%s): %w", appId, err))
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing AppConfig Configuration Profiles (%s): %w", region, err))
 			}
 		}
 
 		return !lastPage
 	})
 
+	if awsv1.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping AppConfig Hosted Configuration Version sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil()
+	}
+
 	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing AppConfig Applications: %w", err))
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing AppConfig Applications (%s): %w", region, err))
 	}
 
-	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping AppConfig Hosted Configuration Versions for %s: %w", region, err))
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping AppConfig Hosted Configuration Versions (%s): %w", region, err))
 	}
 
-	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping AppConfig Hosted Configuration Versions sweep for %s: %s", region, errs)
+	return sweeperErrs.ErrorOrNil()
+}
+
+func sweepExtensionAssociations(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.AppConfigConn(ctx)
+	input := &appconfig.ListExtensionAssociationsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = conn.ListExtensionAssociationsPagesWithContext(ctx, input, func(page *appconfig.ListExtensionAssociationsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Items {
+			r := ResourceExtensionAssociation()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.Id))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if awsv1.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping AppConfig Extension Association sweep for %s: %s", region, err)
 		return nil
 	}
 
-	return errs.ErrorOrNil()
+	if err != nil {
+		return fmt.Errorf("error listing AppConfig Extension Associations (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping AppConfig Extension Associations (%s): %w", region, err)
+	}
+
+	return nil
 }

@@ -20,10 +20,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfwafv2 "github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(wafv2.EndpointsID, testAccErrorCheckSkip)
+	acctest.RegisterServiceErrorCheckFunc(names.WAFV2ServiceID, testAccErrorCheckSkip)
 }
 
 func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
@@ -41,7 +42,7 @@ func TestAccWAFV2WebACL_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -50,8 +51,10 @@ func TestAccWAFV2WebACL_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "application_integration_url", ""),
 					resource.TestCheckResourceAttr(resourceName, "association_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "captcha_config.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "challenge_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.allow.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "default_action.0.block.#", "0"),
@@ -87,7 +90,7 @@ func TestAccWAFV2WebACL_Update_rule(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -126,6 +129,10 @@ func TestAccWAFV2WebACL_Update_rule(t *testing.T) {
 						"statement.0.size_constraint_statement.0.field_to_match.0.all_query_arguments.#":   "0",
 						"statement.0.size_constraint_statement.0.field_to_match.0.body.#":                  "0",
 						"statement.0.size_constraint_statement.0.field_to_match.0.cookies.#":               "0",
+						"statement.0.size_constraint_statement.0.field_to_match.0.header_order.#":          "0",
+						"statement.0.size_constraint_statement.0.field_to_match.0.headers.#":               "0",
+						"statement.0.size_constraint_statement.0.field_to_match.0.ja3_fingerprint.#":       "0",
+						"statement.0.size_constraint_statement.0.field_to_match.0.json_body.#":             "0",
 						"statement.0.size_constraint_statement.0.field_to_match.0.method.#":                "0",
 						"statement.0.size_constraint_statement.0.field_to_match.0.query_string.#":          "1",
 						"statement.0.size_constraint_statement.0.field_to_match.0.single_header.#":         "0",
@@ -226,7 +233,7 @@ func TestAccWAFV2WebACL_Update_ruleProperties(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -432,7 +439,7 @@ func TestAccWAFV2WebACL_Update_nameForceNew(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -484,7 +491,7 @@ func TestAccWAFV2WebACL_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -508,7 +515,7 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -517,6 +524,7 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "application_integration_url", ""),
 					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -643,7 +651,7 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_ManagedRuleGroupConfig(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -716,7 +724,7 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_ManagedRuleGroupConfig_ACFPRuleSet(t *t
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -725,6 +733,7 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_ManagedRuleGroupConfig_ACFPRuleSet(t *t
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
+					resource.TestMatchResourceAttr(resourceName, "application_integration_url", regexache.MustCompile(`https:\/\/.*\.sdk\.awswaf\.com.*`)),
 					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -808,7 +817,7 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_ManagedRuleGroupConfig_ATPRuleSet(t *te
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -817,6 +826,7 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_ManagedRuleGroupConfig_ATPRuleSet(t *te
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
+					resource.TestMatchResourceAttr(resourceName, "application_integration_url", regexache.MustCompile(`https:\/\/.*\.sdk\.awswaf\.com.*`)),
 					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -894,7 +904,7 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_ManagedRuleGroupConfig_BotControl(t *te
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -903,6 +913,7 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_ManagedRuleGroupConfig_BotControl(t *te
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLExists(ctx, resourceName, &v),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
+					resource.TestMatchResourceAttr(resourceName, "application_integration_url", regexache.MustCompile(`https:\/\/.*\.sdk\.awswaf\.com.*`)),
 					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
@@ -931,7 +942,7 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_specifyVersion(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -998,7 +1009,7 @@ func TestAccWAFV2WebACL_minimal(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1032,7 +1043,7 @@ func TestAccWAFV2WebACL_RateBased_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1052,6 +1063,7 @@ func TestAccWAFV2WebACL_RateBased_basic(t *testing.T) {
 						"statement.#":                        "1",
 						"statement.0.rate_based_statement.#": "1",
 						"statement.0.rate_based_statement.0.aggregate_key_type":     "IP",
+						"statement.0.rate_based_statement.0.evaluation_window_sec":  "300",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.#":  "0",
 						"statement.0.rate_based_statement.0.limit":                  "50000",
 						"statement.0.rate_based_statement.0.scope_down_statement.#": "0",
@@ -1074,6 +1086,7 @@ func TestAccWAFV2WebACL_RateBased_basic(t *testing.T) {
 						"statement.#":                        "1",
 						"statement.0.rate_based_statement.#": "1",
 						"statement.0.rate_based_statement.0.aggregate_key_type":                                           "IP",
+						"statement.0.rate_based_statement.0.evaluation_window_sec":                                        "600",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                                        "0",
 						"statement.0.rate_based_statement.0.limit":                                                        "10000",
 						"statement.0.rate_based_statement.0.scope_down_statement.#":                                       "1",
@@ -1102,7 +1115,7 @@ func TestAccWAFV2WebACL_ByteMatchStatement_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1164,7 +1177,7 @@ func TestAccWAFV2WebACL_ByteMatchStatement_ja3fingerprint(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1212,7 +1225,7 @@ func TestAccWAFV2WebACL_ByteMatchStatement_jsonBody(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1272,7 +1285,7 @@ func TestAccWAFV2WebACL_ByteMatchStatement_body(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1312,6 +1325,54 @@ func TestAccWAFV2WebACL_ByteMatchStatement_body(t *testing.T) {
 	})
 }
 
+func TestAccWAFV2WebACL_ByteMatchStatement_headerOrder(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v wafv2.WebACL
+	webACLName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_wafv2_web_acl.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccWebACLConfig_byteMatchStatementHeaderOrder(webACLName, wafv2.OversizeHandlingMatch),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.0.byte_match_statement.0.field_to_match.0.header_order.#":                   "1",
+						"statement.0.byte_match_statement.0.field_to_match.0.header_order.0.oversize_handling": "MATCH",
+					}),
+				),
+			},
+			{
+				Config: testAccWebACLConfig_byteMatchStatementHeaderOrder(webACLName, wafv2.OversizeHandlingNoMatch),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWebACLExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "wafv2", regexache.MustCompile(`regional/webacl/.+$`)),
+					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
+					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
+						"statement.0.byte_match_statement.0.field_to_match.0.header_order.#":                   "1",
+						"statement.0.byte_match_statement.0.field_to_match.0.header_order.0.oversize_handling": "NO_MATCH",
+					}),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateIdFunc: testAccWebACLImportStateIdFunc(resourceName),
+			},
+		},
+	})
+}
+
 func TestAccWAFV2WebACL_GeoMatch_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v wafv2.WebACL
@@ -1322,7 +1383,7 @@ func TestAccWAFV2WebACL_GeoMatch_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1413,7 +1474,7 @@ func TestAccWAFV2WebACL_GeoMatch_forwardedIP(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1479,7 +1540,7 @@ func TestAccWAFV2WebACL_LabelMatchStatement(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1531,7 +1592,7 @@ func TestAccWAFV2WebACL_RuleLabels(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1579,7 +1640,7 @@ func TestAccWAFV2WebACL_IPSetReference_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1626,7 +1687,7 @@ func TestAccWAFV2WebACL_IPSetReference_forwardedIP(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1731,7 +1792,7 @@ func TestAccWAFV2WebACL_RateBased_customKeys(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1747,6 +1808,7 @@ func TestAccWAFV2WebACL_RateBased_customKeys(t *testing.T) {
 						"statement.0.rate_based_statement.#":                                             "1",
 						"statement.0.rate_based_statement.0.custom_key.#":                                "1",
 						"statement.0.rate_based_statement.0.aggregate_key_type":                          "CUSTOM_KEYS",
+						"statement.0.rate_based_statement.0.evaluation_window_sec":                       "300",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                       "0",
 						"statement.0.rate_based_statement.0.limit":                                       "50000",
 						"statement.0.rate_based_statement.0.scope_down_statement.#":                      "0",
@@ -1775,6 +1837,7 @@ func TestAccWAFV2WebACL_RateBased_customKeys(t *testing.T) {
 						"statement.0.rate_based_statement.#":                                "1",
 						"statement.0.rate_based_statement.0.custom_key.#":                   "2",
 						"statement.0.rate_based_statement.0.aggregate_key_type":             "CUSTOM_KEYS",
+						"statement.0.rate_based_statement.0.evaluation_window_sec":          "300",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.#":          "1",
 						"statement.0.rate_based_statement.0.limit":                          "50000",
 						"statement.0.rate_based_statement.0.scope_down_statement.#":         "0",
@@ -1803,6 +1866,7 @@ func TestAccWAFV2WebACL_RateBased_customKeys(t *testing.T) {
 						"statement.0.rate_based_statement.#":                                "1",
 						"statement.0.rate_based_statement.0.custom_key.#":                   "1",
 						"statement.0.rate_based_statement.0.aggregate_key_type":             "CUSTOM_KEYS",
+						"statement.0.rate_based_statement.0.evaluation_window_sec":          "300",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.#":          "0",
 						"statement.0.rate_based_statement.0.limit":                          "50000",
 						"statement.0.rate_based_statement.0.scope_down_statement.#":         "0",
@@ -1830,6 +1894,7 @@ func TestAccWAFV2WebACL_RateBased_customKeys(t *testing.T) {
 						"statement.0.rate_based_statement.#":                                             "1",
 						"statement.0.rate_based_statement.0.custom_key.#":                                "1",
 						"statement.0.rate_based_statement.0.aggregate_key_type":                          "CUSTOM_KEYS",
+						"statement.0.rate_based_statement.0.evaluation_window_sec":                       "300",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                       "0",
 						"statement.0.rate_based_statement.0.limit":                                       "50000",
 						"statement.0.rate_based_statement.0.scope_down_statement.#":                      "0",
@@ -1858,6 +1923,7 @@ func TestAccWAFV2WebACL_RateBased_customKeys(t *testing.T) {
 						"statement.0.rate_based_statement.#":                                "1",
 						"statement.0.rate_based_statement.0.custom_key.#":                   "2",
 						"statement.0.rate_based_statement.0.aggregate_key_type":             "CUSTOM_KEYS",
+						"statement.0.rate_based_statement.0.evaluation_window_sec":          "300",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.#":          "0",
 						"statement.0.rate_based_statement.0.limit":                          "50000",
 						"statement.0.rate_based_statement.0.scope_down_statement.#":         "0",
@@ -1886,6 +1952,7 @@ func TestAccWAFV2WebACL_RateBased_customKeys(t *testing.T) {
 						"statement.0.rate_based_statement.#":                                                     "1",
 						"statement.0.rate_based_statement.0.custom_key.#":                                        "1",
 						"statement.0.rate_based_statement.0.aggregate_key_type":                                  "CUSTOM_KEYS",
+						"statement.0.rate_based_statement.0.evaluation_window_sec":                               "300",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                               "0",
 						"statement.0.rate_based_statement.0.limit":                                               "50000",
 						"statement.0.rate_based_statement.0.scope_down_statement.#":                              "0",
@@ -1914,6 +1981,7 @@ func TestAccWAFV2WebACL_RateBased_customKeys(t *testing.T) {
 						"statement.0.rate_based_statement.#":                                                   "1",
 						"statement.0.rate_based_statement.0.custom_key.#":                                      "1",
 						"statement.0.rate_based_statement.0.aggregate_key_type":                                "CUSTOM_KEYS",
+						"statement.0.rate_based_statement.0.evaluation_window_sec":                             "300",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                             "0",
 						"statement.0.rate_based_statement.0.limit":                                             "50000",
 						"statement.0.rate_based_statement.0.scope_down_statement.#":                            "0",
@@ -1942,6 +2010,7 @@ func TestAccWAFV2WebACL_RateBased_customKeys(t *testing.T) {
 						"statement.0.rate_based_statement.#":                                               "1",
 						"statement.0.rate_based_statement.0.custom_key.#":                                  "1",
 						"statement.0.rate_based_statement.0.aggregate_key_type":                            "CUSTOM_KEYS",
+						"statement.0.rate_based_statement.0.evaluation_window_sec":                         "300",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                         "0",
 						"statement.0.rate_based_statement.0.limit":                                         "50000",
 						"statement.0.rate_based_statement.0.scope_down_statement.#":                        "0",
@@ -1970,6 +2039,7 @@ func TestAccWAFV2WebACL_RateBased_customKeys(t *testing.T) {
 						"statement.0.rate_based_statement.#":                        "1",
 						"statement.0.rate_based_statement.0.custom_key.#":           "5",
 						"statement.0.rate_based_statement.0.aggregate_key_type":     "CUSTOM_KEYS",
+						"statement.0.rate_based_statement.0.evaluation_window_sec":  "300",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.#":  "0",
 						"statement.0.rate_based_statement.0.limit":                  "50000",
 						"statement.0.rate_based_statement.0.scope_down_statement.#": "0",
@@ -1994,7 +2064,7 @@ func TestAccWAFV2WebACL_RateBased_forwardedIP(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2014,6 +2084,7 @@ func TestAccWAFV2WebACL_RateBased_forwardedIP(t *testing.T) {
 						"statement.#":                        "1",
 						"statement.0.rate_based_statement.#": "1",
 						"statement.0.rate_based_statement.0.aggregate_key_type":                      "FORWARDED_IP",
+						"statement.0.rate_based_statement.0.evaluation_window_sec":                   "300",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                   "1",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.0.fallback_behavior": "MATCH",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.0.header_name":       "X-Forwarded-For",
@@ -2038,6 +2109,7 @@ func TestAccWAFV2WebACL_RateBased_forwardedIP(t *testing.T) {
 						"statement.#":                        "1",
 						"statement.0.rate_based_statement.#": "1",
 						"statement.0.rate_based_statement.0.aggregate_key_type":                      "FORWARDED_IP",
+						"statement.0.rate_based_statement.0.evaluation_window_sec":                   "300",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                   "1",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.0.fallback_behavior": "NO_MATCH",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.0.header_name":       "Updated",
@@ -2064,7 +2136,7 @@ func TestAccWAFV2WebACL_RuleGroupReference_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2133,7 +2205,7 @@ func TestAccWAFV2WebACL_RuleGroupReference_shieldMitigation(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2290,7 +2362,7 @@ func TestAccWAFV2WebACL_RuleGroupReference_manageShieldMitigationRule(t *testing
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2330,7 +2402,7 @@ func TestAccWAFV2WebACL_Custom_requestHandling(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2441,6 +2513,7 @@ func TestAccWAFV2WebACL_Custom_requestHandling(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "visibility_config.0.sampled_requests_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "captcha_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "captcha_config.0.immunity_time_property.0.immunity_time", "120"),
+					resource.TestCheckResourceAttr(resourceName, "challenge_config.0.immunity_time_property.0.immunity_time", "300"),
 				),
 			},
 			{
@@ -2482,7 +2555,7 @@ func TestAccWAFV2WebACL_Custom_response(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2602,7 +2675,7 @@ func TestAccWAFV2WebACL_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2650,7 +2723,7 @@ func TestAccWAFV2WebACL_RateBased_maxNested(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2662,15 +2735,16 @@ func TestAccWAFV2WebACL_RateBased_maxNested(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "name", webACLName),
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "rule.*", map[string]string{
-						"statement.#":                                                                                                      "1",
-						"statement.0.rate_based_statement.#":                                                                               "1",
-						"statement.0.rate_based_statement.0.limit":                                                                         "300",
-						"statement.0.rate_based_statement.0.aggregate_key_type":                                                            "IP",
-						"statement.0.rate_based_statement.0.scope_down_statement.#":                                                        "1",
-						"statement.0.rate_based_statement.0.scope_down_statement.0.not_statement.#":                                        "1",
-						"statement.0.rate_based_statement.0.scope_down_statement.0.not_statement.0.statement.#":                            "1",
-						"statement.0.rate_based_statement.0.scope_down_statement.0.not_statement.0.statement.0.or_statement.#":             "1",
-						"statement.0.rate_based_statement.0.scope_down_statement.0.not_statement.0.statement.0.or_statement.0.statement.#": "3",
+						"statement.#":                        "1",
+						"statement.0.rate_based_statement.#": "1",
+						"statement.0.rate_based_statement.0.aggregate_key_type":                                                                                                    "IP",
+						"statement.0.rate_based_statement.0.evaluation_window_sec":                                                                                                 "300",
+						"statement.0.rate_based_statement.0.limit":                                                                                                                 "300",
+						"statement.0.rate_based_statement.0.scope_down_statement.#":                                                                                                "1",
+						"statement.0.rate_based_statement.0.scope_down_statement.0.not_statement.#":                                                                                "1",
+						"statement.0.rate_based_statement.0.scope_down_statement.0.not_statement.0.statement.#":                                                                    "1",
+						"statement.0.rate_based_statement.0.scope_down_statement.0.not_statement.0.statement.0.or_statement.#":                                                     "1",
+						"statement.0.rate_based_statement.0.scope_down_statement.0.not_statement.0.statement.0.or_statement.0.statement.#":                                         "3",
 						"statement.0.rate_based_statement.0.scope_down_statement.0.not_statement.0.statement.0.or_statement.0.statement.0.regex_pattern_set_reference_statement.#": "1",
 						"statement.0.rate_based_statement.0.scope_down_statement.0.not_statement.0.statement.0.or_statement.0.statement.1.regex_match_statement.#":                 "1",
 						"statement.0.rate_based_statement.0.scope_down_statement.0.not_statement.0.statement.0.or_statement.0.statement.2.ip_set_reference_statement.#":            "1",
@@ -2695,7 +2769,7 @@ func TestAccWAFV2WebACL_Operators_maxNested(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2742,7 +2816,7 @@ func TestAccWAFV2WebACL_tokenDomains(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckScopeRegional(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2789,7 +2863,7 @@ func TestAccWAFV2WebACL_associationConfig(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckWAFV2CloudFrontScope(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2835,7 +2909,7 @@ func TestAccWAFV2WebACL_CloudFrontScope(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckWAFV2CloudFrontScope(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, wafv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWebACLDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -3296,6 +3370,57 @@ resource "aws_wafv2_web_acl" "test" {
 `, rName, oversizeHandling)
 }
 
+func testAccWebACLConfig_byteMatchStatementHeaderOrder(rName, oversizeHandling string) string {
+	return fmt.Sprintf(`
+resource "aws_wafv2_web_acl" "test" {
+  name        = %[1]q
+  description = %[1]q
+  scope       = "REGIONAL"
+
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name     = "rule-1"
+    priority = 1
+
+    action {
+      count {}
+    }
+
+    statement {
+      byte_match_statement {
+        search_string = "host:user-agent:accept:authorization:referer"
+        field_to_match {
+          header_order {
+            oversize_handling = %[2]q
+          }
+        }
+        text_transformation {
+          priority = 0
+          type     = "NONE"
+        }
+        positional_constraint = "STARTS_WITH"
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "friendly-rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "friendly-metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+`, rName, oversizeHandling)
+}
+
 func testAccWebACLConfig_geoMatchStatement(rName, countryCodes string) string {
 	return fmt.Sprintf(`
 resource "aws_wafv2_web_acl" "test" {
@@ -3570,6 +3695,12 @@ resource "aws_wafv2_web_acl" "test" {
   captcha_config {
     immunity_time_property {
       immunity_time = 120
+    }
+  }
+
+  challenge_config {
+    immunity_time_property {
+      immunity_time = 300
     }
   }
 }
@@ -5107,8 +5238,9 @@ resource "aws_wafv2_web_acl" "test" {
 
     statement {
       rate_based_statement {
-        limit              = 10000
-        aggregate_key_type = "IP"
+        limit                 = 10000
+        aggregate_key_type    = "IP"
+        evaluation_window_sec = 600
 
         scope_down_statement {
           geo_match_statement {

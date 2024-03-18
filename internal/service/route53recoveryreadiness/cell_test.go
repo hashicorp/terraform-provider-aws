@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfroute53recoveryreadiness "github.com/hashicorp/terraform-provider-aws/internal/service/route53recoveryreadiness"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccRoute53RecoveryReadinessCell_basic(t *testing.T) {
@@ -26,7 +27,7 @@ func TestAccRoute53RecoveryReadinessCell_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, route53recoveryreadiness.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53RecoveryReadinessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCellDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -56,7 +57,7 @@ func TestAccRoute53RecoveryReadinessCell_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, route53recoveryreadiness.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53RecoveryReadinessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCellDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -81,7 +82,7 @@ func TestAccRoute53RecoveryReadinessCell_nestedCell(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, route53recoveryreadiness.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53RecoveryReadinessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCellDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -131,7 +132,7 @@ func TestAccRoute53RecoveryReadinessCell_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, route53recoveryreadiness.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53RecoveryReadinessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCellDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -176,7 +177,7 @@ func TestAccRoute53RecoveryReadinessCell_timeout(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, route53recoveryreadiness.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53RecoveryReadinessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCellDestroy(ctx),
 		Steps: []resource.TestStep{

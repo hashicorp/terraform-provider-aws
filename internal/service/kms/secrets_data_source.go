@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
@@ -68,6 +69,8 @@ func DataSourceSecrets() *schema.Resource {
 }
 
 func dataSourceSecretsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	secrets := d.Get("secret").(*schema.Set).List()
@@ -81,7 +84,7 @@ func dataSourceSecretsRead(ctx context.Context, d *schema.ResourceData, meta int
 		payload, err := base64.StdEncoding.DecodeString(secret["payload"].(string))
 
 		if err != nil {
-			return diag.Errorf("invalid base64 value for secret (%s): %s", name, err)
+			return sdkdiag.AppendErrorf(diags, "invalid base64 value for secret (%s): %s", name, err)
 		}
 
 		// build the kms decrypt input
@@ -109,7 +112,7 @@ func dataSourceSecretsRead(ctx context.Context, d *schema.ResourceData, meta int
 		output, err := conn.DecryptWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("decrypting secret (%s): %s", name, err)
+			return sdkdiag.AppendErrorf(diags, "decrypting secret (%s): %s", name, err)
 		}
 
 		// Set the secret via the name
@@ -119,5 +122,5 @@ func dataSourceSecretsRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.SetId(meta.(*conns.AWSClient).Region)
 	d.Set("plaintext", plaintext)
 
-	return nil
+	return diags
 }

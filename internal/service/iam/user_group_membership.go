@@ -22,13 +22,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_iam_user_group_membership")
-func ResourceUserGroupMembership() *schema.Resource {
+// @SDKResource("aws_iam_user_group_membership", name="User Group Membership")
+func resourceUserGroupMembership() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserGroupMembershipCreate,
 		ReadWithoutTimeout:   resourceUserGroupMembershipRead,
 		UpdateWithoutTimeout: resourceUserGroupMembershipUpdate,
 		DeleteWithoutTimeout: resourceUserGroupMembershipDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceUserGroupMembershipImport,
 		},
@@ -216,12 +217,15 @@ func removeUserFromGroup(ctx context.Context, conn *iam.IAM, user, group string)
 		UserName:  aws.String(user),
 		GroupName: aws.String(group),
 	})
+
 	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
 		return nil
 	}
+
 	if err != nil {
-		return fmt.Errorf("removing User (%s) from Group (%s): %w", user, group, err)
+		return fmt.Errorf("removing IAM User (%s) from group (%s): %w", user, group, err)
 	}
+
 	return nil
 }
 

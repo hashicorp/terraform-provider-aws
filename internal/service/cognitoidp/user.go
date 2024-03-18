@@ -25,8 +25,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_cognito_user")
-func ResourceUser() *schema.Resource {
+// @SDKResource("aws_cognito_user", name="User")
+func resourceUser() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserCreate,
 		ReadWithoutTimeout:   resourceUserRead,
@@ -231,7 +231,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
-	user, err := FindUserByTwoPartKey(ctx, conn, d.Get("user_pool_id").(string), d.Get("username").(string))
+	user, err := findUserByTwoPartKey(ctx, conn, d.Get("user_pool_id").(string), d.Get("username").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		create.LogNotFoundRemoveState(names.CognitoIDP, create.ErrActionReading, ResNameUser, d.Get("username").(string))
@@ -240,7 +240,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	}
 
 	if err != nil {
-		return create.DiagError(names.CognitoIDP, create.ErrActionReading, ResNameUser, d.Get("username").(string), err)
+		return create.AppendDiagError(diags, names.CognitoIDP, create.ErrActionReading, ResNameUser, d.Get("username").(string), err)
 	}
 
 	if err := d.Set("attributes", flattenUserAttributes(user.UserAttributes)); err != nil {
@@ -379,6 +379,10 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interf
 		UserPoolId: aws.String(d.Get("user_pool_id").(string)),
 	})
 
+	if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeUserNotFoundException, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Cognito User (%s): %s", d.Id(), err)
 	}
@@ -398,7 +402,7 @@ func resourceUserImport(ctx context.Context, d *schema.ResourceData, meta interf
 	return []*schema.ResourceData{d}, nil
 }
 
-func FindUserByTwoPartKey(ctx context.Context, conn *cognitoidentityprovider.CognitoIdentityProvider, userPoolID, username string) (*cognitoidentityprovider.AdminGetUserOutput, error) {
+func findUserByTwoPartKey(ctx context.Context, conn *cognitoidentityprovider.CognitoIdentityProvider, userPoolID, username string) (*cognitoidentityprovider.AdminGetUserOutput, error) {
 	input := &cognitoidentityprovider.AdminGetUserInput{
 		Username:   aws.String(username),
 		UserPoolId: aws.String(userPoolID),

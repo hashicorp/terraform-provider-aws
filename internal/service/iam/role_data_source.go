@@ -17,8 +17,8 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
-// @SDKDataSource("aws_iam_role")
-func DataSourceRole() *schema.Resource {
+// @SDKDataSource("aws_iam_role", name="Role")
+func dataSourceRole() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRoleRead,
 
@@ -86,7 +86,7 @@ func dataSourceRoleRead(ctx context.Context, d *schema.ResourceData, meta interf
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
-	role, err := FindRoleByName(ctx, conn, name)
+	role, err := findRoleByName(ctx, conn, name)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading IAM Role (%s): %s", name, err)

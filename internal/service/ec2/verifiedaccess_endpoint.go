@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -138,6 +139,10 @@ func ResourceVerifiedAccessEndpoint() *schema.Resource {
 					},
 				},
 			},
+			"policy_document": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"security_group_ids": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -187,6 +192,7 @@ func resourceVerifiedAccessEndpointCreate(ctx context.Context, d *schema.Resourc
 	input := &ec2.CreateVerifiedAccessEndpointInput{
 		ApplicationDomain:     aws.String(d.Get("application_domain").(string)),
 		AttachmentType:        types.VerifiedAccessEndpointAttachmentType(d.Get("attachment_type").(string)),
+		ClientToken:           aws.String(id.UniqueId()),
 		DomainCertificateArn:  aws.String(d.Get("domain_certificate_arn").(string)),
 		EndpointDomainPrefix:  aws.String(d.Get("endpoint_domain_prefix").(string)),
 		EndpointType:          types.VerifiedAccessEndpointType(d.Get("endpoint_type").(string)),
@@ -204,6 +210,10 @@ func resourceVerifiedAccessEndpointCreate(ctx context.Context, d *schema.Resourc
 
 	if v, ok := d.GetOk("network_interface_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.NetworkInterfaceOptions = expandCreateVerifiedAccessEndpointEniOptions(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("policy_document"); ok {
+		input.PolicyDocument = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("security_group_ids"); ok && v.(*schema.Set).Len() > 0 {
@@ -266,6 +276,14 @@ func resourceVerifiedAccessEndpointRead(ctx context.Context, d *schema.ResourceD
 	d.Set("verified_access_group_id", ep.VerifiedAccessGroupId)
 	d.Set("verified_access_instance_id", ep.VerifiedAccessInstanceId)
 
+	output, err := FindVerifiedAccessEndpointPolicyByID(ctx, conn, d.Id())
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Verified Access Endpoint (%s) policy: %s", d.Id(), err)
+	}
+
+	d.Set("policy_document", output.PolicyDocument)
+
 	return diags
 }
 
@@ -275,6 +293,7 @@ func resourceVerifiedAccessEndpointUpdate(ctx context.Context, d *schema.Resourc
 
 	if d.HasChangesExcept("policy_document", "tags", "tags_all") {
 		input := &ec2.ModifyVerifiedAccessEndpointInput{
+			ClientToken:              aws.String(id.UniqueId()),
 			VerifiedAccessEndpointId: aws.String(d.Id()),
 		}
 
@@ -309,6 +328,20 @@ func resourceVerifiedAccessEndpointUpdate(ctx context.Context, d *schema.Resourc
 		}
 	}
 
+	if d.HasChange("policy_document") {
+		input := &ec2.ModifyVerifiedAccessEndpointPolicyInput{
+			PolicyDocument:           aws.String(d.Get("policy_document").(string)),
+			PolicyEnabled:            aws.Bool(true),
+			VerifiedAccessEndpointId: aws.String(d.Id()),
+		}
+
+		_, err := conn.ModifyVerifiedAccessEndpointPolicy(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Verified Access Endpoint (%s) policy: %s", d.Id(), err)
+		}
+	}
+
 	return append(diags, resourceVerifiedAccessEndpointRead(ctx, d, meta)...)
 }
 
@@ -319,6 +352,7 @@ func resourceVerifiedAccessEndpointDelete(ctx context.Context, d *schema.Resourc
 
 	log.Printf("[INFO] Deleting Verified Access Endpoint: %s", d.Id())
 	_, err := conn.DeleteVerifiedAccessEndpoint(ctx, &ec2.DeleteVerifiedAccessEndpointInput{
+		ClientToken:              aws.String(id.UniqueId()),
 		VerifiedAccessEndpointId: aws.String(d.Id()),
 	})
 

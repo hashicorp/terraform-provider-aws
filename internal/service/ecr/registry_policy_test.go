@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfecr "github.com/hashicorp/terraform-provider-aws/internal/service/ecr"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccECRRegistryPolicy_serial(t *testing.T) {
@@ -36,7 +37,7 @@ func testAccRegistryPolicy_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRegistryPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -73,7 +74,7 @@ func testAccRegistryPolicy_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRegistryPolicyDestroy(ctx),
 		Steps: []resource.TestStep{

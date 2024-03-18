@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tflambda "github.com/hashicorp/terraform-provider-aws/internal/service/lambda"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccLambdaLayerVersion_basic(t *testing.T) {
@@ -25,7 +26,7 @@ func TestAccLambdaLayerVersion_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLayerVersionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -62,7 +63,7 @@ func TestAccLambdaLayerVersion_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLayerVersionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -97,7 +98,7 @@ func TestAccLambdaLayerVersion_sourceCodeHash(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLayerVersionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -133,7 +134,7 @@ func TestAccLambdaLayerVersion_s3(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLayerVersionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -159,7 +160,7 @@ func TestAccLambdaLayerVersion_compatibleRuntimes(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLayerVersionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -188,7 +189,7 @@ func TestAccLambdaLayerVersion_compatibleArchitectures(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLayerVersionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -240,7 +241,7 @@ func TestAccLambdaLayerVersion_description(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLayerVersionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -270,7 +271,7 @@ func TestAccLambdaLayerVersion_licenseInfo(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLayerVersionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -299,12 +300,12 @@ func TestAccLambdaLayerVersion_skipDestroy(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, lambda.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LambdaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop, // this purposely leaves dangling resources, since skip_destroy = true
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLayerVersionConfig_skipDestroy(rName, "nodejs14.x"),
+				Config: testAccLayerVersionConfig_skipDestroy(rName, "nodejs18.x"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerVersionExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("layer:%s:1", rName)),
@@ -313,7 +314,7 @@ func TestAccLambdaLayerVersion_skipDestroy(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccLayerVersionConfig_skipDestroy(rName, "nodejs16.x"),
+				Config: testAccLayerVersionConfig_skipDestroy(rName, "nodejs20.x"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerVersionExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("layer:%s:2", rName)),
@@ -435,7 +436,7 @@ resource "aws_lambda_layer_version" "test" {
   filename   = "test-fixtures/lambdatest.zip"
   layer_name = %[1]q
 
-  compatible_runtimes = ["nodejs14.x", "nodejs16.x"]
+  compatible_runtimes = ["nodejs18.x", "nodejs20.x"]
 }
 `, rName)
 }

@@ -186,6 +186,8 @@ const (
 )
 
 func resourceInputCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
 	in := &medialive.CreateInputInput{
@@ -238,23 +240,25 @@ func resourceInputCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	)
 
 	if err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionCreating, ResNameInput, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionCreating, ResNameInput, d.Get("name").(string), err)
 	}
 
 	if outputRaw == nil || outputRaw.(*medialive.CreateInputOutput).Input == nil {
-		return create.DiagError(names.MediaLive, create.ErrActionCreating, ResNameInput, d.Get("name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionCreating, ResNameInput, d.Get("name").(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(outputRaw.(*medialive.CreateInputOutput).Input.Id))
 
 	if _, err := waitInputCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionWaitingForCreation, ResNameInput, d.Id(), err)
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionWaitingForCreation, ResNameInput, d.Id(), err)
 	}
 
-	return resourceInputRead(ctx, d, meta)
+	return append(diags, resourceInputRead(ctx, d, meta)...)
 }
 
 func resourceInputRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
 	out, err := FindInputByID(ctx, conn, d.Id())
@@ -262,11 +266,11 @@ func resourceInputRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] MediaLive Input (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionReading, ResNameInput, d.Id(), err)
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionReading, ResNameInput, d.Id(), err)
 	}
 
 	d.Set("arn", out.Arn)
@@ -282,10 +286,12 @@ func resourceInputRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("sources", flattenSources(out.Sources))
 	d.Set("type", out.Type)
 
-	return nil
+	return diags
 }
 
 func resourceInputUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -331,20 +337,22 @@ func resourceInputUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		)
 
 		if err != nil {
-			return create.DiagError(names.MediaLive, create.ErrActionUpdating, ResNameInput, d.Id(), err)
+			return create.AppendDiagError(diags, names.MediaLive, create.ErrActionUpdating, ResNameInput, d.Id(), err)
 		}
 
 		out := rawOutput.(*medialive.UpdateInputOutput)
 
 		if _, err := waitInputUpdated(ctx, conn, aws.ToString(out.Input.Id), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return create.DiagError(names.MediaLive, create.ErrActionWaitingForUpdate, ResNameInput, d.Id(), err)
+			return create.AppendDiagError(diags, names.MediaLive, create.ErrActionWaitingForUpdate, ResNameInput, d.Id(), err)
 		}
 	}
 
-	return resourceInputRead(ctx, d, meta)
+	return append(diags, resourceInputRead(ctx, d, meta)...)
 }
 
 func resourceInputDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
 	log.Printf("[INFO] Deleting MediaLive Input %s", d.Id())
@@ -356,17 +364,17 @@ func resourceInputDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	if err != nil {
 		var nfe *types.NotFoundException
 		if errors.As(err, &nfe) {
-			return nil
+			return diags
 		}
 
-		return create.DiagError(names.MediaLive, create.ErrActionDeleting, ResNameInput, d.Id(), err)
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionDeleting, ResNameInput, d.Id(), err)
 	}
 
 	if _, err := waitInputDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionWaitingForDeletion, ResNameInput, d.Id(), err)
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionWaitingForDeletion, ResNameInput, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func waitInputCreated(ctx context.Context, conn *medialive.Client, id string, timeout time.Duration) (*medialive.DescribeInputOutput, error) {

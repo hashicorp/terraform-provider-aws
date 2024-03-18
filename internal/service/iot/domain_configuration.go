@@ -188,7 +188,7 @@ func resourceDomainConfigurationRead(ctx context.Context, d *schema.ResourceData
 	d.Set("arn", output.DomainConfigurationArn)
 	if output.AuthorizerConfig != nil {
 		if err := d.Set("authorizer_config", []interface{}{flattenAuthorizerConfig(output.AuthorizerConfig)}); err != nil {
-			return diag.Errorf("setting authorizer_config: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting authorizer_config: %s", err)
 		}
 	} else {
 		d.Set("authorizer_config", nil)
@@ -203,14 +203,14 @@ func resourceDomainConfigurationRead(ctx context.Context, d *schema.ResourceData
 	d.Set("status", output.DomainConfigurationStatus)
 	if output.TlsConfig != nil {
 		if err := d.Set("tls_config", []interface{}{flattenTlsConfig(output.TlsConfig)}); err != nil {
-			return diag.Errorf("setting tls_config: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting tls_config: %s", err)
 		}
 	} else {
 		d.Set("tls_config", nil)
 	}
 	d.Set("validation_certificate_arn", d.Get("validation_certificate_arn"))
 
-	return nil
+	return diags
 }
 
 func resourceDomainConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -261,6 +261,10 @@ func resourceDomainConfigurationDelete(ctx context.Context, d *schema.ResourceDa
 			DomainConfigurationStatus: aws.String(iot.DomainConfigurationStatusDisabled),
 		})
 
+		if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
+			return diags
+		}
+
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "disabling IoT Domain Configuration (%s): %s", d.Id(), err)
 		}
@@ -270,6 +274,10 @@ func resourceDomainConfigurationDelete(ctx context.Context, d *schema.ResourceDa
 	_, err := conn.DeleteDomainConfigurationWithContext(ctx, &iot.DeleteDomainConfigurationInput{
 		DomainConfigurationName: aws.String(d.Id()),
 	})
+
+	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
+		return diags
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting IoT Domain Configuration (%s): %s", d.Id(), err)

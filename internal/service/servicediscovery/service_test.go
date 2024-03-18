@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfservicediscovery "github.com/hashicorp/terraform-provider-aws/internal/service/servicediscovery"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccServiceDiscoveryService_private(t *testing.T) {
@@ -30,7 +31,7 @@ func TestAccServiceDiscoveryService_private(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, servicediscovery.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, servicediscovery.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceDiscoveryServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServiceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -94,7 +95,7 @@ func TestAccServiceDiscoveryService_public(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, servicediscovery.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, servicediscovery.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceDiscoveryServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServiceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -158,7 +159,7 @@ func TestAccServiceDiscoveryService_private_http(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, servicediscovery.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, servicediscovery.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceDiscoveryServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServiceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -189,7 +190,7 @@ func TestAccServiceDiscoveryService_http(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, servicediscovery.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, servicediscovery.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceDiscoveryServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServiceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -219,7 +220,7 @@ func TestAccServiceDiscoveryService_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, servicediscovery.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, servicediscovery.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceDiscoveryServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServiceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -242,7 +243,7 @@ func TestAccServiceDiscoveryService_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, servicediscovery.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, servicediscovery.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceDiscoveryServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServiceDestroy(ctx),
 		Steps: []resource.TestStep{

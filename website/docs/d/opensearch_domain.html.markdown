@@ -43,6 +43,7 @@ This data source exports the following attributes in addition to the arguments a
             * `unit` - Unit of time.
         * `cron_expression_for_recurrence` - Cron expression for an Auto-Tune maintenance schedule.
     * `rollback_on_disable` - Whether the domain is set to roll back to default Auto-Tune settings when disabling Auto-Tune.
+    * `use_off_peak_window` - Whether to schedule Auto-Tune optimizations that require blue/green deployments during the domain's configured daily off-peak window.
 * `cluster_config` - Cluster configuration of the domain.
     * `cold_storage_options` - Configuration block containing cold storage configuration.
         * `enabled` - Indicates  cold storage is enabled.
@@ -51,6 +52,7 @@ This data source exports the following attributes in addition to the arguments a
     * `dedicated_master_enabled` - Indicates whether dedicated master nodes are enabled for the cluster.
     * `dedicated_master_type` - Instance type of the dedicated master nodes in the cluster.
     * `dedicated_master_count` - Number of dedicated master nodes in the cluster.
+    * `multi_az_with_standby_enabled` - Whether a multi-AZ domain is turned on with a standby AZ.
     * `zone_awareness_enabled` - Indicates whether zone awareness is enabled.
     * `zone_awareness_config` - Configuration block containing zone awareness settings.
         * `availability_zone_count` - Number of availability zones used.

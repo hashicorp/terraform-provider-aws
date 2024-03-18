@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -348,7 +349,7 @@ func (r tagsResourceInterceptor) create(ctx context.Context, request resource.Cr
 		// Remove system tags.
 		tags = tags.IgnoreSystem(inContext.ServicePackageName)
 
-		tagsInContext.TagsIn = types.Some(tags)
+		tagsInContext.TagsIn = option.Some(tags)
 	case After:
 		// Set values for unknowns.
 		// Remove any provider configured ignore_tags and system tags from those passed to the service API.
@@ -513,7 +514,7 @@ func (r tagsResourceInterceptor) update(ctx context.Context, request resource.Up
 		// Remove system tags.
 		tags = tags.IgnoreSystem(inContext.ServicePackageName)
 
-		tagsInContext.TagsIn = types.Some(tags)
+		tagsInContext.TagsIn = option.Some(tags)
 
 		var oldTagsAll, newTagsAll fwtypes.Map
 

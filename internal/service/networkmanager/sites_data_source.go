@@ -11,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -35,6 +36,8 @@ func DataSourceSites() *schema.Resource {
 }
 
 func dataSourceSitesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 	tagsToMatch := tftags.New(ctx, d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -44,7 +47,7 @@ func dataSourceSitesRead(ctx context.Context, d *schema.ResourceData, meta inter
 	})
 
 	if err != nil {
-		return diag.Errorf("listing Network Manager Sites: %s", err)
+		return sdkdiag.AppendErrorf(diags, "listing Network Manager Sites: %s", err)
 	}
 
 	var siteIDs []string
@@ -62,5 +65,5 @@ func dataSourceSitesRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.SetId(meta.(*conns.AWSClient).Region)
 	d.Set("ids", siteIDs)
 
-	return nil
+	return diags
 }

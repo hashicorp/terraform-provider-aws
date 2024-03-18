@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfroute53 "github.com/hashicorp/terraform-provider-aws/internal/service/route53"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestCleanZoneID(t *testing.T) {
@@ -96,7 +97,7 @@ func TestAccRoute53Zone_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckZoneDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -130,7 +131,7 @@ func TestAccRoute53Zone_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckZoneDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -153,7 +154,7 @@ func TestAccRoute53Zone_multiple(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckZoneDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -184,7 +185,7 @@ func TestAccRoute53Zone_comment(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckZoneDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -221,7 +222,7 @@ func TestAccRoute53Zone_delegationSetID(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckZoneDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -250,7 +251,7 @@ func TestAccRoute53Zone_forceDestroy(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckZoneDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -275,7 +276,7 @@ func TestAccRoute53Zone_ForceDestroy_trailingPeriod(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckZoneDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -300,7 +301,7 @@ func TestAccRoute53Zone_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckZoneDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -349,7 +350,7 @@ func TestAccRoute53Zone_VPC_single(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckZoneDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -382,7 +383,7 @@ func TestAccRoute53Zone_VPC_multiple(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckZoneDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -416,7 +417,7 @@ func TestAccRoute53Zone_VPC_updates(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckZoneDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -463,7 +464,7 @@ func TestAccRoute53Zone_VPC_single_forceDestroy(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, route53.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckZoneDestroy(ctx),
 		Steps: []resource.TestStep{

@@ -83,10 +83,10 @@ This data source exports the following attributes in addition to the arguments a
 
 A `quickConnectConfig` block contains the following arguments:
 
-* `quickConnectType` - Configuration type of the Quick Connect. Valid values are `phoneNumber`, `queue`, `user`.
-* `phoneConfig` - Phone configuration of the Quick Connect. This is returned only if `quickConnectType` is `phoneNumber`. The `phoneConfig` block is documented below.
-* `queueConfig` - Queue configuration of the Quick Connect. This is returned only if `quickConnectType` is `queue`. The `queueConfig` block is documented below.
-* `userConfig` - User configuration of the Quick Connect. This is returned only if `quickConnectType` is `user`. The `userConfig` block is documented below.
+* `quickConnectType` - Configuration type of the Quick Connect. Valid values are `PHONE_NUMBER`, `QUEUE`, `USER`.
+* `phoneConfig` - Phone configuration of the Quick Connect. This is returned only if `quickConnectType` is `PHONE_NUMBER`. The `phoneConfig` block is documented below.
+* `queueConfig` - Queue configuration of the Quick Connect. This is returned only if `quickConnectType` is `QUEUE`. The `queueConfig` block is documented below.
+* `userConfig` - User configuration of the Quick Connect. This is returned only if `quickConnectType` is `USER`. The `userConfig` block is documented below.
 
 A `phoneConfig` block contains the following arguments:
 
@@ -102,4 +102,4 @@ A `userConfig` block contains the following arguments:
 * `contactFlowId` - Identifier of the contact flow.
 * `userId` - Identifier for the user.
 
-<!-- cache-key: cdktf-0.18.0 input-47e113eb2f3ca472b6251d59440456f77334d6f7906ea4bbe83c661c839f9048 -->
+<!-- cache-key: cdktf-0.20.1 input-47e113eb2f3ca472b6251d59440456f77334d6f7906ea4bbe83c661c839f9048 -->

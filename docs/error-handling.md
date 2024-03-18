@@ -208,11 +208,11 @@ For Terraform Plugin SDK V2 based resources, creation is implemented on the `Cre
 
 === "Terraform Plugin SDK V2"
     Errors enountered during creation should include additional messaging about the location or cause of the error for operators and code maintainers.
-    The `create.DiagError` helper function can be used to convert a native error into a [diagnostic](https://developer.hashicorp.com/terraform/plugin/framework/diagnostics), which is the method for surfacing warnings and errors in Terraform providers.
+    The `create.AppendDiagError` helper function can be used to convert a native error into a [diagnostic](https://developer.hashicorp.com/terraform/plugin/framework/diagnostics), which is the method for surfacing warnings and errors in Terraform providers.
 
     ```go
     if err != nil {
-        return append(diags, create.DiagError(names.{{ .Service }}, create.ErrActionCreating, ResName{{ .Resource }}, d.Get("name").(string), err)...)
+        return create.AppendDiagError(diags, names.{{ .Service }}, create.ErrActionCreating, ResName{{ .Resource }}, d.Get("name").(string), err)...)
     }
     ```
 
@@ -220,7 +220,7 @@ For Terraform Plugin SDK V2 based resources, creation is implemented on the `Cre
 
     ```go
     if err != nil {
-        return append(diags, create.DiagError(names.IVS, create.ErrActionCreating, ResNameRecordingConfiguration, d.Id(), err)...)
+        return create.AppendDiagError(diags, names.IVS, create.ErrActionCreating, ResNameRecordingConfiguration, d.Id(), err)
     }
     ```
 
@@ -228,7 +228,7 @@ For Terraform Plugin SDK V2 based resources, creation is implemented on the `Cre
 
     ```go
     if _, err := waitRecordingConfigurationCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-        return append(diags, create.DiagError(names.IVS, create.ErrActionWaitingForCreation, ResNameRecordingConfiguration, d.Id(), err)...)
+        return create.AppendDiagError(diags, names.IVS, create.ErrActionWaitingForCreation, ResNameRecordingConfiguration, d.Id(), err)
     }
     ```
 
@@ -257,25 +257,29 @@ To prevent this type of Terraform CLI error, the resource implementation should 
 In the Terraform AWS Provider, an initial fix for the Terraform CLI error will typically look like:
 
 ```go
-func resourceServiceThingCreate(d *schema.ResourceData, meta interface{}) error {
-    /* ... */
+func resourceServiceThingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+ 	var diags diag.Diagnostics
 
-    return resourceServiceThingRead(d, meta)
+   /* ... */
+
+    return append(diags, resourceServiceThingRead(ctx, d, meta)...)
 }
 
-func resourceServiceThingRead(d *schema.ResourceData, meta interface{}) error {
-    /* ... */
+func resourceServiceThingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+  	var diags diag.Diagnostics
+
+   /* ... */
 
     output, err := conn.DescribeServiceThing(input)
 
     if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
         log.Printf("[WARN] {Service} {Thing} (%s) not found, removing from state", d.Id())
         d.SetId("")
-        return nil
+        return diags
     }
 
     if err != nil {
-        return append(diags, create.DiagError(names.{{ .Service }}, create.ErrActionReading, ResName{{ .Resource }}, d.Id(), err)...)
+        return create.AppendDiagError(diags, names.{{ .Service }}, create.ErrActionReading, ResName{{ .Resource }}, d.Id(), err)
     }
 
     /* ... */
@@ -320,11 +324,11 @@ For Terraform Plugin SDK V2 based resources, read is implemented on the `ReadWit
 
 === "Terraform Plugin SDK V2"
     Errors enountered during read should include the resource identifier (for managed resources) and additional messaging about the location or cause of the error for operators and code maintainers.
-    The `create.DiagError` helper function can be used to convert a native error into a [diagnostic](https://developer.hashicorp.com/terraform/plugin/framework/diagnostics), which is the method for surfacing warnings and errors in Terraform providers.
+    The `create.AppendDiagError` helper function can be used to convert a native error into a [diagnostic](https://developer.hashicorp.com/terraform/plugin/framework/diagnostics), which is the method for surfacing warnings and errors in Terraform providers.
 
     ```go
     if err != nil {
-        return append(diags, create.DiagError(names.{{ .Service }}, create.ErrActionReading, ResName{{ .Resource }}, d.Id(), err)...)
+        return create.AppendDiagError(diags, names.{{ .Service }}, create.ErrActionReading, ResName{{ .Resource }}, d.Id(), err)
     }
     ```
 
@@ -332,7 +336,7 @@ For Terraform Plugin SDK V2 based resources, read is implemented on the `ReadWit
 
     ```go
     if err != nil {
-        return append(diags, create.DiagError(names.IVS, create.ErrActionReading, ResNameRecordingConfiguration, d.Id(), err)...)
+        return create.AppendDiagError(diags, names.IVS, create.ErrActionReading, ResNameRecordingConfiguration, d.Id(), err)
     }
     ```
 
@@ -426,11 +430,11 @@ For Terraform Plugin SDK V2 based resources, update is implemented on the `Updat
 
 === "Terraform Plugin SDK V2"
     Errors enountered during update should include the resource identifier and additional messaging about the location or cause of the error for operators and code maintainers.
-    The `create.DiagError` helper function can be used to convert a native error into a [diagnostic](https://developer.hashicorp.com/terraform/plugin/framework/diagnostics), which is the method for surfacing warnings and errors in Terraform providers.
+    The `create.AppendDiagError` helper function can be used to convert a native error into a [diagnostic](https://developer.hashicorp.com/terraform/plugin/framework/diagnostics), which is the method for surfacing warnings and errors in Terraform providers.
 
     ```go
     if err != nil {
-        return append(diags, create.DiagError(names.{{ .Service }}, create.ErrActionUpdating, ResName{{ .Resource }}, d.Id(), err)...)
+        return create.AppendDiagError(diags, names.{{ .Service }}, create.ErrActionUpdating, ResName{{ .Resource }}, d.Id(), err)
     }
     ```
 
@@ -438,7 +442,7 @@ For Terraform Plugin SDK V2 based resources, update is implemented on the `Updat
 
     ```go
     if err != nil {
-         return append(diags, create.DiagError(names.IVS, create.ErrActionUpdating, ResNameRecordingConfiguration, d.Id(), err)...)
+         return create.AppendDiagError(diags, names.IVS, create.ErrActionUpdating, ResNameRecordingConfiguration, d.Id(), err)
     }
     ```
 
@@ -446,7 +450,7 @@ For Terraform Plugin SDK V2 based resources, update is implemented on the `Updat
 
     ```go
     if _, err := waitRecordingConfigurationUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-         return append(diags, create.DiagError(names.IVS, create.ErrActionWaitingForUpdate, ResNameRecordingConfiguration, d.Id(), err)...)
+         return create.AppendDiagError(diags, names.IVS, create.ErrActionWaitingForUpdate, ResNameRecordingConfiguration, d.Id(), err)
     }
     ```
 
@@ -500,11 +504,11 @@ For Terraform Plugin SDK V2 based resources, deletion is implemented on the `Del
 
 === "Terraform Plugin SDK V2"
     Errors enountered during deletion should include the resource identifier and additional messaging about the location or cause of the error for operators and code maintainers.
-    The `create.DiagError` helper function can be used to convert a native error into a [diagnostic](https://developer.hashicorp.com/terraform/plugin/framework/diagnostics), which is the method for surfacing warnings and errors in Terraform providers.
+    The `create.AppendDiagError` helper function can be used to convert a native error into a [diagnostic](https://developer.hashicorp.com/terraform/plugin/framework/diagnostics), which is the method for surfacing warnings and errors in Terraform providers.
 
     ```go
     if err != nil {
-        return append(diags, create.DiagError(names.{{ .Service }}, create.ErrActionDeleting, ResName{{ .Resource }}, d.Id(), err)...)
+        return create.AppendDiagError(diags, names.{{ .Service }}, create.ErrActionDeleting, ResName{{ .Resource }}, d.Id(), err)
     }
     ```
 
@@ -512,7 +516,7 @@ For Terraform Plugin SDK V2 based resources, deletion is implemented on the `Del
 
     ```go
     if err != nil {
-        return append(diags, create.DiagError(names.IVS, create.ErrActionDeleting, ResNameRecordingConfiguration, d.Id(), err)...)
+        return create.AppendDiagError(diags, names.IVS, create.ErrActionDeleting, ResNameRecordingConfiguration, d.Id(), err)
     }
     ```
 
@@ -520,7 +524,7 @@ For Terraform Plugin SDK V2 based resources, deletion is implemented on the `Del
 
     ```go
     if _, err := waitRecordingConfigurationDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-        return append(diags, create.DiagError(names.IVS, create.ErrActionWaitingForDeletion, ResNameRecordingConfiguration, d.Id(), err)...)
+        return create.AppendDiagError(diags, names.IVS, create.ErrActionWaitingForDeletion, ResNameRecordingConfiguration, d.Id(), err)
     }
     ```
 
@@ -559,10 +563,10 @@ In these cases, resources should implement logic that skips returning the error.
     output, err := conn.DeleteServiceThing(input)
 
     if tfawserr.ErrCodeEquals(err, "ResourceNotFoundException") {
-        return nil
+        return diags
     }
 
     if err != nil {
-        return append(diags, create.DiagError(names.{{ .Service }}, create.ErrActionDeleting, ResName{{ .Resource }}, d.Id(), err)...)
+        return create.AppendDiagError(diags, names.{{ .Service }}, create.ErrActionDeleting, ResName{{ .Resource }}, d.Id(), err)
     }
     ```

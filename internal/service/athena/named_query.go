@@ -120,6 +120,7 @@ func resourceNamedQueryDelete(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AthenaClient(ctx)
 
+	log.Printf("[INFO] Deleting Athena Named Query: %s", d.Id())
 	_, err := conn.DeleteNamedQuery(ctx, &athena.DeleteNamedQueryInput{
 		NamedQueryId: aws.String(d.Id()),
 	})

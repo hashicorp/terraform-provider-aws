@@ -42,7 +42,7 @@ This data source supports the following arguments:
 * `name` - (Required) Name of the table.
 * `databaseName` - (Required) Name of the metadata database where the table metadata resides.
 * `catalogId` - (Optional) ID of the Glue Catalog and database where the table metadata resides. If omitted, this defaults to the current AWS Account ID.
-* `queryAsOfTime`- (Optional) The time as of when to read the table contents. If not set, the most recent transaction commit time will be used. Cannot be specified along with `transactionId`. Specified in RFC 3339 format, e.g. `20060102T15:04:05Z07:00`.
+* `queryAsOfTime`- (Optional) The time as of when to read the table contents. If not set, the most recent transaction commit time will be used. Cannot be specified along with `transactionId`. Specified in RFC 3339 format, e.g. `2006-01-02T15:04:05Z07:00`.
 * `transactionId` - (Optional) The transaction ID at which to read the table contents.
 
 ## Attribute Reference
@@ -113,7 +113,7 @@ This data source exports the following attributes in addition to the arguments a
 
 * `name` - Name of the SerDe.
 * `parameters` - Map of initialization parameters for the SerDe, in key-value form.
-* `serializationLibrary` - Usually the class that implements the SerDe. An example is `orgApacheHadoopHiveSerde2ColumnarColumnarSerDe`.
+* `serializationLibrary` - Usually the class that implements the SerDe. An example is `org.apache.hadoop.hive.serde2.columnar.ColumnarSerDe`.
 
 #### sort_columns
 
@@ -131,5 +131,6 @@ This data source exports the following attributes in addition to the arguments a
 * `catalogId` - ID of the Data Catalog in which the table resides.
 * `databaseName` - Name of the catalog database that contains the target table.
 * `name` - Name of the target table.
+* `region` - Region of the target table.
 
-<!-- cache-key: cdktf-0.18.0 input-e15edcd6d033b5edb19b2c2cba94f792949b55bd9f5265620f634af7b6c959a4 -->
+<!-- cache-key: cdktf-0.20.1 input-75051df4e1baf806fc38ba02be8ffc0cd92b7709e612f9893478d1569cbd32dd -->

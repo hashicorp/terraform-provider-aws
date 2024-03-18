@@ -60,6 +60,22 @@ func DataSourceGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"instance_maintenance_policy": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"max_healthy_percentage": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"min_healthy_percentage": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"launch_configuration": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -577,6 +593,9 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("enabled_metrics", flattenEnabledMetrics(group.EnabledMetrics))
 	d.Set("health_check_grace_period", group.HealthCheckGracePeriod)
 	d.Set("health_check_type", group.HealthCheckType)
+	if err := d.Set("instance_maintenance_policy", flattenInstanceMaintenancePolicy(group.InstanceMaintenancePolicy)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting instance_maintenance_policy: %s", err)
+	}
 	d.Set("launch_configuration", group.LaunchConfigurationName)
 	if group.LaunchTemplate != nil {
 		if err := d.Set("launch_template", []interface{}{flattenLaunchTemplateSpecification(group.LaunchTemplate)}); err != nil {

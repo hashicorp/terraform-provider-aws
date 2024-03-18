@@ -12,6 +12,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccKMSReplicaExternalKey_basic(t *testing.T) {
@@ -26,7 +27,7 @@ func TestAccKMSReplicaExternalKey_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckKeyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -77,7 +78,7 @@ func TestAccKMSReplicaExternalKey_descriptionAndEnabled(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckKeyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -132,7 +133,7 @@ func TestAccKMSReplicaExternalKey_policy(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckKeyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -177,7 +178,7 @@ func TestAccKMSReplicaExternalKey_tags(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckKeyDestroy(ctx),
 		Steps: []resource.TestStep{

@@ -56,6 +56,15 @@ func ResourceCluster() *schema.Resource {
 			Delete: schema.DefaultTimeout(120 * time.Minute),
 		},
 
+		SchemaVersion: 1,
+		StateUpgraders: []schema.StateUpgrader{
+			{
+				Type:    resourceClusterResourceV0().CoreConfigSchema().ImpliedType(),
+				Upgrade: clusterStateUpgradeV0,
+				Version: 0,
+			},
+		},
+
 		Schema: map[string]*schema.Schema{
 			"allocated_storage": {
 				Type:     schema.TypeInt,
@@ -157,8 +166,21 @@ func ResourceCluster() *schema.Resource {
 				ForceNew: true,
 				Computed: true,
 			},
+			"delete_automated_backups": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
 			"deletion_protection": {
 				Type:     schema.TypeBool,
+				Optional: true,
+			},
+			"domain": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"domain_iam_role_name": {
+				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"enable_global_write_forwarding": {
@@ -600,6 +622,14 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.DBSubnetGroupName = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("domain"); ok {
+			input.Domain = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("domain_iam_role_name"); ok {
+			input.DomainIAMRoleName = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && v.(*schema.Set).Len() > 0 {
 			input.EnableCloudwatchLogsExports = flex.ExpandStringSet(v.(*schema.Set))
 		}
@@ -718,6 +748,14 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.DBSubnetGroupName = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("domain"); ok {
+			input.Domain = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("domain_iam_role_name"); ok {
+			input.DomainIAMRoleName = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && v.(*schema.Set).Len() > 0 {
 			input.EnableCloudwatchLogsExports = flex.ExpandStringSet(v.(*schema.Set))
 		}
@@ -832,6 +870,14 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if v, ok := d.GetOk("db_subnet_group_name"); ok {
 			input.DBSubnetGroupName = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("domain"); ok {
+			input.Domain = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("domain_iam_role_name"); ok {
+			input.DomainIAMRoleName = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && v.(*schema.Set).Len() > 0 {
@@ -950,6 +996,14 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if v, ok := d.GetOk("db_system_id"); ok {
 			input.DBSystemId = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("domain"); ok {
+			input.Domain = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("domain_iam_role_name"); ok {
+			input.DomainIAMRoleName = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("enable_global_write_forwarding"); ok {
@@ -1130,6 +1184,14 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("db_subnet_group_name", dbc.DBSubnetGroup)
 	d.Set("db_system_id", dbc.DBSystemId)
 	d.Set("deletion_protection", dbc.DeletionProtection)
+	if len(dbc.DomainMemberships) > 0 && dbc.DomainMemberships[0] != nil {
+		domainMembership := dbc.DomainMemberships[0]
+		d.Set("domain", domainMembership.Domain)
+		d.Set("domain_iam_role_name", domainMembership.IAMRoleName)
+	} else {
+		d.Set("domain", nil)
+		d.Set("domain_iam_role_name", nil)
+	}
 	d.Set("enabled_cloudwatch_logs_exports", aws.StringValueSlice(dbc.EnabledCloudwatchLogsExports))
 	d.Set("enable_http_endpoint", dbc.HttpEndpointEnabled)
 	d.Set("endpoint", dbc.Endpoint)
@@ -1219,6 +1281,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 	if d.HasChangesExcept(
 		"allow_major_version_upgrade",
+		"delete_automated_backups",
 		"final_snapshot_identifier",
 		"global_cluster_identifier",
 		"iam_roles",
@@ -1269,6 +1332,11 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if d.HasChange("deletion_protection") {
 			input.DeletionProtection = aws.Bool(d.Get("deletion_protection").(bool))
+		}
+
+		if d.HasChanges("domain", "domain_iam_role_name") {
+			input.Domain = aws.String(d.Get("domain").(string))
+			input.DomainIAMRoleName = aws.String(d.Get("domain_iam_role_name").(string))
 		}
 
 		if d.HasChange("enable_global_write_forwarding") {
@@ -1470,8 +1538,9 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 	skipFinalSnapshot := d.Get("skip_final_snapshot").(bool)
 	input := &rds.DeleteDBClusterInput{
-		DBClusterIdentifier: aws.String(d.Id()),
-		SkipFinalSnapshot:   aws.Bool(skipFinalSnapshot),
+		DBClusterIdentifier:    aws.String(d.Id()),
+		DeleteAutomatedBackups: aws.Bool(d.Get("delete_automated_backups").(bool)),
+		SkipFinalSnapshot:      aws.Bool(skipFinalSnapshot),
 	}
 
 	if !skipFinalSnapshot {
@@ -1554,6 +1623,7 @@ func resourceClusterImport(_ context.Context, d *schema.ResourceData, meta inter
 	// from any API call, so we need to default skip_final_snapshot to true so
 	// that final_snapshot_identifier is not required
 	d.Set("skip_final_snapshot", true)
+	d.Set("delete_automated_backups", true)
 	return []*schema.ResourceData{d}, nil
 }
 

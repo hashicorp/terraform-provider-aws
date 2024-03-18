@@ -37,9 +37,9 @@ import (
 	"github.com/mitchellh/go-homedir"
 )
 
-// @SDKResource("aws_s3_bucket_object", name="Object")
-// @Tags
-func ResourceBucketObject() *schema.Resource {
+// @SDKResource("aws_s3_bucket_object", name="Bucket Object")
+// @Tags(identifierAttribute="arn", resourceType="BucketObject")
+func resourceBucketObject() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketObjectCreate,
 		ReadWithoutTimeout:   resourceBucketObjectRead,
@@ -61,6 +61,10 @@ func ResourceBucketObject() *schema.Resource {
 				Default:          types.ObjectCannedACLPrivate,
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[types.ObjectCannedACL](),
+			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"bucket": {
 				Deprecated:   "Use the aws_s3_object resource instead",
@@ -220,6 +224,12 @@ func resourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading S3 Object (%s): %s", d.Id(), err)
 	}
 
+	arn, err := newObjectARN(meta.(*conns.AWSClient).Partition, bucket, key)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading S3 Object (%s): %s", d.Id(), err)
+	}
+	d.Set("arn", arn.String())
+
 	d.Set("bucket_key_enabled", output.BucketKeyEnabled)
 	d.Set("cache_control", output.CacheControl)
 	d.Set("content_disposition", output.ContentDisposition)
@@ -245,14 +255,6 @@ func resourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, meta 
 	if err := resourceBucketObjectSetKMS(ctx, d, meta, output.SSEKMSKeyId); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
-
-	tags, err := ObjectListTags(ctx, conn, bucket, key)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for S3 Bucket (%s) Object (%s): %s", bucket, key, err)
-	}
-
-	setTagsOut(ctx, Tags(tags))
 
 	return diags
 }
@@ -314,7 +316,7 @@ func resourceBucketObjectUpdate(ctx context.Context, d *schema.ResourceData, met
 			o, n := expandObjectDate(oraw.(string)), expandObjectDate(nraw.(string))
 
 			if n == nil || (o != nil && n.Before(*o)) {
-				input.BypassGovernanceRetention = true
+				input.BypassGovernanceRetention = aws.Bool(true)
 			}
 		}
 
@@ -322,14 +324,6 @@ func resourceBucketObjectUpdate(ctx context.Context, d *schema.ResourceData, met
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "putting S3 Object (%s) retention: %s", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := ObjectUpdateTags(ctx, conn, bucket, key, o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
 		}
 	}
 
@@ -380,8 +374,6 @@ func resourceBucketObjectUpload(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 	uploader := manager.NewUploader(conn)
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	var body io.ReadSeeker
 
@@ -430,7 +422,7 @@ func resourceBucketObjectUpload(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if v, ok := d.GetOk("bucket_key_enabled"); ok {
-		input.BucketKeyEnabled = v.(bool)
+		input.BucketKeyEnabled = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("cache_control"); ok {
@@ -482,6 +474,9 @@ func resourceBucketObjectUpload(ctx context.Context, d *schema.ResourceData, met
 		input.StorageClass = types.StorageClass(v.(string))
 	}
 
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := tftags.New(ctx, getContextTags(ctx))
+	tags = defaultTagsConfig.MergeTags(tags)
 	if len(tags) > 0 {
 		// The tag-set must be encoded as URL Query parameters.
 		input.Tagging = aws.String(tags.IgnoreAWS().URLEncode())
@@ -513,9 +508,9 @@ func resourceBucketObjectSetKMS(ctx context.Context, d *schema.ResourceData, met
 	if sseKMSKeyId != nil {
 		// retrieve S3 KMS Default Master Key
 		conn := meta.(*conns.AWSClient).KMSConn(ctx)
-		keyMetadata, err := kms.FindKeyByID(ctx, conn, DefaultKMSKeyAlias)
+		keyMetadata, err := kms.FindKeyByID(ctx, conn, defaultKMSKeyAlias)
 		if err != nil {
-			return fmt.Errorf("Failed to describe default S3 KMS key (%s): %s", DefaultKMSKeyAlias, err)
+			return fmt.Errorf("Failed to describe default S3 KMS key (%s): %s", defaultKMSKeyAlias, err)
 		}
 
 		if kmsKeyID := aws.ToString(sseKMSKeyId); kmsKeyID != aws.ToString(keyMetadata.Arn) {

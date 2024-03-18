@@ -206,11 +206,11 @@ func resourceGrantRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] KMS Grant (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading KMS Grant (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading KMS Grant (%s): %s", d.Id(), err)
 	}
 
 	if grant.Constraints != nil {

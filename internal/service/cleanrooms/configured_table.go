@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -110,6 +111,8 @@ const (
 )
 
 func resourceConfiguredTableCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).CleanRoomsClient(ctx)
 
 	input := &cleanrooms.CreateConfiguredTableInput{
@@ -121,7 +124,7 @@ func resourceConfiguredTableCreate(ctx context.Context, d *schema.ResourceData, 
 
 	analysisMethod, err := expandAnalysisMethod(d.Get("analysis_method").(string))
 	if err != nil {
-		return create.DiagError(names.CleanRooms, create.ErrActionCreating, ResNameConfiguredTable, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionCreating, ResNameConfiguredTable, d.Get("name").(string), err)
 	}
 	input.AnalysisMethod = analysisMethod
 
@@ -131,18 +134,20 @@ func resourceConfiguredTableCreate(ctx context.Context, d *schema.ResourceData, 
 
 	out, err := conn.CreateConfiguredTable(ctx, input)
 	if err != nil {
-		return create.DiagError(names.CleanRooms, create.ErrActionCreating, ResNameConfiguredTable, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionCreating, ResNameConfiguredTable, d.Get("name").(string), err)
 	}
 
 	if out == nil || out.ConfiguredTable == nil {
-		return create.DiagError(names.CleanRooms, create.ErrActionCreating, ResNameCollaboration, d.Get("name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionCreating, ResNameCollaboration, d.Get("name").(string), errors.New("empty output"))
 	}
 	d.SetId(aws.ToString(out.ConfiguredTable.Id))
 
-	return resourceConfiguredTableRead(ctx, d, meta)
+	return append(diags, resourceConfiguredTableRead(ctx, d, meta)...)
 }
 
 func resourceConfiguredTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).CleanRoomsClient(ctx)
 
 	out, err := findConfiguredTableByID(ctx, conn, d.Id())
@@ -150,11 +155,11 @@ func resourceConfiguredTableRead(ctx context.Context, d *schema.ResourceData, me
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Clean Rooms Configured Table (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.CleanRooms, create.ErrActionReading, ResNameConfiguredTable, d.Id(), err)
+		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionReading, ResNameConfiguredTable, d.Id(), err)
 	}
 
 	configuredTable := out.ConfiguredTable
@@ -167,10 +172,10 @@ func resourceConfiguredTableRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("update_time", configuredTable.UpdateTime.String())
 
 	if err := d.Set("table_reference", flattenTableReference(configuredTable.TableReference)); err != nil {
-		return diag.Errorf("setting table_reference: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting table_reference: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceConfiguredTableUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -192,7 +197,7 @@ func resourceConfiguredTableUpdate(ctx context.Context, d *schema.ResourceData, 
 
 		_, err := conn.UpdateConfiguredTable(ctx, input)
 		if err != nil {
-			return create.DiagError(names.CleanRooms, create.ErrActionUpdating, ResNameConfiguredTable, d.Id(), err)
+			return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionUpdating, ResNameConfiguredTable, d.Id(), err)
 		}
 	}
 
@@ -200,6 +205,8 @@ func resourceConfiguredTableUpdate(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceConfiguredTableDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).CleanRoomsClient(ctx)
 
 	log.Printf("[INFO] Deleting Clean Rooms Configured Table %s", d.Id())
@@ -208,10 +215,10 @@ func resourceConfiguredTableDelete(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if _, err := conn.DeleteConfiguredTable(ctx, in); err != nil {
-		return create.DiagError(names.CleanRooms, create.ErrActionDeleting, ResNameConfiguredTable, d.Id(), err)
+		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionDeleting, ResNameConfiguredTable, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func findConfiguredTableByID(ctx context.Context, conn *cleanrooms.Client, id string) (*cleanrooms.GetConfiguredTableOutput, error) {

@@ -5,18 +5,20 @@ package sns
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"regexp"
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/sns"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/sns"
+	"github.com/aws/aws-sdk-go-v2/service/sns/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -25,6 +27,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -48,7 +51,22 @@ var (
 			Optional:     true,
 			ValidateFunc: validation.IntBetween(0, 100),
 		},
+		"archive_policy": {
+			Type:                  schema.TypeString,
+			Optional:              true,
+			ValidateFunc:          validation.StringIsJSON,
+			DiffSuppressFunc:      verify.SuppressEquivalentJSONWithEmptyDiffs,
+			DiffSuppressOnRefresh: true,
+			StateFunc: func(v interface{}) string {
+				json, _ := structure.NormalizeJsonString(v)
+				return json
+			},
+		},
 		"arn": {
+			Type:     schema.TypeString,
+			Computed: true,
+		},
+		"beginning_archive_time": {
 			Type:     schema.TypeString,
 			Computed: true,
 		},
@@ -58,10 +76,11 @@ var (
 			Default:  false,
 		},
 		"delivery_policy": {
-			Type:             schema.TypeString,
-			Optional:         true,
-			ValidateFunc:     validation.StringIsJSON,
-			DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
+			Type:                  schema.TypeString,
+			Optional:              true,
+			ValidateFunc:          validation.StringIsJSON,
+			DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
+			DiffSuppressOnRefresh: true,
 			StateFunc: func(v interface{}) string {
 				json, _ := structure.NormalizeJsonString(v)
 				return json
@@ -183,42 +202,44 @@ var (
 			Type:         schema.TypeString,
 			Optional:     true,
 			Computed:     true,
-			ValidateFunc: validation.StringInSlice(TopicTracingConfig_Values(), false),
+			ValidateFunc: validation.StringInSlice(topicTracingConfig_Values(), false),
 		},
 	}
 
 	topicAttributeMap = attrmap.New(map[string]string{
-		"application_failure_feedback_role_arn":    TopicAttributeNameApplicationFailureFeedbackRoleARN,
-		"application_success_feedback_role_arn":    TopicAttributeNameApplicationSuccessFeedbackRoleARN,
-		"application_success_feedback_sample_rate": TopicAttributeNameApplicationSuccessFeedbackSampleRate,
-		"arn":                                   TopicAttributeNameTopicARN,
-		"content_based_deduplication":           TopicAttributeNameContentBasedDeduplication,
-		"delivery_policy":                       TopicAttributeNameDeliveryPolicy,
-		"display_name":                          TopicAttributeNameDisplayName,
-		"fifo_topic":                            TopicAttributeNameFIFOTopic,
-		"firehose_failure_feedback_role_arn":    TopicAttributeNameFirehoseFailureFeedbackRoleARN,
-		"firehose_success_feedback_role_arn":    TopicAttributeNameFirehoseSuccessFeedbackRoleARN,
-		"firehose_success_feedback_sample_rate": TopicAttributeNameFirehoseSuccessFeedbackSampleRate,
-		"http_failure_feedback_role_arn":        TopicAttributeNameHTTPFailureFeedbackRoleARN,
-		"http_success_feedback_role_arn":        TopicAttributeNameHTTPSuccessFeedbackRoleARN,
-		"http_success_feedback_sample_rate":     TopicAttributeNameHTTPSuccessFeedbackSampleRate,
-		"kms_master_key_id":                     TopicAttributeNameKMSMasterKeyId,
-		"lambda_failure_feedback_role_arn":      TopicAttributeNameLambdaFailureFeedbackRoleARN,
-		"lambda_success_feedback_role_arn":      TopicAttributeNameLambdaSuccessFeedbackRoleARN,
-		"lambda_success_feedback_sample_rate":   TopicAttributeNameLambdaSuccessFeedbackSampleRate,
-		"owner":                                 TopicAttributeNameOwner,
-		"policy":                                TopicAttributeNamePolicy,
-		"signature_version":                     TopicAttributeNameSignatureVersion,
-		"sqs_failure_feedback_role_arn":         TopicAttributeNameSQSFailureFeedbackRoleARN,
-		"sqs_success_feedback_role_arn":         TopicAttributeNameSQSSuccessFeedbackRoleARN,
-		"sqs_success_feedback_sample_rate":      TopicAttributeNameSQSSuccessFeedbackSampleRate,
-		"tracing_config":                        TopicAttributeNameTracingConfig,
+		"application_failure_feedback_role_arn":    topicAttributeNameApplicationFailureFeedbackRoleARN,
+		"application_success_feedback_role_arn":    topicAttributeNameApplicationSuccessFeedbackRoleARN,
+		"application_success_feedback_sample_rate": topicAttributeNameApplicationSuccessFeedbackSampleRate,
+		"archive_policy":                           topicAttributeNameArchivePolicy,
+		"arn":                                      topicAttributeNameTopicARN,
+		"beginning_archive_time":                   topicAttributeNameBeginningArchiveTime,
+		"content_based_deduplication":              topicAttributeNameContentBasedDeduplication,
+		"delivery_policy":                          topicAttributeNameDeliveryPolicy,
+		"display_name":                             topicAttributeNameDisplayName,
+		"fifo_topic":                               topicAttributeNameFIFOTopic,
+		"firehose_failure_feedback_role_arn":       topicAttributeNameFirehoseFailureFeedbackRoleARN,
+		"firehose_success_feedback_role_arn":       topicAttributeNameFirehoseSuccessFeedbackRoleARN,
+		"firehose_success_feedback_sample_rate":    topicAttributeNameFirehoseSuccessFeedbackSampleRate,
+		"http_failure_feedback_role_arn":           topicAttributeNameHTTPFailureFeedbackRoleARN,
+		"http_success_feedback_role_arn":           topicAttributeNameHTTPSuccessFeedbackRoleARN,
+		"http_success_feedback_sample_rate":        topicAttributeNameHTTPSuccessFeedbackSampleRate,
+		"kms_master_key_id":                        topicAttributeNameKMSMasterKeyId,
+		"lambda_failure_feedback_role_arn":         topicAttributeNameLambdaFailureFeedbackRoleARN,
+		"lambda_success_feedback_role_arn":         topicAttributeNameLambdaSuccessFeedbackRoleARN,
+		"lambda_success_feedback_sample_rate":      topicAttributeNameLambdaSuccessFeedbackSampleRate,
+		"owner":                                    topicAttributeNameOwner,
+		"policy":                                   topicAttributeNamePolicy,
+		"signature_version":                        topicAttributeNameSignatureVersion,
+		"sqs_failure_feedback_role_arn":            topicAttributeNameSQSFailureFeedbackRoleARN,
+		"sqs_success_feedback_role_arn":            topicAttributeNameSQSSuccessFeedbackRoleARN,
+		"sqs_success_feedback_sample_rate":         topicAttributeNameSQSSuccessFeedbackSampleRate,
+		"tracing_config":                           topicAttributeNameTracingConfig,
 	}, topicSchema).WithIAMPolicyAttribute("policy").WithMissingSetToNil("*")
 )
 
 // @SDKResource("aws_sns_topic", name="Topic")
 // @Tags(identifierAttribute="id")
-func ResourceTopic() *schema.Resource {
+func resourceTopic() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTopicCreate,
 		ReadWithoutTimeout:   resourceTopicRead,
@@ -240,7 +261,7 @@ func ResourceTopic() *schema.Resource {
 
 func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SNSConn(ctx)
+	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
 	name := topicName(d)
 	input := &sns.CreateTopicInput{
@@ -254,35 +275,35 @@ func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	// The FifoTopic attribute must be passed in the call to CreateTopic.
-	if v, ok := attributes[TopicAttributeNameFIFOTopic]; ok {
-		input.Attributes = aws.StringMap(map[string]string{
-			TopicAttributeNameFIFOTopic: v,
-		})
+	if v, ok := attributes[topicAttributeNameFIFOTopic]; ok {
+		input.Attributes = map[string]string{
+			topicAttributeNameFIFOTopic: v,
+		}
 
-		delete(attributes, TopicAttributeNameFIFOTopic)
+		delete(attributes, topicAttributeNameFIFOTopic)
 	}
 
-	output, err := conn.CreateTopicWithContext(ctx, input)
+	output, err := conn.CreateTopic(ctx, input)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
-	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
 		input.Tags = nil
 
-		output, err = conn.CreateTopicWithContext(ctx, input)
+		output, err = conn.CreateTopic(ctx, input)
 	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating SNS Topic (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.TopicArn))
+	d.SetId(aws.ToString(output.TopicArn))
 
 	// Retry for eventual consistency; if ABAC is in use, this takes some time
 	// usually about 10s, presumably for tags really to be there, and we get a
 	// permissions error.
-	_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenIsAErrorMessageContains[*types.AuthorizationErrorException](ctx, propagationTimeout, func() (interface{}, error) {
 		return nil, putTopicAttributes(ctx, conn, d.Id(), attributes)
-	}, sns.ErrCodeAuthorizationErrorException, "no identity-based policy allows")
+	}, "no identity-based policy allows")
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
@@ -293,7 +314,7 @@ func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		err := createTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
 			return append(diags, resourceTopicRead(ctx, d, meta)...)
 		}
 
@@ -307,9 +328,9 @@ func resourceTopicCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceTopicRead(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SNSConn(ctx)
+	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
-	attributes, err := FindTopicAttributesByARN(ctx, conn, d.Id())
+	attributes, err := findTopicAttributesWithValidAWSPrincipalsByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SNS Topic (%s) not found, removing from state", d.Id())
@@ -333,7 +354,7 @@ func resourceTopicRead(ctx context.Context, d *schema.ResourceData, meta any) di
 	name := arn.Resource
 	d.Set("name", name)
 	if d.Get("fifo_topic").(bool) {
-		d.Set("name_prefix", create.NamePrefixFromNameWithSuffix(name, FIFOTopicNameSuffix))
+		d.Set("name_prefix", create.NamePrefixFromNameWithSuffix(name, fifoTopicNameSuffix))
 	} else {
 		d.Set("name_prefix", create.NamePrefixFromName(name))
 	}
@@ -342,7 +363,7 @@ func resourceTopicRead(ctx context.Context, d *schema.ResourceData, meta any) di
 }
 
 func resourceTopicUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SNSConn(ctx)
+	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		attributes, err := topicAttributeMap.ResourceDataToAPIAttributesUpdate(d)
@@ -360,14 +381,14 @@ func resourceTopicUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceTopicDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SNSConn(ctx)
+	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
 	log.Printf("[DEBUG] Deleting SNS Topic: %s", d.Id())
-	_, err := conn.DeleteTopicWithContext(ctx, &sns.DeleteTopicInput{
+	_, err := conn.DeleteTopic(ctx, &sns.DeleteTopicInput{
 		TopicArn: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, sns.ErrCodeNotFoundException) {
+	if errs.IsA[*types.NotFoundException](err) {
 		return nil
 	}
 
@@ -380,6 +401,7 @@ func resourceTopicDelete(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceTopicCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, meta interface{}) error {
 	fifoTopic := diff.Get("fifo_topic").(bool)
+	archivePolicy := diff.Get("archive_policy").(string)
 	contentBasedDeduplication := diff.Get("content_based_deduplication").(bool)
 
 	if diff.Id() == "" {
@@ -398,17 +420,22 @@ func resourceTopicCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, me
 		}
 	}
 
-	if !fifoTopic && contentBasedDeduplication {
-		return fmt.Errorf("content-based deduplication can only be set for FIFO topics")
+	if !fifoTopic {
+		if archivePolicy != "" {
+			return errors.New("message archive policy can only be set for FIFO topics")
+		}
+		if contentBasedDeduplication {
+			return errors.New("content-based deduplication can only be set for FIFO topics")
+		}
 	}
 
 	return nil
 }
 
-func putTopicAttributes(ctx context.Context, conn *sns.SNS, arn string, attributes map[string]string) error {
+func putTopicAttributes(ctx context.Context, conn *sns.Client, arn string, attributes map[string]string) error {
 	for name, value := range attributes {
 		// Ignore an empty policy.
-		if name == TopicAttributeNamePolicy && value == "" {
+		if name == topicAttributeNamePolicy && value == "" {
 			continue
 		}
 
@@ -422,9 +449,9 @@ func putTopicAttributes(ctx context.Context, conn *sns.SNS, arn string, attribut
 	return nil
 }
 
-func putTopicAttribute(ctx context.Context, conn *sns.SNS, arn string, name, value string) error {
+func putTopicAttribute(ctx context.Context, conn *sns.Client, arn string, name, value string) error {
 	const (
-		topicPutAttributeTimeout = 2 * time.Minute
+		timeout = 2 * time.Minute
 	)
 	input := &sns.SetTopicAttributesInput{
 		AttributeName:  aws.String(name),
@@ -432,9 +459,9 @@ func putTopicAttribute(ctx context.Context, conn *sns.SNS, arn string, name, val
 		TopicArn:       aws.String(arn),
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, topicPutAttributeTimeout, func() (interface{}, error) {
-		return conn.SetTopicAttributesWithContext(ctx, input)
-	}, sns.ErrCodeInvalidParameterException)
+	_, err := tfresource.RetryWhenIsA[*types.InvalidParameterException](ctx, timeout, func() (interface{}, error) {
+		return conn.SetTopicAttributes(ctx, input)
+	})
 
 	if err != nil {
 		return fmt.Errorf("setting SNS Topic (%s) attribute (%s): %w", arn, name, err)
@@ -443,10 +470,61 @@ func putTopicAttribute(ctx context.Context, conn *sns.SNS, arn string, name, val
 	return nil
 }
 
-func topicName(d interface{ Get(string) any }) string {
+func topicName(d verify.ResourceDiffer) string {
 	optFns := []create.NameGeneratorOptionsFunc{create.WithConfiguredName(d.Get("name").(string)), create.WithConfiguredPrefix(d.Get("name_prefix").(string))}
 	if d.Get("fifo_topic").(bool) {
-		optFns = append(optFns, create.WithSuffix(FIFOTopicNameSuffix))
+		optFns = append(optFns, create.WithSuffix(fifoTopicNameSuffix))
 	}
 	return create.NewNameGenerator(optFns...).Generate()
+}
+
+// findTopicAttributesWithValidAWSPrincipalsByARN returns topic attributes, ensuring that any Policy field
+// is populated with valid AWS principals, i.e. the principal is either an AWS Account ID or an ARN.
+// nosemgrep:ci.aws-in-func-name
+func findTopicAttributesWithValidAWSPrincipalsByARN(ctx context.Context, conn *sns.Client, arn string) (map[string]string, error) {
+	var attributes map[string]string
+	err := tfresource.Retry(ctx, propagationTimeout, func() *retry.RetryError {
+		var err error
+		attributes, err = findTopicAttributesByARN(ctx, conn, arn)
+		if err != nil {
+			return retry.NonRetryableError(err)
+		}
+
+		valid, err := tfiam.PolicyHasValidAWSPrincipals(attributes[topicAttributeNamePolicy])
+		if err != nil {
+			return retry.NonRetryableError(err)
+		}
+		if !valid {
+			return retry.RetryableError(errors.New("contains invalid principals"))
+		}
+
+		return nil
+	})
+
+	return attributes, err
+}
+
+func findTopicAttributesByARN(ctx context.Context, conn *sns.Client, arn string) (map[string]string, error) {
+	input := &sns.GetTopicAttributesInput{
+		TopicArn: aws.String(arn),
+	}
+
+	output, err := conn.GetTopicAttributes(ctx, input)
+
+	if errs.IsA[*types.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.Attributes) == 0 {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Attributes, nil
 }

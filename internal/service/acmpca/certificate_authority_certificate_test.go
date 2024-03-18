@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfacmpca "github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccACMPCACertificateAuthorityCertificate_rootCA(t *testing.T) {
@@ -26,7 +27,7 @@ func TestAccACMPCACertificateAuthorityCertificate_rootCA(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil, // Certificate authority certificates cannot be deleted
 		Steps: []resource.TestStep{
@@ -58,7 +59,7 @@ func TestAccACMPCACertificateAuthorityCertificate_updateRootCA(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil, // Certificate authority certificates cannot be deleted
 		Steps: []resource.TestStep{
@@ -93,7 +94,7 @@ func TestAccACMPCACertificateAuthorityCertificate_subordinateCA(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil, // Certificate authority certificates cannot be deleted
 		Steps: []resource.TestStep{

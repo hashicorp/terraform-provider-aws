@@ -19,6 +19,7 @@ import (
 	tfecr "github.com/hashicorp/terraform-provider-aws/internal/service/ecr"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccECRRepository_basic(t *testing.T) {
@@ -29,7 +30,7 @@ func TestAccECRRepository_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRepositoryDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -63,7 +64,7 @@ func TestAccECRRepository_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRepositoryDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -87,7 +88,7 @@ func TestAccECRRepository_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRepositoryDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -133,7 +134,7 @@ func TestAccECRRepository_immutability(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRepositoryDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -162,7 +163,7 @@ func TestAccECRRepository_Image_scanning(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRepositoryDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -214,7 +215,7 @@ func TestAccECRRepository_Encryption_kms(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRepositoryDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -260,7 +261,7 @@ func TestAccECRRepository_Encryption_aes256(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRepositoryDestroy(ctx),
 		Steps: []resource.TestStep{

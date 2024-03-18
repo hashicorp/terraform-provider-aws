@@ -99,7 +99,7 @@ func dataSourceWorkspaceBundleRead(ctx context.Context, d *schema.ResourceData, 
 			return sdkdiag.AppendErrorf(diags, "expected 1 result for WorkSpaces Workspace Bundle %q, found %d", bundleID, len(resp.Bundles))
 		}
 
-		if len(resp.Bundles) <= 0 {
+		if len(resp.Bundles) == 0 {
 			return sdkdiag.AppendErrorf(diags, "no WorkSpaces Workspace Bundle with ID %q found", bundleID)
 		}
 

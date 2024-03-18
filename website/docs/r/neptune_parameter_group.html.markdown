@@ -28,7 +28,8 @@ resource "aws_neptune_parameter_group" "example" {
 
 This resource supports the following arguments:
 
-* `name` - (Required, Forces new resource) The name of the Neptune parameter group.
+* `name` - (Optional, Forces new resource) The name of the Neptune parameter group.
+* `name_prefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`.
 * `family` - (Required) The family of the Neptune parameter group.
 * `description` - (Optional) The description of the Neptune parameter group. Defaults to "Managed by Terraform".
 * `parameter` - (Optional) A list of Neptune parameters to apply.

@@ -280,16 +280,16 @@ This resource supports the following arguments:
 * `description` - (Required) A description for the DLM lifecycle policy.
 * `executionRoleArn` - (Required) The ARN of an IAM role that is able to be assumed by the DLM service.
 * `policyDetails` - (Required) See the [`policyDetails` configuration](#policy-details-arguments) block. Max of 1.
-* `state` - (Optional) Whether the lifecycle policy should be enabled or disabled. `enabled` or `disabled` are valid values. Defaults to `enabled`.
+* `state` - (Optional) Whether the lifecycle policy should be enabled or disabled. `ENABLED` or `DISABLED` are valid values. Defaults to `ENABLED`.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 #### Policy Details arguments
 
 * `action` - (Optional) The actions to be performed when the event-based policy is triggered. You can specify only one action per policy. This parameter is required for event-based policies only. If you are creating a snapshot or AMI policy, omit this parameter. See the [`action` configuration](#action-arguments) block.
 * `eventSource` - (Optional) The event that triggers the event-based policy. This parameter is required for event-based policies only. If you are creating a snapshot or AMI policy, omit this parameter. See the [`eventSource` configuration](#event-source-arguments) block.
-* `resourceTypes` - (Optional) A list of resource types that should be targeted by the lifecycle policy. Valid values are `volume` and `instance`.
-* `resourceLocations` - (Optional) The location of the resources to backup. If the source resources are located in an AWS Region, specify `cloud`. If the source resources are located on an Outpost in your account, specify `outpost`. If you specify `outpost`, Amazon Data Lifecycle Manager backs up all resources of the specified type with matching target tags across all of the Outposts in your account. Valid values are `cloud` and `outpost`.
-* `policyType` - (Optional) The valid target resource types and actions a policy can manage. Specify `ebsSnapshotManagement` to create a lifecycle policy that manages the lifecycle of Amazon EBS snapshots. Specify `imageManagement` to create a lifecycle policy that manages the lifecycle of EBS-backed AMIs. Specify `eventBasedPolicy` to create an event-based policy that performs specific actions when a defined event occurs in your AWS account. Default value is `ebsSnapshotManagement`.
+* `resourceTypes` - (Optional) A list of resource types that should be targeted by the lifecycle policy. Valid values are `VOLUME` and `INSTANCE`.
+* `resourceLocations` - (Optional) The location of the resources to backup. If the source resources are located in an AWS Region, specify `CLOUD`. If the source resources are located on an Outpost in your account, specify `OUTPOST`. If you specify `OUTPOST`, Amazon Data Lifecycle Manager backs up all resources of the specified type with matching target tags across all of the Outposts in your account. Valid values are `CLOUD` and `OUTPOST`.
+* `policyType` - (Optional) The valid target resource types and actions a policy can manage. Specify `EBS_SNAPSHOT_MANAGEMENT` to create a lifecycle policy that manages the lifecycle of Amazon EBS snapshots. Specify `IMAGE_MANAGEMENT` to create a lifecycle policy that manages the lifecycle of EBS-backed AMIs. Specify `EVENT_BASED_POLICY` to create an event-based policy that performs specific actions when a defined event occurs in your AWS account. Default value is `EBS_SNAPSHOT_MANAGEMENT`.
 * `parameters` - (Optional) A set of optional parameters for snapshot and AMI lifecycle policies. See the [`parameters` configuration](#parameters-arguments) block.
 * `schedule` - (Optional) See the [`schedule` configuration](#schedule-arguments) block.
 * `targetTags` (Optional) A map of tag keys and their values. Any resources that match the `resourceTypes` and are tagged with _any_ of these tags will be targeted.
@@ -315,7 +315,7 @@ This resource supports the following arguments:
 #### Event Source arguments
 
 * `parameters` - (Required) Information about the event. See the [`parameters` configuration](#event-source-parameters-arguments) block.
-* `type` - (Required) The source of the event. Currently only managed CloudWatch Events rules are supported. Valid values are `managedCwe`.
+* `type` - (Required) The source of the event. Currently only managed CloudWatch Events rules are supported. Valid values are `MANAGED_CWE`.
 
 ##### Event Source Parameters arguments
 
@@ -339,40 +339,40 @@ This resource supports the following arguments:
 * `retainRule` - (Required) See the [`retainRule`](#retain-rule-arguments) block. Max of 1 per schedule.
 * `shareRule` - (Required) See the [`shareRule`](#share-rule-arguments) block. Max of 1 per schedule.
 * `tagsToAdd` - (Optional) A map of tag keys and their values. DLM lifecycle policies will already tag the snapshot with the tags on the volume. This configuration adds extra tags on top of these.
-* `variableTags` - (Optional) A map of tag keys and variable values, where the values are determined when the policy is executed. Only `$(instanceId)` or `$(timestamp)` are valid values. Can only be used when `resourceTypes` is `instance`.
+* `variableTags` - (Optional) A map of tag keys and variable values, where the values are determined when the policy is executed. Only `$(instance-id)` or `$(timestamp)` are valid values. Can only be used when `resourceTypes` is `INSTANCE`.
 
 #### Create Rule arguments
 
 * `cronExpression` - (Optional) The schedule, as a Cron expression. The schedule interval must be between 1 hour and 1 year. Conflicts with `interval`, `intervalUnit`, and `times`.
 * `interval` - (Optional) How often this lifecycle policy should be evaluated. `1`, `2`,`3`,`4`,`6`,`8`,`12` or `24` are valid values. Conflicts with `cronExpression`. If set, `intervalUnit` and `times` must also be set.
-* `intervalUnit` - (Optional) The unit for how often the lifecycle policy should be evaluated. `hours` is currently the only allowed value and also the default value. Conflicts with `cronExpression`. Must be set if `interval` is set.
-* `location` - (Optional) Specifies the destination for snapshots created by the policy. To create snapshots in the same Region as the source resource, specify `cloud`. To create snapshots on the same Outpost as the source resource, specify `outpostLocal`. If you omit this parameter, `cloud` is used by default. If the policy targets resources in an AWS Region, then you must create snapshots in the same Region as the source resource. If the policy targets resources on an Outpost, then you can create snapshots on the same Outpost as the source resource, or in the Region of that Outpost. Valid values are `cloud` and `outpostLocal`.
+* `intervalUnit` - (Optional) The unit for how often the lifecycle policy should be evaluated. `HOURS` is currently the only allowed value and also the default value. Conflicts with `cronExpression`. Must be set if `interval` is set.
+* `location` - (Optional) Specifies the destination for snapshots created by the policy. To create snapshots in the same Region as the source resource, specify `CLOUD`. To create snapshots on the same Outpost as the source resource, specify `OUTPOST_LOCAL`. If you omit this parameter, `CLOUD` is used by default. If the policy targets resources in an AWS Region, then you must create snapshots in the same Region as the source resource. If the policy targets resources on an Outpost, then you can create snapshots on the same Outpost as the source resource, or in the Region of that Outpost. Valid values are `CLOUD` and `OUTPOST_LOCAL`.
 * `times` - (Optional) A list of times in 24 hour clock format that sets when the lifecycle policy should be evaluated. Max of 1. Conflicts with `cronExpression`. Must be set if `interval` is set.
 
 #### Deprecate Rule arguments
 
 * `count` - (Optional) Specifies the number of oldest AMIs to deprecate. Must be an integer between `1` and `1000`. Conflicts with `interval` and `intervalUnit`.
 * `interval` - (Optional) Specifies the period after which to deprecate AMIs created by the schedule. The maximum is 100 years. This is equivalent to 1200 months, 5200 weeks, or 36500 days. Conflicts with `count`. If set, `intervalUnit` must also be set.
-* `intervalUnit` - (Optional) The unit of time for time-based retention. Valid values are `days`, `weeks`, `months`, `years`. Conflicts with `count`. Must be set if `interval` is set.
+* `intervalUnit` - (Optional) The unit of time for time-based retention. Valid values are `DAYS`, `WEEKS`, `MONTHS`, `YEARS`. Conflicts with `count`. Must be set if `interval` is set.
 
 #### Fast Restore Rule arguments
 
 * `availabilityZones` - (Required) The Availability Zones in which to enable fast snapshot restore.
 * `count` - (Optional) The number of snapshots to be enabled with fast snapshot restore. Must be an integer between `1` and `1000`. Conflicts with `interval` and `intervalUnit`.
 * `interval` - (Optional) The amount of time to enable fast snapshot restore. The maximum is 100 years. This is equivalent to 1200 months, 5200 weeks, or 36500 days. Conflicts with `count`. If set, `intervalUnit` must also be set.
-* `intervalUnit` - (Optional) The unit of time for enabling fast snapshot restore. Valid values are `days`, `weeks`, `months`, `years`. Conflicts with `count`. Must be set if `interval` is set.
+* `intervalUnit` - (Optional) The unit of time for enabling fast snapshot restore. Valid values are `DAYS`, `WEEKS`, `MONTHS`, `YEARS`. Conflicts with `count`. Must be set if `interval` is set.
 
 #### Retain Rule arguments
 
 * `count` - (Optional) How many snapshots to keep. Must be an integer between `1` and `1000`. Conflicts with `interval` and `intervalUnit`.
 * `interval` - (Optional) The amount of time to retain each snapshot. The maximum is 100 years. This is equivalent to 1200 months, 5200 weeks, or 36500 days. Conflicts with `count`. If set, `intervalUnit` must also be set.
-* `intervalUnit` - (Optional) The unit of time for time-based retention. Valid values are `days`, `weeks`, `months`, `years`. Conflicts with `count`. Must be set if `interval` is set.
+* `intervalUnit` - (Optional) The unit of time for time-based retention. Valid values are `DAYS`, `WEEKS`, `MONTHS`, `YEARS`. Conflicts with `count`. Must be set if `interval` is set.
 
 #### Share Rule arguments
 
 * `targetAccounts` - (Required) The IDs of the AWS accounts with which to share the snapshots.
 * `interval` - (Optional) The period after which snapshots that are shared with other AWS accounts are automatically unshared.
-* `intervalUnit` - (Optional) The unit of time for the automatic unsharing interval. Valid values are `days`, `weeks`, `months`, `years`.
+* `intervalUnit` - (Optional) The unit of time for the automatic unsharing interval. Valid values are `DAYS`, `WEEKS`, `MONTHS`, `YEARS`.
 
 #### Cross Region Copy Rule arguments
 
@@ -386,12 +386,12 @@ This resource supports the following arguments:
 #### Cross Region Copy Rule Deprecate Rule arguments
 
 * `interval` - (Required) The period after which to deprecate the cross-Region AMI copies. The period must be less than or equal to the cross-Region AMI copy retention period, and it can't be greater than 10 years. This is equivalent to 120 months, 520 weeks, or 3650 days.
-* `intervalUnit` - (Required) The unit of time in which to measure the `interval`. Valid values: `days`, `weeks`, `months`, or `years`.
+* `intervalUnit` - (Required) The unit of time in which to measure the `interval`. Valid values: `DAYS`, `WEEKS`, `MONTHS`, or `YEARS`.
 
 #### Cross Region Copy Rule Retain Rule arguments
 
 * `interval` - (Required) The amount of time to retain each snapshot. The maximum is 100 years. This is equivalent to 1200 months, 5200 weeks, or 36500 days.
-* `intervalUnit` - (Required) The unit of time for time-based retention. Valid values: `days`, `weeks`, `months`, or `years`.
+* `intervalUnit` - (Required) The unit of time for time-based retention. Valid values: `DAYS`, `WEEKS`, `MONTHS`, or `YEARS`.
 
 ## Attribute Reference
 
@@ -409,9 +409,19 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { DlmLifecyclePolicy } from "./.gen/providers/aws/dlm-lifecycle-policy";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    DlmLifecyclePolicy.generateConfigForImport(
+      this,
+      "example",
+      "policy-abcdef12345678901"
+    );
   }
 }
 
@@ -423,4 +433,4 @@ Using `terraform import`, import DLM lifecycle policies using their policy ID. F
 % terraform import aws_dlm_lifecycle_policy.example policy-abcdef12345678901
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-cd52275658ea26bb97d5ff6b8e5c283dfc879cf7239a8546704deb3cc7ac57ec -->
+<!-- cache-key: cdktf-0.20.1 input-cd52275658ea26bb97d5ff6b8e5c283dfc879cf7239a8546704deb3cc7ac57ec -->

@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAPIGatewayV2API_basicWebSocket(t *testing.T) {
@@ -28,7 +29,7 @@ func TestAccAPIGatewayV2API_basicWebSocket(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAPIDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -67,7 +68,7 @@ func TestAccAPIGatewayV2API_basicHTTP(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAPIDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -106,7 +107,7 @@ func TestAccAPIGatewayV2API_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAPIDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -131,7 +132,7 @@ func TestAccAPIGatewayV2API_allAttributesWebSocket(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAPIDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -214,7 +215,7 @@ func TestAccAPIGatewayV2API_allAttributesHTTP(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAPIDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -296,7 +297,7 @@ func TestAccAPIGatewayV2API_openAPI(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAPIDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -346,7 +347,7 @@ func TestAccAPIGatewayV2API_OpenAPI_withTags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAPIDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -387,7 +388,7 @@ func TestAccAPIGatewayV2API_OpenAPI_withCors(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAPIDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -447,7 +448,7 @@ func TestAccAPIGatewayV2API_OpenAPI_withMoreFields(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAPIDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -505,7 +506,7 @@ func TestAccAPIGatewayV2API_OpenAPI_failOnWarnings(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAPIDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -591,7 +592,7 @@ func TestAccAPIGatewayV2API_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAPIDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -645,7 +646,7 @@ func TestAccAPIGatewayV2API_cors(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAPIDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -737,7 +738,7 @@ func TestAccAPIGatewayV2API_quickCreate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAPIDestroy(ctx),
 		Steps: []resource.TestStep{

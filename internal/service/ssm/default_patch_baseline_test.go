@@ -37,7 +37,7 @@ func testAccSSMDefaultPatchBaseline_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDefaultPatchBaselineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -77,7 +77,7 @@ func testAccSSMDefaultPatchBaseline_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDefaultPatchBaselineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -105,7 +105,7 @@ func testAccSSMDefaultPatchBaseline_patchBaselineARN(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDefaultPatchBaselineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -146,7 +146,7 @@ func testAccSSMDefaultPatchBaseline_otherOperatingSystem(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDefaultPatchBaselineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -184,7 +184,7 @@ func testAccSSMDefaultPatchBaseline_wrongOperatingSystem(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDefaultPatchBaselineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -207,7 +207,7 @@ func testAccSSMDefaultPatchBaseline_systemDefault(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDefaultPatchBaselineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -249,7 +249,7 @@ func testAccSSMDefaultPatchBaseline_update(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDefaultPatchBaselineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -301,7 +301,7 @@ func testAccSSMDefaultPatchBaseline_multiRegion(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.SSMEndpointID)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
 		CheckDestroy:             testAccCheckDefaultPatchBaselineDestroy(ctx),
 		Steps: []resource.TestStep{

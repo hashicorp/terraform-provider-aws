@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDSLogSubscription_basic(t *testing.T) {
@@ -27,7 +28,7 @@ func TestAccDSLogSubscription_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckDirectoryService(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, directoryservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLogSubscriptionDestroy(ctx),
 		Steps: []resource.TestStep{

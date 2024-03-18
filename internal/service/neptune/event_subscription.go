@@ -131,13 +131,13 @@ func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData
 	output, err := conn.CreateEventSubscriptionWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Neptune Event Subscription (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Neptune Event Subscription (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.EventSubscription.CustSubscriptionId))
 
 	if _, err := waitEventSubscriptionCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for Neptune Event Subscription (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Neptune Event Subscription (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceEventSubscriptionRead(ctx, d, meta)...)
@@ -152,11 +152,11 @@ func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Neptune Event Subscription (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Neptune Event Subscription (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Neptune Event Subscription (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", output.EventSubscriptionArn)
@@ -201,11 +201,11 @@ func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData
 		_, err := conn.ModifyEventSubscriptionWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating Neptune Event Subscription (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Neptune Event Subscription (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitEventSubscriptionUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for Neptune Event Subscription (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for Neptune Event Subscription (%s) update: %s", d.Id(), err)
 		}
 	}
 
@@ -231,7 +231,7 @@ func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData
 				})
 
 				if err != nil {
-					return diag.Errorf("removing Neptune Event Subscription (%s) source identifier: %s", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "removing Neptune Event Subscription (%s) source identifier: %s", d.Id(), err)
 				}
 			}
 		}
@@ -244,7 +244,7 @@ func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData
 				})
 
 				if err != nil {
-					return diag.Errorf("adding Neptune Event Subscription (%s) source identifier: %s", d.Id(), err)
+					return sdkdiag.AppendErrorf(diags, "adding Neptune Event Subscription (%s) source identifier: %s", d.Id(), err)
 				}
 			}
 		}
@@ -271,7 +271,7 @@ func resourceEventSubscriptionDelete(ctx context.Context, d *schema.ResourceData
 	}
 
 	if _, err := waitEventSubscriptionDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for Neptune Event Subscription (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Neptune Event Subscription (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
@@ -356,8 +356,8 @@ func statusEventSubscription(ctx context.Context, conn *neptune.Neptune, name st
 
 func waitEventSubscriptionCreated(ctx context.Context, conn *neptune.Neptune, name string, timeout time.Duration) (*neptune.EventSubscription, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{"creating"},
-		Target:     []string{"active"},
+		Pending:    []string{eventSubscriptionStatusCreating},
+		Target:     []string{eventSubscriptionStatusActive},
 		Refresh:    statusEventSubscription(ctx, conn, name),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
@@ -375,8 +375,8 @@ func waitEventSubscriptionCreated(ctx context.Context, conn *neptune.Neptune, na
 
 func waitEventSubscriptionUpdated(ctx context.Context, conn *neptune.Neptune, name string, timeout time.Duration) (*neptune.EventSubscription, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{"modifying"},
-		Target:     []string{"active"},
+		Pending:    []string{eventSubscriptionStatusModifying},
+		Target:     []string{eventSubscriptionStatusActive},
 		Refresh:    statusEventSubscription(ctx, conn, name),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
@@ -394,7 +394,7 @@ func waitEventSubscriptionUpdated(ctx context.Context, conn *neptune.Neptune, na
 
 func waitEventSubscriptionDeleted(ctx context.Context, conn *neptune.Neptune, name string, timeout time.Duration) (*neptune.EventSubscription, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{"deleting"},
+		Pending:    []string{eventSubscriptionStatusDeleting},
 		Target:     []string{},
 		Refresh:    statusEventSubscription(ctx, conn, name),
 		Timeout:    timeout,

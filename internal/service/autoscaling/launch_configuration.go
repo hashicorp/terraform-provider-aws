@@ -414,8 +414,8 @@ func resourceLaunchConfigurationCreate(ctx context.Context, d *schema.ResourceDa
 			return autoscalingconn.CreateLaunchConfigurationWithContext(ctx, &input)
 		},
 		func(err error) (bool, error) {
-			if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "Invalid IamInstanceProfile") ||
-				tfawserr.ErrMessageContains(err, ErrCodeValidationError, "You are not authorized to perform this operation") {
+			if tfawserr.ErrMessageContains(err, errCodeValidationError, "Invalid IamInstanceProfile") ||
+				tfawserr.ErrMessageContains(err, errCodeValidationError, "You are not authorized to perform this operation") {
 				return true, err
 			}
 
@@ -531,7 +531,7 @@ func resourceLaunchConfigurationDelete(ctx context.Context, d *schema.ResourceDa
 		},
 		autoscaling.ErrCodeResourceInUseFault)
 
-	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
+	if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
 		return diags
 	}
 

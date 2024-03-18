@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/cognitoidentity"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentity/types"
 )
 
 func TestValidIdentityPoolName(t *testing.T) {
@@ -159,22 +159,22 @@ func TestValidRoleMappingsAmbiguousRoleResolutionAgainstType(t *testing.T) {
 	}{
 		{
 			AmbiguousRoleResolution: nil,
-			Type:                    cognitoidentity.RoleMappingTypeToken,
+			Type:                    string(awstypes.RoleMappingTypeToken),
 			ErrCount:                1,
 		},
 		{
 			AmbiguousRoleResolution: "foo",
-			Type:                    cognitoidentity.RoleMappingTypeToken,
+			Type:                    string(awstypes.RoleMappingTypeToken),
 			ErrCount:                0, // 0 as it should be defined, the value isn't validated here
 		},
 		{
-			AmbiguousRoleResolution: cognitoidentity.AmbiguousRoleResolutionTypeAuthenticatedRole,
-			Type:                    cognitoidentity.RoleMappingTypeToken,
+			AmbiguousRoleResolution: awstypes.AmbiguousRoleResolutionTypeAuthenticatedRole,
+			Type:                    string(awstypes.RoleMappingTypeToken),
 			ErrCount:                0,
 		},
 		{
-			AmbiguousRoleResolution: cognitoidentity.AmbiguousRoleResolutionTypeDeny,
-			Type:                    cognitoidentity.RoleMappingTypeToken,
+			AmbiguousRoleResolution: awstypes.AmbiguousRoleResolutionTypeDeny,
+			Type:                    string(awstypes.RoleMappingTypeToken),
 			ErrCount:                0,
 		},
 	}
@@ -204,7 +204,7 @@ func TestValidRoleMappingsRulesConfiguration(t *testing.T) {
 	}{
 		{
 			MappingRule: nil,
-			Type:        cognitoidentity.RoleMappingTypeRules,
+			Type:        string(awstypes.RoleMappingTypeRules),
 			ErrCount:    1,
 		},
 		{
@@ -216,7 +216,7 @@ func TestValidRoleMappingsRulesConfiguration(t *testing.T) {
 					"Value":     "paid",
 				},
 			},
-			Type:     cognitoidentity.RoleMappingTypeRules,
+			Type:     string(awstypes.RoleMappingTypeRules),
 			ErrCount: 0,
 		},
 		{
@@ -228,12 +228,12 @@ func TestValidRoleMappingsRulesConfiguration(t *testing.T) {
 					"Value":     "paid",
 				},
 			},
-			Type:     cognitoidentity.RoleMappingTypeToken,
+			Type:     string(awstypes.RoleMappingTypeToken),
 			ErrCount: 1,
 		},
 		{
 			MappingRule: nil,
-			Type:        cognitoidentity.RoleMappingTypeToken,
+			Type:        string(awstypes.RoleMappingTypeToken),
 			ErrCount:    0,
 		},
 	}

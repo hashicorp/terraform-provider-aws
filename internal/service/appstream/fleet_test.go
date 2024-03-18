@@ -17,10 +17,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfappstream "github.com/hashicorp/terraform-provider-aws/internal/service/appstream"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(appstream.EndpointsID, testAccErrorCheckSkip)
+	acctest.RegisterServiceErrorCheckFunc(names.AppStreamServiceID, testAccErrorCheckSkip)
 }
 
 // testAccErrorCheckSkip skips AppStream tests that have error messages indicating unsupported features
@@ -45,7 +46,7 @@ func TestAccAppStreamFleet_basic(t *testing.T) {
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
-		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_basic(rName, instanceType),
@@ -81,7 +82,7 @@ func TestAccAppStreamFleet_disappears(t *testing.T) {
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
-		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_basic(rName, instanceType),
@@ -113,7 +114,7 @@ func TestAccAppStreamFleet_completeWithStop(t *testing.T) {
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
-		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_complete(rName, description, fleetType, instanceType),
@@ -166,7 +167,7 @@ func TestAccAppStreamFleet_completeWithoutStop(t *testing.T) {
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
-		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_completeNoStopping(rName, description, fleetType, instanceType, displayName),
@@ -220,7 +221,7 @@ func TestAccAppStreamFleet_withTags(t *testing.T) {
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
-		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_tags(rName, description, fleetType, instanceType, displayName),
@@ -275,7 +276,7 @@ func TestAccAppStreamFleet_emptyDomainJoin(t *testing.T) {
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
-		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_emptyDomainJoin(rName, instanceType, `""`),

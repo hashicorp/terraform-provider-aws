@@ -70,7 +70,7 @@ The arguments of this data source act as filters for querying the available ONTA
 The following arguments are optional:
 
 * `filter` - (Optional) Configuration block. Detailed below.
-* `id` - (Optional) Identifier of the storage virtual machine (e.g. `svm12345678`).
+* `id` - (Optional) Identifier of the storage virtual machine (e.g. `svm-12345678`).
 
 ### filter
 
@@ -89,7 +89,7 @@ In addition to all arguments above, the following attributes are exported:
 * `activeDirectoryConfiguration` - The Microsoft Active Directory configuration to which the SVM is joined, if applicable. See [Active Directory Configuration](#active-directory-configuration) below.
 * `creationTime` - The time that the SVM was created.
 * `endpoints` - The endpoints that are used to access data or to manage the SVM using the NetApp ONTAP CLI, REST API, or NetApp CloudManager. They are the Iscsi, Management, Nfs, and Smb endpoints. See [SVM Endpoints](#svm-endpoints) below.
-* `fileSystemId` - Identifier of the file system (e.g. `fs12345678`).
+* `fileSystemId` - Identifier of the file system (e.g. `fs-12345678`).
 * `id` - The SVM's system generated unique ID.
 * `lifecycleStatus` - The SVM's lifecycle status.
 * `lifecycleTransitionReason` - Describes why the SVM lifecycle state changed. See [Lifecycle Transition Reason](#lifecycle-transition-reason) below.
@@ -118,14 +118,14 @@ The following arguments are supported for `activeDirectoryConfiguration` configu
 
 ### SVM Endpoints
 
-* `iscsi` - An endpoint for connecting using the Internet Small Computer Systems Interface (iSCSI) protocol. See [SVM Endpoint](#svm-endpoint) below.
+* `Iscsi` - An endpoint for connecting using the Internet Small Computer Systems Interface (iSCSI) protocol. See [SVM Endpoint](#svm-endpoint) below.
 * `management` - An endpoint for managing SVMs using the NetApp ONTAP CLI, NetApp ONTAP API, or NetApp CloudManager. See [SVM Endpoint](#svm-endpoint) below.
 * `nfs` - An endpoint for connecting using the Network File System (NFS) protocol. See [SVM Endpoint](#svm-endpoint) below.
 * `smb` - An endpoint for connecting using the Server Message Block (SMB) protocol. See [SVM Endpoint](#svm-endpoint) below.
 
 ### SVM Endpoint
 
-* `dnsName` - The file system's DNS name. You can mount your file system using its DNS name.
-* `ipAddresses` - The SVM endpoint's IP addresses.
+* `DNSName` - The file system's DNS name. You can mount your file system using its DNS name.
+* `IpAddresses` - The SVM endpoint's IP addresses.
 
-<!-- cache-key: cdktf-0.18.0 input-f6cea127fecc9fef03f1751e79c3dcabeee15d54d55425580842b9e868758d48 -->
+<!-- cache-key: cdktf-0.20.1 input-f6cea127fecc9fef03f1751e79c3dcabeee15d54d55425580842b9e868758d48 -->

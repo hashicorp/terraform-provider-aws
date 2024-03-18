@@ -30,9 +30,9 @@ func TestAccIdentityStoreGroup_basic(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
-			testAccPreCheck(ctx, t)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -64,10 +64,9 @@ func TestAccIdentityStoreGroup_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
-			testAccPreCheckSSOAdminInstances(ctx, t)
-			testAccPreCheck(ctx, t)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -94,10 +93,9 @@ func TestAccIdentityStoreGroup_descriptionChange(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.IdentityStoreEndpointID)
-			testAccPreCheckSSOAdminInstances(ctx, t)
-			testAccPreCheck(ctx, t)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{

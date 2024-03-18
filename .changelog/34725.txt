@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_appconfig_configuration_profile: Add `kms_key_identifier` attribute
+```
+
+```release-note:enhancement
+data-source/aws_appconfig_configuration_profile: Add `kms_key_identifier` attribute
+```

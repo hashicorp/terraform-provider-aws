@@ -47,7 +47,7 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - EKS Cluster name and EKS Node Group name separated by a colon (`:`).
 * `amiType` - Type of Amazon Machine Image (AMI) associated with the EKS Node Group.
 * `arn` - ARN of the EKS Node Group.
-* `capacityType` - Type of capacity associated with the EKS Node Group. Valid values: `onDemand`, `spot`.
+* `capacityType` - Type of capacity associated with the EKS Node Group. Valid values: `ON_DEMAND`, `SPOT`.
 * `diskSize` - Disk size in GiB for worker nodes.
 * `instanceTypes` - Set of instance types associated with the EKS Node Group.
 * `labels` - Key-value map of Kubernetes labels. Only labels that are applied with the EKS API are managed by this argument. Other Kubernetes labels applied to the EKS Node Group will not be managed.
@@ -63,7 +63,7 @@ This data source exports the following attributes in addition to the arguments a
 * `resources` - List of objects containing information about underlying resources.
     * `autoscalingGroups` - List of objects containing information about AutoScaling Groups.
         * `name` - Name of the AutoScaling Group.
-    * `remoteAccessSecurityGroupId` - Identifier of the remote access EC2 Security Group.
+    * `remote_access_security_group_id` - Identifier of the remote access EC2 Security Group.
 * `scalingConfig` - Configuration block with scaling settings.
     * `desiredSize` - Desired number of worker nodes.
     * `maxSize` - Maximum number of worker nodes.
@@ -77,4 +77,4 @@ This data source exports the following attributes in addition to the arguments a
 * `tags` - Key-value map of resource tags.
 * `version` – Kubernetes version.
 
-<!-- cache-key: cdktf-0.18.0 input-455f97b7456c88e1697131f0d9d93c38151b37400a9cfe93bcaa3f2bceee01a2 -->
+<!-- cache-key: cdktf-0.20.1 input-455f97b7456c88e1697131f0d9d93c38151b37400a9cfe93bcaa3f2bceee01a2 -->
