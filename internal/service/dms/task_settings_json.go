@@ -203,13 +203,13 @@ func normalizeTaskSettings(apiObject string) string {
 	var jsonMap map[string]interface{}
 
 	if err := json.Unmarshal([]byte(apiObject), &jsonMap); err != nil {
-		log.Printf("[WARN] failed to unmarshal task settings JSON: %v", err)
+		log.Printf("[DEBUG] failed to unmarshal task settings JSON: %v", err)
 		return apiObject
 	}
 
 	jsonMap = checkdefaultvalues(defaultValues, jsonMap)
 	if b, err := json.Marshal(&jsonMap); err != nil {
-		log.Printf("[WARN] failed to marshal task settings JSON: %v", err)
+		log.Printf("[DEBUG] failed to marshal task settings JSON: %v", err)
 		return apiObject
 	} else {
 		return string(tfjson.RemoveEmptyFields(b))
