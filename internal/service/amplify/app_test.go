@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccApp_basic(t *testing.T) {
@@ -31,7 +32,7 @@ func testAccApp_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AmplifyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAppDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -45,6 +46,7 @@ func testAccApp_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "auto_branch_creation_patterns.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "basic_auth_credentials", ""),
 					resource.TestCheckResourceAttr(resourceName, "build_spec", ""),
+					resource.TestCheckResourceAttr(resourceName, "custom_headers", ""),
 					resource.TestCheckResourceAttr(resourceName, "custom_rule.#", "0"),
 					resource.TestMatchResourceAttr(resourceName, "default_domain", regexache.MustCompile(`\.amplifyapp\.com$`)),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
@@ -79,7 +81,7 @@ func testAccApp_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AmplifyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAppDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -103,7 +105,7 @@ func testAccApp_tags(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AmplifyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAppDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -151,7 +153,7 @@ func testAccApp_AutoBranchCreationConfig(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AmplifyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAppDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -248,7 +250,7 @@ func testAccApp_BasicAuthCredentials(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AmplifyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAppDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -294,7 +296,7 @@ func testAccApp_BuildSpec(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AmplifyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAppDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -337,7 +339,7 @@ func testAccApp_CustomRules(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AmplifyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAppDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -388,7 +390,7 @@ func testAccApp_Description(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AmplifyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAppDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -432,7 +434,7 @@ func testAccApp_EnvironmentVariables(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AmplifyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAppDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -479,7 +481,7 @@ func testAccApp_IAMServiceRole(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AmplifyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAppDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -523,7 +525,7 @@ func testAccApp_Name(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AmplifyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAppDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -570,7 +572,7 @@ func testAccApp_Repository(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AmplifyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAppDestroy(ctx),
 		Steps: []resource.TestStep{

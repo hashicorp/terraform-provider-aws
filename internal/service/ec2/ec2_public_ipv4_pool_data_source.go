@@ -94,7 +94,7 @@ func dataSourcePublicIPv4PoolRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("total_address_count", pool.TotalAddressCount)
 	d.Set("total_available_address_count", pool.TotalAvailableAddressCount)
 
-	return nil
+	return diags
 }
 
 func flattenPublicIPv4PoolRange(apiObject *ec2.PublicIpv4PoolRange) map[string]interface{} {

@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package opsworks
 
 import (
@@ -20,11 +17,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_opsworks_stack", &resource.Sweeper{
 		Name: "aws_opsworks_stack",
 		F:    sweepStacks,
@@ -83,7 +81,7 @@ func sweepApplication(region string) error {
 	output, err := conn.DescribeStacksWithContext(ctx, &opsworks.DescribeStacksInput{})
 
 	if err != nil {
-		if sweep.SkipSweepError(err) {
+		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping OpsWorks Application sweep for %s: %s", region, err)
 			return nil
 		}
@@ -135,7 +133,7 @@ func sweepInstance(region string) error {
 	output, err := conn.DescribeStacksWithContext(ctx, &opsworks.DescribeStacksInput{})
 
 	if err != nil {
-		if sweep.SkipSweepError(err) {
+		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping OpsWorks Instance sweep for %s: %s", region, err)
 			return nil
 		}
@@ -188,7 +186,7 @@ func sweepRDSDBInstance(region string) error {
 	output, err := conn.DescribeStacksWithContext(ctx, &opsworks.DescribeStacksInput{})
 
 	if err != nil {
-		if sweep.SkipSweepError(err) {
+		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping OpsWorks RDS DB Instance sweep for %s: %s", region, err)
 			return nil
 		}
@@ -241,7 +239,7 @@ func sweepStacks(region string) error {
 	output, err := conn.DescribeStacksWithContext(ctx, &opsworks.DescribeStacksInput{})
 
 	if err != nil {
-		if sweep.SkipSweepError(err) {
+		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping OpsWorks Stack sweep for %s: %s", region, err)
 			return nil
 		}
@@ -284,7 +282,7 @@ func sweepLayers(region string) error {
 	output, err := conn.DescribeStacksWithContext(ctx, &opsworks.DescribeStacksInput{})
 
 	if err != nil {
-		if sweep.SkipSweepError(err) {
+		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping OpsWorks Layer sweep for %s: %s", region, err)
 			return nil
 		}
@@ -346,7 +344,7 @@ func sweepUserProfiles(region string) error {
 	output, err := conn.DescribeUserProfilesWithContext(ctx, &opsworks.DescribeUserProfilesInput{})
 
 	if err != nil {
-		if sweep.SkipSweepError(err) {
+		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping OpsWorks User Profile sweep for %s: %s", region, err)
 			return nil
 		}

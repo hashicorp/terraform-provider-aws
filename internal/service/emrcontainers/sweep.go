@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package emrcontainers
 
 import (
@@ -14,9 +11,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/emrcontainers"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_emrcontainers_virtual_cluster", &resource.Sweeper{
 		Name: "aws_emrcontainers_virtual_cluster",
 		F:    sweepVirtualClusters,
@@ -58,7 +56,7 @@ func sweepVirtualClusters(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EMR Containers Virtual Cluster sweep for %s: %s", region, err)
 		return nil
 	}
@@ -102,7 +100,7 @@ func sweepJobTemplates(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EMR Containers Job Template sweep for %s: %s", region, err)
 		return nil
 	}

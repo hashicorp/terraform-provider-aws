@@ -232,11 +232,11 @@ func resourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("public_ipv4_pool", address.PublicIpv4Pool)
 	d.Set("private_ip", address.PrivateIpAddress)
 	if v := aws.StringValue(address.PrivateIpAddress); v != "" {
-		d.Set("private_dns", PrivateDNSNameForIP(meta.(*conns.AWSClient), v))
+		d.Set("private_dns", PrivateDNSNameForIP(ctx, meta.(*conns.AWSClient), v))
 	}
 	d.Set("public_ip", address.PublicIp)
 	if v := aws.StringValue(address.PublicIp); v != "" {
-		d.Set("public_dns", PublicDNSNameForIP(meta.(*conns.AWSClient), v))
+		d.Set("public_dns", PublicDNSNameForIP(ctx, meta.(*conns.AWSClient), v))
 	}
 	d.Set("vpc", aws.StringValue(address.Domain) == ec2.DomainTypeVpc)
 
@@ -393,10 +393,10 @@ func ConvertIPToDashIP(ip string) string {
 	return strings.Replace(ip, ".", "-", -1)
 }
 
-func PrivateDNSNameForIP(client *conns.AWSClient, ip string) string {
+func PrivateDNSNameForIP(ctx context.Context, client *conns.AWSClient, ip string) string {
 	return fmt.Sprintf("ip-%s.%s", ConvertIPToDashIP(ip), RegionalPrivateDNSSuffix(client.Region))
 }
 
-func PublicDNSNameForIP(client *conns.AWSClient, ip string) string {
-	return client.PartitionHostname(fmt.Sprintf("ec2-%s.%s", ConvertIPToDashIP(ip), RegionalPublicDNSSuffix(client.Region)))
+func PublicDNSNameForIP(ctx context.Context, client *conns.AWSClient, ip string) string {
+	return client.PartitionHostname(ctx, fmt.Sprintf("ec2-%s.%s", ConvertIPToDashIP(ip), RegionalPublicDNSSuffix(client.Region)))
 }

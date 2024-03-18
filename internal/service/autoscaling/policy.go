@@ -598,7 +598,7 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		PolicyName:           aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
+	if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
 		return diags
 	}
 
@@ -648,7 +648,7 @@ func FindScalingPolicy(ctx context.Context, conn *autoscaling.AutoScaling, asgNa
 		return !lastPage
 	})
 
-	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
+	if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

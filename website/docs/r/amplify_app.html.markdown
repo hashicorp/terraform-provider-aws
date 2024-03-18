@@ -136,6 +136,30 @@ resource "aws_amplify_app" "example" {
 }
 ```
 
+### Custom Headers
+
+```terraform
+resource "aws_amplify_app" "example" {
+  name = "example"
+
+  custom_headers = <<-EOT
+    customHeaders:
+      - pattern: '**'
+        headers:
+          - key: 'Strict-Transport-Security'
+            value: 'max-age=31536000; includeSubDomains'
+          - key: 'X-Frame-Options'
+            value: 'SAMEORIGIN'
+          - key: 'X-XSS-Protection'
+            value: '1; mode=block'
+          - key: 'X-Content-Type-Options'
+            value: 'nosniff'
+          - key: 'Content-Security-Policy'
+            value: "default-src 'self'"
+  EOT
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
@@ -146,6 +170,7 @@ This resource supports the following arguments:
 * `auto_branch_creation_patterns` - (Optional) Automated branch creation glob patterns for an Amplify app.
 * `basic_auth_credentials` - (Optional) Credentials for basic authorization for an Amplify app.
 * `build_spec` - (Optional) The [build specification](https://docs.aws.amazon.com/amplify/latest/userguide/build-settings.html) (build spec) for an Amplify app.
+* `custom_headers` - (Optional) The [custom HTTP headers](https://docs.aws.amazon.com/amplify/latest/userguide/custom-headers.html) for an Amplify app.
 * `custom_rule` - (Optional) Custom rewrite and redirect rules for an Amplify app. A `custom_rule` block is documented below.
 * `description` - (Optional) Description for an Amplify app.
 * `enable_auto_branch_creation` - (Optional) Enables automated branch creation for an Amplify app.

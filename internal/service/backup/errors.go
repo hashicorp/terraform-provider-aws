@@ -4,5 +4,6 @@
 package backup
 
 const (
-	errCodeAccessDeniedException = "AccessDeniedException"
+	errCodeAccessDeniedException          = "AccessDeniedException"
+	errCodeInvalidParameterValueException = "InvalidParameterValueException"
 )

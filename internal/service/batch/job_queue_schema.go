@@ -90,16 +90,18 @@ func upgradeJobQueueResourceStateV0toV1(ctx context.Context, req resource.Upgrad
 	if resp.Diagnostics.HasError() {
 		return
 	}
+	ceo := fwtypes.NewListNestedObjectValueOfNull[computeEnvironmentOrder](ctx)
 
 	jobQueueDataV2 := resourceJobQueueData{
-		ComputeEnvironments: jobQueueDataV0.ComputeEnvironments,
-		ID:                  jobQueueDataV0.ID,
-		Name:                jobQueueDataV0.Name,
-		Priority:            jobQueueDataV0.Priority,
-		State:               jobQueueDataV0.State,
-		Tags:                jobQueueDataV0.Tags,
-		TagsAll:             jobQueueDataV0.TagsAll,
-		Timeouts:            jobQueueDataV0.Timeouts,
+		ComputeEnvironments:     jobQueueDataV0.ComputeEnvironments,
+		ComputeEnvironmentOrder: ceo,
+		ID:                      jobQueueDataV0.ID,
+		JobQueueName:            jobQueueDataV0.Name,
+		Priority:                jobQueueDataV0.Priority,
+		State:                   jobQueueDataV0.State,
+		Tags:                    jobQueueDataV0.Tags,
+		TagsAll:                 jobQueueDataV0.TagsAll,
+		Timeouts:                jobQueueDataV0.Timeouts,
 	}
 
 	if jobQueueDataV0.SchedulingPolicyARN.ValueString() == "" {

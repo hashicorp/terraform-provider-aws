@@ -5,6 +5,7 @@ package appautoscaling
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strconv"
@@ -28,8 +29,8 @@ const (
 	ResNamePolicy = "Policy"
 )
 
-// @SDKResource("aws_appautoscaling_policy")
-func ResourcePolicy() *schema.Resource {
+// @SDKResource("aws_appautoscaling_policy", name="Scaling Policy")
+func resourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePolicyCreate,
 		ReadWithoutTimeout:   resourcePolicyRead,
@@ -334,7 +335,7 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		resp, err = conn.PutScalingPolicyWithContext(ctx, &params)
 	}
 	if err != nil {
-		return create.DiagError(names.AppAutoScaling, create.ErrActionCreating, ResNamePolicy, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.AppAutoScaling, create.ErrActionCreating, ResNamePolicy, d.Get("name").(string), err)
 	}
 
 	d.Set("arn", resp.PolicyARN)
@@ -366,7 +367,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 		p, err = getPolicy(ctx, d, meta)
 	}
 	if err != nil {
-		return create.DiagError(names.AppAutoScaling, create.ErrActionReading, ResNamePolicy, d.Id(), err)
+		return create.AppendDiagError(diags, names.AppAutoScaling, create.ErrActionReading, ResNamePolicy, d.Id(), err)
 	}
 
 	if p == nil && !d.IsNewResource() {
@@ -390,10 +391,10 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("service_namespace", p.ServiceNamespace)
 
 	if err := d.Set("step_scaling_policy_configuration", flattenStepScalingPolicyConfiguration(p.StepScalingPolicyConfiguration)); err != nil {
-		return create.DiagSettingError(names.AppAutoScaling, ResNamePolicy, d.Id(), "step_scaling_policy_configuration", err)
+		return create.AppendDiagSettingError(diags, names.AppAutoScaling, ResNamePolicy, d.Id(), "step_scaling_policy_configuration", err)
 	}
 	if err := d.Set("target_tracking_scaling_policy_configuration", flattenTargetTrackingScalingPolicyConfiguration(p.TargetTrackingScalingPolicyConfiguration)); err != nil {
-		return create.DiagSettingError(names.AppAutoScaling, ResNamePolicy, d.Id(), "target_tracking_scaling_policy_configuration", err)
+		return create.AppendDiagSettingError(diags, names.AppAutoScaling, ResNamePolicy, d.Id(), "target_tracking_scaling_policy_configuration", err)
 	}
 
 	return diags
@@ -422,7 +423,7 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		_, err = conn.PutScalingPolicyWithContext(ctx, &params)
 	}
 	if err != nil {
-		return create.DiagError(names.AppAutoScaling, create.ErrActionUpdating, ResNamePolicy, d.Id(), err)
+		return create.AppendDiagError(diags, names.AppAutoScaling, create.ErrActionUpdating, ResNamePolicy, d.Id(), err)
 	}
 
 	return append(diags, resourcePolicyRead(ctx, d, meta)...)
@@ -433,7 +434,7 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).AppAutoScalingConn(ctx)
 	p, err := getPolicy(ctx, d, meta)
 	if err != nil {
-		return create.DiagError(names.AppAutoScaling, create.ErrActionDeleting, ResNamePolicy, d.Id(), err)
+		return create.AppendDiagError(diags, names.AppAutoScaling, create.ErrActionDeleting, ResNamePolicy, d.Id(), err)
 	}
 	if p == nil {
 		return diags
@@ -468,7 +469,7 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if err != nil {
-		return create.DiagError(names.AppAutoScaling, create.ErrActionDeleting, ResNamePolicy, d.Id(), err)
+		return create.AppendDiagError(diags, names.AppAutoScaling, create.ErrActionDeleting, ResNamePolicy, d.Id(), err)
 	}
 
 	return diags
@@ -549,11 +550,11 @@ func expandStepAdjustments(configured []interface{}) ([]*applicationautoscaling.
 			case string:
 				f, err := strconv.ParseFloat(bound, 64)
 				if err != nil {
-					return nil, fmt.Errorf("metric_interval_lower_bound must be a float value represented as a string")
+					return nil, errors.New("metric_interval_lower_bound must be a float value represented as a string")
 				}
 				a.MetricIntervalLowerBound = aws.Float64(f)
 			default:
-				return nil, fmt.Errorf("metric_interval_lower_bound isn't a string")
+				return nil, errors.New("metric_interval_lower_bound isn't a string")
 			}
 		}
 		if data["metric_interval_upper_bound"] != "" {
@@ -562,11 +563,11 @@ func expandStepAdjustments(configured []interface{}) ([]*applicationautoscaling.
 			case string:
 				f, err := strconv.ParseFloat(bound, 64)
 				if err != nil {
-					return nil, fmt.Errorf("metric_interval_upper_bound must be a float value represented as a string")
+					return nil, errors.New("metric_interval_upper_bound must be a float value represented as a string")
 				}
 				a.MetricIntervalUpperBound = aws.Float64(f)
 			default:
-				return nil, fmt.Errorf("metric_interval_upper_bound isn't a string")
+				return nil, errors.New("metric_interval_upper_bound isn't a string")
 			}
 		}
 		adjustments = append(adjustments, a)

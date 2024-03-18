@@ -10,6 +10,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -42,6 +43,11 @@ func ResourceVerifiedAccessInstance() *schema.Resource {
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
+			},
+			"fips_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				ForceNew: true,
 			},
 			"last_updated_time": {
 				Type:     schema.TypeString,
@@ -96,6 +102,10 @@ func resourceVerifiedAccessInstanceCreate(ctx context.Context, d *schema.Resourc
 		input.Description = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("fips_enabled"); ok {
+		input.FIPSEnabled = aws.Bool(v.(bool))
+	}
+
 	output, err := conn.CreateVerifiedAccessInstance(ctx, input)
 
 	if err != nil {
@@ -123,13 +133,14 @@ func resourceVerifiedAccessInstanceRead(ctx context.Context, d *schema.ResourceD
 		return sdkdiag.AppendErrorf(diags, "reading Verified Access Instance (%s): %s", d.Id(), err)
 	}
 
-	d.Set("description", output.Description)
 	d.Set("creation_time", output.CreationTime)
+	d.Set("description", output.Description)
+	d.Set("fips_enabled", output.FipsEnabled)
 	d.Set("last_updated_time", output.LastUpdatedTime)
 
 	if v := output.VerifiedAccessTrustProviders; v != nil {
 		if err := d.Set("verified_access_trust_providers", flattenVerifiedAccessTrustProviders(v)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "setting verified access trust providers: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting verified_access_trust_providers: %s", err)
 		}
 	} else {
 		d.Set("verified_access_trust_providers", nil)
@@ -150,7 +161,7 @@ func resourceVerifiedAccessInstanceUpdate(ctx context.Context, d *schema.Resourc
 			VerifiedAccessInstanceId: aws.String(d.Id()),
 		}
 
-		if d.HasChanges("description") {
+		if d.HasChange("description") {
 			input.Description = aws.String(d.Get("description").(string))
 		}
 
@@ -173,6 +184,10 @@ func resourceVerifiedAccessInstanceDelete(ctx context.Context, d *schema.Resourc
 		ClientToken:              aws.String(id.UniqueId()),
 		VerifiedAccessInstanceId: aws.String(d.Id()),
 	})
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidVerifiedAccessInstanceIdNotFound) {
+		return diags
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Verified Access Instance (%s): %s", d.Id(), err)

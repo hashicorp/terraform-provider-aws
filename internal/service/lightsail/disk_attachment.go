@@ -52,6 +52,8 @@ func ResourceDiskAttachment() *schema.Resource {
 }
 
 func resourceDiskAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	in := lightsail.AttachDiskInput{
@@ -63,7 +65,7 @@ func resourceDiskAttachmentCreate(ctx context.Context, d *schema.ResourceData, m
 	out, err := conn.AttachDisk(ctx, &in)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, string(types.OperationTypeAttachDisk), ResDiskAttachment, d.Get("disk_name").(string), err)
+		return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeAttachDisk), ResDiskAttachment, d.Get("disk_name").(string), err)
 	}
 
 	diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeAttachDisk, ResDiskAttachment, d.Get("disk_name").(string))
@@ -80,10 +82,12 @@ func resourceDiskAttachmentCreate(ctx context.Context, d *schema.ResourceData, m
 
 	d.SetId(strings.Join(vars, ","))
 
-	return resourceDiskAttachmentRead(ctx, d, meta)
+	return append(diags, resourceDiskAttachmentRead(ctx, d, meta)...)
 }
 
 func resourceDiskAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	out, err := FindDiskAttachmentById(ctx, conn, d.Id())
@@ -91,21 +95,23 @@ func resourceDiskAttachmentRead(ctx context.Context, d *schema.ResourceData, met
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		create.LogNotFoundRemoveState(names.Lightsail, create.ErrActionReading, ResDiskAttachment, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionReading, ResDiskAttachment, d.Id(), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionReading, ResDiskAttachment, d.Id(), err)
 	}
 
 	d.Set("disk_name", out.Name)
 	d.Set("disk_path", out.Path)
 	d.Set("instance_name", out.AttachedTo)
 
-	return nil
+	return diags
 }
 
 func resourceDiskAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	id_parts := strings.SplitN(d.Id(), ",", -1)
@@ -116,7 +122,7 @@ func resourceDiskAttachmentDelete(ctx context.Context, d *schema.ResourceData, m
 	iStateOut, err := waitInstanceState(ctx, conn, &iName)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionReading, ResInstance, iName, errors.New("Error waiting for Instance to enter running or stopped state"))
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionReading, ResInstance, iName, errors.New("Error waiting for Instance to enter running or stopped state"))
 	}
 
 	if aws.ToString(iStateOut.State.Name) == "running" {
@@ -125,7 +131,7 @@ func resourceDiskAttachmentDelete(ctx context.Context, d *schema.ResourceData, m
 		})
 
 		if err != nil {
-			return create.DiagError(names.Lightsail, string(types.OperationTypeStopInstance), ResInstance, iName, err)
+			return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeStopInstance), ResInstance, iName, err)
 		}
 
 		diag := expandOperations(ctx, conn, stopOut.Operations, types.OperationTypeStopInstance, ResInstance, iName)
@@ -140,7 +146,7 @@ func resourceDiskAttachmentDelete(ctx context.Context, d *schema.ResourceData, m
 	})
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, string(types.OperationTypeDetachDisk), ResDiskAttachment, d.Get("disk_name").(string), err)
+		return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeDetachDisk), ResDiskAttachment, d.Get("disk_name").(string), err)
 	}
 
 	diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeDetachDisk, ResDiskAttachment, d.Get("disk_name").(string))
@@ -152,7 +158,7 @@ func resourceDiskAttachmentDelete(ctx context.Context, d *schema.ResourceData, m
 	iStateOut, err = waitInstanceState(ctx, conn, &iName)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionReading, ResInstance, iName, errors.New("Error waiting for Instance to enter running or stopped state"))
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionReading, ResInstance, iName, errors.New("Error waiting for Instance to enter running or stopped state"))
 	}
 
 	if aws.ToString(iStateOut.State.Name) != "running" {
@@ -161,7 +167,7 @@ func resourceDiskAttachmentDelete(ctx context.Context, d *schema.ResourceData, m
 		})
 
 		if err != nil {
-			return create.DiagError(names.Lightsail, string(types.OperationTypeStartInstance), ResInstance, iName, err)
+			return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeStartInstance), ResInstance, iName, err)
 		}
 
 		diag := expandOperations(ctx, conn, startOut.Operations, types.OperationTypeStartInstance, ResInstance, iName)
@@ -171,7 +177,7 @@ func resourceDiskAttachmentDelete(ctx context.Context, d *schema.ResourceData, m
 		}
 	}
 
-	return nil
+	return diags
 }
 
 func FindDiskAttachmentById(ctx context.Context, conn *lightsail.Client, id string) (*types.Disk, error) {

@@ -6,13 +6,14 @@ package ec2_test
 import (
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccClientVPNEndpointDataSource_basic(t *testing.T) {
+func testAccClientVPNEndpointDataSource_basic(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_client_vpn_endpoint.test"
@@ -21,8 +22,11 @@ func testAccClientVPNEndpointDataSource_basic(t *testing.T) {
 	datasource3Name := "data.aws_ec2_client_vpn_endpoint.by_tags"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { testAccPreCheckClientVPNSyncronize(t); acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		PreCheck: func() {
+			testAccPreCheckClientVPNSyncronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClientVPNEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -41,6 +45,7 @@ func testAccClientVPNEndpointDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasource1Name, "dns_servers.#", resourceName, "dns_servers.#"),
 					resource.TestCheckResourceAttrPair(datasource1Name, "security_group_ids.#", resourceName, "security_group_ids.#"),
 					resource.TestCheckResourceAttrPair(datasource1Name, "self_service_portal", resourceName, "self_service_portal"),
+					resource.TestCheckResourceAttrPair(datasource1Name, "self_service_portal_url", resourceName, "self_service_portal_url"),
 					resource.TestCheckResourceAttrPair(datasource1Name, "server_certificate_arn", resourceName, "server_certificate_arn"),
 					resource.TestCheckResourceAttrPair(datasource1Name, "session_timeout_hours", resourceName, "session_timeout_hours"),
 					resource.TestCheckResourceAttrPair(datasource1Name, "split_tunnel", resourceName, "split_tunnel"),
@@ -60,6 +65,7 @@ func testAccClientVPNEndpointDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasource2Name, "dns_name", resourceName, "dns_name"),
 					resource.TestCheckResourceAttrPair(datasource2Name, "dns_servers.#", resourceName, "dns_servers.#"),
 					resource.TestCheckResourceAttrPair(datasource2Name, "security_group_ids.#", resourceName, "security_group_ids.#"),
+					resource.TestCheckResourceAttrPair(datasource2Name, "self_service_portal_url", resourceName, "self_service_portal_url"),
 					resource.TestCheckResourceAttrPair(datasource2Name, "self_service_portal", resourceName, "self_service_portal"),
 					resource.TestCheckResourceAttrPair(datasource2Name, "server_certificate_arn", resourceName, "server_certificate_arn"),
 					resource.TestCheckResourceAttrPair(datasource2Name, "session_timeout_hours", resourceName, "session_timeout_hours"),
@@ -80,6 +86,7 @@ func testAccClientVPNEndpointDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasource3Name, "dns_name", resourceName, "dns_name"),
 					resource.TestCheckResourceAttrPair(datasource3Name, "dns_servers.#", resourceName, "dns_servers.#"),
 					resource.TestCheckResourceAttrPair(datasource3Name, "security_group_ids.#", resourceName, "security_group_ids.#"),
+					resource.TestCheckResourceAttrPair(datasource2Name, "self_service_portal_url", resourceName, "self_service_portal_url"),
 					resource.TestCheckResourceAttrPair(datasource3Name, "self_service_portal", resourceName, "self_service_portal"),
 					resource.TestCheckResourceAttrPair(datasource3Name, "server_certificate_arn", resourceName, "server_certificate_arn"),
 					resource.TestCheckResourceAttrPair(datasource3Name, "session_timeout_hours", resourceName, "session_timeout_hours"),

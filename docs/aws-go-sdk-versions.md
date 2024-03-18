@@ -6,20 +6,18 @@ There are two versions of this API, both of which are considered Generally Avail
 - [AWS SDKs and Tools maintenance policy](https://docs.aws.amazon.com/sdkref/latest/guide/maint-policy.html)
 - [AWS SDKs and Tools version support matrix](https://docs.aws.amazon.com/sdkref/latest/guide/version-support-matrix.html)
 
-While the vast majority of the provider is based on the [AWS SDK for Go v1](https://github.com/aws/aws-sdk-go),
-the provider also allows the use of the [AWS SDK for Go v2](https://github.com/aws/aws-sdk-go-v2).
+Each Terraform provider implementation for an AWS service relies on a service client, which in turn is constructed based on a specific SDK version.
+While the vast majority of the provider is based on the [AWS SDK for Go v1](https://github.com/aws/aws-sdk-go), the provider also allows the use of the [AWS SDK for Go v2](https://github.com/aws/aws-sdk-go-v2).
 
 ## Which SDK Version should I use?
 
-Each Terraform provider implementation for an AWS service relies on a service client which in turn is constructed based on a specific SDK version.
-At present, we are slowly increasing our footprint on SDK v2, but are not actively migrating existing code to use v2.
-The choice of SDK will be as follows:
+At this time **all net-new services are required to use AWS Go SDK v2**.
+Enhancements or bug fixes to existing AWS Go SDK v1 based services do not require migration.
+You can determine the SDK version a given service uses by looking at the `import` section in the service's Go files.
+Where applicable, the contributor guide has been updated to include examples with both AWS Go SDK v1 and v2.
 
-For new services, you should use [AWS SDK for Go v2](https://github.com/aws/aws-sdk-go-v2).
+We are beginning to migrate core services written with v1 onto v2, and adoption will continue to increase over time.
 AWS has a [migration guide](https://aws.github.io/aws-sdk-go-v2/docs/migrating/) that details the differences between the versions of the SDK.
-
-For existing services, use the version of the SDK that service currently uses.
-You can determine this by looking at the `import` section in the service's Go files.
 
 ## What does the SDK handle?
 

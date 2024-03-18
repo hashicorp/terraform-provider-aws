@@ -4,6 +4,7 @@
 package datasync
 
 import (
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datasync"
 )
 
@@ -66,6 +67,15 @@ func expandSMB(l []interface{}) *datasync.FsxProtocolSmb {
 	protocol := &datasync.FsxProtocolSmb{
 		MountOptions: expandSMBMountOptions(m["mount_options"].([]interface{})),
 	}
+	if v, ok := m["domain"].(string); ok && v != "" {
+		protocol.Domain = aws.String(v)
+	}
+	if v, ok := m["password"].(string); ok && v != "" {
+		protocol.Password = aws.String(v)
+	}
+	if v, ok := m["user"].(string); ok && v != "" {
+		protocol.User = aws.String(v)
+	}
 
 	return protocol
 }
@@ -90,6 +100,15 @@ func flattenSMB(smb *datasync.FsxProtocolSmb) []interface{} {
 
 	m := map[string]interface{}{
 		"mount_options": flattenSMBMountOptions(smb.MountOptions),
+	}
+	if v := smb.Domain; v != nil {
+		m["domain"] = aws.StringValue(v)
+	}
+	if v := smb.Password; v != nil {
+		m["password"] = aws.StringValue(v)
+	}
+	if v := smb.User; v != nil {
+		m["user"] = aws.StringValue(v)
 	}
 
 	return []interface{}{m}

@@ -445,7 +445,7 @@ object Sweeper : BuildType({
                     branchFilter = "+:refs/heads/main"
                     triggerBuild = always()
                     withPendingChangesOnly = false
-                    enableQueueOptimization = false
+                    enableQueueOptimization = true
                     enforceCleanCheckoutForDependencies = true
                 }
             }
@@ -582,7 +582,7 @@ object Sanity : BuildType({
                     branchFilter = "+:refs/heads/main"
                     triggerBuild = always()
                     withPendingChangesOnly = false
-                    enableQueueOptimization = false
+                    enableQueueOptimization = true
                     enforceCleanCheckoutForDependencies = true
                 }
             }
@@ -593,6 +593,10 @@ object Sanity : BuildType({
         feature {
             type = "JetBrains.SharedResources"
             param("locks-param", "${DslContext.getParameter("aws_account.lock_id")} writeLock")
+        }
+        feature {
+            type = "JetBrains.SharedResources"
+            param("locks-param", "${DslContext.getParameter("aws_account.vpc_lock_id")} readLock")
         }
     }
 })
@@ -650,10 +654,21 @@ object Performance : BuildType({
                     branchFilter = "+:refs/heads/main"
                     triggerBuild = always()
                     withPendingChangesOnly = false
-                    enableQueueOptimization = false
+                    enableQueueOptimization = true
                     enforceCleanCheckoutForDependencies = true
                 }
             }
+        }
+    }
+
+    features {
+        feature {
+            type = "JetBrains.SharedResources"
+            param("locks-param", "${DslContext.getParameter("aws_account.lock_id")} writeLock")
+        }
+        feature {
+            type = "JetBrains.SharedResources"
+            param("locks-param", "${DslContext.getParameter("aws_account.vpc_lock_id")} readLock")
         }
     }
 })

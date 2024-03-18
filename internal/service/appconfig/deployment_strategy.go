@@ -204,11 +204,10 @@ func resourceDeploymentStrategyDelete(ctx context.Context, d *schema.ResourceDat
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
 
-	input := &appconfig.DeleteDeploymentStrategyInput{
+	log.Printf("[INFO] Deleting AppConfig Deployment Strategy: %s", d.Id())
+	_, err := conn.DeleteDeploymentStrategyWithContext(ctx, &appconfig.DeleteDeploymentStrategyInput{
 		DeploymentStrategyId: aws.String(d.Id()),
-	}
-
-	_, err := conn.DeleteDeploymentStrategyWithContext(ctx, input)
+	})
 
 	if tfawserr.ErrCodeEquals(err, appconfig.ErrCodeResourceNotFoundException) {
 		return diags

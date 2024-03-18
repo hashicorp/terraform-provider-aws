@@ -32,6 +32,7 @@ func ResourceApp() *schema.Resource {
 		ReadWithoutTimeout:   resourceAppRead,
 		UpdateWithoutTimeout: resourceAppUpdate,
 		DeleteWithoutTimeout: resourceAppDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -55,12 +56,10 @@ func ResourceApp() *schema.Resource {
 				Sensitive:    true,
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
-
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"auto_branch_creation_config": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -82,52 +81,43 @@ func ResourceApp() *schema.Resource {
 								return true
 							},
 						},
-
 						"build_spec": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(1, 25000),
 						},
-
 						"enable_auto_build": {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
-
 						"enable_basic_auth": {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
-
 						"enable_performance_mode": {
 							Type:     schema.TypeBool,
 							Optional: true,
 							ForceNew: true,
 						},
-
 						"enable_pull_request_preview": {
 							Type:     schema.TypeBool,
 							Optional: true,
 						},
-
 						"environment_variables": {
 							Type:     schema.TypeMap,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
-
 						"framework": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(1, 255),
 						},
-
 						"pull_request_environment_name": {
 							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(1, 255),
 						},
-
 						"stage": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -144,7 +134,6 @@ func ResourceApp() *schema.Resource {
 					},
 				},
 			},
-
 			"auto_branch_creation_patterns": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -158,7 +147,6 @@ func ResourceApp() *schema.Resource {
 					return true
 				},
 			},
-
 			"basic_auth_credentials": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -173,14 +161,18 @@ func ResourceApp() *schema.Resource {
 					return true
 				},
 			},
-
 			"build_spec": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.StringLenBetween(1, 25000),
 			},
-
+			"custom_headers": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringLenBetween(1, 25000),
+			},
 			"custom_rule": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -191,13 +183,11 @@ func ResourceApp() *schema.Resource {
 							Optional:     true,
 							ValidateFunc: validation.StringLenBetween(1, 2048),
 						},
-
 						"source": {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(1, 2048),
 						},
-
 						"status": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -209,7 +199,6 @@ func ResourceApp() *schema.Resource {
 								"404-200",
 							}, false),
 						},
-
 						"target": {
 							Type:         schema.TypeString,
 							Required:     true,
@@ -218,70 +207,58 @@ func ResourceApp() *schema.Resource {
 					},
 				},
 			},
-
 			"default_domain": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1000),
 			},
-
 			"enable_auto_branch_creation": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-
 			"enable_basic_auth": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-
 			"enable_branch_auto_build": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-
 			"enable_branch_auto_deletion": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-
 			"environment_variables": {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-
 			"iam_service_role_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
-
 			"oauth_token": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Sensitive:    true,
 				ValidateFunc: validation.StringLenBetween(1, 1000),
 			},
-
 			"platform": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Default:      amplify.PlatformWeb,
 				ValidateFunc: validation.StringInSlice(amplify.Platform_Values(), false),
 			},
-
 			"production_branch": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -291,17 +268,14 @@ func ResourceApp() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-
 						"last_deploy_time": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-
 						"status": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-
 						"thumbnail_url": {
 							Type:     schema.TypeString,
 							Computed: true,
@@ -309,13 +283,11 @@ func ResourceApp() *schema.Resource {
 					},
 				},
 			},
-
 			"repository": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1000),
 			},
-
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
@@ -351,6 +323,10 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	if v, ok := d.GetOk("build_spec"); ok {
 		input.BuildSpec = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("custom_headers"); ok {
+		input.CustomHeaders = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("custom_rule"); ok && len(v.([]interface{})) > 0 {
@@ -436,6 +412,7 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("auto_branch_creation_patterns", aws.StringValueSlice(app.AutoBranchCreationPatterns))
 	d.Set("basic_auth_credentials", app.BasicAuthCredentials)
 	d.Set("build_spec", app.BuildSpec)
+	d.Set("custom_headers", app.CustomHeaders)
 	if err := d.Set("custom_rule", flattenCustomRules(app.CustomRules)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting custom_rule: %s", err)
 	}
@@ -496,6 +473,10 @@ func resourceAppUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 
 		if d.HasChange("build_spec") {
 			input.BuildSpec = aws.String(d.Get("build_spec").(string))
+		}
+
+		if d.HasChange("custom_headers") {
+			input.CustomHeaders = aws.String(d.Get("custom_headers").(string))
 		}
 
 		if d.HasChange("custom_rule") {

@@ -21,8 +21,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_s3_bucket_policy")
-func ResourceBucketPolicy() *schema.Resource {
+// @SDKResource("aws_s3_bucket_policy", name="Bucket Policy")
+func resourceBucketPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketPolicyPut,
 		ReadWithoutTimeout:   resourceBucketPolicyRead,
@@ -64,12 +64,15 @@ func resourceBucketPolicyPut(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	bucket := d.Get("bucket").(string)
+	if isDirectoryBucket(bucket) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
 	input := &s3.PutBucketPolicyInput{
 		Bucket: aws.String(bucket),
 		Policy: aws.String(policy),
 	}
 
-	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return conn.PutBucketPolicy(ctx, input)
 	}, errCodeMalformedPolicy, errCodeNoSuchBucket)
 
@@ -80,7 +83,7 @@ func resourceBucketPolicyPut(ctx context.Context, d *schema.ResourceData, meta i
 	if d.IsNewResource() {
 		d.SetId(bucket)
 
-		_, err = tfresource.RetryWhenNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+		_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 			return findBucketPolicy(ctx, conn, d.Id())
 		})
 
@@ -95,6 +98,9 @@ func resourceBucketPolicyPut(ctx context.Context, d *schema.ResourceData, meta i
 func resourceBucketPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
+	if isDirectoryBucket(d.Id()) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
 
 	policy, err := findBucketPolicy(ctx, conn, d.Id())
 
@@ -122,6 +128,9 @@ func resourceBucketPolicyRead(ctx context.Context, d *schema.ResourceData, meta 
 func resourceBucketPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
+	if isDirectoryBucket(d.Id()) {
+		conn = meta.(*conns.AWSClient).S3ExpressClient(ctx)
+	}
 
 	log.Printf("[DEBUG] Deleting S3 Bucket Policy: %s", d.Id())
 	_, err := conn.DeleteBucketPolicy(ctx, &s3.DeleteBucketPolicyInput{
@@ -136,7 +145,7 @@ func resourceBucketPolicyDelete(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket Policy (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return findBucketPolicy(ctx, conn, d.Id())
 	})
 

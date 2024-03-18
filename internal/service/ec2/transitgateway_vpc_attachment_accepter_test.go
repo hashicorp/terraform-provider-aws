@@ -11,6 +11,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccTransitGatewayVPCAttachmentAccepter_basic(t *testing.T) {
@@ -29,7 +30,7 @@ func testAccTransitGatewayVPCAttachmentAccepter_basic(t *testing.T) {
 			acctest.PreCheckAlternateAccount(t)
 			testAccPreCheckTransitGateway(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckTransitGatewayVPCAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -72,7 +73,7 @@ func testAccTransitGatewayVPCAttachmentAccepter_tags(t *testing.T) {
 			acctest.PreCheckAlternateAccount(t)
 			testAccPreCheckTransitGateway(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckTransitGatewayVPCAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -125,7 +126,7 @@ func testAccTransitGatewayVPCAttachmentAccepter_TransitGatewayDefaultRouteTableA
 			acctest.PreCheckAlternateAccount(t)
 			testAccPreCheckTransitGateway(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckTransitGatewayVPCAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{

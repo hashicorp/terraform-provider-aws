@@ -104,7 +104,7 @@ func resourceRouteResponseRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	d.Set("model_selection_expression", resp.ModelSelectionExpression)
-	if err := d.Set("response_models", flex.PointersMapToStringList(resp.ResponseModels)); err != nil {
+	if err := d.Set("response_models", flex.FlattenStringMap(resp.ResponseModels)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting response_models: %s", err)
 	}
 	d.Set("route_response_key", resp.RouteResponseKey)

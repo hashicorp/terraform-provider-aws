@@ -69,7 +69,7 @@ func resourceOriginAccessIdentityCreate(ctx context.Context, d *schema.ResourceD
 
 	resp, err := conn.CreateCloudFrontOriginAccessIdentityWithContext(ctx, params)
 	if err != nil {
-		return create.DiagError(names.CloudFront, create.ErrActionReading, ResNameOriginAccessIdentity, d.Id(), err)
+		return create.AppendDiagError(diags, names.CloudFront, create.ErrActionReading, ResNameOriginAccessIdentity, d.Id(), err)
 	}
 	d.SetId(aws.StringValue(resp.CloudFrontOriginAccessIdentity.Id))
 	return append(diags, resourceOriginAccessIdentityRead(ctx, d, meta)...)
@@ -90,7 +90,7 @@ func resourceOriginAccessIdentityRead(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if err != nil {
-		return create.DiagError(names.CloudFront, create.ErrActionReading, ResNameOriginAccessIdentity, d.Id(), err)
+		return create.AppendDiagError(diags, names.CloudFront, create.ErrActionReading, ResNameOriginAccessIdentity, d.Id(), err)
 	}
 
 	// Update attributes from DistributionConfig
@@ -120,7 +120,7 @@ func resourceOriginAccessIdentityUpdate(ctx context.Context, d *schema.ResourceD
 	}
 	_, err := conn.UpdateCloudFrontOriginAccessIdentityWithContext(ctx, params)
 	if err != nil {
-		return create.DiagError(names.CloudFront, create.ErrActionUpdating, ResNameOriginAccessIdentity, d.Id(), err)
+		return create.AppendDiagError(diags, names.CloudFront, create.ErrActionUpdating, ResNameOriginAccessIdentity, d.Id(), err)
 	}
 
 	return append(diags, resourceOriginAccessIdentityRead(ctx, d, meta)...)
@@ -135,7 +135,7 @@ func resourceOriginAccessIdentityDelete(ctx context.Context, d *schema.ResourceD
 	}
 
 	if _, err := conn.DeleteCloudFrontOriginAccessIdentityWithContext(ctx, params); err != nil {
-		return create.DiagError(names.CloudFront, create.ErrActionDeleting, ResNameOriginAccessIdentity, d.Id(), err)
+		return create.AppendDiagError(diags, names.CloudFront, create.ErrActionDeleting, ResNameOriginAccessIdentity, d.Id(), err)
 	}
 	return diags
 }

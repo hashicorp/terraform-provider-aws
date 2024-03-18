@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdatasync "github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDataSyncLocationFSxWindowsFileSystem_basic(t *testing.T) {
@@ -34,7 +35,7 @@ func TestAccDataSyncLocationFSxWindowsFileSystem_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, fsx.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLocationFSxWindowsDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -74,7 +75,7 @@ func TestAccDataSyncLocationFSxWindowsFileSystem_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, fsx.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLocationFSxWindowsDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -103,7 +104,7 @@ func TestAccDataSyncLocationFSxWindowsFileSystem_subdirectory(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, fsx.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLocationFSxWindowsDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -138,7 +139,7 @@ func TestAccDataSyncLocationFSxWindowsFileSystem_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, fsx.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLocationFSxWindowsDestroy(ctx),
 		Steps: []resource.TestStep{

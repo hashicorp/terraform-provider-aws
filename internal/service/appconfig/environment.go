@@ -433,8 +433,7 @@ func expandMonitors(l []monitorData) []awstypes.Monitor {
 }
 
 func flattenMonitors(ctx context.Context, apiObjects []awstypes.Monitor, diags *diag.Diagnostics) types.Set {
-	monitorDataTypes := flex.AttributeTypesMust[monitorData](ctx)
-	elemType := types.ObjectType{AttrTypes: monitorDataTypes}
+	elemType := fwtypes.NewObjectTypeOf[monitorData](ctx).ObjectType
 
 	if len(apiObjects) == 0 {
 		return types.SetValueMust(elemType, []attr.Value{})
@@ -442,7 +441,7 @@ func flattenMonitors(ctx context.Context, apiObjects []awstypes.Monitor, diags *
 
 	values := make([]attr.Value, len(apiObjects))
 	for i, o := range apiObjects {
-		values[i] = flattenMonitorData(ctx, o, diags).value(ctx, diags)
+		values[i] = flattenMonitorData(ctx, o).value(ctx)
 	}
 
 	result, d := types.SetValueFrom(ctx, elemType, values)
@@ -458,28 +457,23 @@ type monitorData struct {
 
 func (m monitorData) expand() awstypes.Monitor {
 	result := awstypes.Monitor{
-		AlarmArn: aws.String(m.AlarmARN.ValueARN().String()),
+		AlarmArn: aws.String(m.AlarmARN.ValueString()),
 	}
 
 	if !m.AlarmRoleARN.IsNull() {
-		result.AlarmRoleArn = aws.String(m.AlarmRoleARN.ValueARN().String())
+		result.AlarmRoleArn = aws.String(m.AlarmRoleARN.ValueString())
 	}
 
 	return result
 }
 
-func flattenMonitorData(ctx context.Context, apiObject awstypes.Monitor, diags *diag.Diagnostics) monitorData {
-	return monitorData{
-		AlarmARN:     flex.StringToFrameworkARN(ctx, apiObject.AlarmArn, diags),
-		AlarmRoleARN: flex.StringToFrameworkARN(ctx, apiObject.AlarmRoleArn, diags),
+func flattenMonitorData(ctx context.Context, apiObject awstypes.Monitor) *monitorData {
+	return &monitorData{
+		AlarmARN:     flex.StringToFrameworkARN(ctx, apiObject.AlarmArn),
+		AlarmRoleARN: flex.StringToFrameworkARN(ctx, apiObject.AlarmRoleArn),
 	}
 }
 
-func (m monitorData) value(ctx context.Context, diags *diag.Diagnostics) types.Object {
-	monitorDataTypes := flex.AttributeTypesMust[monitorData](ctx)
-
-	obj, d := types.ObjectValueFrom(ctx, monitorDataTypes, m)
-	diags.Append(d...)
-
-	return obj
+func (m *monitorData) value(ctx context.Context) types.Object {
+	return fwtypes.NewObjectValueOfMust[monitorData](ctx, m).ObjectValue
 }

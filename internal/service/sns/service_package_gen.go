@@ -5,9 +5,8 @@ package sns
 import (
 	"context"
 
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	sns_sdkv1 "github.com/aws/aws-sdk-go/service/sns"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	sns_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sns"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -26,7 +25,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceTopic,
+			Factory:  dataSourceTopic,
 			TypeName: "aws_sns_topic",
 		},
 	}
@@ -35,15 +34,15 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourcePlatformApplication,
+			Factory:  resourcePlatformApplication,
 			TypeName: "aws_sns_platform_application",
 		},
 		{
-			Factory:  ResourceSMSPreferences,
+			Factory:  resourceSMSPreferences,
 			TypeName: "aws_sns_sms_preferences",
 		},
 		{
-			Factory:  ResourceTopic,
+			Factory:  resourceTopic,
 			TypeName: "aws_sns_topic",
 			Name:     "Topic",
 			Tags: &types.ServicePackageResourceTags{
@@ -51,15 +50,15 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceTopicDataProtectionPolicy,
+			Factory:  resourceTopicDataProtectionPolicy,
 			TypeName: "aws_sns_topic_data_protection_policy",
 		},
 		{
-			Factory:  ResourceTopicPolicy,
+			Factory:  resourceTopicPolicy,
 			TypeName: "aws_sns_topic_policy",
 		},
 		{
-			Factory:  ResourceTopicSubscription,
+			Factory:  resourceTopicSubscription,
 			TypeName: "aws_sns_topic_subscription",
 		},
 	}
@@ -69,11 +68,15 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.SNS
 }
 
-// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*sns_sdkv1.SNS, error) {
-	sess := config["session"].(*session_sdkv1.Session)
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*sns_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
-	return sns_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+	return sns_sdkv2.NewFromConfig(cfg, func(o *sns_sdkv2.Options) {
+		if endpoint := config["endpoint"].(string); endpoint != "" {
+			o.BaseEndpoint = aws_sdkv2.String(endpoint)
+		}
+	}), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

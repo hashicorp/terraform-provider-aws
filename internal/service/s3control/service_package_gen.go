@@ -7,9 +7,6 @@ import (
 
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	s3control_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3control"
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	s3control_sdkv1 "github.com/aws/aws-sdk-go/service/s3control"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,7 +19,27 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
+	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory: newAccessGrantResource,
+			Name:    "Access Grant",
+			Tags:    &types.ServicePackageResourceTags{},
+		},
+		{
+			Factory: newAccessGrantsInstanceResource,
+			Name:    "Access Grants Instance",
+			Tags:    &types.ServicePackageResourceTags{},
+		},
+		{
+			Factory: newAccessGrantsInstanceResourcePolicyResource,
+			Name:    "Access Grants Instance Resource Policy",
+		},
+		{
+			Factory: newAccessGrantsLocationResource,
+			Name:    "Access Grants Location",
+			Tags:    &types.ServicePackageResourceTags{},
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
@@ -30,6 +47,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  dataSourceAccountPublicAccessBlock,
 			TypeName: "aws_s3_account_public_access_block",
+			Name:     "Account Public Access Block",
 		},
 		{
 			Factory:  dataSourceMultiRegionAccessPoint,
@@ -47,6 +65,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  resourceAccountPublicAccessBlock,
 			TypeName: "aws_s3_account_public_access_block",
+			Name:     "Account Public Access Block",
 		},
 		{
 			Factory:  resourceAccessPointPolicy,
@@ -93,13 +112,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 
 func (p *servicePackage) ServicePackageName() string {
 	return names.S3Control
-}
-
-// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*s3control_sdkv1.S3Control, error) {
-	sess := config["session"].(*session_sdkv1.Session)
-
-	return s3control_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
 }
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.

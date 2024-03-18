@@ -155,7 +155,7 @@ func resourceExternalKeyCreate(ctx context.Context, d *schema.ResourceData, meta
 	// KMS will report this error until it can validate the policy itself.
 	// They acknowledge this here:
 	// http://docs.aws.amazon.com/kms/latest/APIReference/API_CreateKey.html
-	output, err := WaitIAMPropagation(ctx, func() (*kms.CreateKeyOutput, error) {
+	output, err := WaitIAMPropagation(ctx, propagationTimeout, func() (*kms.CreateKeyOutput, error) {
 		return conn.CreateKeyWithContext(ctx, input)
 	})
 

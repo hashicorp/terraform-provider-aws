@@ -12,7 +12,7 @@ description: |-
 
 Manages Lake Formation principals designated as data lake administrators and lists of principal permission entries for default create database and default create table permissions.
 
-~> **NOTE:** Lake Formation introduces fine-grained access control for data in your data lake. Part of the changes include the `iamAllowedPrincipals` principal in order to make Lake Formation backwards compatible with existing IAM and Glue permissions. For more information, see [Changing the Default Security Settings for Your Data Lake](https://docs.aws.amazon.com/lake-formation/latest/dg/change-settings.html) and [Upgrading AWS Glue Data Permissions to the AWS Lake Formation Model](https://docs.aws.amazon.com/lake-formation/latest/dg/upgrade-glue-lake-formation.html).
+~> **NOTE:** Lake Formation introduces fine-grained access control for data in your data lake. Part of the changes include the `IAMAllowedPrincipals` principal in order to make Lake Formation backwards compatible with existing IAM and Glue permissions. For more information, see [Changing the Default Security Settings for Your Data Lake](https://docs.aws.amazon.com/lake-formation/latest/dg/change-settings.html) and [Upgrading AWS Glue Data Permissions to the AWS Lake Formation Model](https://docs.aws.amazon.com/lake-formation/latest/dg/upgrade-glue-lake-formation.html).
 
 ## Example Usage
 
@@ -132,18 +132,18 @@ The following arguments are optional:
 
 The following arguments are optional:
 
-* `permissions` - (Optional) List of permissions that are granted to the principal. Valid values may include `all`, `select`, `alter`, `drop`, `delete`, `insert`, `describe`, and `createTable`. For more details, see [Lake Formation Permissions Reference](https://docs.aws.amazon.com/lake-formation/latest/dg/lf-permissions-reference.html).
-* `principal` - (Optional) Principal who is granted permissions. To enforce metadata and underlying data access control only by IAM on new databases and tables set `principal` to `iamAllowedPrincipals` and `permissions` to `["all"]`.
+* `permissions` - (Optional) List of permissions that are granted to the principal. Valid values may include `ALL`, `SELECT`, `ALTER`, `DROP`, `DELETE`, `INSERT`, `DESCRIBE`, and `CREATE_TABLE`. For more details, see [Lake Formation Permissions Reference](https://docs.aws.amazon.com/lake-formation/latest/dg/lf-permissions-reference.html).
+* `principal` - (Optional) Principal who is granted permissions. To enforce metadata and underlying data access control only by IAM on new databases and tables set `principal` to `IAM_ALLOWED_PRINCIPALS` and `permissions` to `["ALL"]`.
 
 ### create_table_default_permissions
 
 The following arguments are optional:
 
-* `permissions` - (Optional) List of permissions that are granted to the principal. Valid values may include `all`, `select`, `alter`, `drop`, `delete`, `insert`, and `describe`. For more details, see [Lake Formation Permissions Reference](https://docs.aws.amazon.com/lake-formation/latest/dg/lf-permissions-reference.html).
-* `principal` - (Optional) Principal who is granted permissions. To enforce metadata and underlying data access control only by IAM on new databases and tables set `principal` to `iamAllowedPrincipals` and `permissions` to `["all"]`.
+* `permissions` - (Optional) List of permissions that are granted to the principal. Valid values may include `ALL`, `SELECT`, `ALTER`, `DROP`, `DELETE`, `INSERT`, and `DESCRIBE`. For more details, see [Lake Formation Permissions Reference](https://docs.aws.amazon.com/lake-formation/latest/dg/lf-permissions-reference.html).
+* `principal` - (Optional) Principal who is granted permissions. To enforce metadata and underlying data access control only by IAM on new databases and tables set `principal` to `IAM_ALLOWED_PRINCIPALS` and `permissions` to `["ALL"]`.
 
 ## Attribute Reference
 
 This resource exports no additional attributes.
 
-<!-- cache-key: cdktf-0.18.0 input-417a6f6da709dcf8d9f1bd94d43d2cf8836515780173f60b9dd4db641440c4d0 -->
+<!-- cache-key: cdktf-0.20.1 input-417a6f6da709dcf8d9f1bd94d43d2cf8836515780173f60b9dd4db641440c4d0 -->

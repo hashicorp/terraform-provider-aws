@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package finspace
 
 import (
@@ -18,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_finspace_kx_environment", &resource.Sweeper{
 		Name: "aws_finspace_kx_environment",
 		F:    sweepKxEnvironments,
@@ -51,7 +48,8 @@ func sweepKxEnvironments(region string) error {
 		for _, v := range page.Environments {
 			id := aws.ToString(v.EnvironmentId)
 
-			if status := v.Status; status == types.EnvironmentStatusDeleted {
+			switch status := v.Status; status {
+			case types.EnvironmentStatusDeleted, types.EnvironmentStatusDeleting, types.EnvironmentStatusCreating, types.EnvironmentStatusFailedDeletion:
 				log.Printf("[INFO] Skipping FinSpace Kx Environment %s: Status=%s", id, status)
 				continue
 			}

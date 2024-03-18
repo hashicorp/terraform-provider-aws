@@ -56,8 +56,12 @@ func tagsUpdateFunc(ctx context.Context, d schemaResourceData, sp conns.ServiceP
 	stateTags := make(map[string]string)
 	if state := d.GetRawState(); !state.IsNull() && state.IsKnown() {
 		s := state.GetAttr(names.AttrTagsAll)
-		for k, v := range s.AsValueMap() {
-			stateTags[k] = v.AsString()
+		if !s.IsNull() {
+			for k, v := range s.AsValueMap() {
+				if !v.IsNull() {
+					stateTags[k] = v.AsString()
+				}
+			}
 		}
 	}
 

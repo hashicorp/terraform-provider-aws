@@ -70,9 +70,9 @@ func validOptionGroupNamePrefix(v interface{}, k string) (ws []string, errors []
 
 func validParamGroupName(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
-	if !regexache.MustCompile(`^[0-9a-z-]+$`).MatchString(value) {
+	if !regexache.MustCompile(`^[0-9a-z.-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
-			"only lowercase alphanumeric characters and hyphens allowed in parameter group %q", k))
+			"only lowercase alphanumeric characters, periods, and hyphens allowed in parameter group %q", k))
 	}
 	if !regexache.MustCompile(`^[a-z]`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(

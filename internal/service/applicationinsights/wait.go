@@ -35,7 +35,7 @@ func waitApplicationCreated(ctx context.Context, conn *applicationinsights.Appli
 
 func waitApplicationTerminated(ctx context.Context, conn *applicationinsights.ApplicationInsights, name string) (*applicationinsights.ApplicationInfo, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{"NOT_CONFIGURED", "DELETING"},
+		Pending: []string{"ACTIVE", "NOT_CONFIGURED", "DELETING"},
 		Target:  []string{},
 		Refresh: statusApplication(ctx, conn, name),
 		Timeout: ApplicationDeletedTimeout,

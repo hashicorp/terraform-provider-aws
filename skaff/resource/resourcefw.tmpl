@@ -63,6 +63,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+{{- if .AWSGoSDKV2 }}
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+{{- end }}
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 {{- if .IncludeTags }}
@@ -593,8 +596,7 @@ func (r *resource{{ .Resource }}) Delete(ctx context.Context, req resource.Delet
 	{{- end }}
 	if err != nil {
 		{{- if .AWSGoSDKV2 }}
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return
 		}
 		{{- else }}
@@ -644,7 +646,7 @@ func (r *resource{{ .Resource }}) ModifyPlan(ctx context.Context, request resour
 // TIP: ==== STATUS CONSTANTS ====
 // Create constants for states and statuses if the service does not
 // already have suitable constants. We prefer that you use the constants
-// provided in the service if available (e.g., amp.WorkspaceStatusCodeActive).
+// provided in the service if available (e.g., awstypes.StatusInProgress).
 {{- end }}
 const (
 	statusChangePending = "Pending"
@@ -668,7 +670,7 @@ const (
 // You will need to adjust the parameters and names to fit the service.
 {{- end }}
 {{- if .AWSGoSDKV2 }}
-func wait{{ .Resource }}Created(ctx context.Context, conn *{{ .ServiceLower }}.Client, id string, timeout time.Duration) (*{{ .ServiceLower }}.{{ .Resource }}, error) {
+func wait{{ .Resource }}Created(ctx context.Context, conn *{{ .ServiceLower }}.Client, id string, timeout time.Duration) (*awstypes.{{ .Resource }}, error) {
 {{- else }}
 func wait{{ .Resource }}Created(ctx context.Context, conn *{{ .ServiceLower }}.{{ .Service }}, id string, timeout time.Duration) (*{{ .ServiceLower }}.{{ .Resource }}, error) {
 {{- end }}
@@ -695,7 +697,7 @@ func wait{{ .Resource }}Created(ctx context.Context, conn *{{ .ServiceLower }}.{
 // key resource argument is updated to a new value or not.
 {{- end }}
 {{- if .AWSGoSDKV2 }}
-func wait{{ .Resource }}Updated(ctx context.Context, conn *{{ .ServiceLower }}.Client, id string, timeout time.Duration) (*{{ .ServiceLower }}.{{ .Resource }}, error) {
+func wait{{ .Resource }}Updated(ctx context.Context, conn *{{ .ServiceLower }}.Client, id string, timeout time.Duration) (*awstypes.{{ .Resource }}, error) {
 {{- else }}
 func wait{{ .Resource }}Updated(ctx context.Context, conn *{{ .ServiceLower }}.{{ .Service }}, id string, timeout time.Duration) (*{{ .ServiceLower }}.{{ .Resource }}, error) {
 {{- end }}
@@ -720,7 +722,7 @@ func wait{{ .Resource }}Updated(ctx context.Context, conn *{{ .ServiceLower }}.{
 // be additional pending states, however.
 {{- end }}
 {{- if .AWSGoSDKV2 }}
-func wait{{ .Resource }}Deleted(ctx context.Context, conn *{{ .ServiceLower }}.Client, id string, timeout time.Duration) (*{{ .ServiceLower }}.{{ .Resource }}, error) {
+func wait{{ .Resource }}Deleted(ctx context.Context, conn *{{ .ServiceLower }}.Client, id string, timeout time.Duration) (*awstypes.{{ .Resource }}, error) {
 {{- else }}
 func wait{{ .Resource }}Deleted(ctx context.Context, conn *{{ .ServiceLower }}.{{ .Service }}, id string, timeout time.Duration) (*{{ .ServiceLower }}.{{ .Resource }}, error) {
 {{- end }}
@@ -776,7 +778,7 @@ func status{{ .Resource }}(ctx context.Context, conn *{{ .ServiceLower }}.{{ .Se
 // is good practice to define it separately.
 {{- end }}
 {{- if .AWSGoSDKV2 }}
-func find{{ .Resource }}ByID(ctx context.Context, conn *{{ .ServiceLower }}.Client, id string) (*{{ .ServiceLower }}.{{ .Resource }}, error) {
+func find{{ .Resource }}ByID(ctx context.Context, conn *{{ .ServiceLower }}.Client, id string) (*awstypes.{{ .Resource }}, error) {
 {{- else }}
 func find{{ .Resource }}ByID(ctx context.Context, conn *{{ .ServiceLower }}.{{ .Service }}, id string) (*{{ .ServiceLower }}.{{ .Resource }}, error) {
 {{- end }}
@@ -786,8 +788,7 @@ func find{{ .Resource }}ByID(ctx context.Context, conn *{{ .ServiceLower }}.{{ .
 	{{ if .AWSGoSDKV2 }}
 	out, err := conn.Get{{ .Resource }}(ctx, in)
 	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
@@ -829,7 +830,11 @@ func find{{ .Resource }}ByID(ctx context.Context, conn *{{ .ServiceLower }}.{{ .
 // See more:
 // https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/
 {{- end }}
+{{- if .AWSGoSDKV2 }}
+func flattenComplexArgument(ctx context.Context, apiObject *awstypes.ComplexArgument) (types.List, diag.Diagnostics) {
+{{- else }}
 func flattenComplexArgument(ctx context.Context, apiObject *{{ .ServiceLower }}.ComplexArgument) (types.List, diag.Diagnostics) {
+{{- end }}
 	var diags diag.Diagnostics
 	elemType := types.ObjectType{AttrTypes: complexArgumentAttrTypes}
 
@@ -855,7 +860,11 @@ func flattenComplexArgument(ctx context.Context, apiObject *{{ .ServiceLower }}.
 // that means you'll get back a one-length slice. This plural function works
 // brilliantly for that situation too.
 {{- end }}
+{{- if .AWSGoSDKV2 }}
+func flattenComplexArguments(ctx context.Context, apiObjects []*awstypes.ComplexArgument) (types.List, diag.Diagnostics) {
+{{- else }}
 func flattenComplexArguments(ctx context.Context, apiObjects []*{{ .ServiceLower }}.ComplexArgument) (types.List, diag.Diagnostics) {
+{{- end }}
 	var diags diag.Diagnostics
 	elemType := types.ObjectType{AttrTypes: complexArgumentAttrTypes}
 
@@ -892,13 +901,21 @@ func flattenComplexArguments(ctx context.Context, apiObjects []*{{ .ServiceLower
 // See more:
 // https://hashicorp.github.io/terraform-provider-aws/data-handling-and-conversion/
 {{- end }}
+{{- if .AWSGoSDKV2 }}
+func expandComplexArgument(tfList []complexArgumentData) *awstypes.ComplexArgument {
+{{- else }}
 func expandComplexArgument(tfList []complexArgumentData) *{{ .ServiceLower }}.ComplexArgument {
+{{- end }}
 	if len(tfList) == 0 {
 		return nil
 	}
 
 	tfObj := tfList[0]
+{{- if .AWSGoSDKV2 }}
+	apiObject := &awstypes.ComplexArgument{
+{{- else }}
 	apiObject := &{{ .ServiceLower }}.ComplexArgument{
+{{- end }}
 		NestedRequired: aws.String(tfObj.NestedRequired.ValueString()),
 	}
 	if !tfObj.NestedOptional.IsNull() {
@@ -931,7 +948,11 @@ func expandComplexArguments(tfList []complexArgumentData) []*{{ .ServiceLower }}
         return nil
     }
 
+{{- if .AWSGoSDKV2 }}
+    var apiObject []*awstypes.ComplexArgument
+{{- else }}
     var apiObject []*{{ .ServiceLower }}.ComplexArgument
+{{- end }}
 	{{- if .IncludeComments }}
 	// TIP: Option 2: Return zero-length list for zero-length list. If option 1 does
 	// not work, after testing going from something to nothing (if that is

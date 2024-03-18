@@ -182,7 +182,6 @@ func ResourceDomain() *schema.Resource {
 						"maintenance_schedule": {
 							Type:     schema.TypeSet,
 							Optional: true,
-							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"cron_expression_for_recurrence": {
@@ -220,6 +219,11 @@ func ResourceDomain() *schema.Resource {
 							Optional:     true,
 							Computed:     true,
 							ValidateFunc: validation.StringInSlice(opensearchservice.RollbackOnDisable_Values(), false),
+						},
+						"use_off_peak_window": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
 						},
 					},
 				},
@@ -865,7 +869,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 		d.Set("access_policies", policies)
 	}
 
-	options := advancedOptionsIgnoreDefault(d.Get("advanced_options").(map[string]interface{}), flex.PointersMapToStringList(ds.AdvancedOptions))
+	options := advancedOptionsIgnoreDefault(d.Get("advanced_options").(map[string]interface{}), flex.FlattenStringMap(ds.AdvancedOptions))
 	if err = d.Set("advanced_options", options); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting advanced_options %v: %s", options, err)
 	}
@@ -928,7 +932,7 @@ func resourceDomainRead(ctx context.Context, d *schema.ResourceData, meta interf
 			return sdkdiag.AppendErrorf(diags, "setting vpc_options: %s", err)
 		}
 
-		endpoints := flex.PointersMapToStringList(ds.Endpoints)
+		endpoints := flex.FlattenStringMap(ds.Endpoints)
 		d.Set("endpoint", endpoints["vpc"])
 		d.Set("dashboard_endpoint", getDashboardEndpoint(d))
 		d.Set("kibana_endpoint", getKibanaEndpoint(d))

@@ -11,20 +11,21 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/service/resourcegroups"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/resourcegroups"
+	"github.com/aws/aws-sdk-go-v2/service/resourcegroups/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // @SDKResource("aws_resourcegroups_resource", name="Resource")
-func ResourceResource() *schema.Resource {
+func resourceResource() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResourceCreate,
 		ReadWithoutTimeout:   resourceResourceRead,
@@ -55,20 +56,20 @@ func ResourceResource() *schema.Resource {
 }
 
 func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ResourceGroupsConn(ctx)
+	conn := meta.(*conns.AWSClient).ResourceGroupsClient(ctx)
 
 	groupARN := d.Get("group_arn").(string)
 	resourceARN := d.Get("resource_arn").(string)
 	id := strings.Join([]string{strings.Split(strings.ToLower(groupARN), "/")[1], strings.Split(resourceARN, "/")[1]}, "_")
 	input := &resourcegroups.GroupResourcesInput{
 		Group:        aws.String(groupARN),
-		ResourceArns: aws.StringSlice([]string{resourceARN}),
+		ResourceArns: []string{resourceARN},
 	}
 
-	output, err := conn.GroupResourcesWithContext(ctx, input)
+	output, err := conn.GroupResources(ctx, input)
 
 	if err == nil {
-		err = FailedResourcesError(output.Failed)
+		err = failedResourcesError(output.Failed)
 	}
 
 	if err != nil {
@@ -85,9 +86,9 @@ func resourceResourceCreate(ctx context.Context, d *schema.ResourceData, meta in
 }
 
 func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ResourceGroupsConn(ctx)
+	conn := meta.(*conns.AWSClient).ResourceGroupsClient(ctx)
 
-	output, err := FindResourceByTwoPartKey(ctx, conn, d.Get("group_arn").(string), d.Get("resource_arn").(string))
+	output, err := findResourceByTwoPartKey(ctx, conn, d.Get("group_arn").(string), d.Get("resource_arn").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ResourceGroups Resource (%s) not found, removing from state", d.Id())
@@ -106,18 +107,19 @@ func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 }
 
 func resourceResourceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ResourceGroupsConn(ctx)
+	conn := meta.(*conns.AWSClient).ResourceGroupsClient(ctx)
 
 	groupARN := d.Get("group_arn").(string)
 	resourceARN := d.Get("resource_arn").(string)
+
 	log.Printf("[INFO] Deleting Resource Groups Resource: %s", d.Id())
-	output, err := conn.UngroupResourcesWithContext(ctx, &resourcegroups.UngroupResourcesInput{
+	output, err := conn.UngroupResources(ctx, &resourcegroups.UngroupResourcesInput{
 		Group:        aws.String(groupARN),
-		ResourceArns: aws.StringSlice([]string{resourceARN}),
+		ResourceArns: []string{resourceARN},
 	})
 
 	if err == nil {
-		err = FailedResourcesError(output.Failed)
+		err = failedResourcesError(output.Failed)
 	}
 
 	if err != nil {
@@ -131,43 +133,40 @@ func resourceResourceDelete(ctx context.Context, d *schema.ResourceData, meta in
 	return nil
 }
 
-func FindResourceByTwoPartKey(ctx context.Context, conn *resourcegroups.ResourceGroups, groupARN, resourceARN string) (*resourcegroups.ListGroupResourcesItem, error) {
+func findResourceByTwoPartKey(ctx context.Context, conn *resourcegroups.Client, groupARN, resourceARN string) (*types.ListGroupResourcesItem, error) {
 	input := &resourcegroups.ListGroupResourcesInput{
 		Group: aws.String(groupARN),
 	}
-	var output []*resourcegroups.ListGroupResourcesItem
+	var output []types.ListGroupResourcesItem
 
-	err := conn.ListGroupResourcesPagesWithContext(ctx, input, func(page *resourcegroups.ListGroupResourcesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := resourcegroups.NewListGroupResourcesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*types.NotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
 		}
 
 		output = append(output, page.Resources...)
-
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, resourcegroups.ErrCodeNotFoundException) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
 	}
 
-	if err != nil {
-		return nil, err
-	}
-
-	output = slices.Filter(output, func(v *resourcegroups.ListGroupResourcesItem) bool {
-		return v.Identifier != nil && aws.StringValue(v.Identifier.ResourceArn) == resourceARN
+	output = slices.Filter(output, func(v types.ListGroupResourcesItem) bool {
+		return v.Identifier != nil && aws.ToString(v.Identifier.ResourceArn) == resourceARN
 	})
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func statusResource(ctx context.Context, conn *resourcegroups.ResourceGroups, groupARN, resourceARN string) retry.StateRefreshFunc {
+func statusResource(ctx context.Context, conn *resourcegroups.Client, groupARN, resourceARN string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindResourceByTwoPartKey(ctx, conn, groupARN, resourceARN)
+		output, err := findResourceByTwoPartKey(ctx, conn, groupARN, resourceARN)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -181,13 +180,13 @@ func statusResource(ctx context.Context, conn *resourcegroups.ResourceGroups, gr
 			return output, "", nil
 		}
 
-		return output, aws.StringValue(output.Status.Name), nil
+		return output, string(output.Status.Name), nil
 	}
 }
 
-func waitResourceCreated(ctx context.Context, conn *resourcegroups.ResourceGroups, groupARN, resourceARN string, timeout time.Duration) (*resourcegroups.ListGroupResourcesItem, error) {
+func waitResourceCreated(ctx context.Context, conn *resourcegroups.Client, groupARN, resourceARN string, timeout time.Duration) (*types.ListGroupResourcesItem, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{resourcegroups.ResourceStatusValuePending},
+		Pending: enum.Slice(types.ResourceStatusValuePending),
 		Target:  []string{""},
 		Refresh: statusResource(ctx, conn, groupARN, resourceARN),
 		Timeout: timeout,
@@ -195,16 +194,16 @@ func waitResourceCreated(ctx context.Context, conn *resourcegroups.ResourceGroup
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*resourcegroups.ListGroupResourcesItem); ok {
+	if output, ok := outputRaw.(*types.ListGroupResourcesItem); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitResourceDeleted(ctx context.Context, conn *resourcegroups.ResourceGroups, groupARN, resourceARN string, timeout time.Duration) (*resourcegroups.ListGroupResourcesItem, error) {
+func waitResourceDeleted(ctx context.Context, conn *resourcegroups.Client, groupARN, resourceARN string, timeout time.Duration) (*types.ListGroupResourcesItem, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{resourcegroups.ResourceStatusValuePending},
+		Pending: enum.Slice(types.ResourceStatusValuePending),
 		Target:  []string{},
 		Refresh: statusResource(ctx, conn, groupARN, resourceARN),
 		Timeout: timeout,
@@ -212,33 +211,25 @@ func waitResourceDeleted(ctx context.Context, conn *resourcegroups.ResourceGroup
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*resourcegroups.ListGroupResourcesItem); ok {
+	if output, ok := outputRaw.(*types.ListGroupResourcesItem); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func FailedResourceError(apiObject *resourcegroups.FailedResource) error {
-	if apiObject == nil {
-		return nil
-	}
-
-	return awserr.New(aws.StringValue(apiObject.ErrorCode), aws.StringValue(apiObject.ErrorMessage), nil)
+func failedResourceError(apiObject types.FailedResource) error {
+	return fmt.Errorf("%s: %s", aws.ToString(apiObject.ErrorCode), aws.ToString(apiObject.ErrorMessage))
 }
 
-func FailedResourcesError(apiObjects []*resourcegroups.FailedResource) error {
+func failedResourcesError(apiObjects []types.FailedResource) error {
 	var errs []error
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
-		err := FailedResourceError(apiObject)
+		err := failedResourceError(apiObject)
 
 		if err != nil {
-			errs = append(errs, fmt.Errorf("%s: %w", aws.StringValue(apiObject.ResourceArn), err))
+			errs = append(errs, fmt.Errorf("%s: %w", aws.ToString(apiObject.ResourceArn), err))
 		}
 	}
 

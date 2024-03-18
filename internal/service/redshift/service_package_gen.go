@@ -5,6 +5,8 @@ package redshift
 import (
 	"context"
 
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	redshift_sdkv2 "github.com/aws/aws-sdk-go-v2/service/redshift"
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	redshift_sdkv1 "github.com/aws/aws-sdk-go/service/redshift"
@@ -16,11 +18,25 @@ import (
 type servicePackage struct{}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{}
+	return []*types.ServicePackageFrameworkDataSource{
+		{
+			Factory: newDataSourceDataShares,
+			Name:    "Data Shares",
+		},
+	}
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
+	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory: newResourceDataShareAuthorization,
+			Name:    "Data Share Authorization",
+		},
+		{
+			Factory: newResourceDataShareConsumerAssociation,
+			Name:    "Data Share Consumer Association",
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
@@ -28,6 +44,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceCluster,
 			TypeName: "aws_redshift_cluster",
+			Name:     "Cluster",
 		},
 		{
 			Factory:  DataSourceClusterCredentials,
@@ -119,6 +136,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_redshift_partner",
 		},
 		{
+			Factory:  ResourceResourcePolicy,
+			TypeName: "aws_redshift_resource_policy",
+		},
+		{
 			Factory:  ResourceScheduledAction,
 			TypeName: "aws_redshift_scheduled_action",
 		},
@@ -170,6 +191,17 @@ func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*r
 	sess := config["session"].(*session_sdkv1.Session)
 
 	return redshift_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+}
+
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*redshift_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+
+	return redshift_sdkv2.NewFromConfig(cfg, func(o *redshift_sdkv2.Options) {
+		if endpoint := config["endpoint"].(string); endpoint != "" {
+			o.BaseEndpoint = aws_sdkv2.String(endpoint)
+		}
+	}), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

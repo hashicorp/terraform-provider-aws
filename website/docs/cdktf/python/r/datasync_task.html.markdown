@@ -101,7 +101,8 @@ This resource supports the following arguments:
 * `name` - (Optional) Name of the DataSync Task.
 * `options` - (Optional) Configuration block containing option that controls the default behavior when you start an execution of this DataSync Task. For each individual task execution, you can override these options by specifying an overriding configuration in those executions.
 * `schedule` - (Optional) Specifies a schedule used to periodically transfer files from a source to a destination location.
-* `tags` - (Optional) Key-value pairs of resource tags to assign to the DataSync Task. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value pairs of resource tags to assign to the DataSync Task. If configured with a provider [`default_tags` configuration block](/docs/providers/aws/index.html#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `task_report_config` - (Optional) Configuration block containing the configuration of a DataSync Task Report. See [`task_report_config`](#task_report_config-argument-reference) below.
 
 ### options Argument Reference
 
@@ -124,6 +125,35 @@ The `options` configuration block supports the following arguments:
 * `transfer_mode` - (Optional) Determines whether DataSync transfers only the data and metadata that differ between the source and the destination location, or whether DataSync transfers all the content from the source, without comparing to the destination location. Valid values: `CHANGED`, `ALL`. Default: `CHANGED`
 * `uid` - (Optional) User identifier of the file's owners. Valid values: `BOTH`, `INT_VALUE`, `NAME`, `NONE`. Default: `INT_VALUE` (preserve integer value of the ID).
 * `verify_mode` - (Optional) Whether a data integrity verification should be performed at the end of a task execution after all data and metadata have been transferred. Valid values: `NONE`, `POINT_IN_TIME_CONSISTENT`, `ONLY_FILES_TRANSFERRED`. Default: `POINT_IN_TIME_CONSISTENT`.
+
+### `task_report_config` Argument Reference
+
+The following arguments are supported inside the `task_report_config` configuration block:
+
+* `s3_destination` - (Required) Configuration block containing the configuration for the Amazon S3 bucket where DataSync uploads your task report. See [`s3_destination`](#s3_destination-argument-reference) below.
+* `s3_object_versioning` - (Optional) Specifies whether your task report includes the new version of each object transferred into an S3 bucket. This only applies if you enable versioning on your bucket. Keep in mind that setting this to INCLUDE can increase the duration of your task execution. Valid values: `INCLUDE` and `NONE`.
+* `output_type` - (Optional) Specifies the type of task report you'd like. Valid values: `SUMMARY_ONLY` and `STANDARD`.
+* `report_overrides` - (Optional) Configuration block containing the configuration of the reporting level for aspects of your task report. See [`report_overrides`](#report_overrides-argument-reference) below.
+* `report_level` - Specifies whether you want your task report to include only what went wrong with your transfer or a list of what succeeded and didn't. Valid values: `ERRORS_ONLY` and `SUCCESSES_AND_ERRORS`.
+
+### `s3_destination` Argument Reference
+
+The following arguments are supported inside the `s3_destination` configuration block:
+
+* `bucket_access_role_arn` - (Required) Specifies the Amazon Resource Name (ARN) of the IAM policy that allows DataSync to upload a task report to your S3 bucket.
+* `s3_bucket_arn` - (Required) Specifies the ARN of the S3 bucket where DataSync uploads your report.
+* `subdirectory` - (Optional) Specifies a bucket prefix for your report.
+
+### `report_overrides` Argument Reference
+
+The following arguments are supported inside the `report_overrides` configuration block:
+
+* `deleted_override` - (Optional) Specifies the level of reporting for the files, objects, and directories that DataSync attempted to delete in your destination location. This only applies if you configure your task to delete data in the destination that isn't in the source. Valid values: `ERRORS_ONLY` and `SUCCESSES_AND_ERRORS`.
+* `skipped_override` - (Optional) Specifies the level of reporting for the files, objects, and directories that DataSync attempted to skip during your transfer. Valid values: `ERRORS_ONLY` and `SUCCESSES_AND_ERRORS`.
+* `transferred_override` - (Optional) Specifies the level of reporting for the files, objects, and directories that DataSync attempted to transfer. Valid values: `ERRORS_ONLY` and `SUCCESSES_AND_ERRORS`.
+* `verified_override` - (Optional) Specifies the level of reporting for the files, objects, and directories that DataSync attempted to verify at the end of your transfer. Valid values: `ERRORS_ONLY` and `SUCCESSES_AND_ERRORS`.
+
+~> **NOTE:** If any `report_overrides` are set to the same value as `task_report_config.report_level`, they will always be flagged as changed. Only set overrides to a value that differs from `task_report_config.report_level`.
 
 ### Schedule
 
@@ -161,9 +191,15 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 # DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 from constructs import Construct
 from cdktf import TerraformStack
+#
+# Provider bindings are generated by running `cdktf get`.
+# See https://cdk.tf/provider-generation for more details.
+#
+from imports.aws.datasync_task import DatasyncTask
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
+        DatasyncTask.generate_config_for_import(self, "example", "arn:aws:datasync:us-east-1:123456789012:task/task-12345678901234567")
 ```
 
 Using `terraform import`, import `aws_datasync_task` using the DataSync Task Amazon Resource Name (ARN). For example:
@@ -172,4 +208,4 @@ Using `terraform import`, import `aws_datasync_task` using the DataSync Task Ama
 % terraform import aws_datasync_task.example arn:aws:datasync:us-east-1:123456789012:task/task-12345678901234567
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-cdd40a57bab5272f6d1ab360a92d6775feeadf4450ae0350087abd170b623ea3 -->
+<!-- cache-key: cdktf-0.20.1 input-31b892fb93faa525a767449c304854f23fafedbe0997378add704550c2fb2682 -->

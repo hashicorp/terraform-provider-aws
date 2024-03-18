@@ -1,0 +1,3 @@
+```release-note:bug
+provider: Always use the S3 regional endpoint in `us-east-1` for S3 directory bucket operations. This fixes `no such host` errors
+```

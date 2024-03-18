@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package waf
 
 import (
@@ -16,10 +13,11 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_waf_byte_match_set", &resource.Sweeper{
 		Name: "aws_waf_byte_match_set",
 		F:    sweepByteMatchSet,
@@ -199,7 +197,7 @@ func sweepByteMatchSet(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF Byte Match Set for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping WAF Byte Match Set sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -274,7 +272,7 @@ func sweepGeoMatchSet(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF Geo Match Set for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping WAF Geo Match Set sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -349,7 +347,7 @@ func sweepIPSet(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF IP Set for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping WAF IP Set sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -424,7 +422,7 @@ func sweepRateBasedRules(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF Rate Based Rule for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping WAF Rate Based Rule sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -499,7 +497,7 @@ func sweepRegexMatchSet(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF Regex Match Set for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping WAF Regex Match Set sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -574,7 +572,7 @@ func sweepRegexPatternSet(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF Regex Pattern Set for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping WAF Regex Pattern Set sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -649,7 +647,7 @@ func sweepRuleGroups(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF Rule Group for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping WAF Rule Group sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -728,7 +726,7 @@ func sweepRules(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF Rules for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping WAF Rule sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -803,7 +801,7 @@ func sweepSizeConstraintSet(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF Size Constraint Sets for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping WAF Size Constraint Set sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -878,7 +876,7 @@ func sweepSQLInjectionMatchSet(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF SQL Injection Matches for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping WAF SQL Injection Match sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -957,7 +955,7 @@ func sweepWebACLs(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF Web ACLs for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping WAF Web ACL sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -1032,7 +1030,7 @@ func sweepXSSMatchSet(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping WAF XSS Match Sets for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping WAF XSS Match Set sweep for %s: %s", region, errs)
 		return nil
 	}

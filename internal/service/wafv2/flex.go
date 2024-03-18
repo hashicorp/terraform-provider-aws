@@ -74,6 +74,32 @@ func expandCaptchaConfig(l []interface{}) *wafv2.CaptchaConfig {
 	return configuration
 }
 
+func expandChallengeConfig(l []interface{}) *wafv2.ChallengeConfig {
+	configuration := &wafv2.ChallengeConfig{}
+
+	if len(l) == 0 || l[0] == nil {
+		return configuration
+	}
+
+	m := l[0].(map[string]interface{})
+	if v, ok := m["immunity_time_property"]; ok {
+		inner := v.([]interface{})
+		if len(inner) == 0 || inner[0] == nil {
+			return configuration
+		}
+
+		m = inner[0].(map[string]interface{})
+
+		if v, ok := m["immunity_time"]; ok {
+			configuration.ImmunityTimeProperty = &wafv2.ImmunityTimeProperty{
+				ImmunityTime: aws.Int64(int64(v.(int))),
+			}
+		}
+	}
+
+	return configuration
+}
+
 func expandAssociationConfig(l []interface{}) *wafv2.AssociationConfig {
 	if len(l) == 0 || l[0] == nil {
 		return nil
@@ -505,6 +531,10 @@ func expandFieldToMatch(l []interface{}) *wafv2.FieldToMatch {
 		f.Cookies = expandCookies(m["cookies"].([]interface{}))
 	}
 
+	if v, ok := m["header_order"]; ok && len(v.([]interface{})) > 0 {
+		f.HeaderOrder = expandHeaderOrder(m["header_order"].([]interface{}))
+	}
+
 	if v, ok := m["headers"]; ok && len(v.([]interface{})) > 0 {
 		f.Headers = expandHeaders(m["headers"].([]interface{}))
 	}
@@ -523,6 +553,10 @@ func expandFieldToMatch(l []interface{}) *wafv2.FieldToMatch {
 
 	if v, ok := m["single_header"]; ok && len(v.([]interface{})) > 0 {
 		f.SingleHeader = expandSingleHeader(m["single_header"].([]interface{}))
+	}
+
+	if v, ok := m["ja3_fingerprint"]; ok && len(v.([]interface{})) > 0 {
+		f.JA3Fingerprint = expandJA3Fingerprint(v.([]interface{}))
 	}
 
 	if v, ok := m["single_query_argument"]; ok && len(v.([]interface{})) > 0 {
@@ -639,6 +673,20 @@ func expandBody(l []interface{}) *wafv2.Body {
 	}
 
 	return body
+}
+
+func expandJA3Fingerprint(l []interface{}) *wafv2.JA3Fingerprint {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	ja3fingerprint := &wafv2.JA3Fingerprint{
+		FallbackBehavior: aws.String(m["fallback_behavior"].(string)),
+	}
+
+	return ja3fingerprint
 }
 
 func expandJSONMatchPattern(l []interface{}) *wafv2.JsonMatchPattern {
@@ -860,6 +908,18 @@ func expandXSSMatchStatement(l []interface{}) *wafv2.XssMatchStatement {
 	return &wafv2.XssMatchStatement{
 		FieldToMatch:        expandFieldToMatch(m["field_to_match"].([]interface{})),
 		TextTransformations: expandTextTransformations(m["text_transformation"].(*schema.Set).List()),
+	}
+}
+
+func expandHeaderOrder(l []interface{}) *wafv2.HeaderOrder {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	return &wafv2.HeaderOrder{
+		OversizeHandling: aws.String(m["oversize_handling"].(string)),
 	}
 }
 
@@ -1099,6 +1159,9 @@ func expandManagedRuleGroupConfigs(tfList []interface{}) []*wafv2.ManagedRuleGro
 		if v, ok := m["aws_managed_rules_bot_control_rule_set"].([]interface{}); ok && len(v) > 0 {
 			r.AWSManagedRulesBotControlRuleSet = expandManagedRulesBotControlRuleSet(v)
 		}
+		if v, ok := m["aws_managed_rules_acfp_rule_set"].([]interface{}); ok && len(v) > 0 {
+			r.AWSManagedRulesACFPRuleSet = expandManagedRulesACFPRuleSet(v)
+		}
 		if v, ok := m["aws_managed_rules_atp_rule_set"].([]interface{}); ok && len(v) > 0 {
 			r.AWSManagedRulesATPRuleSet = expandManagedRulesATPRuleSet(v)
 		}
@@ -1119,6 +1182,19 @@ func expandManagedRuleGroupConfigs(tfList []interface{}) []*wafv2.ManagedRuleGro
 	}
 
 	return out
+}
+
+func expandEmailField(tfList []interface{}) *wafv2.EmailField {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+	out := wafv2.EmailField{
+		Identifier: aws.String(m["identifier"].(string)),
+	}
+
+	return &out
 }
 
 func expandPasswordField(tfList []interface{}) *wafv2.PasswordField {
@@ -1160,6 +1236,30 @@ func expandManagedRulesBotControlRuleSet(tfList []interface{}) *wafv2.AWSManaged
 	return &out
 }
 
+func expandManagedRulesACFPRuleSet(tfList []interface{}) *wafv2.AWSManagedRulesACFPRuleSet {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+	out := wafv2.AWSManagedRulesACFPRuleSet{
+		CreationPath:         aws.String(m["creation_path"].(string)),
+		RegistrationPagePath: aws.String(m["registration_page_path"].(string)),
+	}
+
+	if v, ok := m["enable_regex_in_path"].(bool); ok {
+		out.EnableRegexInPath = aws.Bool(v)
+	}
+	if v, ok := m["request_inspection"].([]interface{}); ok && len(v) > 0 {
+		out.RequestInspection = expandRequestInspectionACFP(v)
+	}
+	if v, ok := m["response_inspection"].([]interface{}); ok && len(v) > 0 {
+		out.ResponseInspection = expandResponseInspection(v)
+	}
+
+	return &out
+}
+
 func expandManagedRulesATPRuleSet(tfList []interface{}) *wafv2.AWSManagedRulesATPRuleSet {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
@@ -1190,6 +1290,22 @@ func expandRequestInspection(tfList []interface{}) *wafv2.RequestInspection {
 
 	m := tfList[0].(map[string]interface{})
 	out := wafv2.RequestInspection{
+		PasswordField: expandPasswordField(m["password_field"].([]interface{})),
+		PayloadType:   aws.String(m["payload_type"].(string)),
+		UsernameField: expandUsernameField(m["username_field"].([]interface{})),
+	}
+
+	return &out
+}
+
+func expandRequestInspectionACFP(tfList []interface{}) *wafv2.RequestInspectionACFP {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+	out := wafv2.RequestInspectionACFP{
+		EmailField:    expandEmailField(m["email_field"].([]interface{})),
 		PasswordField: expandPasswordField(m["password_field"].([]interface{})),
 		PayloadType:   aws.String(m["payload_type"].(string)),
 		UsernameField: expandUsernameField(m["username_field"].([]interface{})),
@@ -1389,8 +1505,9 @@ func expandRateBasedStatement(l []interface{}) *wafv2.RateBasedStatement {
 
 	m := l[0].(map[string]interface{})
 	r := &wafv2.RateBasedStatement{
-		AggregateKeyType: aws.String(m["aggregate_key_type"].(string)),
-		Limit:            aws.Int64(int64(m["limit"].(int))),
+		AggregateKeyType:    aws.String(m["aggregate_key_type"].(string)),
+		EvaluationWindowSec: aws.Int64(int64(m["evaluation_window_sec"].(int))),
+		Limit:               aws.Int64(int64(m["limit"].(int))),
 	}
 
 	if v, ok := m["forwarded_ip_config"]; ok {
@@ -1565,6 +1682,23 @@ func flattenCaptcha(a *wafv2.CaptchaAction) []interface{} {
 }
 
 func flattenCaptchaConfig(config *wafv2.CaptchaConfig) interface{} {
+	if config == nil {
+		return []interface{}{}
+	}
+	if config.ImmunityTimeProperty == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"immunity_time_property": []interface{}{map[string]interface{}{
+			"immunity_time": aws.Int64Value(config.ImmunityTimeProperty.ImmunityTime),
+		}},
+	}
+
+	return []interface{}{m}
+}
+
+func flattenChallengeConfig(config *wafv2.ChallengeConfig) interface{} {
 	if config == nil {
 		return []interface{}{}
 	}
@@ -1841,8 +1975,16 @@ func flattenFieldToMatch(f *wafv2.FieldToMatch) interface{} {
 		m["cookies"] = flattenCookies(f.Cookies)
 	}
 
+	if f.HeaderOrder != nil {
+		m["header_order"] = flattenHeaderOrder(f.HeaderOrder)
+	}
+
 	if f.Headers != nil {
 		m["headers"] = flattenHeaders(f.Headers)
+	}
+
+	if f.JA3Fingerprint != nil {
+		m["ja3_fingerprint"] = flattenJA3Fingerprint(f.JA3Fingerprint)
 	}
 
 	if f.JsonBody != nil {
@@ -1925,6 +2067,18 @@ func flattenCookiesMatchPattern(c *wafv2.CookieMatchPattern) interface{} {
 
 	if c.All != nil {
 		m["all"] = make([]map[string]interface{}, 1)
+	}
+
+	return []interface{}{m}
+}
+
+func flattenJA3Fingerprint(j *wafv2.JA3Fingerprint) interface{} {
+	if j == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"fallback_behavior": aws.StringValue(j.FallbackBehavior),
 	}
 
 	return []interface{}{m}
@@ -2154,6 +2308,18 @@ func flattenVisibilityConfig(config *wafv2.VisibilityConfig) interface{} {
 	return []interface{}{m}
 }
 
+func flattenHeaderOrder(s *wafv2.HeaderOrder) interface{} {
+	if s == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"oversize_handling": aws.StringValue(s.OversizeHandling),
+	}
+
+	return []interface{}{m}
+}
+
 func flattenHeaders(s *wafv2.Headers) interface{} {
 	if s == nil {
 		return []interface{}{}
@@ -2365,6 +2531,9 @@ func flattenManagedRuleGroupConfigs(c []*wafv2.ManagedRuleGroupConfig) []interfa
 
 	for _, config := range c {
 		m := make(map[string]interface{})
+		if config.AWSManagedRulesACFPRuleSet != nil {
+			m["aws_managed_rules_acfp_rule_set"] = flattenManagedRulesACFPRuleSet(config.AWSManagedRulesACFPRuleSet)
+		}
 		if config.AWSManagedRulesBotControlRuleSet != nil {
 			m["aws_managed_rules_bot_control_rule_set"] = flattenManagedRulesBotControlRuleSet(config.AWSManagedRulesBotControlRuleSet)
 		}
@@ -2388,6 +2557,18 @@ func flattenManagedRuleGroupConfigs(c []*wafv2.ManagedRuleGroupConfig) []interfa
 	}
 
 	return out
+}
+
+func flattenEmailField(apiObject *wafv2.EmailField) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"identifier": aws.StringValue(apiObject.Identifier),
+	}
+
+	return []interface{}{m}
 }
 
 func flattenPasswordField(apiObject *wafv2.PasswordField) []interface{} {
@@ -2426,6 +2607,26 @@ func flattenManagedRulesBotControlRuleSet(apiObject *wafv2.AWSManagedRulesBotCon
 	return []interface{}{m}
 }
 
+func flattenManagedRulesACFPRuleSet(apiObject *wafv2.AWSManagedRulesACFPRuleSet) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"enable_regex_in_path":   aws.BoolValue(apiObject.EnableRegexInPath),
+		"creation_path":          aws.StringValue(apiObject.CreationPath),
+		"registration_page_path": aws.StringValue(apiObject.RegistrationPagePath),
+	}
+	if apiObject.RequestInspection != nil {
+		m["request_inspection"] = flattenRequestInspectionACFP(apiObject.RequestInspection)
+	}
+	if apiObject.ResponseInspection != nil {
+		m["response_inspection"] = flattenResponseInspection(apiObject.ResponseInspection)
+	}
+
+	return []interface{}{m}
+}
+
 func flattenManagedRulesATPRuleSet(apiObject *wafv2.AWSManagedRulesATPRuleSet) []interface{} {
 	if apiObject == nil {
 		return nil
@@ -2440,6 +2641,21 @@ func flattenManagedRulesATPRuleSet(apiObject *wafv2.AWSManagedRulesATPRuleSet) [
 	}
 	if apiObject.ResponseInspection != nil {
 		m["response_inspection"] = flattenResponseInspection(apiObject.ResponseInspection)
+	}
+
+	return []interface{}{m}
+}
+
+func flattenRequestInspectionACFP(apiObject *wafv2.RequestInspectionACFP) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"email_field":    flattenEmailField(apiObject.EmailField),
+		"password_field": flattenPasswordField(apiObject.PasswordField),
+		"payload_type":   aws.StringValue(apiObject.PayloadType),
+		"username_field": flattenUsernameField(apiObject.UsernameField),
 	}
 
 	return []interface{}{m}
@@ -2667,6 +2883,10 @@ func flattenRateBasedStatement(apiObject *wafv2.RateBasedStatement) interface{} 
 
 	if apiObject.CustomKeys != nil {
 		tfMap["custom_key"] = flattenRateBasedStatementCustomKeys(apiObject.CustomKeys)
+	}
+
+	if apiObject.EvaluationWindowSec != nil {
+		tfMap["evaluation_window_sec"] = int(aws.Int64Value(apiObject.EvaluationWindowSec))
 	}
 
 	if apiObject.Limit != nil {

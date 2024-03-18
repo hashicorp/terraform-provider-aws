@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 // @SDKDataSource("aws_emr_release_labels")
@@ -47,6 +48,8 @@ func DataSourceReleaseLabels() *schema.Resource {
 }
 
 func dataSourceReleaseLabelsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
 	input := &emr.ListReleaseLabelsInput{}
@@ -58,7 +61,7 @@ func dataSourceReleaseLabelsRead(ctx context.Context, d *schema.ResourceData, me
 	output, err := findReleaseLabels(ctx, conn, input)
 
 	if err != nil {
-		return diag.Errorf("reading EMR Release Labels: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading EMR Release Labels: %s", err)
 	}
 
 	releaseLabels := aws.StringValueSlice(output)
@@ -70,7 +73,7 @@ func dataSourceReleaseLabelsRead(ctx context.Context, d *schema.ResourceData, me
 	}
 	d.Set("release_labels", releaseLabels)
 
-	return nil
+	return diags
 }
 
 func expandReleaseLabelsFilters(filters []interface{}) *emr.ReleaseLabelFilter {

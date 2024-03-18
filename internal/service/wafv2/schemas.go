@@ -342,7 +342,9 @@ func fieldToMatchBaseSchema() *schema.Resource {
 			"all_query_arguments": emptySchema(),
 			"body":                bodySchema(),
 			"cookies":             cookiesSchema(),
+			"header_order":        headerOrderSchema(),
 			"headers":             headersSchema(),
+			"ja3_fingerprint":     ja3fingerprintSchema(),
 			"json_body":           jsonBodySchema(),
 			"method":              emptySchema(),
 			"query_string":        emptySchema(),
@@ -617,6 +619,31 @@ func challengeConfigSchema() *schema.Schema {
 	}
 }
 
+func outerChallengeConfigSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"immunity_time_property": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"immunity_time": {
+								Type:     schema.TypeInt,
+								Optional: true,
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
 func countConfigSchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
@@ -789,6 +816,23 @@ func cookiesMatchPatternSchema() *schema.Schema {
 	}
 }
 
+func ja3fingerprintSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"fallback_behavior": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringInSlice(wafv2.FallbackBehavior_Values(), false),
+				},
+			},
+		},
+	}
+}
+
 func bodySchema() *schema.Schema {
 	return &schema.Schema{
 		Type:     schema.TypeList,
@@ -824,6 +868,18 @@ func matchScopeSchema() *schema.Schema {
 		Type:         schema.TypeString,
 		Required:     true,
 		ValidateFunc: validation.StringInSlice(wafv2.MapMatchScope_Values(), false),
+	}
+}
+
+func headerOrderSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Optional: true,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"oversize_handling": oversizeHandlingRequiredSchema(),
+			},
+		},
 	}
 }
 
@@ -1034,6 +1090,12 @@ func rateBasedStatementSchema(level int) *schema.Schema {
 						},
 					},
 				},
+				"evaluation_window_sec": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      300,
+					ValidateFunc: validation.IntInSlice([]int{60, 120, 300, 600}),
+				},
 				"forwarded_ip_config": forwardedIPConfigSchema(),
 				"limit": {
 					Type:         schema.TypeInt,
@@ -1094,6 +1156,37 @@ func managedRuleGroupConfigSchema() *schema.Schema {
 		Optional: true,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
+				"aws_managed_rules_acfp_rule_set": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"enable_regex_in_path": {
+								Type:     schema.TypeBool,
+								Optional: true,
+							},
+							"creation_path": {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 256),
+									validation.StringMatch(regexache.MustCompile(`.*\S.*`), `must conform to pattern .*\S.* `),
+								),
+							},
+							"registration_page_path": {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 256),
+									validation.StringMatch(regexache.MustCompile(`.*\S.*`), `must conform to pattern .*\S.* `),
+								),
+							},
+							"request_inspection":  managedRuleGroupConfigACFPRequestInspectionSchema(),
+							"response_inspection": managedRuleGroupConfigATPResponseInspectionSchema(),
+						},
+					},
+				},
 				"aws_managed_rules_atp_rule_set": {
 					Type:     schema.TypeList,
 					Optional: true,
@@ -1213,6 +1306,74 @@ func ruleGroupReferenceStatementSchema() *schema.Schema {
 					ValidateFunc: verify.ValidARN,
 				},
 				"rule_action_override": ruleActionOverrideSchema(),
+			},
+		},
+	}
+}
+
+func managedRuleGroupConfigACFPRequestInspectionSchema() *schema.Schema {
+	return &schema.Schema{
+		Type:     schema.TypeList,
+		Required: true,
+		MaxItems: 1,
+		Elem: &schema.Resource{
+			Schema: map[string]*schema.Schema{
+				"email_field": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"identifier": {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 512),
+									validation.StringMatch(regexache.MustCompile(`.*\S.*`), `must conform to pattern .*\S.* `),
+								),
+							},
+						},
+					},
+				},
+				"password_field": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"identifier": {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 512),
+									validation.StringMatch(regexache.MustCompile(`.*\S.*`), `must conform to pattern .*\S.* `),
+								),
+							},
+						},
+					},
+				},
+				"payload_type": {
+					Type:         schema.TypeString,
+					Required:     true,
+					ValidateFunc: validation.StringInSlice(wafv2.PayloadType_Values(), false),
+				},
+				"username_field": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"identifier": {
+								Type:     schema.TypeString,
+								Required: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(1, 512),
+									validation.StringMatch(regexache.MustCompile(`.*\S.*`), `must conform to pattern .*\S.* `),
+								),
+							},
+						},
+					},
+				},
 			},
 		},
 	}

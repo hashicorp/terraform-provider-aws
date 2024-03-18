@@ -108,7 +108,7 @@ func tooltipOptionsSchema() *schema.Schema {
 											MaxItems: 1,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
-													"column":      columnSchema(),                   // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+													"column":      columnSchema(true),               // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 													"aggregation": aggregationFunctionSchema(false), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AggregationFunction.html
 													"label": {
 														Type:     schema.TypeString,

@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -124,6 +125,8 @@ const (
 )
 
 func resourceRecordingConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).IVSConn(ctx)
 
 	in := &ivs.CreateRecordingConfigurationInput{
@@ -143,29 +146,31 @@ func resourceRecordingConfigurationCreate(ctx context.Context, d *schema.Resourc
 		in.ThumbnailConfiguration = expandThumbnailConfiguration(v.([]interface{}))
 
 		if aws.StringValue(in.ThumbnailConfiguration.RecordingMode) == ivs.RecordingModeDisabled && in.ThumbnailConfiguration.TargetIntervalSeconds != nil {
-			return diag.Errorf("thumbnail configuration target interval cannot be set if recording_mode is \"DISABLED\"")
+			return sdkdiag.AppendErrorf(diags, "thumbnail configuration target interval cannot be set if recording_mode is \"DISABLED\"")
 		}
 	}
 
 	out, err := conn.CreateRecordingConfigurationWithContext(ctx, in)
 	if err != nil {
-		return create.DiagError(names.IVS, create.ErrActionCreating, ResNameRecordingConfiguration, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.IVS, create.ErrActionCreating, ResNameRecordingConfiguration, d.Get("name").(string), err)
 	}
 
 	if out == nil || out.RecordingConfiguration == nil {
-		return create.DiagError(names.IVS, create.ErrActionCreating, ResNameRecordingConfiguration, d.Get("name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.IVS, create.ErrActionCreating, ResNameRecordingConfiguration, d.Get("name").(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.StringValue(out.RecordingConfiguration.Arn))
 
 	if _, err := waitRecordingConfigurationCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.DiagError(names.IVS, create.ErrActionWaitingForCreation, ResNameRecordingConfiguration, d.Id(), err)
+		return create.AppendDiagError(diags, names.IVS, create.ErrActionWaitingForCreation, ResNameRecordingConfiguration, d.Id(), err)
 	}
 
-	return resourceRecordingConfigurationRead(ctx, d, meta)
+	return append(diags, resourceRecordingConfigurationRead(ctx, d, meta)...)
 }
 
 func resourceRecordingConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).IVSConn(ctx)
 
 	out, err := FindRecordingConfigurationByID(ctx, conn, d.Id())
@@ -173,17 +178,17 @@ func resourceRecordingConfigurationRead(ctx context.Context, d *schema.ResourceD
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IVS RecordingConfiguration (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.IVS, create.ErrActionReading, ResNameRecordingConfiguration, d.Id(), err)
+		return create.AppendDiagError(diags, names.IVS, create.ErrActionReading, ResNameRecordingConfiguration, d.Id(), err)
 	}
 
 	d.Set("arn", out.Arn)
 
 	if err := d.Set("destination_configuration", flattenDestinationConfiguration(out.DestinationConfiguration)); err != nil {
-		return create.DiagError(names.IVS, create.ErrActionSetting, ResNameRecordingConfiguration, d.Id(), err)
+		return create.AppendDiagError(diags, names.IVS, create.ErrActionSetting, ResNameRecordingConfiguration, d.Id(), err)
 	}
 
 	d.Set("name", out.Name)
@@ -191,13 +196,15 @@ func resourceRecordingConfigurationRead(ctx context.Context, d *schema.ResourceD
 	d.Set("state", out.State)
 
 	if err := d.Set("thumbnail_configuration", flattenThumbnailConfiguration(out.ThumbnailConfiguration)); err != nil {
-		return create.DiagError(names.IVS, create.ErrActionSetting, ResNameRecordingConfiguration, d.Id(), err)
+		return create.AppendDiagError(diags, names.IVS, create.ErrActionSetting, ResNameRecordingConfiguration, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceRecordingConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).IVSConn(ctx)
 
 	log.Printf("[INFO] Deleting IVS RecordingConfiguration %s", d.Id())
@@ -207,18 +214,18 @@ func resourceRecordingConfigurationDelete(ctx context.Context, d *schema.Resourc
 	})
 
 	if tfawserr.ErrCodeEquals(err, ivs.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.IVS, create.ErrActionDeleting, ResNameRecordingConfiguration, d.Id(), err)
+		return create.AppendDiagError(diags, names.IVS, create.ErrActionDeleting, ResNameRecordingConfiguration, d.Id(), err)
 	}
 
 	if _, err := waitRecordingConfigurationDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return create.DiagError(names.IVS, create.ErrActionWaitingForDeletion, ResNameRecordingConfiguration, d.Id(), err)
+		return create.AppendDiagError(diags, names.IVS, create.ErrActionWaitingForDeletion, ResNameRecordingConfiguration, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func flattenDestinationConfiguration(apiObject *ivs.DestinationConfiguration) []interface{} {

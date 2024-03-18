@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package ssm
 
 import (
@@ -28,7 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_ssm_default_patch_baseline", &resource.Sweeper{
 		Name: "aws_ssm_default_patch_baseline",
 		F:    sweepDefaultPatchBaselines,
@@ -87,7 +84,7 @@ func sweepDefaultPatchBaselines(region string) error {
 			return b.DefaultBaseline
 		}) {
 			baselineID := aws.ToString(identity.BaselineId)
-			pb, err := findPatchBaselineByID(ctx, conn, baselineID)
+			pb, err := findPatchBaselineByIDV2(ctx, conn, baselineID)
 			if err != nil {
 				errs = multierror.Append(errs, fmt.Errorf("reading Patch Baseline (%s): %w", baselineID, err))
 				continue
@@ -205,7 +202,7 @@ func sweepPatchBaselines(region string) error {
 
 		for _, identity := range page.BaselineIdentities {
 			baselineID := aws.ToString(identity.BaselineId)
-			r := ResourcePatchBaseline()
+			r := resourcePatchBaseline()
 			d := r.Data(nil)
 			d.SetId(baselineID)
 			d.Set("operating_system", identity.OperatingSystem)

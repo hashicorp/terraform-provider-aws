@@ -31,6 +31,7 @@ func ResourceBranch() *schema.Resource {
 		ReadWithoutTimeout:   resourceBranchRead,
 		UpdateWithoutTimeout: resourceBranchUpdate,
 		DeleteWithoutTimeout: resourceBranchDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -43,24 +44,20 @@ func ResourceBranch() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"associated_resources": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-
 			"backend_environment_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-
 			"basic_auth_credentials": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -75,88 +72,72 @@ func ResourceBranch() *schema.Resource {
 					return true
 				},
 			},
-
 			"branch_name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z/_.-]{1,255}$`), "should be not be more than 255 letters, numbers, and the symbols /_.-"),
 			},
-
 			"custom_domains": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 1000),
 			},
-
 			"destination_branch": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"display_name": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9a-z-]{1,255}$`), "should be not be more than 255 lowercase alphanumeric or hyphen characters"),
 			},
-
 			"enable_auto_build": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
 			},
-
 			"enable_basic_auth": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-
 			"enable_notification": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-
 			"enable_performance_mode": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				ForceNew: true,
 			},
-
 			"enable_pull_request_preview": {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
-
 			"environment_variables": {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-
 			"framework": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 255),
 			},
-
 			"pull_request_environment_name": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringLenBetween(1, 20),
 			},
-
 			"source_branch": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
 			"stage": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -170,7 +151,6 @@ func ResourceBranch() *schema.Resource {
 					return old == new
 				},
 			},
-
 			"ttl": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -183,7 +163,6 @@ func ResourceBranch() *schema.Resource {
 					return old == new
 				},
 			},
-
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
@@ -197,7 +176,6 @@ func resourceBranchCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	appID := d.Get("app_id").(string)
 	branchName := d.Get("branch_name").(string)
 	id := BranchCreateResourceID(appID, branchName)
-
 	input := &amplify.CreateBranchInput{
 		AppId:           aws.String(appID),
 		BranchName:      aws.String(branchName),
@@ -257,7 +235,6 @@ func resourceBranchCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.Ttl = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating Amplify Branch: %s", input)
 	_, err := conn.CreateBranchWithContext(ctx, input)
 
 	if err != nil {
@@ -274,9 +251,8 @@ func resourceBranchRead(ctx context.Context, d *schema.ResourceData, meta interf
 	conn := meta.(*conns.AWSClient).AmplifyConn(ctx)
 
 	appID, branchName, err := BranchParseResourceID(d.Id())
-
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "parsing Amplify Branch ID: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	branch, err := FindBranchByAppIDAndBranchName(ctx, conn, appID, branchName)
@@ -324,9 +300,8 @@ func resourceBranchUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		appID, branchName, err := BranchParseResourceID(d.Id())
-
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "parsing Amplify Branch ID: %s", err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		input := &amplify.UpdateBranchInput{
@@ -363,7 +338,7 @@ func resourceBranchUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 
 		if d.HasChange("enable_performance_mode") {
-			input.EnablePullRequestPreview = aws.Bool(d.Get("enable_performance_mode").(bool))
+			input.EnablePerformanceMode = aws.Bool(d.Get("enable_performance_mode").(bool))
 		}
 
 		if d.HasChange("enable_pull_request_preview") {
@@ -409,9 +384,8 @@ func resourceBranchDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).AmplifyConn(ctx)
 
 	appID, branchName, err := BranchParseResourceID(d.Id())
-
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "parsing Amplify Branch ID: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	log.Printf("[DEBUG] Deleting Amplify Branch: %s", d.Id())

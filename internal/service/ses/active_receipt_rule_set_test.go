@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfses "github.com/hashicorp/terraform-provider-aws/internal/service/ses"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // Only one SES Receipt RuleSet can be active at a time, so run serially
@@ -48,7 +49,7 @@ func testAccActiveReceiptRuleSet_basic(t *testing.T) {
 			testAccPreCheck(ctx, t)
 			testAccPreCheckReceiptRule(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckActiveReceiptRuleSetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -79,7 +80,7 @@ func testAccActiveReceiptRuleSet_disappears(t *testing.T) {
 			testAccPreCheck(ctx, t)
 			testAccPreCheckReceiptRule(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckActiveReceiptRuleSetDestroy(ctx),
 		Steps: []resource.TestStep{

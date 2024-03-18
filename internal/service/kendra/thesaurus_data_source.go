@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -108,6 +109,8 @@ func DataSourceThesaurus() *schema.Resource {
 }
 
 func dataSourceThesaurusRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -117,7 +120,7 @@ func dataSourceThesaurusRead(ctx context.Context, d *schema.ResourceData, meta i
 	resp, err := FindThesaurusByID(ctx, conn, thesaurusID, indexID)
 
 	if err != nil {
-		return diag.Errorf("reading Kendra Thesaurus (%s): %s", thesaurusID, err)
+		return sdkdiag.AppendErrorf(diags, "reading Kendra Thesaurus (%s): %s", thesaurusID, err)
 	}
 
 	arn := arn.ARN{
@@ -142,22 +145,22 @@ func dataSourceThesaurusRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("updated_at", aws.ToTime(resp.UpdatedAt).Format(time.RFC3339))
 
 	if err := d.Set("source_s3_path", flattenSourceS3Path(resp.SourceS3Path)); err != nil {
-		return diag.Errorf("setting source_s3_path: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting source_s3_path: %s", err)
 	}
 
 	tags, err := listTags(ctx, conn, arn)
 
 	if err != nil {
-		return diag.Errorf("listing tags for Kendra Thesaurus (%s): %s", arn, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for Kendra Thesaurus (%s): %s", arn, err)
 	}
 
 	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s", thesaurusID, indexID))
 
-	return nil
+	return diags
 }

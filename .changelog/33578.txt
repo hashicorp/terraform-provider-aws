@@ -1,0 +1,15 @@
+```release-note:bug
+resource/aws_cloudfront_distribution: Fix `IllegalUpdate` errors when updating a staging distribution associated with an `aws_cloudfront_continuous_deployment_policy`
+```
+
+```release-note:bug
+resource/aws_cloudfront_continuous_deployment_policy: Fix `IllegalUpdate` errors when updating a staging `aws_cloudfront_distribution` that is part of continuous deployment
+```
+
+```release-note:bug
+resource/aws_cloudfront_distribution: Fix `StagingDistributionInUse` errors when destroying a distribution associated with an `aws_cloudfront_continuous_deployment_policy`
+```
+
+```release-note:bug
+resource/aws_cloudfront_distribution: Fix `PreconditionFailed` errors when destroying a distribution associated with an `aws_cloudfront_continuous_deployment_policy`
+```

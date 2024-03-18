@@ -254,7 +254,7 @@ func cascadingControlConfigurationSchema() *schema.Schema {
 					MaxItems: 200,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"column_to_match": columnSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+							"column_to_match": columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 							"source_sheet_control_id": {
 								Type:     schema.TypeString,
 								Optional: true,

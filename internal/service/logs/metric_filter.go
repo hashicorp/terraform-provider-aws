@@ -10,14 +10,17 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
@@ -69,10 +72,10 @@ func resourceMetricFilter() *schema.Resource {
 							ValidateFunc: validLogMetricFilterTransformationName,
 						},
 						"unit": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      cloudwatchlogs.StandardUnitNone,
-							ValidateFunc: validation.StringInSlice(cloudwatchlogs.StandardUnit_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          types.StandardUnitNone,
+							ValidateDiagFunc: enum.Validate[types.StandardUnit](),
 						},
 						"value": {
 							Type:         schema.TypeString,
@@ -105,7 +108,9 @@ func resourceMetricFilter() *schema.Resource {
 }
 
 func resourceMetricFilterPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn(ctx)
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	name := d.Get("name").(string)
 	logGroupName := d.Get("log_group_name").(string)
@@ -123,46 +128,50 @@ func resourceMetricFilterPut(ctx context.Context, d *schema.ResourceData, meta i
 	conns.GlobalMutexKV.Lock(mutexKey)
 	defer conns.GlobalMutexKV.Unlock(mutexKey)
 
-	_, err := conn.PutMetricFilterWithContext(ctx, input)
+	_, err := conn.PutMetricFilter(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("putting CloudWatch Logs Metric Filter (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "putting CloudWatch Logs Metric Filter (%s): %s", d.Id(), err)
 	}
 
 	if d.IsNewResource() {
 		d.SetId(name)
 	}
 
-	return resourceMetricFilterRead(ctx, d, meta)
+	return append(diags, resourceMetricFilterRead(ctx, d, meta)...)
 }
 
 func resourceMetricFilterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn(ctx)
+	var diags diag.Diagnostics
 
-	mf, err := FindMetricFilterByTwoPartKey(ctx, conn, d.Get("log_group_name").(string), d.Id())
+	conn := meta.(*conns.AWSClient).LogsClient(ctx)
+
+	mf, err := findMetricFilterByTwoPartKey(ctx, conn, d.Get("log_group_name").(string), d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudWatch Logs Metric Filter (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading CloudWatch Logs Metric Filter (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Logs Metric Filter (%s): %s", d.Id(), err)
 	}
 
 	d.Set("log_group_name", mf.LogGroupName)
 	if err := d.Set("metric_transformation", flattenMetricTransformations(mf.MetricTransformations)); err != nil {
-		return diag.Errorf("setting metric_transformation: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting metric_transformation: %s", err)
 	}
 	d.Set("name", mf.FilterName)
 	d.Set("pattern", mf.FilterPattern)
 
-	return nil
+	return diags
 }
 
 func resourceMetricFilterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LogsConn(ctx)
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	// Creating multiple filters on the same log group can sometimes cause
 	// clashes, so use a mutex here (and on creation) to serialise actions on
@@ -172,20 +181,20 @@ func resourceMetricFilterDelete(ctx context.Context, d *schema.ResourceData, met
 	defer conns.GlobalMutexKV.Unlock(mutexKey)
 
 	log.Printf("[INFO] Deleting CloudWatch Logs Metric Filter: %s", d.Id())
-	_, err := conn.DeleteMetricFilterWithContext(ctx, &cloudwatchlogs.DeleteMetricFilterInput{
+	_, err := conn.DeleteMetricFilter(ctx, &cloudwatchlogs.DeleteMetricFilterInput{
 		FilterName:   aws.String(d.Id()),
 		LogGroupName: aws.String(d.Get("log_group_name").(string)),
 	})
 
-	if tfawserr.ErrCodeEquals(err, cloudwatchlogs.ErrCodeResourceNotFoundException) {
-		return nil
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting CloudWatch Logs Metric Filter (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting CloudWatch Logs Metric Filter (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceMetricFilterImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
@@ -201,53 +210,43 @@ func resourceMetricFilterImport(d *schema.ResourceData, meta interface{}) ([]*sc
 	return []*schema.ResourceData{d}, nil
 }
 
-func FindMetricFilterByTwoPartKey(ctx context.Context, conn *cloudwatchlogs.CloudWatchLogs, logGroupName, name string) (*cloudwatchlogs.MetricFilter, error) {
+func findMetricFilterByTwoPartKey(ctx context.Context, conn *cloudwatchlogs.Client, logGroupName, name string) (*types.MetricFilter, error) {
 	input := &cloudwatchlogs.DescribeMetricFiltersInput{
 		FilterNamePrefix: aws.String(name),
 		LogGroupName:     aws.String(logGroupName),
 	}
-	var output *cloudwatchlogs.MetricFilter
 
-	err := conn.DescribeMetricFiltersPagesWithContext(ctx, input, func(page *cloudwatchlogs.DescribeMetricFiltersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
+	pages := cloudwatchlogs.NewDescribeMetricFiltersPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-		for _, v := range page.MetricFilters {
-			if aws.StringValue(v.FilterName) == name {
-				output = v
-
-				return false
+		if errs.IsA[*types.ResourceNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
 			}
 		}
 
-		return !lastPage
-	})
+		if err != nil {
+			return nil, err
+		}
 
-	if tfawserr.ErrCodeEquals(err, cloudwatchlogs.ErrCodeResourceNotFoundException) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		for _, v := range page.MetricFilters {
+			if aws.ToString(v.FilterName) == name {
+				return &v, nil
+			}
 		}
 	}
 
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output, nil
+	return nil, tfresource.NewEmptyResultError(input)
 }
 
-func expandMetricTransformation(tfMap map[string]interface{}) *cloudwatchlogs.MetricTransformation {
+func expandMetricTransformation(tfMap map[string]interface{}) *types.MetricTransformation {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &cloudwatchlogs.MetricTransformation{}
+	apiObject := &types.MetricTransformation{}
 
 	if v, ok := tfMap["default_value"].(string); ok {
 		if v, null, _ := nullable.Float(v).Value(); !null {
@@ -256,7 +255,7 @@ func expandMetricTransformation(tfMap map[string]interface{}) *cloudwatchlogs.Me
 	}
 
 	if v, ok := tfMap["dimensions"].(map[string]interface{}); ok && len(v) > 0 {
-		apiObject.Dimensions = flex.ExpandStringMap(v)
+		apiObject.Dimensions = flex.ExpandStringValueMap(v)
 	}
 
 	if v, ok := tfMap["name"].(string); ok && v != "" {
@@ -268,7 +267,7 @@ func expandMetricTransformation(tfMap map[string]interface{}) *cloudwatchlogs.Me
 	}
 
 	if v, ok := tfMap["unit"].(string); ok && v != "" {
-		apiObject.Unit = aws.String(v)
+		apiObject.Unit = types.StandardUnit(v)
 	}
 
 	if v, ok := tfMap["value"].(string); ok && v != "" {
@@ -278,12 +277,12 @@ func expandMetricTransformation(tfMap map[string]interface{}) *cloudwatchlogs.Me
 	return apiObject
 }
 
-func expandMetricTransformations(tfList []interface{}) []*cloudwatchlogs.MetricTransformation {
+func expandMetricTransformations(tfList []interface{}) []types.MetricTransformation {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []*cloudwatchlogs.MetricTransformation
+	var apiObjects []types.MetricTransformation
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -298,47 +297,41 @@ func expandMetricTransformations(tfList []interface{}) []*cloudwatchlogs.MetricT
 			continue
 		}
 
-		apiObjects = append(apiObjects, apiObject)
+		apiObjects = append(apiObjects, *apiObject)
 	}
 
 	return apiObjects
 }
 
-func flattenMetricTransformation(apiObject *cloudwatchlogs.MetricTransformation) map[string]interface{} {
-	if apiObject == nil {
-		return nil
+func flattenMetricTransformation(apiObject types.MetricTransformation) map[string]interface{} {
+	tfMap := map[string]interface{}{
+		"unit": apiObject.Unit,
 	}
 
-	tfMap := map[string]interface{}{}
-
 	if v := apiObject.DefaultValue; v != nil {
-		tfMap["default_value"] = strconv.FormatFloat(aws.Float64Value(v), 'f', -1, 64)
+		tfMap["default_value"] = strconv.FormatFloat(aws.ToFloat64(v), 'f', -1, 64)
 	}
 
 	if v := apiObject.Dimensions; v != nil {
-		tfMap["dimensions"] = aws.StringValueMap(v)
+		tfMap["dimensions"] = v
 	}
 
 	if v := apiObject.MetricName; v != nil {
-		tfMap["name"] = aws.StringValue(v)
+		tfMap["name"] = aws.ToString(v)
 	}
 
 	if v := apiObject.MetricNamespace; v != nil {
-		tfMap["namespace"] = aws.StringValue(v)
-	}
-
-	if v := apiObject.Unit; v != nil {
-		tfMap["unit"] = aws.StringValue(v)
+		tfMap["namespace"] = aws.ToString(v)
 	}
 
 	if v := apiObject.MetricValue; v != nil {
-		tfMap["value"] = aws.StringValue(v)
+		tfMap["value"] = aws.ToString(v)
 	}
 
 	return tfMap
 }
 
-func flattenMetricTransformations(apiObjects []*cloudwatchlogs.MetricTransformation) []interface{} {
+func flattenMetricTransformations(apiObjects []types.MetricTransformation) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -346,10 +339,6 @@ func flattenMetricTransformations(apiObjects []*cloudwatchlogs.MetricTransformat
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
 		tfList = append(tfList, flattenMetricTransformation(apiObject))
 	}
 

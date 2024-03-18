@@ -22,7 +22,7 @@ See [#9992](https://github.com/hashicorp/terraform-provider-aws/issues/9992) / [
 
 ## AWS Go SDK Updates
 
-Almost exclusively, `github.com/aws/aws-sdk-go` updates are additive in nature. It is generally safe to only scan through them before approving and merging. If you have any concerns about any of the service client updates such as suspicious code removals in the update, or deprecations introduced, run the acceptance testing for potentially affected resources before merging.
+Almost exclusively, `github.com/aws/aws-sdk-go` and `github.com/aws/aws-sdk-go-v2` updates are additive in nature. It is generally safe to only scan through them before approving and merging. If you have any concerns about any of the service client updates such as suspicious code removals in the update, or deprecations introduced, run the acceptance testing for potentially affected resources before merging.
 
 ### Authentication changes
 
@@ -38,7 +38,7 @@ CloudFront service client updates have previously caused an issue when a new fie
 
 Merge if CI passes.
 
-## Terraform Plugin SDK Updates
+## Terraform Plugin Development Package Updates (SDK V2 or Framework)
 
 Except for trivial changes, run the full acceptance testing suite against the pull request and verify there are no new or unexpected failures.
 

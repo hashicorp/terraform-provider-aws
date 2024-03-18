@@ -7,6 +7,7 @@ import (
 	"context"
 	"strconv"
 
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -959,38 +960,6 @@ func StatusVolumeModificationState(ctx context.Context, conn *ec2.EC2, id string
 	}
 }
 
-func StatusVPCState(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindVPCByID(ctx, conn, id)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.StringValue(output.State), nil
-	}
-}
-
-func StatusVPCAttributeValue(ctx context.Context, conn *ec2.EC2, id string, attribute string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		attributeValue, err := FindVPCAttribute(ctx, conn, id, attribute)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return attributeValue, strconv.FormatBool(attributeValue), nil
-	}
-}
-
 func StatusVPCCIDRBlockAssociationState(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, _, err := FindVPCCIDRBlockAssociationByID(ctx, conn, id)
@@ -1109,6 +1078,22 @@ func StatusVPNConnectionState(ctx context.Context, conn *ec2.EC2, id string) ret
 func StatusVPNConnectionRouteState(ctx context.Context, conn *ec2.EC2, vpnConnectionID, cidrBlock string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindVPNConnectionRouteByVPNConnectionIDAndCIDR(ctx, conn, vpnConnectionID, cidrBlock)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.State), nil
+	}
+}
+
+func StatusVPNGatewayState(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindVPNGatewayByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -1496,5 +1481,37 @@ func StatusInstanceConnectEndpointState(ctx context.Context, conn *ec2_sdkv2.Cli
 		}
 
 		return output, string(output.State), nil
+	}
+}
+
+func StatusImageBlockPublicAccessState(ctx context.Context, conn *ec2_sdkv2.Client) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindImageBlockPublicAccessState(ctx, conn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws_sdkv2.ToString(output), nil
+	}
+}
+
+func StatusVerifiedAccessEndpoint(ctx context.Context, conn *ec2_sdkv2.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindVerifiedAccessEndpointByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status.Code), nil
 	}
 }

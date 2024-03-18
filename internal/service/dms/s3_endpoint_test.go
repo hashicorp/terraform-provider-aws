@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDMSS3Endpoint_basic(t *testing.T) {
@@ -20,7 +20,7 @@ func TestAccDMSS3Endpoint_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -54,6 +54,7 @@ func TestAccDMSS3Endpoint_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "encoding_type", "plain"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_mode", "SSE_S3"),
 					resource.TestCheckResourceAttrPair(resourceName, "expected_bucket_owner", "data.aws_caller_identity.current", "account_id"),
+					resource.TestCheckResourceAttr(resourceName, "glue_catalog_generation", "true"),
 					resource.TestCheckResourceAttr(resourceName, "ignore_header_rows", "1"),
 					resource.TestCheckResourceAttr(resourceName, "include_op_for_full_load", "true"),
 					resource.TestCheckResourceAttr(resourceName, "max_file_size", "1000000"),
@@ -85,7 +86,7 @@ func TestAccDMSS3Endpoint_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -118,6 +119,7 @@ func TestAccDMSS3Endpoint_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "encoding_type", "plain"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_mode", "SSE_S3"),
 					resource.TestCheckResourceAttrPair(resourceName, "expected_bucket_owner", "data.aws_caller_identity.current", "account_id"),
+					resource.TestCheckResourceAttr(resourceName, "glue_catalog_generation", "true"),
 					resource.TestCheckResourceAttr(resourceName, "ignore_header_rows", "1"),
 					resource.TestCheckResourceAttr(resourceName, "include_op_for_full_load", "true"),
 					resource.TestCheckResourceAttr(resourceName, "max_file_size", "1000000"),
@@ -163,6 +165,7 @@ func TestAccDMSS3Endpoint_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "encoding_type", "plain"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_mode", "SSE_S3"),
 					resource.TestCheckResourceAttrPair(resourceName, "expected_bucket_owner", "data.aws_caller_identity.current", "account_id"),
+					resource.TestCheckResourceAttr(resourceName, "glue_catalog_generation", "false"),
 					resource.TestCheckResourceAttr(resourceName, "ignore_header_rows", "1"),
 					resource.TestCheckResourceAttr(resourceName, "include_op_for_full_load", "false"),
 					resource.TestCheckResourceAttr(resourceName, "max_file_size", "900000"),
@@ -189,7 +192,7 @@ func TestAccDMSS3Endpoint_simple(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -223,6 +226,7 @@ func TestAccDMSS3Endpoint_simple(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "encoding_type", ""),
 					resource.TestCheckResourceAttr(resourceName, "encryption_mode", ""),
 					resource.TestCheckResourceAttr(resourceName, "expected_bucket_owner", ""),
+					resource.TestCheckResourceAttr(resourceName, "glue_catalog_generation", "false"),
 					resource.TestCheckResourceAttr(resourceName, "ignore_header_rows", "0"),
 					resource.TestCheckResourceAttr(resourceName, "include_op_for_full_load", "false"),
 					resource.TestCheckResourceAttr(resourceName, "max_file_size", "0"),
@@ -253,7 +257,7 @@ func TestAccDMSS3Endpoint_sourceSimple(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -302,7 +306,7 @@ func TestAccDMSS3Endpoint_sourceSimple(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"compression_type", "date_partition_enabled", "parquet_timestamp_in_millisecond", "preserve_transactions", "use_csv_no_sup_value"},
+				ImportStateVerifyIgnore: []string{"compression_type", "date_partition_enabled", "parquet_timestamp_in_millisecond", "preserve_transactions", "use_csv_no_sup_value", "glue_catalog_generation"},
 			},
 		},
 	})
@@ -315,7 +319,7 @@ func TestAccDMSS3Endpoint_source(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -403,7 +407,7 @@ func TestAccDMSS3Endpoint_detachTargetOnLobLookupFailureParquet(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEndpointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -562,6 +566,7 @@ resource "aws_dms_s3_endpoint" "test" {
   timestamp_column_name                       = "tx_commit_time"
   use_csv_no_sup_value                        = false
   use_task_start_time_for_full_load_timestamp = true
+  glue_catalog_generation                     = true
 
   depends_on = [aws_iam_role_policy.test]
 }
@@ -640,6 +645,7 @@ resource "aws_dms_s3_endpoint" "test" {
   timestamp_column_name                       = "tx_commit_time2"
   use_csv_no_sup_value                        = true
   use_task_start_time_for_full_load_timestamp = false
+  glue_catalog_generation                     = false
 
   depends_on = [aws_iam_role_policy.test]
 }

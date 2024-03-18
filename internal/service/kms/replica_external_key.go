@@ -151,7 +151,7 @@ func resourceReplicaExternalKeyCreate(ctx context.Context, d *schema.ResourceDat
 
 	replicateConn := kms.New(session)
 
-	output, err := WaitIAMPropagation(ctx, func() (*kms.ReplicateKeyOutput, error) {
+	output, err := WaitIAMPropagation(ctx, propagationTimeout, func() (*kms.ReplicateKeyOutput, error) {
 		return replicateConn.ReplicateKeyWithContext(ctx, input)
 	})
 

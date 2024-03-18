@@ -71,35 +71,39 @@ More information about this can be found [here](https://docs.aws.amazon.com/Amaz
 
 This resource supports the following arguments:
 
-* `name` - (Optional, Forces new resource) The name of the option group. If omitted, Terraform will assign a random, unique name. Must be lowercase, to match as it is stored in AWS.
+* `name` - (Optional, Forces new resource) Name of the option group. If omitted, Terraform will assign a random, unique name. Must be lowercase, to match as it is stored in AWS.
 * `name_prefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`. Must be lowercase, to match as it is stored in AWS.
-* `option_group_description` - (Optional) The description of the option group. Defaults to "Managed by Terraform".
+* `option_group_description` - (Optional) Description of the option group. Defaults to "Managed by Terraform".
 * `engine_name` - (Required) Specifies the name of the engine that this option group should be associated with.
 * `major_engine_version` - (Required) Specifies the major version of the engine that this option group should be associated with.
-* `option` - (Optional) A list of Options to apply.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `option` - (Optional) The options to apply. See [`option` Block](#option-block) below for more details.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-Option blocks support the following:
+### `option` Block
 
-* `option_name` - (Required) The Name of the Option (e.g., MEMCACHED).
-* `option_settings` - (Optional) A list of option settings to apply.
-* `port` - (Optional) The Port number when connecting to the Option (e.g., 11211).
-* `version` - (Optional) The version of the option (e.g., 13.1.0.0).
-* `db_security_group_memberships` - (Optional) A list of DB Security Groups for which the option is enabled.
-* `vpc_security_group_memberships` - (Optional) A list of VPC Security Groups for which the option is enabled.
+The `option` blocks support the following arguments:
 
-Option Settings blocks support the following:
+* `option_name` - (Required) Name of the option (e.g., MEMCACHED).
+* `option_settings` - (Optional) The option settings to apply. See [`option_settings` Block](#option_settings-block) below for more details.
+* `port` - (Optional) Port number when connecting to the option (e.g., 11211). Leaving out or removing `port` from your configuration does not remove or clear a port from the option in AWS. AWS may assign a default port. Not including `port` in your configuration means that the AWS provider will ignore a previously set value, a value set by AWS, and any port changes.
+* `version` - (Optional) Version of the option (e.g., 13.1.0.0). Leaving out or removing `version` from your configuration does not remove or clear a version from the option in AWS. AWS may assign a default version. Not including `version` in your configuration means that the AWS provider will ignore a previously set value, a value set by AWS, and any version changes.
+* `db_security_group_memberships` - (Optional) List of DB Security Groups for which the option is enabled.
+* `vpc_security_group_memberships` - (Optional) List of VPC Security Groups for which the option is enabled.
 
-* `name` - (Optional) The Name of the setting.
-* `value` - (Optional) The Value of the setting.
+#### `option_settings` Block
+
+The `option_settings` blocks support the following arguments:
+
+* `name` - (Optional) Name of the setting.
+* `value` - (Optional) Value of the setting.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The db option group name.
-* `arn` - The ARN of the db option group.
-* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `id` - DB option group name.
+* `arn` - ARN of the DB option group.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
@@ -109,21 +113,27 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DB Option groups using the `name`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DB option groups using the `name`. For example:
 
 ```python
 # DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 from constructs import Construct
 from cdktf import TerraformStack
+#
+# Provider bindings are generated by running `cdktf get`.
+# See https://cdk.tf/provider-generation for more details.
+#
+from imports.aws.db_option_group import DbOptionGroup
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
+        DbOptionGroup.generate_config_for_import(self, "example", "mysql-option-group")
 ```
 
-Using `terraform import`, import DB Option groups using the `name`. For example:
+Using `terraform import`, import DB option groups using the `name`. For example:
 
 ```console
 % terraform import aws_db_option_group.example mysql-option-group
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-e2653f20f77c2a6f4979ce5eb3a9c3c9dc22aa167c5aac46782e52fe6e4b9e98 -->
+<!-- cache-key: cdktf-0.20.1 input-f4f57d2a8743b4e406d5ddc4770491e90f783f3d60d46d4947114c831496d546 -->

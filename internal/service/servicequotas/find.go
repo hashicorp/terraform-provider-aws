@@ -5,22 +5,23 @@ package servicequotas
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/servicequotas"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/servicequotas"
+	"github.com/aws/aws-sdk-go-v2/service/servicequotas/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func findServiceQuotaDefaultByID(ctx context.Context, conn *servicequotas.ServiceQuotas, serviceCode, quotaCode string) (*servicequotas.ServiceQuota, error) {
+func findServiceQuotaDefaultByID(ctx context.Context, conn *servicequotas.Client, serviceCode, quotaCode string) (*types.ServiceQuota, error) {
 	input := &servicequotas.GetAWSDefaultServiceQuotaInput{
 		ServiceCode: aws.String(serviceCode),
 		QuotaCode:   aws.String(quotaCode),
 	}
 
-	output, err := conn.GetAWSDefaultServiceQuotaWithContext(ctx, input)
+	output, err := conn.GetAWSDefaultServiceQuota(ctx, input)
 
 	if err != nil {
 		return nil, err
@@ -32,45 +33,38 @@ func findServiceQuotaDefaultByID(ctx context.Context, conn *servicequotas.Servic
 	return output.Quota, nil
 }
 
-func findServiceQuotaDefaultByName(ctx context.Context, conn *servicequotas.ServiceQuotas, serviceCode, quotaName string) (*servicequotas.ServiceQuota, error) {
+func findServiceQuotaDefaultByName(ctx context.Context, conn *servicequotas.Client, serviceCode, quotaName string) (*types.ServiceQuota, error) {
 	input := &servicequotas.ListAWSDefaultServiceQuotasInput{
 		ServiceCode: aws.String(serviceCode),
 	}
 
-	var defaultQuota *servicequotas.ServiceQuota
-	err := conn.ListAWSDefaultServiceQuotasPagesWithContext(ctx, input, func(page *servicequotas.ListAWSDefaultServiceQuotasOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	paginator := servicequotas.NewListAWSDefaultServiceQuotasPaginator(conn, input)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if err != nil {
+			return nil, err
 		}
 
 		for _, q := range page.Quotas {
-			if aws.StringValue(q.QuotaName) == quotaName {
-				defaultQuota = q
-				return false
+			if aws.ToString(q.QuotaName) == quotaName {
+				return &q, nil
 			}
 		}
-
-		return !lastPage
-	})
-	if err != nil {
-		return nil, err
-	}
-	if defaultQuota == nil {
-		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return defaultQuota, nil
+	return nil, tfresource.NewEmptyResultError(input)
 }
 
-func findServiceQuotaByID(ctx context.Context, conn *servicequotas.ServiceQuotas, serviceCode, quotaCode string) (*servicequotas.ServiceQuota, error) {
+func findServiceQuotaByID(ctx context.Context, conn *servicequotas.Client, serviceCode, quotaCode string) (*types.ServiceQuota, error) {
 	input := &servicequotas.GetServiceQuotaInput{
 		ServiceCode: aws.String(serviceCode),
 		QuotaCode:   aws.String(quotaCode),
 	}
 
-	output, err := conn.GetServiceQuotaWithContext(ctx, input)
+	output, err := conn.GetServiceQuota(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, servicequotas.ErrCodeNoSuchResourceException) {
+	var nsr *types.NoSuchResourceException
+	if errors.As(err, &nsr) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -86,7 +80,7 @@ func findServiceQuotaByID(ctx context.Context, conn *servicequotas.ServiceQuotas
 
 	if output.Quota.ErrorReason != nil {
 		return nil, &retry.NotFoundError{
-			Message:     fmt.Sprintf("%s: %s", aws.StringValue(output.Quota.ErrorReason.ErrorCode), aws.StringValue(output.Quota.ErrorReason.ErrorMessage)),
+			Message:     fmt.Sprintf("%s: %s", output.Quota.ErrorReason.ErrorCode, aws.ToString(output.Quota.ErrorReason.ErrorMessage)),
 			LastRequest: input,
 		}
 	}

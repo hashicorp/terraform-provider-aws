@@ -4,11 +4,14 @@
 package schema
 
 import (
+	"strconv"
+
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 )
 
 func analysisDefaultSchema() *schema.Schema {
@@ -349,14 +352,14 @@ func gridLayoutConfigurationSchema() *schema.Schema {
 								ValidateFunc: validation.IntBetween(1, 21),
 							},
 							"column_index": {
-								Type:         schema.TypeInt,
+								Type:         nullable.TypeNullableInt,
 								Optional:     true,
-								ValidateFunc: validation.IntBetween(0, 35),
+								ValidateFunc: nullable.ValidateTypeStringNullableIntBetween(0, 35),
 							},
 							"row_index": {
-								Type:         schema.TypeInt,
+								Type:         nullable.TypeNullableInt,
 								Optional:     true,
-								ValidateFunc: validation.IntBetween(0, 9009),
+								ValidateFunc: nullable.ValidateTypeStringNullableIntBetween(0, 9009),
 							},
 						},
 					},
@@ -1281,11 +1284,11 @@ func expandGridLayoutElement(tfMap map[string]interface{}) *quicksight.GridLayou
 	if v, ok := tfMap["row_span"].(int); ok && v != 0 {
 		layout.RowSpan = aws.Int64(int64(v))
 	}
-	if v, ok := tfMap["column_index"].(int); ok && v != 0 {
-		layout.ColumnIndex = aws.Int64(int64(v))
+	if v, null, _ := nullable.Int(tfMap["column_index"].(string)).Value(); !null {
+		layout.ColumnIndex = aws.Int64(v)
 	}
-	if v, ok := tfMap["row_index"].(int); ok && v != 0 {
-		layout.RowIndex = aws.Int64(int64(v))
+	if v, null, _ := nullable.Int(tfMap["row_index"].(string)).Value(); !null {
+		layout.RowIndex = aws.Int64(v)
 	}
 
 	return layout
@@ -2093,10 +2096,10 @@ func flattenGridLayoutElement(apiObject []*quicksight.GridLayoutElement) []inter
 			"row_span":     aws.Int64Value(config.RowSpan),
 		}
 		if config.ColumnIndex != nil {
-			tfMap["column_index"] = aws.Int64Value(config.ColumnIndex)
+			tfMap["column_index"] = strconv.FormatInt(aws.Int64Value(config.ColumnIndex), 10)
 		}
 		if config.RowIndex != nil {
-			tfMap["row_index"] = aws.Int64Value(config.RowIndex)
+			tfMap["row_index"] = strconv.FormatInt(aws.Int64Value(config.RowIndex), 10)
 		}
 
 		tfList = append(tfList, tfMap)

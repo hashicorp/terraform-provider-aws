@@ -271,3 +271,102 @@ func TestFlattenTimeStringList(t *testing.T) {
 		t.Errorf("expanded = %v, want = %v", got, want)
 	}
 }
+
+func TestDiffStringMaps(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		Old, New                  map[string]interface{}
+		Create, Remove, Unchanged map[string]interface{}
+	}{
+		// Add
+		{
+			Old: map[string]interface{}{
+				"foo": "bar",
+			},
+			New: map[string]interface{}{
+				"foo": "bar",
+				"bar": "baz",
+			},
+			Create: map[string]interface{}{
+				"bar": "baz",
+			},
+			Remove: map[string]interface{}{},
+			Unchanged: map[string]interface{}{
+				"foo": "bar",
+			},
+		},
+
+		// Modify
+		{
+			Old: map[string]interface{}{
+				"foo": "bar",
+			},
+			New: map[string]interface{}{
+				"foo": "baz",
+			},
+			Create: map[string]interface{}{
+				"foo": "baz",
+			},
+			Remove: map[string]interface{}{
+				"foo": "bar",
+			},
+			Unchanged: map[string]interface{}{},
+		},
+
+		// Overlap
+		{
+			Old: map[string]interface{}{
+				"foo":   "bar",
+				"hello": "world",
+			},
+			New: map[string]interface{}{
+				"foo":   "baz",
+				"hello": "world",
+			},
+			Create: map[string]interface{}{
+				"foo": "baz",
+			},
+			Remove: map[string]interface{}{
+				"foo": "bar",
+			},
+			Unchanged: map[string]interface{}{
+				"hello": "world",
+			},
+		},
+
+		// Remove
+		{
+			Old: map[string]interface{}{
+				"foo": "bar",
+				"bar": "baz",
+			},
+			New: map[string]interface{}{
+				"foo": "bar",
+			},
+			Create: map[string]interface{}{},
+			Remove: map[string]interface{}{
+				"bar": "baz",
+			},
+			Unchanged: map[string]interface{}{
+				"foo": "bar",
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		c, r, u := DiffStringMaps(tc.Old, tc.New)
+		cm := FlattenStringMap(c)
+		rm := FlattenStringMap(r)
+		um := FlattenStringMap(u)
+		if diff := cmp.Diff(cm, tc.Create); diff != "" {
+			t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+		}
+		if diff := cmp.Diff(rm, tc.Remove); diff != "" {
+			t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+		}
+		if diff := cmp.Diff(um, tc.Unchanged); diff != "" {
+			t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+		}
+	}
+}

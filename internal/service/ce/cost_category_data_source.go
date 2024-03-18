@@ -317,13 +317,15 @@ func DataSourceCostCategory() *schema.Resource {
 }
 
 func dataSourceCostCategoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).CEConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	costCategory, err := FindCostCategoryByARN(ctx, conn, d.Get("cost_category_arn").(string))
 
 	if err != nil {
-		return create.DiagError(names.CE, create.ErrActionReading, ResNameCostCategory, d.Id(), err)
+		return create.AppendDiagError(diags, names.CE, create.ErrActionReading, ResNameCostCategory, d.Id(), err)
 	}
 
 	d.Set("default_value", costCategory.DefaultValue)
@@ -331,11 +333,11 @@ func dataSourceCostCategoryRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("effective_start", costCategory.EffectiveStart)
 	d.Set("name", costCategory.Name)
 	if err = d.Set("rule", flattenCostCategoryRules(costCategory.Rules)); err != nil {
-		return create.DiagError(names.CE, "setting rule", ResNameCostCategory, d.Id(), err)
+		return create.AppendDiagError(diags, names.CE, "setting rule", ResNameCostCategory, d.Id(), err)
 	}
 	d.Set("rule_version", costCategory.RuleVersion)
 	if err = d.Set("split_charge_rule", flattenCostCategorySplitChargeRules(costCategory.SplitChargeRules)); err != nil {
-		return create.DiagError(names.CE, "setting split_charge_rule", ResNameCostCategory, d.Id(), err)
+		return create.AppendDiagError(diags, names.CE, "setting split_charge_rule", ResNameCostCategory, d.Id(), err)
 	}
 
 	d.SetId(aws.StringValue(costCategory.CostCategoryArn))
@@ -343,12 +345,12 @@ func dataSourceCostCategoryRead(ctx context.Context, d *schema.ResourceData, met
 	tags, err := listTags(ctx, conn, d.Id())
 
 	if err != nil {
-		return create.DiagError(names.CE, "listing tags", ResNameCostCategory, d.Id(), err)
+		return create.AppendDiagError(diags, names.CE, "listing tags", ResNameCostCategory, d.Id(), err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return create.DiagError(names.CE, "setting tags", ResNameCostCategory, d.Id(), err)
+		return create.AppendDiagError(diags, names.CE, "setting tags", ResNameCostCategory, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

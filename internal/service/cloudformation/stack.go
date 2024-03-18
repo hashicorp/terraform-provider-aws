@@ -332,7 +332,7 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	}, errCodeValidationError, "is invalid or cannot be assumed")
 
 	if tfawserr.ErrMessageContains(err, errCodeValidationError, "No updates are to be performed") {
-		return diags
+		return append(diags, resourceStackRead(ctx, d, meta)...)
 	}
 
 	if err != nil {

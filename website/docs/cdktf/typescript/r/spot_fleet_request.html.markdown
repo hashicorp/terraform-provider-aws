@@ -303,10 +303,10 @@ terminateInstancesWithExpiration.
 across different markets and instance types. Conflicts with `launchTemplateConfig`. At least one of `launchSpecification` or `launchTemplateConfig` is required.
 
     **Note**: This takes in similar but not
-    identical inputs as [`awsInstance`](instance.html).  There are limitations on
+    identical inputs as [`aws_instance`](instance.html).  There are limitations on
     what you can specify. See the list of officially supported inputs in the
-    [reference documentation](http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_SpotFleetLaunchSpecification.html). Any normal [`awsInstance`](instance.html) parameter that corresponds to those inputs may be used and it have
-    a additional parameter `iamInstanceProfileArn` takes `awsIamInstanceProfile` attribute `arn` as input.
+    [reference documentation](http://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_SpotFleetLaunchSpecification.html). Any normal [`aws_instance`](instance.html) parameter that corresponds to those inputs may be used and it have
+    a additional parameter `iamInstanceProfileArn` takes `aws_iam_instance_profile` attribute `arn` as input.
 
 * `launchTemplateConfig` - (Optional) Launch template configuration block. See [Launch Template Configs](#launch-template-configs) below for more details. Conflicts with `launchSpecification`. At least one of `launchSpecification` or `launchTemplateConfig` is required.
 * `spotMaintenanceStrategies` - (Optional) Nested argument containing maintenance strategies for managing your Spot Instances that are at an elevated risk of being interrupted. Defined below.
@@ -342,7 +342,7 @@ across different markets and instance types. Conflicts with `launchTemplateConfi
 * `validUntil` - (Optional) The end date and time of the request, in UTC [RFC3339](https://tools.ietf.org/html/rfc3339#section-5.8) format(for example, YYYY-MM-DDTHH:MM:SSZ). At this point, no new Spot instance requests are placed or enabled to fulfill the request.
 * `validFrom` - (Optional) The start date and time of the request, in UTC [RFC3339](https://tools.ietf.org/html/rfc3339#section-5.8) format(for example, YYYY-MM-DDTHH:MM:SSZ). The default is to start fulfilling the request immediately.
 * `loadBalancers` (Optional) A list of elastic load balancer names to add to the Spot fleet.
-* `targetGroupArns` (Optional) A list of `awsAlbTargetGroup` ARNs, for use with Application Load Balancing.
+* `targetGroupArns` (Optional) A list of `aws_alb_target_group` ARNs, for use with Application Load Balancing.
 * `onDemandAllocationStrategy` - The order of the launch template overrides to use in fulfilling On-Demand capacity. the possible values are: `lowestPrice` and `prioritized`. the default is `lowestPrice`.
 * `onDemandMaxTotalPrice` - The maximum amount per hour for On-Demand Instances that you're willing to pay. When the maximum amount you're willing to pay is reached, the fleet stops launching instances even if it hasn’t met the target capacity.
 * `onDemandTargetCapacity` - The number of On-Demand units to request. If the request type is `maintain`, you can specify a target capacity of 0 and add capacity later.
@@ -359,10 +359,10 @@ The `launchTemplateConfig` block supports the following:
 
 * `id` - The ID of the launch template. Conflicts with `name`.
 * `name` - The name of the launch template. Conflicts with `id`.
-* `version` - (Optional) Template version. Unlike the autoscaling equivalent, does not support `$latest` or `$default`, so use the launch_template resource's attribute, e.g., `"${awsLaunchTemplateFooLatestVersion}"`. It will use the default version if omitted.
+* `version` - (Optional) Template version. Unlike the autoscaling equivalent, does not support `$Latest` or `$Default`, so use the launch_template resource's attribute, e.g., `"${aws_launch_template.foo.latest_version}"`. It will use the default version if omitted.
 
     **Note:** The specified launch template can specify only a subset of the
-    inputs of [`awsLaunchTemplate`](launch_template.html).  There are limitations on
+    inputs of [`aws_launch_template`](launch_template.html).  There are limitations on
     what you can specify as spot fleet does not support all the attributes that are supported by autoscaling groups. [AWS documentation](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-launch-templates.html#launch-templates-spot-fleet) is currently sparse, but at least `instanceInitiatedShutdownBehavior` is confirmed unsupported.
 
 ### spot_maintenance_strategies
@@ -425,7 +425,7 @@ This configuration block supports the following:
       * inference
     ```
 
-* `allowedInstanceTypes` - (Optional) List of instance types to apply your specified attributes against. All other instance types are ignored, even if they match your specified attributes. You can use strings with one or more wild cards, represented by an asterisk (\*), to allow an instance type, size, or generation. The following are examples: `m58Xlarge`, `c5*.*`, `m5A.*`, `r*`, `*3*`. For example, if you specify `c5*`, you are allowing the entire C5 instance family, which includes all C5a and C5n instance types. If you specify `m5A.*`, you are allowing all the M5a instance types, but not the M5n instance types. Maximum of 400 entries in the list; each entry is limited to 30 characters. Default is all instance types.
+* `allowedInstanceTypes` - (Optional) List of instance types to apply your specified attributes against. All other instance types are ignored, even if they match your specified attributes. You can use strings with one or more wild cards, represented by an asterisk (\*), to allow an instance type, size, or generation. The following are examples: `m5.8xlarge`, `c5*.*`, `m5a.*`, `r*`, `*3*`. For example, if you specify `c5*`, you are allowing the entire C5 instance family, which includes all C5a and C5n instance types. If you specify `m5a.*`, you are allowing all the M5a instance types, but not the M5n instance types. Maximum of 400 entries in the list; each entry is limited to 30 characters. Default is all instance types.
 
     ~> **NOTE:** If you specify `allowedInstanceTypes`, you can't specify `excludedInstanceTypes`.
 
@@ -445,7 +445,7 @@ This configuration block supports the following:
       * intel
     ```
 
-* `excludedInstanceTypes` - (Optional) List of instance types to exclude. You can use strings with one or more wild cards, represented by an asterisk (\*), to exclude an instance type, size, or generation. The following are examples: `m58Xlarge`, `c5*.*`, `m5A.*`, `r*`, `*3*`. For example, if you specify `c5*`, you are excluding the entire C5 instance family, which includes all C5a and C5n instance types. If you specify `m5A.*`, you are excluding all the M5a instance types, but not the M5n instance types. Maximum of 400 entries in the list; each entry is limited to 30 characters. Default is no excluded instance types.
+* `excludedInstanceTypes` - (Optional) List of instance types to exclude. You can use strings with one or more wild cards, represented by an asterisk (\*), to exclude an instance type, size, or generation. The following are examples: `m5.8xlarge`, `c5*.*`, `m5a.*`, `r*`, `*3*`. For example, if you specify `c5*`, you are excluding the entire C5 instance family, which includes all C5a and C5n instance types. If you specify `m5a.*`, you are excluding all the M5a instance types, but not the M5n instance types. Maximum of 400 entries in the list; each entry is limited to 30 characters. Default is no excluded instance types.
 
     ~> **NOTE:** If you specify `excludedInstanceTypes`, you can't specify `allowedInstanceTypes`.
 
@@ -467,8 +467,8 @@ This configuration block supports the following:
     ```
 
 * `memoryGibPerVcpu` - (Optional) Block describing the minimum and maximum amount of memory (GiB) per vCPU. Default is no minimum or maximum.
-    * `min` - (Optional) Minimum. May be a decimal number, e.g. `05`.
-    * `max` - (Optional) Maximum. May be a decimal number, e.g. `05`.
+    * `min` - (Optional) Minimum. May be a decimal number, e.g. `0.5`.
+    * `max` - (Optional) Maximum. May be a decimal number, e.g. `0.5`.
 * `memoryMib` - (Optional) Block describing the minimum and maximum amount of memory (MiB). Default is no maximum.
     * `min` - (Optional) Minimum.
     * `max` - (Optional) Maximum.
@@ -486,8 +486,8 @@ This configuration block supports the following:
 
     If you set DesiredCapacityType to vcpu or memory-mib, the price protection threshold is applied based on the per vCPU or per memory price instead of the per instance price.
 * `totalLocalStorageGb` - (Optional) Block describing the minimum and maximum total local storage (GB). Default is no minimum or maximum.
-    * `min` - (Optional) Minimum. May be a decimal number, e.g. `05`.
-    * `max` - (Optional) Maximum. May be a decimal number, e.g. `05`.
+    * `min` - (Optional) Minimum. May be a decimal number, e.g. `0.5`.
+    * `max` - (Optional) Maximum. May be a decimal number, e.g. `0.5`.
 * `vcpuCount` - (Optional) Block describing the minimum and maximum number of vCPUs. Default is no maximum.
     * `min` - (Optional) Minimum.
     * `max` - (Optional) Maximum.
@@ -504,8 +504,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `10M`)
-* `delete` - (Default `15M`)
+* `create` - (Default `10m`)
+* `delete` - (Default `15m`)
 
 ## Import
 
@@ -515,9 +515,19 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { SpotFleetRequest } from "./.gen/providers/aws/spot-fleet-request";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    SpotFleetRequest.generateConfigForImport(
+      this,
+      "fleet",
+      "sfr-005e9ec8-5546-4c31-b317-31a62325411e"
+    );
   }
 }
 
@@ -529,4 +539,4 @@ Using `terraform import`, import Spot Fleet Requests using `id`. For example:
 % terraform import aws_spot_fleet_request.fleet sfr-005e9ec8-5546-4c31-b317-31a62325411e
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-1ecd23c004a4840044b58f08e2d76b93455d0e78ffddfd4a1e1ae619c9c18174 -->
+<!-- cache-key: cdktf-0.20.1 input-1ecd23c004a4840044b58f08e2d76b93455d0e78ffddfd4a1e1ae619c9c18174 -->

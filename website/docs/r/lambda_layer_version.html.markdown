@@ -45,7 +45,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `compatible_architectures` - (Optional) List of [Architectures][4] this layer is compatible with. Currently `x86_64` and `arm64` can be specified.
-* `compatible_runtimes` - (Optional) List of [Runtimes][2] this layer is compatible with. Up to 5 runtimes can be specified.
+* `compatible_runtimes` - (Optional) List of [Runtimes][2] this layer is compatible with. Up to 15 runtimes can be specified.
 * `description` - (Optional) Description of what your Lambda Layer does.
 * `filename` (Optional) Path to the function's deployment package within the local filesystem. If defined, The `s3_`-prefixed options cannot be used.
 * `license_info` - (Optional) License info for your Lambda Layer. See [License Info][3].

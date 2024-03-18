@@ -161,18 +161,16 @@ func resourceHostedConfigurationVersionDelete(ctx context.Context, d *schema.Res
 	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
 
 	appID, confProfID, versionNumber, err := HostedConfigurationVersionParseID(d.Id())
-
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Appconfig Hosted Configuration Version (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &appconfig.DeleteHostedConfigurationVersionInput{
+	log.Printf("[INFO] Deleting AppConfig Hosted Configuration Version: %s", d.Id())
+	_, err = conn.DeleteHostedConfigurationVersionWithContext(ctx, &appconfig.DeleteHostedConfigurationVersionInput{
 		ApplicationId:          aws.String(appID),
 		ConfigurationProfileId: aws.String(confProfID),
 		VersionNumber:          aws.Int64(int64(versionNumber)),
-	}
-
-	_, err = conn.DeleteHostedConfigurationVersionWithContext(ctx, input)
+	})
 
 	if tfawserr.ErrCodeEquals(err, appconfig.ErrCodeResourceNotFoundException) {
 		return diags
