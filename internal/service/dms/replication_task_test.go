@@ -82,26 +82,26 @@ func TestAccDMSReplicationTask_update(t *testing.T) {
 		CheckDestroy:             testAccCheckReplicationTaskDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationTaskConfig_update(rName, "full-load", 1024, "ZedsDead"),
+				Config: testAccReplicationTaskConfig_update(rName, "full-load", 1056, "ZedsDead"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationTaskExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "replication_task_arn"),
 					resource.TestCheckResourceAttr(resourceName, "migration_type", "full-load"),
-					resource.TestMatchResourceAttr(resourceName, "replication_task_settings", regexache.MustCompile("MemoryLimitTotal\":1024")),
+					resource.TestMatchResourceAttr(resourceName, "replication_task_settings", regexache.MustCompile("MemoryLimitTotal\":1056")),
 					resource.TestMatchResourceAttr(resourceName, "table_mappings", regexache.MustCompile("rule-name\":\"ZedsDead")),
 				),
 			},
 			{
-				Config: testAccReplicationTaskConfig_update(rName, "full-load", 1024, "EMBRZ"),
+				Config: testAccReplicationTaskConfig_update(rName, "full-load", 1056, "EMBRZ"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationTaskExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "migration_type", "full-load"),
-					resource.TestMatchResourceAttr(resourceName, "replication_task_settings", regexache.MustCompile("MemoryLimitTotal\":1024")),
+					resource.TestMatchResourceAttr(resourceName, "replication_task_settings", regexache.MustCompile("MemoryLimitTotal\":1056")),
 					resource.TestMatchResourceAttr(resourceName, "table_mappings", regexache.MustCompile("rule-name\":\"EMBRZ")),
 				),
 			},
 			{
-				Config:             testAccReplicationTaskConfig_update(rName, "full-load", 1024, "EMBRZ"),
+				Config:             testAccReplicationTaskConfig_update(rName, "full-load", 1056, "EMBRZ"),
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: false,
 			},
@@ -116,16 +116,16 @@ func TestAccDMSReplicationTask_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccReplicationTaskConfig_update(rName, "full-load", 1024, "ZedsDead"),
+				Config: testAccReplicationTaskConfig_update(rName, "full-load", 1056, "ZedsDead"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationTaskExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "migration_type", "full-load"),
-					resource.TestMatchResourceAttr(resourceName, "replication_task_settings", regexache.MustCompile("MemoryLimitTotal\":1024")),
+					resource.TestMatchResourceAttr(resourceName, "replication_task_settings", regexache.MustCompile("MemoryLimitTotal\":1056")),
 					resource.TestMatchResourceAttr(resourceName, "table_mappings", regexache.MustCompile("rule-name\":\"ZedsDead")),
 				),
 			},
 			{
-				Config:             testAccReplicationTaskConfig_update(rName, "full-load", 1024, "ZedsDead"),
+				Config:             testAccReplicationTaskConfig_update(rName, "full-load", 1056, "ZedsDead"),
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: false,
 			},
@@ -140,16 +140,16 @@ func TestAccDMSReplicationTask_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccReplicationTaskConfig_update(rName, "full-load", 1024, "EMBRZ"),
+				Config: testAccReplicationTaskConfig_update(rName, "full-load", 1056, "EMBRZ"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckReplicationTaskExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "migration_type", "full-load"),
-					resource.TestMatchResourceAttr(resourceName, "replication_task_settings", regexache.MustCompile("MemoryLimitTotal\":1024")),
+					resource.TestMatchResourceAttr(resourceName, "replication_task_settings", regexache.MustCompile("MemoryLimitTotal\":1056")),
 					resource.TestMatchResourceAttr(resourceName, "table_mappings", regexache.MustCompile("rule-name\":\"EMBRZ")),
 				),
 			},
 			{
-				Config:             testAccReplicationTaskConfig_update(rName, "full-load", 1024, "EMBRZ"),
+				Config:             testAccReplicationTaskConfig_update(rName, "full-load", 1056, "EMBRZ"),
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: false,
 			},
