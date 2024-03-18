@@ -1,4 +1,10 @@
 ## 5.42.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_appautoscaling_scheduled_action: Always send `start_time` and `end_time` values on update when configured ([#33713](https://github.com/hashicorp/terraform-provider-aws/issues/33713))
+* resource/aws_appautoscaling_scheduled_action: Read correct resource by using `scalable_dimension` as an additional filter ([#34382](https://github.com/hashicorp/terraform-provider-aws/issues/34382))
+
 ## 5.41.0 (March 14, 2024)
 
 FEATURES:
