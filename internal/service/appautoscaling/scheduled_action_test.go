@@ -79,6 +79,32 @@ func TestAccAppAutoScalingScheduledAction_dynamoDB(t *testing.T) {
 	})
 }
 
+func TestAccAppAutoScalingScheduledAction_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var sa applicationautoscaling.ScheduledAction
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	schedule := time.Now().AddDate(0, 0, 1).Format("2006-01-02T15:04:05")
+
+	resourceName := "aws_appautoscaling_scheduled_action.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppAutoScalingServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckScheduledActionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccScheduledActionConfig_dynamoDB(rName, schedule),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckScheduledActionExists(ctx, resourceName, &sa),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappautoscaling.ResourceTarget(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAppAutoScalingScheduledAction_ecs(t *testing.T) {
 	ctx := acctest.Context(t)
 	var sa applicationautoscaling.ScheduledAction
