@@ -325,7 +325,7 @@ func TestAccAppStreamFleet_multiSession(t *testing.T) {
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFleetDestroy(ctx),
-		ErrorCheck:               acctest.ErrorCheck(t, appstream.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFleetConfig_multiSession(rName, instanceType, desiredSessions, maxSessionsPerInstance),
