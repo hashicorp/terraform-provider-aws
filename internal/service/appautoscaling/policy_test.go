@@ -70,13 +70,13 @@ func TestValidatePolicyImportInput(t *testing.T) {
 			errorExpected: true,
 		},
 		{
-			input:         "kafka/arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3/kafka:broker-storage:VolumeSize/KafkaBrokerStorageUtilization-scaling-policy:arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3",
-			expected:      []string{"kafka", "arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3", "kafka:broker-storage:VolumeSize", "KafkaBrokerStorageUtilization-scaling-policy:arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3"},
+			input:         "kafka/arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3/kafka:broker-storage:VolumeSize/KafkaBrokerStorageUtilization-scaling-policy:arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3",                    //lintignore:AWSAT003,AWSAT005
+			expected:      []string{"kafka", "arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3", "kafka:broker-storage:VolumeSize", "KafkaBrokerStorageUtilization-scaling-policy:arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3"}, //lintignore:AWSAT003,AWSAT005
 			errorExpected: false,
 		},
 		{
-			input:         "kafka/arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3/kafka:broker-storage:VolumeSize/some-autoscaler-name",
-			expected:      []string{"kafka", "arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3", "kafka:broker-storage:VolumeSize", "some-autoscaler-name"},
+			input:         "kafka/arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3/kafka:broker-storage:VolumeSize/some-autoscaler-name",                    //lintignore:AWSAT003,AWSAT005
+			expected:      []string{"kafka", "arn:aws:kafka:us-west-2:123456789012:cluster/example/279c0212-d057-4dba-9aa9-1c4e5a25bfc7-3", "kafka:broker-storage:VolumeSize", "some-autoscaler-name"}, //lintignore:AWSAT003,AWSAT005
 			errorExpected: false,
 		},
 		{
