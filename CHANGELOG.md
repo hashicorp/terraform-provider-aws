@@ -2,8 +2,11 @@
 
 BUG FIXES:
 
+* resource/aws_appautoscaling_policy: Fix errors when importing an MSK storage autoscaling policy ([#34934](https://github.com/hashicorp/terraform-provider-aws/issues/34934))
 * resource/aws_appautoscaling_scheduled_action: Always send `start_time` and `end_time` values on update when configured ([#33713](https://github.com/hashicorp/terraform-provider-aws/issues/33713))
 * resource/aws_appautoscaling_scheduled_action: Read correct resource by using `scalable_dimension` as an additional filter ([#34382](https://github.com/hashicorp/terraform-provider-aws/issues/34382))
+* resource/aws_dms_replication_config: Fix persistent change in `replication_settings` ([#35670](https://github.com/hashicorp/terraform-provider-aws/issues/35670))
+* resource/aws_dms_replication_task: Fix persistent change in `replication_task_settings` ([#35670](https://github.com/hashicorp/terraform-provider-aws/issues/35670))
 
 ## 5.41.0 (March 14, 2024)
 
