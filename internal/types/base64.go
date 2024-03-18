@@ -5,7 +5,17 @@ package types
 
 import (
 	"encoding/base64"
+
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
+
+func Base64Decode(s string) ([]byte, error) {
+	return base64.StdEncoding.DecodeString(s)
+}
+
+func MustBase64Decode(s string) []byte {
+	return errs.Must(Base64Decode(s))
+}
 
 // Base64EncodeOnce encodes the input blob using base64.StdEncoding.EncodeToString.
 // If the blob is already base64 encoded, return the original input unchanged.
