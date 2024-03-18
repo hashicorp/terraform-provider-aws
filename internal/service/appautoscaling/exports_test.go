@@ -9,5 +9,7 @@ var (
 	ResourceScheduledAction = resourceScheduledAction
 	ResourceTarget          = resourceTarget
 
+	FindScalingPolicyByFourPartKey   = findScalingPolicyByFourPartKey
 	FindScheduledActionByFourPartKey = findScheduledActionByFourPartKey
+	ValidPolicyImportInput           = validPolicyImportInput
 )
