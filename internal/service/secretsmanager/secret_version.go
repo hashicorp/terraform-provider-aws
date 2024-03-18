@@ -5,7 +5,6 @@ package secretsmanager
 
 import (
 	"context"
-	"encoding/base64"
 	"fmt"
 	"log"
 	"strings"
@@ -94,8 +93,7 @@ func resourceSecretVersionCreate(ctx context.Context, d *schema.ResourceData, me
 
 	if v, ok := d.GetOk("secret_binary"); ok {
 		var err error
-		input.SecretBinary, err = base64.StdEncoding.DecodeString(v.(string))
-
+		input.SecretBinary, err = itypes.Base64Decode(v.(string))
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}

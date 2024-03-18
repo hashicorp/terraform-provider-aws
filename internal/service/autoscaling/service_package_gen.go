@@ -77,6 +77,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceLaunchConfiguration,
 			TypeName: "aws_launch_configuration",
+			Name:     "Launch Configuration",
 		},
 	}
 }

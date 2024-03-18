@@ -5,7 +5,6 @@ package dms
 
 import (
 	"context"
-	"encoding/base64"
 	"log"
 
 	"github.com/YakDriver/regexache"
@@ -91,11 +90,11 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("certificate_wallet"); ok {
-		certWallet, err := base64.StdEncoding.DecodeString(v.(string))
+		v, err := itypes.Base64Decode(v.(string))
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
-		input.CertificateWallet = certWallet
+		input.CertificateWallet = v
 	}
 
 	_, err := conn.ImportCertificateWithContext(ctx, input)

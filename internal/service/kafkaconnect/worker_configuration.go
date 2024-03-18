@@ -5,7 +5,6 @@ package kafkaconnect
 
 import (
 	"context"
-	"encoding/base64"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -16,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 // @SDKResource("aws_mskconnect_worker_configuration")
@@ -125,11 +125,10 @@ func resourceWorkerConfigurationRead(ctx context.Context, d *schema.ResourceData
 }
 
 func decodePropertiesFileContent(content string) string {
-	result, err := base64.StdEncoding.DecodeString(content)
-
+	v, err := itypes.Base64Decode(content)
 	if err != nil {
 		return content
 	}
 
-	return string(result)
+	return string(v)
 }
