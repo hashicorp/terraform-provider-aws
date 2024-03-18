@@ -80,12 +80,8 @@ func TestAccCostOptimizationHubEnrollmentStatus_disappears(t *testing.T) {
 	})
 }
 
-// testAccCheckEnrollmentStatusDestroy verfies ListEnrollmentStatuses does not return an error
-//
-// Since this resource manages enrollment/unenrollment to Cost Optimization Hub, there is nothing
-// to destroy. Additionally, because enrollment may remain active depending on whether
-// the unenroll_on_destroy attribute was set, this function does not check that account
-// enrollment is inactive, simply that the status check returns a valid response.
+// Since this resource manages enrollment/unenrollment destroying the resource
+// only means that account enrollment is inactive.
 func testAccCheckEnrollmentStatusDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CostOptimizationHubClient(ctx)
@@ -104,7 +100,6 @@ func testAccCheckEnrollmentStatusDestroy(ctx context.Context) resource.TestCheck
 			}
 
 			return fmt.Errorf("Cost Optimization Hub Enrollment Status %s still exists", rs.Primary.ID)
-
 		}
 
 		return nil

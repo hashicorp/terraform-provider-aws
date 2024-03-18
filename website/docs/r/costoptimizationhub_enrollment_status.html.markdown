@@ -3,19 +3,12 @@ subcategory: "Cost Optimization Hub"
 layout: "aws"
 page_title: "AWS: aws_costoptimizationhub_enrollment_status"
 description: |-
-  Terraform resource for managing an AWS Cost Optimization Hub Enrollment Status.
+  Terraform resource for managing AWS Cost Optimization Hub Enrollment Status.
 ---
-<!---
-TIP: A few guiding principles for writing documentation:
-1. Use simple language while avoiding jargon and figures of speech.
-2. Focus on brevity and clarity to keep a reader's attention.
-3. Use active voice and present tense whenever you can.
-4. Document your feature as it exists now; do not mention the future or past if you can help it.
-5. Use accessible and inclusive language.
---->`
+
 # Resource: aws_costoptimizationhub_enrollment_status
 
-Terraform resource for managing an AWS Cost Optimization Hub Enrollment Status.
+Terraform resource for managing AWS Cost Optimization Hub Enrollment Status.
 
 ## Example Usage
 
@@ -26,44 +19,40 @@ resource "aws_costoptimizationhub_enrollment_status" "example" {
 }
 ```
 
+### Usage with all the arguments
+
+```terraform
+resource "aws_costoptimizationhub_enrollment_status" "example" {
+  include_member_accounts            = true
+}
+```
+
 ## Argument Reference
-
-The following arguments are required:
-
-* `example_arg` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
 
 The following arguments are optional:
 
-* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `include_member_accounts` - (Optional) Flag to enroll member accounts of the organization if the account is the management account. Default value is `false`
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Enrollment Status. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
+* `id` - Unique identifier for the enrollment. Since enrollment is for the entire account, this will be the 12-digit account id.
+* `status` - Status of enrollment. When the resource is present in Terraform, it's status will always be `Active`
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cost Optimization Hub Enrollment Status using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cost Optimization Hub Enrollment Status using the `id`. For example:
 
 ```terraform
 import {
   to = aws_costoptimizationhub_enrollment_status.example
-  id = "enrollment_status-id-12345678"
+  id = "111222333444"
 }
 ```
 
-Using `terraform import`, import Cost Optimization Hub Enrollment Status using the `example_id_arg`. For example:
+Using `terraform import`, import Cost Optimization Hub Enrollment Status using the `id`. For example:
 
 ```console
-% terraform import aws_costoptimizationhub_enrollment_status.example enrollment_status-id-12345678
+% terraform import aws_costoptimizationhub_enrollment_status.example 111222333444
 ```
