@@ -161,7 +161,7 @@ func resourceLocationS3Read(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
-	output, err := FindLocationS3ByARN(ctx, conn, d.Id())
+	output, err := findLocationS3ByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DataSync Location S3 (%s) not found, removing from state", d.Id())
@@ -230,7 +230,7 @@ func resourceLocationS3Delete(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func FindLocationS3ByARN(ctx context.Context, conn *datasync.DataSync, arn string) (*datasync.DescribeLocationS3Output, error) {
+func findLocationS3ByARN(ctx context.Context, conn *datasync.DataSync, arn string) (*datasync.DescribeLocationS3Output, error) {
 	input := &datasync.DescribeLocationS3Input{
 		LocationArn: aws.String(arn),
 	}

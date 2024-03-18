@@ -127,7 +127,7 @@ func resourceLocationFSxLustreFileSystemRead(ctx context.Context, d *schema.Reso
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
-	output, err := FindLocationFSxLustreByARN(ctx, conn, d.Id())
+	output, err := findLocationFSxLustreByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DataSync Location FSx for Lustre File System (%s) not found, removing from state", d.Id())
@@ -183,7 +183,7 @@ func resourceLocationFSxLustreFileSystemDelete(ctx context.Context, d *schema.Re
 	return diags
 }
 
-func FindLocationFSxLustreByARN(ctx context.Context, conn *datasync.DataSync, arn string) (*datasync.DescribeLocationFsxLustreOutput, error) {
+func findLocationFSxLustreByARN(ctx context.Context, conn *datasync.DataSync, arn string) (*datasync.DescribeLocationFsxLustreOutput, error) {
 	input := &datasync.DescribeLocationFsxLustreInput{
 		LocationArn: aws.String(arn),
 	}

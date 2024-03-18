@@ -17,4 +17,17 @@ var (
 	ResourceLocationS3                   = resourceLocationS3
 	ResourceLocationSMB                  = resourceLocationSMB
 	ResourceTask                         = resourceTask
+
+	FindLocationAzureBlobByARN     = findLocationAzureBlobByARN
+	FindLocationEFSByARN           = findLocationEFSByARN
+	FindLocationFSxLustreByARN     = findLocationFSxLustreByARN
+	FindLocationFSxONTAPByARN      = findLocationFSxONTAPByARN
+	FindLocationFSxOpenZFSByARN    = findLocationFSxOpenZFSByARN
+	FindLocationFSxWindowsByARN    = findLocationFSxWindowsByARN
+	FindLocationHDFSByARN          = findLocationHDFSByARN
+	FindLocationNFSByARN           = findLocationNFSByARN
+	FindLocationObjectStorageByARN = findLocationObjectStorageByARN
+	FindLocationS3ByARN            = findLocationS3ByARN
+	FindLocationSMBByARN           = findLocationSMBByARN
+	FindTaskByARN                  = findTaskByARN
 )

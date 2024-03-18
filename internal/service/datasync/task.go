@@ -358,7 +358,7 @@ func resourceTaskRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
-	output, err := FindTaskByARN(ctx, conn, d.Id())
+	output, err := findTaskByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DataSync Task (%s) not found, removing from state", d.Id())
@@ -459,7 +459,7 @@ func resourceTaskDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func FindTaskByARN(ctx context.Context, conn *datasync.DataSync, arn string) (*datasync.DescribeTaskOutput, error) {
+func findTaskByARN(ctx context.Context, conn *datasync.DataSync, arn string) (*datasync.DescribeTaskOutput, error) {
 	input := &datasync.DescribeTaskInput{
 		TaskArn: aws.String(arn),
 	}
@@ -486,7 +486,7 @@ func FindTaskByARN(ctx context.Context, conn *datasync.DataSync, arn string) (*d
 
 func statusTask(ctx context.Context, conn *datasync.DataSync, arn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindTaskByARN(ctx, conn, arn)
+		output, err := findTaskByARN(ctx, conn, arn)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

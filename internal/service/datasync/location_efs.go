@@ -159,7 +159,7 @@ func resourceLocationEFSRead(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
-	output, err := FindLocationEFSByARN(ctx, conn, d.Id())
+	output, err := findLocationEFSByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DataSync Location EFS (%s) not found, removing from state", d.Id())
@@ -230,7 +230,7 @@ func resourceLocationEFSDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func FindLocationEFSByARN(ctx context.Context, conn *datasync.DataSync, arn string) (*datasync.DescribeLocationEfsOutput, error) {
+func findLocationEFSByARN(ctx context.Context, conn *datasync.DataSync, arn string) (*datasync.DescribeLocationEfsOutput, error) {
 	input := &datasync.DescribeLocationEfsInput{
 		LocationArn: aws.String(arn),
 	}

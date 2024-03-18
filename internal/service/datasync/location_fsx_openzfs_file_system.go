@@ -164,7 +164,7 @@ func resourceLocationFSxOpenZFSFileSystemRead(ctx context.Context, d *schema.Res
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
-	output, err := FindLocationFSxOpenZFSByARN(ctx, conn, d.Id())
+	output, err := findLocationFSxOpenZFSByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DataSync Location FSx for OpenZFS File System (%s) not found, removing from state", d.Id())
@@ -223,7 +223,7 @@ func resourceLocationFSxOpenZFSFileSystemDelete(ctx context.Context, d *schema.R
 	return diags
 }
 
-func FindLocationFSxOpenZFSByARN(ctx context.Context, conn *datasync.DataSync, arn string) (*datasync.DescribeLocationFsxOpenZfsOutput, error) {
+func findLocationFSxOpenZFSByARN(ctx context.Context, conn *datasync.DataSync, arn string) (*datasync.DescribeLocationFsxOpenZfsOutput, error) {
 	input := &datasync.DescribeLocationFsxOpenZfsInput{
 		LocationArn: aws.String(arn),
 	}

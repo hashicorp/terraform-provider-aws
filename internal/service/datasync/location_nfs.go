@@ -140,7 +140,7 @@ func resourceLocationNFSRead(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
-	output, err := FindLocationNFSByARN(ctx, conn, d.Id())
+	output, err := findLocationNFSByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DataSync Location NFS (%s) not found, removing from state", d.Id())
@@ -221,7 +221,7 @@ func resourceLocationNFSDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func FindLocationNFSByARN(ctx context.Context, conn *datasync.DataSync, arn string) (*datasync.DescribeLocationNfsOutput, error) {
+func findLocationNFSByARN(ctx context.Context, conn *datasync.DataSync, arn string) (*datasync.DescribeLocationNfsOutput, error) {
 	input := &datasync.DescribeLocationNfsInput{
 		LocationArn: aws.String(arn),
 	}

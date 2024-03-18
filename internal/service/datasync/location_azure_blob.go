@@ -155,7 +155,7 @@ func resourceLocationAzureBlobRead(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
-	output, err := FindLocationAzureBlobByARN(ctx, conn, d.Id())
+	output, err := findLocationAzureBlobByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DataSync Location Microsoft Azure Blob Storage (%s) not found, removing from state", d.Id())
@@ -257,7 +257,7 @@ func resourceLocationAzureBlobDelete(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func FindLocationAzureBlobByARN(ctx context.Context, conn *datasync.DataSync, arn string) (*datasync.DescribeLocationAzureBlobOutput, error) {
+func findLocationAzureBlobByARN(ctx context.Context, conn *datasync.DataSync, arn string) (*datasync.DescribeLocationAzureBlobOutput, error) {
 	input := &datasync.DescribeLocationAzureBlobInput{
 		LocationArn: aws.String(arn),
 	}

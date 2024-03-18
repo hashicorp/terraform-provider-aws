@@ -223,7 +223,7 @@ func resourceLocationFSxONTAPFileSystemRead(ctx context.Context, d *schema.Resou
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
-	output, err := FindLocationFSxONTAPByARN(ctx, conn, d.Id())
+	output, err := findLocationFSxONTAPByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DataSync Location FSx for NetApp ONTAP File System (%s) not found, removing from state", d.Id())
@@ -291,7 +291,7 @@ func resourceLocationFSxONTAPFileSystemDelete(ctx context.Context, d *schema.Res
 	return diags
 }
 
-func FindLocationFSxONTAPByARN(ctx context.Context, conn *datasync.DataSync, arn string) (*datasync.DescribeLocationFsxOntapOutput, error) {
+func findLocationFSxONTAPByARN(ctx context.Context, conn *datasync.DataSync, arn string) (*datasync.DescribeLocationFsxOntapOutput, error) {
 	input := &datasync.DescribeLocationFsxOntapInput{
 		LocationArn: aws.String(arn),
 	}

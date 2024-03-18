@@ -155,7 +155,7 @@ func resourceLocationObjectStorageRead(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
-	output, err := FindLocationObjectStorageByARN(ctx, conn, d.Id())
+	output, err := findLocationObjectStorageByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DataSync Location Object Storage (%s) not found, removing from state", d.Id())
@@ -250,7 +250,7 @@ func resourceLocationObjectStorageDelete(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func FindLocationObjectStorageByARN(ctx context.Context, conn *datasync.DataSync, arn string) (*datasync.DescribeLocationObjectStorageOutput, error) {
+func findLocationObjectStorageByARN(ctx context.Context, conn *datasync.DataSync, arn string) (*datasync.DescribeLocationObjectStorageOutput, error) {
 	input := &datasync.DescribeLocationObjectStorageInput{
 		LocationArn: aws.String(arn),
 	}

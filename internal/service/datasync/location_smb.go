@@ -149,7 +149,7 @@ func resourceLocationSMBRead(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
-	output, err := FindLocationSMBByARN(ctx, conn, d.Id())
+	output, err := findLocationSMBByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DataSync Location SMB (%s) not found, removing from state", d.Id())
@@ -233,7 +233,7 @@ func resourceLocationSMBDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func FindLocationSMBByARN(ctx context.Context, conn *datasync.DataSync, arn string) (*datasync.DescribeLocationSmbOutput, error) {
+func findLocationSMBByARN(ctx context.Context, conn *datasync.DataSync, arn string) (*datasync.DescribeLocationSmbOutput, error) {
 	input := &datasync.DescribeLocationSmbInput{
 		LocationArn: aws.String(arn),
 	}
