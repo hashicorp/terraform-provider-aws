@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -91,7 +91,7 @@ func DataSourceDomainName() *schema.Resource {
 
 func dataSourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	domainName := d.Get("domain_name").(string)
@@ -101,7 +101,7 @@ func dataSourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway Domain Name (%s): %s", domainName, err)
 	}
 
-	d.SetId(aws.StringValue(output.DomainName))
+	d.SetId(aws.ToString(output.DomainName))
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,

@@ -7,19 +7,20 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func vpcLinkStatus(ctx context.Context, conn *apigateway.APIGateway, vpcLinkId string) retry.StateRefreshFunc {
+func vpcLinkStatus(ctx context.Context, conn *apigateway.Client, vpcLinkId string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := conn.GetVpcLinkWithContext(ctx, &apigateway.GetVpcLinkInput{
+		output, err := conn.GetVpcLink(ctx, &apigateway.GetVpcLinkInput{
 			VpcLinkId: aws.String(vpcLinkId),
 		})
-		if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
+		if errs.IsA[*awstypes.NotFoundException](err) {
 			return nil, "", nil
 		}
 		if err != nil {
@@ -27,15 +28,15 @@ func vpcLinkStatus(ctx context.Context, conn *apigateway.APIGateway, vpcLinkId s
 		}
 
 		// Error messages can also be contained in the response with FAILED status
-		if aws.StringValue(output.Status) == apigateway.VpcLinkStatusFailed {
-			return output, apigateway.VpcLinkStatusFailed, fmt.Errorf("%s: %s", apigateway.VpcLinkStatusFailed, aws.StringValue(output.StatusMessage))
+		if output.Status == awstypes.VpcLinkStatusFailed {
+			return output, string(awstypes.VpcLinkStatusFailed), fmt.Errorf("%s: %s", string(awstypes.VpcLinkStatusFailed), aws.ToString(output.StatusMessage))
 		}
 
-		return output, aws.StringValue(output.Status), nil
+		return output, string(output.Status), nil
 	}
 }
 
-func stageCacheStatus(ctx context.Context, conn *apigateway.APIGateway, restApiId, name string) retry.StateRefreshFunc {
+func stageCacheStatus(ctx context.Context, conn *apigateway.Client, restApiId, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindStageByTwoPartKey(ctx, conn, restApiId, name)
 
@@ -46,6 +47,6 @@ func stageCacheStatus(ctx context.Context, conn *apigateway.APIGateway, restApiI
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.CacheClusterStatus), nil
+		return output, string(output.CacheClusterStatus), nil
 	}
 }

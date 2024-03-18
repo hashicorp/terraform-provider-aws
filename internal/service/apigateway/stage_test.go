@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func TestAccAPIGatewayStage_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.Stage
+	var conf apigateway.GetStageOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_stage.test"
 
@@ -89,7 +89,7 @@ func TestAccAPIGatewayStage_basic(t *testing.T) {
 
 func TestAccAPIGatewayStage_cache(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.Stage
+	var conf apigateway.GetStageOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_stage.test"
 
@@ -143,7 +143,7 @@ func TestAccAPIGatewayStage_cache(t *testing.T) {
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/22866
 func TestAccAPIGatewayStage_cacheSizeCacheDisabled(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.Stage
+	var conf apigateway.GetStageOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_stage.test"
 
@@ -197,7 +197,7 @@ func TestAccAPIGatewayStage_cacheSizeCacheDisabled(t *testing.T) {
 
 func TestAccAPIGatewayStage_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.Stage
+	var conf apigateway.GetStageOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_stage.test"
 
@@ -244,7 +244,7 @@ func TestAccAPIGatewayStage_tags(t *testing.T) {
 
 func TestAccAPIGatewayStage_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var stage apigateway.Stage
+	var stage apigateway.GetStageOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_stage.test"
 
@@ -269,7 +269,7 @@ func TestAccAPIGatewayStage_disappears(t *testing.T) {
 
 func TestAccAPIGatewayStage_Disappears_restAPI(t *testing.T) {
 	ctx := acctest.Context(t)
-	var stage apigateway.Stage
+	var stage apigateway.GetStageOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_stage.test"
 
@@ -294,7 +294,7 @@ func TestAccAPIGatewayStage_Disappears_restAPI(t *testing.T) {
 
 func TestAccAPIGatewayStage_accessLogSettings(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.Stage
+	var conf apigateway.GetStageOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	cloudwatchLogGroupResourceName := "aws_cloudwatch_log_group.test"
 	resourceName := "aws_api_gateway_stage.test"
@@ -364,7 +364,7 @@ func TestAccAPIGatewayStage_accessLogSettings(t *testing.T) {
 
 func TestAccAPIGatewayStage_AccessLogSettings_kinesis(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.Stage
+	var conf apigateway.GetStageOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_stage.test"
 	kinesesResourceName := "aws_kinesis_firehose_delivery_stream.test"
@@ -433,7 +433,7 @@ func TestAccAPIGatewayStage_AccessLogSettings_kinesis(t *testing.T) {
 
 func TestAccAPIGatewayStage_waf(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.Stage
+	var conf apigateway.GetStageOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_stage.test"
 
@@ -468,7 +468,7 @@ func TestAccAPIGatewayStage_waf(t *testing.T) {
 
 func TestAccAPIGatewayStage_canarySettings(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.Stage
+	var conf apigateway.GetStageOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_stage.test"
 
@@ -515,7 +515,7 @@ func TestAccAPIGatewayStage_canarySettings(t *testing.T) {
 	})
 }
 
-func testAccCheckStageExists(ctx context.Context, n string, v *apigateway.Stage) resource.TestCheckFunc {
+func testAccCheckStageExists(ctx context.Context, n string, v *apigateway.GetStageOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -526,7 +526,7 @@ func testAccCheckStageExists(ctx context.Context, n string, v *apigateway.Stage)
 			return fmt.Errorf("No API Gateway Stage ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
 		output, err := tfapigateway.FindStageByTwoPartKey(ctx, conn, rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes["stage_name"])
 
@@ -542,7 +542,7 @@ func testAccCheckStageExists(ctx context.Context, n string, v *apigateway.Stage)
 
 func testAccCheckStageDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_api_gateway_stage" {

@@ -7,12 +7,14 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // @SDKDataSource("aws_api_gateway_resource")
@@ -42,32 +44,36 @@ func DataSourceResource() *schema.Resource {
 
 func dataSourceResourceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	restApiId := d.Get("rest_api_id").(string)
 	target := d.Get("path").(string)
 	params := &apigateway.GetResourcesInput{RestApiId: aws.String(restApiId)}
 
-	var match *apigateway.Resource
-	log.Printf("[DEBUG] Reading API Gateway Resources: %s", params)
-	err := conn.GetResourcesPagesWithContext(ctx, params, func(page *apigateway.GetResourcesOutput, lastPage bool) bool {
+	var resources []awstypes.Resource
+	log.Printf("[DEBUG] Reading API Gateway Resources: %+v", params)
+
+	pages := apigateway.NewGetResourcesPaginator(conn, params)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "describing API Gateway Resources: %s", err)
+		}
+
 		for _, resource := range page.Items {
-			if aws.StringValue(resource.Path) == target {
-				match = resource
-				return false
+			if aws.ToString(resource.Path) == target {
+				resources = append(resources, resource)
 			}
 		}
-		return !lastPage
-	})
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "describing API Gateway Resources: %s", err)
 	}
 
-	if match == nil {
+	match, err := tfresource.AssertSingleValueResult(resources)
+	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "no Resources with path %q found for rest api %q", target, restApiId)
 	}
 
-	d.SetId(aws.StringValue(match.Id))
+	d.SetId(aws.ToString(match.Id))
 	d.Set("path_part", match.PathPart)
 	d.Set("parent_id", match.ParentId)
 

@@ -9,13 +9,15 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -105,10 +107,10 @@ func ResourceMethodSettings() *schema.Resource {
 							Computed: true,
 						},
 						"unauthorized_cache_control_header_strategy": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice(apigateway.UnauthorizedCacheControlHeaderStrategy_Values(), false),
-							Computed:     true,
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.UnauthorizedCacheControlHeaderStrategy](),
+							Computed:         true,
 						},
 					},
 				},
@@ -117,11 +119,7 @@ func ResourceMethodSettings() *schema.Resource {
 	}
 }
 
-func flattenMethodSettings(settings *apigateway.MethodSetting) []interface{} {
-	if settings == nil {
-		return nil
-	}
-
+func flattenMethodSettings(settings awstypes.MethodSetting) []interface{} {
 	return []interface{}{
 		map[string]interface{}{
 			"metrics_enabled":                            settings.MetricsEnabled,
@@ -140,7 +138,7 @@ func flattenMethodSettings(settings *apigateway.MethodSetting) []interface{} {
 
 func resourceMethodSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	stage, err := FindStageByTwoPartKey(ctx, conn, d.Get("rest_api_id").(string), d.Get("stage_name").(string))
 
@@ -172,81 +170,81 @@ func resourceMethodSettingsRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceMethodSettingsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	methodPath := d.Get("method_path").(string)
 	prefix := fmt.Sprintf("/%s/", methodPath)
 
-	ops := make([]*apigateway.PatchOperation, 0)
+	ops := make([]awstypes.PatchOperation, 0)
 	if d.HasChange("settings.0.metrics_enabled") {
-		ops = append(ops, &apigateway.PatchOperation{
-			Op:    aws.String(apigateway.OpReplace),
+		ops = append(ops, awstypes.PatchOperation{
+			Op:    awstypes.OpReplace,
 			Path:  aws.String(prefix + "metrics/enabled"),
 			Value: aws.String(fmt.Sprintf("%t", d.Get("settings.0.metrics_enabled").(bool))),
 		})
 	}
 	if d.HasChange("settings.0.logging_level") {
-		ops = append(ops, &apigateway.PatchOperation{
-			Op:    aws.String(apigateway.OpReplace),
+		ops = append(ops, awstypes.PatchOperation{
+			Op:    awstypes.OpReplace,
 			Path:  aws.String(prefix + "logging/loglevel"),
 			Value: aws.String(d.Get("settings.0.logging_level").(string)),
 		})
 	}
 	if d.HasChange("settings.0.data_trace_enabled") {
-		ops = append(ops, &apigateway.PatchOperation{
-			Op:    aws.String(apigateway.OpReplace),
+		ops = append(ops, awstypes.PatchOperation{
+			Op:    awstypes.OpReplace,
 			Path:  aws.String(prefix + "logging/dataTrace"),
 			Value: aws.String(fmt.Sprintf("%t", d.Get("settings.0.data_trace_enabled").(bool))),
 		})
 	}
 
 	if d.HasChange("settings.0.throttling_burst_limit") {
-		ops = append(ops, &apigateway.PatchOperation{
-			Op:    aws.String(apigateway.OpReplace),
+		ops = append(ops, awstypes.PatchOperation{
+			Op:    awstypes.OpReplace,
 			Path:  aws.String(prefix + "throttling/burstLimit"),
 			Value: aws.String(fmt.Sprintf("%d", d.Get("settings.0.throttling_burst_limit").(int))),
 		})
 	}
 	if d.HasChange("settings.0.throttling_rate_limit") {
-		ops = append(ops, &apigateway.PatchOperation{
-			Op:    aws.String(apigateway.OpReplace),
+		ops = append(ops, awstypes.PatchOperation{
+			Op:    awstypes.OpReplace,
 			Path:  aws.String(prefix + "throttling/rateLimit"),
 			Value: aws.String(fmt.Sprintf("%f", d.Get("settings.0.throttling_rate_limit").(float64))),
 		})
 	}
 	if d.HasChange("settings.0.caching_enabled") {
-		ops = append(ops, &apigateway.PatchOperation{
-			Op:    aws.String(apigateway.OpReplace),
+		ops = append(ops, awstypes.PatchOperation{
+			Op:    awstypes.OpReplace,
 			Path:  aws.String(prefix + "caching/enabled"),
 			Value: aws.String(fmt.Sprintf("%t", d.Get("settings.0.caching_enabled").(bool))),
 		})
 	}
 
 	if v, ok := d.GetOkExists("settings.0.cache_ttl_in_seconds"); ok {
-		ops = append(ops, &apigateway.PatchOperation{
-			Op:    aws.String(apigateway.OpReplace),
+		ops = append(ops, awstypes.PatchOperation{
+			Op:    awstypes.OpReplace,
 			Path:  aws.String(prefix + "caching/ttlInSeconds"),
 			Value: aws.String(fmt.Sprintf("%d", v.(int))),
 		})
 	}
 
 	if d.HasChange("settings.0.cache_data_encrypted") {
-		ops = append(ops, &apigateway.PatchOperation{
-			Op:    aws.String(apigateway.OpReplace),
+		ops = append(ops, awstypes.PatchOperation{
+			Op:    awstypes.OpReplace,
 			Path:  aws.String(prefix + "caching/dataEncrypted"),
 			Value: aws.String(fmt.Sprintf("%t", d.Get("settings.0.cache_data_encrypted").(bool))),
 		})
 	}
 	if d.HasChange("settings.0.require_authorization_for_cache_control") {
-		ops = append(ops, &apigateway.PatchOperation{
-			Op:    aws.String(apigateway.OpReplace),
+		ops = append(ops, awstypes.PatchOperation{
+			Op:    awstypes.OpReplace,
 			Path:  aws.String(prefix + "caching/requireAuthorizationForCacheControl"),
 			Value: aws.String(fmt.Sprintf("%t", d.Get("settings.0.require_authorization_for_cache_control").(bool))),
 		})
 	}
 	if d.HasChange("settings.0.unauthorized_cache_control_header_strategy") {
-		ops = append(ops, &apigateway.PatchOperation{
-			Op:    aws.String(apigateway.OpReplace),
+		ops = append(ops, awstypes.PatchOperation{
+			Op:    awstypes.OpReplace,
 			Path:  aws.String(prefix + "caching/unauthorizedCacheControlHeaderStrategy"),
 			Value: aws.String(d.Get("settings.0.unauthorized_cache_control_header_strategy").(string)),
 		})
@@ -259,9 +257,9 @@ func resourceMethodSettingsUpdate(ctx context.Context, d *schema.ResourceData, m
 		StageName:       aws.String(stageName),
 		PatchOperations: ops,
 	}
-	log.Printf("[DEBUG] Updating API Gateway Stage: %s", input)
+	log.Printf("[DEBUG] Updating API Gateway Stage: %+v", input)
 
-	_, err := conn.UpdateStageWithContext(ctx, &input)
+	_, err := conn.UpdateStage(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating API Gateway Stage failed: %s", err)
@@ -274,27 +272,27 @@ func resourceMethodSettingsUpdate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceMethodSettingsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	input := &apigateway.UpdateStageInput{
 		RestApiId: aws.String(d.Get("rest_api_id").(string)),
 		StageName: aws.String(d.Get("stage_name").(string)),
-		PatchOperations: []*apigateway.PatchOperation{
+		PatchOperations: []awstypes.PatchOperation{
 			{
-				Op:   aws.String(apigateway.OpRemove),
+				Op:   awstypes.OpRemove,
 				Path: aws.String(fmt.Sprintf("/%s", d.Get("method_path").(string))),
 			},
 		},
 	}
 
-	_, err := conn.UpdateStageWithContext(ctx, input)
+	_, err := conn.UpdateStage(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
 	}
 
 	// BadRequestException: Cannot remove method setting */* because there is no method setting for this method
-	if tfawserr.ErrMessageContains(err, apigateway.ErrCodeBadRequestException, "no method setting for this method") {
+	if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "no method setting for this method") {
 		return diags
 	}
 

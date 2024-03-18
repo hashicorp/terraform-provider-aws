@@ -9,8 +9,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -23,7 +23,7 @@ import (
 
 func TestAccAPIGatewayDeployment_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var deployment apigateway.Deployment
+	var deployment apigateway.GetDeploymentOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_deployment.test"
 	restApiResourceName := "aws_api_gateway_rest_api.test"
@@ -60,8 +60,8 @@ func TestAccAPIGatewayDeployment_basic(t *testing.T) {
 
 func TestAccAPIGatewayDeployment_Disappears_restAPI(t *testing.T) {
 	ctx := acctest.Context(t)
-	var deployment apigateway.Deployment
-	var restApi apigateway.RestApi
+	var deployment apigateway.GetDeploymentOutput
+	var restApi apigateway.GetRestApiOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_deployment.test"
 	restApiResourceName := "aws_api_gateway_rest_api.test"
@@ -88,8 +88,8 @@ func TestAccAPIGatewayDeployment_Disappears_restAPI(t *testing.T) {
 
 func TestAccAPIGatewayDeployment_triggers(t *testing.T) {
 	ctx := acctest.Context(t)
-	var deployment1, deployment2, deployment3, deployment4 apigateway.Deployment
-	var stage apigateway.Stage
+	var deployment1, deployment2, deployment3, deployment4 apigateway.GetDeploymentOutput
+	var stage apigateway.GetStageOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_deployment.test"
 
@@ -147,7 +147,7 @@ func TestAccAPIGatewayDeployment_triggers(t *testing.T) {
 
 func TestAccAPIGatewayDeployment_description(t *testing.T) {
 	ctx := acctest.Context(t)
-	var deployment apigateway.Deployment
+	var deployment apigateway.GetDeploymentOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_deployment.test"
 
@@ -177,8 +177,8 @@ func TestAccAPIGatewayDeployment_description(t *testing.T) {
 
 func TestAccAPIGatewayDeployment_stageDescription(t *testing.T) {
 	ctx := acctest.Context(t)
-	var deployment apigateway.Deployment
-	var stage apigateway.Stage
+	var deployment apigateway.GetDeploymentOutput
+	var stage apigateway.GetStageOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_deployment.test"
 
@@ -202,8 +202,8 @@ func TestAccAPIGatewayDeployment_stageDescription(t *testing.T) {
 
 func TestAccAPIGatewayDeployment_stageName(t *testing.T) {
 	ctx := acctest.Context(t)
-	var deployment apigateway.Deployment
-	var stage apigateway.Stage
+	var deployment apigateway.GetDeploymentOutput
+	var stage apigateway.GetStageOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_deployment.test"
 	stageName := sdkacctest.RandomWithPrefix("tf-acc-test-deployment")
@@ -238,7 +238,7 @@ func TestAccAPIGatewayDeployment_stageName(t *testing.T) {
 
 func TestAccAPIGatewayDeployment_StageName_emptyString(t *testing.T) {
 	ctx := acctest.Context(t)
-	var deployment apigateway.Deployment
+	var deployment apigateway.GetDeploymentOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_deployment.test"
 
@@ -261,7 +261,7 @@ func TestAccAPIGatewayDeployment_StageName_emptyString(t *testing.T) {
 
 func TestAccAPIGatewayDeployment_variables(t *testing.T) {
 	ctx := acctest.Context(t)
-	var deployment apigateway.Deployment
+	var deployment apigateway.GetDeploymentOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_deployment.test"
 
@@ -286,7 +286,7 @@ func TestAccAPIGatewayDeployment_variables(t *testing.T) {
 // https://github.com/hashicorp/terraform-provider-aws/issues/28997.
 func TestAccAPIGatewayDeployment_conflictingConnectionType(t *testing.T) {
 	ctx := acctest.Context(t)
-	var deployment apigateway.Deployment
+	var deployment apigateway.GetDeploymentOutput
 	resourceName := "aws_api_gateway_deployment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -307,7 +307,7 @@ func TestAccAPIGatewayDeployment_conflictingConnectionType(t *testing.T) {
 	})
 }
 
-func testAccCheckDeploymentExists(ctx context.Context, n string, v *apigateway.Deployment) resource.TestCheckFunc {
+func testAccCheckDeploymentExists(ctx context.Context, n string, v *apigateway.GetDeploymentOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -318,7 +318,7 @@ func testAccCheckDeploymentExists(ctx context.Context, n string, v *apigateway.D
 			return fmt.Errorf("No API Gateway Deployment ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
 		output, err := tfapigateway.FindDeploymentByTwoPartKey(ctx, conn, rs.Primary.Attributes["rest_api_id"], rs.Primary.ID)
 
@@ -334,7 +334,7 @@ func testAccCheckDeploymentExists(ctx context.Context, n string, v *apigateway.D
 
 func testAccCheckDeploymentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_api_gateway_deployment" {
@@ -358,9 +358,9 @@ func testAccCheckDeploymentDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckDeploymentNotRecreated(i, j *apigateway.Deployment) resource.TestCheckFunc {
+func testAccCheckDeploymentNotRecreated(i, j *apigateway.GetDeploymentOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if !aws.TimeValue(i.CreatedDate).Equal(aws.TimeValue(j.CreatedDate)) {
+		if !aws.ToTime(i.CreatedDate).Equal(aws.ToTime(j.CreatedDate)) {
 			return fmt.Errorf("API Gateway Deployment recreated")
 		}
 
@@ -368,9 +368,9 @@ func testAccCheckDeploymentNotRecreated(i, j *apigateway.Deployment) resource.Te
 	}
 }
 
-func testAccCheckDeploymentRecreated(i, j *apigateway.Deployment) resource.TestCheckFunc {
+func testAccCheckDeploymentRecreated(i, j *apigateway.GetDeploymentOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.TimeValue(i.CreatedDate).Equal(aws.TimeValue(j.CreatedDate)) {
+		if aws.ToTime(i.CreatedDate).Equal(aws.ToTime(j.CreatedDate)) {
 			return fmt.Errorf("API Gateway Deployment not recreated")
 		}
 

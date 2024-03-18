@@ -7,7 +7,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -61,7 +61,7 @@ func DataSourceAPIKey() *schema.Resource {
 
 func dataSourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	id := d.Get("id").(string)
@@ -71,12 +71,12 @@ func dataSourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway API Key (%s): %s", id, err)
 	}
 
-	d.SetId(aws.StringValue(apiKey.Id))
-	d.Set("created_date", aws.TimeValue(apiKey.CreatedDate).Format(time.RFC3339))
+	d.SetId(aws.ToString(apiKey.Id))
+	d.Set("created_date", aws.ToTime(apiKey.CreatedDate).Format(time.RFC3339))
 	d.Set("customer_id", apiKey.CustomerId)
 	d.Set("description", apiKey.Description)
 	d.Set("enabled", apiKey.Enabled)
-	d.Set("last_updated_date", aws.TimeValue(apiKey.LastUpdatedDate).Format(time.RFC3339))
+	d.Set("last_updated_date", aws.ToTime(apiKey.LastUpdatedDate).Format(time.RFC3339))
 	d.Set("name", apiKey.Name)
 	d.Set("value", apiKey.Value)
 

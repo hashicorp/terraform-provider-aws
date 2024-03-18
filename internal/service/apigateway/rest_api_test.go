@@ -9,14 +9,15 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -24,7 +25,7 @@ import (
 
 func TestAccAPIGatewayRestAPI_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.RestApi
+	var conf apigateway.GetRestApiOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_rest_api.test"
 
@@ -65,7 +66,7 @@ func TestAccAPIGatewayRestAPI_basic(t *testing.T) {
 
 func TestAccAPIGatewayRestAPI_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.RestApi
+	var conf apigateway.GetRestApiOutput
 	resourceName := "aws_api_gateway_rest_api.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -117,7 +118,7 @@ func TestAccAPIGatewayRestAPI_tags(t *testing.T) {
 
 func TestAccAPIGatewayRestAPI_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var restApi apigateway.RestApi
+	var restApi apigateway.GetRestApiOutput
 	resourceName := "aws_api_gateway_rest_api.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -141,7 +142,7 @@ func TestAccAPIGatewayRestAPI_disappears(t *testing.T) {
 
 func TestAccAPIGatewayRestAPI_endpoint(t *testing.T) {
 	ctx := acctest.Context(t)
-	var restApi apigateway.RestApi
+	var restApi apigateway.GetRestApiOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_rest_api.test"
 
@@ -183,22 +184,22 @@ func TestAccAPIGatewayRestAPI_endpoint(t *testing.T) {
 					// This can eventually be moved to a PreCheck function
 					// If the region does not support EDGE endpoint type, this test will either show
 					// SKIP (if REGIONAL passed) or FAIL (if REGIONAL failed)
-					conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
-					output, err := conn.CreateRestApiWithContext(ctx, &apigateway.CreateRestApiInput{
+					conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
+					output, err := conn.CreateRestApi(ctx, &apigateway.CreateRestApiInput{
 						Name: aws.String(sdkacctest.RandomWithPrefix("tf-acc-test-edge-endpoint-precheck")),
-						EndpointConfiguration: &apigateway.EndpointConfiguration{
-							Types: []*string{aws.String("EDGE")},
+						EndpointConfiguration: &awstypes.EndpointConfiguration{
+							Types: []awstypes.EndpointType{awstypes.EndpointTypeEdge},
 						},
 					})
 					if err != nil {
-						if tfawserr.ErrMessageContains(err, apigateway.ErrCodeBadRequestException, "Endpoint Configuration type EDGE is not supported in this region") {
+						if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "Endpoint Configuration type EDGE is not supported in this region") {
 							t.Skip("Region does not support EDGE endpoint type")
 						}
 						t.Fatal(err)
 					}
 
 					// Be kind and rewind. :)
-					_, err = conn.DeleteRestApiWithContext(ctx, &apigateway.DeleteRestApiInput{
+					_, err = conn.DeleteRestApi(ctx, &apigateway.DeleteRestApiInput{
 						RestApiId: output.Id,
 					})
 					if err != nil {
@@ -219,7 +220,7 @@ func TestAccAPIGatewayRestAPI_endpoint(t *testing.T) {
 
 func TestAccAPIGatewayRestAPI_Endpoint_private(t *testing.T) {
 	ctx := acctest.Context(t)
-	var restApi apigateway.RestApi
+	var restApi apigateway.GetRestApiOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_rest_api.test"
 
@@ -233,22 +234,22 @@ func TestAccAPIGatewayRestAPI_Endpoint_private(t *testing.T) {
 				PreConfig: func() {
 					// Ensure region supports PRIVATE endpoint
 					// This can eventually be moved to a PreCheck function
-					conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
-					output, err := conn.CreateRestApiWithContext(ctx, &apigateway.CreateRestApiInput{
+					conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
+					output, err := conn.CreateRestApi(ctx, &apigateway.CreateRestApiInput{
 						Name: aws.String(sdkacctest.RandomWithPrefix("tf-acc-test-private-endpoint-precheck")),
-						EndpointConfiguration: &apigateway.EndpointConfiguration{
-							Types: []*string{aws.String("PRIVATE")},
+						EndpointConfiguration: &awstypes.EndpointConfiguration{
+							Types: []awstypes.EndpointType{awstypes.EndpointTypePrivate},
 						},
 					})
 					if err != nil {
-						if tfawserr.ErrMessageContains(err, apigateway.ErrCodeBadRequestException, "Endpoint Configuration type PRIVATE is not supported in this region") {
+						if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "Endpoint Configuration type PRIVATE is not supported in this region") {
 							t.Skip("Region does not support PRIVATE endpoint type")
 						}
 						t.Fatal(err)
 					}
 
 					// Be kind and rewind. :)
-					_, err = conn.DeleteRestApiWithContext(ctx, &apigateway.DeleteRestApiInput{
+					_, err = conn.DeleteRestApi(ctx, &apigateway.DeleteRestApiInput{
 						RestApiId: output.Id,
 					})
 					if err != nil {
@@ -314,7 +315,7 @@ func TestAccAPIGatewayRestAPI_apiKeySource(t *testing.T) {
 
 func TestAccAPIGatewayRestAPI_APIKeySource_overrideBody(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.RestApi
+	var conf apigateway.GetRestApiOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_rest_api.test"
 
@@ -359,7 +360,7 @@ func TestAccAPIGatewayRestAPI_APIKeySource_overrideBody(t *testing.T) {
 
 func TestAccAPIGatewayRestAPI_APIKeySource_setByBody(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.RestApi
+	var conf apigateway.GetRestApiOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_rest_api.test"
 
@@ -388,7 +389,7 @@ func TestAccAPIGatewayRestAPI_APIKeySource_setByBody(t *testing.T) {
 
 func TestAccAPIGatewayRestAPI_binaryMediaTypes(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.RestApi
+	var conf apigateway.GetRestApiOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_rest_api.test"
 
@@ -426,7 +427,7 @@ func TestAccAPIGatewayRestAPI_binaryMediaTypes(t *testing.T) {
 
 func TestAccAPIGatewayRestAPI_BinaryMediaTypes_overrideBody(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.RestApi
+	var conf apigateway.GetRestApiOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_rest_api.test"
 
@@ -474,7 +475,7 @@ func TestAccAPIGatewayRestAPI_BinaryMediaTypes_overrideBody(t *testing.T) {
 
 func TestAccAPIGatewayRestAPI_BinaryMediaTypes_setByBody(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.RestApi
+	var conf apigateway.GetRestApiOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_rest_api.test"
 
@@ -504,7 +505,7 @@ func TestAccAPIGatewayRestAPI_BinaryMediaTypes_setByBody(t *testing.T) {
 
 func TestAccAPIGatewayRestAPI_body(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.RestApi
+	var conf apigateway.GetRestApiOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_rest_api.test"
 
@@ -548,7 +549,7 @@ func TestAccAPIGatewayRestAPI_body(t *testing.T) {
 
 func TestAccAPIGatewayRestAPI_description(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.RestApi
+	var conf apigateway.GetRestApiOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_rest_api.test"
 
@@ -584,7 +585,7 @@ func TestAccAPIGatewayRestAPI_description(t *testing.T) {
 
 func TestAccAPIGatewayRestAPI_Description_overrideBody(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.RestApi
+	var conf apigateway.GetRestApiOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_rest_api.test"
 
@@ -629,7 +630,7 @@ func TestAccAPIGatewayRestAPI_Description_overrideBody(t *testing.T) {
 
 func TestAccAPIGatewayRestAPI_Description_setByBody(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.RestApi
+	var conf apigateway.GetRestApiOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_rest_api.test"
 
@@ -697,7 +698,7 @@ func TestAccAPIGatewayRestAPI_disableExecuteAPIEndpoint(t *testing.T) {
 
 func TestAccAPIGatewayRestAPI_DisableExecuteAPIEndpoint_overrideBody(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.RestApi
+	var conf apigateway.GetRestApiOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_rest_api.test"
 
@@ -742,7 +743,7 @@ func TestAccAPIGatewayRestAPI_DisableExecuteAPIEndpoint_overrideBody(t *testing.
 
 func TestAccAPIGatewayRestAPI_DisableExecuteAPIEndpoint_setByBody(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.RestApi
+	var conf apigateway.GetRestApiOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_rest_api.test"
 
@@ -771,7 +772,7 @@ func TestAccAPIGatewayRestAPI_DisableExecuteAPIEndpoint_setByBody(t *testing.T) 
 
 func TestAccAPIGatewayRestAPI_Endpoint_vpcEndpointIDs(t *testing.T) {
 	ctx := acctest.Context(t)
-	var restApi apigateway.RestApi
+	var restApi apigateway.GetRestApiOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_rest_api.test"
 	vpcEndpointResourceName1 := "aws_vpc_endpoint.test"
@@ -829,7 +830,7 @@ func TestAccAPIGatewayRestAPI_Endpoint_vpcEndpointIDs(t *testing.T) {
 
 func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_overrideBody(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.RestApi
+	var conf apigateway.GetRestApiOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_rest_api.test"
 	vpcEndpointResourceName1 := "aws_vpc_endpoint.test.0"
@@ -886,7 +887,7 @@ func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_overrideBody(t *testing.T) 
 
 func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_mergeBody(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.RestApi
+	var conf apigateway.GetRestApiOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_rest_api.test"
 	vpcEndpointResourceName1 := "aws_vpc_endpoint.test.0"
@@ -944,7 +945,7 @@ func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_mergeBody(t *testing.T) {
 
 func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_overrideToMergeBody(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.RestApi
+	var conf apigateway.GetRestApiOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_rest_api.test"
 	vpcEndpointResourceName1 := "aws_vpc_endpoint.test.0"
@@ -996,7 +997,7 @@ func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_overrideToMergeBody(t *test
 
 func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_setByBody(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.RestApi
+	var conf apigateway.GetRestApiOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_rest_api.test"
 	vpcEndpointResourceName := "aws_vpc_endpoint.test"
@@ -1028,7 +1029,7 @@ func TestAccAPIGatewayRestAPI_EndpointVPCEndpointIDs_setByBody(t *testing.T) {
 
 func TestAccAPIGatewayRestAPI_minimumCompressionSize(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.RestApi
+	var conf apigateway.GetRestApiOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_rest_api.test"
 
@@ -1071,7 +1072,7 @@ func TestAccAPIGatewayRestAPI_minimumCompressionSize(t *testing.T) {
 
 func TestAccAPIGatewayRestAPI_MinimumCompressionSize_overrideBody(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.RestApi
+	var conf apigateway.GetRestApiOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_rest_api.test"
 
@@ -1116,7 +1117,7 @@ func TestAccAPIGatewayRestAPI_MinimumCompressionSize_overrideBody(t *testing.T) 
 
 func TestAccAPIGatewayRestAPI_MinimumCompressionSize_setByBody(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.RestApi
+	var conf apigateway.GetRestApiOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_rest_api.test"
 
@@ -1145,7 +1146,7 @@ func TestAccAPIGatewayRestAPI_MinimumCompressionSize_setByBody(t *testing.T) {
 
 func TestAccAPIGatewayRestAPI_Name_overrideBody(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.RestApi
+	var conf apigateway.GetRestApiOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_rest_api.test"
@@ -1191,7 +1192,7 @@ func TestAccAPIGatewayRestAPI_Name_overrideBody(t *testing.T) {
 
 func TestAccAPIGatewayRestAPI_FailOnWarnings(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.RestApi
+	var conf apigateway.GetRestApiOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_rest_api.test"
 
@@ -1237,7 +1238,7 @@ func TestAccAPIGatewayRestAPI_FailOnWarnings(t *testing.T) {
 
 func TestAccAPIGatewayRestAPI_parameters(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.RestApi
+	var conf apigateway.GetRestApiOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_rest_api.test"
 
@@ -1334,7 +1335,7 @@ func TestAccAPIGatewayRestAPI_Policy_order(t *testing.T) {
 
 func TestAccAPIGatewayRestAPI_Policy_overrideBody(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.RestApi
+	var conf apigateway.GetRestApiOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_rest_api.test"
 
@@ -1382,7 +1383,7 @@ func TestAccAPIGatewayRestAPI_Policy_overrideBody(t *testing.T) {
 
 func TestAccAPIGatewayRestAPI_Policy_setByBody(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.RestApi
+	var conf apigateway.GetRestApiOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_rest_api.test"
 
@@ -1409,11 +1410,11 @@ func TestAccAPIGatewayRestAPI_Policy_setByBody(t *testing.T) {
 	})
 }
 
-func testAccCheckRestAPIRoutes(ctx context.Context, conf *apigateway.RestApi, routes []string) resource.TestCheckFunc {
+func testAccCheckRestAPIRoutes(ctx context.Context, conf *apigateway.GetRestApiOutput, routes []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
-		resp, err := conn.GetResourcesWithContext(ctx, &apigateway.GetResourcesInput{
+		resp, err := conn.GetResources(ctx, &apigateway.GetResourcesInput{
 			RestApiId: conf.Id,
 		})
 		if err != nil {
@@ -1440,11 +1441,11 @@ func testAccCheckRestAPIRoutes(ctx context.Context, conf *apigateway.RestApi, ro
 	}
 }
 
-func testAccCheckRestAPIEndpointsCount(ctx context.Context, conf *apigateway.RestApi, count int) resource.TestCheckFunc {
+func testAccCheckRestAPIEndpointsCount(ctx context.Context, conf *apigateway.GetRestApiOutput, count int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
-		resp, err := conn.GetRestApiWithContext(ctx, &apigateway.GetRestApiInput{
+		resp, err := conn.GetRestApi(ctx, &apigateway.GetRestApiInput{
 			RestApiId: conf.Id,
 		})
 		if err != nil {
@@ -1453,7 +1454,7 @@ func testAccCheckRestAPIEndpointsCount(ctx context.Context, conf *apigateway.Res
 
 		actualEndpoints := map[string]bool{}
 		for _, endpoint := range resp.EndpointConfiguration.VpcEndpointIds {
-			actualEndpoints[*endpoint] = true
+			actualEndpoints[endpoint] = true
 		}
 
 		if len(resp.EndpointConfiguration.VpcEndpointIds) != count {
@@ -1464,7 +1465,7 @@ func testAccCheckRestAPIEndpointsCount(ctx context.Context, conf *apigateway.Res
 	}
 }
 
-func testAccCheckRestAPIExists(ctx context.Context, n string, v *apigateway.RestApi) resource.TestCheckFunc {
+func testAccCheckRestAPIExists(ctx context.Context, n string, v *apigateway.GetRestApiOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -1475,7 +1476,7 @@ func testAccCheckRestAPIExists(ctx context.Context, n string, v *apigateway.Rest
 			return fmt.Errorf("No API Gateway ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
 		output, err := tfapigateway.FindRESTAPIByID(ctx, conn, rs.Primary.ID)
 
@@ -1491,7 +1492,7 @@ func testAccCheckRestAPIExists(ctx context.Context, n string, v *apigateway.Rest
 
 func testAccCheckRestAPIDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_api_gateway_rest_api" {

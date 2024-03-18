@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func TestAccAPIGatewayIntegration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.Integration
+	var conf apigateway.GetIntegrationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_integration.test"
 
@@ -135,7 +135,7 @@ func TestAccAPIGatewayIntegration_basic(t *testing.T) {
 
 func TestAccAPIGatewayIntegration_contentHandling(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.Integration
+	var conf apigateway.GetIntegrationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_integration.test"
 
@@ -212,7 +212,7 @@ func TestAccAPIGatewayIntegration_contentHandling(t *testing.T) {
 
 func TestAccAPIGatewayIntegration_CacheKey_parameters(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.Integration
+	var conf apigateway.GetIntegrationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_integration.test"
 
@@ -256,7 +256,7 @@ func TestAccAPIGatewayIntegration_CacheKey_parameters(t *testing.T) {
 
 func TestAccAPIGatewayIntegration_CacheKeyUpdate_parameters(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.Integration
+	var conf apigateway.GetIntegrationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_integration.test"
 
@@ -323,7 +323,7 @@ func TestAccAPIGatewayIntegration_CacheKeyUpdate_parameters(t *testing.T) {
 
 func TestAccAPIGatewayIntegration_integrationType(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.Integration
+	var conf apigateway.GetIntegrationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_integration.test"
 
@@ -369,7 +369,7 @@ func TestAccAPIGatewayIntegration_integrationType(t *testing.T) {
 
 func TestAccAPIGatewayIntegration_TLS_insecureSkipVerification(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.Integration
+	var conf apigateway.GetIntegrationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_integration.test"
 
@@ -407,7 +407,7 @@ func TestAccAPIGatewayIntegration_TLS_insecureSkipVerification(t *testing.T) {
 
 func TestAccAPIGatewayIntegration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.Integration
+	var conf apigateway.GetIntegrationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_integration.test"
 
@@ -429,7 +429,7 @@ func TestAccAPIGatewayIntegration_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckIntegrationExists(ctx context.Context, n string, v *apigateway.Integration) resource.TestCheckFunc {
+func testAccCheckIntegrationExists(ctx context.Context, n string, v *apigateway.GetIntegrationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -440,7 +440,7 @@ func testAccCheckIntegrationExists(ctx context.Context, n string, v *apigateway.
 			return fmt.Errorf("No API Gateway Integration ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
 		output, err := tfapigateway.FindIntegrationByThreePartKey(ctx, conn, rs.Primary.Attributes["http_method"], rs.Primary.Attributes["resource_id"], rs.Primary.Attributes["rest_api_id"])
 
@@ -456,7 +456,7 @@ func testAccCheckIntegrationExists(ctx context.Context, n string, v *apigateway.
 
 func testAccCheckIntegrationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_api_gateway_integration" {

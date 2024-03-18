@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,7 +21,7 @@ import (
 
 func TestAccAPIGatewayModel_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.Model
+	var conf apigateway.GetModelOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	modelName := sdkacctest.RandString(16)
 	resourceName := "aws_api_gateway_model.test"
@@ -53,7 +53,7 @@ func TestAccAPIGatewayModel_basic(t *testing.T) {
 
 func TestAccAPIGatewayModel_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.Model
+	var conf apigateway.GetModelOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	modelName := sdkacctest.RandString(16)
 	resourceName := "aws_api_gateway_model.test"
@@ -76,7 +76,7 @@ func TestAccAPIGatewayModel_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckModelExists(ctx context.Context, n string, v *apigateway.Model) resource.TestCheckFunc {
+func testAccCheckModelExists(ctx context.Context, n string, v *apigateway.GetModelOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -87,7 +87,7 @@ func testAccCheckModelExists(ctx context.Context, n string, v *apigateway.Model)
 			return fmt.Errorf("No API Gateway Model ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
 		output, err := tfapigateway.FindModelByTwoPartKey(ctx, conn, rs.Primary.Attributes["name"], rs.Primary.Attributes["rest_api_id"])
 
@@ -103,7 +103,7 @@ func testAccCheckModelExists(ctx context.Context, n string, v *apigateway.Model)
 
 func testAccCheckModelDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_api_gateway_model" {

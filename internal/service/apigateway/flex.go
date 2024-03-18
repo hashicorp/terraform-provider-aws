@@ -8,13 +8,14 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 )
 
-func expandMethodParametersOperations(d *schema.ResourceData, key string, prefix string) []*apigateway.PatchOperation {
-	operations := make([]*apigateway.PatchOperation, 0)
+func expandMethodParametersOperations(d *schema.ResourceData, key string, prefix string) []awstypes.PatchOperation {
+	operations := make([]awstypes.PatchOperation, 0)
 
 	oldParameters, newParameters := d.GetChange(key)
 	oldParametersMap := oldParameters.(map[string]interface{})
@@ -22,8 +23,8 @@ func expandMethodParametersOperations(d *schema.ResourceData, key string, prefix
 
 	for k, kV := range oldParametersMap {
 		keyValueUnchanged := false
-		operation := apigateway.PatchOperation{
-			Op:   aws.String(apigateway.OpRemove),
+		operation := awstypes.PatchOperation{
+			Op:   awstypes.OpRemove,
 			Path: aws.String(fmt.Sprintf("/%s/%s", prefix, k)),
 		}
 
@@ -35,7 +36,7 @@ func expandMethodParametersOperations(d *schema.ResourceData, key string, prefix
 			}
 
 			if (nK == k) && (nV != kV) {
-				operation.Op = aws.String(apigateway.OpReplace)
+				operation.Op = awstypes.OpReplace
 				operation.Value = aws.String(strconv.FormatBool(b))
 			} else if (nK == k) && (nV == kV) {
 				keyValueUnchanged = true
@@ -43,7 +44,7 @@ func expandMethodParametersOperations(d *schema.ResourceData, key string, prefix
 		}
 
 		if !keyValueUnchanged {
-			operations = append(operations, &operation)
+			operations = append(operations, operation)
 		}
 	}
 
@@ -60,39 +61,39 @@ func expandMethodParametersOperations(d *schema.ResourceData, key string, prefix
 				value, _ := strconv.ParseBool(nV.(string))
 				b = value
 			}
-			operation := apigateway.PatchOperation{
-				Op:    aws.String(apigateway.OpAdd),
+			operation := awstypes.PatchOperation{
+				Op:    awstypes.OpAdd,
 				Path:  aws.String(fmt.Sprintf("/%s/%s", prefix, nK)),
 				Value: aws.String(strconv.FormatBool(b)),
 			}
-			operations = append(operations, &operation)
+			operations = append(operations, operation)
 		}
 	}
 
 	return operations
 }
 
-func expandRequestResponseModelOperations(d *schema.ResourceData, key string, prefix string) []*apigateway.PatchOperation {
-	operations := make([]*apigateway.PatchOperation, 0)
+func expandRequestResponseModelOperations(d *schema.ResourceData, key string, prefix string) []awstypes.PatchOperation {
+	operations := make([]awstypes.PatchOperation, 0)
 
 	oldModels, newModels := d.GetChange(key)
 	oldModelMap := oldModels.(map[string]interface{})
 	newModelMap := newModels.(map[string]interface{})
 
 	for k := range oldModelMap {
-		operation := apigateway.PatchOperation{
-			Op:   aws.String(apigateway.OpRemove),
+		operation := awstypes.PatchOperation{
+			Op:   awstypes.OpRemove,
 			Path: aws.String(fmt.Sprintf("/%s/%s", prefix, strings.Replace(k, "/", "~1", -1))),
 		}
 
 		for nK, nV := range newModelMap {
 			if nK == k {
-				operation.Op = aws.String(apigateway.OpReplace)
+				operation.Op = awstypes.OpReplace
 				operation.Value = aws.String(nV.(string))
 			}
 		}
 
-		operations = append(operations, &operation)
+		operations = append(operations, operation)
 	}
 
 	for nK, nV := range newModelMap {
@@ -103,14 +104,21 @@ func expandRequestResponseModelOperations(d *schema.ResourceData, key string, pr
 			}
 		}
 		if !exists {
-			operation := apigateway.PatchOperation{
-				Op:    aws.String(apigateway.OpAdd),
+			operation := awstypes.PatchOperation{
+				Op:    awstypes.OpAdd,
 				Path:  aws.String(fmt.Sprintf("/%s/%s", prefix, strings.Replace(nK, "/", "~1", -1))),
 				Value: aws.String(nV.(string)),
 			}
-			operations = append(operations, &operation)
+			operations = append(operations, operation)
 		}
 	}
 
 	return operations
+}
+
+// Expands a map of string to interface to a map of string to *bool
+func expandBoolValueMap(m map[string]interface{}) map[string]bool {
+	return tfmaps.ApplyToAllValues(m, func(v any) bool {
+		return v.(bool)
+	})
 }

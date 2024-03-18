@@ -8,14 +8,15 @@ import (
 	"log"
 	"strconv"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -55,12 +56,12 @@ func ResourceRestAPIPolicy() *schema.Resource {
 
 func resourceRestAPIPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	restApiId := d.Get("rest_api_id").(string)
 	log.Printf("[DEBUG] Setting API Gateway REST API Policy: %s", restApiId)
 
-	operations := make([]*apigateway.PatchOperation, 0)
+	operations := make([]awstypes.PatchOperation, 0)
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 
@@ -68,13 +69,13 @@ func resourceRestAPIPolicyPut(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policy, err)
 	}
 
-	operations = append(operations, &apigateway.PatchOperation{
-		Op:    aws.String(apigateway.OpReplace),
+	operations = append(operations, awstypes.PatchOperation{
+		Op:    awstypes.OpReplace,
 		Path:  aws.String("/policy"),
 		Value: aws.String(policy),
 	})
 
-	res, err := conn.UpdateRestApiWithContext(ctx, &apigateway.UpdateRestApiInput{
+	res, err := conn.UpdateRestApi(ctx, &apigateway.UpdateRestApiInput{
 		RestApiId:       aws.String(restApiId),
 		PatchOperations: operations,
 	})
@@ -85,21 +86,21 @@ func resourceRestAPIPolicyPut(ctx context.Context, d *schema.ResourceData, meta 
 
 	log.Printf("[DEBUG] API Gateway REST API Policy Set: %s", restApiId)
 
-	d.SetId(aws.StringValue(res.Id))
+	d.SetId(aws.ToString(res.Id))
 
 	return append(diags, resourceRestAPIPolicyRead(ctx, d, meta)...)
 }
 
 func resourceRestAPIPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	log.Printf("[DEBUG] Reading API Gateway REST API Policy %s", d.Id())
 
-	api, err := conn.GetRestApiWithContext(ctx, &apigateway.GetRestApiInput{
+	api, err := conn.GetRestApi(ctx, &apigateway.GetRestApiInput{
 		RestApiId: aws.String(d.Id()),
 	})
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
+	if !d.IsNewResource() && errs.IsA[*awstypes.NotFoundException](err) {
 		log.Printf("[WARN] API Gateway REST API Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -108,7 +109,7 @@ func resourceRestAPIPolicyRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway REST API Policy (%s): %s", d.Id(), err)
 	}
 
-	normalizedPolicy, err := structure.NormalizeJsonString(`"` + aws.StringValue(api.Policy) + `"`)
+	normalizedPolicy, err := structure.NormalizeJsonString(`"` + aws.ToString(api.Policy) + `"`)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "normalizing API Gateway REST API policy JSON: %s", err)
 	}
@@ -133,20 +134,20 @@ func resourceRestAPIPolicyRead(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceRestAPIPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	restApiId := d.Get("rest_api_id").(string)
 	log.Printf("[DEBUG] Deleting API Gateway REST API Policy: %s", restApiId)
 
-	operations := make([]*apigateway.PatchOperation, 0)
+	operations := make([]awstypes.PatchOperation, 0)
 
-	operations = append(operations, &apigateway.PatchOperation{
-		Op:    aws.String(apigateway.OpReplace),
+	operations = append(operations, awstypes.PatchOperation{
+		Op:    awstypes.OpReplace,
 		Path:  aws.String("/policy"),
 		Value: aws.String(""),
 	})
 
-	_, err := conn.UpdateRestApiWithContext(ctx, &apigateway.UpdateRestApiInput{
+	_, err := conn.UpdateRestApi(ctx, &apigateway.UpdateRestApiInput{
 		RestApiId:       aws.String(restApiId),
 		PatchOperations: operations,
 	})
