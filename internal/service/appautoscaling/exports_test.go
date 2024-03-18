@@ -5,7 +5,9 @@ package appautoscaling
 
 // Exports for use in tests only.
 var (
+	ResourcePolicy          = resourcePolicy
 	ResourceScheduledAction = resourceScheduledAction
+	ResourceTarget          = resourceTarget
 
 	FindScheduledActionByFourPartKey = findScheduledActionByFourPartKey
 )
