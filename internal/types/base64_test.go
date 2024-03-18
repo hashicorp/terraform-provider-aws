@@ -5,6 +5,23 @@ package types
 
 import "testing"
 
+func TestBase64EncodeOnce(t *testing.T) {
+	t.Parallel()
+
+	for _, tc := range []struct {
+		blob []byte
+		s    string
+	}{
+		{[]byte("data should be encoded"), "ZGF0YSBzaG91bGQgYmUgZW5jb2RlZA=="},
+		{[]byte("ZGF0YSBzaG91bGQgYmUgZW5jb2RlZA=="), "ZGF0YSBzaG91bGQgYmUgZW5jb2RlZA=="},
+	} {
+		s := Base64EncodeOnce(tc.blob)
+		if got, want := s, tc.s; got != want {
+			t.Errorf("Base64EncodeOnce(%q) = %v, want %v", tc.blob, got, want)
+		}
+	}
+}
+
 func TestIsBase64Encoded(t *testing.T) {
 	t.Parallel()
 
