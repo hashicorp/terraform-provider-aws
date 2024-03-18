@@ -176,17 +176,15 @@ func resourceLocationAzureBlobRead(ctx context.Context, d *schema.ResourceData, 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
-
 	containerName := subdirectory[:strings.IndexAny(subdirectory[1:], "/")+1]
-	containerUrl := fmt.Sprintf("https://%s%s", accountHostName, containerName)
-	d.Set("container_url", containerUrl)
+	containerURL := fmt.Sprintf("https://%s%s", accountHostName, containerName)
 
 	d.Set("access_tier", output.AccessTier)
 	d.Set("agent_arns", aws.StringValueSlice(output.AgentArns))
 	d.Set("arn", output.LocationArn)
 	d.Set("authentication_type", output.AuthenticationType)
 	d.Set("blob_type", output.BlobType)
-	d.Set("container_url", d.Get("container_url"))
+	d.Set("container_url", containerURL)
 	d.Set("sas_configuration", d.Get("sas_configuration"))
 	d.Set("subdirectory", subdirectory[strings.IndexAny(subdirectory[1:], "/")+1:])
 	d.Set("uri", uri)

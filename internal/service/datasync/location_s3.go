@@ -182,16 +182,15 @@ func resourceLocationS3Read(ctx context.Context, d *schema.ResourceData, meta in
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
-
-	locationArn, err := arn.Parse(d.Id())
+	locationARN, err := arn.Parse(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
-	s3BucketArn := fmt.Sprintf("arn:%s:s3:::%s", locationArn.Partition, s3BucketName)
-	d.Set("s3_bucket_arn", s3BucketArn)
 
 	d.Set("agent_arns", aws.StringValueSlice(output.AgentArns))
 	d.Set("arn", output.LocationArn)
+	s3BucketArn := fmt.Sprintf("arn:%s:s3:::%s", locationARN.Partition, s3BucketName)
+	d.Set("s3_bucket_arn", s3BucketArn)
 	if err := d.Set("s3_config", flattenS3Config(output.S3Config)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting s3_config: %s", err)
 	}
