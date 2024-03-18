@@ -335,7 +335,7 @@ implement the logic to convert the configuration tags into the service tags, e.g
 === "Terraform Plugin SDK V2"
     ```go
     // Typically declared near conn := /*...*/
-    defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+    defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
     tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
     input := &eks.CreateClusterInput{
@@ -349,7 +349,7 @@ If the service API does not allow passing an empty list, the logic can be adjust
 === "Terraform Plugin SDK V2"
     ```go
     // Typically declared near conn := /*...*/
-    defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+    defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
     tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
     input := &eks.CreateClusterInput{
@@ -367,7 +367,7 @@ implement the logic to convert the configuration tags into the service API call 
 === "Terraform Plugin SDK V2"
     ```go
     // Typically declared near conn := /*...*/
-    defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+    defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
     tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
     /* ... creation steps ... */
@@ -380,18 +380,18 @@ implement the logic to convert the configuration tags into the service API call 
     ```
 
 Some EC2 resources (e.g., [`aws_ec2_fleet`](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/ec2_fleet)) have a `TagSpecifications` field in the `InputStruct` instead of a `Tags` field.
-In these cases the `tagSpecificationsFromKeyValueTags()` helper function should be used.
+In these cases the `tagSpecificationsFromKeyValue()` helper function should be used.
 This example shows using `TagSpecifications`:
 
 === "Terraform Plugin SDK V2"
     ```go
     // Typically declared near conn := /*...*/
-    defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
+    defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
     tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
     input := &ec2.CreateFleetInput{
         /* ... other configuration ... */
-        TagSpecifications: tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeFleet),
+        TagSpecifications: tagSpecificationsFromKeyValue(tags, ec2.ResourceTypeFleet),
     }
     ```
 
@@ -402,8 +402,8 @@ In the resource `Read` operation, implement the logic to convert the service tag
 === "Terraform Plugin SDK V2"
     ```go
     // Typically declared near conn := /*...*/
-    defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-    ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+    defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+    ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
     /* ... other d.Set(...) logic ... */
 
@@ -424,8 +424,8 @@ use the generated `listTags` function, e.g., with Athena Workgroups:
 === "Terraform Plugin SDK V2"
     ```go
     // Typically declared near conn := /*...*/
-    defaultTagsConfig := meta.(*AWSClient).DefaultTagsConfig
-    ignoreTagsConfig := meta.(*AWSClient).IgnoreTagsConfig
+    defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+    ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
     /* ... other d.Set(...) logic ... */
 

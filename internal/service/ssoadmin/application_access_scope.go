@@ -160,7 +160,7 @@ func (r *resourceApplicationAccessScope) Read(ctx context.Context, req resource.
 		return
 	}
 
-	state.ApplicationARN = fwtypes.ARNValue(parts[0])
+	state.ApplicationARN = fwtypes.ARNValueMust(parts[0])
 	state.AuthorizedTargets = flex.FlattenFrameworkStringValueList(ctx, out.AuthorizedTargets)
 	state.Scope = flex.StringToFramework(ctx, out.Scope)
 

@@ -49,7 +49,7 @@ func DataSourceVPNGateway() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"filter": CustomFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -76,31 +76,31 @@ func dataSourceVPNGatewayRead(ctx context.Context, d *schema.ResourceData, meta 
 		input.VpnGatewayIds = aws.StringSlice([]string{id.(string)})
 	}
 
-	input.Filters = BuildAttributeFilterList(
+	input.Filters = newAttributeFilterList(
 		map[string]string{
 			"state":             d.Get("state").(string),
 			"availability-zone": d.Get("availability_zone").(string),
 		},
 	)
 	if asn, ok := d.GetOk("amazon_side_asn"); ok {
-		input.Filters = append(input.Filters, BuildAttributeFilterList(
+		input.Filters = append(input.Filters, newAttributeFilterList(
 			map[string]string{
 				"amazon-side-asn": asn.(string),
 			},
 		)...)
 	}
 	if id, ok := d.GetOk("attached_vpc_id"); ok {
-		input.Filters = append(input.Filters, BuildAttributeFilterList(
+		input.Filters = append(input.Filters, newAttributeFilterList(
 			map[string]string{
 				"attachment.state":  "attached",
 				"attachment.vpc-id": id.(string),
 			},
 		)...)
 	}
-	input.Filters = append(input.Filters, BuildTagFilterList(
+	input.Filters = append(input.Filters, newTagFilterList(
 		Tags(tftags.New(ctx, d.Get("tags").(map[string]interface{}))),
 	)...)
-	input.Filters = append(input.Filters, BuildCustomFilterList(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 	if len(input.Filters) == 0 {

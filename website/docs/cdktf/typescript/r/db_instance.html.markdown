@@ -43,6 +43,7 @@ Low-downtime updates minimize service interruptions by performing the updates wi
 
 Low-downtime updates are only available for DB Instances using MySQL and MariaDB,
 as other engines are not supported by RDS Blue/Green deployments.
+They cannot be used with DB Instances with replicas.
 
 Backups must be enabled to use low-downtime updates.
 
@@ -200,7 +201,7 @@ class MyConvertedCode extends TerraformStack {
       allocatedStorage: 500,
       autoMinorVersionUpgrade: false,
       backupRetentionPeriod: 7,
-      customIamInstanceProfile: "AWSRDSCustomSQLServerInstanceRole",
+      customIamInstanceProfile: "AWSRDSCustomSQLServerInstanceProfile",
       dbSubnetGroupName: dbSubnetGroupName,
       engine: Token.asString(customSqlserver.engine),
       engineVersion: Token.asString(customSqlserver.engineVersion),
@@ -435,9 +436,13 @@ action CreateDBInstanceReadReplica](https://docs.aws.amazon.com/AmazonRDS/latest
 for additional read replica constraints.
 * `deleteAutomatedBackups` - (Optional) Specifies whether to remove automated backups immediately after the DB instance is deleted. Default is `true`.
 * `deletionProtection` - (Optional) If the DB instance should have deletion protection enabled. The database can't be deleted when this value is set to `true`. The default is `false`.
-* `domain` - (Optional) The ID of the Directory Service Active Directory domain to create the instance in.
-* `domainIamRoleName` - (Optional, but required if domain is provided) The name of the IAM role to be used when making API calls to the Directory Service.
-* `enabledCloudwatchLogsExports` - (Optional) Set of log types to enable for exporting to CloudWatch logs. If omitted, no logs will be exported. Valid values (depending on `engine`). MySQL and MariaDB: `audit`, `error`, `general`, `slowquery`. PostgreSQL: `postgresql`, `upgrade`. MSSQL: `agent` , `error`. Oracle: `alert`, `audit`, `listener`, `trace`.
+* `domain` - (Optional) The ID of the Directory Service Active Directory domain to create the instance in. Conflicts with `domainFqdn`, `domainOu`, `domainAuthSecretArn` and a `domainDnsIps`.
+* `domainAuthSecretArn` - (Optional, but required if domain_fqdn is provided) The ARN for the Secrets Manager secret with the self managed Active Directory credentials for the user joining the domain. Conflicts with `domain` and `domainIamRoleName`.
+* `domainDnsIps` - (Optional, but required if domain_fqdn is provided)  The IPv4 DNS IP addresses of your primary and secondary self managed Active Directory domain controllers. Two IP addresses must be provided. If there isn't a secondary domain controller, use the IP address of the primary domain controller for both entries in the list. Conflicts with `domain` and `domainIamRoleName`.
+* `domainFqdn` - (Optional) The fully qualified domain name (FQDN) of the self managed Active Directory domain. Conflicts with `domain` and `domainIamRoleName`.
+* `domainIamRoleName` - (Optional, but required if domain is provided) The name of the IAM role to be used when making API calls to the Directory Service. Conflicts with `domainFqdn`, `domainOu`, `domainAuthSecretArn` and a `domainDnsIps`.
+* `domainOu` - (Optional, but required if domain_fqdn is provided) The self managed Active Directory organizational unit for your DB instance to join. Conflicts with `domain` and `domainIamRoleName`.
+* `enabledCloudwatchLogsExports` - (Optional) Set of log types to enable for exporting to CloudWatch logs. If omitted, no logs will be exported. For supported values, see the EnableCloudwatchLogsExports.member.N parameter in [API action CreateDBInstance](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html).
 * `engine` - (Required unless a `snapshotIdentifier` or `replicateSourceDb` is provided) The database engine to use. For supported values, see the Engine parameter in [API action CreateDBInstance](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html). Note that for Amazon Aurora instances the engine must match the [DB cluster](/docs/providers/aws/r/rds_cluster.html)'s engine'. For information on the difference between the available Aurora MySQL engines see [Comparison between Aurora MySQL 1 and Aurora MySQL 2](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/AuroraMySQL.Updates.20180206.html) in the Amazon RDS User Guide.
 * `engineVersion` - (Optional) The engine version to use. If `autoMinorVersionUpgrade` is enabled, you can provide a prefix of the version such as `5.7` (for `5.7.10`). The actual engine version used is returned in the attribute `engineVersionActual`, see [Attribute Reference](#attribute-reference) below. For supported values, see the EngineVersion parameter in [API action CreateDBInstance](https://docs.aws.amazon.com/AmazonRDS/latest/APIReference/API_CreateDBInstance.html). Note that for Amazon Aurora instances the engine version must match the [DB cluster](/docs/providers/aws/r/rds_cluster.html)'s engine version'.
 * `finalSnapshotIdentifier` - (Optional) The name of your final DB snapshot
@@ -621,7 +626,11 @@ This resource exports the following attributes in addition to the arguments abov
 DB instance.
 * `dbName` - The database name.
 * `domain` - The ID of the Directory Service Active Directory domain the instance is joined to
+* `domainAuthSecretArn` - The ARN for the Secrets Manager secret with the self managed Active Directory credentials for the user joining the domain.
+* `domainDnsIps` - The IPv4 DNS IP addresses of your primary and secondary self managed Active Directory domain controllers.
+* `domainFqdn` - The fully qualified domain name (FQDN) of an self managed Active Directory domain.
 * `domainIamRoleName` - The name of the IAM role to be used when making API calls to the Directory Service.
+* `domainOu` - The self managed Active Directory organizational unit for your DB instance to join.
 * `endpoint` - The connection endpoint in `address:port` format.
 * `engine` - The database engine.
 * `engineVersionActual` - The running version of the database.
@@ -695,4 +704,4 @@ Using `terraform import`, import DB Instances using the `identifier`. For exampl
 % terraform import aws_db_instance.default mydb-rds-instance
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-738cfe0ac659c0398cfe29ca012c97002ce9cbe965488f84d5f8c45e623be0fd -->
+<!-- cache-key: cdktf-0.20.1 input-18a067387bc4a652c2e766b1044b8b68907a5be354ceaba1530d5c03912ed3ee -->

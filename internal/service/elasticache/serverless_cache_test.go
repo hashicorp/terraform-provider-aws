@@ -255,6 +255,69 @@ func TestAccElastiCacheServerlessCache_update(t *testing.T) {
 	})
 }
 
+func TestAccElastiCacheServerlessCache_updatesc(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	descriptionOld := "Memcached Serverless Cluster"
+	descriptionNew := "Memcached Serverless Cluster updated"
+	resourceName := "aws_elasticache_serverless_cache.test"
+	var serverlessElasticCache awstypes.ServerlessCache
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
+			testAccCheckServerlessCacheDestroy(ctx),
+		),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServerlessCacheConfig_updatesc(rName, descriptionOld, 1, 1000),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckServerlessCacheExists(ctx, resourceName, &serverlessElasticCache),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "cache_usage_limits.#"),
+					resource.TestCheckResourceAttrSet(resourceName, "create_time"),
+					resource.TestCheckResourceAttr(resourceName, "description", descriptionOld),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint.#"),
+					resource.TestCheckResourceAttrSet(resourceName, "engine"),
+					resource.TestCheckResourceAttrSet(resourceName, "full_engine_version"),
+					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint.#"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "status"),
+					resource.TestCheckResourceAttrSet(resourceName, "subnet_ids.#"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccServerlessCacheConfig_updatesc(rName, descriptionNew, 2, 1010),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckServerlessCacheExists(ctx, resourceName, &serverlessElasticCache),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "cache_usage_limits.#"),
+					resource.TestCheckResourceAttrSet(resourceName, "create_time"),
+					resource.TestCheckResourceAttr(resourceName, "description", descriptionNew),
+					resource.TestCheckResourceAttrSet(resourceName, "endpoint.#"),
+					resource.TestCheckResourceAttrSet(resourceName, "engine"),
+					resource.TestCheckResourceAttrSet(resourceName, "full_engine_version"),
+					resource.TestCheckResourceAttrSet(resourceName, "reader_endpoint.#"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "status"),
+					resource.TestCheckResourceAttrSet(resourceName, "subnet_ids.#"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccElastiCacheServerlessCache_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -512,6 +575,25 @@ resource "aws_elasticache_serverless_cache" "test" {
   description = %[2]q
 }
 `, rName, desc)
+}
+
+func testAccServerlessCacheConfig_updatesc(rName string, desc string, d1 int64, d2 int64) string {
+	return fmt.Sprintf(`
+resource "aws_elasticache_serverless_cache" "test" {
+  engine      = "memcached"
+  name        = %[1]q
+  description = %[2]q
+  cache_usage_limits {
+    data_storage {
+      maximum = %[3]d
+      unit    = "GB"
+    }
+    ecpu_per_second {
+      maximum = %[4]d
+    }
+  }
+}
+`, rName, desc, d1, d2)
 }
 
 func testAccServerlessCacheConfig_tags(rName, tags string) string {

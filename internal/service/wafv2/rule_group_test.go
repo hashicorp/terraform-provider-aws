@@ -2053,6 +2053,7 @@ func TestAccWAFV2RuleGroup_rateBasedStatement(t *testing.T) {
 						"statement.#": "1",
 						"statement.0.rate_based_statement.0.custom_key.#":           "0",
 						"statement.0.rate_based_statement.0.aggregate_key_type":     "IP",
+						"statement.0.rate_based_statement.0.evaluation_window_sec":  "600",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.#":  "0",
 						"statement.0.rate_based_statement.0.limit":                  "50000",
 						"statement.0.rate_based_statement.0.scope_down_statement.#": "0",
@@ -2070,6 +2071,7 @@ func TestAccWAFV2RuleGroup_rateBasedStatement(t *testing.T) {
 						"statement.0.rate_based_statement.#":                                         "1",
 						"statement.0.rate_based_statement.0.custom_key.#":                            "0",
 						"statement.0.rate_based_statement.0.aggregate_key_type":                      "FORWARDED_IP",
+						"statement.0.rate_based_statement.0.evaluation_window_sec":                   "300",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                   "1",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.0.fallback_behavior": "MATCH",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.0.header_name":       "X-Forwarded-For",
@@ -2089,6 +2091,7 @@ func TestAccWAFV2RuleGroup_rateBasedStatement(t *testing.T) {
 						"statement.0.rate_based_statement.#":                                         "1",
 						"statement.0.rate_based_statement.0.custom_key.#":                            "0",
 						"statement.0.rate_based_statement.0.aggregate_key_type":                      "FORWARDED_IP",
+						"statement.0.rate_based_statement.0.evaluation_window_sec":                   "300",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                   "1",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.0.fallback_behavior": "NO_MATCH",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.0.header_name":       "Updated",
@@ -2108,6 +2111,7 @@ func TestAccWAFV2RuleGroup_rateBasedStatement(t *testing.T) {
 						"statement.0.rate_based_statement.#":                                             "1",
 						"statement.0.rate_based_statement.0.custom_key.#":                                "1",
 						"statement.0.rate_based_statement.0.aggregate_key_type":                          "CUSTOM_KEYS",
+						"statement.0.rate_based_statement.0.evaluation_window_sec":                       "300",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                       "0",
 						"statement.0.rate_based_statement.0.limit":                                       "50000",
 						"statement.0.rate_based_statement.0.scope_down_statement.#":                      "0",
@@ -2135,6 +2139,7 @@ func TestAccWAFV2RuleGroup_rateBasedStatement(t *testing.T) {
 						"statement.0.rate_based_statement.#":                                "1",
 						"statement.0.rate_based_statement.0.custom_key.#":                   "2",
 						"statement.0.rate_based_statement.0.aggregate_key_type":             "CUSTOM_KEYS",
+						"statement.0.rate_based_statement.0.evaluation_window_sec":          "300",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.#":          "1",
 						"statement.0.rate_based_statement.0.limit":                          "50000",
 						"statement.0.rate_based_statement.0.scope_down_statement.#":         "0",
@@ -2162,6 +2167,7 @@ func TestAccWAFV2RuleGroup_rateBasedStatement(t *testing.T) {
 						"statement.0.rate_based_statement.#":                                "1",
 						"statement.0.rate_based_statement.0.custom_key.#":                   "1",
 						"statement.0.rate_based_statement.0.aggregate_key_type":             "CUSTOM_KEYS",
+						"statement.0.rate_based_statement.0.evaluation_window_sec":          "300",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.#":          "0",
 						"statement.0.rate_based_statement.0.limit":                          "50000",
 						"statement.0.rate_based_statement.0.scope_down_statement.#":         "0",
@@ -2188,6 +2194,7 @@ func TestAccWAFV2RuleGroup_rateBasedStatement(t *testing.T) {
 						"statement.0.rate_based_statement.#":                                             "1",
 						"statement.0.rate_based_statement.0.custom_key.#":                                "1",
 						"statement.0.rate_based_statement.0.aggregate_key_type":                          "CUSTOM_KEYS",
+						"statement.0.rate_based_statement.0.evaluation_window_sec":                       "300",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                       "0",
 						"statement.0.rate_based_statement.0.limit":                                       "50000",
 						"statement.0.rate_based_statement.0.scope_down_statement.#":                      "0",
@@ -2215,6 +2222,7 @@ func TestAccWAFV2RuleGroup_rateBasedStatement(t *testing.T) {
 						"statement.0.rate_based_statement.#":                                "1",
 						"statement.0.rate_based_statement.0.custom_key.#":                   "2",
 						"statement.0.rate_based_statement.0.aggregate_key_type":             "CUSTOM_KEYS",
+						"statement.0.rate_based_statement.0.evaluation_window_sec":          "300",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.#":          "0",
 						"statement.0.rate_based_statement.0.limit":                          "50000",
 						"statement.0.rate_based_statement.0.scope_down_statement.#":         "0",
@@ -2242,6 +2250,7 @@ func TestAccWAFV2RuleGroup_rateBasedStatement(t *testing.T) {
 						"statement.0.rate_based_statement.#":                                                     "1",
 						"statement.0.rate_based_statement.0.custom_key.#":                                        "1",
 						"statement.0.rate_based_statement.0.aggregate_key_type":                                  "CUSTOM_KEYS",
+						"statement.0.rate_based_statement.0.evaluation_window_sec":                               "300",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                               "0",
 						"statement.0.rate_based_statement.0.limit":                                               "50000",
 						"statement.0.rate_based_statement.0.scope_down_statement.#":                              "0",
@@ -2269,6 +2278,7 @@ func TestAccWAFV2RuleGroup_rateBasedStatement(t *testing.T) {
 						"statement.0.rate_based_statement.#":                                                   "1",
 						"statement.0.rate_based_statement.0.custom_key.#":                                      "1",
 						"statement.0.rate_based_statement.0.aggregate_key_type":                                "CUSTOM_KEYS",
+						"statement.0.rate_based_statement.0.evaluation_window_sec":                             "300",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                             "0",
 						"statement.0.rate_based_statement.0.limit":                                             "50000",
 						"statement.0.rate_based_statement.0.scope_down_statement.#":                            "0",
@@ -2296,6 +2306,7 @@ func TestAccWAFV2RuleGroup_rateBasedStatement(t *testing.T) {
 						"statement.0.rate_based_statement.#":                                               "1",
 						"statement.0.rate_based_statement.0.custom_key.#":                                  "1",
 						"statement.0.rate_based_statement.0.aggregate_key_type":                            "CUSTOM_KEYS",
+						"statement.0.rate_based_statement.0.evaluation_window_sec":                         "300",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                         "0",
 						"statement.0.rate_based_statement.0.limit":                                         "50000",
 						"statement.0.rate_based_statement.0.scope_down_statement.#":                        "0",
@@ -2323,6 +2334,7 @@ func TestAccWAFV2RuleGroup_rateBasedStatement(t *testing.T) {
 						"statement.0.rate_based_statement.#":                        "1",
 						"statement.0.rate_based_statement.0.custom_key.#":           "5",
 						"statement.0.rate_based_statement.0.aggregate_key_type":     "CUSTOM_KEYS",
+						"statement.0.rate_based_statement.0.evaluation_window_sec":  "300",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.#":  "0",
 						"statement.0.rate_based_statement.0.limit":                  "50000",
 						"statement.0.rate_based_statement.0.scope_down_statement.#": "0",
@@ -2340,6 +2352,7 @@ func TestAccWAFV2RuleGroup_rateBasedStatement(t *testing.T) {
 						"statement.0.rate_based_statement.#":                                                              "1",
 						"statement.0.rate_based_statement.0.custom_key.#":                                                 "0",
 						"statement.0.rate_based_statement.0.aggregate_key_type":                                           "IP",
+						"statement.0.rate_based_statement.0.evaluation_window_sec":                                        "300",
 						"statement.0.rate_based_statement.0.forwarded_ip_config.#":                                        "0",
 						"statement.0.rate_based_statement.0.limit":                                                        "10000",
 						"statement.0.rate_based_statement.0.scope_down_statement.#":                                       "1",
@@ -4719,7 +4732,8 @@ resource "aws_wafv2_rule_group" "test" {
 
     statement {
       rate_based_statement {
-        limit = 50000
+        evaluation_window_sec = 600
+        limit                 = 50000
       }
     }
 

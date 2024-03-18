@@ -35,6 +35,7 @@ func TestAccS3BucketObjectDataSource_basic(t *testing.T) {
 			{
 				Config: testAccBucketObjectDataSourceConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttr(dataSourceName, "content_length", "11"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "content_type", resourceName, "content_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "etag", resourceName, "etag"),

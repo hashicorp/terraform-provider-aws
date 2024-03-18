@@ -314,6 +314,7 @@ The following arguments are optional:
 * `skipDestroy` - (Optional) Whether to retain the old revision when the resource is destroyed or replacement is necessary. Default is `false`.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `taskRoleArn` - (Optional) ARN of IAM role that allows your Amazon ECS container task to make calls to other AWS services.
+* `trackLatest` - (Optional) Whether should track latest task definition or the one created with the resource. Default is `false`.
 * `volume` - (Optional) Configuration block for [volumes](#volume) that containers in your task may use. Detailed below.
 
 ### volume
@@ -429,4 +430,4 @@ Using `terraform import`, import ECS Task Definitions using their ARNs. For exam
 % terraform import aws_ecs_task_definition.example arn:aws:ecs:us-east-1:012345678910:task-definition/mytaskfamily:123
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-e600d146b2b55ceeb9bc9361167e95241f61a5b3e90831c8b6a3c0cb748b8f00 -->
+<!-- cache-key: cdktf-0.20.1 input-f93bc3e065742c353f4207a2027fa3e40044e53bcb4f3ea8e603e0c8ea6098e6 -->

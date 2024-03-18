@@ -69,6 +69,7 @@ val services = mapOf(
     "deploy" to ServiceSpec("CodeDeploy", vpcLock = true),
     "detective" to ServiceSpec("Detective"),
     "devicefarm" to ServiceSpec("Device Farm"),
+    "devopsguru" to ServiceSpec("DevOps Guru"),
     "directconnect" to ServiceSpec("Direct Connect", vpcLock = true),
     "dlm" to ServiceSpec("DLM (Data Lifecycle Manager)"),
     "dms" to ServiceSpec("DMS (Database Migration)", vpcLock = true),

@@ -145,11 +145,6 @@ func TestAccVPCNetworkACL_Egress_mode(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
 				Config: testAccVPCNetworkACLConfig_egressModeNoBlocks(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkACLExists(ctx, resourceName, &v),
@@ -157,21 +152,11 @@ func TestAccVPCNetworkACL_Egress_mode(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
 				Config: testAccVPCNetworkACLConfig_egressModeZeroed(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkACLExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "egress.#", "0"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -197,11 +182,6 @@ func TestAccVPCNetworkACL_Ingress_mode(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
 				Config: testAccVPCNetworkACLConfig_ingressModeNoBlocks(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkACLExists(ctx, resourceName, &v),
@@ -209,21 +189,11 @@ func TestAccVPCNetworkACL_Ingress_mode(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
 				Config: testAccVPCNetworkACLConfig_ingressModeZeroed(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckNetworkACLExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "ingress.#", "0"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -263,11 +233,6 @@ func TestAccVPCNetworkACL_egressAndIngressRules(t *testing.T) {
 					}),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
 		},
 	})
 }
@@ -297,11 +262,6 @@ func TestAccVPCNetworkACL_OnlyIngressRules_basic(t *testing.T) {
 						"cidr_block": "10.2.0.0/18",
 					}),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -337,11 +297,6 @@ func TestAccVPCNetworkACL_OnlyIngressRules_update(t *testing.T) {
 						"rule_no":    "2",
 					}),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 			{
 				Config: testAccVPCNetworkACLConfig_ingressChange(rName),
@@ -380,11 +335,6 @@ func TestAccVPCNetworkACL_caseSensitivityNoChanges(t *testing.T) {
 					testAccCheckNetworkACLExists(ctx, resourceName, &v),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
 		},
 	})
 }
@@ -406,11 +356,6 @@ func TestAccVPCNetworkACL_onlyEgressRules(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkACLExists(ctx, resourceName, &v),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -559,11 +504,6 @@ func TestAccVPCNetworkACL_ipv6Rules(t *testing.T) {
 					}),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
 		},
 	})
 }
@@ -612,11 +552,6 @@ func TestAccVPCNetworkACL_ipv6VPCRules(t *testing.T) {
 					}),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
 		},
 	})
 }
@@ -638,11 +573,6 @@ func TestAccVPCNetworkACL_espProtocol(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNetworkACLExists(ctx, resourceName, &v),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})

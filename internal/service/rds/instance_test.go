@@ -19,6 +19,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	tfawserr_sdkv2 "github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -1040,6 +1041,7 @@ func TestAccRDSInstance_ReplicateSourceDB_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "identifier", rName),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", ""),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
+					resource.TestCheckResourceAttrPair(resourceName, "replicate_source_db", sourceResourceName, "identifier"),
 					resource.TestCheckResourceAttrPair(resourceName, "db_name", sourceResourceName, "db_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "username", sourceResourceName, "username"),
 
@@ -2145,6 +2147,50 @@ func TestAccRDSInstance_ReplicateSourceDB_parameterGroupTwoStep(t *testing.T) {
 	})
 }
 
+func TestAccRDSInstance_ReplicateSourceDB_CrossRegion_parameterGroupNameEquivalent(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance, sourceDbInstance rds.DBInstance
+	var providers []*schema.Provider
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	sourceResourceName := "aws_db_instance.source"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDB_CrossRegion_ParameterGroupName_equivalent(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExistsWithProvider(ctx, sourceResourceName, &sourceDbInstance, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers)),
+					resource.TestCheckResourceAttr(sourceResourceName, "parameter_group_name", fmt.Sprintf("%s-source", rName)),
+					testAccCheckInstanceExistsWithProvider(ctx, resourceName, &dbInstance, acctest.RegionProviderFunc(acctest.Region(), &providers)),
+					resource.TestCheckResourceAttrPair(resourceName, "replicate_source_db", sourceResourceName, "arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "parameter_group_name", "aws_db_parameter_group.test", "name"),
+					testAccCheckInstanceParameterApplyStatusInSync(&dbInstance),
+					testAccCheckInstanceParameterApplyStatusInSync(&sourceDbInstance),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"password",
+				},
+			},
+		},
+	})
+}
+
 func TestAccRDSInstance_s3Import(t *testing.T) {
 	acctest.Skip(t, "RestoreDBInstanceFromS3 cannot restore from MySQL version 5.6")
 
@@ -2446,7 +2492,40 @@ func TestAccRDSInstance_SnapshotIdentifier_io1Storage(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_SnapshotID_io1Storage(rName, 1000),
+				Config: testAccInstanceConfig_SnapshotID_ioStorage(rName, "io1", 1000),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
+					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
+					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "iops", "1000"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_SnapshotIdentifier_io2Storage(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance, sourceDbInstance rds.DBInstance
+	var dbSnapshot rds.DBSnapshot
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	sourceDbResourceName := "aws_db_instance.source"
+	snapshotResourceName := "aws_db_snapshot.test"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_SnapshotID_ioStorage(rName, "io2", 1000),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, sourceDbResourceName, &sourceDbInstance),
 					testAccCheckDBSnapshotExists(ctx, snapshotResourceName, &dbSnapshot),
@@ -3421,7 +3500,7 @@ func TestAccRDSInstance_MonitoringRoleARN_removedToEnabled(t *testing.T) {
 // Regression test for https://github.com/hashicorp/terraform/issues/3760 .
 // We apply a plan, then change just the iops. If the apply succeeds, we
 // consider this a pass, as before in 3760 the request would fail
-func TestAccRDSInstance_Storage_separateIOPSUpdate(t *testing.T) {
+func TestAccRDSInstance_Storage_separateIOPSUpdate_Io1(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
@@ -3438,7 +3517,7 @@ func TestAccRDSInstance_Storage_separateIOPSUpdate(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_iopsUpdate(rName, 1000),
+				Config: testAccInstanceConfig_iopsUpdate(rName, "io1", 1000),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					testAccCheckInstanceAttributes(&v),
@@ -3446,7 +3525,42 @@ func TestAccRDSInstance_Storage_separateIOPSUpdate(t *testing.T) {
 			},
 
 			{
-				Config: testAccInstanceConfig_iopsUpdate(rName, 2000),
+				Config: testAccInstanceConfig_iopsUpdate(rName, "io1", 2000),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					testAccCheckInstanceAttributes(&v),
+				),
+			},
+		},
+	})
+}
+
+func TestAccRDSInstance_Storage_separateIOPSUpdate_Io2(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v rds.DBInstance
+	resourceName := "aws_db_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_iopsUpdate(rName, "io2", 1000),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &v),
+					testAccCheckInstanceAttributes(&v),
+				),
+			},
+
+			{
+				Config: testAccInstanceConfig_iopsUpdate(rName, "io2", 2000),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 					testAccCheckInstanceAttributes(&v),
@@ -6204,6 +6318,10 @@ func dbInstanceIdentity(v *rds.DBInstance) string {
 }
 
 func testAccCheckInstanceExists(ctx context.Context, n string, v *rds.DBInstance) resource.TestCheckFunc {
+	return testAccCheckInstanceExistsWithProvider(ctx, n, v, func() *schema.Provider { return acctest.Provider })
+}
+
+func testAccCheckInstanceExistsWithProvider(ctx context.Context, n string, v *rds.DBInstance, providerF func() *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -6214,7 +6332,7 @@ func testAccCheckInstanceExists(ctx context.Context, n string, v *rds.DBInstance
 			return fmt.Errorf("No RDS DB Instance ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
+		conn := providerF().Meta().(*conns.AWSClient).RDSConn(ctx)
 
 		output, err := tfrds.FindDBInstanceByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
@@ -7138,7 +7256,7 @@ resource "aws_db_instance" "restore" {
 `, rName))
 }
 
-func testAccInstanceConfig_iopsUpdate(rName string, iops int) string {
+func testAccInstanceConfig_iopsUpdate(rName string, sType string, iops int) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = %[1]q
@@ -7150,7 +7268,7 @@ data "aws_rds_orderable_db_instance" "test" {
   license_model              = "general-public-license"
   preferred_instance_classes = [%[2]s]
 
-  storage_type  = "io1"
+  storage_type  = %[4]q
   supports_iops = true
 }
 
@@ -7169,9 +7287,9 @@ resource "aws_db_instance" "test" {
 
   storage_type      = data.aws_rds_orderable_db_instance.test.storage_type
   allocated_storage = 200
-  iops              = %[4]d
+  iops              = %[5]d
 }
-`, tfrds.InstanceEngineMySQL, mainInstanceClasses, rName, iops)
+`, tfrds.InstanceEngineMySQL, mainInstanceClasses, rName, sType, iops)
 }
 
 func testAccInstanceConfig_mySQLPort(rName string) string {
@@ -9585,6 +9703,79 @@ resource "aws_db_parameter_group" "test" {
 `, rName))
 }
 
+func testAccInstanceConfig_ReplicateSourceDB_CrossRegion_ParameterGroupName_equivalent(rName string) string {
+	parameters := `
+parameter {
+  # "max_string_size" cannot be changed after creation
+  name         = "max_string_size"
+  value        = "EXTENDED"
+  apply_method = "immediate"
+}
+`
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(2), fmt.Sprintf(`
+resource "aws_db_instance" "test" {
+  provider = "aws"
+
+  identifier           = %[1]q
+  replicate_source_db  = aws_db_instance.source.arn
+  instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
+  skip_final_snapshot  = true
+  apply_immediately    = true
+  parameter_group_name = aws_db_parameter_group.test.name
+}
+
+resource "aws_db_parameter_group" "test" {
+  provider = "aws"
+
+  family = data.aws_rds_engine_version.default.parameter_group_family
+  name   = %[1]q
+
+  %[4]s
+}
+
+resource "aws_db_instance" "source" {
+  provider = "awsalternate"
+
+  identifier              = "%[1]s-source"
+  allocated_storage       = 20
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  engine_version          = data.aws_rds_orderable_db_instance.test.engine_version
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  storage_type            = data.aws_rds_orderable_db_instance.test.storage_type
+  db_name                 = "MAINDB"
+  username                = "oadmin"
+  password                = "avoid-plaintext-passwords"
+  skip_final_snapshot     = true
+  apply_immediately       = true
+  backup_retention_period = 3
+  parameter_group_name    = aws_db_parameter_group.source.name
+}
+
+resource "aws_db_parameter_group" "source" {
+  provider = "awsalternate"
+
+  family = data.aws_rds_engine_version.default.parameter_group_family
+  name   = "%[1]s-source"
+
+  %[4]s
+}
+
+data "aws_rds_engine_version" "default" {
+  engine = %[2]q
+}
+
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = data.aws_rds_engine_version.default.engine
+  engine_version             = data.aws_rds_engine_version.default.version
+  license_model              = "bring-your-own-license"
+  storage_type               = "gp2"
+  read_replica_capable       = true
+  preferred_instance_classes = [%[3]s]
+}
+`, rName, tfrds.InstanceEngineOracleEnterprise, strings.Replace(mainInstanceClasses, "db.t3.small", "frodo", 1), parameters))
+}
+
 func testAccInstanceConfig_baseMonitoringRole(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
@@ -9809,13 +10000,13 @@ resource "aws_db_instance" "test" {
 `, rName, allocatedStorage))
 }
 
-func testAccInstanceConfig_SnapshotID_io1Storage(rName string, iops int) string {
+func testAccInstanceConfig_SnapshotID_ioStorage(rName string, sType string, iops int) string {
 	return fmt.Sprintf(`
 data "aws_rds_orderable_db_instance" "test" {
   engine                = %[1]q
   engine_latest_version = true
   license_model         = "general-public-license"
-  storage_type          = "io1"
+  storage_type          = %[4]q
 
   preferred_instance_classes = [%[2]s]
 }
@@ -9841,10 +10032,10 @@ resource "aws_db_instance" "test" {
   snapshot_identifier = aws_db_snapshot.test.id
   skip_final_snapshot = true
   allocated_storage   = 200
-  iops                = %[4]d
+  iops                = %[5]d
   storage_type        = data.aws_rds_orderable_db_instance.test.storage_type
 }
-`, tfrds.InstanceEngineMariaDB, mainInstanceClasses, rName, iops)
+`, tfrds.InstanceEngineMariaDB, mainInstanceClasses, rName, sType, iops)
 }
 
 func testAccInstanceConfig_SnapshotID_allowMajorVersionUpgrade(rName string, allowMajorVersionUpgrade bool) string {
