@@ -4,6 +4,7 @@
 package dms
 
 import (
+	"cmp"
 	"encoding/json"
 	"log"
 	"reflect"
@@ -11,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"golang.org/x/exp/slices"
 )
 
 // https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.CustomizingTasks.TaskSettings.html#CHAP_Tasks.CustomizingTasks.TaskSettings.Example
@@ -193,7 +195,7 @@ func normalizeTaskSettings(apiObject string) string {
 			"ControlSchema":                 "",
 			"FullLoadExceptionTableEnabled": false,
 		},
-		// "BeforeImageSettings": nil,
+		"BeforeImageSettings":                 nil,
 		"FailTaskWhenCleanTaskResourceFailed": false,
 		"ErrorBehavior": map[string]interface{}{
 			"DataErrorPolicy":                             "LOG_ERROR",
@@ -239,80 +241,80 @@ func normalizeTaskSettings(apiObject string) string {
 			"CloudWatchLogGroup":  nil,
 			"CloudWatchLogStream": nil,
 			"EnableLogContext":    false,
-			"LogComponents": []interface{}{
-				map[string]interface{}{
+			"LogComponents": []map[string]string{
+				{
 					"Severity": "LOGGER_SEVERITY_DEFAULT",
 					"Id":       "TRANSFORMATION",
 				},
-				map[string]interface{}{
+				{
 					"Severity": "LOGGER_SEVERITY_DEFAULT",
 					"Id":       "SOURCE_UNLOAD",
 				},
-				map[string]interface{}{
+				{
 					"Severity": "LOGGER_SEVERITY_DEFAULT",
 					"Id":       "IO",
 				},
-				map[string]interface{}{
+				{
 					"Severity": "LOGGER_SEVERITY_DEFAULT",
 					"Id":       "TARGET_LOAD",
 				},
-				map[string]interface{}{
+				{
 					"Severity": "LOGGER_SEVERITY_DEFAULT",
 					"Id":       "PERFORMANCE",
 				},
-				map[string]interface{}{
+				{
 					"Severity": "LOGGER_SEVERITY_DEFAULT",
 					"Id":       "SOURCE_CAPTURE",
 				},
-				map[string]interface{}{
+				{
 					"Severity": "LOGGER_SEVERITY_DEFAULT",
 					"Id":       "SORTER",
 				},
-				map[string]interface{}{
+				{
 					"Severity": "LOGGER_SEVERITY_DEFAULT",
 					"Id":       "REST_SERVER",
 				},
-				map[string]interface{}{
+				{
 					"Severity": "LOGGER_SEVERITY_DEFAULT",
 					"Id":       "VALIDATOR_EXT",
 				},
-				map[string]interface{}{
+				{
 					"Severity": "LOGGER_SEVERITY_DEFAULT",
 					"Id":       "TARGET_APPLY",
 				},
-				map[string]interface{}{
+				{
 					"Severity": "LOGGER_SEVERITY_DEFAULT",
 					"Id":       "TASK_MANAGER",
 				},
-				map[string]interface{}{
+				{
 					"Severity": "LOGGER_SEVERITY_DEFAULT",
 					"Id":       "TABLES_MANAGER",
 				},
-				map[string]interface{}{
+				{
 					"Severity": "LOGGER_SEVERITY_DEFAULT",
 					"Id":       "METADATA_MANAGER",
 				},
-				map[string]interface{}{
+				{
 					"Severity": "LOGGER_SEVERITY_DEFAULT",
 					"Id":       "FILE_FACTORY",
 				},
-				map[string]interface{}{
+				{
 					"Severity": "LOGGER_SEVERITY_DEFAULT",
 					"Id":       "COMMON",
 				},
-				map[string]interface{}{
+				{
 					"Severity": "LOGGER_SEVERITY_DEFAULT",
 					"Id":       "ADDONS",
 				},
-				map[string]interface{}{
+				{
 					"Severity": "LOGGER_SEVERITY_DEFAULT",
 					"Id":       "DATA_STRUCTURE",
 				},
-				map[string]interface{}{
+				{
 					"Severity": "LOGGER_SEVERITY_DEFAULT",
 					"Id":       "COMMUNICATION",
 				},
-				map[string]interface{}{
+				{
 					"Severity": "LOGGER_SEVERITY_DEFAULT",
 					"Id":       "FILE_TRANSFER",
 				},
@@ -379,17 +381,18 @@ func suppressEquivalentTaskSettings(k, old, new string, d *schema.ResourceData) 
 func checkdefaultvalues(defaultMap, oldMap map[string]interface{}) map[string]interface{} {
 	for k, v := range oldMap {
 		log.Printf("[WARN] checking key: %s, type: %T", k, v)
-		if value, ok := defaultMap[k]; ok { //if key exists in the default struct
-			switch t := reflect.TypeOf(value); t.Kind() { //check the type ; value is off the default map
-			//top level
+		if value, ok := defaultMap[k]; ok && v != nil {
+			// Check the type of the value
+			switch t := reflect.TypeOf(value); t.Kind() {
+			// Check top level settings
 			case reflect.Bool, reflect.String, reflect.Float64, reflect.Int:
-				if value == v {
+				if reflect.DeepEqual(value, v) {
 					delete(oldMap, k)
 				}
 			case reflect.Map:
 				// Map of defaults
 				kMap := value.(map[string]interface{})
-				// Map of inner map of oldMap/user
+				// Map of inner map (from user)
 				vMap := v.(map[string]interface{})
 
 				for kInner, vInner := range vMap {
@@ -400,36 +403,35 @@ func checkdefaultvalues(defaultMap, oldMap map[string]interface{}) map[string]in
 								kMap[kInner] = float64(kMap[kInner].(int))
 							}
 						}
-						// if reflect.TypeOf(vInner).Kind() == reflect.Slice {
-						// 	//kMap[kInner] map of default; kInner is the key from the map from the user
-						// 	// vSlice := v.([]interface{})
-						// 	if kMap[kInner] != nil {
-						// 		log.Printf("[WARN] vinner value: %s", vInner)
-						// 		if reflect.DeepEqual(kMap[kInner], vInner) {
-						// 			compareLogComponent := true
-						// 		}
-						// 		// log.Printf("[WARN]  kMap[kInner] value: %s", kMap[kInner])
-						// 	}
-						// 	// kMap[kInner] = []interface{}{kMap[kInner]}
-						// 	// kMap[kInner] = v.([]interface{kMap[kInner]})
-						// 	// 	if reflect.DeepEqual(kMap[kInner], vInner) {
-						// 	// 		delete(vMap, kInner)
-						// 	// 	}
-						// 	// }
-						// 	// check if it's a slice; if it is, want to do something similar; how we cast like 346, cast it to a slice also;
-						// 	// checking if two slices are equal will be diff;  like line 348; look up comparing two slices; you can reflect
-						// 	// the values;
-						// }
-						//if kMap[kInner] == vInner {
+						if reflect.TypeOf(vInner).Kind() == reflect.Slice {
+							temp := make([]map[string]string, 0)
+							for _, v := range vInner.([]interface{}) {
+								innerTemp := make(map[string]string)
+								for k, v := range v.(map[string]interface{}) {
+									innerTemp[k] = v.(string)
+								}
+								temp = append(temp, innerTemp)
+							}
+							// We are assuming the types; we know the type at the point of this code
+							slices.SortFunc(temp, func(i, j map[string]string) int {
+								return cmp.Compare(i["Id"], j["Id"])
+							})
+							vInner = temp
+
+							slices.SortFunc(kMap[kInner].([]map[string]string), func(i, j map[string]string) int {
+								return cmp.Compare(i["Id"], j["Id"])
+							})
+						}
+
 						if reflect.DeepEqual(kMap[kInner], vInner) {
 							delete(vMap, kInner)
 						}
 					}
-
 				}
 				if len(vMap) == 0 {
 					delete(oldMap, k)
 				}
+
 			default:
 				return oldMap
 			}
