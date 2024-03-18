@@ -8,11 +8,11 @@ import (
 	"encoding/json"
 	"log"
 	"reflect"
+	"slices"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	tfjson "github.com/hashicorp/terraform-provider-aws/internal/json"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"golang.org/x/exp/slices"
 )
 
 // https://docs.aws.amazon.com/dms/latest/userguide/CHAP_Tasks.CustomizingTasks.TaskSettings.html#CHAP_Tasks.CustomizingTasks.TaskSettings.Example
@@ -22,8 +22,6 @@ import (
 // Read-only (non-configurable) fields are removed by using the published "schema".
 // Empty fields are then removed.
 func normalizeTaskSettings(apiObject string) string {
-	// var taskSettings taskSettings
-
 	defaultValues := map[string]interface{}{
 		"ChangeProcessingTuning": map[string]interface{}{
 			"BatchApplyMemoryLimit":         500,
@@ -274,7 +272,6 @@ func checkdefaultvalues(defaultMap, oldMap map[string]interface{}) map[string]in
 								return cmp.Compare(i["Id"], j["Id"])
 							})
 						}
-
 						if reflect.DeepEqual(kMap[kInner], vInner) {
 							delete(vMap, kInner)
 						}

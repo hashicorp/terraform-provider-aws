@@ -188,7 +188,7 @@ func resourceReplicationTaskRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("replication_instance_arn", task.ReplicationInstanceArn)
 	d.Set("replication_task_arn", task.ReplicationTaskArn)
 	d.Set("replication_task_id", task.ReplicationTaskIdentifier)
-	d.Set("replication_task_settings", task.ReplicationTaskSettings)
+	d.Set("replication_task_settings", normalizeTaskSettings(*task.ReplicationTaskSettings))
 	d.Set("source_endpoint_arn", task.SourceEndpointArn)
 	d.Set("status", task.Status)
 	d.Set("table_mappings", task.TableMappings)
