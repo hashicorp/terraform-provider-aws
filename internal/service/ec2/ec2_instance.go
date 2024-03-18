@@ -821,15 +821,7 @@ func ResourceInstance() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ConflictsWith: []string{"user_data"},
-				ValidateFunc: func(v interface{}, name string) (warns []string, errs []error) {
-					s := v.(string)
-					if !verify.IsBase64Encoded([]byte(s)) {
-						errs = append(errs, fmt.Errorf(
-							"%s: must be base64-encoded", name,
-						))
-					}
-					return
-				},
+				ValidateFunc:  verify.ValidBase64String,
 			},
 			"user_data_replace_on_change": {
 				Type:     schema.TypeBool,
@@ -2943,7 +2935,7 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interfa
 	userDataBase64 := d.Get("user_data_base64").(string)
 
 	if userData != "" {
-		opts.UserData64 = aws.String(verify.Base64Encode([]byte(userData)))
+		opts.UserData64 = flex.StringValueToBase64String(userData)
 	} else if userDataBase64 != "" {
 		opts.UserData64 = aws.String(userDataBase64)
 	}

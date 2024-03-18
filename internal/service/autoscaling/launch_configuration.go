@@ -302,15 +302,7 @@ func ResourceLaunchConfiguration() *schema.Resource {
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"user_data"},
-				ValidateFunc: func(v interface{}, name string) (warns []string, errs []error) {
-					s := v.(string)
-					if !verify.IsBase64Encoded([]byte(s)) {
-						errs = append(errs, fmt.Errorf(
-							"%s: must be base64-encoded", name,
-						))
-					}
-					return
-				},
+				ValidateFunc:  verify.ValidBase64String,
 			},
 		},
 	}
@@ -363,7 +355,7 @@ func resourceLaunchConfigurationCreate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if v, ok := d.GetOk("user_data"); ok {
-		input.UserData = aws.String(verify.Base64Encode([]byte(v.(string))))
+		input.UserData = flex.StringValueToBase64String(v.(string))
 	} else if v, ok := d.GetOk("user_data_base64"); ok {
 		input.UserData = aws.String(v.(string))
 	}

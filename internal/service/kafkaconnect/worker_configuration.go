@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // @SDKResource("aws_mskconnect_worker_configuration")
@@ -73,7 +73,7 @@ func resourceWorkerConfigurationCreate(ctx context.Context, d *schema.ResourceDa
 	name := d.Get("name").(string)
 	input := &kafkaconnect.CreateWorkerConfigurationInput{
 		Name:                  aws.String(name),
-		PropertiesFileContent: aws.String(verify.Base64Encode([]byte(d.Get("properties_file_content").(string)))),
+		PropertiesFileContent: flex.StringValueToBase64String(d.Get("properties_file_content").(string)),
 	}
 
 	if v, ok := d.GetOk("description"); ok {

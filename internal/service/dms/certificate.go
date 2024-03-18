@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -167,7 +168,7 @@ func resourceCertificateSetState(d *schema.ResourceData, cert *dms.Certificate) 
 		d.Set("certificate_pem", cert.CertificatePem)
 	}
 	if cert.CertificateWallet != nil && len(cert.CertificateWallet) != 0 {
-		d.Set("certificate_wallet", verify.Base64Encode(cert.CertificateWallet))
+		d.Set("certificate_wallet", itypes.Base64EncodeOnce(cert.CertificateWallet))
 	}
 }
 

@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -148,7 +149,7 @@ func resourceSecretVersionRead(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	d.Set("arn", output.ARN)
-	d.Set("secret_binary", verify.Base64Encode(output.SecretBinary))
+	d.Set("secret_binary", itypes.Base64EncodeOnce(output.SecretBinary))
 	d.Set("secret_id", secretID)
 	d.Set("secret_string", output.SecretString)
 	d.Set("version_id", output.VersionId)
