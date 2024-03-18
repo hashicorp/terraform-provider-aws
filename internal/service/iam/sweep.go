@@ -336,7 +336,7 @@ func sweepServiceSpecificCredentials(ctx context.Context, client *conns.AWSClien
 		for _, cred := range out.ServiceSpecificCredentials {
 			id := fmt.Sprintf("%s:%s:%s", aws.StringValue(cred.ServiceName), aws.StringValue(cred.UserName), aws.StringValue(cred.ServiceSpecificCredentialId))
 
-			r := ResourceServiceSpecificCredential()
+			r := resourceServiceSpecificCredential()
 			d := r.Data(nil)
 			d.SetId(id)
 
@@ -900,7 +900,7 @@ func sweepSigningCertificates(ctx context.Context, client *conns.AWSClient) ([]s
 		for _, cert := range out.Certificates {
 			id := fmt.Sprintf("%s:%s", aws.StringValue(cert.CertificateId), aws.StringValue(cert.UserName))
 
-			r := ResourceSigningCertificate()
+			r := resourceSigningCertificate()
 			d := r.Data(nil)
 			d.SetId(id)
 

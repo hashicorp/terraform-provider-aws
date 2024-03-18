@@ -16324,16 +16324,6 @@ var awsPartition = partition{
 				}: endpoint{},
 			},
 		},
-		"iotroborunner": service{
-			Endpoints: serviceEndpoints{
-				endpointKey{
-					Region: "eu-central-1",
-				}: endpoint{},
-				endpointKey{
-					Region: "us-east-1",
-				}: endpoint{},
-			},
-		},
 		"iotsecuredtunneling": service{
 			Defaults: endpointDefaults{
 				defaultKey{}: endpoint{},

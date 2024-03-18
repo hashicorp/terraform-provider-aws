@@ -8,13 +8,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/lakeformation"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -24,7 +25,7 @@ func testAccDataLakeSettings_basic(t *testing.T) {
 	resourceName := "aws_lakeformation_data_lake_settings.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.LakeFormation) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataLakeSettingsDestroy(ctx),
@@ -60,7 +61,7 @@ func testAccDataLakeSettings_disappears(t *testing.T) {
 	resourceName := "aws_lakeformation_data_lake_settings.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.LakeFormation) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataLakeSettingsDestroy(ctx),
@@ -123,7 +124,7 @@ func testAccDataLakeSettings_readOnlyAdmins(t *testing.T) {
 
 func testAccCheckDataLakeSettingsDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lakeformation_data_lake_settings" {
@@ -136,9 +137,9 @@ func testAccCheckDataLakeSettingsDestroy(ctx context.Context) resource.TestCheck
 				input.CatalogId = aws.String(rs.Primary.Attributes["catalog_id"])
 			}
 
-			output, err := conn.GetDataLakeSettingsWithContext(ctx, input)
+			output, err := conn.GetDataLakeSettings(ctx, input)
 
-			if tfawserr.ErrCodeEquals(err, lakeformation.ErrCodeEntityNotFoundException) {
+			if errs.IsA[*awstypes.EntityNotFoundException](err) {
 				continue
 			}
 
@@ -166,7 +167,7 @@ func testAccCheckDataLakeSettingsExists(ctx context.Context, resourceName string
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationClient(ctx)
 
 		input := &lakeformation.GetDataLakeSettingsInput{}
 
@@ -174,7 +175,7 @@ func testAccCheckDataLakeSettingsExists(ctx context.Context, resourceName string
 			input.CatalogId = aws.String(rs.Primary.Attributes["catalog_id"])
 		}
 
-		_, err := conn.GetDataLakeSettingsWithContext(ctx, input)
+		_, err := conn.GetDataLakeSettings(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("error getting Lake Formation data lake settings (%s): %w", rs.Primary.ID, err)

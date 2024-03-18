@@ -26,7 +26,7 @@ import (
 
 // @SDKResource("aws_cognito_identity_pool", name="Pool")
 // @Tags(identifierAttribute="arn")
-func ResourcePool() *schema.Resource {
+func resourcePool() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePoolCreate,
 		ReadWithoutTimeout:   resourcePoolRead,

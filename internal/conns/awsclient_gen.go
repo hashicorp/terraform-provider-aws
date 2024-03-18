@@ -49,6 +49,7 @@ import (
 	costoptimizationhub_sdkv2 "github.com/aws/aws-sdk-go-v2/service/costoptimizationhub"
 	customerprofiles_sdkv2 "github.com/aws/aws-sdk-go-v2/service/customerprofiles"
 	dax_sdkv2 "github.com/aws/aws-sdk-go-v2/service/dax"
+	devopsguru_sdkv2 "github.com/aws/aws-sdk-go-v2/service/devopsguru"
 	directoryservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/directoryservice"
 	docdbelastic_sdkv2 "github.com/aws/aws-sdk-go-v2/service/docdbelastic"
 	dynamodb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/dynamodb"
@@ -207,7 +208,6 @@ import (
 	kinesisanalyticsv2_sdkv1 "github.com/aws/aws-sdk-go/service/kinesisanalyticsv2"
 	kinesisvideo_sdkv1 "github.com/aws/aws-sdk-go/service/kinesisvideo"
 	kms_sdkv1 "github.com/aws/aws-sdk-go/service/kms"
-	lakeformation_sdkv1 "github.com/aws/aws-sdk-go/service/lakeformation"
 	lambda_sdkv1 "github.com/aws/aws-sdk-go/service/lambda"
 	lexmodelbuildingservice_sdkv1 "github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
 	licensemanager_sdkv1 "github.com/aws/aws-sdk-go/service/licensemanager"
@@ -548,6 +548,10 @@ func (c *AWSClient) DetectiveConn(ctx context.Context) *detective_sdkv1.Detectiv
 	return errs.Must(conn[*detective_sdkv1.Detective](ctx, c, names.Detective, make(map[string]any)))
 }
 
+func (c *AWSClient) DevOpsGuruClient(ctx context.Context) *devopsguru_sdkv2.Client {
+	return errs.Must(client[*devopsguru_sdkv2.Client](ctx, c, names.DevOpsGuru, make(map[string]any)))
+}
+
 func (c *AWSClient) DeviceFarmConn(ctx context.Context) *devicefarm_sdkv1.DeviceFarm {
 	return errs.Must(conn[*devicefarm_sdkv1.DeviceFarm](ctx, c, names.DeviceFarm, make(map[string]any)))
 }
@@ -798,10 +802,6 @@ func (c *AWSClient) KinesisAnalyticsV2Conn(ctx context.Context) *kinesisanalytic
 
 func (c *AWSClient) KinesisVideoConn(ctx context.Context) *kinesisvideo_sdkv1.KinesisVideo {
 	return errs.Must(conn[*kinesisvideo_sdkv1.KinesisVideo](ctx, c, names.KinesisVideo, make(map[string]any)))
-}
-
-func (c *AWSClient) LakeFormationConn(ctx context.Context) *lakeformation_sdkv1.LakeFormation {
-	return errs.Must(conn[*lakeformation_sdkv1.LakeFormation](ctx, c, names.LakeFormation, make(map[string]any)))
 }
 
 func (c *AWSClient) LakeFormationClient(ctx context.Context) *lakeformation_sdkv2.Client {

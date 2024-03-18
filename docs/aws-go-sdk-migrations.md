@@ -260,6 +260,11 @@ ErrorCheck: acctest.ErrorCheck(t, names.SSOAdminServiceID),
 V2 of the AWS SDK introduces new [paginator](https://aws.github.io/aws-sdk-go-v2/docs/making-requests/#using-paginators) helpers.
 Any `List*Pages` methods called with V1 of the SDK will need to replace the pagination function argument with the syntax documented in the AWS SDK for Go V2 documentation.
 
+## Waiters
+
+V2 of the AWS SDK introduces new [waiter](https://aws.github.io/aws-sdk-go-v2/docs/making-requests/#using-waiters) helpers.
+Any `Wait*` methods called with V1 of the SDK will need to be replaced with the syntax documented in the AWS SDK for Go V2 documentation.
+
 ## Sweepers
 
 All [sweepers](./running-and-writing-acceptance-tests.md#sweeper-checklists) should be updated to use the V2 SDK.

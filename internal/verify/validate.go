@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/timestamp"
 )
 
@@ -130,9 +130,7 @@ func ValidARNCheck(f ...ARNCheckFunc) schema.SchemaValidateFunc {
 func ValidAccountID(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 
-	// http://docs.aws.amazon.com/lambda/latest/dg/API_AddPermission.html
-	pattern := `^\d{12}$`
-	if !regexache.MustCompile(pattern).MatchString(value) {
+	if !itypes.IsAWSAccountID(value) {
 		errors = append(errors, fmt.Errorf(
 			"%q doesn't look like AWS Account ID (exactly 12 digits): %q",
 			k, value))
@@ -156,7 +154,7 @@ func ValidBase64String(v interface{}, k string) (ws []string, errors []error) {
 // ValidCIDRNetworkAddress ensures that the string value is a valid CIDR that
 // represents a network address - it adds an error otherwise
 func ValidCIDRNetworkAddress(v interface{}, k string) (ws []string, errors []error) {
-	if err := types.ValidateCIDRBlock(v.(string)); err != nil {
+	if err := itypes.ValidateCIDRBlock(v.(string)); err != nil {
 		errors = append(errors, err)
 		return
 	}
@@ -223,7 +221,7 @@ func ValidateIPv4CIDRBlock(cidr string) error {
 		return fmt.Errorf("%q is not a valid IPv4 CIDR block", cidr)
 	}
 
-	if !types.CIDRBlocksEqual(cidr, ipnet.String()) {
+	if !itypes.CIDRBlocksEqual(cidr, ipnet.String()) {
 		return fmt.Errorf("%q is not a valid IPv4 CIDR block; did you mean %q?", cidr, ipnet)
 	}
 
@@ -245,7 +243,7 @@ func ValidateIPv6CIDRBlock(cidr string) error {
 		return fmt.Errorf("%q is not a valid IPv6 CIDR block", cidr)
 	}
 
-	if !types.CIDRBlocksEqual(cidr, ipnet.String()) {
+	if !itypes.CIDRBlocksEqual(cidr, ipnet.String()) {
 		return fmt.Errorf("%q is not a valid IPv6 CIDR block; did you mean %q?", cidr, ipnet)
 	}
 

@@ -14,16 +14,19 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_iam_access_key")
-func ResourceAccessKey() *schema.Resource {
+// @SDKResource("aws_iam_access_key", name="Access Key")
+func resourceAccessKey() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccessKeyCreate,
 		ReadWithoutTimeout:   resourceAccessKeyRead,
@@ -187,8 +190,8 @@ func resourceAccessKeyRead(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	username := d.Get("user").(string)
+	key, err := findAccessKeyByTwoPartKey(ctx, conn, username, d.Id())
 
-	key, err := FindAccessKey(ctx, conn, username, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IAM Access Key (%s) for User (%s) not found, removing from state", d.Id(), username)
 		d.SetId("")
@@ -242,14 +245,20 @@ func resourceAccessKeyDelete(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
-	request := &iam.DeleteAccessKeyInput{
+	log.Printf("[DEBUG] Deleting IAM Access Key: %s", d.Id())
+	_, err := conn.DeleteAccessKeyWithContext(ctx, &iam.DeleteAccessKeyInput{
 		AccessKeyId: aws.String(d.Id()),
 		UserName:    aws.String(d.Get("user").(string)),
+	})
+
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+		return diags
 	}
 
-	if _, err := conn.DeleteAccessKeyWithContext(ctx, request); err != nil {
+	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting IAM Access Key (%s): %s", d.Id(), err)
 	}
+
 	return diags
 }
 
@@ -262,6 +271,61 @@ func resourceAccessKeyStatusUpdate(ctx context.Context, conn *iam.IAM, d *schema
 
 	_, err := conn.UpdateAccessKeyWithContext(ctx, request)
 	return err
+}
+
+func findAccessKeyByTwoPartKey(ctx context.Context, conn *iam.IAM, username, id string) (*iam.AccessKeyMetadata, error) {
+	input := &iam.ListAccessKeysInput{
+		UserName: aws.String(username),
+	}
+
+	return findAccessKey(ctx, conn, input, func(v *iam.AccessKeyMetadata) bool {
+		return aws.StringValue(v.AccessKeyId) == id
+	})
+}
+
+func findAccessKeysByUser(ctx context.Context, conn *iam.IAM, username string) ([]*iam.AccessKeyMetadata, error) {
+	input := &iam.ListAccessKeysInput{
+		UserName: aws.String(username),
+	}
+
+	return findAccessKeys(ctx, conn, input, tfslices.PredicateTrue[*iam.AccessKeyMetadata]())
+}
+
+func findAccessKey(ctx context.Context, conn *iam.IAM, input *iam.ListAccessKeysInput, filter tfslices.Predicate[*iam.AccessKeyMetadata]) (*iam.AccessKeyMetadata, error) {
+	output, err := findAccessKeys(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findAccessKeys(ctx context.Context, conn *iam.IAM, input *iam.ListAccessKeysInput, filter tfslices.Predicate[*iam.AccessKeyMetadata]) ([]*iam.AccessKeyMetadata, error) {
+	var output []*iam.AccessKeyMetadata
+
+	err := conn.ListAccessKeysPagesWithContext(ctx, input, func(page *iam.ListAccessKeysOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.AccessKeyMetadata {
+			if v != nil && filter(v) {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	return output, err
 }
 
 func hmacSignature(key []byte, value []byte) ([]byte, error) {

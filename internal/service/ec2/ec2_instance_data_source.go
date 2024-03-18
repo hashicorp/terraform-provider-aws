@@ -163,7 +163,7 @@ func DataSourceInstance() *schema.Resource {
 					},
 				},
 			},
-			"filter": CustomFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"get_password_data": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -406,12 +406,12 @@ func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta in
 	input := &ec2.DescribeInstancesInput{}
 
 	if tags, tagsOk := d.GetOk("instance_tags"); tagsOk {
-		input.Filters = append(input.Filters, BuildTagFilterList(
+		input.Filters = append(input.Filters, newTagFilterList(
 			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 		)...)
 	}
 
-	input.Filters = append(input.Filters, BuildCustomFilterList(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 	if len(input.Filters) == 0 {

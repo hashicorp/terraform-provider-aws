@@ -35,72 +35,89 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceAccessKeys,
+			Factory:  dataSourceAccessKeys,
 			TypeName: "aws_iam_access_keys",
+			Name:     "Access Keys",
 		},
 		{
-			Factory:  DataSourceAccountAlias,
+			Factory:  dataSourceAccountAlias,
 			TypeName: "aws_iam_account_alias",
+			Name:     "Account Alias",
 		},
 		{
-			Factory:  DataSourceGroup,
+			Factory:  dataSourceGroup,
 			TypeName: "aws_iam_group",
+			Name:     "Group",
 		},
 		{
-			Factory:  DataSourceInstanceProfile,
+			Factory:  dataSourceInstanceProfile,
 			TypeName: "aws_iam_instance_profile",
+			Name:     "Instance Profile",
 		},
 		{
-			Factory:  DataSourceInstanceProfiles,
+			Factory:  dataSourceInstanceProfiles,
 			TypeName: "aws_iam_instance_profiles",
+			Name:     "Instance Profiles",
 		},
 		{
-			Factory:  DataSourceOpenIDConnectProvider,
+			Factory:  dataSourceOpenIDConnectProvider,
 			TypeName: "aws_iam_openid_connect_provider",
+			Name:     "OIDC Provider",
 		},
 		{
-			Factory:  DataSourcePolicy,
+			Factory:  dataSourcePolicy,
 			TypeName: "aws_iam_policy",
+			Name:     "Policy",
 		},
 		{
-			Factory:  DataSourcePolicyDocument,
+			Factory:  dataSourcePolicyDocument,
 			TypeName: "aws_iam_policy_document",
+			Name:     "Policy Document",
 		},
 		{
-			Factory:  DataSourcePrincipalPolicySimulation,
+			Factory:  dataSourcePrincipalPolicySimulation,
 			TypeName: "aws_iam_principal_policy_simulation",
+			Name:     "Principal Policy Simulation",
 		},
 		{
-			Factory:  DataSourceRole,
+			Factory:  dataSourceRole,
 			TypeName: "aws_iam_role",
+			Name:     "Role",
 		},
 		{
-			Factory:  DataSourceRoles,
+			Factory:  dataSourceRoles,
 			TypeName: "aws_iam_roles",
+			Name:     "Roles",
 		},
 		{
-			Factory:  DataSourceSAMLProvider,
+			Factory:  dataSourceSAMLProvider,
 			TypeName: "aws_iam_saml_provider",
+			Name:     "SAML Provider",
 		},
 		{
-			Factory:  DataSourceServerCertificate,
+			Factory:  dataSourceServerCertificate,
 			TypeName: "aws_iam_server_certificate",
+			Name:     "Server Certificate",
 		},
 		{
-			Factory:  DataSourceSessionContext,
+			Factory:  dataSourceSessionContext,
 			TypeName: "aws_iam_session_context",
+			Name:     "Session Context",
 		},
 		{
-			Factory:  DataSourceUser,
+			Factory:  dataSourceUser,
 			TypeName: "aws_iam_user",
+			Name:     "User",
 		},
 		{
-			Factory:  DataSourceUserSSHKey,
+			Factory:  dataSourceUserSSHKey,
 			TypeName: "aws_iam_user_ssh_key",
+			Name:     "User SSH Key",
 		},
 		{
-			Factory:  DataSourceUsers,
+			Factory:  dataSourceUsers,
 			TypeName: "aws_iam_users",
+			Name:     "Users",
 		},
 	}
 }
@@ -108,12 +125,14 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceAccessKey,
+			Factory:  resourceAccessKey,
 			TypeName: "aws_iam_access_key",
+			Name:     "Access Key",
 		},
 		{
-			Factory:  ResourceAccountAlias,
+			Factory:  resourceAccountAlias,
 			TypeName: "aws_iam_account_alias",
+			Name:     "Account Alias",
 		},
 		{
 			Factory:  resourceAccountPasswordPolicy,
@@ -126,12 +145,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Group",
 		},
 		{
-			Factory:  ResourceGroupMembership,
+			Factory:  resourceGroupMembership,
 			TypeName: "aws_iam_group_membership",
+			Name:     "Group Membership",
 		},
 		{
-			Factory:  ResourceGroupPolicy,
+			Factory:  resourceGroupPolicy,
 			TypeName: "aws_iam_group_policy",
+			Name:     "Group Policy",
 		},
 		{
 			Factory:  resourceGroupPolicyAttachment,
@@ -171,8 +192,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Policy Attachment",
 		},
 		{
-			Factory:  ResourceRolePolicy,
+			Factory:  resourceRolePolicy,
 			TypeName: "aws_iam_role_policy",
+			Name:     "Role Policy",
 		},
 		{
 			Factory:  resourceRolePolicyAttachment,
@@ -189,7 +211,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceSecurityTokenServicePreferences,
+			Factory:  resourceSecurityTokenServicePreferences,
 			TypeName: "aws_iam_security_token_service_preferences",
 			Name:     "Security Token Service Preferences",
 		},
@@ -212,12 +234,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceServiceSpecificCredential,
+			Factory:  resourceServiceSpecificCredential,
 			TypeName: "aws_iam_service_specific_credential",
+			Name:     "Service Specific Credential",
 		},
 		{
-			Factory:  ResourceSigningCertificate,
+			Factory:  resourceSigningCertificate,
 			TypeName: "aws_iam_signing_certificate",
+			Name:     "Signing Certificate",
 		},
 		{
 			Factory:  resourceUser,
@@ -229,8 +253,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceUserGroupMembership,
+			Factory:  resourceUserGroupMembership,
 			TypeName: "aws_iam_user_group_membership",
+			Name:     "User Group Membership",
 		},
 		{
 			Factory:  resourceUserLoginProfile,
@@ -238,8 +263,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "User Login Profile",
 		},
 		{
-			Factory:  ResourceUserPolicy,
+			Factory:  resourceUserPolicy,
 			TypeName: "aws_iam_user_policy",
+			Name:     "User Policy",
 		},
 		{
 			Factory:  resourceUserPolicyAttachment,
