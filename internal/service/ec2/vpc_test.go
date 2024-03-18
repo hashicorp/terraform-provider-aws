@@ -574,6 +574,107 @@ func TestAccVPC_DefaultTagsProviderAndResource_moveDuplicateTags(t *testing.T) {
 	})
 }
 
+func TestAccVPC_Tags_EmptyTag_OnCreate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var vpc awstypes.Vpc
+	resourceName := "aws_vpc.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCConfig_tags1("key1", ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccVPC_Tags_EmptyTag_OnUpdate_Add(t *testing.T) {
+	ctx := acctest.Context(t)
+	var vpc awstypes.Vpc
+	resourceName := "aws_vpc.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCConfig_tags1("key1", "value1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				Config: testAccVPCConfig_tags2("key1", "value1", "key2", ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccVPC_Tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
+	ctx := acctest.Context(t)
+	var vpc awstypes.Vpc
+	resourceName := "aws_vpc.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVPCDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCConfig_tags1("key1", "value1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				Config: testAccVPCConfig_tags1("key1", ""),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					acctest.CheckVPCExistsV2(ctx, resourceName, &vpc),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 // TestAccVPC_DynamicResourceTagsMergedWithLocals_ignoreChanges ensures computed "tags_all"
 // attributes are correctly determined when the provider-level default_tags block
 // is left unused and resource tags (merged with local.tags) are only known at apply time,

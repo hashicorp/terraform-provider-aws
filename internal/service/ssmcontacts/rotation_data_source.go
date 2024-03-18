@@ -5,15 +5,15 @@ package ssmcontacts
 
 import (
 	"context"
-	"time"
 
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ssmcontacts/types"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -56,7 +56,7 @@ func (d *dataSourceRotation) Schema(ctx context.Context, request datasource.Sche
 				Computed:    true,
 			},
 			"start_time": schema.StringAttribute{
-				CustomType: fwtypes.TimestampType,
+				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 			},
 			"tags": tftags.TagsAttributeComputedOnly(),
@@ -88,39 +88,36 @@ func (d *dataSourceRotation) Read(ctx context.Context, request datasource.ReadRe
 	}
 
 	rc := &dsRecurrenceData{}
-	rc.RecurrenceMultiplier = flex.Int32ToFramework(ctx, output.Recurrence.RecurrenceMultiplier)
-	rc.NumberOfOnCalls = flex.Int32ToFramework(ctx, output.Recurrence.NumberOfOnCalls)
+	rc.RecurrenceMultiplier = fwflex.Int32ToFramework(ctx, output.Recurrence.RecurrenceMultiplier)
+	rc.NumberOfOnCalls = fwflex.Int32ToFramework(ctx, output.Recurrence.NumberOfOnCalls)
 
-	response.Diagnostics.Append(flex.Flatten(ctx, output.Recurrence.DailySettings, &rc.DailySettings)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output.Recurrence.DailySettings, &rc.DailySettings)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	response.Diagnostics.Append(flex.Flatten(ctx, output.Recurrence.MonthlySettings, &rc.MonthlySettings)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output.Recurrence.MonthlySettings, &rc.MonthlySettings)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	response.Diagnostics.Append(flex.Flatten(ctx, output.Recurrence.WeeklySettings, &rc.WeeklySettings)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output.Recurrence.WeeklySettings, &rc.WeeklySettings)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	response.Diagnostics.Append(flex.Flatten(ctx, output.ContactIds, &data.ContactIds)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output.ContactIds, &data.ContactIds)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	rc.ShiftCoverages = flattenShiftCoveragesDataSource(ctx, output.Recurrence.ShiftCoverages)
 
-	data.Name = flex.StringToFramework(ctx, output.Name)
+	data.Name = fwflex.StringToFramework(ctx, output.Name)
 	data.Recurrence = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, rc)
-	data.TimeZoneID = flex.StringToFramework(ctx, output.TimeZoneId)
-	data.ID = flex.StringToFramework(ctx, output.RotationArn)
-
-	if output.StartTime != nil {
-		data.StartTime = fwtypes.TimestampValue(output.StartTime.Format(time.RFC3339))
-	}
+	data.StartTime = fwflex.TimeToFramework(ctx, output.StartTime)
+	data.TimeZoneID = fwflex.StringToFramework(ctx, output.TimeZoneId)
+	data.ID = fwflex.StringToFramework(ctx, output.RotationArn)
 
 	tags, err := listTags(ctx, conn, data.ARN.ValueString())
 
@@ -132,7 +129,7 @@ func (d *dataSourceRotation) Read(ctx context.Context, request datasource.ReadRe
 		return
 	}
 
-	data.Tags = flex.FlattenFrameworkStringValueMap(ctx, tags.Map())
+	data.Tags = fwflex.FlattenFrameworkStringValueMap(ctx, tags.Map())
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -143,7 +140,7 @@ type dataSourceRotationData struct {
 	ID         types.String                                      `tfsdk:"id"`
 	Recurrence fwtypes.ListNestedObjectValueOf[dsRecurrenceData] `tfsdk:"recurrence"`
 	Name       types.String                                      `tfsdk:"name"`
-	StartTime  fwtypes.Timestamp                                 `tfsdk:"start_time"`
+	StartTime  timetypes.RFC3339                                 `tfsdk:"start_time"`
 	Tags       types.Map                                         `tfsdk:"tags"`
 	TimeZoneID types.String                                      `tfsdk:"time_zone_id"`
 }
@@ -196,12 +193,12 @@ func flattenShiftCoveragesDataSource(ctx context.Context, object map[string][]aw
 		for _, v := range value {
 			ct := dsCoverageTimesData{
 				End: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &dsHandOffTime{
-					HourOfDay:    flex.Int32ValueToFramework(ctx, v.End.HourOfDay),
-					MinuteOfHour: flex.Int32ValueToFramework(ctx, v.End.MinuteOfHour),
+					HourOfDay:    fwflex.Int32ValueToFramework(ctx, v.End.HourOfDay),
+					MinuteOfHour: fwflex.Int32ValueToFramework(ctx, v.End.MinuteOfHour),
 				}),
 				Start: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &dsHandOffTime{
-					HourOfDay:    flex.Int32ValueToFramework(ctx, v.Start.HourOfDay),
-					MinuteOfHour: flex.Int32ValueToFramework(ctx, v.End.MinuteOfHour),
+					HourOfDay:    fwflex.Int32ValueToFramework(ctx, v.Start.HourOfDay),
+					MinuteOfHour: fwflex.Int32ValueToFramework(ctx, v.End.MinuteOfHour),
 				}),
 			}
 			coverageTimes = append(coverageTimes, ct)

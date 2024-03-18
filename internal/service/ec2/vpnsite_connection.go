@@ -745,7 +745,7 @@ func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta
 
 	if v := vpnConnection.TransitGatewayId; v != nil {
 		input := &ec2.DescribeTransitGatewayAttachmentsInput{
-			Filters: BuildAttributeFilterList(map[string]string{
+			Filters: newAttributeFilterList(map[string]string{
 				"resource-id":        d.Id(),
 				"resource-type":      ec2.TransitGatewayAttachmentResourceTypeVpn,
 				"transit-gateway-id": aws.StringValue(v),
@@ -1696,7 +1696,7 @@ func validVPNConnectionTunnelInsideCIDR() schema.SchemaValidateFunc {
 func validVPNConnectionTunnelInsideIPv6CIDR() schema.SchemaValidateFunc {
 	return validation.All(
 		validation.IsCIDRNetwork(126, 126),
-		validation.StringMatch(regexache.MustCompile(`^fd00:`), "must be within fd00::/8"),
+		validation.StringMatch(regexache.MustCompile(`^fd`), "must be within fd00::/8"),
 	)
 }
 

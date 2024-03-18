@@ -206,7 +206,11 @@ func testAccCheckAccountExists(ctx context.Context, n string) resource.TestCheck
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		_, err := tfsecurityhub.FindHub(ctx, acctest.Provider.Meta().(*conns.AWSClient))
+		awsClient := acctest.Provider.Meta().(*conns.AWSClient)
+		conn := awsClient.SecurityHubClient(ctx)
+
+		arn := tfsecurityhub.AccountHubARN(awsClient)
+		_, err := tfsecurityhub.FindHubByARN(ctx, conn, arn)
 
 		return err
 	}
@@ -214,12 +218,16 @@ func testAccCheckAccountExists(ctx context.Context, n string) resource.TestCheck
 
 func testAccCheckAccountDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
+		awsClient := acctest.Provider.Meta().(*conns.AWSClient)
+		conn := awsClient.SecurityHubClient(ctx)
+
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_securityhub_account" {
 				continue
 			}
 
-			_, err := tfsecurityhub.FindHub(ctx, acctest.Provider.Meta().(*conns.AWSClient))
+			arn := tfsecurityhub.AccountHubARN(awsClient)
+			_, err := tfsecurityhub.FindHubByARN(ctx, conn, arn)
 
 			if tfresource.NotFound(err) {
 				continue

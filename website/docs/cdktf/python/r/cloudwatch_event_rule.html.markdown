@@ -79,6 +79,8 @@ This resource supports the following arguments:
   To also enable the rule for events delivered by CloudTrail, set `state` to `ENABLED_WITH_ALL_CLOUDTRAIL_MANAGEMENT_EVENTS`.
   Defaults to `ENABLED`.
   Conflicts with `is_enabled`.
+
+  **NOTE:** The rule state  `ENABLED_WITH_ALL_CLOUDTRAIL_MANAGEMENT_EVENTS` cannot be used in conjunction with the `schedule_expression` argument.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
@@ -114,4 +116,4 @@ Using `terraform import`, import EventBridge Rules using the `event_bus_name/rul
 % terraform import aws_cloudwatch_event_rule.console example-event-bus/capture-console-sign-in
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-5196dca74dee243e06bbc7c4837260a8d524816f38cf3c6be02db3a9a953596f -->
+<!-- cache-key: cdktf-0.20.1 input-592d547f9107c1e0a929217003e01e7f912cfdd84c2707b59fb72713df1770cb -->

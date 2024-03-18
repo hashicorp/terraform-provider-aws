@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfappautoscaling "github.com/hashicorp/terraform-provider-aws/internal/service/appautoscaling"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -73,6 +74,32 @@ func TestAccAppAutoScalingScheduledAction_dynamoDB(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "start_time"),
 					resource.TestCheckNoResourceAttr(resourceName, "end_time"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccAppAutoScalingScheduledAction_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var sa applicationautoscaling.ScheduledAction
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	schedule := time.Now().AddDate(0, 0, 1).Format("2006-01-02T15:04:05")
+
+	resourceName := "aws_appautoscaling_scheduled_action.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppAutoScalingServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckScheduledActionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccScheduledActionConfig_dynamoDB(rName, schedule),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckScheduledActionExists(ctx, resourceName, &sa),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappautoscaling.ResourceScheduledAction(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -577,42 +604,39 @@ func testAccCheckScheduledActionDestroy(ctx context.Context) resource.TestCheckF
 				continue
 			}
 
-			input := &applicationautoscaling.DescribeScheduledActionsInput{
-				ResourceId:           aws.String(rs.Primary.Attributes["resource_id"]),
-				ScheduledActionNames: []*string{aws.String(rs.Primary.Attributes["name"])},
-				ServiceNamespace:     aws.String(rs.Primary.Attributes["service_namespace"]),
+			_, err := tfappautoscaling.FindScheduledActionByFourPartKey(ctx, conn, rs.Primary.Attributes["name"], rs.Primary.Attributes["service_namespace"], rs.Primary.Attributes["resource_id"], rs.Primary.Attributes["scalable_dimension"])
+
+			if tfresource.NotFound(err) {
+				continue
 			}
-			resp, err := conn.DescribeScheduledActionsWithContext(ctx, input)
+
 			if err != nil {
 				return err
 			}
-			if len(resp.ScheduledActions) > 0 {
-				return fmt.Errorf("Appautoscaling Scheduled Action (%s) not deleted", rs.Primary.Attributes["name"])
-			}
+
+			return fmt.Errorf("Application Auto Scaling Scheduled Action %s still exists", rs.Primary.ID)
 		}
+
 		return nil
 	}
 }
 
-func testAccCheckScheduledActionExists(ctx context.Context, name string, obj *applicationautoscaling.ScheduledAction) resource.TestCheckFunc {
+func testAccCheckScheduledActionExists(ctx context.Context, n string, v *applicationautoscaling.ScheduledAction) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("Application Autoscaling scheduled action (%s) ID not set", name)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AppAutoScalingConn(ctx)
 
-		sa, err := tfappautoscaling.FindScheduledAction(ctx, conn, rs.Primary.Attributes["name"], rs.Primary.Attributes["service_namespace"], rs.Primary.Attributes["resource_id"])
+		output, err := tfappautoscaling.FindScheduledActionByFourPartKey(ctx, conn, rs.Primary.Attributes["name"], rs.Primary.Attributes["service_namespace"], rs.Primary.Attributes["resource_id"], rs.Primary.Attributes["scalable_dimension"])
+
 		if err != nil {
 			return err
 		}
 
-		*obj = *sa
+		*v = *output
 
 		return nil
 	}
@@ -621,7 +645,7 @@ func testAccCheckScheduledActionExists(ctx context.Context, name string, obj *ap
 func testAccCheckScheduledActionNotRecreated(i, j *applicationautoscaling.ScheduledAction) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if !aws.TimeValue(i.CreationTime).Equal(aws.TimeValue(j.CreationTime)) {
-			return fmt.Errorf("Application Auto Scaling scheduled action recreated")
+			return fmt.Errorf("Application Auto Scaling Scheduled Action recreated")
 		}
 
 		return nil
@@ -761,7 +785,7 @@ resource "aws_ecs_service" "test" {
 }
 
 func testAccScheduledActionConfig_emr(rName, ts string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
 resource "aws_appautoscaling_scheduled_action" "test" {
   name               = %[1]q
   service_namespace  = aws_appautoscaling_target.test.service_namespace
@@ -782,17 +806,6 @@ resource "aws_appautoscaling_target" "test" {
   role_arn           = aws_iam_role.autoscale_role.arn
   min_capacity       = 1
   max_capacity       = 5
-}
-
-data "aws_availability_zones" "available" {
-  # The requested instance type c4.large is not supported in the requested availability zone.
-  exclude_zone_ids = ["usw2-az4"]
-  state            = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
 }
 
 data "aws_partition" "current" {}
@@ -835,7 +848,7 @@ resource "aws_emr_cluster" "test" {
 
   configurations = "test-fixtures/emr_configurations.json"
 
-  depends_on = [aws_main_route_table_association.test]
+  depends_on = [aws_route_table_association.test]
 
   service_role     = aws_iam_role.emr_role.arn
   autoscaling_role = aws_iam_role.autoscale_role.arn
@@ -847,56 +860,62 @@ resource "aws_emr_instance_group" "test" {
   instance_type  = "c4.large"
 }
 
-resource "aws_security_group" "test" {
-  name        = %[1]q
-  description = "Allow all inbound traffic"
-  vpc_id      = aws_vpc.test.id
-
-  ingress {
-    from_port = 0
-    to_port   = 0
-    protocol  = "-1"
-    self      = true
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  depends_on = [aws_subnet.test]
-
-  lifecycle {
-    ignore_changes = [
-      ingress,
-      egress,
-    ]
-  }
-}
-
 resource "aws_vpc" "test" {
-  cidr_block           = "168.31.0.0/16"
+  cidr_block           = "10.0.0.0/16"
   enable_dns_hostnames = true
 
   tags = {
-    Name = "terraform-testacc-appautoscaling-scheduled-action-emr"
-  }
-}
-
-resource "aws_subnet" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "168.31.0.0/20"
-  vpc_id            = aws_vpc.test.id
-
-  tags = {
-    Name = "tf-acc-appautoscaling-scheduled-action"
+    Name = %[1]q
   }
 }
 
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  ingress {
+    from_port = 0
+    protocol  = "-1"
+    self      = true
+    to_port   = 0
+  }
+
+  egress {
+    cidr_blocks = ["0.0.0.0/0"]
+    from_port   = 0
+    protocol    = "-1"
+    to_port     = 0
+  }
+
+  tags = {
+    Name                                     = %[1]q
+    for-use-with-amazon-emr-managed-policies = true
+  }
+
+  # EMR will modify ingress rules
+  lifecycle {
+    ignore_changes = [ingress]
+  }
+}
+
+resource "aws_subnet" "test" {
+  availability_zone       = data.aws_availability_zones.available.names[0]
+  cidr_block              = cidrsubnet(aws_vpc.test.cidr_block, 8, 0)
+  map_public_ip_on_launch = true
+  vpc_id                  = aws_vpc.test.id
+
+  tags = {
+    Name                                     = %[1]q
+    for-use-with-amazon-emr-managed-policies = true
+  }
 }
 
 resource "aws_route_table" "test" {
@@ -906,11 +925,15 @@ resource "aws_route_table" "test" {
     cidr_block = "0.0.0.0/0"
     gateway_id = aws_internet_gateway.test.id
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
-resource "aws_main_route_table_association" "test" {
-  vpc_id         = aws_vpc.test.id
+resource "aws_route_table_association" "test" {
   route_table_id = aws_route_table.test.id
+  subnet_id      = aws_subnet.test.id
 }
 
 resource "aws_iam_role" "emr_role" {
@@ -1089,7 +1112,7 @@ resource "aws_iam_role_policy_attachment" "autoscale_role" {
   role       = aws_iam_role.autoscale_role.name
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonElasticMapReduceforAutoScalingRole"
 }
-`, rName, ts)
+`, rName, ts))
 }
 
 func testAccScheduledActionConfig_duplicateName(rName string) string {
@@ -1163,7 +1186,7 @@ resource "aws_appautoscaling_scheduled_action" "test" {
 }
 
 func testAccScheduledActionConfig_spotFleet(rName, ts, validUntil string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(), fmt.Sprintf(`
 resource "aws_appautoscaling_scheduled_action" "test" {
   name               = %[1]q
   service_namespace  = aws_appautoscaling_target.test.service_namespace
@@ -1185,24 +1208,9 @@ resource "aws_appautoscaling_target" "test" {
   max_capacity       = 3
 }
 
-data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-minimal-hvm-*"]
-  }
-
-  filter {
-    name   = "root-device-type"
-    values = ["ebs"]
-  }
-}
-
 data "aws_partition" "current" {}
 
-resource "aws_iam_role" "fleet_role" {
+resource "aws_iam_role" "test" {
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -1222,24 +1230,24 @@ resource "aws_iam_role" "fleet_role" {
 EOF
 }
 
-resource "aws_iam_role_policy_attachment" "fleet_role_policy" {
-  role       = aws_iam_role.fleet_role.name
+resource "aws_iam_role_policy_attachment" "test" {
+  role       = aws_iam_role.test.name
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonEC2SpotFleetTaggingRole"
 }
 
 resource "aws_spot_fleet_request" "test" {
-  iam_fleet_role                      = aws_iam_role.fleet_role.arn
+  iam_fleet_role                      = aws_iam_role.test.arn
   spot_price                          = "0.005"
   target_capacity                     = 2
   valid_until                         = %[3]q
   terminate_instances_with_expiration = true
 
   launch_specification {
-    instance_type = "m3.medium"
+    instance_type = "t3.micro"
     ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   }
 }
-`, rName, ts, validUntil)
+`, rName, ts, validUntil))
 }
 
 func testAccScheduledActionConfig_schedule(rName, schedule string) string {

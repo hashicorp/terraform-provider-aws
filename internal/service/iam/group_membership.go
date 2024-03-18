@@ -19,8 +19,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_iam_group_membership")
-func ResourceGroupMembership() *schema.Resource {
+// @SDKResource("aws_iam_group_membership", name="Group Membership")
+func resourceGroupMembership() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGroupMembershipCreate,
 		ReadWithoutTimeout:   resourceGroupMembershipRead,

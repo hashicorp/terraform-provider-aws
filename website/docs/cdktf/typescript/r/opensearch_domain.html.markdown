@@ -477,7 +477,10 @@ The following arguments are optional:
 
 * `desiredState` - (Required) Auto-Tune desired state for the domain. Valid values: `ENABLED` or `DISABLED`.
 * `maintenanceSchedule` - (Required if `rollbackOnDisable` is set to `DEFAULT_ROLLBACK`) Configuration block for Auto-Tune maintenance windows. Can be specified multiple times for each maintenance window. Detailed below.
+
+  **NOTE:** Maintenance windows are deprecated and have been replaced with [off-peak windows](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/off-peak.html). Consequently, `maintenanceSchedule` configuration blocks cannot be specified when `useOffPeakWindow` is set to `true`.
 * `rollbackOnDisable` - (Optional) Whether to roll back to default Auto-Tune settings when disabling Auto-Tune. Valid values: `DEFAULT_ROLLBACK` or `NO_ROLLBACK`.
+* `useOffPeakWindow` - (Optional) Whether to schedule Auto-Tune optimizations that require blue/green deployments during the domain's configured daily off-peak window. Defaults to `false`.
 
 #### maintenance_schedule
 
@@ -636,4 +639,4 @@ Using `terraform import`, import OpenSearch domains using the `domainName`. For 
 % terraform import aws_opensearch_domain.example domain_name
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-3520506ca4451d8aad7f61d8126b34e79c301e9b261c5d51100a69086367a360 -->
+<!-- cache-key: cdktf-0.20.1 input-67cdb16ac2a864835c0cf54ca3a5a6ddd68cbfa0a33beec2dc6e6b98b6a7a9b7 -->
