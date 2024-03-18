@@ -963,7 +963,7 @@ resource "aws_appautoscaling_scheduled_action" "test" {
   resource_id        = aws_appautoscaling_target.test.resource_id
   scalable_dimension = aws_appautoscaling_target.test.scalable_dimension
   schedule           = "at(%[2]s)"
-  
+
   start_time = %[3]q
   end_time   = %[4]q
 
@@ -1006,6 +1006,7 @@ resource "aws_ecs_service" "test" {
   cluster         = aws_ecs_cluster.test.id
   task_definition = aws_ecs_task_definition.test.arn
   desired_count   = 1
+
   deployment_maximum_percent         = 200
   deployment_minimum_healthy_percent = 50
 }
