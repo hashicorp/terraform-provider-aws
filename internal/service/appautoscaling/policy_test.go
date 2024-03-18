@@ -287,8 +287,8 @@ func TestAccAppAutoScalingPolicy_spotFleetRequest(t *testing.T) {
 func TestAccAppAutoScalingPolicy_DynamoDB_table(t *testing.T) {
 	ctx := acctest.Context(t)
 	var policy applicationautoscaling.ScalingPolicy
-
-	randPolicyName := fmt.Sprintf("test-appautoscaling-policy-%s", sdkacctest.RandString(5))
+	resourceName := "aws_appautoscaling_policy.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -297,19 +297,19 @@ func TestAccAppAutoScalingPolicy_DynamoDB_table(t *testing.T) {
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConfig_dynamoDB(randPolicyName),
+				Config: testAccPolicyConfig_dynamoDB(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(ctx, "aws_appautoscaling_policy.dynamo_test", &policy),
-					resource.TestCheckResourceAttr("aws_appautoscaling_policy.dynamo_test", "name", fmt.Sprintf("DynamoDBWriteCapacityUtilization:table/%s", randPolicyName)),
-					resource.TestCheckResourceAttr("aws_appautoscaling_policy.dynamo_test", "policy_type", "TargetTrackingScaling"),
-					resource.TestCheckResourceAttr("aws_appautoscaling_policy.dynamo_test", "service_namespace", "dynamodb"),
-					resource.TestCheckResourceAttr("aws_appautoscaling_policy.dynamo_test", "scalable_dimension", "dynamodb:table:WriteCapacityUnits"),
+					testAccCheckPolicyExists(ctx, resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, "name", fmt.Sprintf("DynamoDBWriteCapacityUtilization:table/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "policy_type", "TargetTrackingScaling"),
+					resource.TestCheckResourceAttr(resourceName, "service_namespace", "dynamodb"),
+					resource.TestCheckResourceAttr(resourceName, "scalable_dimension", "dynamodb:table:WriteCapacityUnits"),
 				),
 			},
 			{
-				ResourceName:      "aws_appautoscaling_policy.dynamo_test",
+				ResourceName:      resourceName,
 				ImportState:       true,
-				ImportStateIdFunc: testAccPolicyImportStateIdFunc("aws_appautoscaling_policy.dynamo_test"),
+				ImportStateIdFunc: testAccPolicyImportStateIdFunc(resourceName),
 				ImportStateVerify: true,
 			},
 		},
