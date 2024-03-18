@@ -60,8 +60,8 @@ func SetTagsDiff(ctx context.Context, diff *schema.ResourceDiff, meta interface{
 		}
 
 		if len(allTags) == 0 {
-			if err := diff.SetNewComputed("tags_all"); err != nil {
-				return fmt.Errorf("setting tags_all to computed: %w", err)
+			if err := diff.SetNew("tags_all", allTags.Map()); err != nil {
+				return fmt.Errorf("setting new tags_all diff: %w", err)
 			}
 		}
 	} else if !diff.HasChange("tags") {
