@@ -17,6 +17,10 @@ func MustBase64Decode(s string) []byte {
 	return errs.Must(Base64Decode(s))
 }
 
+func Base64Encode(blob []byte) string {
+	return base64.StdEncoding.EncodeToString(blob)
+}
+
 // Base64EncodeOnce encodes the input blob using base64.StdEncoding.EncodeToString.
 // If the blob is already base64 encoded, return the original input unchanged.
 func Base64EncodeOnce(blob []byte) string {
@@ -24,7 +28,7 @@ func Base64EncodeOnce(blob []byte) string {
 		return s
 	}
 
-	return base64.StdEncoding.EncodeToString(blob)
+	return Base64Encode(blob)
 }
 
 // IsBase64Encoded checks if the input string is base64 encoded.
