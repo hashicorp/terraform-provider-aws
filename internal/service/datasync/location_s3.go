@@ -174,7 +174,7 @@ func resourceLocationS3Read(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	uri := aws.StringValue(output.LocationUri)
-	s3BucketName, err := globalIdFromLocationURI(aws.StringValue(output.LocationUri))
+	s3BucketName, err := globalIDFromLocationURI(aws.StringValue(output.LocationUri))
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}

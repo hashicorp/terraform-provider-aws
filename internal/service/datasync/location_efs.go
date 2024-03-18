@@ -172,7 +172,7 @@ func resourceLocationEFSRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	uri := aws.StringValue(output.LocationUri)
-	globalId, err := globalIdFromLocationURI(uri)
+	globalId, err := globalIDFromLocationURI(uri)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}

@@ -18,7 +18,7 @@ var (
 
 // globalIDFromLocationURI extracts the global ID from a location URI.
 // https://docs.aws.amazon.com/datasync/latest/userguide/API_LocationListEntry.html#DataSync-Type-LocationListEntry-LocationUri
-func globalIdFromLocationURI(uri string) (string, error) {
+func globalIDFromLocationURI(uri string) (string, error) {
 	submatches := locationURIPattern.FindStringSubmatch(uri)
 
 	if len(submatches) != 3 {

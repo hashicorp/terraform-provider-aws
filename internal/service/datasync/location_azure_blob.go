@@ -168,7 +168,7 @@ func resourceLocationAzureBlobRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	uri := aws.StringValue(output.LocationUri)
-	accountHostName, err := globalIdFromLocationURI(aws.StringValue(output.LocationUri))
+	accountHostName, err := globalIDFromLocationURI(aws.StringValue(output.LocationUri))
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
