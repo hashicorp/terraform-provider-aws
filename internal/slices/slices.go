@@ -3,7 +3,7 @@
 
 package slices
 
-import "golang.org/x/exp/slices"
+import "slices"
 
 // Reverse returns a reversed copy of the slice `s`.
 func Reverse[S ~[]E, E any](s S) S {

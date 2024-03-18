@@ -17,10 +17,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tflicensemanager "github.com/hashicorp/terraform-provider-aws/internal/service/licensemanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(licensemanager.EndpointsID, testAccErrorCheckSkip)
+	acctest.RegisterServiceErrorCheckFunc(names.LicenseManagerServiceID, testAccErrorCheckSkip)
 }
 
 func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
@@ -37,7 +38,7 @@ func TestAccLicenseManagerLicenseConfiguration_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, licensemanager.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LicenseManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLicenseConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -73,7 +74,7 @@ func TestAccLicenseManagerLicenseConfiguration_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, licensemanager.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LicenseManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLicenseConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -97,7 +98,7 @@ func TestAccLicenseManagerLicenseConfiguration_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, licensemanager.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LicenseManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLicenseConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -144,7 +145,7 @@ func TestAccLicenseManagerLicenseConfiguration_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, licensemanager.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LicenseManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLicenseConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{

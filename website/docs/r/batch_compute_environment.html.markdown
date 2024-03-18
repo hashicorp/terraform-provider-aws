@@ -155,6 +155,36 @@ resource "aws_batch_compute_environment" "sample" {
 }
 ```
 
+### Setting Update Policy
+
+```hcl
+resource "aws_batch_compute_environment" "sample" {
+  compute_environment_name = "sample"
+
+  compute_resources {
+    allocation_strategy = "BEST_FIT_PROGRESSIVE"
+    instance_role       = aws_iam_instance_profile.ecs_instance.arn
+    instance_type       = ["optimal"]
+    max_vcpus           = 4
+    min_vcpus           = 0
+    security_group_ids = [
+      aws_security_group.sample.id
+    ]
+    subnets = [
+      aws_subnet.sample.id
+    ]
+    type = "EC2"
+  }
+
+  update_policy {
+    job_execution_timeout_minutes = 30
+    terminate_jobs_on_update      = false
+  }
+
+  type = "MANAGED"
+}
+```
+
 ## Argument Reference
 
 * `compute_environment_name` - (Optional, Forces new resource) The name for your compute environment. Up to 128 letters (uppercase and lowercase), numbers, and underscores are allowed. If omitted, Terraform will assign a random, unique name.
@@ -165,10 +195,11 @@ resource "aws_batch_compute_environment" "sample" {
 * `state` - (Optional) The state of the compute environment. If the state is `ENABLED`, then the compute environment accepts jobs from a queue and can scale out automatically based on queues. Valid items are `ENABLED` or `DISABLED`. Defaults to `ENABLED`.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `type` - (Required) The type of the compute environment. Valid items are `MANAGED` or `UNMANAGED`.
+* `update_policy` - (Optional) Specifies the infrastructure update policy for the compute environment. See details below.
 
 ### compute_resources
 
-* `allocation_strategy` - (Optional) The allocation strategy to use for the compute resource in case not enough instances of the best fitting instance type can be allocated. Valid items are `BEST_FIT_PROGRESSIVE`, `SPOT_CAPACITY_OPTIMIZED` or `BEST_FIT`. Defaults to `BEST_FIT`. See [AWS docs](https://docs.aws.amazon.com/batch/latest/userguide/allocation-strategies.html) for details. This parameter isn't applicable to jobs running on Fargate resources, and shouldn't be specified.
+* `allocation_strategy` - (Optional) The allocation strategy to use for the compute resource in case not enough instances of the best fitting instance type can be allocated. For valid values, refer to the [AWS documentation](https://docs.aws.amazon.com/batch/latest/APIReference/API_ComputeResource.html#Batch-Type-ComputeResource-allocationStrategy). Defaults to `BEST_FIT`. This parameter isn't applicable to jobs running on Fargate resources, and shouldn't be specified.
 * `bid_percentage` - (Optional) Integer of maximum percentage that a Spot Instance price can be when compared with the On-Demand price for that instance type before instances are launched. For example, if your bid percentage is 20% (`20`), then the Spot price must be below 20% of the current On-Demand price for that EC2 instance. If you leave this field empty, the default value is 100% of the On-Demand price. This parameter isn't applicable to jobs running on Fargate resources, and shouldn't be specified.
 * `desired_vcpus` - (Optional) The desired number of EC2 vCPUS in the compute environment. This parameter isn't applicable to jobs running on Fargate resources, and shouldn't be specified.
 * `ec2_configuration` - (Optional) Provides information used to select Amazon Machine Images (AMIs) for EC2 instances in the compute environment. If Ec2Configuration isn't specified, the default is ECS_AL2. This parameter isn't applicable to jobs that are running on Fargate resources, and shouldn't be specified.
@@ -207,6 +238,13 @@ resource "aws_batch_compute_environment" "sample" {
 
 * `eks_cluster_arn` - (Required) The Amazon Resource Name (ARN) of the Amazon EKS cluster.
 * `kubernetes_namespace` - (Required) The namespace of the Amazon EKS cluster. AWS Batch manages pods in this namespace.
+
+### update_policy
+
+`update_policy` supports the following:
+
+* `job_execution_timeout_minutes` - (Required) Specifies the job timeout (in minutes) when the compute environment infrastructure is updated.
+* `terminate_jobs_on_update` - (Required) Specifies whether jobs are automatically terminated when the computer environment infrastructure is updated.
 
 ## Attribute Reference
 

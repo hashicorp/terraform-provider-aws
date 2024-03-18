@@ -126,7 +126,7 @@ func ResourceIndexingConfiguration() *schema.Resource {
 											Type: schema.TypeString,
 											ValidateFunc: validation.All(
 												validation.StringLenBetween(1, 64),
-												validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9:_-]+`), "must contain only alphanumeric characters, underscores, colons, and hyphens"),
+												validation.StringMatch(regexache.MustCompile(`^[$a-zA-Z0-9:_-]+`), "must contain only alphanumeric characters, underscores, colons, and hyphens (^[$a-zA-Z0-9:_-]+)"),
 											),
 										},
 									},

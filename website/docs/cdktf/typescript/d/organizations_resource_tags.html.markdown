@@ -43,9 +43,9 @@ class MyConvertedCode extends TerraformStack {
 You can specify any of the following taggable resources.
 
 * AWS account – specify the account ID number.
-* Organizational unit – specify the OU ID that begins with `ou` and looks similar to: `ou-1a2b-34uvwxyz`
-* Root – specify the root ID that begins with `r` and looks similar to: `r-1a2b`
-* Policy – specify the policy ID that begins with `p` and looks similar to: `p-12abcdefg3`
+* Organizational unit – specify the OU ID that begins with `ou-` and looks similar to: `ou-1a2b-34uvwxyz`
+* Root – specify the root ID that begins with `r-` and looks similar to: `r-1a2b`
+* Policy – specify the policy ID that begins with `p-` and looks similar to: `p-12abcdefg3`
 
 ## Attribute Reference
 
@@ -53,4 +53,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `tags` - Map of key=value pairs for each tag set on the resource.
 
-<!-- cache-key: cdktf-0.19.0 input-9e1e646d2fbb671bf1b3448756c03ac6bb18b017208c1205580374b81a907e14 -->
+<!-- cache-key: cdktf-0.20.1 input-9e1e646d2fbb671bf1b3448756c03ac6bb18b017208c1205580374b81a907e14 -->

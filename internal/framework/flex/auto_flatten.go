@@ -7,8 +7,10 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strings"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -198,7 +200,10 @@ func (flattener autoFlattener) string(ctx context.Context, vFrom reflect.Value, 
 	case basetypes.StringTypable:
 		stringValue := types.StringNull()
 		if !isNullFrom {
-			stringValue = types.StringValue(vFrom.String())
+			// If the target is a StringEnumType, an empty string value is converted to a null String.
+			if value := vFrom.String(); !strings.HasPrefix(tTo.String(), "StringEnumType[") || value != "" {
+				stringValue = types.StringValue(value)
+			}
 		}
 		v, d := tTo.ValueFromString(ctx, stringValue)
 		diags.Append(d...)
@@ -225,7 +230,7 @@ func (flattener autoFlattener) time(ctx context.Context, vFrom reflect.Value, is
 	var diags diag.Diagnostics
 
 	if isNullFrom {
-		vTo.Set(reflect.ValueOf(fwtypes.TimestampNull()))
+		vTo.Set(reflect.ValueOf(timetypes.NewRFC3339Null()))
 		return diags
 	}
 
@@ -234,9 +239,9 @@ func (flattener autoFlattener) time(ctx context.Context, vFrom reflect.Value, is
 		return diags
 	}
 
-	// time.Time --> fwtypes.Timestamp
+	// time.Time --> timetypes.RFC3339
 	if from, ok := vFrom.Interface().(time.Time); ok {
-		vTo.Set(reflect.ValueOf(fwtypes.TimestampValue(from.Format(time.RFC3339))))
+		vTo.Set(reflect.ValueOf(timetypes.NewRFC3339TimeValue(from)))
 		return diags
 	}
 
@@ -245,9 +250,9 @@ func (flattener autoFlattener) time(ctx context.Context, vFrom reflect.Value, is
 		return diags
 	}
 
-	// *time.Time --> fwtypes.Timestamp
+	// *time.Time --> timetypes.RFC3339
 	if from, ok := vFrom.Elem().Interface().(time.Time); ok {
-		vTo.Set(reflect.ValueOf(fwtypes.TimestampValue(from.Format(time.RFC3339))))
+		vTo.Set(reflect.ValueOf(timetypes.NewRFC3339TimeValue(from)))
 		return diags
 	}
 
@@ -299,7 +304,7 @@ func (flattener autoFlattener) struct_(ctx context.Context, vFrom reflect.Value,
 
 	if tTo, ok := tTo.(fwtypes.NestedObjectType); ok {
 		//
-		// *struct -> types.List(OfObject).
+		// *struct -> types.List(OfObject) or types.Object.
 		//
 		diags.Append(flattener.structToNestedObject(ctx, vFrom, isNilFrom, tTo, vTo)...)
 		return diags
@@ -312,7 +317,7 @@ func (flattener autoFlattener) struct_(ctx context.Context, vFrom reflect.Value,
 	}
 
 	switch iTo.(type) {
-	case fwtypes.Timestamp:
+	case timetypes.RFC3339:
 		diags.Append(flattener.time(ctx, vFrom, isNilFrom, vTo)...)
 		return diags
 	}
@@ -472,21 +477,21 @@ func (flattener autoFlattener) slice(ctx context.Context, vFrom reflect.Value, t
 			}
 
 		case reflect.Struct:
-			if tTo, ok := tTo.(fwtypes.NestedObjectType); ok {
+			if tTo, ok := tTo.(fwtypes.NestedObjectCollectionType); ok {
 				//
 				// []*struct -> types.List(OfObject).
 				//
-				diags.Append(flattener.sliceOfStructNestedObject(ctx, vFrom, tTo, vTo)...)
+				diags.Append(flattener.sliceOfStructNestedObjectCollection(ctx, vFrom, tTo, vTo)...)
 				return diags
 			}
 		}
 
 	case reflect.Struct:
-		if tTo, ok := tTo.(fwtypes.NestedObjectType); ok {
+		if tTo, ok := tTo.(fwtypes.NestedObjectCollectionType); ok {
 			//
 			// []struct -> types.List(OfObject).
 			//
-			diags.Append(flattener.sliceOfStructNestedObject(ctx, vFrom, tTo, vTo)...)
+			diags.Append(flattener.sliceOfStructNestedObjectCollection(ctx, vFrom, tTo, vTo)...)
 			return diags
 		}
 	}
@@ -508,15 +513,25 @@ func (flattener autoFlattener) map_(ctx context.Context, vFrom reflect.Value, tT
 		switch tMapElem := vFrom.Type().Elem(); tMapElem.Kind() {
 		case reflect.Struct:
 			switch tTo := tTo.(type) {
-			case basetypes.MapTypable:
+			case basetypes.SetTypable:
 				//
-				// map[string]struct -> fwtypes.ObjectMapOf[Object]
+				// map[string]struct -> fwtypes.SetNestedObjectOf[Object]
 				//
-				if tTo, ok := tTo.(fwtypes.ObjectMapType); ok {
-					diags.Append(flattener.structMapToObjectMap(ctx, vFrom, tTo, vTo)...)
+				if tTo, ok := tTo.(fwtypes.NestedObjectCollectionType); ok {
+					diags.Append(flattener.structMapToObjectList(ctx, vFrom, tTo, vTo)...)
+					return diags
+				}
+
+			case basetypes.ListTypable:
+				//
+				// map[string]struct -> fwtypes.ListNestedObjectOf[Object]
+				//
+				if tTo, ok := tTo.(fwtypes.NestedObjectCollectionType); ok {
+					diags.Append(flattener.structMapToObjectList(ctx, vFrom, tTo, vTo)...)
 					return diags
 				}
 			}
+
 		case reflect.String:
 			switch tTo := tTo.(type) {
 			case basetypes.MapTypable:
@@ -558,15 +573,22 @@ func (flattener autoFlattener) map_(ctx context.Context, vFrom reflect.Value, tT
 		case reflect.Ptr:
 			switch tMapElem.Elem().Kind() {
 			case reflect.Struct:
-				//
-				// map[string]*struct -> fwtypes.ObjectMapOf[Object]
-				//
-				if tTo, ok := tTo.(fwtypes.ObjectMapType); ok {
-					diags.Append(flattener.structMapToObjectMap(ctx, vFrom, tTo, vTo)...)
+				if tTo, ok := tTo.(fwtypes.NestedObjectCollectionType); ok {
+					diags.Append(flattener.structMapToObjectList(ctx, vFrom, tTo, vTo)...)
 					return diags
 				}
+
 			case reflect.String:
 				switch tTo := tTo.(type) {
+				case basetypes.ListTypable:
+					//
+					// map[string]struct -> fwtypes.ListNestedObjectOf[Object]
+					//
+					if tTo, ok := tTo.(fwtypes.NestedObjectCollectionType); ok {
+						diags.Append(flattener.structMapToObjectList(ctx, vFrom, tTo, vTo)...)
+						return diags
+					}
+
 				case basetypes.MapTypable:
 					//
 					// map[string]*string -> types.Map(OfString).
@@ -614,7 +636,7 @@ func (flattener autoFlattener) map_(ctx context.Context, vFrom reflect.Value, tT
 	return diags
 }
 
-func (flattener autoFlattener) structMapToObjectMap(ctx context.Context, vFrom reflect.Value, tTo fwtypes.ObjectMapType, vTo reflect.Value) diag.Diagnostics {
+func (flattener autoFlattener) structMapToObjectList(ctx context.Context, vFrom reflect.Value, tTo fwtypes.NestedObjectCollectionType, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	if vFrom.IsNil() {
@@ -628,7 +650,8 @@ func (flattener autoFlattener) structMapToObjectMap(ctx context.Context, vFrom r
 		return diags
 	}
 
-	to, d := tTo.New(ctx)
+	n := vFrom.Len()
+	to, d := tTo.NewObjectSlice(ctx, n, n)
 	diags.Append(d...)
 	if diags.HasError() {
 		return diags
@@ -636,38 +659,39 @@ func (flattener autoFlattener) structMapToObjectMap(ctx context.Context, vFrom r
 
 	t := reflect.ValueOf(to)
 
-	tStruct := t.Type().Elem()
-	if tStruct.Kind() == reflect.Ptr {
-		tStruct = tStruct.Elem()
-	}
-
+	i := 0
 	for _, key := range vFrom.MapKeys() {
-		target := reflect.New(tStruct)
+		target, d := tTo.NewObjectPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
 
 		fromInterface := vFrom.MapIndex(key).Interface()
 		if vFrom.MapIndex(key).Kind() == reflect.Ptr {
 			fromInterface = vFrom.MapIndex(key).Elem().Interface()
 		}
 
-		diags.Append(autoFlexConvertStruct(ctx, fromInterface, target.Interface(), flattener)...)
+		diags.Append(autoFlexConvertStruct(ctx, fromInterface, target, flattener)...)
 		if diags.HasError() {
 			return diags
 		}
 
-		if t.Type().Elem().Kind() == reflect.Struct {
-			t.SetMapIndex(key, target.Elem())
-		} else {
-			t.SetMapIndex(key, target)
-		}
+		d = blockKeyMapSet(target, key)
+		diags.Append(d...)
+
+		t.Index(i).Set(reflect.ValueOf(target))
+		i++
 	}
 
-	val, d := tTo.ValueFromRawMap(ctx, to)
+	val, d := tTo.ValueFromObjectSlice(ctx, to)
 	diags.Append(d...)
 	if diags.HasError() {
 		return diags
 	}
 
 	vTo.Set(reflect.ValueOf(val))
+
 	return diags
 }
 
@@ -709,8 +733,8 @@ func (flattener autoFlattener) structToNestedObject(ctx context.Context, vFrom r
 	return diags
 }
 
-// sliceOfStructNestedObject copies an AWS API []struct value to a compatible Plugin Framework NestedObjectValue value.
-func (flattener autoFlattener) sliceOfStructNestedObject(ctx context.Context, vFrom reflect.Value, tTo fwtypes.NestedObjectType, vTo reflect.Value) diag.Diagnostics {
+// sliceOfStructNestedObjectCollection copies an AWS API []struct value to a compatible Plugin Framework NestedObjectCollectionValue value.
+func (flattener autoFlattener) sliceOfStructNestedObjectCollection(ctx context.Context, vFrom reflect.Value, tTo fwtypes.NestedObjectCollectionType, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	if vFrom.IsNil() {
@@ -756,5 +780,52 @@ func (flattener autoFlattener) sliceOfStructNestedObject(ctx context.Context, vF
 	}
 
 	vTo.Set(reflect.ValueOf(val))
+	return diags
+}
+
+// blockKeyMapSet takes a struct and assigns the value of the `key`
+func blockKeyMapSet(to any, key reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	valTo := reflect.ValueOf(to)
+	if kind := valTo.Kind(); kind == reflect.Ptr {
+		valTo = valTo.Elem()
+	}
+
+	if valTo.Kind() != reflect.Struct {
+		diags.AddError("AutoFlEx", fmt.Sprintf("wrong type (%T), expected struct", valTo))
+		return diags
+	}
+
+	for i, typTo := 0, valTo.Type(); i < typTo.NumField(); i++ {
+		field := typTo.Field(i)
+		if field.PkgPath != "" {
+			continue // Skip unexported fields.
+		}
+
+		if field.Name != MapBlockKey {
+			continue
+		}
+
+		if _, ok := valTo.Field(i).Interface().(basetypes.StringValue); ok {
+			valTo.Field(i).Set(reflect.ValueOf(basetypes.NewStringValue(key.String())))
+			return diags
+		}
+
+		fieldType := valTo.Field(i).Type()
+
+		method, found := fieldType.MethodByName("StringEnumValue")
+		if found {
+			result := fieldType.Method(method.Index).Func.Call([]reflect.Value{valTo.Field(i), key})
+			if len(result) > 0 {
+				valTo.Field(i).Set(result[0])
+			}
+		}
+
+		return diags
+	}
+
+	diags.AddError("AutoFlEx", fmt.Sprintf("unable to find map block key (%s)", MapBlockKey))
+
 	return diags
 }

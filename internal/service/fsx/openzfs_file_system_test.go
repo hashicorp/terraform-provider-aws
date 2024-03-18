@@ -18,10 +18,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tffsx "github.com/hashicorp/terraform-provider-aws/internal/service/fsx"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(fsx.EndpointsID, testAccErrorCheckSkip)
+	acctest.RegisterServiceErrorCheckFunc(names.FSxServiceID, testAccErrorCheckSkip)
 }
 
 func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
@@ -38,7 +39,7 @@ func TestAccFSxOpenZFSFileSystem_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOpenZFSFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -76,6 +77,7 @@ func TestAccFSxOpenZFSFileSystem_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "root_volume_id"),
 					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "skip_final_backup", "false"),
 					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "64"),
 					resource.TestCheckResourceAttr(resourceName, "storage_type", fsx.StorageTypeSsd),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "1"),
@@ -90,6 +92,9 @@ func TestAccFSxOpenZFSFileSystem_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"skip_final_backup",
+				},
 			},
 		},
 	})
@@ -103,7 +108,7 @@ func TestAccFSxOpenZFSFileSystem_diskIops(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOpenZFSFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -117,10 +122,13 @@ func TestAccFSxOpenZFSFileSystem_diskIops(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"security_group_ids",
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccOpenZFSFileSystemConfig_diskIOPSConfiguration(rName, 200),
@@ -143,7 +151,7 @@ func TestAccFSxOpenZFSFileSystem_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOpenZFSFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -167,7 +175,7 @@ func TestAccFSxOpenZFSFileSystem_rootVolume(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOpenZFSFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -204,10 +212,13 @@ func TestAccFSxOpenZFSFileSystem_rootVolume(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"security_group_ids",
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccOpenZFSFileSystemConfig_rootVolume2(rName, "ZSTD", "true", 256, 8),
@@ -350,7 +361,7 @@ func TestAccFSxOpenZFSFileSystem_securityGroupIDs(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOpenZFSFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -362,10 +373,13 @@ func TestAccFSxOpenZFSFileSystem_securityGroupIDs(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"security_group_ids",
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccOpenZFSFileSystemConfig_securityGroupIDs2(rName),
@@ -387,7 +401,7 @@ func TestAccFSxOpenZFSFileSystem_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOpenZFSFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -400,10 +414,13 @@ func TestAccFSxOpenZFSFileSystem_tags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"security_group_ids",
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccOpenZFSFileSystemConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
@@ -436,7 +453,7 @@ func TestAccFSxOpenZFSFileSystem_copyTags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOpenZFSFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -451,10 +468,13 @@ func TestAccFSxOpenZFSFileSystem_copyTags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"security_group_ids",
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccOpenZFSFileSystemConfig_copyTags(rName, "key1", "value1", "false"),
@@ -478,7 +498,7 @@ func TestAccFSxOpenZFSFileSystem_throughput(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOpenZFSFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -490,10 +510,13 @@ func TestAccFSxOpenZFSFileSystem_throughput(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"security_group_ids",
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccOpenZFSFileSystemConfig_throughput(rName, 128),
@@ -515,7 +538,7 @@ func TestAccFSxOpenZFSFileSystem_storageType(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOpenZFSFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -527,10 +550,13 @@ func TestAccFSxOpenZFSFileSystem_storageType(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"security_group_ids",
+					"skip_final_backup",
+				},
 			},
 		},
 	})
@@ -544,7 +570,7 @@ func TestAccFSxOpenZFSFileSystem_weeklyMaintenanceStartTime(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOpenZFSFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -556,10 +582,13 @@ func TestAccFSxOpenZFSFileSystem_weeklyMaintenanceStartTime(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"security_group_ids",
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccOpenZFSFileSystemConfig_weeklyMaintenanceStartTime(rName, "2:02:02"),
@@ -581,7 +610,7 @@ func TestAccFSxOpenZFSFileSystem_automaticBackupRetentionDays(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOpenZFSFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -593,10 +622,13 @@ func TestAccFSxOpenZFSFileSystem_automaticBackupRetentionDays(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"security_group_ids",
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccOpenZFSFileSystemConfig_automaticBackupRetentionDays(rName, 0),
@@ -625,7 +657,7 @@ func TestAccFSxOpenZFSFileSystem_kmsKeyID(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOpenZFSFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -637,10 +669,13 @@ func TestAccFSxOpenZFSFileSystem_kmsKeyID(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"security_group_ids",
+					"skip_final_backup",
+				},
 			},
 		},
 	})
@@ -654,7 +689,7 @@ func TestAccFSxOpenZFSFileSystem_dailyAutomaticBackupStartTime(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOpenZFSFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -666,10 +701,13 @@ func TestAccFSxOpenZFSFileSystem_dailyAutomaticBackupStartTime(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"security_group_ids",
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccOpenZFSFileSystemConfig_dailyAutomaticBackupStartTime(rName, "02:02"),
@@ -691,7 +729,7 @@ func TestAccFSxOpenZFSFileSystem_throughputCapacity(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOpenZFSFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -703,10 +741,13 @@ func TestAccFSxOpenZFSFileSystem_throughputCapacity(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"security_group_ids",
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccOpenZFSFileSystemConfig_throughputCapacity(rName),
@@ -728,7 +769,7 @@ func TestAccFSxOpenZFSFileSystem_storageCapacity(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOpenZFSFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -740,10 +781,13 @@ func TestAccFSxOpenZFSFileSystem_storageCapacity(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"security_group_ids",
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccOpenZFSFileSystemConfig_storageCapacity(rName),
@@ -765,7 +809,7 @@ func TestAccFSxOpenZFSFileSystem_deploymentType(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOpenZFSFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -778,10 +822,13 @@ func TestAccFSxOpenZFSFileSystem_deploymentType(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"security_group_ids"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"security_group_ids",
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccOpenZFSFileSystemConfig_deploymentType(rName, "SINGLE_AZ_2", 160),
@@ -804,7 +851,7 @@ func TestAccFSxOpenZFSFileSystem_multiAZ(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOpenZFSFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -842,6 +889,7 @@ func TestAccFSxOpenZFSFileSystem_multiAZ(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "root_volume_id"),
 					resource.TestCheckResourceAttr(resourceName, "route_table_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "skip_final_backup", "true"),
 					resource.TestCheckResourceAttr(resourceName, "storage_capacity", "64"),
 					resource.TestCheckResourceAttr(resourceName, "storage_type", fsx.StorageTypeSsd),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
@@ -858,6 +906,9 @@ func TestAccFSxOpenZFSFileSystem_multiAZ(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"skip_final_backup",
+				},
 			},
 		},
 	})
@@ -871,7 +922,7 @@ func TestAccFSxOpenZFSFileSystem_routeTableIDs(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOpenZFSFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -887,6 +938,10 @@ func TestAccFSxOpenZFSFileSystem_routeTableIDs(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"security_group_ids",
+					"skip_final_backup",
+				},
 			},
 			{
 				Config: testAccOpenZFSFileSystemConfig_routeTableIDs(rName, 2),
@@ -998,6 +1053,7 @@ resource "aws_fsx_openzfs_file_system" "test" {
 func testAccOpenZFSFileSystemConfig_diskIOPSConfiguration(rName string, iops int) string {
 	return acctest.ConfigCompose(testAccOpenZFSFileSystemConfig_baseSingleAZ(rName), fmt.Sprintf(`
 resource "aws_fsx_openzfs_file_system" "test" {
+  skip_final_backup   = true
   storage_capacity    = 64
   storage_type        = "SSD"
   subnet_ids          = aws_subnet.test[*].id
@@ -1042,6 +1098,7 @@ resource "aws_security_group" "test1" {
 
 resource "aws_fsx_openzfs_file_system" "test" {
   security_group_ids  = [aws_security_group.test1.id]
+  skip_final_backup   = true
   storage_capacity    = 64
   subnet_ids          = aws_subnet.test[*].id
   deployment_type     = "SINGLE_AZ_1"
@@ -1105,6 +1162,7 @@ resource "aws_security_group" "test2" {
 
 resource "aws_fsx_openzfs_file_system" "test" {
   security_group_ids  = [aws_security_group.test1.id, aws_security_group.test2.id]
+  skip_final_backup   = true
   storage_capacity    = 64
   subnet_ids          = aws_subnet.test[*].id
   deployment_type     = "SINGLE_AZ_1"
@@ -1121,6 +1179,7 @@ resource "aws_fsx_openzfs_file_system" "test" {
 func testAccOpenZFSFileSystemConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccOpenZFSFileSystemConfig_baseSingleAZ(rName), fmt.Sprintf(`
 resource "aws_fsx_openzfs_file_system" "test" {
+  skip_final_backup   = true
   storage_capacity    = 64
   subnet_ids          = aws_subnet.test[*].id
   deployment_type     = "SINGLE_AZ_1"
@@ -1137,6 +1196,7 @@ resource "aws_fsx_openzfs_file_system" "test" {
 func testAccOpenZFSFileSystemConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(testAccOpenZFSFileSystemConfig_baseSingleAZ(rName), fmt.Sprintf(`
 resource "aws_fsx_openzfs_file_system" "test" {
+  skip_final_backup   = true
   storage_capacity    = 64
   subnet_ids          = aws_subnet.test[*].id
   deployment_type     = "SINGLE_AZ_1"
@@ -1154,6 +1214,7 @@ resource "aws_fsx_openzfs_file_system" "test" {
 func testAccOpenZFSFileSystemConfig_copyTags(rName, tagKey1, tagValue1, copyTags string) string {
 	return acctest.ConfigCompose(testAccOpenZFSFileSystemConfig_baseSingleAZ(rName), fmt.Sprintf(`
 resource "aws_fsx_openzfs_file_system" "test" {
+  skip_final_backup    = true
   storage_capacity     = 64
   subnet_ids           = aws_subnet.test[*].id
   deployment_type      = "SINGLE_AZ_1"
@@ -1172,6 +1233,7 @@ resource "aws_fsx_openzfs_file_system" "test" {
 func testAccOpenZFSFileSystemConfig_weeklyMaintenanceStartTime(rName, weeklyMaintenanceStartTime string) string {
 	return acctest.ConfigCompose(testAccOpenZFSFileSystemConfig_baseSingleAZ(rName), fmt.Sprintf(`
 resource "aws_fsx_openzfs_file_system" "test" {
+  skip_final_backup             = true
   storage_capacity              = 64
   subnet_ids                    = aws_subnet.test[*].id
   deployment_type               = "SINGLE_AZ_1"
@@ -1189,6 +1251,7 @@ resource "aws_fsx_openzfs_file_system" "test" {
 func testAccOpenZFSFileSystemConfig_dailyAutomaticBackupStartTime(rName, dailyAutomaticBackupStartTime string) string {
 	return acctest.ConfigCompose(testAccOpenZFSFileSystemConfig_baseSingleAZ(rName), fmt.Sprintf(`
 resource "aws_fsx_openzfs_file_system" "test" {
+  skip_final_backup                 = true
   storage_capacity                  = 64
   subnet_ids                        = aws_subnet.test[*].id
   deployment_type                   = "SINGLE_AZ_1"
@@ -1207,6 +1270,7 @@ resource "aws_fsx_openzfs_file_system" "test" {
 func testAccOpenZFSFileSystemConfig_automaticBackupRetentionDays(rName string, retention int) string {
 	return acctest.ConfigCompose(testAccOpenZFSFileSystemConfig_baseSingleAZ(rName), fmt.Sprintf(`
 resource "aws_fsx_openzfs_file_system" "test" {
+  skip_final_backup               = true
   storage_capacity                = 64
   subnet_ids                      = aws_subnet.test[*].id
   deployment_type                 = "SINGLE_AZ_1"
@@ -1229,6 +1293,7 @@ resource "aws_kms_key" "test" {
 }
 
 resource "aws_fsx_openzfs_file_system" "test" {
+  skip_final_backup   = true
   storage_capacity    = 64
   subnet_ids          = aws_subnet.test[*].id
   deployment_type     = "SINGLE_AZ_1"
@@ -1246,6 +1311,7 @@ resource "aws_fsx_openzfs_file_system" "test" {
 func testAccOpenZFSFileSystemConfig_throughput(rName string, throughput int) string {
 	return acctest.ConfigCompose(testAccOpenZFSFileSystemConfig_baseSingleAZ(rName), fmt.Sprintf(`
 resource "aws_fsx_openzfs_file_system" "test" {
+  skip_final_backup   = true
   storage_capacity    = 64
   subnet_ids          = aws_subnet.test[*].id
   deployment_type     = "SINGLE_AZ_1"
@@ -1261,6 +1327,7 @@ resource "aws_fsx_openzfs_file_system" "test" {
 func testAccOpenZFSFileSystemConfig_storageType(rName, storageType string) string {
 	return acctest.ConfigCompose(testAccOpenZFSFileSystemConfig_baseSingleAZ(rName), fmt.Sprintf(`
 resource "aws_fsx_openzfs_file_system" "test" {
+  skip_final_backup   = true
   storage_capacity    = 64
   subnet_ids          = aws_subnet.test[*].id
   deployment_type     = "SINGLE_AZ_1"
@@ -1277,6 +1344,7 @@ resource "aws_fsx_openzfs_file_system" "test" {
 func testAccOpenZFSFileSystemConfig_rootVolume1(rName, dataCompression, readOnly string, quotaSize int) string {
 	return acctest.ConfigCompose(testAccOpenZFSFileSystemConfig_baseSingleAZ(rName), fmt.Sprintf(`
 resource "aws_fsx_openzfs_file_system" "test" {
+  skip_final_backup   = true
   storage_capacity    = 64
   subnet_ids          = aws_subnet.test[*].id
   deployment_type     = "SINGLE_AZ_1"
@@ -1322,6 +1390,7 @@ resource "aws_fsx_openzfs_file_system" "test" {
 func testAccOpenZFSFileSystemConfig_rootVolume2(rName, dataCompression, readOnly string, quotaSize, recordSizeKiB int) string {
 	return acctest.ConfigCompose(testAccOpenZFSFileSystemConfig_baseSingleAZ(rName), fmt.Sprintf(`
 resource "aws_fsx_openzfs_file_system" "test" {
+  skip_final_backup   = true
   storage_capacity    = 64
   subnet_ids          = aws_subnet.test[*].id
   deployment_type     = "SINGLE_AZ_1"
@@ -1368,6 +1437,7 @@ resource "aws_fsx_openzfs_file_system" "test" {
 func testAccOpenZFSFileSystemConfig_rootVolume3Client(rName, dataCompression, readOnly string, userQuota, groupQuota, recordSizeKiB int) string {
 	return acctest.ConfigCompose(testAccOpenZFSFileSystemConfig_baseSingleAZ(rName), fmt.Sprintf(`
 resource "aws_fsx_openzfs_file_system" "test" {
+  skip_final_backup   = true
   storage_capacity    = 64
   subnet_ids          = aws_subnet.test[*].id
   deployment_type     = "SINGLE_AZ_1"
@@ -1433,6 +1503,7 @@ resource "aws_fsx_openzfs_file_system" "test" {
 func testAccOpenZFSFileSystemConfig_rootVolume4(rName, dataCompression, readOnly string, userQuota, groupQuota int) string {
 	return acctest.ConfigCompose(testAccOpenZFSFileSystemConfig_baseSingleAZ(rName), fmt.Sprintf(`
 resource "aws_fsx_openzfs_file_system" "test" {
+  skip_final_backup   = true
   storage_capacity    = 64
   subnet_ids          = aws_subnet.test[*].id
   deployment_type     = "SINGLE_AZ_1"
@@ -1484,6 +1555,7 @@ resource "aws_fsx_openzfs_file_system" "test" {
 func testAccOpenZFSFileSystemConfig_throughputCapacity(rName string) string {
 	return acctest.ConfigCompose(testAccOpenZFSFileSystemConfig_baseSingleAZ(rName), fmt.Sprintf(`
 resource "aws_fsx_openzfs_file_system" "test" {
+  skip_final_backup   = true
   storage_capacity    = 64
   subnet_ids          = aws_subnet.test[*].id
   deployment_type     = "SINGLE_AZ_1"
@@ -1499,6 +1571,7 @@ resource "aws_fsx_openzfs_file_system" "test" {
 func testAccOpenZFSFileSystemConfig_storageCapacity(rName string) string {
 	return acctest.ConfigCompose(testAccOpenZFSFileSystemConfig_baseSingleAZ(rName), fmt.Sprintf(`
 resource "aws_fsx_openzfs_file_system" "test" {
+  skip_final_backup   = true
   storage_capacity    = 75
   subnet_ids          = aws_subnet.test[*].id
   deployment_type     = "SINGLE_AZ_1"
@@ -1514,6 +1587,7 @@ resource "aws_fsx_openzfs_file_system" "test" {
 func testAccOpenZFSFileSystemConfig_deploymentType(rName, deploymentType string, throughput int) string {
 	return acctest.ConfigCompose(testAccOpenZFSFileSystemConfig_baseSingleAZ(rName), fmt.Sprintf(`
 resource "aws_fsx_openzfs_file_system" "test" {
+  skip_final_backup   = true
   storage_capacity    = 64
   subnet_ids          = aws_subnet.test[*].id
   deployment_type     = %[2]q
@@ -1529,6 +1603,7 @@ resource "aws_fsx_openzfs_file_system" "test" {
 func testAccOpenZFSFileSystemConfig_multiAZ(rName string) string {
 	return acctest.ConfigCompose(testAccOpenZFSFileSystemConfig_baseMultiAZ(rName), fmt.Sprintf(`
 resource "aws_fsx_openzfs_file_system" "test" {
+  skip_final_backup   = true
   storage_capacity    = 64
   subnet_ids          = aws_subnet.test[*].id
   preferred_subnet_id = aws_subnet.test[0].id
@@ -1568,6 +1643,7 @@ resource "aws_route_table" "test" {
 }
 
 resource "aws_fsx_openzfs_file_system" "test" {
+  skip_final_backup   = true
   storage_capacity    = 64
   subnet_ids          = aws_subnet.test[*].id
   preferred_subnet_id = aws_subnet.test[0].id

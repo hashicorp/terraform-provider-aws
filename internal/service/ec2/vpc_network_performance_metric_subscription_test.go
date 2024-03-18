@@ -8,13 +8,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccVPCNetworkPerformanceMetricSubscription_serial(t *testing.T) {
@@ -36,7 +36,7 @@ func testAccNetworkPerformanceMetricSubscription_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckNetworkPerformanceMetricSubscriptionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -63,7 +63,7 @@ func testAccNetworkPerformanceMetricSubscription_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckNetworkPerformanceMetricSubscriptionDestroy(ctx),
 		Steps: []resource.TestStep{

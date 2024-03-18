@@ -33,7 +33,7 @@ func TestAccEvidentlyFeature_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EvidentlyEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFeatureDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -85,7 +85,7 @@ func TestAccEvidentlyFeature_updateDefaultVariation(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EvidentlyEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFeatureDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -127,7 +127,7 @@ func TestAccEvidentlyFeature_updateDescription(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EvidentlyEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFeatureDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -169,7 +169,7 @@ func TestAccEvidentlyFeature_updateEntityOverrides(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EvidentlyEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFeatureDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -234,7 +234,7 @@ func TestAccEvidentlyFeature_updateEvaluationStrategy(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EvidentlyEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFeatureDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -280,7 +280,7 @@ func TestAccEvidentlyFeature_updateVariationsBoolValue(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EvidentlyEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFeatureDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -345,7 +345,7 @@ func TestAccEvidentlyFeature_updateVariationsDoubleValue(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EvidentlyEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFeatureDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -410,7 +410,7 @@ func TestAccEvidentlyFeature_updateVariationsLongValue(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EvidentlyEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFeatureDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -476,7 +476,7 @@ func TestAccEvidentlyFeature_updateVariationsStringValue(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EvidentlyEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFeatureDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -554,7 +554,7 @@ func TestAccEvidentlyFeature_tags(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.EvidentlyEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFeatureDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -602,7 +602,7 @@ func TestAccEvidentlyFeature_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EvidentlyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFeatureDestroy(ctx),
 		Steps: []resource.TestStep{

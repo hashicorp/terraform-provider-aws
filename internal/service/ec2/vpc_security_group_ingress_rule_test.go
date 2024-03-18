@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestNormalizeIPProtocol(t *testing.T) {
@@ -91,7 +92,7 @@ func TestAccVPCSecurityGroupIngressRule_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupIngressRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -129,7 +130,7 @@ func TestAccVPCSecurityGroupIngressRule_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupIngressRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -153,7 +154,7 @@ func TestAccVPCSecurityGroupIngressRule_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupIngressRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -199,7 +200,7 @@ func TestAccVPCSecurityGroupIngressRule_tags_computed(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupIngressRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -223,7 +224,7 @@ func TestAccVPCSecurityGroupIngressRule_DefaultTags_providerOnly(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupIngressRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -281,7 +282,7 @@ func TestAccVPCSecurityGroupIngressRule_DefaultTags_updateToProviderOnly(t *test
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupIngressRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -324,7 +325,7 @@ func TestAccVPCSecurityGroupIngressRule_DefaultTags_updateToResourceOnly(t *test
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupIngressRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -367,7 +368,7 @@ func TestAccVPCSecurityGroupIngressRule_DefaultTagsProviderAndResource_nonOverla
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupIngressRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -432,7 +433,7 @@ func TestAccVPCSecurityGroupIngressRule_DefaultTagsProviderAndResource_overlappi
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupIngressRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -493,7 +494,7 @@ func TestAccVPCSecurityGroupIngressRule_DefaultTagsProviderAndResource_duplicate
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupIngressRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -520,7 +521,7 @@ func TestAccVPCSecurityGroupIngressRule_updateTagsKnownAtApply(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupIngressRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -557,7 +558,7 @@ func TestAccVPCSecurityGroupIngressRule_defaultAndIgnoreTags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupIngressRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -595,7 +596,7 @@ func TestAccVPCSecurityGroupIngressRule_ignoreTags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupIngressRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -633,7 +634,7 @@ func TestAccVPCSecurityGroupIngressRule_cidrIPv4(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupIngressRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -689,7 +690,7 @@ func TestAccVPCSecurityGroupIngressRule_cidrIPv6(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupIngressRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -745,7 +746,7 @@ func TestAccVPCSecurityGroupIngressRule_description(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupIngressRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -783,7 +784,7 @@ func TestAccVPCSecurityGroupIngressRule_prefixListID(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupIngressRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -841,7 +842,7 @@ func TestAccVPCSecurityGroupIngressRule_referencedSecurityGroupID(t *testing.T) 
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupIngressRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -900,7 +901,7 @@ func TestAccVPCSecurityGroupIngressRule_ReferencedSecurityGroupID_peerVPC(t *tes
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckSecurityGroupIngressRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -938,7 +939,7 @@ func TestAccVPCSecurityGroupIngressRule_updateSourceType(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSecurityGroupIngressRuleDestroy(ctx),
 		Steps: []resource.TestStep{

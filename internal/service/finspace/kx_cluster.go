@@ -132,7 +132,7 @@ func ResourceKxCluster() *schema.Resource {
 			},
 			"capacity_configuration": {
 				Type:     schema.TypeList,
-				Required: true,
+				Optional: true,
 				ForceNew: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
@@ -171,7 +171,7 @@ func ResourceKxCluster() *schema.Resource {
 						"s3_object_version": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(3, 63),
+							ValidateFunc: validation.StringLenBetween(3, 1024),
 						},
 					},
 				},
@@ -181,8 +181,8 @@ func ResourceKxCluster() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				ValidateDiagFunc: validation.AllDiag(
-					validation.MapKeyLenBetween(1, 50),
-					validation.MapValueLenBetween(1, 50),
+					validation.MapKeyLenBetween(1, 1024),
+					validation.MapValueLenBetween(1, 1024),
 				),
 			},
 			"created_timestamp": {
@@ -222,6 +222,12 @@ func ResourceKxCluster() *schema.Resource {
 						"database_name": {
 							Type:         schema.TypeString,
 							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringLenBetween(3, 63),
+						},
+						"dataview_name": {
+							Type:         schema.TypeString,
+							Optional:     true,
 							ForceNew:     true,
 							ValidateFunc: validation.StringLenBetween(3, 63),
 						},
@@ -280,16 +286,22 @@ func ResourceKxCluster() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"type": {
 							Type:     schema.TypeString,
-							Required: true,
+							Optional: true,
 							ForceNew: true,
 							ValidateFunc: validation.StringInSlice(
 								enum.Slice(types.KxSavedownStorageTypeSds01), true),
 						},
 						"size": {
 							Type:         schema.TypeInt,
-							Required:     true,
+							Optional:     true,
 							ForceNew:     true,
 							ValidateFunc: validation.IntBetween(10, 16000),
+						},
+						"volume_name": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringLenBetween(3, 63),
 						},
 					},
 				},
@@ -346,6 +358,64 @@ func ResourceKxCluster() *schema.Resource {
 					},
 				},
 			},
+			"scaling_group_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"scaling_group_name": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringLenBetween(3, 63),
+						},
+						"cpu": {
+							Type:         schema.TypeFloat,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.FloatAtLeast(0.1),
+						},
+						"node_count": {
+							Type:         schema.TypeInt,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.IntAtLeast(1),
+						},
+						"memory_limit": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.IntAtLeast(6),
+						},
+						"memory_reservation": {
+							Type:         schema.TypeInt,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.IntAtLeast(6),
+						},
+					},
+				},
+			},
+			"tickerplant_log_configuration": {
+				Type:     schema.TypeList,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"tickerplant_log_volumes": {
+							Type:     schema.TypeSet,
+							Required: true,
+							ForceNew: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringLenBetween(3, 63),
+							},
+						},
+					},
+				},
+			},
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -375,14 +445,13 @@ func resourceKxClusterCreate(ctx context.Context, d *schema.ResourceData, meta i
 	d.SetId(rID)
 
 	in := &finspace.CreateKxClusterInput{
-		EnvironmentId:         aws.String(environmentId),
-		ClusterName:           aws.String(clusterName),
-		ClusterType:           types.KxClusterType(d.Get("type").(string)),
-		ReleaseLabel:          aws.String(d.Get("release_label").(string)),
-		AzMode:                types.KxAzMode(d.Get("az_mode").(string)),
-		CapacityConfiguration: expandCapacityConfiguration(d.Get("capacity_configuration").([]interface{})),
-		ClientToken:           aws.String(id.UniqueId()),
-		Tags:                  getTagsIn(ctx),
+		EnvironmentId: aws.String(environmentId),
+		ClusterName:   aws.String(clusterName),
+		ClusterType:   types.KxClusterType(d.Get("type").(string)),
+		ReleaseLabel:  aws.String(d.Get("release_label").(string)),
+		AzMode:        types.KxAzMode(d.Get("az_mode").(string)),
+		ClientToken:   aws.String(id.UniqueId()),
+		Tags:          getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -399,6 +468,10 @@ func resourceKxClusterCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	if v, ok := d.GetOk("availability_zone_id"); ok {
 		in.AvailabilityZoneId = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("capacity_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		in.CapacityConfiguration = expandCapacityConfiguration(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("command_line_arguments"); ok && len(v.(map[string]interface{})) > 0 {
@@ -427,6 +500,14 @@ func resourceKxClusterCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	if v, ok := d.GetOk("code"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		in.Code = expandCode(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("scaling_group_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		in.ScalingGroupConfiguration = expandScalingGroupConfiguration(v.([]interface{}))
+	}
+
+	if v, ok := d.GetOk("tickerplant_log_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		in.TickerplantLogConfiguration = expandTickerplantLogConfiguration(v.([]interface{}))
 	}
 
 	out, err := conn.CreateKxCluster(ctx, in)
@@ -507,6 +588,14 @@ func resourceKxClusterRead(ctx context.Context, d *schema.ResourceData, meta int
 		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)
 	}
 
+	if err := d.Set("scaling_group_configuration", flattenScalingGroupConfiguration(out.ScalingGroupConfiguration)); err != nil {
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)
+	}
+
+	if err := d.Set("tickerplant_log_configuration", flattenTickerplantLogConfiguration(out.TickerplantLogConfiguration)); err != nil {
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionSetting, ResNameKxCluster, d.Id(), err)
+	}
+
 	// compose cluster ARN using environment ARN
 	parts, err := flex.ExpandResourceId(d.Id(), kxUserIDPartCount, false)
 	if err != nil {
@@ -550,16 +639,25 @@ func resourceKxClusterUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		updateCode = true
 	}
 
-	if v, ok := d.GetOk("initialization_script"); ok && d.HasChanges("initialization_script") {
+	if v, ok := d.GetOk("initialization_script"); ok {
 		CodeConfigIn.Code = expandCode(d.Get("code").([]interface{}))
-		CodeConfigIn.InitializationScript = aws.String(v.(string))
-		updateCode = true
+		if d.HasChanges("initialization_script") {
+			CodeConfigIn.InitializationScript = aws.String(v.(string))
+			updateCode = true
+		} else {
+			CodeConfigIn.InitializationScript = aws.String(d.Get("initialization_script").(string))
+		}
 	}
 
-	if v, ok := d.GetOk("command_line_arguments"); ok && len(v.(map[string]interface{})) > 0 && d.HasChanges("command_line_arguments") {
+	if v, ok := d.GetOk("command_line_arguments"); ok && len(v.(map[string]interface{})) > 0 {
 		CodeConfigIn.Code = expandCode(d.Get("code").([]interface{}))
-		CodeConfigIn.CommandLineArguments = expandCommandLineArguments(v.(map[string]interface{}))
-		updateCode = true
+		if d.HasChanges("command_line_arguments") {
+			CodeConfigIn.CommandLineArguments = expandCommandLineArguments(v.(map[string]interface{}))
+			updateCode = true
+		} else {
+			CodeConfigIn.CommandLineArguments = expandCommandLineArguments(
+				d.Get("command_line_arguments").(map[string]interface{}))
+		}
 	}
 
 	if updateDb {
@@ -767,6 +865,38 @@ func expandAutoScalingConfiguration(tfList []interface{}) *types.AutoScalingConf
 	return a
 }
 
+func expandScalingGroupConfiguration(tfList []interface{}) *types.KxScalingGroupConfiguration {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]interface{})
+
+	a := &types.KxScalingGroupConfiguration{}
+
+	if v, ok := tfMap["scaling_group_name"].(string); ok && v != "" {
+		a.ScalingGroupName = aws.String(v)
+	}
+
+	if v, ok := tfMap["node_count"].(int); ok && v != 0 {
+		a.NodeCount = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["memory_limit"].(int); ok && v != 0 {
+		a.MemoryLimit = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["cpu"].(float64); ok && v != 0 {
+		a.Cpu = aws.Float64(v)
+	}
+
+	if v, ok := tfMap["memory_reservation"].(int); ok && v != 0 {
+		a.MemoryReservation = aws.Int32(int32(v))
+	}
+
+	return a
+}
+
 func expandSavedownStorageConfiguration(tfList []interface{}) *types.KxSavedownStorageConfiguration {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
@@ -782,6 +912,10 @@ func expandSavedownStorageConfiguration(tfList []interface{}) *types.KxSavedownS
 
 	if v, ok := tfMap["size"].(int); ok && v != 0 {
 		a.Size = aws.Int32(int32(v))
+	}
+
+	if v, ok := tfMap["volume_name"].(string); ok && v != "" {
+		a.VolumeName = aws.String(v)
 	}
 
 	return a
@@ -810,6 +944,22 @@ func expandVPCConfiguration(tfList []interface{}) *types.VpcConfiguration {
 
 	if v, ok := tfMap["ip_address_type"].(string); ok && v != "" {
 		a.IpAddressType = types.IPAddressType(v)
+	}
+
+	return a
+}
+
+func expandTickerplantLogConfiguration(tfList []interface{}) *types.TickerplantLogConfiguration {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]interface{})
+
+	a := &types.TickerplantLogConfiguration{}
+
+	if v, ok := tfMap["tickerplant_log_volumes"].(*schema.Set); ok && v.Len() > 0 {
+		a.TickerplantLogVolumes = flex.ExpandStringValueSet(v)
 	}
 
 	return a
@@ -894,6 +1044,10 @@ func expandDatabase(tfMap map[string]interface{}) *types.KxDatabaseConfiguration
 
 	if v, ok := tfMap["database_name"].(string); ok && v != "" {
 		a.DatabaseName = aws.String(v)
+	}
+
+	if v, ok := tfMap["dataview_name"].(string); ok && v != "" {
+		a.DataviewName = aws.String(v)
 	}
 
 	if v, ok := tfMap["cache_configurations"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -1059,6 +1213,50 @@ func flattenAutoScalingConfiguration(apiObject *types.AutoScalingConfiguration) 
 	return []interface{}{m}
 }
 
+func flattenScalingGroupConfiguration(apiObject *types.KxScalingGroupConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := apiObject.ScalingGroupName; v != nil {
+		m["scaling_group_name"] = aws.ToString(v)
+	}
+
+	if v := apiObject.NodeCount; v != nil {
+		m["node_count"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.MemoryLimit; v != nil {
+		m["memory_limit"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.Cpu; v != nil {
+		m["cpu"] = aws.ToFloat64(v)
+	}
+
+	if v := apiObject.MemoryReservation; v != nil {
+		m["memory_reservation"] = aws.ToInt32(v)
+	}
+
+	return []interface{}{m}
+}
+
+func flattenTickerplantLogConfiguration(apiObject *types.TickerplantLogConfiguration) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{}
+
+	if v := apiObject.TickerplantLogVolumes; v != nil {
+		m["tickerplant_log_volumes"] = v
+	}
+
+	return []interface{}{m}
+}
+
 func flattenSavedownStorageConfiguration(apiObject *types.KxSavedownStorageConfiguration) []interface{} {
 	if apiObject == nil {
 		return nil
@@ -1072,6 +1270,10 @@ func flattenSavedownStorageConfiguration(apiObject *types.KxSavedownStorageConfi
 
 	if v := aws.ToInt32(apiObject.Size); v >= 10 && v <= 16000 {
 		m["size"] = v
+	}
+
+	if v := apiObject.VolumeName; v != nil {
+		m["volume_name"] = aws.ToString(v)
 	}
 
 	return []interface{}{m}
@@ -1198,6 +1400,10 @@ func flattenDatabase(apiObject *types.KxDatabaseConfiguration) map[string]interf
 
 	if v := apiObject.DatabaseName; v != nil {
 		m["database_name"] = aws.ToString(v)
+	}
+
+	if v := apiObject.DataviewName; v != nil {
+		m["dataview_name"] = aws.ToString(v)
 	}
 
 	if v := apiObject.CacheConfigurations; v != nil {

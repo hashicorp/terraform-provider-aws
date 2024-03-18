@@ -34,7 +34,7 @@ func TestAccOpenSearchServerlessAccessPolicy_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
 			testAccPreCheckAccessPolicy(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccessPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -67,7 +67,7 @@ func TestAccOpenSearchServerlessAccessPolicy_update(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
 			testAccPreCheckAccessPolicy(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccessPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -104,7 +104,7 @@ func TestAccOpenSearchServerlessAccessPolicy_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.OpenSearchServerlessEndpointID)
 			testAccPreCheckAccessPolicy(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccessPolicyDestroy(ctx),
 		Steps: []resource.TestStep{

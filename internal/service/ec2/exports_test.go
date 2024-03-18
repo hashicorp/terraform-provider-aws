@@ -5,12 +5,26 @@ package ec2
 
 // Exports for use in tests only.
 var (
-	ResourceInstanceConnectEndpoint  = newResourceInstanceConnectEndpoint
-	ResourceSecurityGroupEgressRule  = newResourceSecurityGroupEgressRule
-	ResourceSecurityGroupIngressRule = newResourceSecurityGroupIngressRule
+	ResourceDefaultNetworkACL               = resourceDefaultNetworkACL
+	ResourceDefaultRouteTable               = resourceDefaultRouteTable
+	ResourceEBSFastSnapshotRestore          = newResourceEBSFastSnapshotRestore
+	ResourceInstanceConnectEndpoint         = newResourceInstanceConnectEndpoint
+	ResourceNetworkACL                      = resourceNetworkACL
+	ResourceNetworkACLRule                  = resourceNetworkACLRule
+	ResourceRoute                           = resourceRoute
+	ResourceRouteTable                      = resourceRouteTable
+	ResourceSecurityGroupEgressRule         = newResourceSecurityGroupEgressRule
+	ResourceSecurityGroupIngressRule        = newResourceSecurityGroupIngressRule
+	ResourceTag                             = resourceTag
+	ResourceTransitGatewayPeeringAttachment = resourceTransitGatewayPeeringAttachment
 
-	UpdateTags   = updateTags
-	UpdateTagsV2 = updateTagsV2
-
-	StopInstance = stopInstance
+	CustomFiltersSchema            = customFiltersSchema
+	FindEBSFastSnapshotRestoreByID = findEBSFastSnapshotRestoreByID
+	FindNetworkACLByIDV2           = findNetworkACLByIDV2
+	NewAttributeFilterList         = newAttributeFilterList
+	NewCustomFilterList            = newCustomFilterList
+	NewTagFilterList               = newTagFilterList
+	StopInstance                   = stopInstance
+	UpdateTags                     = updateTags
+	UpdateTagsV2                   = updateTagsV2
 )

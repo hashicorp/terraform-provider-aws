@@ -1,7 +1,8 @@
 # RDS Blue/Green Deployments
 
-**Summary:** Discussion of which resource types can support RDS Blue/Green Deployments for updates
-**Created:** 2023-11-24
+**Summary:** Discussion of which resource types can support RDS Blue/Green Deployments for updates<br>
+**Created:** 2023-11-24<br>
+**Updated:** 2024-01-24
 
 ---
 
@@ -27,6 +28,12 @@ When the `blue_green_update.enabled` parameter is set, the AWS Provider will use
 According to [AWS documentation](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/blue-green-deployments-overview.html), "switchover typically takes under a minute".
 
 The update takes place in a single `terraform apply`, and the Blue/Green Deployment object is not exposed by the provider, since it is only an implementation detail.
+
+### `aws_db_instance` Replicas
+
+Creating replica RDS DB Instance involves one source `aws_db_instance` resource and one or more replica `aws_db_instance` resources.
+Because multiple resources are involved, Terraform cannot treat the source Instance and its replicas as a single unit.
+Therefore, Terraform cannot use a Blue/Green Deployment for updating an Instance and its replicas.
 
 ### `aws_rds_cluster`
 

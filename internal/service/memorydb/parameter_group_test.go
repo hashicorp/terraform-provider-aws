@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfmemorydb "github.com/hashicorp/terraform-provider-aws/internal/service/memorydb"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccMemoryDBParameterGroup_basic(t *testing.T) {
@@ -28,7 +29,7 @@ func TestAccMemoryDBParameterGroup_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, memorydb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MemoryDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -70,7 +71,7 @@ func TestAccMemoryDBParameterGroup_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, memorydb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MemoryDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -93,7 +94,7 @@ func TestAccMemoryDBParameterGroup_update_parameters(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, memorydb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MemoryDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckParameterGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -203,7 +204,7 @@ func TestAccMemoryDBParameterGroup_update_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, memorydb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MemoryDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSubnetGroupDestroy(ctx),
 		Steps: []resource.TestStep{

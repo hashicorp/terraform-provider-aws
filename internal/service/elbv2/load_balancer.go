@@ -9,6 +9,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"errors"
 	"fmt"
 	"log"
+	"slices"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -33,7 +34,6 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"golang.org/x/exp/slices"
 )
 
 // @SDKResource("aws_alb", name="Load Balancer")
@@ -51,9 +51,9 @@ func ResourceLoadBalancer() *schema.Resource {
 		},
 
 		CustomizeDiff: customdiff.Sequence(
-			customizeDiffALB,
-			customizeDiffNLB,
-			customizeDiffGWLB,
+			customizeDiffLoadBalancerALB,
+			customizeDiffLoadBalancerNLB,
+			customizeDiffLoadBalancerGWLB,
 			verify.SetTagsDiff,
 		),
 
@@ -667,6 +667,10 @@ func modifyLoadBalancerAttributes(ctx context.Context, conn *elbv2.ELBV2, arn st
 
 	// Not all attributes are supported in all partitions.
 	for {
+		if len(input.Attributes) == 0 {
+			return nil
+		}
+
 		_, err := conn.ModifyLoadBalancerAttributesWithContext(ctx, input)
 
 		if err != nil {
@@ -1062,7 +1066,7 @@ func SuffixFromARN(arn *string) string {
 // cannot have security groups added if none are present, and cannot have
 // all security groups removed. If the type is 'network' and any of these
 // conditions are met, mark the diff as a ForceNew operation.
-func customizeDiffNLB(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+func customizeDiffLoadBalancerNLB(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 	// The current criteria for determining if the operation should be ForceNew:
 	// - lb of type "network"
 	// - existing resource (id is not "")
@@ -1152,7 +1156,7 @@ func customizeDiffNLB(_ context.Context, diff *schema.ResourceDiff, v interface{
 	return nil
 }
 
-func customizeDiffALB(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+func customizeDiffLoadBalancerALB(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 	if lbType := diff.Get("load_balancer_type").(string); lbType != elbv2.LoadBalancerTypeEnumApplication {
 		return nil
 	}
@@ -1208,7 +1212,7 @@ func customizeDiffALB(_ context.Context, diff *schema.ResourceDiff, v interface{
 	return nil
 }
 
-func customizeDiffGWLB(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+func customizeDiffLoadBalancerGWLB(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
 	if lbType := diff.Get("load_balancer_type").(string); lbType != elbv2.LoadBalancerTypeEnumGateway {
 		return nil
 	}

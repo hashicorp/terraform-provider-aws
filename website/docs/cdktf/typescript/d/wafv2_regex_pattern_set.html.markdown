@@ -57,4 +57,4 @@ Each `regularExpression` supports the following argument:
 
 * `regexString` - (Required) String representing the regular expression, see the AWS WAF [documentation](https://docs.aws.amazon.com/waf/latest/developerguide/waf-regex-pattern-set-creating.html) for more information.
 
-<!-- cache-key: cdktf-0.19.0 input-a646ff63f23c77b2e1c1477a070043fec306e7b9d0c94cd6c0f0b67fafdb28da -->
+<!-- cache-key: cdktf-0.20.1 input-a646ff63f23c77b2e1c1477a070043fec306e7b9d0c94cd6c0f0b67fafdb28da -->

@@ -7,7 +7,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/s3control/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 )
 
 // []*SERVICE.Tag handling
@@ -54,6 +54,6 @@ func getTagsInS3(ctx context.Context) []awstypes.S3Tag {
 // setTagsOutS3 sets s3control service tags in Context.
 func setTagsOutS3(ctx context.Context, tags []awstypes.S3Tag) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = types.Some(keyValueTagsS3(ctx, tags))
+		inContext.TagsOut = option.Some(keyValueTagsS3(ctx, tags))
 	}
 }

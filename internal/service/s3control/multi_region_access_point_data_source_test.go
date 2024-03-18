@@ -27,7 +27,7 @@ func TestAccS3ControlMultiRegionAccessPointDataSource_basic(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
 		Steps: []resource.TestStep{
 			{

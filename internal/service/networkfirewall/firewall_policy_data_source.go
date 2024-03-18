@@ -114,6 +114,10 @@ func DataSourceFirewallPolicy() *schema.Resource {
 								},
 							},
 						},
+						"tls_inspection_configuration_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},

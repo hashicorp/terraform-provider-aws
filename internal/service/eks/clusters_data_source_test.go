@@ -19,7 +19,7 @@ func TestAccEKSClustersDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.EKSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -34,7 +34,7 @@ func TestAccEKSClustersDataSource_basic(t *testing.T) {
 }
 
 func testAccClustersDataSourceConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccClusterConfig_required(rName), `
+	return acctest.ConfigCompose(testAccClusterConfig_basic(rName), `
 data "aws_eks_clusters" "test" {
   depends_on = [aws_eks_cluster.test]
 }

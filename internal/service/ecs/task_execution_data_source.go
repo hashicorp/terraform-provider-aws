@@ -48,6 +48,10 @@ func DataSourceTaskExecution() *schema.Resource {
 					},
 				},
 			},
+			"client_token": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"cluster": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -294,6 +298,9 @@ func dataSourceTaskExecutionRead(ctx context.Context, d *schema.ResourceData, me
 
 	if v, ok := d.GetOk("capacity_provider_strategy"); ok {
 		input.CapacityProviderStrategy = expandCapacityProviderStrategy(v.(*schema.Set))
+	}
+	if v, ok := d.GetOk("client_token"); ok {
+		input.ClientToken = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("desired_count"); ok {
 		input.Count = aws.Int64(int64(v.(int)))

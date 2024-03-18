@@ -5,6 +5,7 @@ package appautoscaling
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strconv"
@@ -28,8 +29,8 @@ const (
 	ResNamePolicy = "Policy"
 )
 
-// @SDKResource("aws_appautoscaling_policy")
-func ResourcePolicy() *schema.Resource {
+// @SDKResource("aws_appautoscaling_policy", name="Scaling Policy")
+func resourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePolicyCreate,
 		ReadWithoutTimeout:   resourcePolicyRead,
@@ -557,11 +558,11 @@ func expandStepAdjustments(configured []interface{}) ([]*applicationautoscaling.
 			case string:
 				f, err := strconv.ParseFloat(bound, 64)
 				if err != nil {
-					return nil, fmt.Errorf("metric_interval_lower_bound must be a float value represented as a string")
+					return nil, errors.New("metric_interval_lower_bound must be a float value represented as a string")
 				}
 				a.MetricIntervalLowerBound = aws.Float64(f)
 			default:
-				return nil, fmt.Errorf("metric_interval_lower_bound isn't a string")
+				return nil, errors.New("metric_interval_lower_bound isn't a string")
 			}
 		}
 		if data["metric_interval_upper_bound"] != "" {
@@ -570,11 +571,11 @@ func expandStepAdjustments(configured []interface{}) ([]*applicationautoscaling.
 			case string:
 				f, err := strconv.ParseFloat(bound, 64)
 				if err != nil {
-					return nil, fmt.Errorf("metric_interval_upper_bound must be a float value represented as a string")
+					return nil, errors.New("metric_interval_upper_bound must be a float value represented as a string")
 				}
 				a.MetricIntervalUpperBound = aws.Float64(f)
 			default:
-				return nil, fmt.Errorf("metric_interval_upper_bound isn't a string")
+				return nil, errors.New("metric_interval_upper_bound isn't a string")
 			}
 		}
 		adjustments = append(adjustments, a)

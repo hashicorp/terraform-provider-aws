@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"slices"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -26,15 +27,14 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"golang.org/x/exp/slices"
 )
 
 const (
 	patchBaselineIDRegexPattern = `pb-[0-9a-f]{17}`
 )
 
-// @SDKResource("aws_ssm_default_patch_baseline")
-func ResourceDefaultPatchBaseline() *schema.Resource {
+// @SDKResource("aws_ssm_default_patch_baseline", name="Default Patch Baseline")
+func resourceDefaultPatchBaseline() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDefaultPatchBaselineCreate,
 		ReadWithoutTimeout:   resourceDefaultPatchBaselineRead,
@@ -47,7 +47,7 @@ func ResourceDefaultPatchBaseline() *schema.Resource {
 				if isPatchBaselineID(id) || isPatchBaselineARN(id) {
 					conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
-					patchbaseline, err := findPatchBaselineByID(ctx, conn, id)
+					patchbaseline, err := findPatchBaselineByIDV2(ctx, conn, id)
 					if err != nil {
 						return nil, fmt.Errorf("reading SSM Patch Baseline (%s): %w", id, err)
 					}
@@ -171,17 +171,16 @@ const (
 
 func resourceDefaultPatchBaselineCreate(ctx context.Context, d *schema.ResourceData, meta any) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).SSMClient(ctx)
 
 	baselineID := d.Get("baseline_id").(string)
 
-	patchBaseline, err := findPatchBaselineByID(ctx, conn, baselineID)
+	patchBaseline, err := findPatchBaselineByIDV2(ctx, conn, baselineID)
+
 	if err != nil {
-		return create.AppendDiagErrorMessage(diags, names.SSM, "registering", ResNameDefaultPatchBaseline, baselineID,
-			create.ProblemStandardMessage(names.SSM, create.ErrActionReading, resNamePatchBaseline, baselineID, err),
-		)
+		return sdkdiag.AppendErrorf(diags, "reading SSM Patch Baseline (%s): %s", baselineID, err)
 	}
+
 	if pbOS, cOS := string(patchBaseline.OperatingSystem), d.Get("operating_system"); pbOS != cOS {
 		return create.AppendDiagErrorMessage(diags, names.SSM, "registering", ResNameDefaultPatchBaseline, baselineID,
 			fmt.Sprintf("Patch Baseline Operating System (%s) does not match %s", pbOS, cOS),
@@ -304,16 +303,17 @@ func FindDefaultPatchBaseline(ctx context.Context, conn *ssm.Client, os types.Op
 	return out, nil
 }
 
-func findPatchBaselineByID(ctx context.Context, conn *ssm.Client, id string) (*ssm.GetPatchBaselineOutput, error) {
-	in := &ssm.GetPatchBaselineInput{
+func findPatchBaselineByIDV2(ctx context.Context, conn *ssm.Client, id string) (*ssm.GetPatchBaselineOutput, error) {
+	input := &ssm.GetPatchBaselineInput{
 		BaselineId: aws.String(id),
 	}
-	out, err := conn.GetPatchBaseline(ctx, in)
+
+	output, err := conn.GetPatchBaseline(ctx, input)
 
 	if errs.IsA[*types.DoesNotExistException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
-			LastRequest: in,
+			LastRequest: input,
 		}
 	}
 
@@ -321,11 +321,11 @@ func findPatchBaselineByID(ctx context.Context, conn *ssm.Client, id string) (*s
 		return nil, err
 	}
 
-	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return out, nil
+	return output, nil
 }
 
 func patchBaselinesPaginator(conn *ssm.Client, filters ...types.PatchOrchestratorFilter) *ssm.DescribePatchBaselinesPaginator {

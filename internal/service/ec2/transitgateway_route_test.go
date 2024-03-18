@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccTransitGatewayRoute_basic(t *testing.T) {
@@ -28,7 +29,7 @@ func testAccTransitGatewayRoute_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckTransitGateway(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTransitGatewayRouteDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -61,7 +62,7 @@ func testAccTransitGatewayRoute_basic_ipv6(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckTransitGateway(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTransitGatewayRouteDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -93,7 +94,7 @@ func testAccTransitGatewayRoute_blackhole(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckTransitGateway(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTransitGatewayRouteDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -124,7 +125,7 @@ func testAccTransitGatewayRoute_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckTransitGateway(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTransitGatewayRouteDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -149,7 +150,7 @@ func testAccTransitGatewayRoute_disappears_TransitGatewayAttachment(t *testing.T
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckTransitGateway(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTransitGatewayRouteDestroy(ctx),
 		Steps: []resource.TestStep{

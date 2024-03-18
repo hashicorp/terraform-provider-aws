@@ -6,6 +6,7 @@ package flex
 import (
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -164,7 +165,7 @@ type TestFlexAWS18 struct {
 }
 
 type TestFlexTimeTF01 struct {
-	CreationDateTime fwtypes.Timestamp `tfsdk:"creation_date_time"`
+	CreationDateTime timetypes.RFC3339 `tfsdk:"creation_date_time"`
 }
 type TestFlexTimeAWS01 struct {
 	CreationDateTime *time.Time
@@ -177,20 +178,8 @@ type TestFlexTF11 struct {
 	FieldInner fwtypes.MapValueOf[basetypes.StringValue] `tfsdk:"field_inner"`
 }
 
-type TestFlexTF12 struct {
-	FieldInner fwtypes.ObjectMapValueOf[TestFlexTF01] `tfsdk:"field_inner"`
-}
-
-type TestFlexTF13 struct {
-	FieldInner fwtypes.ObjectMapValueOf[*TestFlexTF01] `tfsdk:"field_inner"`
-}
-
 type TestFlexTF14 struct {
 	FieldOuter fwtypes.ListNestedObjectValueOf[TestFlexTF11] `tfsdk:"field_outer"`
-}
-
-type TestFlexTF15 struct {
-	FieldOuter fwtypes.ListNestedObjectValueOf[TestFlexTF12] `tfsdk:"field_outer"`
 }
 
 type TestFlexAWS13 struct {
@@ -228,11 +217,6 @@ func (TestEnum) Values() []TestEnum {
 	}
 }
 
-type TestFlexComplexNestTF01 struct { // ie, DialogState
-	DialogAction      fwtypes.ListNestedObjectValueOf[TestFlexComplexNestTF02] `tfsdk:"dialog_action"`
-	Intent            fwtypes.ListNestedObjectValueOf[TestFlexComplexNestTF03] `tfsdk:"intent"`
-	SessionAttributes fwtypes.MapValueOf[basetypes.StringValue]                `tfsdk:"session_attributes"`
-}
 type TestFlexComplexNestAWS01 struct { // ie, DialogState
 	DialogAction      *TestFlexComplexNestAWS02
 	Intent            *TestFlexComplexNestAWS03
@@ -250,10 +234,6 @@ type TestFlexComplexNestAWS02 struct { // ie, DialogAction
 	SuppressNextMessage *bool
 }
 
-type TestFlexComplexNestTF03 struct { // ie, IntentOverride
-	Name  types.String                                      `tfsdk:"name"`
-	Slots fwtypes.ObjectMapValueOf[TestFlexComplexNestTF04] `tfsdk:"slots"`
-}
 type TestFlexComplexNestAWS03 struct { // ie, IntentOverride
 	Name  *string
 	Slots map[string]TestFlexComplexNestAWS04
@@ -296,4 +276,38 @@ type TestFlexTF18 struct {
 	Field4 fwtypes.SetValueOf[types.String]  `tfsdk:"field4"`
 	Field5 fwtypes.MapValueOf[types.String]  `tfsdk:"field5"`
 	Field6 fwtypes.MapValueOf[types.String]  `tfsdk:"field6"`
+}
+
+type TestFlexMapBlockKeyTF01 struct {
+	MapBlock fwtypes.ListNestedObjectValueOf[TestFlexMapBlockKeyTF02] `tfsdk:"map_block"`
+}
+type TestFlexMapBlockKeyAWS01 struct {
+	MapBlock map[string]TestFlexMapBlockKeyAWS02
+}
+
+type TestFlexMapBlockKeyTF02 struct {
+	MapBlockKey types.String `tfsdk:"map_block_key"`
+	Attr1       types.String `tfsdk:"attr1"`
+	Attr2       types.String `tfsdk:"attr2"`
+}
+type TestFlexMapBlockKeyAWS02 struct {
+	Attr1 string
+	Attr2 string
+}
+
+type TestFlexMapBlockKeyTF03 struct {
+	MapBlock fwtypes.SetNestedObjectValueOf[TestFlexMapBlockKeyTF02] `tfsdk:"map_block"`
+}
+
+type TestFlexMapBlockKeyAWS03 struct {
+	MapBlock map[string]*TestFlexMapBlockKeyAWS02
+}
+
+type TestFlexMapBlockKeyTF04 struct {
+	MapBlock fwtypes.ListNestedObjectValueOf[TestFlexMapBlockKeyTF05] `tfsdk:"map_block"`
+}
+type TestFlexMapBlockKeyTF05 struct {
+	MapBlockKey fwtypes.StringEnum[TestEnum] `tfsdk:"map_block_key"`
+	Attr1       types.String                 `tfsdk:"attr1"`
+	Attr2       types.String                 `tfsdk:"attr2"`
 }

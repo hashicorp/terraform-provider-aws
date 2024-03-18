@@ -9,11 +9,14 @@ import (
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/service/sns"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/sns/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -117,12 +120,19 @@ func resourceTopicPolicyRead(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceTopicPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
 	// It is impossible to delete a policy or set to empty
 	// (confirmed by AWS Support representative)
 	// so we instead set it back to the default one.
-	return diag.FromErr(putTopicPolicy(ctx, conn, d.Id(), defaultTopicPolicy(d.Id(), d.Get("owner").(string))))
+	err := putTopicPolicy(ctx, conn, d.Id(), defaultTopicPolicy(d.Id(), d.Get("owner").(string)))
+
+	if errs.IsA[*awstypes.NotFoundException](err) {
+		return diags
+	}
+
+	return sdkdiag.AppendFromErr(diags, err)
 }
 
 func defaultTopicPolicy(topicARN, accountID string) string {

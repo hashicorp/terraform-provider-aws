@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -76,6 +77,10 @@ func (expander autoExpander) convert(ctx context.Context, valFrom, vTo reflect.V
 		return diags
 
 	// Aggregate types.
+	case basetypes.ObjectValuable:
+		diags.Append(expander.object(ctx, vFrom, vTo)...)
+		return diags
+
 	case basetypes.ListValuable:
 		diags.Append(expander.list(ctx, vFrom, vTo)...)
 		return diags
@@ -107,7 +112,7 @@ func (expander autoExpander) bool(ctx context.Context, vFrom basetypes.BoolValua
 		return diags
 	}
 
-	switch vTo.Kind() {
+	switch tTo := vTo.Type(); vTo.Kind() {
 	case reflect.Bool:
 		//
 		// types.Bool -> bool.
@@ -116,7 +121,7 @@ func (expander autoExpander) bool(ctx context.Context, vFrom basetypes.BoolValua
 		return diags
 
 	case reflect.Ptr:
-		switch vTo.Type().Elem().Kind() {
+		switch tElem := tTo.Elem(); tElem.Kind() {
 		case reflect.Bool:
 			//
 			// types.Bool -> *bool.
@@ -144,7 +149,7 @@ func (expander autoExpander) float64(ctx context.Context, vFrom basetypes.Float6
 		return diags
 	}
 
-	switch vTo.Kind() {
+	switch tTo := vTo.Type(); vTo.Kind() {
 	case reflect.Float32, reflect.Float64:
 		//
 		// types.Float32/types.Float64 -> float32/float64.
@@ -153,7 +158,7 @@ func (expander autoExpander) float64(ctx context.Context, vFrom basetypes.Float6
 		return diags
 
 	case reflect.Ptr:
-		switch vTo.Type().Elem().Kind() {
+		switch tElem := tTo.Elem(); tElem.Kind() {
 		case reflect.Float32:
 			//
 			// types.Float32/types.Float64 -> *float32.
@@ -189,7 +194,7 @@ func (expander autoExpander) int64(ctx context.Context, vFrom basetypes.Int64Val
 		return diags
 	}
 
-	switch vTo.Kind() {
+	switch tTo := vTo.Type(); vTo.Kind() {
 	case reflect.Int32, reflect.Int64:
 		//
 		// types.Int32/types.Int64 -> int32/int64.
@@ -198,7 +203,7 @@ func (expander autoExpander) int64(ctx context.Context, vFrom basetypes.Int64Val
 		return diags
 
 	case reflect.Ptr:
-		switch vTo.Type().Elem().Kind() {
+		switch tElem := tTo.Elem(); tElem.Kind() {
 		case reflect.Int32:
 			//
 			// types.Int32/types.Int64 -> *int32.
@@ -234,35 +239,91 @@ func (expander autoExpander) string(ctx context.Context, vFrom basetypes.StringV
 		return diags
 	}
 
-	switch vTo.Kind() {
+	switch tTo := vTo.Type(); vTo.Kind() {
 	case reflect.String:
 		//
 		// types.String -> string.
 		//
 		vTo.SetString(v.ValueString())
 		return diags
+
 	case reflect.Struct:
 		//
-		// fwtypes.Timestamp --> time.Time
+		// timetypes.RFC3339 --> time.Time
 		//
-		if t, ok := vFrom.(fwtypes.Timestamp); ok {
-			vTo.Set(reflect.ValueOf(t.ValueTimestamp()))
+		if t, ok := vFrom.(timetypes.RFC3339); ok {
+			v, d := t.ValueRFC3339Time()
+			diags.Append(d...)
+			if diags.HasError() {
+				return diags
+			}
+
+			vTo.Set(reflect.ValueOf(v))
 			return diags
 		}
+
 	case reflect.Ptr:
-		switch vTo.Type().Elem().Kind() {
+		switch tElem := tTo.Elem(); tElem.Kind() {
 		case reflect.String:
 			//
 			// types.String -> *string.
 			//
 			vTo.Set(reflect.ValueOf(v.ValueStringPointer()))
 			return diags
+
 		case reflect.Struct:
 			//
-			// fwtypes.Timestamp --> *time.Time
+			// timetypes.RFC3339 --> *time.Time
 			//
-			if t, ok := vFrom.(fwtypes.Timestamp); ok {
-				vTo.Set(reflect.ValueOf(t.ValueTimestampPointer()))
+			if t, ok := vFrom.(timetypes.RFC3339); ok {
+				v, d := t.ValueRFC3339Time()
+				diags.Append(d...)
+				if diags.HasError() {
+					return diags
+				}
+
+				vTo.Set(reflect.ValueOf(&v))
+				return diags
+			}
+		}
+	}
+
+	tflog.Info(ctx, "AutoFlex Expand; incompatible types", map[string]interface{}{
+		"from": vFrom.Type(ctx),
+		"to":   vTo.Kind(),
+	})
+
+	return diags
+}
+
+// string copies a Plugin Framework Object(ish) value to a compatible AWS API value.
+func (expander autoExpander) object(ctx context.Context, vFrom basetypes.ObjectValuable, vTo reflect.Value) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	_, d := vFrom.ToObjectValue(ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return diags
+	}
+
+	switch tTo := vTo.Type(); vTo.Kind() {
+	case reflect.Struct:
+		//
+		// types.Object -> struct.
+		//
+		if vFrom, ok := vFrom.(fwtypes.NestedObjectValue); ok {
+			diags.Append(expander.nestedObjectToStruct(ctx, vFrom, tTo, vTo)...)
+			return diags
+		}
+
+	case reflect.Ptr:
+		switch tElem := tTo.Elem(); tElem.Kind() {
+		case reflect.Struct:
+			//
+			// types.Object --> *struct
+			//
+			if vFrom, ok := vFrom.(fwtypes.NestedObjectValue); ok {
+				diags.Append(expander.nestedObjectToStruct(ctx, vFrom, tElem, vTo)...)
 				return diags
 			}
 		}
@@ -292,8 +353,8 @@ func (expander autoExpander) list(ctx context.Context, vFrom basetypes.ListValua
 		return diags
 
 	case basetypes.ObjectTypable:
-		if vFrom, ok := vFrom.(fwtypes.NestedObjectValue); ok {
-			diags.Append(expander.nestedObject(ctx, vFrom, vTo)...)
+		if vFrom, ok := vFrom.(fwtypes.NestedObjectCollectionValue); ok {
+			diags.Append(expander.nestedObjectCollection(ctx, vFrom, vTo)...)
 			return diags
 		}
 	}
@@ -366,11 +427,6 @@ func (expander autoExpander) map_(ctx context.Context, vFrom basetypes.MapValuab
 	case basetypes.StringTypable:
 		diags.Append(expander.mapOfString(ctx, v, vTo)...)
 		return diags
-	case basetypes.ObjectTypable:
-		if vFrom, ok := vFrom.(fwtypes.ObjectMapValue); ok {
-			diags.Append(expander.objectMap(ctx, vFrom, vTo)...)
-			return diags
-		}
 	}
 
 	tflog.Info(ctx, "AutoFlex Expand; incompatible types", map[string]interface{}{
@@ -446,8 +502,8 @@ func (expander autoExpander) set(ctx context.Context, vFrom basetypes.SetValuabl
 		return diags
 
 	case basetypes.ObjectTypable:
-		if vFrom, ok := vFrom.(fwtypes.NestedObjectValue); ok {
-			diags.Append(expander.nestedObject(ctx, vFrom, vTo)...)
+		if vFrom, ok := vFrom.(fwtypes.NestedObjectCollectionValue); ok {
+			diags.Append(expander.nestedObjectCollection(ctx, vFrom, vTo)...)
 			return diags
 		}
 	}
@@ -506,8 +562,8 @@ func (expander autoExpander) setOfString(ctx context.Context, vFrom basetypes.Se
 	return diags
 }
 
-// nestedObject copies a Plugin Framework NestedObjectValue value to a compatible AWS API value.
-func (expander autoExpander) nestedObject(ctx context.Context, vFrom fwtypes.NestedObjectValue, vTo reflect.Value) diag.Diagnostics {
+// nestedObjectCollection copies a Plugin Framework NestedObjectCollectionValue value to a compatible AWS API value.
+func (expander autoExpander) nestedObjectCollection(ctx context.Context, vFrom fwtypes.NestedObjectCollectionValue, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	switch tTo := vTo.Type(); vTo.Kind() {
@@ -525,11 +581,28 @@ func (expander autoExpander) nestedObject(ctx context.Context, vFrom fwtypes.Nes
 			return diags
 		}
 
+	case reflect.Map:
+		switch tElem := tTo.Elem(); tElem.Kind() {
+		case reflect.Struct:
+			//
+			// types.List(OfObject) -> map[string]struct
+			//
+			diags.Append(expander.nestedKeyObjectToMap(ctx, vFrom, tElem, vTo)...)
+			return diags
+
+		case reflect.Ptr:
+			//
+			// types.List(OfObject) -> map[string]*struct
+			//
+			diags.Append(expander.nestedKeyObjectToMap(ctx, vFrom, tElem, vTo)...)
+			return diags
+		}
+
 	case reflect.Slice:
 		switch tElem := tTo.Elem(); tElem.Kind() {
 		case reflect.Struct:
 			//
-			// types.List(OfObject) -> []struct.
+			// types.List(OfObject) -> []struct
 			//
 			diags.Append(expander.nestedObjectToSlice(ctx, vFrom, tTo, tElem, vTo)...)
 			return diags
@@ -578,8 +651,8 @@ func (expander autoExpander) nestedObjectToStruct(ctx context.Context, vFrom fwt
 	return diags
 }
 
-// nestedObjectToSlice copies a Plugin Framework NestedObjectValue to a compatible AWS API [](*)struct value.
-func (expander autoExpander) nestedObjectToSlice(ctx context.Context, vFrom fwtypes.NestedObjectValue, tSlice, tElem reflect.Type, vTo reflect.Value) diag.Diagnostics {
+// nestedObjectToSlice copies a Plugin Framework NestedObjectCollectionValue to a compatible AWS API [](*)struct value.
+func (expander autoExpander) nestedObjectToSlice(ctx context.Context, vFrom fwtypes.NestedObjectCollectionValue, tSlice, tElem reflect.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	// Get the nested Objects as a slice.
@@ -614,65 +687,39 @@ func (expander autoExpander) nestedObjectToSlice(ctx context.Context, vFrom fwty
 	return diags
 }
 
-// objectMap copies a Plugin Framework ObjectMapValue value to a compatible AWS API value.
-func (expander autoExpander) objectMap(ctx context.Context, vFrom fwtypes.ObjectMapValue, vTo reflect.Value) diag.Diagnostics {
+// nestedKeyObjectToMap copies a Plugin Framework NestedObjectCollectionValue to a compatible AWS API map[string]struct value.
+func (expander autoExpander) nestedKeyObjectToMap(ctx context.Context, vFrom fwtypes.NestedObjectCollectionValue, tElem reflect.Type, vTo reflect.Value) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	switch tTo := vTo.Type(); vTo.Kind() {
-	case reflect.Map:
-		switch tElem := tTo.Elem(); tElem.Kind() {
-		case reflect.Ptr:
-			diags.Append(expander.mappedObjectToStruct(ctx, vFrom, tElem, vTo)...)
-			return diags
-		case reflect.Struct:
-			diags.Append(expander.mappedObjectToStruct(ctx, vFrom, tElem, vTo)...)
-			return diags
-		}
-	case reflect.Ptr:
-		switch tElem := tTo.Elem(); tElem.Kind() {
-		case reflect.Struct:
-			diags.Append(expander.mappedObjectToStruct(ctx, vFrom, tElem, vTo)...)
-			return diags
-		}
-	}
-
-	diags.AddError("Incompatible types", fmt.Sprintf("objectMap[%s] cannot be expanded to %s", vFrom.Type(ctx).(attr.TypeWithElementType).ElementType(), vTo.Kind()))
-	return diags
-}
-
-// mappedObjectToStruct copies a Plugin Framework ObjectMapValue to a compatible AWS API (*)struct value.
-func (expander autoExpander) mappedObjectToStruct(ctx context.Context, vFrom fwtypes.ObjectMapValue, tStruct reflect.Type, vTo reflect.Value) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	// Get the mapped Objects as a map
-	from, d := vFrom.ToObjectMap(ctx)
+	// Get the nested Objects as a slice.
+	from, d := vFrom.ToObjectSlice(ctx)
 	diags.Append(d...)
 	if diags.HasError() {
 		return diags
 	}
 
-	if tStruct.Kind() == reflect.Ptr {
-		tStruct = tStruct.Elem()
+	if tElem.Kind() == reflect.Ptr {
+		tElem = tElem.Elem()
 	}
 
+	// Create a new target slice and expand each element.
 	f := reflect.ValueOf(from)
 	m := reflect.MakeMap(vTo.Type())
-
-	for _, key := range f.MapKeys() {
-		// Create a new target map and populate it
-		target := reflect.New(tStruct)
-
-		fromInterface := f.MapIndex(key).Interface()
-		if f.MapIndex(key).Kind() == reflect.Ptr {
-			fromInterface = f.MapIndex(key).Elem().Interface()
-		}
-
-		diags.Append(autoFlexConvertStruct(ctx, fromInterface, target.Interface(), expander)...)
+	for i := 0; i < f.Len(); i++ {
+		// Create a new target structure and walk its fields.
+		target := reflect.New(tElem)
+		diags.Append(autoFlexConvertStruct(ctx, f.Index(i).Interface(), target.Interface(), expander)...)
 		if diags.HasError() {
 			return diags
 		}
 
-		// Set value (or pointer) in the target slice.
+		key, d := blockKeyMap(f.Index(i).Interface())
+		diags.Append(d...)
+		if diags.HasError() {
+			return diags
+		}
+
+		// Set value (or pointer) in the target map.
 		if vTo.Type().Elem().Kind() == reflect.Struct {
 			m.SetMapIndex(key, target.Elem())
 		} else {
@@ -683,4 +730,49 @@ func (expander autoExpander) mappedObjectToStruct(ctx context.Context, vFrom fwt
 	vTo.Set(m)
 
 	return diags
+}
+
+// blockKeyMap takes a struct and extracts the value of the `key`
+func blockKeyMap(from any) (reflect.Value, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	valFrom := reflect.ValueOf(from)
+	if kind := valFrom.Kind(); kind == reflect.Ptr {
+		valFrom = valFrom.Elem()
+	}
+
+	for i, typFrom := 0, valFrom.Type(); i < typFrom.NumField(); i++ {
+		field := typFrom.Field(i)
+		if field.PkgPath != "" {
+			continue // Skip unexported fields.
+		}
+
+		// go from StringValue to string
+		if field.Name == MapBlockKey {
+			fieldVal := valFrom.Field(i)
+
+			if v, ok := fieldVal.Interface().(basetypes.StringValue); ok {
+				return reflect.ValueOf(v.ValueString()), diags
+			}
+
+			// this handles things like StringEnum which has a ValueString method but is tricky to get a generic instantiation of
+			fieldType := fieldVal.Type()
+			method, found := fieldType.MethodByName("ValueString")
+			if found {
+				result := fieldType.Method(method.Index).Func.Call([]reflect.Value{fieldVal})
+				if len(result) > 0 {
+					return result[0], diags
+				}
+			}
+
+			// this is not ideal but perhaps better than a panic?
+			// return reflect.ValueOf(fmt.Sprintf("%s", valFrom.Field(i))), diags
+
+			return valFrom.Field(i), diags
+		}
+	}
+
+	diags.AddError("AutoFlEx", fmt.Sprintf("unable to find map block key (%s)", MapBlockKey))
+
+	return reflect.Zero(reflect.TypeOf("")), diags
 }

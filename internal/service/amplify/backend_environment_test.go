@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfamplify "github.com/hashicorp/terraform-provider-aws/internal/service/amplify"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccBackendEnvironment_basic(t *testing.T) {
@@ -29,7 +30,7 @@ func testAccBackendEnvironment_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AmplifyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBackendEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -62,7 +63,7 @@ func testAccBackendEnvironment_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AmplifyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBackendEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -88,7 +89,7 @@ func testAccBackendEnvironment_DeploymentArtifacts_StackName(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, amplify.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AmplifyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBackendEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{

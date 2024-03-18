@@ -61,11 +61,11 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arn` - Key ARN of the asymmetric CMK from which the public key was downloaded.
 * `customerMasterKeySpec` - Type of the public key that was downloaded.
-* `encryptionAlgorithms` - Encryption algorithms that AWS KMS supports for this key. Only set when the `key_usage` of the public key is `ENCRYPT_DECRYPT`.
+* `encryptionAlgorithms` - Encryption algorithms that AWS KMS supports for this key. Only set when the `keyUsage` of the public key is `ENCRYPT_DECRYPT`.
 * `id` - Key ARN of the asymmetric CMK from which the public key was downloaded.
 * `keyUsage` - Permitted use of the public key. Valid values are `ENCRYPT_DECRYPT` or `SIGN_VERIFY`
 * `publicKey` - Exported public key. The value is a DER-encoded X.509 public key, also known as SubjectPublicKeyInfo (SPKI), as defined in [RFC 5280](https://tools.ietf.org/html/rfc5280). The value is Base64-encoded.
 * `publicKeyPem` - Exported public key. The value is Privacy Enhanced Mail (PEM) encoded.
-* `signingAlgorithms` - Signing algorithms that AWS KMS supports for this key. Only set when the `key_usage` of the public key is `SIGN_VERIFY`.
+* `signingAlgorithms` - Signing algorithms that AWS KMS supports for this key. Only set when the `keyUsage` of the public key is `SIGN_VERIFY`.
 
-<!-- cache-key: cdktf-0.19.0 input-12b3af34b0a1b4d66a4ded239c7cec5e42bb02e7dbdeb474700393154476f950 -->
+<!-- cache-key: cdktf-0.20.1 input-12b3af34b0a1b4d66a4ded239c7cec5e42bb02e7dbdeb474700393154476f950 -->

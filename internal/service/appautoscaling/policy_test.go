@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfappautoscaling "github.com/hashicorp/terraform-provider-aws/internal/service/appautoscaling"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestValidatePolicyImportInput(t *testing.T) {
@@ -109,7 +110,7 @@ func TestAccAppAutoScalingPolicy_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppAutoScalingServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -151,7 +152,7 @@ func TestAccAppAutoScalingPolicy_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppAutoScalingServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -176,7 +177,7 @@ func TestAccAppAutoScalingPolicy_scaleOutAndIn(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppAutoScalingServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -258,7 +259,7 @@ func TestAccAppAutoScalingPolicy_spotFleetRequest(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppAutoScalingServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -291,7 +292,7 @@ func TestAccAppAutoScalingPolicy_DynamoDB_table(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppAutoScalingServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -324,7 +325,7 @@ func TestAccAppAutoScalingPolicy_DynamoDB_index(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppAutoScalingServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -359,7 +360,7 @@ func TestAccAppAutoScalingPolicy_multiplePoliciesSameName(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppAutoScalingServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -393,7 +394,7 @@ func TestAccAppAutoScalingPolicy_multiplePoliciesSameResource(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppAutoScalingServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -439,7 +440,7 @@ func TestAccAppAutoScalingPolicy_ResourceID_forceNew(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppAutoScalingServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -474,7 +475,7 @@ func TestAccAppAutoScalingPolicy_TargetTrack_metricMath(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, applicationautoscaling.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppAutoScalingServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -722,7 +723,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type = "m3.medium"
-    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   }
 }
 

@@ -53,6 +53,7 @@ This resource supports the following arguments:
 ### `auto_scaling_group_provider`
 
 * `auto_scaling_group_arn` - (Required) - ARN of the associated auto scaling group.
+* `managed_draining` - (Optional) - Enables or disables a graceful shutdown of instances without disturbing workloads. Valid values are `ENABLED` and `DISABLED`. The default value is `ENABLED` when a capacity provider is created.
 * `managed_scaling` - (Optional) - Configuration block defining the parameters of the auto scaling. Detailed below.
 * `managed_termination_protection` - (Optional) - Enables or disables container-aware termination of instances in the auto scaling group when scale-in happens. Valid values are `ENABLED` and `DISABLED`.
 

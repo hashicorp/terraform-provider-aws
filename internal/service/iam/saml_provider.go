@@ -28,8 +28,8 @@ import (
 )
 
 // @SDKResource("aws_iam_saml_provider", name="SAML Provider")
-// @Tags
-func ResourceSAMLProvider() *schema.Resource {
+// @Tags(identifierAttribute="id", resourceType="SAMLProvider")
+func resourceSAMLProvider() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSAMLProviderCreate,
 		ReadWithoutTimeout:   resourceSAMLProviderRead,
@@ -117,7 +117,7 @@ func resourceSAMLProviderRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
-	output, err := FindSAMLProviderByARN(ctx, conn, d.Id())
+	output, err := findSAMLProviderByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IAM SAML Provider %s not found, removing from state", d.Id())
@@ -167,21 +167,6 @@ func resourceSAMLProviderUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		err := samlProviderUpdateTags(ctx, conn, d.Id(), o, n)
-
-		// Some partitions (e.g. ISO) may not support tagging.
-		if errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
-			return append(diags, resourceSAMLProviderRead(ctx, d, meta)...)
-		}
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags for IAM SAML Provider (%s): %s", d.Id(), err)
-		}
-	}
-
 	return append(diags, resourceSAMLProviderRead(ctx, d, meta)...)
 }
 
@@ -206,7 +191,7 @@ func resourceSAMLProviderDelete(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func FindSAMLProviderByARN(ctx context.Context, conn *iam.IAM, arn string) (*iam.GetSAMLProviderOutput, error) {
+func findSAMLProviderByARN(ctx context.Context, conn *iam.IAM, arn string) (*iam.GetSAMLProviderOutput, error) {
 	input := &iam.GetSAMLProviderInput{
 		SAMLProviderArn: aws.String(arn),
 	}

@@ -29,7 +29,7 @@ func TestAccSESV2EmailIdentity_basic_emailAddress(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -66,7 +66,7 @@ func TestAccSESV2EmailIdentity_basic_domain(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -103,7 +103,7 @@ func TestAccSESV2EmailIdentity_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -126,7 +126,7 @@ func TestAccSESV2EmailIdentity_configurationSetName(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -160,7 +160,7 @@ func TestAccSESV2EmailIdentity_nextSigningKeyLength(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -202,7 +202,7 @@ func TestAccSESV2EmailIdentity_domainSigning(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -241,7 +241,7 @@ func TestAccSESV2EmailIdentity_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckEmailIdentityDestroy(ctx),
 		Steps: []resource.TestStep{

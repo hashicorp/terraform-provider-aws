@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfevents "github.com/hashicorp/terraform-provider-aws/internal/service/events"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEventsTarget_basic(t *testing.T) {
@@ -32,7 +33,7 @@ func TestAccEventsTarget_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -88,7 +89,7 @@ func TestAccEventsTarget_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -112,7 +113,7 @@ func TestAccEventsTarget_eventBusName(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -152,7 +153,7 @@ func TestAccEventsTarget_eventBusARN(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -186,7 +187,7 @@ func TestAccEventsTarget_generatedTargetID(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -219,7 +220,7 @@ func TestAccEventsTarget_RetryPolicy_deadLetter(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -258,7 +259,7 @@ func TestAccEventsTarget_full(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -291,7 +292,7 @@ func TestAccEventsTarget_ssmDocument(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -323,7 +324,7 @@ func TestAccEventsTarget_http(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -359,7 +360,7 @@ func TestAccEventsTarget_http_params(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -412,7 +413,7 @@ func TestAccEventsTarget_ecs(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -448,7 +449,7 @@ func TestAccEventsTarget_redshift(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -485,7 +486,7 @@ func TestAccEventsTarget_ecsWithoutLaunchType(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -546,7 +547,7 @@ func TestAccEventsTarget_ecsWithBlankLaunchType(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -601,7 +602,7 @@ func TestAccEventsTarget_ecsWithBlankTaskCount(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -631,7 +632,7 @@ func TestAccEventsTarget_ecsFull(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -669,7 +670,7 @@ func TestAccEventsTarget_ecsCapacityProvider(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -703,7 +704,7 @@ func TestAccEventsTarget_ecsPlacementStrategy(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -739,7 +740,7 @@ func TestAccEventsTarget_batch(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -770,7 +771,7 @@ func TestAccEventsTarget_kinesis(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -799,7 +800,7 @@ func TestAccEventsTarget_sqs(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -829,7 +830,7 @@ func TestAccEventsTarget_sageMakerPipeline(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -886,7 +887,7 @@ func TestAccEventsTarget_Input_transformer(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -922,7 +923,7 @@ func TestAccEventsTarget_inputTransformerJSONString(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -955,7 +956,7 @@ func TestAccEventsTarget_partnerEventBus(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -987,7 +988,7 @@ func TestAccEventsTarget_ecsNoPropagateTags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1832,7 +1833,7 @@ resource "aws_cloudwatch_event_target" "test" {
 
 func testAccTargetConfig_ecsCapacityProvider(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		testAccTargetConfig_ecsBase(rName),
 		fmt.Sprintf(`
 resource "aws_cloudwatch_event_target" "test" {
@@ -1854,7 +1855,7 @@ resource "aws_cloudwatch_event_target" "test" {
 
 resource "aws_launch_template" "test" {
   name          = %[1]q
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = "t2.micro"
 }
 
@@ -1883,6 +1884,7 @@ resource "aws_ecs_capacity_provider" "test" {
   auto_scaling_group_provider {
     auto_scaling_group_arn         = aws_autoscaling_group.test.arn
     managed_termination_protection = "DISABLED"
+    managed_draining               = "ENABLED"
 
     managed_scaling {
       maximum_scaling_step_size = 1
@@ -1897,7 +1899,7 @@ resource "aws_ecs_capacity_provider" "test" {
 
 func testAccTargetConfig_ecsPlacementStrategy(rName string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		testAccTargetConfig_ecsBase(rName),
 		fmt.Sprintf(`
 resource "aws_cloudwatch_event_target" "test" {
@@ -1919,13 +1921,12 @@ resource "aws_cloudwatch_event_target" "test" {
       type  = "spread"
       field = "instanceId"
     }
-
   }
 }
 
 resource "aws_launch_template" "test" {
   name          = %[1]q
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = "t2.micro"
 }
 
@@ -1954,6 +1955,7 @@ resource "aws_ecs_capacity_provider" "test" {
   auto_scaling_group_provider {
     auto_scaling_group_arn         = aws_autoscaling_group.test.arn
     managed_termination_protection = "DISABLED"
+    managed_draining               = "ENABLED"
 
     managed_scaling {
       maximum_scaling_step_size = 1
@@ -1974,8 +1976,6 @@ resource "aws_ecs_cluster_capacity_providers" "test" {
     weight            = 100
   }
 }
-
-
 `, rName))
 }
 

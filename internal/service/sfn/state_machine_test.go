@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsfn "github.com/hashicorp/terraform-provider-aws/internal/service/sfn"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSFNStateMachine_createUpdate(t *testing.T) {
@@ -30,7 +31,7 @@ func TestAccSFNStateMachine_createUpdate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sfn.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SFNServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStateMachineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -98,7 +99,7 @@ func TestAccSFNStateMachine_expressUpdate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sfn.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SFNServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStateMachineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -154,7 +155,7 @@ func TestAccSFNStateMachine_standardUpdate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sfn.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SFNServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStateMachineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -212,7 +213,7 @@ func TestAccSFNStateMachine_nameGenerated(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sfn.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SFNServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStateMachineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -241,7 +242,7 @@ func TestAccSFNStateMachine_namePrefix(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sfn.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SFNServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStateMachineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -270,7 +271,7 @@ func TestAccSFNStateMachine_publish(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sfn.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SFNServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStateMachineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -300,7 +301,7 @@ func TestAccSFNStateMachine_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sfn.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SFNServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStateMachineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -346,7 +347,7 @@ func TestAccSFNStateMachine_tracing(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sfn.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SFNServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStateMachineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -383,7 +384,7 @@ func TestAccSFNStateMachine_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sfn.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SFNServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStateMachineDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -407,7 +408,7 @@ func TestAccSFNStateMachine_expressLogging(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sfn.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SFNServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStateMachineDestroy(ctx),
 		Steps: []resource.TestStep{

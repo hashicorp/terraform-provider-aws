@@ -89,7 +89,8 @@ This resource supports the following arguments:
 * `deregistration_delay` - (Optional) Amount time for Elastic Load Balancing to wait before changing the state of a deregistering target from draining to unused. The range is 0-3600 seconds. The default value is 300 seconds.
 * `health_check` - (Optional, Maximum of 1) Health Check configuration block. Detailed below.
 * `lambda_multi_value_headers_enabled` - (Optional) Whether the request and response headers exchanged between the load balancer and the Lambda function include arrays of values or strings. Only applies when `target_type` is `lambda`. Default is `false`.
-* `load_balancing_algorithm_type` - (Optional) Determines how the load balancer selects targets when routing requests. Only applicable for Application Load Balancer Target Groups. The value is `round_robin` or `least_outstanding_requests`. The default is `round_robin`.
+* `load_balancing_algorithm_type` - (Optional) Determines how the load balancer selects targets when routing requests. Only applicable for Application Load Balancer Target Groups. The value is `round_robin`, `least_outstanding_requests`, or `weighted_random`. The default is `round_robin`.
+* `load_balancing_anomaly_mitigation` - (Optional) Determines whether to enable target anomaly mitigation.  Target anomaly mitigation is only supported by the `weighted_random` load balancing algorithm type.  See [doc](https://docs.aws.amazon.com/elasticloadbalancing/latest/application/load-balancer-target-groups.html#automatic-target-weights) for more information.  The value is `"on"` or `"off"`. The default is `"off"`.
 * `load_balancing_cross_zone_enabled` - (Optional) Indicates whether cross zone load balancing is enabled. The value is `"true"`, `"false"` or `"use_load_balancer_configuration"`. The default is `"use_load_balancer_configuration"`.
 * `name_prefix` - (Optional, Forces new resource) Creates a unique name beginning with the specified prefix. Conflicts with `name`. Cannot be longer than 6 characters.
 * `name` - (Optional, Forces new resource) Name of the target group. If omitted, Terraform will assign a random, unique name. This name must be unique per region per account, can have a maximum of 32 characters, must contain only alphanumeric characters or hyphens, and must not begin or end with a hyphen.
@@ -178,6 +179,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - ARN of the Target Group (matches `id`).
 * `id` - ARN of the Target Group (matches `arn`).
 * `name` - Name of the Target Group.
+* `load_balancer_arns` - ARNs of the Load Balancers associated with the Target Group.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import

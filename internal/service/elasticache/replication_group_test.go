@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfelasticache "github.com/hashicorp/terraform-provider-aws/internal/service/elasticache"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccElastiCacheReplicationGroup_basic(t *testing.T) {
@@ -36,7 +37,7 @@ func TestAccElastiCacheReplicationGroup_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -80,7 +81,7 @@ func TestAccElastiCacheReplicationGroup_basic_v5(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -117,7 +118,7 @@ func TestAccElastiCacheReplicationGroup_uppercase(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -150,7 +151,7 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_v7(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -185,7 +186,7 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -264,7 +265,7 @@ func TestAccElastiCacheReplicationGroup_EngineVersion_6xToRealVersion(t *testing
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -303,7 +304,7 @@ func TestAccElastiCacheReplicationGroup_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -331,7 +332,7 @@ func TestAccElastiCacheReplicationGroup_updateDescription(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -373,7 +374,7 @@ func TestAccElastiCacheReplicationGroup_updateMaintenanceWindow(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -415,7 +416,7 @@ func TestAccElastiCacheReplicationGroup_updateUserGroups(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -457,7 +458,7 @@ func TestAccElastiCacheReplicationGroup_updateNodeSize(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -502,7 +503,7 @@ func TestAccElastiCacheReplicationGroup_updateParameterGroup(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -548,7 +549,7 @@ func TestAccElastiCacheReplicationGroup_authToken(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -613,7 +614,7 @@ func TestAccElastiCacheReplicationGroup_stateUpgrade5270(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:     func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:   acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:   acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		CheckDestroy: testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
@@ -652,7 +653,7 @@ func TestAccElastiCacheReplicationGroup_vpc(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -686,7 +687,7 @@ func TestAccElastiCacheReplicationGroup_multiAzNotInVPC(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -724,7 +725,7 @@ func TestAccElastiCacheReplicationGroup_multiAzNotInVPC_repeated(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -764,7 +765,7 @@ func TestAccElastiCacheReplicationGroup_multiAzInVPC(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -809,7 +810,7 @@ func TestAccElastiCacheReplicationGroup_deprecatedAvailabilityZones_multiAzInVPC
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -848,7 +849,7 @@ func TestAccElastiCacheReplicationGroup_ValidationMultiAz_noAutomaticFailover(t 
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -872,7 +873,7 @@ func TestAccElastiCacheReplicationGroup_ipDiscovery(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -913,7 +914,7 @@ func TestAccElastiCacheReplicationGroup_networkType(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -955,7 +956,7 @@ func TestAccElastiCacheReplicationGroup_ClusterMode_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -997,7 +998,7 @@ func TestAccElastiCacheReplicationGroup_ClusterMode_nonClusteredParameterGroup(t
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1042,7 +1043,7 @@ func TestAccElastiCacheReplicationGroup_ClusterModeUpdateNumNodeGroups_scaleUp(t
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1091,7 +1092,7 @@ func TestAccElastiCacheReplicationGroup_ClusterModeUpdateNumNodeGroups_scaleDown
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1135,7 +1136,7 @@ func TestAccElastiCacheReplicationGroup_ClusterMode_updateReplicasPerNodeGroup(t
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1191,7 +1192,7 @@ func TestAccElastiCacheReplicationGroup_ClusterModeUpdateNumNodeGroupsAndReplica
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1235,7 +1236,7 @@ func TestAccElastiCacheReplicationGroup_ClusterModeUpdateNumNodeGroupsAndReplica
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1279,7 +1280,7 @@ func TestAccElastiCacheReplicationGroup_ClusterMode_singleNode(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1317,7 +1318,7 @@ func TestAccElastiCacheReplicationGroup_clusteringAndCacheNodesCausesError(t *te
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1341,7 +1342,7 @@ func TestAccElastiCacheReplicationGroup_enableSnapshotting(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1381,7 +1382,7 @@ func TestAccElastiCacheReplicationGroup_enableAuthTokenTransitEncryption(t *test
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1414,7 +1415,7 @@ func TestAccElastiCacheReplicationGroup_enableAtRestEncryption(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1446,7 +1447,7 @@ func TestAccElastiCacheReplicationGroup_useCMKKMSKeyID(t *testing.T) {
 	resourceName := "aws_elasticache_replication_group.test"
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1474,7 +1475,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClusters_basic(t *testing.T) 
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1542,7 +1543,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersFailover_autoFailover
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1600,7 +1601,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersFailover_autoFailover
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1663,7 +1664,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClusters_multiAZEnabled(t *te
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1723,7 +1724,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersMemberClusterDisappea
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1774,7 +1775,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersMemberClusterDisappea
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1825,7 +1826,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersMemberClusterDisappea
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1876,7 +1877,7 @@ func TestAccElastiCacheReplicationGroup_NumberCacheClustersMemberClusterDisappea
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1928,7 +1929,7 @@ func TestAccElastiCacheReplicationGroup_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1983,7 +1984,7 @@ func TestAccElastiCacheReplicationGroup_tagWithOtherModification(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2023,7 +2024,7 @@ func TestAccElastiCacheReplicationGroup_finalSnapshot(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2050,7 +2051,7 @@ func TestAccElastiCacheReplicationGroup_autoMinorVersionUpgrade(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2087,7 +2088,7 @@ func TestAccElastiCacheReplicationGroup_Validation_noNodeType(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2112,7 +2113,7 @@ func TestAccElastiCacheReplicationGroup_Validation_globalReplicationGroupIdAndNo
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2141,7 +2142,7 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_basic(t *testin
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
 		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
 			testAccCheckReplicationGroupDestroy(ctx),
@@ -2193,7 +2194,7 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_full(t *testing
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
 		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
 			testAccCheckReplicationGroupDestroy(ctx),
@@ -2258,7 +2259,7 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupID_disappears(t *t
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2291,7 +2292,7 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupIDClusterMode_basi
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
 		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
 			testAccCheckReplicationGroupDestroy(ctx),
@@ -2349,7 +2350,7 @@ func TestAccElastiCacheReplicationGroup_GlobalReplicationGroupIDClusterModeValid
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2376,7 +2377,7 @@ func TestAccElastiCacheReplicationGroup_dataTiering(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2414,7 +2415,7 @@ func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_C
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -2517,7 +2518,7 @@ func TestAccElastiCacheReplicationGroup_Engine_Redis_LogDeliveryConfigurations_C
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elasticache.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ElastiCacheServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationGroupDestroy(ctx),
 		Steps: []resource.TestStep{

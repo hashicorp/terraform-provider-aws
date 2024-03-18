@@ -124,6 +124,30 @@ func DataSourceFunction() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
+			"logging_config": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"application_log_level": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"log_format": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"log_group": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"system_log_level": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"memory_size": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -294,6 +318,9 @@ func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("last_modified", function.LastModified)
 	if err := d.Set("layers", flattenLayers(function.Layers)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting layers: %s", err)
+	}
+	if err := d.Set("logging_config", flattenLoggingConfig(function.LoggingConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting logging_config: %s", err)
 	}
 	d.Set("memory_size", function.MemorySize)
 	d.Set("qualified_arn", qualifiedARN)

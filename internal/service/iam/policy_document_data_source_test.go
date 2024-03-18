@@ -9,9 +9,9 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccIAMPolicyDocumentDataSource_basic(t *testing.T) {
@@ -21,7 +21,7 @@ func TestAccIAMPolicyDocumentDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -42,7 +42,7 @@ func TestAccIAMPolicyDocumentDataSource_singleConditionValue(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -61,7 +61,7 @@ func TestAccIAMPolicyDocumentDataSource_multipleConditionKeys(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -80,7 +80,7 @@ func TestAccIAMPolicyDocumentDataSource_duplicateConditionKeys(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -97,7 +97,7 @@ func TestAccIAMPolicyDocumentDataSource_conditionWithBoolValue(t *testing.T) {
 	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -119,7 +119,7 @@ func TestAccIAMPolicyDocumentDataSource_source(t *testing.T) {
 	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -146,7 +146,7 @@ func TestAccIAMPolicyDocumentDataSource_sourceList(t *testing.T) {
 	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -165,7 +165,7 @@ func TestAccIAMPolicyDocumentDataSource_sourceConflicting(t *testing.T) {
 	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -184,7 +184,7 @@ func TestAccIAMPolicyDocumentDataSource_sourceListConflicting(t *testing.T) {
 	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -199,7 +199,7 @@ func TestAccIAMPolicyDocumentDataSource_override(t *testing.T) {
 	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -218,7 +218,7 @@ func TestAccIAMPolicyDocumentDataSource_overrideList(t *testing.T) {
 	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -237,7 +237,7 @@ func TestAccIAMPolicyDocumentDataSource_noStatementMerge(t *testing.T) {
 	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -256,7 +256,7 @@ func TestAccIAMPolicyDocumentDataSource_noStatementOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -275,7 +275,7 @@ func TestAccIAMPolicyDocumentDataSource_duplicateSid(t *testing.T) {
 	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -298,7 +298,7 @@ func TestAccIAMPolicyDocumentDataSource_sourcePolicyValidJSON(t *testing.T) {
 	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -321,7 +321,7 @@ func TestAccIAMPolicyDocumentDataSource_overridePolicyDocumentValidJSON(t *testi
 	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -347,7 +347,7 @@ func TestAccIAMPolicyDocumentDataSource_StatementPrincipalIdentifiers_stringAndS
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -367,7 +367,7 @@ func TestAccIAMPolicyDocumentDataSource_StatementPrincipalIdentifiers_multiplePr
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartition(t, endpoints.AwsPartitionID) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -386,7 +386,7 @@ func TestAccIAMPolicyDocumentDataSource_StatementPrincipalIdentifiers_multiplePr
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartition(t, endpoints.AwsUsGovPartitionID) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -403,7 +403,7 @@ func TestAccIAMPolicyDocumentDataSource_version20081017(t *testing.T) {
 	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{

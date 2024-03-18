@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -706,6 +707,7 @@ func resourceFleetCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	fleetType := d.Get("type").(string)
 	input := &ec2.CreateFleetInput{
+		ClientToken:                 aws.String(id.UniqueId()),
 		LaunchTemplateConfigs:       expandFleetLaunchTemplateConfigRequests(d.Get("launch_template_config").([]interface{})),
 		TargetCapacitySpecification: expandTargetCapacitySpecificationRequest(d.Get("target_capacity_specification").([]interface{})[0].(map[string]interface{})),
 		TagSpecifications:           getTagSpecificationsIn(ctx, ec2.ResourceTypeFleet),
@@ -901,7 +903,7 @@ func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	})
 
 	if err == nil && output != nil {
-		err = DeleteFleetsError(output.UnsuccessfulFleetDeletions)
+		err = deleteFleetsError(output.UnsuccessfulFleetDeletions)
 	}
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidFleetIdNotFound) {

@@ -66,4 +66,4 @@ This data source exports the following attributes in addition to the arguments a
 * `supportsPerformanceInsights` - Whether a DB instance supports Performance Insights.
 * `supportsStorageEncryption` - Whether a DB instance supports encrypted storage.
 
-<!-- cache-key: cdktf-0.19.0 input-96ed319d4f21711473bbe2040090bbe88fe63b3c2315bc78386e18d098f01431 -->
+<!-- cache-key: cdktf-0.20.1 input-96ed319d4f21711473bbe2040090bbe88fe63b3c2315bc78386e18d098f01431 -->

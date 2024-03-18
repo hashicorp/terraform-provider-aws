@@ -17,10 +17,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfnetworkmanager "github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(networkmanager.EndpointsID, testAccErrorCheckSkip)
+	acctest.RegisterServiceErrorCheckFunc(names.NetworkManagerServiceID, testAccErrorCheckSkip)
 }
 
 func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
@@ -38,7 +39,7 @@ func TestAccNetworkManagerTransitGatewayPeering_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTransitGatewayPeeringDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -74,7 +75,7 @@ func TestAccNetworkManagerTransitGatewayPeering_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTransitGatewayPeeringDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -98,7 +99,7 @@ func TestAccNetworkManagerTransitGatewayPeering_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTransitGatewayPeeringDestroy(ctx),
 		Steps: []resource.TestStep{

@@ -15,12 +15,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 )
 
-// ProviderErrorDetailPrefix contains instructions for reporting provider errors to provider developers
-const ProviderErrorDetailPrefix = "An unexpected error was encountered trying to validate an attribute value. " +
-	"This is always an error in the provider. Please report the following to the provider developer:\n\n"
+var (
+	_ xattr.TypeWithValidate   = (*arnType)(nil)
+	_ basetypes.StringTypable  = (*arnType)(nil)
+	_ basetypes.StringValuable = (*ARN)(nil)
+)
 
 type arnType struct {
 	basetypes.StringType
@@ -28,12 +30,6 @@ type arnType struct {
 
 var (
 	ARNType = arnType{}
-)
-
-var (
-	_ xattr.TypeWithValidate   = (*arnType)(nil)
-	_ basetypes.StringTypable  = (*arnType)(nil)
-	_ basetypes.StringValuable = (*ARN)(nil)
 )
 
 func (t arnType) Equal(o attr.Type) bool {
@@ -65,7 +61,7 @@ func (t arnType) ValueFromString(_ context.Context, in types.String) (basetypes.
 		return ARNUnknown(), diags // Must not return validation errors.
 	}
 
-	return ARNValue(valueString), diags
+	return ARNValueMust(valueString), diags
 }
 
 func (t arnType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
@@ -132,11 +128,23 @@ func ARNUnknown() ARN {
 	return ARN{StringValue: basetypes.NewStringUnknown()}
 }
 
-func ARNValue(value string) ARN {
+func ARNValue(value string) (ARN, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	v, err := arn.Parse(value)
+	if err != nil {
+		diags.Append(diag.NewErrorDiagnostic("Invalid ARN", err.Error()))
+		return ARNUnknown(), diags
+	}
+
 	return ARN{
 		StringValue: basetypes.NewStringValue(value),
-		value:       errs.Must(arn.Parse(value)),
-	}
+		value:       v,
+	}, diags
+}
+
+func ARNValueMust(value string) ARN {
+	return fwdiag.Must(ARNValue(value))
 }
 
 type ARN struct {

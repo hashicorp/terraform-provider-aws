@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// @SDKDataSource("aws_iam_roles")
-func DataSourceRoles() *schema.Resource {
+// @SDKDataSource("aws_iam_roles", name="Roles")
+func dataSourceRoles() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRolesRead,
 
