@@ -37,19 +37,20 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `id` - The name of the project in the space.
 * `name` - The name of the project in the space.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
+* `create` - (Default `5m`)
+* `update` - (Default `5m`)
+* `delete` - (Default `5m`)
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeCatalyst Project using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeCatalyst Project using the `id`. For example:
 
 ```terraform
 import {
@@ -58,7 +59,7 @@ import {
 }
 ```
 
-Using `terraform import`, import CodeCatalyst Project using the `example_id_arg`. For example:
+Using `terraform import`, import CodeCatalyst Project using the `id`. For example:
 
 ```console
 % terraform import aws_codecatalyst_project.example project-id-12345678

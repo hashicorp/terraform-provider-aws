@@ -5,7 +5,6 @@ package apigatewayv2
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -66,7 +65,7 @@ func dataSourceVPCLinkRead(ctx context.Context, d *schema.ResourceData, meta int
 		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "apigateway",
 		Region:    meta.(*conns.AWSClient).Region,
-		Resource:  fmt.Sprintf("/vpclinks/%s", d.Id()),
+		Resource:  "/vpclinks/" + d.Id(),
 	}.String()
 	d.Set("arn", arn)
 	d.Set("name", output.Name)

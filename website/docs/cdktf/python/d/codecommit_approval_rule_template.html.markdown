@@ -49,4 +49,4 @@ This data source exports the following attributes in addition to the arguments a
 * `last_modified_user` - ARN of the user who made the most recent changes to the approval rule template.
 * `rule_content_sha256` - SHA-256 hash signature for the content of the approval rule template.
 
-<!-- cache-key: cdktf-0.19.0 input-98231bebffea86eca15b51adc087fc2f29b27084e6d362ae00eb79cfb0b83130 -->
+<!-- cache-key: cdktf-0.20.1 input-98231bebffea86eca15b51adc087fc2f29b27084e6d362ae00eb79cfb0b83130 -->

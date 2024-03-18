@@ -917,7 +917,7 @@ func expandBatchArrayProperties(tfMap map[string]interface{}) *types.BatchArrayP
 	apiObject := &types.BatchArrayProperties{}
 
 	if v, ok := tfMap["size"].(int); ok {
-		apiObject.Size = int32(v)
+		apiObject.Size = aws.Int32(int32(v))
 	}
 
 	return apiObject
@@ -1089,7 +1089,7 @@ func expandBatchRetryStrategy(tfMap map[string]interface{}) *types.BatchRetryStr
 	apiObject := &types.BatchRetryStrategy{}
 
 	if v, ok := tfMap["attempts"].(int); ok {
-		apiObject.Attempts = int32(v)
+		apiObject.Attempts = aws.Int32(int32(v))
 	}
 
 	return apiObject
@@ -1515,7 +1515,7 @@ func expandECSEphemeralStorage(tfMap map[string]interface{}) *types.EcsEphemeral
 	apiObject := &types.EcsEphemeralStorage{}
 
 	if v, ok := tfMap["size_in_gib"].(int); ok {
-		apiObject.SizeInGiB = int32(v)
+		apiObject.SizeInGiB = aws.Int32(int32(v))
 	}
 
 	return apiObject
@@ -1960,8 +1960,8 @@ func flattenBatchArrayProperties(apiObject *types.BatchArrayProperties) map[stri
 
 	tfMap := map[string]interface{}{}
 
-	if v := apiObject.Size; v != 0 {
-		tfMap["size"] = int(v)
+	if v := apiObject.Size; v != nil {
+		tfMap["size"] = aws.ToInt32(v)
 	}
 
 	return tfMap
@@ -2084,8 +2084,8 @@ func flattenBatchRetryStrategy(apiObject *types.BatchRetryStrategy) map[string]i
 
 	tfMap := map[string]interface{}{}
 
-	if v := apiObject.Attempts; v != 0 {
-		tfMap["attempts"] = int(v)
+	if v := apiObject.Attempts; v != nil {
+		tfMap["attempts"] = aws.ToInt32(v)
 	}
 
 	return tfMap

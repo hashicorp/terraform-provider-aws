@@ -29,8 +29,8 @@ const (
 	rolePolicyNamePrefixMaxLen = rolePolicyNameMaxLen - id.UniqueIDSuffixLength
 )
 
-// @SDKResource("aws_iam_role_policy")
-func ResourceRolePolicy() *schema.Resource {
+// @SDKResource("aws_iam_role_policy", name="Role Policy")
+func resourceRolePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRolePolicyPut,
 		ReadWithoutTimeout:   resourceRolePolicyRead,

@@ -44,6 +44,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_iot_authorizer",
 		},
 		{
+			Factory:  ResourceBillingGroup,
+			TypeName: "aws_iot_billing_group",
+			Name:     "Billing Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
 			Factory:  ResourceCACertificate,
 			TypeName: "aws_iot_ca_certificate",
 			Name:     "CA Certificate",
@@ -65,6 +73,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
+			Factory:  ResourceEventConfigurations,
+			TypeName: "aws_iot_event_configurations",
+			Name:     "Event Configurations",
+		},
+		{
 			Factory:  ResourceIndexingConfiguration,
 			TypeName: "aws_iot_indexing_configuration",
 		},
@@ -75,6 +88,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourcePolicy,
 			TypeName: "aws_iot_policy",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourcePolicyAttachment,
@@ -91,6 +107,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceRoleAlias,
 			TypeName: "aws_iot_role_alias",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceThing,

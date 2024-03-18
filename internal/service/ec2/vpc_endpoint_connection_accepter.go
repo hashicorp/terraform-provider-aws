@@ -84,9 +84,8 @@ func resourceVPCEndpointConnectionAccepterRead(ctx context.Context, d *schema.Re
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	serviceID, vpcEndpointID, err := VPCEndpointConnectionAccepterParseResourceID(d.Id())
-
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading VPC Endpoint Connection (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	vpcEndpointConnection, err := FindVPCEndpointConnectionByServiceIDAndVPCEndpointID(ctx, conn, serviceID, vpcEndpointID)
@@ -113,17 +112,15 @@ func resourceVPCEndpointConnectionAccepterDelete(ctx context.Context, d *schema.
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	serviceID, vpcEndpointID, err := VPCEndpointConnectionAccepterParseResourceID(d.Id())
-
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting VPC Endpoint Connection (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &ec2.RejectVpcEndpointConnectionsInput{
+	log.Printf("[DEBUG] Rejecting VPC Endpoint Connection: %s", d.Id())
+	_, err = conn.RejectVpcEndpointConnectionsWithContext(ctx, &ec2.RejectVpcEndpointConnectionsInput{
 		ServiceId:      aws.String(serviceID),
 		VpcEndpointIds: aws.StringSlice([]string{vpcEndpointID}),
-	}
-
-	_, err = conn.RejectVpcEndpointConnectionsWithContext(ctx, input)
+	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPCEndpointServiceIdNotFound) {
 		return diags

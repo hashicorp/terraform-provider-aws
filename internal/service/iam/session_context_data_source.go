@@ -19,8 +19,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKDataSource("aws_iam_session_context")
-func DataSourceSessionContext() *schema.Resource {
+// @SDKDataSource("aws_iam_session_context", name="Session Context")
+func dataSourceSessionContext() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSessionContextRead,
 
@@ -76,7 +76,7 @@ func dataSourceSessionContextRead(ctx context.Context, d *schema.ResourceData, m
 	err = retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		var err error
 
-		role, err = FindRoleByName(ctx, conn, roleName)
+		role, err = findRoleByName(ctx, conn, roleName)
 
 		if !d.IsNewResource() && tfresource.NotFound(err) {
 			return retry.RetryableError(err)
@@ -90,7 +90,7 @@ func dataSourceSessionContextRead(ctx context.Context, d *schema.ResourceData, m
 	})
 
 	if tfresource.TimedOut(err) {
-		role, err = FindRoleByName(ctx, conn, roleName)
+		role, err = findRoleByName(ctx, conn, roleName)
 	}
 
 	if err != nil {

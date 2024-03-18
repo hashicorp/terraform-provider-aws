@@ -266,7 +266,7 @@ func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta in
 		d.Set("certificate_upload_date", nil)
 	}
 	d.Set("cloudfront_domain_name", domainName.DistributionDomainName)
-	d.Set("cloudfront_zone_id", meta.(*conns.AWSClient).CloudFrontDistributionHostedZoneID())
+	d.Set("cloudfront_zone_id", meta.(*conns.AWSClient).CloudFrontDistributionHostedZoneID(ctx))
 	d.Set("domain_name", domainName.DomainName)
 	if err := d.Set("endpoint_configuration", flattenEndpointConfiguration(domainName.EndpointConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoint_configuration: %s", err)
@@ -350,6 +350,14 @@ func resourceDomainNameUpdate(ctx context.Context, d *schema.ResourceData, meta 
 					Value: aws.String(""),
 				})
 			}
+		}
+
+		if d.HasChange("ownership_verification_certificate_arn") {
+			operations = append(operations, &apigateway.PatchOperation{
+				Op:    aws.String(apigateway.OpReplace),
+				Path:  aws.String("/ownershipVerificationCertificateArn"),
+				Value: aws.String(d.Get("ownership_verification_certificate_arn").(string)),
+			})
 		}
 
 		if d.HasChange("regional_certificate_arn") {

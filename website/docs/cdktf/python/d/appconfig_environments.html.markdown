@@ -46,4 +46,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `environment_ids` - Set of Environment IDs associated with this AppConfig Application.
 
-<!-- cache-key: cdktf-0.19.0 input-b2458ae100264c5acfd0fedda3d10f3ece761d168943b6b933cee8edcda8140a -->
+<!-- cache-key: cdktf-0.20.1 input-b2458ae100264c5acfd0fedda3d10f3ece761d168943b6b933cee8edcda8140a -->

@@ -9,6 +9,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -33,22 +34,24 @@ func DataSourceFirewallResourcePolicy() *schema.Resource {
 }
 
 func dataSourceFirewallResourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 
 	resourceARN := d.Get("resource_arn").(string)
 	policy, err := FindResourcePolicy(ctx, conn, resourceARN)
 
 	if err != nil {
-		return diag.Errorf("reading NetworkFirewall Resource Policy (%s): %s", resourceARN, err)
+		return sdkdiag.AppendErrorf(diags, "reading NetworkFirewall Resource Policy (%s): %s", resourceARN, err)
 	}
 
 	if policy == nil {
-		return diag.Errorf("reading NetworkFirewall Resource Policy (%s): empty output", resourceARN)
+		return sdkdiag.AppendErrorf(diags, "reading NetworkFirewall Resource Policy (%s): empty output", resourceARN)
 	}
 
 	d.SetId(resourceARN)
 	d.Set("policy", policy)
 	d.Set("resource_arn", resourceARN)
 
-	return nil
+	return diags
 }

@@ -45,22 +45,22 @@ This resource supports the following arguments:
 * `gatewayArn` - (Required) Amazon Resource Name (ARN) of the file gateway.
 * `locationArn` - (Required) The ARN of the backed storage used for storing file data.
 * `vpcEndpointDnsName` - (Optional) The DNS name of the VPC endpoint for S3 PrivateLink.
-* `bucketRegion` - (Optional) The region of the S3 bucket used by the file share. Required when specifying `vpc_endpoint_dns_name`.
+* `bucketRegion` - (Optional) The region of the S3 bucket used by the file share. Required when specifying `vpcEndpointDnsName`.
 * `roleArn` - (Required) The ARN of the AWS Identity and Access Management (IAM) role that a file gateway assumes when it accesses the underlying storage.
 * `auditDestinationArn` - (Optional) The Amazon Resource Name (ARN) of the storage used for audit logs.
 * `defaultStorageClass` - (Optional) The default [storage class](https://docs.aws.amazon.com/storagegateway/latest/APIReference/API_CreateNFSFileShare.html#StorageGateway-CreateNFSFileShare-request-DefaultStorageClass) for objects put into an Amazon S3 bucket by the file gateway. Defaults to `S3_STANDARD`.
 * `guessMimeTypeEnabled` - (Optional) Boolean value that enables guessing of the MIME type for uploaded objects based on file extensions. Defaults to `true`.
 * `kmsEncrypted` - (Optional) Boolean value if `true` to use Amazon S3 server side encryption with your own AWS KMS key, or `false` to use a key managed by Amazon S3. Defaults to `false`.
-* `kmsKeyArn` - (Optional) Amazon Resource Name (ARN) for KMS key used for Amazon S3 server side encryption. This value can only be set when `kms_encrypted` is true.
+* `kmsKeyArn` - (Optional) Amazon Resource Name (ARN) for KMS key used for Amazon S3 server side encryption. This value can only be set when `kmsEncrypted` is true.
 * `nfsFileShareDefaults` - (Optional) Nested argument with file share default values. More information below. see [NFS File Share Defaults](#nfs_file_share_defaults) for more details.
 * `cacheAttributes` - (Optional) Refresh cache information. see [Cache Attributes](#cache_attributes) for more details.
 * `objectAcl` - (Optional) Access Control List permission for S3 objects. Defaults to `private`.
 * `readOnly` - (Optional) Boolean to indicate write status of file share. File share does not accept writes if `true`. Defaults to `false`.
 * `requesterPays` - (Optional) Boolean who pays the cost of the request and the data download from the Amazon S3 bucket. Set this value to `true` if you want the requester to pay instead of the bucket owner. Defaults to `false`.
 * `squash` - (Optional) Maps a user to anonymous user. Defaults to `RootSquash`. Valid values: `RootSquash` (only root is mapped to anonymous user), `NoSquash` (no one is mapped to anonymous user), `AllSquash` (everyone is mapped to anonymous user)
-* `fileShareName` - (Optional) The name of the file share. Must be set if an S3 prefix name is set in `location_arn`.
+* `fileShareName` - (Optional) The name of the file share. Must be set if an S3 prefix name is set in `locationArn`.
 * `notificationPolicy` - (Optional) The notification policy of the file share. For more information see the [AWS Documentation](https://docs.aws.amazon.com/storagegateway/latest/APIReference/API_CreateNFSFileShare.html#StorageGateway-CreateNFSFileShare-request-NotificationPolicy). Default value is `{}`.
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### nfs_file_share_defaults
 
@@ -85,7 +85,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - Amazon Resource Name (ARN) of the NFS File Share.
 * `fileshareId` - ID of the NFS File Share.
 * `path` - File share path used by the NFS client to identify the mount point.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
@@ -97,24 +97,34 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `awsStoragegatewayNfsFileShare` using the NFS File Share Amazon Resource Name (ARN). For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_storagegateway_nfs_file_share` using the NFS File Share Amazon Resource Name (ARN). For example:
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { StoragegatewayNfsFileShare } from "./.gen/providers/aws/storagegateway-nfs-file-share";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    StoragegatewayNfsFileShare.generateConfigForImport(
+      this,
+      "example",
+      "arn:aws:storagegateway:us-east-1:123456789012:share/share-12345678"
+    );
   }
 }
 
 ```
 
-Using `terraform import`, import `awsStoragegatewayNfsFileShare` using the NFS File Share Amazon Resource Name (ARN). For example:
+Using `terraform import`, import `aws_storagegateway_nfs_file_share` using the NFS File Share Amazon Resource Name (ARN). For example:
 
 ```console
 % terraform import aws_storagegateway_nfs_file_share.example arn:aws:storagegateway:us-east-1:123456789012:share/share-12345678
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-37dcb9904d5b8589febdac999a43883747910390dad15f3d634a4d7806b3b88b -->
+<!-- cache-key: cdktf-0.20.1 input-37dcb9904d5b8589febdac999a43883747910390dad15f3d634a4d7806b3b88b -->

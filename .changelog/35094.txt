@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_networkfirewall_firewall_policy: Add `firewall_policy.tls_inspection_configuration_arn` argument
+```
+
+```release-note:enhancement
+data-source/aws_networkfirewall_firewall_policy: Add `firewall_policy.tls_inspection_configuration_arn` attribute
+```

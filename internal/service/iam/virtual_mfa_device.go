@@ -28,8 +28,8 @@ import (
 )
 
 // @SDKResource("aws_iam_virtual_mfa_device", name="Virtual MFA Device")
-// @Tags
-func ResourceVirtualMFADevice() *schema.Resource {
+// @Tags(identifierAttribute="id", resourceType="VirtualMFADevice")
+func resourceVirtualMFADevice() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVirtualMFADeviceCreate,
 		ReadWithoutTimeout:   resourceVirtualMFADeviceRead,
@@ -137,7 +137,7 @@ func resourceVirtualMFADeviceRead(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
-	vMFA, err := FindVirtualMFADeviceBySerialNumber(ctx, conn, d.Id())
+	vMFA, err := findVirtualMFADeviceBySerialNumber(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IAM Virtual MFA Device (%s) not found, removing from state", d.Id())
@@ -183,20 +183,8 @@ func resourceVirtualMFADeviceRead(ctx context.Context, d *schema.ResourceData, m
 
 func resourceVirtualMFADeviceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
-	o, n := d.GetChange("tags_all")
-
-	err := virtualMFADeviceUpdateTags(ctx, conn, d.Id(), o, n)
-
-	// Some partitions (e.g. ISO) may not support tagging.
-	if errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
-		return append(diags, resourceVirtualMFADeviceRead(ctx, d, meta)...)
-	}
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating tags for IAM Virtual MFA Device (%s): %s", d.Id(), err)
-	}
+	// Tags only.
 
 	return append(diags, resourceVirtualMFADeviceRead(ctx, d, meta)...)
 }
@@ -234,7 +222,7 @@ func resourceVirtualMFADeviceDelete(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func FindVirtualMFADeviceBySerialNumber(ctx context.Context, conn *iam.IAM, serialNumber string) (*iam.VirtualMFADevice, error) {
+func findVirtualMFADeviceBySerialNumber(ctx context.Context, conn *iam.IAM, serialNumber string) (*iam.VirtualMFADevice, error) {
 	input := &iam.ListVirtualMFADevicesInput{}
 	var output *iam.VirtualMFADevice
 

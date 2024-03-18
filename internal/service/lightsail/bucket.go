@@ -84,6 +84,8 @@ func ResourceBucket() *schema.Resource {
 }
 
 func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	in := lightsail.CreateBucketInput{
@@ -95,7 +97,7 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	out, err := conn.CreateBucket(ctx, &in)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, string(types.OperationTypeCreateBucket), ResBucket, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeCreateBucket), ResBucket, d.Get("name").(string), err)
 	}
 
 	id := d.Get("name").(string)
@@ -107,10 +109,12 @@ func resourceBucketCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.SetId(id)
 
-	return resourceBucketRead(ctx, d, meta)
+	return append(diags, resourceBucketRead(ctx, d, meta)...)
 }
 
 func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	out, err := FindBucketById(ctx, conn, d.Id())
@@ -118,11 +122,11 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		create.LogNotFoundRemoveState(names.Lightsail, create.ErrActionReading, ResBucket, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionReading, ResBucket, d.Id(), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionReading, ResBucket, d.Id(), err)
 	}
 
 	d.Set("arn", out.Arn)
@@ -136,10 +140,12 @@ func resourceBucketRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	setTagsOut(ctx, out.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	if d.HasChange("bundle_id") {
@@ -150,7 +156,7 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		out, err := conn.UpdateBucketBundle(ctx, &in)
 
 		if err != nil {
-			return create.DiagError(names.Lightsail, string(types.OperationTypeUpdateBucket), ResBucket, d.Get("name").(string), err)
+			return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeUpdateBucket), ResBucket, d.Get("name").(string), err)
 		}
 
 		diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeUpdateBucket, ResBucket, d.Get("name").(string))
@@ -160,10 +166,12 @@ func resourceBucketUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	return resourceBucketRead(ctx, d, meta)
+	return append(diags, resourceBucketRead(ctx, d, meta)...)
 }
 
 func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Lightsail Bucket: %s", d.Id())
@@ -173,11 +181,11 @@ func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	})
 
 	if err != nil && errs.IsA[*types.NotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionDeleting, ResBucket, d.Id(), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionDeleting, ResBucket, d.Id(), err)
 	}
 
 	diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeDeleteBucket, ResBucket, d.Id())
@@ -186,7 +194,7 @@ func resourceBucketDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		return diag
 	}
 
-	return nil
+	return diags
 }
 
 func FindBucketById(ctx context.Context, conn *lightsail.Client, id string) (*types.Bucket, error) {

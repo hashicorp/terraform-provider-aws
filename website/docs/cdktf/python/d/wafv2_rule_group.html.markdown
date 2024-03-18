@@ -47,4 +47,4 @@ This data source exports the following attributes in addition to the arguments a
 * `description` - Description of the rule group that helps with identification.
 * `id` - Unique identifier of the rule group.
 
-<!-- cache-key: cdktf-0.19.0 input-4de733ef434bbfbe5aa4d54ed8db1f5e78db59b5a79986eddb88c9cc5144e9ca -->
+<!-- cache-key: cdktf-0.20.1 input-4de733ef434bbfbe5aa4d54ed8db1f5e78db59b5a79986eddb88c9cc5144e9ca -->

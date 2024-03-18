@@ -299,6 +299,8 @@ const (
 )
 
 func resourceFileCacheCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	input := &fsx.CreateFileCacheInput{
@@ -328,19 +330,21 @@ func resourceFileCacheCreate(ctx context.Context, d *schema.ResourceData, meta i
 	result, err := conn.CreateFileCacheWithContext(ctx, input)
 
 	if err != nil {
-		return create.DiagError(names.FSx, create.ErrActionCreating, ResNameFileCache, "", err)
+		return create.AppendDiagError(diags, names.FSx, create.ErrActionCreating, ResNameFileCache, "", err)
 	}
 
 	d.SetId(aws.StringValue(result.FileCache.FileCacheId))
 
 	if _, err := waitFileCacheCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.DiagError(names.FSx, create.ErrActionWaitingForCreation, ResNameFileCache, d.Id(), err)
+		return create.AppendDiagError(diags, names.FSx, create.ErrActionWaitingForCreation, ResNameFileCache, d.Id(), err)
 	}
 
-	return resourceFileCacheRead(ctx, d, meta)
+	return append(diags, resourceFileCacheRead(ctx, d, meta)...)
 }
 
 func resourceFileCacheRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	filecache, err := findFileCacheByID(ctx, conn, d.Id())
@@ -348,11 +352,11 @@ func resourceFileCacheRead(ctx context.Context, d *schema.ResourceData, meta int
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] FSx FileCache (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.FSx, create.ErrActionReading, ResNameFileCache, d.Id(), err)
+		return create.AppendDiagError(diags, names.FSx, create.ErrActionReading, ResNameFileCache, d.Id(), err)
 	}
 
 	d.Set("arn", filecache.ResourceARN)
@@ -369,13 +373,13 @@ func resourceFileCacheRead(ctx context.Context, d *schema.ResourceData, meta int
 	dataRepositoryAssociationIDs := aws.StringValueSlice(filecache.DataRepositoryAssociationIds)
 	d.Set("data_repository_association_ids", dataRepositoryAssociationIDs)
 	if err := d.Set("lustre_configuration", flattenFileCacheLustreConfiguration(filecache.LustreConfiguration)); err != nil {
-		return create.DiagError(names.FSx, create.ErrActionSetting, ResNameFileCache, d.Id(), err)
+		return create.AppendDiagError(diags, names.FSx, create.ErrActionSetting, ResNameFileCache, d.Id(), err)
 	}
 	if err := d.Set("network_interface_ids", aws.StringValueSlice(filecache.NetworkInterfaceIds)); err != nil {
-		return create.DiagError(names.FSx, create.ErrActionSetting, ResNameFileCache, d.Id(), err)
+		return create.AppendDiagError(diags, names.FSx, create.ErrActionSetting, ResNameFileCache, d.Id(), err)
 	}
 	if err := d.Set("subnet_ids", aws.StringValueSlice(filecache.SubnetIds)); err != nil {
-		return create.DiagError(names.FSx, create.ErrActionSetting, ResNameFileCache, d.Id(), err)
+		return create.AppendDiagError(diags, names.FSx, create.ErrActionSetting, ResNameFileCache, d.Id(), err)
 	}
 
 	// Lookup and set Data Repository Associations
@@ -385,13 +389,15 @@ func resourceFileCacheRead(ctx context.Context, d *schema.ResourceData, meta int
 	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 	if err := d.Set("data_repository_association", flattenDataRepositoryAssociations(ctx, dataRepositoryAssociations, defaultTagsConfig, ignoreTagsConfig)); err != nil {
-		return create.DiagError(names.FSx, create.ErrActionSetting, ResNameFileCache, d.Id(), err)
+		return create.AppendDiagError(diags, names.FSx, create.ErrActionSetting, ResNameFileCache, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceFileCacheUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	if d.HasChangesExcept("tags_all") {
@@ -409,16 +415,18 @@ func resourceFileCacheUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 		result, err := conn.UpdateFileCacheWithContext(ctx, input)
 		if err != nil {
-			return create.DiagError(names.FSx, create.ErrActionUpdating, ResNameFileCache, d.Id(), err)
+			return create.AppendDiagError(diags, names.FSx, create.ErrActionUpdating, ResNameFileCache, d.Id(), err)
 		}
 		if _, err := waitFileCacheUpdated(ctx, conn, aws.StringValue(result.FileCache.FileCacheId), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return create.DiagError(names.FSx, create.ErrActionWaitingForUpdate, ResNameFileCache, d.Id(), err)
+			return create.AppendDiagError(diags, names.FSx, create.ErrActionWaitingForUpdate, ResNameFileCache, d.Id(), err)
 		}
 	}
-	return resourceFileCacheRead(ctx, d, meta)
+	return append(diags, resourceFileCacheRead(ctx, d, meta)...)
 }
 
 func resourceFileCacheDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 	log.Printf("[INFO] Deleting FSx FileCache %s", d.Id())
 
@@ -428,16 +436,16 @@ func resourceFileCacheDelete(ctx context.Context, d *schema.ResourceData, meta i
 	})
 
 	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeFileCacheNotFound) {
-		return nil
+		return diags
 	}
 	if err != nil {
-		return create.DiagError(names.FSx, create.ErrActionDeleting, ResNameFileCache, d.Id(), err)
+		return create.AppendDiagError(diags, names.FSx, create.ErrActionDeleting, ResNameFileCache, d.Id(), err)
 	}
 	if _, err := waitFileCacheDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return create.DiagError(names.FSx, create.ErrActionWaitingForDeletion, ResNameFileCache, d.Id(), err)
+		return create.AppendDiagError(diags, names.FSx, create.ErrActionWaitingForDeletion, ResNameFileCache, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func flattenDataRepositoryAssociations(ctx context.Context, dataRepositoryAssociations []*fsx.DataRepositoryAssociation, defaultTagsConfig *tftags.DefaultConfig, ignoreTagsConfig *tftags.IgnoreConfig) []interface{} {

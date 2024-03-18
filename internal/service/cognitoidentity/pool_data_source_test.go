@@ -7,10 +7,11 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/cognitoidentity"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentity"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCognitoIdentityPoolDataSource_basic(t *testing.T) {
@@ -20,7 +21,7 @@ func TestAccCognitoIdentityPoolDataSource_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var ip cognitoidentity.IdentityPool
+	var ip cognitoidentity.DescribeIdentityPoolOutput
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_cognito_identity_pool.test"
 	resourceName := "aws_cognito_identity_pool.test"
@@ -28,10 +29,10 @@ func TestAccCognitoIdentityPoolDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, cognitoidentity.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.CognitoIdentityEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIdentityServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPoolDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -56,7 +57,7 @@ func TestAccCognitoIdentityPoolDataSource_openidConnectProviderARNs(t *testing.T
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var ip cognitoidentity.IdentityPool
+	var ip cognitoidentity.DescribeIdentityPoolOutput
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_cognito_identity_pool.test"
 	resourceName := "aws_cognito_identity_pool.test"
@@ -64,10 +65,10 @@ func TestAccCognitoIdentityPoolDataSource_openidConnectProviderARNs(t *testing.T
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, cognitoidentity.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.CognitoIdentityEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIdentityServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPoolDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -91,17 +92,17 @@ func TestAccCognitoIdentityPoolDataSource_cognitoIdentityProviders(t *testing.T)
 	}
 
 	name := sdkacctest.RandString(10)
-	var ip cognitoidentity.IdentityPool
+	var ip cognitoidentity.DescribeIdentityPoolOutput
 	dataSourceName := "data.aws_cognito_identity_pool.test"
 	resourceName := "aws_cognito_identity_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, cognitoidentity.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.CognitoIdentityEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIdentityServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPoolDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -126,17 +127,17 @@ func TestAccCognitoIdentityPoolDataSource_samlProviderARNs(t *testing.T) {
 
 	name := sdkacctest.RandString(10)
 	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
-	var ip cognitoidentity.IdentityPool
+	var ip cognitoidentity.DescribeIdentityPoolOutput
 	dataSourceName := "data.aws_cognito_identity_pool.test"
 	resourceName := "aws_cognito_identity_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, cognitoidentity.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.CognitoIdentityEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIdentityServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPoolDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -160,17 +161,17 @@ func TestAccCognitoIdentityPoolDataSource_supportedLoginProviders(t *testing.T) 
 	}
 
 	name := sdkacctest.RandString(10)
-	var ip cognitoidentity.IdentityPool
+	var ip cognitoidentity.DescribeIdentityPoolOutput
 	dataSourceName := "data.aws_cognito_identity_pool.test"
 	resourceName := "aws_cognito_identity_pool.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, cognitoidentity.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.CognitoIdentityEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIdentityServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPoolDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -193,7 +194,7 @@ func TestAccCognitoIdentityPoolDataSource_tags(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var ip cognitoidentity.IdentityPool
+	var ip cognitoidentity.DescribeIdentityPoolOutput
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_cognito_identity_pool.test"
 	resourceName := "aws_cognito_identity_pool.test"
@@ -201,10 +202,10 @@ func TestAccCognitoIdentityPoolDataSource_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, cognitoidentity.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.CognitoIdentityEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, cognitoidentity.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIdentityServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPoolDestroy(ctx),
 		Steps: []resource.TestStep{

@@ -85,4 +85,4 @@ This data source exports the following attributes in addition to the arguments a
 * `enableMaintenanceMode` – Indicates whether maintenance mode is enabled for your WorkSpaces. For more information, see [WorkSpace Maintenance](https://docs.aws.amazon.com/workspaces/latest/adminguide/workspace-maintenance.html).
 * `userEnabledAsLocalAdministrator` – Indicates whether users are local administrators of their WorkSpaces.
 
-<!-- cache-key: cdktf-0.19.0 input-b94343197f46538817cb6fbc22fc3a4b2fd2b6a8ee88d85032acad20463566b5 -->
+<!-- cache-key: cdktf-0.20.1 input-b94343197f46538817cb6fbc22fc3a4b2fd2b6a8ee88d85032acad20463566b5 -->

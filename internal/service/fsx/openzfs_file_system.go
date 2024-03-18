@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -25,7 +26,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"golang.org/x/exp/slices"
 )
 
 // @SDKResource("aws_fsx_openzfs_file_system", name="OpenZFS File System")
@@ -38,7 +38,11 @@ func ResourceOpenZFSFileSystem() *schema.Resource {
 		DeleteWithoutTimeout: resourceOpenZFSFileSystemDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+				d.Set("skip_final_backup", false)
+
+				return []*schema.ResourceData{d}, nil
+			},
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -249,6 +253,11 @@ func ResourceOpenZFSFileSystem() *schema.Resource {
 				ForceNew: true,
 				MaxItems: 50,
 				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"skip_final_backup": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 			"storage_capacity": {
 				Type:         schema.TypeInt,
@@ -621,6 +630,9 @@ func resourceOpenZFSFileSystemDelete(ctx context.Context, d *schema.ResourceData
 	log.Printf("[DEBUG] Deleting FSx for OpenZFS File System: %s", d.Id())
 	_, err := conn.DeleteFileSystemWithContext(ctx, &fsx.DeleteFileSystemInput{
 		FileSystemId: aws.String(d.Id()),
+		OpenZFSConfiguration: &fsx.DeleteFileSystemOpenZFSConfiguration{
+			SkipFinalBackup: aws.Bool(d.Get("skip_final_backup").(bool)),
+		},
 	})
 
 	if tfawserr.ErrCodeEquals(err, fsx.ErrCodeFileSystemNotFound) {

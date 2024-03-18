@@ -73,10 +73,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceMountTarget,
 			TypeName: "aws_efs_mount_target",
+			Name:     "Mount Target",
 		},
 		{
 			Factory:  ResourceReplicationConfiguration,
 			TypeName: "aws_efs_replication_configuration",
+			Name:     "Replication Configuration",
 		},
 	}
 }

@@ -92,11 +92,11 @@ func resourceKxUserCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	out, err := client.CreateKxUser(ctx, in)
 	if err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionCreating, ResNameKxUser, d.Get("name").(string), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxUser, d.Get("name").(string), err)
 	}
 
 	if out == nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionCreating, ResNameKxUser, d.Get("name").(string), errors.New("empty output"))...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxUser, d.Get("name").(string), errors.New("empty output"))
 	}
 
 	idParts := []string{
@@ -105,7 +105,7 @@ func resourceKxUserCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	id, err := flex.FlattenResourceId(idParts, kxUserIDPartCount, false)
 	if err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionFlatteningResourceId, ResNameKxUser, d.Get("name").(string), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionFlatteningResourceId, ResNameKxUser, d.Get("name").(string), err)
 	}
 	d.SetId(id)
 
@@ -124,7 +124,7 @@ func resourceKxUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if err != nil {
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionReading, ResNameKxUser, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionReading, ResNameKxUser, d.Id(), err)
 	}
 
 	d.Set("arn", out.UserArn)
@@ -148,7 +148,7 @@ func resourceKxUserUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 		_, err := conn.UpdateKxUser(ctx, in)
 		if err != nil {
-			return append(diags, create.DiagError(names.FinSpace, create.ErrActionUpdating, ResNameKxUser, d.Id(), err)...)
+			return create.AppendDiagError(diags, names.FinSpace, create.ErrActionUpdating, ResNameKxUser, d.Id(), err)
 		}
 	}
 
@@ -169,10 +169,10 @@ func resourceKxUserDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	if err != nil {
 		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {
-			return nil
+			return diags
 		}
 
-		return append(diags, create.DiagError(names.FinSpace, create.ErrActionDeleting, ResNameKxUser, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionDeleting, ResNameKxUser, d.Id(), err)
 	}
 
 	return diags

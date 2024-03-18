@@ -18,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_iam_account_password_policy")
-func ResourceAccountPasswordPolicy() *schema.Resource {
+// @SDKResource("aws_iam_account_password_policy", name="Account Password Policy")
+func resourceAccountPasswordPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccountPasswordPolicyUpdate,
 		ReadWithoutTimeout:   resourceAccountPasswordPolicyRead,
@@ -135,9 +135,9 @@ func resourceAccountPasswordPolicyRead(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
-	policy, err := FindAccountPasswordPolicy(ctx, conn)
+	policy, err := findAccountPasswordPolicy(ctx, conn)
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IAM Account Password Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -168,6 +168,10 @@ func resourceAccountPasswordPolicyDelete(ctx context.Context, d *schema.Resource
 	log.Printf("[DEBUG] Deleting IAM Account Password Policy: %s", d.Id())
 	_, err := conn.DeleteAccountPasswordPolicyWithContext(ctx, &iam.DeleteAccountPasswordPolicyInput{})
 
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting IAM Account Password Policy (%s): %s", d.Id(), err)
 	}
@@ -175,7 +179,7 @@ func resourceAccountPasswordPolicyDelete(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func FindAccountPasswordPolicy(ctx context.Context, conn *iam.IAM) (*iam.PasswordPolicy, error) {
+func findAccountPasswordPolicy(ctx context.Context, conn *iam.IAM) (*iam.PasswordPolicy, error) {
 	input := &iam.GetAccountPasswordPolicyInput{}
 
 	output, err := conn.GetAccountPasswordPolicyWithContext(ctx, input)

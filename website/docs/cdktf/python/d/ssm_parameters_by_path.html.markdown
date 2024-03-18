@@ -52,4 +52,4 @@ This data source exports the following attributes in addition to the arguments a
 * `types` - A list that contains the types (`String`, `StringList`, or `SecureString`) of retrieved parameters.
 * `values` - A list that contains the retrieved parameter values. **Note:** This value is always marked as sensitive in the Terraform plan output, regardless of whether any retrieved parameters are of `SecureString` type. Use the [`nonsensitive` function](https://developer.hashicorp.com/terraform/language/functions/nonsensitive) to override the behavior at your own risk and discretion, if you are certain that there are no sensitive values being retrieved.
 
-<!-- cache-key: cdktf-0.19.0 input-2c5efa2120dfb04d67888b7cc67b770d004cdf9500bcaac792c2d6da59c31265 -->
+<!-- cache-key: cdktf-0.20.1 input-2c5efa2120dfb04d67888b7cc67b770d004cdf9500bcaac792c2d6da59c31265 -->

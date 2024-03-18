@@ -19,7 +19,7 @@ Before new resources are submitted, please raise a separate pull request contain
 
 To add an AWS SDK for Go service client:
 
-1. Check the file `names/names_data.csv` for the service.
+1. Check the file `names/data/names_data.csv` for the service.
 
 1. If the service is there and there is no value in the `NotImplmented` column, you are ready to implement the first [resource](./add-a-new-resource.md) or [data source](./add-a-new-datasource.md).
 
@@ -27,26 +27,42 @@ To add an AWS SDK for Go service client:
 
 1. Otherwise, determine the service identifier using the rule described in [the Naming Guide](naming.md#service-identifier).
 
-1. In `names/names_data.csv`, add a new line with all the requested information for the service following the guidance in the [`names` README](https://github.com/hashicorp/terraform-provider-aws/blob/main/names/README.md).
+1. In `names/data/names_data.csv`, add a new line with all the requested information for the service following the guidance in the [`names` README](https://github.com/hashicorp/terraform-provider-aws/blob/main/names/README.md).
 
     !!! tip
         Be very careful when adding or changing data in `names_data.csv`!
         The Provider and generators depend on the file being correct.
         We strongly recommend using an editor with CSV support.
 
-To generate the client, run the following then submit the pull request:
+Once the names data is ready, create a new service directory with the appropriate service name.
+
+```console
+mkdir internal/service/<service>
+```
+
+Add a new file `internal/service/<service>/generate.go` with the following content. This will generate the structs required for [resource self-registration](./add-a-new-resource.md#register-resource-to-the-provider).
+
+```go
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
+//go:generate go run ../../generate/servicepackage/main.go
+// ONLY generate directives and package declaration! Do not add anything else to this file.
+
+package <service>
+```
+
+Next, generate the client and ensure all dependencies are fetched.
 
 ```console
 make gen
 ```
 
 ```console
-make test
-```
-
-```console
 go mod tidy
 ```
+
+At this point a pull request with the re-generated files and new service client can be submitted.
 
 Once the service client has been added, implement the first [resource](./add-a-new-resource.md) or [data source](./add-a-new-datasource.md) in a separate PR.
 
@@ -54,7 +70,7 @@ Once the service client has been added, implement the first [resource](./add-a-n
 
 If an AWS service must be created in a non-standard way, for example the service API's endpoint must be accessed via a single AWS Region, then:
 
-1. Add an `x` in the **SkipClientGenerate** column for the service in [`names/names_data.csv`](https://github.com/hashicorp/terraform-provider-aws/blob/main/names/README.md)
+1. Add an `x` in the **SkipClientGenerate** column for the service in [`names/data/names_data.csv`](https://github.com/hashicorp/terraform-provider-aws/blob/main/names/README.md)
 
 1. Run `make gen`
 
@@ -63,28 +79,28 @@ If an AWS service must be created in a non-standard way, for example the service
 === "AWS Go SDK V2 (Preferred)"
 
     ```go
-    package route53domains
-    
+    package costoptimizationhub
+
     import (
-    	"context"
-    
-    	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
-    	route53domains_sdkv2 "github.com/aws/aws-sdk-go-v2/service/route53domains"
-    	endpoints_sdkv1 "github.com/aws/aws-sdk-go/aws/endpoints"
+        "context"
+
+        "github.com/aws/aws-sdk-go-v2/aws"
+        "github.com/aws/aws-sdk-go-v2/service/costoptimizationhub"
+        "github.com/hashicorp/terraform-provider-aws/names"
     )
-    
+
     // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
-    func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*route53domains_sdkv2.Client, error) {
-    	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
-    
-    	return route53domains_sdkv2.NewFromConfig(cfg, func(o *route53domains_sdkv2.Options) {
-    		if endpoint := config["endpoint"].(string); endpoint != "" {
-    			o.BaseEndpoint = aws_sdkv2.String(endpoint)
-    		} else if config["partition"].(string) == endpoints_sdkv1.AwsPartitionID {
-    			// Route 53 Domains is only available in AWS Commercial us-east-1 Region.
-    			o.Region = endpoints_sdkv1.UsEast1RegionID
-    		}
-    	}), nil
+    func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*costoptimizationhub.Client, error) {
+        cfg := *(config["aws_sdkv2_config"].(*aws.Config))
+
+        return costoptimizationhub.NewFromConfig(cfg, func(o *costoptimizationhub.Options) {
+            if endpoint := config["endpoint"].(string); endpoint != "" {
+                o.BaseEndpoint = aws.String(endpoint)
+            } else if config["partition"].(string) == names.StandardPartitionID {
+                // Cost Optimization Hub endpoint is available only in us-east-1 Region.
+                o.Region = names.USEast1RegionID
+            }
+        }), nil
     }
     ```
 

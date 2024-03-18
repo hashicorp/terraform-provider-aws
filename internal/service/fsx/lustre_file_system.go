@@ -196,7 +196,6 @@ func ResourceLustreFileSystem() *schema.Resource {
 			"per_unit_storage_throughput": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				ForceNew: true,
 				ValidateFunc: validation.IntInSlice([]int{
 					12,
 					40,
@@ -510,12 +509,16 @@ func resourceLustreFileSystemUpdate(ctx context.Context, d *schema.ResourceData,
 			input.LustreConfiguration.DailyAutomaticBackupStartTime = aws.String(d.Get("daily_automatic_backup_start_time").(string))
 		}
 
-		if v, ok := d.GetOk("data_compression_type"); ok {
-			input.LustreConfiguration.DataCompressionType = aws.String(v.(string))
+		if d.HasChange("data_compression_type") {
+			input.LustreConfiguration.DataCompressionType = aws.String(d.Get("data_compression_type").(string))
 		}
 
 		if d.HasChange("log_configuration") {
 			input.LustreConfiguration.LogConfiguration = expandLustreLogCreateConfiguration(d.Get("log_configuration").([]interface{}))
+		}
+
+		if d.HasChange("per_unit_storage_throughput") {
+			input.LustreConfiguration.PerUnitStorageThroughput = aws.Int64(int64(d.Get("per_unit_storage_throughput").(int)))
 		}
 
 		if d.HasChange("root_squash_configuration") {

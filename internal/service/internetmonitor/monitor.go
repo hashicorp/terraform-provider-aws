@@ -164,7 +164,7 @@ func resourceMonitorCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("max_city_networks_to_monitor"); ok {
-		input.MaxCityNetworksToMonitor = int32(v.(int))
+		input.MaxCityNetworksToMonitor = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("resources"); ok && v.(*schema.Set).Len() > 0 {
@@ -172,7 +172,7 @@ func resourceMonitorCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("traffic_percentage_to_monitor"); ok {
-		input.TrafficPercentageToMonitor = int32(v.(int))
+		input.TrafficPercentageToMonitor = aws.Int32(int32(v.(int)))
 	}
 
 	_, err := conn.CreateMonitor(ctx, input)
@@ -263,7 +263,7 @@ func resourceMonitorUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if d.HasChange("max_city_networks_to_monitor") {
-			input.MaxCityNetworksToMonitor = int32(d.Get("max_city_networks_to_monitor").(int))
+			input.MaxCityNetworksToMonitor = aws.Int32(int32(d.Get("max_city_networks_to_monitor").(int)))
 		}
 
 		if d.HasChange("resources") {
@@ -283,7 +283,7 @@ func resourceMonitorUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if d.HasChange("traffic_percentage_to_monitor") {
-			input.TrafficPercentageToMonitor = int32(d.Get("traffic_percentage_to_monitor").(int))
+			input.TrafficPercentageToMonitor = aws.Int32(int32(d.Get("traffic_percentage_to_monitor").(int)))
 		}
 
 		_, err := conn.UpdateMonitor(ctx, input)
