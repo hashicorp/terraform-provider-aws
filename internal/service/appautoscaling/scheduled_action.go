@@ -231,6 +231,7 @@ func resourceScheduledActionDelete(ctx context.Context, d *schema.ResourceData, 
 func findScheduledActionByFourPartKey(ctx context.Context, conn *applicationautoscaling.ApplicationAutoScaling, name, serviceNamespace, resourceID, scalableDimension string) (*applicationautoscaling.ScheduledAction, error) {
 	input := &applicationautoscaling.DescribeScheduledActionsInput{
 		ResourceId:           aws.String(resourceID),
+		ScalableDimension:    aws.String(scalableDimension),
 		ScheduledActionNames: aws.StringSlice([]string{name}),
 		ServiceNamespace:     aws.String(serviceNamespace),
 	}
