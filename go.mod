@@ -80,7 +80,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.12.3
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.12.3
 	github.com/aws/aws-sdk-go-v2/service/kafka v1.31.1
-	github.com/aws/aws-sdk-go-v2/service/kendra v1.49.2
+	github.com/aws/aws-sdk-go-v2/service/kendra v1.49.3
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.10.2
 	github.com/aws/aws-sdk-go-v2/service/kinesis v1.27.2
 	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.31.3
