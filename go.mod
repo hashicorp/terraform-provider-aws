@@ -22,7 +22,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/athena v1.40.3
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.32.3
 	github.com/aws/aws-sdk-go-v2/service/batch v1.35.1
-	github.com/aws/aws-sdk-go-v2/service/bedrock v1.7.2
+	github.com/aws/aws-sdk-go-v2/service/bedrock v1.7.3
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.4.2
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.22.2
 	github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.15.2
