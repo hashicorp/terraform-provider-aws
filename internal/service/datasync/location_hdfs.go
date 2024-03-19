@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -65,12 +66,26 @@ func resourceLocationHDFS() *schema.Resource {
 				),
 			},
 			"kerberos_keytab": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"kerberos_keytab_base64"},
+			},
+			"kerberos_keytab_base64": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"kerberos_keytab"},
+				ValidateFunc:  verify.ValidBase64String,
 			},
 			"kerberos_krb5_conf": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"kerberos_krb5_conf_base64"},
+			},
+			"kerberos_krb5_conf_base64": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"kerberos_krb5_conf"},
+				ValidateFunc:  verify.ValidBase64String,
 			},
 			"kerberos_principal": {
 				Type:         schema.TypeString,
@@ -176,10 +191,24 @@ func resourceLocationHDFSCreate(ctx context.Context, d *schema.ResourceData, met
 
 	if v, ok := d.GetOk("kerberos_keytab"); ok {
 		input.KerberosKeytab = []byte(v.(string))
+	} else if v, ok := d.GetOk("kerberos_keytab_base64"); ok {
+		v := v.(string)
+		b, err := itypes.Base64Decode(v)
+		if err != nil {
+			b = []byte(v)
+		}
+		input.KerberosKeytab = b
 	}
 
 	if v, ok := d.GetOk("kerberos_krb5_conf"); ok {
 		input.KerberosKrb5Conf = []byte(v.(string))
+	} else if v, ok := d.GetOk("kerberos_krb5_conf_base64"); ok {
+		v := v.(string)
+		b, err := itypes.Base64Decode(v)
+		if err != nil {
+			b = []byte(v)
+		}
+		input.KerberosKrb5Conf = b
 	}
 
 	if v, ok := d.GetOk("kerberos_principal"); ok {
@@ -276,12 +305,30 @@ func resourceLocationHDFSUpdate(ctx context.Context, d *schema.ResourceData, met
 			input.BlockSize = aws.Int64(int64(d.Get("block_size").(int)))
 		}
 
-		if d.HasChange("kerberos_keytab") {
-			input.KerberosKeytab = []byte(d.Get("kerberos_keytab").(string))
+		if d.HasChanges("kerberos_keytab", "kerberos_keytab_base64") {
+			if v, ok := d.GetOk("kerberos_keytab"); ok {
+				input.KerberosKeytab = []byte(v.(string))
+			} else if v, ok := d.GetOk("kerberos_keytab_base64"); ok {
+				v := v.(string)
+				b, err := itypes.Base64Decode(v)
+				if err != nil {
+					b = []byte(v)
+				}
+				input.KerberosKeytab = b
+			}
 		}
 
-		if d.HasChange("kerberos_krb5_conf") {
-			input.KerberosKrb5Conf = []byte(d.Get("kerberos_krb5_conf").(string))
+		if d.HasChanges("kerberos_krb5_conf", "kerberos_krb5_conf_base64") {
+			if v, ok := d.GetOk("kerberos_krb5_conf"); ok {
+				input.KerberosKrb5Conf = []byte(v.(string))
+			} else if v, ok := d.GetOk("kerberos_krb5_conf_base64"); ok {
+				v := v.(string)
+				b, err := itypes.Base64Decode(v)
+				if err != nil {
+					b = []byte(v)
+				}
+				input.KerberosKrb5Conf = b
+			}
 		}
 
 		if d.HasChange("kerberos_principal") {
