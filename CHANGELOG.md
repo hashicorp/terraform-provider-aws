@@ -1,10 +1,20 @@
 ## 5.42.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_datasync_location_hdfs: Add `kerberos_keytab_base64` and `kerberos_krb5_conf_base64` arguments ([#36072](https://github.com/hashicorp/terraform-provider-aws/issues/36072))
+
 BUG FIXES:
 
 * resource/aws_appautoscaling_policy: Fix errors when importing an MSK storage autoscaling policy ([#34934](https://github.com/hashicorp/terraform-provider-aws/issues/34934))
 * resource/aws_appautoscaling_scheduled_action: Always send `start_time` and `end_time` values on update when configured ([#33713](https://github.com/hashicorp/terraform-provider-aws/issues/33713))
 * resource/aws_appautoscaling_scheduled_action: Read correct resource by using `scalable_dimension` as an additional filter ([#34382](https://github.com/hashicorp/terraform-provider-aws/issues/34382))
+* resource/aws_datasync_location_azure_blob: Fix missing `container_url` attribute value and bad `subdirectory` attribute value from state read/refresh ([#36072](https://github.com/hashicorp/terraform-provider-aws/issues/36072))
+* resource/aws_datasync_location_efs: Fix missing `efs_file_system_arn` attribute value from state read/refresh ([#36072](https://github.com/hashicorp/terraform-provider-aws/issues/36072))
+* resource/aws_datasync_location_hdfs: Mark `qop_configuration` as Computed ([#36072](https://github.com/hashicorp/terraform-provider-aws/issues/36072))
+* resource/aws_datasync_location_nfs: Fix missing `server_hostname` attribute value from state read/refresh ([#36072](https://github.com/hashicorp/terraform-provider-aws/issues/36072))
+* resource/aws_datasync_location_s3: Fix missing `s3_bucket_arn` attribute value from state read/refresh ([#36072](https://github.com/hashicorp/terraform-provider-aws/issues/36072))
+* resource/aws_datasync_location_smb: Fix missing `server_hostname` attribute value from state read/refresh ([#36072](https://github.com/hashicorp/terraform-provider-aws/issues/36072))
 * resource/aws_dms_replication_config: Fix persistent change in `replication_settings` ([#35670](https://github.com/hashicorp/terraform-provider-aws/issues/35670))
 * resource/aws_dms_replication_task: Fix persistent change in `replication_task_settings` ([#35670](https://github.com/hashicorp/terraform-provider-aws/issues/35670))
 
