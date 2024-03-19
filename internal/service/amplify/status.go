@@ -6,13 +6,12 @@ package amplify
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/amplify"
+	"github.com/aws/aws-sdk-go-v2/service/amplify"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusDomainAssociation(ctx context.Context, conn *amplify.Amplify, appID, domainName string) retry.StateRefreshFunc {
+func statusDomainAssociation(ctx context.Context, conn *amplify.Client, appID, domainName string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		domainAssociation, err := FindDomainAssociationByAppIDAndDomainName(ctx, conn, appID, domainName)
 
@@ -24,6 +23,6 @@ func statusDomainAssociation(ctx context.Context, conn *amplify.Amplify, appID, 
 			return nil, "", err
 		}
 
-		return domainAssociation, aws.StringValue(domainAssociation.DomainStatus), nil
+		return domainAssociation, string(domainAssociation.DomainStatus), nil
 	}
 }

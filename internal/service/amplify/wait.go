@@ -8,9 +8,11 @@ import (
 	"errors"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/amplify"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/amplify"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/amplify/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -19,19 +21,19 @@ const (
 	domainAssociationVerifiedTimeout = 15 * time.Minute
 )
 
-func waitDomainAssociationCreated(ctx context.Context, conn *amplify.Amplify, appID, domainName string) (*amplify.DomainAssociation, error) {
+func waitDomainAssociationCreated(ctx context.Context, conn *amplify.Client, appID, domainName string) (*awstypes.DomainAssociation, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{amplify.DomainStatusCreating, amplify.DomainStatusInProgress, amplify.DomainStatusRequestingCertificate},
-		Target:  []string{amplify.DomainStatusPendingVerification, amplify.DomainStatusPendingDeployment, amplify.DomainStatusAvailable},
+		Pending: enum.Slice(awstypes.DomainStatusCreating, awstypes.DomainStatusInProgress, awstypes.DomainStatusRequestingCertificate),
+		Target:  enum.Slice(awstypes.DomainStatusPendingVerification, awstypes.DomainStatusPendingDeployment, awstypes.DomainStatusAvailable),
 		Refresh: statusDomainAssociation(ctx, conn, appID, domainName),
 		Timeout: domainAssociationCreatedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if v, ok := outputRaw.(*amplify.DomainAssociation); ok {
-		if status := aws.StringValue(v.DomainStatus); status == amplify.DomainStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.StringValue(v.StatusReason)))
+	if v, ok := outputRaw.(*awstypes.DomainAssociation); ok {
+		if v.DomainStatus == awstypes.DomainStatusFailed {
+			tfresource.SetLastError(err, errors.New(aws.ToString(v.StatusReason)))
 		}
 
 		return v, err
@@ -40,19 +42,19 @@ func waitDomainAssociationCreated(ctx context.Context, conn *amplify.Amplify, ap
 	return nil, err
 }
 
-func waitDomainAssociationVerified(ctx context.Context, conn *amplify.Amplify, appID, domainName string) (*amplify.DomainAssociation, error) { //nolint:unparam
+func waitDomainAssociationVerified(ctx context.Context, conn *amplify.Client, appID, domainName string) (*awstypes.DomainAssociation, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{amplify.DomainStatusUpdating, amplify.DomainStatusInProgress, amplify.DomainStatusPendingVerification},
-		Target:  []string{amplify.DomainStatusPendingDeployment, amplify.DomainStatusAvailable},
+		Pending: enum.Slice(awstypes.DomainStatusUpdating, awstypes.DomainStatusInProgress, awstypes.DomainStatusPendingVerification),
+		Target:  enum.Slice(awstypes.DomainStatusPendingDeployment, awstypes.DomainStatusAvailable),
 		Refresh: statusDomainAssociation(ctx, conn, appID, domainName),
 		Timeout: domainAssociationVerifiedTimeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if v, ok := outputRaw.(*amplify.DomainAssociation); ok {
-		if v != nil && aws.StringValue(v.DomainStatus) == amplify.DomainStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.StringValue(v.StatusReason)))
+	if v, ok := outputRaw.(*awstypes.DomainAssociation); ok {
+		if v.DomainStatus == awstypes.DomainStatusFailed {
+			tfresource.SetLastError(err, errors.New(aws.ToString(v.StatusReason)))
 		}
 
 		return v, err

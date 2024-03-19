@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/amplify"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/amplify"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
@@ -27,7 +27,7 @@ func sweepApps(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.AmplifyConn(ctx)
+	conn := client.AmplifyClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	input := &amplify.ListAppsInput{}
@@ -39,7 +39,7 @@ func sweepApps(region string) error {
 		for _, app := range page.Apps {
 			r := ResourceApp()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(app.AppId))
+			d.SetId(aws.ToString(app.AppId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

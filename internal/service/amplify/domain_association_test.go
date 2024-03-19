@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/amplify"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/amplify/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -29,7 +29,7 @@ func testAccDomainAssociation_basic(t *testing.T) {
 		t.Skipf("Environment variable %s is not set", key)
 	}
 
-	var domain amplify.DomainAssociation
+	var domain awstypes.DomainAssociation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_domain_association.test"
 
@@ -72,7 +72,7 @@ func testAccDomainAssociation_disappears(t *testing.T) {
 		t.Skipf("Environment variable %s is not set", key)
 	}
 
-	var domain amplify.DomainAssociation
+	var domain awstypes.DomainAssociation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_domain_association.test"
 
@@ -102,7 +102,7 @@ func testAccDomainAssociation_update(t *testing.T) {
 		t.Skipf("Environment variable %s is not set", key)
 	}
 
-	var domain amplify.DomainAssociation
+	var domain awstypes.DomainAssociation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_domain_association.test"
 
@@ -156,7 +156,7 @@ func testAccDomainAssociation_update(t *testing.T) {
 	})
 }
 
-func testAccCheckDomainAssociationExists(ctx context.Context, resourceName string, v *amplify.DomainAssociation) resource.TestCheckFunc {
+func testAccCheckDomainAssociationExists(ctx context.Context, resourceName string, v *awstypes.DomainAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -173,7 +173,7 @@ func testAccCheckDomainAssociationExists(ctx context.Context, resourceName strin
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyClient(ctx)
 
 		domainAssociation, err := tfamplify.FindDomainAssociationByAppIDAndDomainName(ctx, conn, appID, domainName)
 
@@ -189,7 +189,7 @@ func testAccCheckDomainAssociationExists(ctx context.Context, resourceName strin
 
 func testAccCheckDomainAssociationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_amplify_domain_association" {
