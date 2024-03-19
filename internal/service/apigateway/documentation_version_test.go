@@ -8,21 +8,22 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAPIGatewayDocumentationVersion_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.DocumentationVersion
+	var conf apigateway.GetDocumentationVersionOutput
 
 	rString := sdkacctest.RandString(8)
 	version := fmt.Sprintf("tf-acc-test_version_%s", rString)
@@ -55,7 +56,7 @@ func TestAccAPIGatewayDocumentationVersion_basic(t *testing.T) {
 
 func TestAccAPIGatewayDocumentationVersion_allFields(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.DocumentationVersion
+	var conf apigateway.GetDocumentationVersionOutput
 
 	rString := sdkacctest.RandString(8)
 	version := fmt.Sprintf("tf-acc-test_version_%s", rString)
@@ -101,7 +102,7 @@ func TestAccAPIGatewayDocumentationVersion_allFields(t *testing.T) {
 
 func TestAccAPIGatewayDocumentationVersion_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.DocumentationVersion
+	var conf apigateway.GetDocumentationVersionOutput
 
 	rString := sdkacctest.RandString(8)
 	version := fmt.Sprintf("tf-acc-test_version_%s", rString)
@@ -127,7 +128,7 @@ func TestAccAPIGatewayDocumentationVersion_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckDocumentationVersionExists(ctx context.Context, n string, res *apigateway.DocumentationVersion) resource.TestCheckFunc {
+func testAccCheckDocumentationVersionExists(ctx context.Context, n string, res *apigateway.GetDocumentationVersionOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -138,7 +139,7 @@ func testAccCheckDocumentationVersionExists(ctx context.Context, n string, res *
 			return fmt.Errorf("No API Gateway Documentation Version ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
 		apiId, version, err := tfapigateway.DecodeDocumentationVersionID(rs.Primary.ID)
 		if err != nil {
@@ -149,7 +150,7 @@ func testAccCheckDocumentationVersionExists(ctx context.Context, n string, res *
 			DocumentationVersion: aws.String(version),
 			RestApiId:            aws.String(apiId),
 		}
-		docVersion, err := conn.GetDocumentationVersionWithContext(ctx, req)
+		docVersion, err := conn.GetDocumentationVersion(ctx, req)
 		if err != nil {
 			return err
 		}
@@ -162,7 +163,7 @@ func testAccCheckDocumentationVersionExists(ctx context.Context, n string, res *
 
 func testAccCheckDocumentationVersionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_api_gateway_documentation_version" {
@@ -178,9 +179,9 @@ func testAccCheckDocumentationVersionDestroy(ctx context.Context) resource.TestC
 				DocumentationVersion: aws.String(version),
 				RestApiId:            aws.String(apiId),
 			}
-			_, err = conn.GetDocumentationVersionWithContext(ctx, req)
+			_, err = conn.GetDocumentationVersion(ctx, req)
 			if err != nil {
-				if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
+				if errs.IsA[*awstypes.NotFoundException](err) {
 					return nil
 				}
 				return err

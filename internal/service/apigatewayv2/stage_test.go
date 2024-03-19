@@ -9,8 +9,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/apigateway"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -1541,9 +1541,9 @@ resource "aws_apigatewayv2_stage" "test" {
 
 // testAccPreCheckAPIGatewayAccountCloudWatchRoleARN checks whether a CloudWatch role ARN has been configured in the current AWS region.
 func testAccPreCheckAPIGatewayAccountCloudWatchRoleARN(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
-	output, err := conn.GetAccountWithContext(ctx, &apigateway.GetAccountInput{})
+	output, err := conn.GetAccount(ctx, &apigateway.GetAccountInput{})
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping tests: %s", err)

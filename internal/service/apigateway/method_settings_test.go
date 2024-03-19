@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func TestAccAPIGatewayMethodSettings_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var stage apigateway.Stage
+	var stage apigateway.GetStageOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
@@ -52,7 +52,7 @@ func TestAccAPIGatewayMethodSettings_basic(t *testing.T) {
 
 func TestAccAPIGatewayMethodSettings_Settings_cacheDataEncrypted(t *testing.T) {
 	ctx := acctest.Context(t)
-	var stage1, stage2 apigateway.Stage
+	var stage1, stage2 apigateway.GetStageOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
@@ -90,7 +90,7 @@ func TestAccAPIGatewayMethodSettings_Settings_cacheDataEncrypted(t *testing.T) {
 
 func TestAccAPIGatewayMethodSettings_Settings_cacheTTLInSeconds(t *testing.T) {
 	ctx := acctest.Context(t)
-	var stage1, stage2 apigateway.Stage
+	var stage1, stage2 apigateway.GetStageOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
@@ -136,7 +136,7 @@ func TestAccAPIGatewayMethodSettings_Settings_cacheTTLInSeconds(t *testing.T) {
 
 func TestAccAPIGatewayMethodSettings_Settings_cachingEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
-	var stage1, stage2 apigateway.Stage
+	var stage1, stage2 apigateway.GetStageOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
@@ -174,7 +174,7 @@ func TestAccAPIGatewayMethodSettings_Settings_cachingEnabled(t *testing.T) {
 
 func TestAccAPIGatewayMethodSettings_Settings_dataTraceEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
-	var stage1, stage2 apigateway.Stage
+	var stage1, stage2 apigateway.GetStageOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
@@ -212,7 +212,7 @@ func TestAccAPIGatewayMethodSettings_Settings_dataTraceEnabled(t *testing.T) {
 
 func TestAccAPIGatewayMethodSettings_Settings_loggingLevel(t *testing.T) {
 	ctx := acctest.Context(t)
-	var stage1, stage2 apigateway.Stage
+	var stage1, stage2 apigateway.GetStageOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
@@ -252,7 +252,7 @@ func TestAccAPIGatewayMethodSettings_Settings_loggingLevel(t *testing.T) {
 
 func TestAccAPIGatewayMethodSettings_Settings_metricsEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
-	var stage1, stage2 apigateway.Stage
+	var stage1, stage2 apigateway.GetStageOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
@@ -292,7 +292,7 @@ func TestAccAPIGatewayMethodSettings_Settings_metricsEnabled(t *testing.T) {
 
 func TestAccAPIGatewayMethodSettings_Settings_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
-	var stage1, stage2 apigateway.Stage
+	var stage1, stage2 apigateway.GetStageOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
@@ -336,7 +336,7 @@ func TestAccAPIGatewayMethodSettings_Settings_multiple(t *testing.T) {
 
 func TestAccAPIGatewayMethodSettings_Settings_requireAuthorizationForCacheControl(t *testing.T) {
 	ctx := acctest.Context(t)
-	var stage1, stage2 apigateway.Stage
+	var stage1, stage2 apigateway.GetStageOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
@@ -374,7 +374,7 @@ func TestAccAPIGatewayMethodSettings_Settings_requireAuthorizationForCacheContro
 
 func TestAccAPIGatewayMethodSettings_Settings_throttlingBurstLimit(t *testing.T) {
 	ctx := acctest.Context(t)
-	var stage1, stage2 apigateway.Stage
+	var stage1, stage2 apigateway.GetStageOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
@@ -413,7 +413,7 @@ func TestAccAPIGatewayMethodSettings_Settings_throttlingBurstLimit(t *testing.T)
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/5690
 func TestAccAPIGatewayMethodSettings_Settings_throttlingBurstLimitDisabledByDefault(t *testing.T) {
 	ctx := acctest.Context(t)
-	var stage1, stage2 apigateway.Stage
+	var stage1, stage2 apigateway.GetStageOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
@@ -451,7 +451,7 @@ func TestAccAPIGatewayMethodSettings_Settings_throttlingBurstLimitDisabledByDefa
 
 func TestAccAPIGatewayMethodSettings_Settings_throttlingRateLimit(t *testing.T) {
 	ctx := acctest.Context(t)
-	var stage1, stage2 apigateway.Stage
+	var stage1, stage2 apigateway.GetStageOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
@@ -490,7 +490,7 @@ func TestAccAPIGatewayMethodSettings_Settings_throttlingRateLimit(t *testing.T) 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/5690
 func TestAccAPIGatewayMethodSettings_Settings_throttlingRateLimitDisabledByDefault(t *testing.T) {
 	ctx := acctest.Context(t)
-	var stage1, stage2 apigateway.Stage
+	var stage1, stage2 apigateway.GetStageOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
@@ -528,7 +528,7 @@ func TestAccAPIGatewayMethodSettings_Settings_throttlingRateLimitDisabledByDefau
 
 func TestAccAPIGatewayMethodSettings_Settings_unauthorizedCacheControlHeaderStrategy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var stage1, stage2 apigateway.Stage
+	var stage1, stage2 apigateway.GetStageOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
@@ -564,33 +564,33 @@ func TestAccAPIGatewayMethodSettings_Settings_unauthorizedCacheControlHeaderStra
 	})
 }
 
-func testAccCheckMethodSettings_metricsEnabled(conf *apigateway.Stage, path string, expected bool) resource.TestCheckFunc {
+func testAccCheckMethodSettings_metricsEnabled(conf *apigateway.GetStageOutput, path string, expected bool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		settings, ok := conf.MethodSettings[path]
 		if !ok {
 			return fmt.Errorf("Expected to find method settings for %q", path)
 		}
 
-		if expected && aws.BoolValue(settings.MetricsEnabled) != expected {
-			return fmt.Errorf("Expected metrics to be enabled, got %t", aws.BoolValue(settings.MetricsEnabled))
+		if expected && settings.MetricsEnabled != expected {
+			return fmt.Errorf("Expected metrics to be enabled, got %t", settings.MetricsEnabled)
 		}
-		if !expected && aws.BoolValue(settings.MetricsEnabled) != expected {
-			return fmt.Errorf("Expected metrics to be disabled, got %t", aws.BoolValue(settings.MetricsEnabled))
+		if !expected && settings.MetricsEnabled != expected {
+			return fmt.Errorf("Expected metrics to be disabled, got %t", settings.MetricsEnabled)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckMethodSettings_loggingLevel(conf *apigateway.Stage, path string, expectedLevel string) resource.TestCheckFunc {
+func testAccCheckMethodSettings_loggingLevel(conf *apigateway.GetStageOutput, path string, expectedLevel string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		settings, ok := conf.MethodSettings[path]
 		if !ok {
 			return fmt.Errorf("Expected to find method settings for %q", path)
 		}
 
-		if aws.StringValue(settings.LoggingLevel) != expectedLevel {
-			return fmt.Errorf("Expected logging level to match %q, got %q", expectedLevel, aws.StringValue(settings.LoggingLevel))
+		if aws.ToString(settings.LoggingLevel) != expectedLevel {
+			return fmt.Errorf("Expected logging level to match %q, got %q", expectedLevel, aws.ToString(settings.LoggingLevel))
 		}
 
 		return nil
@@ -599,7 +599,7 @@ func testAccCheckMethodSettings_loggingLevel(conf *apigateway.Stage, path string
 
 func TestAccAPIGatewayMethodSettings_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var stage apigateway.Stage
+	var stage apigateway.GetStageOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
@@ -623,7 +623,7 @@ func TestAccAPIGatewayMethodSettings_disappears(t *testing.T) {
 
 func testAccCheckMethodSettingsDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_api_gateway_method_settings" {

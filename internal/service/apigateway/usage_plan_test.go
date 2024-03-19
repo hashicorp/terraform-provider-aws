@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func TestAccAPIGatewayUsagePlan_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.UsagePlan
+	var conf apigateway.GetUsagePlanOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	updatedName := sdkacctest.RandomWithPrefix("tf-acc-test-2")
 	resourceName := "aws_api_gateway_usage_plan.test"
@@ -64,7 +64,7 @@ func TestAccAPIGatewayUsagePlan_basic(t *testing.T) {
 
 func TestAccAPIGatewayUsagePlan_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.UsagePlan
+	var conf apigateway.GetUsagePlanOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_usage_plan.test"
 
@@ -112,7 +112,7 @@ func TestAccAPIGatewayUsagePlan_tags(t *testing.T) {
 
 func TestAccAPIGatewayUsagePlan_description(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.UsagePlan
+	var conf apigateway.GetUsagePlanOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_usage_plan.test"
 
@@ -167,7 +167,7 @@ func TestAccAPIGatewayUsagePlan_description(t *testing.T) {
 
 func TestAccAPIGatewayUsagePlan_productCode(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.UsagePlan
+	var conf apigateway.GetUsagePlanOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_usage_plan.test"
 
@@ -216,7 +216,7 @@ func TestAccAPIGatewayUsagePlan_productCode(t *testing.T) {
 
 func TestAccAPIGatewayUsagePlan_throttling(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.UsagePlan
+	var conf apigateway.GetUsagePlanOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_usage_plan.test"
 
@@ -272,7 +272,7 @@ func TestAccAPIGatewayUsagePlan_throttling(t *testing.T) {
 // https://github.com/hashicorp/terraform-provider-aws/issues/2057
 func TestAccAPIGatewayUsagePlan_throttlingInitialRateLimit(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.UsagePlan
+	var conf apigateway.GetUsagePlanOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_usage_plan.test"
 
@@ -300,7 +300,7 @@ func TestAccAPIGatewayUsagePlan_throttlingInitialRateLimit(t *testing.T) {
 
 func TestAccAPIGatewayUsagePlan_quota(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.UsagePlan
+	var conf apigateway.GetUsagePlanOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_usage_plan.test"
 
@@ -357,7 +357,7 @@ func TestAccAPIGatewayUsagePlan_quota(t *testing.T) {
 
 func TestAccAPIGatewayUsagePlan_apiStages(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.UsagePlan
+	var conf apigateway.GetUsagePlanOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_usage_plan.test"
 
@@ -442,7 +442,7 @@ func TestAccAPIGatewayUsagePlan_apiStages(t *testing.T) {
 
 func TestAccAPIGatewayUsagePlan_APIStages_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.UsagePlan
+	var conf apigateway.GetUsagePlanOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_usage_plan.test"
 
@@ -476,7 +476,7 @@ func TestAccAPIGatewayUsagePlan_APIStages_multiple(t *testing.T) {
 
 func TestAccAPIGatewayUsagePlan_APIStages_throttle(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.UsagePlan
+	var conf apigateway.GetUsagePlanOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_usage_plan.test"
 
@@ -535,7 +535,7 @@ func TestAccAPIGatewayUsagePlan_APIStages_throttle(t *testing.T) {
 
 func TestAccAPIGatewayUsagePlan_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.UsagePlan
+	var conf apigateway.GetUsagePlanOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_usage_plan.test"
 
@@ -558,7 +558,7 @@ func TestAccAPIGatewayUsagePlan_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckUsagePlanExists(ctx context.Context, n string, v *apigateway.UsagePlan) resource.TestCheckFunc {
+func testAccCheckUsagePlanExists(ctx context.Context, n string, v *apigateway.GetUsagePlanOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -569,7 +569,7 @@ func testAccCheckUsagePlanExists(ctx context.Context, n string, v *apigateway.Us
 			return fmt.Errorf("No API Gateway Usage Plan ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
 		output, err := tfapigateway.FindUsagePlanByID(ctx, conn, rs.Primary.ID)
 
@@ -585,7 +585,7 @@ func testAccCheckUsagePlanExists(ctx context.Context, n string, v *apigateway.Us
 
 func testAccCheckUsagePlanDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_api_gateway_usage_plan" {

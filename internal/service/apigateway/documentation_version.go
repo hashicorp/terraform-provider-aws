@@ -9,12 +9,13 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
@@ -51,7 +52,7 @@ func ResourceDocumentationVersion() *schema.Resource {
 
 func resourceDocumentationVersionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	restApiId := d.Get("rest_api_id").(string)
 
@@ -63,9 +64,9 @@ func resourceDocumentationVersionCreate(ctx context.Context, d *schema.ResourceD
 		params.Description = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating API Gateway Documentation Version: %s", params)
+	log.Printf("[DEBUG] Creating API Gateway Documentation Version: %+v", params)
 
-	version, err := conn.CreateDocumentationVersionWithContext(ctx, params)
+	version, err := conn.CreateDocumentationVersion(ctx, params)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating API Gateway Documentation Version: %s", err)
 	}
@@ -77,7 +78,7 @@ func resourceDocumentationVersionCreate(ctx context.Context, d *schema.ResourceD
 
 func resourceDocumentationVersionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 	log.Printf("[DEBUG] Reading API Gateway Documentation Version %s", d.Id())
 
 	apiId, docVersion, err := DecodeDocumentationVersionID(d.Id())
@@ -85,12 +86,12 @@ func resourceDocumentationVersionRead(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway Documentation Version (%s): %s", d.Id(), err)
 	}
 
-	version, err := conn.GetDocumentationVersionWithContext(ctx, &apigateway.GetDocumentationVersionInput{
+	version, err := conn.GetDocumentationVersion(ctx, &apigateway.GetDocumentationVersionInput{
 		DocumentationVersion: aws.String(docVersion),
 		RestApiId:            aws.String(apiId),
 	})
 	if err != nil {
-		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
+		if !d.IsNewResource() && errs.IsA[*awstypes.NotFoundException](err) {
 			log.Printf("[WARN] API Gateway Documentation Version (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return diags
@@ -107,15 +108,15 @@ func resourceDocumentationVersionRead(ctx context.Context, d *schema.ResourceDat
 
 func resourceDocumentationVersionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 	log.Printf("[DEBUG] Updating API Gateway Documentation Version %s", d.Id())
 
-	_, err := conn.UpdateDocumentationVersionWithContext(ctx, &apigateway.UpdateDocumentationVersionInput{
+	_, err := conn.UpdateDocumentationVersion(ctx, &apigateway.UpdateDocumentationVersionInput{
 		DocumentationVersion: aws.String(d.Get("version").(string)),
 		RestApiId:            aws.String(d.Get("rest_api_id").(string)),
-		PatchOperations: []*apigateway.PatchOperation{
+		PatchOperations: []awstypes.PatchOperation{
 			{
-				Op:    aws.String(apigateway.OpReplace),
+				Op:    awstypes.OpReplace,
 				Path:  aws.String("/description"),
 				Value: aws.String(d.Get("description").(string)),
 			},
@@ -131,10 +132,10 @@ func resourceDocumentationVersionUpdate(ctx context.Context, d *schema.ResourceD
 
 func resourceDocumentationVersionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 	log.Printf("[DEBUG] Deleting API Gateway Documentation Version: %s", d.Id())
 
-	_, err := conn.DeleteDocumentationVersionWithContext(ctx, &apigateway.DeleteDocumentationVersionInput{
+	_, err := conn.DeleteDocumentationVersion(ctx, &apigateway.DeleteDocumentationVersionInput{
 		DocumentationVersion: aws.String(d.Get("version").(string)),
 		RestApiId:            aws.String(d.Get("rest_api_id").(string)),
 	})

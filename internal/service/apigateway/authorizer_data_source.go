@@ -6,7 +6,6 @@ package apigateway
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -70,7 +69,7 @@ func DataSourceAuthorizer() *schema.Resource {
 
 func dataSourceAuthorizerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	authorizerID := d.Get("authorizer_id").(string)
 	apiID := d.Get("rest_api_id").(string)
@@ -92,7 +91,7 @@ func dataSourceAuthorizerRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("identity_source", authorizer.IdentitySource)
 	d.Set("identity_validation_expression", authorizer.IdentityValidationExpression)
 	d.Set("name", authorizer.Name)
-	d.Set("provider_arns", aws.StringValueSlice(authorizer.ProviderARNs))
+	d.Set("provider_arns", authorizer.ProviderARNs)
 	d.Set("type", authorizer.Type)
 
 	return diags

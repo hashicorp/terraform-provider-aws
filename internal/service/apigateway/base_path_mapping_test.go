@@ -8,13 +8,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -75,7 +76,7 @@ func TestDecodeBasePathMappingID(t *testing.T) {
 
 func TestAccAPIGatewayBasePathMapping_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.BasePathMapping
+	var conf apigateway.GetBasePathMappingOutput
 
 	name := acctest.RandomSubdomain()
 
@@ -106,7 +107,7 @@ func TestAccAPIGatewayBasePathMapping_basic(t *testing.T) {
 // https://github.com/hashicorp/terraform/issues/9212
 func TestAccAPIGatewayBasePathMapping_BasePath_empty(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.BasePathMapping
+	var conf apigateway.GetBasePathMappingOutput
 
 	name := acctest.RandomSubdomain()
 
@@ -136,7 +137,7 @@ func TestAccAPIGatewayBasePathMapping_BasePath_empty(t *testing.T) {
 
 func TestAccAPIGatewayBasePathMapping_updates(t *testing.T) {
 	ctx := acctest.Context(t)
-	var confFirst, conf apigateway.BasePathMapping
+	var confFirst, conf apigateway.GetBasePathMappingOutput
 	resourceName := "aws_api_gateway_base_path_mapping.test"
 	name := acctest.RandomSubdomain()
 
@@ -187,7 +188,7 @@ func TestAccAPIGatewayBasePathMapping_updates(t *testing.T) {
 
 func TestAccAPIGatewayBasePathMapping_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.BasePathMapping
+	var conf apigateway.GetBasePathMappingOutput
 
 	name := acctest.RandomSubdomain()
 	resourceName := "aws_api_gateway_base_path_mapping.test"
@@ -213,7 +214,7 @@ func TestAccAPIGatewayBasePathMapping_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckBasePathExists(ctx context.Context, n string, res *apigateway.BasePathMapping) resource.TestCheckFunc {
+func testAccCheckBasePathExists(ctx context.Context, n string, res *apigateway.GetBasePathMappingOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -224,7 +225,7 @@ func testAccCheckBasePathExists(ctx context.Context, n string, res *apigateway.B
 			return fmt.Errorf("No API Gateway ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
 		domainName, basePath, err := tfapigateway.DecodeBasePathMappingID(rs.Primary.ID)
 		if err != nil {
@@ -235,7 +236,7 @@ func testAccCheckBasePathExists(ctx context.Context, n string, res *apigateway.B
 			DomainName: aws.String(domainName),
 			BasePath:   aws.String(basePath),
 		}
-		describe, err := conn.GetBasePathMappingWithContext(ctx, req)
+		describe, err := conn.GetBasePathMapping(ctx, req)
 		if err != nil {
 			return err
 		}
@@ -248,7 +249,7 @@ func testAccCheckBasePathExists(ctx context.Context, n string, res *apigateway.B
 
 func testAccCheckBasePathDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_api_gateway_base_path_mapping" {
@@ -264,10 +265,10 @@ func testAccCheckBasePathDestroy(ctx context.Context) resource.TestCheckFunc {
 				DomainName: aws.String(domainName),
 				BasePath:   aws.String(basePath),
 			}
-			_, err = conn.GetBasePathMappingWithContext(ctx, req)
+			_, err = conn.GetBasePathMapping(ctx, req)
 
 			if err != nil {
-				if tfawserr.ErrCodeEquals(err, apigateway.ErrCodeNotFoundException) {
+				if errs.IsA[*awstypes.NotFoundException](err) {
 					return nil
 				}
 				return err
@@ -280,7 +281,7 @@ func testAccCheckBasePathDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckBasePathStageAttribute(conf *apigateway.BasePathMapping, basePath string) resource.TestCheckFunc {
+func testAccCheckBasePathStageAttribute(conf *apigateway.GetBasePathMappingOutput, basePath string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if conf.Stage == nil {
 			return fmt.Errorf("attribute Stage should not be nil")
@@ -293,7 +294,7 @@ func testAccCheckBasePathStageAttribute(conf *apigateway.BasePathMapping, basePa
 	}
 }
 
-func testAccCheckRestAPIIDAttributeHasChanged(conf *apigateway.BasePathMapping, previousConf *apigateway.BasePathMapping) resource.TestCheckFunc {
+func testAccCheckRestAPIIDAttributeHasChanged(conf *apigateway.GetBasePathMappingOutput, previousConf *apigateway.GetBasePathMappingOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if conf.RestApiId == nil {
 			return fmt.Errorf("attribute RestApiId should not be nil")
@@ -306,7 +307,7 @@ func testAccCheckRestAPIIDAttributeHasChanged(conf *apigateway.BasePathMapping, 
 	}
 }
 
-func testAccCheckBasePathBasePathAttribute(conf *apigateway.BasePathMapping, basePath string) resource.TestCheckFunc {
+func testAccCheckBasePathBasePathAttribute(conf *apigateway.GetBasePathMappingOutput, basePath string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if conf.Stage == nil {
 			return fmt.Errorf("attribute Stage should not be nil")
