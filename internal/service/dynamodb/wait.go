@@ -273,3 +273,21 @@ func waitContributorInsightsDeleted(ctx context.Context, conn *dynamodb.DynamoDB
 
 	return err
 }
+
+func waitTableActiveAfterDeletionProtectionChange(ctx context.Context, conn *dynamodb.DynamoDB, tableName string, timeout time.Duration) (*dynamodb.TableDescription, error) {
+	stateConf := &retry.StateChangeConf{
+		Delay:   5 * time.Second,
+		Pending: []string{dynamodb.TableStatusCreating, dynamodb.TableStatusUpdating},
+		Target:  []string{dynamodb.TableStatusActive},
+		Timeout: maxDuration(createTableTimeout, timeout),
+		Refresh: statusTable(ctx, conn, tableName),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*dynamodb.TableDescription); ok {
+		return output, err
+	}
+
+	return nil, err
+}

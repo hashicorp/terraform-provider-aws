@@ -88,6 +88,10 @@ func ResourceTableReplica() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(dynamodb.TableClass_Values(), false),
 			},
+			"deletion_protection_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			names.AttrTags:    tftags.TagsSchema(),         // direct to replica
 			names.AttrTagsAll: tftags.TagsSchemaComputed(), // direct to replica
 		},
@@ -337,6 +341,8 @@ func resourceTableReplicaReadReplica(ctx context.Context, d *schema.ResourceData
 
 	setTagsOut(ctx, Tags(tags))
 
+	d.Set("deletion_protection_enabled", result.Table.DeletionProtectionEnabled)
+
 	return diags
 }
 
@@ -428,7 +434,8 @@ func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, met
 	// handled direct to replica
 	// * point_in_time_recovery
 	// * tags
-	if d.HasChanges("point_in_time_recovery", names.AttrTagsAll) {
+	// * deletion_protection_enabled
+	if d.HasChanges("point_in_time_recovery", names.AttrTagsAll, "deletion_protection_enabled") {
 		if d.HasChange(names.AttrTagsAll) {
 			o, n := d.GetChange(names.AttrTagsAll)
 			if err := updateTags(ctx, repConn, d.Get(names.AttrARN).(string), o, n); err != nil {
@@ -442,9 +449,26 @@ func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, met
 			}
 		}
 
+		if d.HasChange("deletion_protection_enabled") {
+			log.Printf("[DEBUG] Updating DynamoDB Table Replica deletion protection: %v", d.Get("deletion_protection_enabled").(bool))
+			_, err := repConn.UpdateTableWithContext(ctx, &dynamodb.UpdateTableInput{
+				TableName:                 aws.String(tableName),
+				DeletionProtectionEnabled: aws.Bool(d.Get("deletion_protection_enabled").(bool)),
+			})
+			if err != nil {
+				return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, ResNameTableReplica, d.Id(), err)
+			}
+			// Deletion protection change is reflected only on table status, and not in replicas status field
+			// There is certain lag after attr update and table status change so doing it with delay
+			if _, err := waitTableActiveAfterDeletionProtectionChange(ctx, repConn, tableName, d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionWaitingForUpdate, ResNameTable, d.Id(), err)
+			}
+		}
+
 		if err := waitReplicaActive(ctx, tabConn, tableName, replicaRegion, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionWaitingForUpdate, ResNameTableReplica, d.Id(), err)
 		}
+
 	}
 
 	return append(diags, resourceTableReplicaRead(ctx, d, meta)...)
