@@ -128,8 +128,8 @@ github.com/aws/aws-sdk-go-v2/service/connectcases v1.15.3 h1:L95GltoDtewMcFq15o/
 github.com/aws/aws-sdk-go-v2/service/connectcases v1.15.3/go.mod h1:TyZr6RqRlR3hKsh1y1XfbY7+4NRvp3SgMFzxBk1K3Us=
 github.com/aws/aws-sdk-go-v2/service/controltower v1.13.3 h1:SG3sGG6K3N6tPMVeJBe98Zx0aXfTZlBDhHn6F0Nqof0=
 github.com/aws/aws-sdk-go-v2/service/controltower v1.13.3/go.mod h1:/MVyYMNxCYw1fGAIjcMc4N/gmTfJusFugrFKiKrW1Pw=
-github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.4.2 h1:trs+Vgd/4VvHr1B+bzQPWEp923It3GxR91WvA91k43s=
-github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.4.2/go.mod h1:EQYjdYyXTpCZXuHMK2t0sMtdOJ+cW6XQ2wekotnm/Hc=
+github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.4.3 h1:nCnaWjpCuKpcvUjnS/xuZTYPNUIWyyDB+br1muzA7Xk=
+github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.4.3/go.mod h1:GgMyAMEjKSWEMqwTkesHtHygbeh6aKyeGtkJC2XBQNc=
 github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.36.2 h1:IXaIyKQmuuSQ159kQj5UoIbg/pb8SQ+R/+D7s3nUapQ=
 github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.36.2/go.mod h1:aOYb58r6q9DSLhAqovQv7Um3qL3HKuzD/kX7xu1HHlk=
 github.com/aws/aws-sdk-go-v2/service/dax v1.19.2 h1:W8FEeMaUh/Poq2blWK4nmue31d+Mttmku2vBwonSzok=
