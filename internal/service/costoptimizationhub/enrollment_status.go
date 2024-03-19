@@ -63,9 +63,6 @@ func (r *resourceEnrollmentStatus) Schema(ctx context.Context, req resource.Sche
 				Computed: true,
 				Default:  booldefault.StaticBool(false),
 			},
-			"unenroll_on_destroy": schema.BoolAttribute{
-				Optional: true,
-			},
 		},
 	}
 }
@@ -232,5 +229,4 @@ type resourceEnrollmentStatusData struct {
 	ID                    types.String `tfsdk:"id"`
 	Status                types.String `tfsdk:"status"`
 	IncludeMemberAccounts types.Bool   `tfsdk:"include_member_accounts"`
-	UnenrollOnDestroy     types.Bool   `tfsdk:"unenroll_on_destroy"`
 }
