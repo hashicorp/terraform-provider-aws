@@ -57,7 +57,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.36.3
 	github.com/aws/aws-sdk-go-v2/service/devopsguru v1.30.3
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.24.3
-	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.9.1
+	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.9.2
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.30.4
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.151.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.27.2
