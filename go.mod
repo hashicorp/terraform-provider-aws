@@ -120,7 +120,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.23.3
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.53.0
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.44.3
-	github.com/aws/aws-sdk-go-v2/service/scheduler v1.8.2
+	github.com/aws/aws-sdk-go-v2/service/scheduler v1.8.3
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.28.3
 	github.com/aws/aws-sdk-go-v2/service/securityhub v1.46.2
 	github.com/aws/aws-sdk-go-v2/service/securitylake v1.13.1
