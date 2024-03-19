@@ -32,6 +32,7 @@ nav:
       - AWS SDK for Go Versions: aws-go-sdk-versions.md
       - AWS SDK for Go Migrations: aws-go-sdk-migrations.md
       - AWS SDK Go Base: aws-sdk-go-base.md
+      - Core Services: core-services.md
       - Data Handling and Conversion: data-handling-and-conversion.md
       - Debugging: debugging.md
       - Dependency Updates: dependency-updates.md
