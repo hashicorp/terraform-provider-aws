@@ -37,6 +37,7 @@ func testAccOrganizationDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "master_account_arn", dataSourceName, "master_account_arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "master_account_email", dataSourceName, "master_account_email"),
 					resource.TestCheckResourceAttrPair(resourceName, "master_account_id", dataSourceName, "master_account_id"),
+					resource.TestCheckResourceAttrPair(resourceName, "master_account_name", dataSourceName, "master_account_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "non_master_accounts.#", dataSourceName, "non_master_accounts.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "roots.#", dataSourceName, "roots.#"),
 				),
