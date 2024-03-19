@@ -27,7 +27,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.22.3
 	github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.15.3
 	github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.14.3
-	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.10.2
+	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.10.3
 	github.com/aws/aws-sdk-go-v2/service/cloud9 v1.24.2
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.18.2
 	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.35.2
