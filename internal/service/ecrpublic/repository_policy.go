@@ -79,7 +79,6 @@ func resourceRepositoryPolicyPut(ctx context.Context, d *schema.ResourceData, me
 		RepositoryName: aws.String(repositoryName),
 	}
 
-	// log.Printf("[DEBUG] Setting ECR Public Repository Policy: %s", aws.ToString(input))
 	outputRaw, err := tfresource.RetryWhen(ctx, policyPutTimeout,
 		func() (interface{}, error) {
 			return conn.SetRepositoryPolicy(ctx, input)

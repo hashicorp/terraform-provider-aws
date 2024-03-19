@@ -170,8 +170,8 @@ func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta in
 		out, err = conn.DescribeRepositories(ctx, input)
 		if d.IsNewResource() && errs.IsA[*awstypes.RepositoryNotFoundException](err) {
 			return retry.RetryableError(err)
-			return retry.RetryableError(err)
 		}
+
 		if err != nil {
 			return retry.NonRetryableError(err)
 		}
@@ -276,6 +276,7 @@ func resourceRepositoryDelete(ctx context.Context, d *schema.ResourceData, meta 
 
 		return retry.RetryableError(fmt.Errorf("%q: Timeout while waiting for the ECR Public Repository to be deleted", d.Id()))
 	})
+
 	if tfresource.TimedOut(err) {
 		_, err = conn.DescribeRepositories(ctx, input)
 	}

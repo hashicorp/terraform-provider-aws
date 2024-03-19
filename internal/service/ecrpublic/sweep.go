@@ -5,11 +5,13 @@ package ecrpublic
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecrpublic"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
 func RegisterSweepers() {
@@ -33,9 +35,16 @@ func sweepRepositories(region string) error {
 
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping ECR Public Repository sweep for %s: %s", region, err)
+			return nil
+		}
+
 		if err != nil {
 			return fmt.Errorf("error describing repositories: %w", err)
 		}
+
 		for _, repository := range page.Repositories {
 			r := ResourceRepository()
 			d := r.Data(nil)
