@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha1"
-	"encoding/base64"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -35,6 +34,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -821,15 +821,7 @@ func ResourceInstance() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ConflictsWith: []string{"user_data"},
-				ValidateFunc: func(v interface{}, name string) (warns []string, errs []error) {
-					s := v.(string)
-					if !verify.IsBase64Encoded([]byte(s)) {
-						errs = append(errs, fmt.Errorf(
-							"%s: must be base64-encoded", name,
-						))
-					}
-					return
-				},
+				ValidateFunc:  verify.ValidBase64String,
 			},
 			"user_data_replace_on_change": {
 				Type:     schema.TypeBool,
@@ -1775,19 +1767,16 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		// Otherwise, you must provide base64-encoded text".
 
 		if d.HasChange("user_data") {
-			log.Printf("[INFO] Modifying user data %s", d.Id())
-
-			// Decode so the AWS SDK doesn't double encode
-			userData, err := base64.StdEncoding.DecodeString(d.Get("user_data").(string))
+			// Decode so the AWS SDK doesn't double encode.
+			v, err := itypes.Base64Decode(d.Get("user_data").(string))
 			if err != nil {
-				log.Printf("[DEBUG] Instance (%s) user_data not base64 decoded", d.Id())
-				userData = []byte(d.Get("user_data").(string))
+				v = []byte(d.Get("user_data").(string))
 			}
 
 			input := &ec2.ModifyInstanceAttributeInput{
 				InstanceId: aws.String(d.Id()),
 				UserData: &ec2.BlobAttributeValue{
-					Value: userData,
+					Value: v,
 				},
 			}
 
@@ -1797,20 +1786,17 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if d.HasChange("user_data_base64") {
-			log.Printf("[INFO] Modifying user data base64 %s", d.Id())
-
 			// Schema validation technically ensures the data is Base64 encoded.
-			// Decode so the AWS SDK doesn't double encode
-			userData, err := base64.StdEncoding.DecodeString(d.Get("user_data_base64").(string))
+			// Decode so the AWS SDK doesn't double encode.
+			v, err := itypes.Base64Decode(d.Get("user_data_base64").(string))
 			if err != nil {
-				log.Printf("[DEBUG] Instance (%s) user_data_base64 not base64 decoded", d.Id())
-				userData = []byte(d.Get("user_data_base64").(string))
+				v = []byte(d.Get("user_data_base64").(string))
 			}
 
 			input := &ec2.ModifyInstanceAttributeInput{
 				InstanceId: aws.String(d.Id()),
 				UserData: &ec2.BlobAttributeValue{
-					Value: userData,
+					Value: v,
 				},
 			}
 
@@ -2943,7 +2929,7 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interfa
 	userDataBase64 := d.Get("user_data_base64").(string)
 
 	if userData != "" {
-		opts.UserData64 = aws.String(verify.Base64Encode([]byte(userData)))
+		opts.UserData64 = flex.StringValueToBase64String(userData)
 	} else if userDataBase64 != "" {
 		opts.UserData64 = aws.String(userDataBase64)
 	}
@@ -3299,13 +3285,13 @@ func waitInstanceStopped(ctx context.Context, conn *ec2.EC2, id string, timeout 
 	return nil, err
 }
 
-func userDataHashSum(user_data string) string {
+func userDataHashSum(userData string) string {
 	// Check whether the user_data is not Base64 encoded.
 	// Always calculate hash of base64 decoded value since we
-	// check against double-encoding when setting it
-	v, base64DecodeError := base64.StdEncoding.DecodeString(user_data)
-	if base64DecodeError != nil {
-		v = []byte(user_data)
+	// check against double-encoding when setting it.
+	v, err := itypes.Base64Decode(userData)
+	if err != nil {
+		v = []byte(userData)
 	}
 
 	hash := sha1.Sum(v)

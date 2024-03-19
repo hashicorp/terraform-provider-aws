@@ -309,7 +309,7 @@ func TestSESSMTPPasswordFromSecretKeySigV4(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		actual, err := tfiam.SessmTPPasswordFromSecretKeySigV4(&tc.Input, tc.Region)
+		actual, err := tfiam.SESSMTPPasswordFromSecretKeySigV4(&tc.Input, tc.Region)
 		if err != nil {
 			t.Fatalf("unexpected error: %s", err)
 		}
