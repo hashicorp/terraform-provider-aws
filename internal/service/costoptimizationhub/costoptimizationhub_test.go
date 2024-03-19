@@ -14,9 +14,9 @@ func TestAccCostOptimizationHub_serial(t *testing.T) {
 
 	testCases := map[string]map[string]func(t *testing.T){
 		"EnrollmentStatus": {
-			"basic":                 testAccCostOptimizationHubEnrollmentStatus_basic,
-			"disappears":            testAccCostOptimizationHubEnrollmentStatus_disappears,
-			"includeMemberAccounts": testAccCostOptimizationHubEnrollmentStatus_IncludeMemberAccounts,
+			"basic":                 testAccEnrollmentStatus_basic,
+			"disappears":            testAccEnrollmentStatus_disappears,
+			"includeMemberAccounts": testAccEnrollmentStatus_includeMemberAccounts,
 		},
 	}
 

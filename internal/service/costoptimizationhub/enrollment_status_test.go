@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccCostOptimizationHubEnrollmentStatus_basic(t *testing.T) {
+func testAccEnrollmentStatus_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var les_out costoptimizationhub.ListEnrollmentStatusesOutput
@@ -51,7 +51,7 @@ func testAccCostOptimizationHubEnrollmentStatus_basic(t *testing.T) {
 	})
 }
 
-func testAccCostOptimizationHubEnrollmentStatus_disappears(t *testing.T) {
+func testAccEnrollmentStatus_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	resourceName := "aws_costoptimizationhub_enrollment_status.test"
@@ -131,7 +131,7 @@ func testAccCheckEnrollmentStatusIsActive(ctx context.Context, name string) reso
 	}
 }
 
-func testAccCostOptimizationHubEnrollmentStatus_IncludeMemberAccounts(t *testing.T) {
+func testAccEnrollmentStatus_includeMemberAccounts(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var les_out costoptimizationhub.ListEnrollmentStatusesOutput

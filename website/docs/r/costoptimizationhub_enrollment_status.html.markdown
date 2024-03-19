@@ -23,7 +23,7 @@ resource "aws_costoptimizationhub_enrollment_status" "example" {
 
 ```terraform
 resource "aws_costoptimizationhub_enrollment_status" "example" {
-  include_member_accounts            = true
+  include_member_accounts = true
 }
 ```
 
