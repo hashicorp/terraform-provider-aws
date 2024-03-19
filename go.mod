@@ -98,7 +98,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mediastore v1.20.3
 	github.com/aws/aws-sdk-go-v2/service/mq v1.22.3
 	github.com/aws/aws-sdk-go-v2/service/mwaa v1.26.4
-	github.com/aws/aws-sdk-go-v2/service/oam v1.9.2
+	github.com/aws/aws-sdk-go-v2/service/oam v1.9.3
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.11.2
 	github.com/aws/aws-sdk-go-v2/service/osis v1.8.2
 	github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.5.2
