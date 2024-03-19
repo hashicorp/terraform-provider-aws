@@ -37,7 +37,7 @@ nav:
       - AWS SDK for Go Migrations: aws-go-sdk-migrations.md
       - Terraform Plugin Development Packages: terraform-plugin-development-packages.md
       - Terraform Plugin Migrations: terraform-plugin-migrations.md
-      - AWS Go SDK Base: aws-go-sdk-base.md
+      - AWS SDK Go Base: aws-sdk-go-base.md
       - Error Handling: error-handling.md
       - Provider Design: provider-design.md
       - Provider Scaffolding (skaff): skaff.md
