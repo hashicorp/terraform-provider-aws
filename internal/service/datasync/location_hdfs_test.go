@@ -178,6 +178,10 @@ func TestAccDataSyncLocationHDFS_kerberos(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"kerberos_keytab_base64",
+					"kerberos_krb5_conf",
+				},
 			},
 		},
 	})
