@@ -994,7 +994,7 @@ func testAccJobConfig_executionClass(rName, executionClass string) string {
 resource "aws_glue_job" "test" {
   execution_class   = %[2]q
   name              = %[1]q
-  number_of_workers = 1
+  number_of_workers = 2
   role_arn          = aws_iam_role.test.arn
   worker_type       = "G.1X"
   glue_version      = "3.0"
