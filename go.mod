@@ -109,7 +109,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.21.3
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.16.3
 	github.com/aws/aws-sdk-go-v2/service/rds v1.76.0
-	github.com/aws/aws-sdk-go-v2/service/redshift v1.43.3
+	github.com/aws/aws-sdk-go-v2/service/redshift v1.43.4
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.25.2
 	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.17.2
 	github.com/aws/aws-sdk-go-v2/service/rekognition v1.39.2
