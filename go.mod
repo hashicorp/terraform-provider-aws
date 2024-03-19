@@ -104,7 +104,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.5.3
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.11.3
 	github.com/aws/aws-sdk-go-v2/service/polly v1.39.5
-	github.com/aws/aws-sdk-go-v2/service/pricing v1.27.2
+	github.com/aws/aws-sdk-go-v2/service/pricing v1.27.3
 	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.4.2
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.21.2
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.16.2
