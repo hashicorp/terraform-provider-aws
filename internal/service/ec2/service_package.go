@@ -42,7 +42,14 @@ func (p *servicePackage) CustomizeConn(ctx context.Context, conn *ec2_sdkv1.EC2)
 			}
 
 		case "RunInstances":
-			// `InsufficientInstanceCapacity` error has status code 500 and AWS SDK try retry this error by default.
+			// `InsufficientInstanceCapacity` error has status code 500 and AWS SDK try retries this error by default.
+			if tfawserr.ErrCodeEquals(err, errCodeInsufficientInstanceCapacity) {
+				r.Retryable = aws_sdkv1.Bool(false)
+			}
+
+		case "CreateCapacityReservation":
+			// `InsufficientInstanceCapacity` error has status code 500 and AWS SDK retries this error by default.
+			// Terraform should handle retries so that we can support a timeout.
 			if tfawserr.ErrCodeEquals(err, errCodeInsufficientInstanceCapacity) {
 				r.Retryable = aws_sdkv1.Bool(false)
 			}

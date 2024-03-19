@@ -5,6 +5,7 @@ package ec2
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -13,6 +14,7 @@ import (
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -36,6 +38,12 @@ func ResourceCapacityReservation() *schema.Resource {
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
+			Update: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(10 * time.Minute),
+		},
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -163,15 +171,25 @@ func resourceCapacityReservationCreate(ctx context.Context, d *schema.ResourceDa
 		input.Tenancy = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateCapacityReservationWithContext(ctx, input)
+	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate)-(5*time.Second), func() *retry.RetryError {
+		output, err := conn.CreateCapacityReservationWithContext(ctx, input)
+
+		if err != nil {
+			if tfawserr.ErrCodeEquals(err, errCodeInsufficientInstanceCapacity) {
+				return retry.RetryableError(fmt.Errorf("creating EC2 Capacity Reservation: insufficient capacity for instance type %s in availability zone %s", *input.InstanceType, *input.AvailabilityZone))
+			}
+			return retry.NonRetryableError(fmt.Errorf("creating EC2 Capacity Reservation: %s", err))
+		}
+
+		d.SetId(aws.StringValue(output.CapacityReservation.CapacityReservationId))
+		return nil
+	})
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating EC2 Capacity Reservation: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.SetId(aws.StringValue(output.CapacityReservation.CapacityReservationId))
-
-	if _, err := WaitCapacityReservationActive(ctx, conn, d.Id()); err != nil {
+	if _, err := WaitCapacityReservationActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Capacity Reservation (%s) create: %s", d.Id(), err)
 	}
 
@@ -235,13 +253,24 @@ func resourceCapacityReservationUpdate(ctx context.Context, d *schema.ResourceDa
 			input.EndDate = aws.Time(v)
 		}
 
-		_, err := conn.ModifyCapacityReservationWithContext(ctx, input)
+		err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutUpdate)-(5*time.Second), func() *retry.RetryError {
+			_, err := conn.ModifyCapacityReservationWithContext(ctx, input)
+
+			if err != nil {
+				if tfawserr.ErrCodeEquals(err, errCodeInsufficientInstanceCapacity) {
+					return retry.RetryableError(fmt.Errorf("updating EC2 Capacity Reservation: insufficient capacity"))
+				}
+				return retry.NonRetryableError(fmt.Errorf("updating EC2 Capacity Reservation: %s", err))
+			}
+
+			return nil
+		})
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EC2 Capacity Reservation (%s): %s", d.Id(), err)
 		}
 
-		if _, err := WaitCapacityReservationActive(ctx, conn, d.Id()); err != nil {
+		if _, err := WaitCapacityReservationActive(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for EC2 Capacity Reservation (%s) update: %s", d.Id(), err)
 		}
 	}
@@ -266,7 +295,7 @@ func resourceCapacityReservationDelete(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 Capacity Reservation (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitCapacityReservationDeleted(ctx, conn, d.Id()); err != nil {
+	if _, err := WaitCapacityReservationDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Capacity Reservation (%s) delete: %s", d.Id(), err)
 	}
 

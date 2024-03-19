@@ -81,17 +81,12 @@ func WaitAvailabilityZoneGroupNotOptedIn(ctx context.Context, conn *ec2.EC2, nam
 	return nil, err
 }
 
-const (
-	CapacityReservationActiveTimeout  = 2 * time.Minute
-	CapacityReservationDeletedTimeout = 2 * time.Minute
-)
-
-func WaitCapacityReservationActive(ctx context.Context, conn *ec2.EC2, id string) (*ec2.CapacityReservation, error) {
+func WaitCapacityReservationActive(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.CapacityReservation, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{ec2.CapacityReservationStatePending},
 		Target:  []string{ec2.CapacityReservationStateActive},
 		Refresh: StatusCapacityReservationState(ctx, conn, id),
-		Timeout: CapacityReservationActiveTimeout,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -103,12 +98,12 @@ func WaitCapacityReservationActive(ctx context.Context, conn *ec2.EC2, id string
 	return nil, err
 }
 
-func WaitCapacityReservationDeleted(ctx context.Context, conn *ec2.EC2, id string) (*ec2.CapacityReservation, error) {
+func WaitCapacityReservationDeleted(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.CapacityReservation, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{ec2.CapacityReservationStateActive},
 		Target:  []string{},
 		Refresh: StatusCapacityReservationState(ctx, conn, id),
-		Timeout: CapacityReservationDeletedTimeout,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
