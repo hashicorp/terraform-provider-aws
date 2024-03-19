@@ -18,7 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfsesv2 "github.com/hashicorp/terraform-provider-aws/internal/service/sesv2"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -194,10 +194,10 @@ func TestAccSESV2EmailIdentity_domainSigning(t *testing.T) {
 	rName := acctest.RandomDomainName()
 	resourceName := "aws_sesv2_email_identity.test"
 
-	key1 := verify.Base64Encode([]byte(acctest.TLSRSAPrivateKeyPEM(t, 2048)))
+	key1 := itypes.Base64EncodeOnce([]byte(acctest.TLSRSAPrivateKeyPEM(t, 2048)))
 	selector1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	key2 := verify.Base64Encode([]byte(acctest.TLSRSAPrivateKeyPEM(t, 2048)))
+	key2 := itypes.Base64EncodeOnce([]byte(acctest.TLSRSAPrivateKeyPEM(t, 2048)))
 	selector2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{

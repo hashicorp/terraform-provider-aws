@@ -5,7 +5,6 @@ package ecrpublic
 
 import (
 	"context"
-	"encoding/base64"
 	"strings"
 	"time"
 
@@ -15,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 // @SDKDataSource("aws_ecrpublic_authorization_token")
@@ -59,7 +59,8 @@ func dataSourceAuthorizationTokenRead(ctx context.Context, d *schema.ResourceDat
 	authorizationData := out.AuthorizationData
 	authorizationToken := aws.ToString(authorizationData.AuthorizationToken)
 	expiresAt := aws.ToTime(authorizationData.ExpiresAt).Format(time.RFC3339)
-	authBytes, err := base64.URLEncoding.DecodeString(authorizationToken)
+	authBytes, err := itypes.Base64Decode(authorizationToken)
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "decoding ECR Public authorization token: %s", err)
 	}

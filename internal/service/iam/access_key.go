@@ -7,7 +7,6 @@ import (
 	"context"
 	"crypto/hmac"
 	"crypto/sha256"
-	"encoding/base64"
 	"fmt"
 	"log"
 	"time"
@@ -23,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 // @SDKResource("aws_iam_access_key", name="Access Key")
@@ -128,7 +128,7 @@ func resourceAccessKeyCreate(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "CreateAccessKey response did not contain a Secret Access Key as expected")
 	}
 
-	sesSMTPPasswordV4, err := SessmTPPasswordFromSecretKeySigV4(createResp.AccessKey.SecretAccessKey, meta.(*conns.AWSClient).Region)
+	sesSMTPPasswordV4, err := sesSMTPPasswordFromSecretKeySigV4(createResp.AccessKey.SecretAccessKey, meta.(*conns.AWSClient).Region)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "getting SES SigV4 SMTP Password from Secret Access Key: %s", err)
 	}
@@ -336,7 +336,7 @@ func hmacSignature(key []byte, value []byte) ([]byte, error) {
 	return h.Sum(nil), nil
 }
 
-func SessmTPPasswordFromSecretKeySigV4(key *string, region string) (string, error) {
+func sesSMTPPasswordFromSecretKeySigV4(key *string, region string) (string, error) {
 	if key == nil {
 		return "", nil
 	}
@@ -346,7 +346,7 @@ func SessmTPPasswordFromSecretKeySigV4(key *string, region string) (string, erro
 	terminal := []byte("aws4_request")
 	message := []byte("SendRawEmail")
 
-	rawSig, err := hmacSignature([]byte("AWS4"+*key), date)
+	rawSig, err := hmacSignature([]byte("AWS4"+aws.StringValue(key)), date)
 	if err != nil {
 		return "", err
 	}
@@ -367,5 +367,5 @@ func SessmTPPasswordFromSecretKeySigV4(key *string, region string) (string, erro
 	versionedSig := make([]byte, 0, len(rawSig)+1)
 	versionedSig = append(versionedSig, version)
 	versionedSig = append(versionedSig, rawSig...)
-	return base64.StdEncoding.EncodeToString(versionedSig), nil
+	return itypes.Base64Encode(versionedSig), nil
 }
