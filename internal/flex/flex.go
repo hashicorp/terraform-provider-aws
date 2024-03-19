@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 const (
@@ -348,6 +349,11 @@ func Int64ValueToString(v int64) *string {
 func StringToIntValue(v *string) int {
 	i, _ := strconv.Atoi(aws.StringValue(v))
 	return i
+}
+
+// StringValueToBase64String converts a string to a Go base64 string pointer.
+func StringValueToBase64String(v string) *string {
+	return aws.String(itypes.Base64EncodeOnce([]byte(v)))
 }
 
 // StringValueToInt64 converts a string to a Go int64 pointer.

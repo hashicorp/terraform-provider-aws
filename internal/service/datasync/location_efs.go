@@ -5,10 +5,12 @@ package datasync
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/datasync"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -26,7 +28,7 @@ import (
 
 // @SDKResource("aws_datasync_location_efs", name="Location EFS")
 // @Tags(identifierAttribute="id")
-func ResourceLocationEFS() *schema.Resource {
+func resourceLocationEFS() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationEFSCreate,
 		ReadWithoutTimeout:   resourceLocationEFSRead,
@@ -157,7 +159,7 @@ func resourceLocationEFSRead(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
-	output, err := FindLocationEFSByARN(ctx, conn, d.Id())
+	output, err := findLocationEFSByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DataSync Location EFS (%s) not found, removing from state", d.Id())
@@ -170,16 +172,27 @@ func resourceLocationEFSRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	uri := aws.StringValue(output.LocationUri)
+	globalID, err := globalIDFromLocationURI(uri)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
 	subdirectory, err := subdirectoryFromLocationURI(uri)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
+	locationARN, err := arn.Parse(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+	globalIDParts := strings.Split(globalID, ".") // Global ID format for EFS location is <region>.<efs_file_system_id>
 
 	d.Set("access_point_arn", output.AccessPointArn)
 	d.Set("arn", output.LocationArn)
 	if err := d.Set("ec2_config", flattenEC2Config(output.Ec2Config)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ec2_config: %s", err)
 	}
+	efsFileSystemARN := fmt.Sprintf("arn:%s:elasticfilesystem:%s:%s:file-system/%s", locationARN.Partition, globalIDParts[0], locationARN.AccountID, globalIDParts[1])
+	d.Set("efs_file_system_arn", efsFileSystemARN)
 	d.Set("file_system_access_role_arn", output.FileSystemAccessRoleArn)
 	d.Set("in_transit_encryption", output.InTransitEncryption)
 	d.Set("subdirectory", subdirectory)
@@ -216,7 +229,7 @@ func resourceLocationEFSDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func FindLocationEFSByARN(ctx context.Context, conn *datasync.DataSync, arn string) (*datasync.DescribeLocationEfsOutput, error) {
+func findLocationEFSByARN(ctx context.Context, conn *datasync.DataSync, arn string) (*datasync.DescribeLocationEfsOutput, error) {
 	input := &datasync.DescribeLocationEfsInput{
 		LocationArn: aws.String(arn),
 	}

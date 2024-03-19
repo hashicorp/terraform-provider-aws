@@ -20,13 +20,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_datasync_location_hdfs", name="Location HDFS")
 // @Tags(identifierAttribute="id")
-func ResourceLocationHDFS() *schema.Resource {
+func resourceLocationHDFS() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationHDFSCreate,
 		ReadWithoutTimeout:   resourceLocationHDFSRead,
@@ -65,12 +66,26 @@ func ResourceLocationHDFS() *schema.Resource {
 				),
 			},
 			"kerberos_keytab": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"kerberos_keytab_base64"},
+			},
+			"kerberos_keytab_base64": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"kerberos_keytab"},
+				ValidateFunc:  verify.ValidBase64String,
 			},
 			"kerberos_krb5_conf": {
-				Type:     schema.TypeString,
-				Optional: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"kerberos_krb5_conf_base64"},
+			},
+			"kerberos_krb5_conf_base64": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				ConflictsWith: []string{"kerberos_krb5_conf"},
+				ValidateFunc:  verify.ValidBase64String,
 			},
 			"kerberos_principal": {
 				Type:         schema.TypeString,
@@ -104,17 +119,20 @@ func ResourceLocationHDFS() *schema.Resource {
 			"qop_configuration": {
 				Type:     schema.TypeList,
 				Optional: true,
+				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"data_transfer_protection": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							Computed:     true,
 							ValidateFunc: validation.StringInSlice(datasync.HdfsDataTransferProtection_Values(), false),
 						},
 						"rpc_protection": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							Computed:     true,
 							ValidateFunc: validation.StringInSlice(datasync.HdfsRpcProtection_Values(), false),
 						},
 					},
@@ -176,10 +194,24 @@ func resourceLocationHDFSCreate(ctx context.Context, d *schema.ResourceData, met
 
 	if v, ok := d.GetOk("kerberos_keytab"); ok {
 		input.KerberosKeytab = []byte(v.(string))
+	} else if v, ok := d.GetOk("kerberos_keytab_base64"); ok {
+		v := v.(string)
+		b, err := itypes.Base64Decode(v)
+		if err != nil {
+			b = []byte(v)
+		}
+		input.KerberosKeytab = b
 	}
 
 	if v, ok := d.GetOk("kerberos_krb5_conf"); ok {
 		input.KerberosKrb5Conf = []byte(v.(string))
+	} else if v, ok := d.GetOk("kerberos_krb5_conf_base64"); ok {
+		v := v.(string)
+		b, err := itypes.Base64Decode(v)
+		if err != nil {
+			b = []byte(v)
+		}
+		input.KerberosKrb5Conf = b
 	}
 
 	if v, ok := d.GetOk("kerberos_principal"); ok {
@@ -217,7 +249,7 @@ func resourceLocationHDFSRead(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
-	output, err := FindLocationHDFSByARN(ctx, conn, d.Id())
+	output, err := findLocationHDFSByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DataSync Location HDFS (%s) not found, removing from state", d.Id())
@@ -276,12 +308,30 @@ func resourceLocationHDFSUpdate(ctx context.Context, d *schema.ResourceData, met
 			input.BlockSize = aws.Int64(int64(d.Get("block_size").(int)))
 		}
 
-		if d.HasChange("kerberos_keytab") {
-			input.KerberosKeytab = []byte(d.Get("kerberos_keytab").(string))
+		if d.HasChanges("kerberos_keytab", "kerberos_keytab_base64") {
+			if v, ok := d.GetOk("kerberos_keytab"); ok {
+				input.KerberosKeytab = []byte(v.(string))
+			} else if v, ok := d.GetOk("kerberos_keytab_base64"); ok {
+				v := v.(string)
+				b, err := itypes.Base64Decode(v)
+				if err != nil {
+					b = []byte(v)
+				}
+				input.KerberosKeytab = b
+			}
 		}
 
-		if d.HasChange("kerberos_krb5_conf") {
-			input.KerberosKrb5Conf = []byte(d.Get("kerberos_krb5_conf").(string))
+		if d.HasChanges("kerberos_krb5_conf", "kerberos_krb5_conf_base64") {
+			if v, ok := d.GetOk("kerberos_krb5_conf"); ok {
+				input.KerberosKrb5Conf = []byte(v.(string))
+			} else if v, ok := d.GetOk("kerberos_krb5_conf_base64"); ok {
+				v := v.(string)
+				b, err := itypes.Base64Decode(v)
+				if err != nil {
+					b = []byte(v)
+				}
+				input.KerberosKrb5Conf = b
+			}
 		}
 
 		if d.HasChange("kerberos_principal") {
@@ -342,7 +392,7 @@ func resourceLocationHDFSDelete(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func FindLocationHDFSByARN(ctx context.Context, conn *datasync.DataSync, arn string) (*datasync.DescribeLocationHdfsOutput, error) {
+func findLocationHDFSByARN(ctx context.Context, conn *datasync.DataSync, arn string) (*datasync.DescribeLocationHdfsOutput, error) {
 	input := &datasync.DescribeLocationHdfsInput{
 		LocationArn: aws.String(arn),
 	}

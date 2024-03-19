@@ -1,4 +1,4 @@
-# Migrating from Terraform SDKv2 to Framework
+# Terraform Plugin Migrations
 
 With the introduction of [Terraform Plugin Framework](https://developer.hashicorp.com/terraform/plugin/framework) it will become necessary to migrate existing resources from SDKv2. The Provider currently implements both plugins so migration can be done at a resource level.
 

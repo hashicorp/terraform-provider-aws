@@ -5,7 +5,6 @@ package ecrpublic
 
 import (
 	"context"
-	"encoding/base64"
 	"fmt"
 	"log"
 	"time"
@@ -23,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -356,8 +356,7 @@ func expandRepositoryCatalogData(tfMap map[string]interface{}) *ecrpublic.Reposi
 	}
 
 	if v, ok := tfMap["logo_image_blob"].(string); ok && len(v) > 0 {
-		data, _ := base64.StdEncoding.DecodeString(v)
-		repositoryCatalogDataInput.LogoImageBlob = data
+		repositoryCatalogDataInput.LogoImageBlob = itypes.MustBase64Decode(v)
 	}
 
 	if v, ok := tfMap["operating_systems"].(*schema.Set); ok {
