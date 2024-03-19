@@ -142,6 +142,7 @@ func TestAccDataSyncLocationHDFS_kerberos(t *testing.T) {
 	var v datasync.DescribeLocationHdfsOutput
 	resourceName := "aws_datasync_location_hdfs.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	principal := acctest.RandomEmailAddress(acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -150,7 +151,7 @@ func TestAccDataSyncLocationHDFS_kerberos(t *testing.T) {
 		CheckDestroy:             testAccCheckLocationHDFSDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLocationHDFSConfig_kerberos(rName),
+				Config: testAccLocationHDFSConfig_kerberos(rName, principal),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLocationHDFSExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "1"),
@@ -161,7 +162,7 @@ func TestAccDataSyncLocationHDFS_kerberos(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "kerberos_keytab_base64"),
 					resource.TestCheckResourceAttrSet(resourceName, "kerberos_krb5_conf"),
 					resource.TestCheckNoResourceAttr(resourceName, "kerberos_krb5_conf_base64"),
-					resource.TestCheckResourceAttr(resourceName, "kerberos_principal", "user@example.com"),
+					resource.TestCheckResourceAttr(resourceName, "kerberos_principal", principal),
 					resource.TestCheckResourceAttr(resourceName, "kms_key_provider_uri", ""),
 					resource.TestCheckResourceAttr(resourceName, "name_node.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "name_node.*", map[string]string{
@@ -297,8 +298,8 @@ resource "aws_datasync_location_hdfs" "test" {
 `, rName, key1, value1, key2, value2))
 }
 
-func testAccLocationHDFSConfig_kerberos(rName string) string {
-	return acctest.ConfigCompose(testAccLocationHDFSConfig_base(rName), `
+func testAccLocationHDFSConfig_kerberos(rName, principal string) string {
+	return acctest.ConfigCompose(testAccLocationHDFSConfig_base(rName), fmt.Sprintf(`
 resource "aws_datasync_location_hdfs" "test" {
   agent_arns          = [aws_datasync_agent.test.arn]
   authentication_type = "KERBEROS"
@@ -308,9 +309,9 @@ resource "aws_datasync_location_hdfs" "test" {
     port     = 80
   }
 
-  kerberos_principal     = "user@example.com"
+  kerberos_principal     = %[1]q
   kerberos_keytab_base64 = filebase64("test-fixtures/keytab.krb")
   kerberos_krb5_conf     = file("test-fixtures/krb5.conf")
 }
-`)
+`, principal))
 }
