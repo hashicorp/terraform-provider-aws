@@ -21,3 +21,7 @@ resource/aws_datasync_location_smb: Fix missing `server_hostname` attribute valu
 ```release-note:enhancement
 resource/aws_datasync_location_hdfs: Add `kerberos_keytab_base64` and `kerberos_krb5_conf_base64` arguments
 ```
+
+```release-note:bug
+resource/aws_datasync_location_hdfs: Mark `qop_configuration` as Computed
+```
