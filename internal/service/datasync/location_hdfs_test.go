@@ -34,7 +34,7 @@ func TestAccDataSyncLocationHDFS_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationHDFSConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLocationHDFSExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "1"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexache.MustCompile(`location/loc-.+`)),
@@ -53,7 +53,7 @@ func TestAccDataSyncLocationHDFS_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "qop_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "replication_factor", "3"),
 					resource.TestCheckResourceAttr(resourceName, "simple_user", rName),
-					resource.TestCheckResourceAttr(resourceName, "subdirectory", ""),
+					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestMatchResourceAttr(resourceName, "uri", regexache.MustCompile(`^hdfs://.+/`)),
 				),
@@ -83,7 +83,6 @@ func TestAccDataSyncLocationHDFS_disappears(t *testing.T) {
 				Config: testAccLocationHDFSConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLocationHDFSExists(ctx, resourceName, &v),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdatasync.ResourceLocationHDFS(), resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdatasync.ResourceLocationHDFS(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -152,7 +151,7 @@ func TestAccDataSyncLocationHDFS_kerberos(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationHDFSConfig_kerberos(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckLocationHDFSExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "1"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexache.MustCompile(`location/loc-.+`)),
@@ -168,9 +167,9 @@ func TestAccDataSyncLocationHDFS_kerberos(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "name_node.*", map[string]string{
 						"port": "80",
 					}),
-					resource.TestCheckResourceAttr(resourceName, "qop_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "qop_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "replication_factor", "3"),
-					resource.TestCheckResourceAttr(resourceName, "subdirectory", ""),
+					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestMatchResourceAttr(resourceName, "uri", regexache.MustCompile(`^hdfs://.+/`)),
 				),
