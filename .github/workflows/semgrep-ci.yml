@@ -14,7 +14,7 @@ on:
 env:
   SEMGREP_SEND_METRICS: "off"
   SEMGREP_ENABLE_VERSION_CHECK: false
-  SEMGREP_TIMEOUT: 60
+  SEMGREP_TIMEOUT: 300
   COMMON_PARAMS: --error --quiet
 
 jobs:
