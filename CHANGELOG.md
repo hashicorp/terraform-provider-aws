@@ -3,6 +3,7 @@
 FEATURES:
 
 * **New Data Source:** `aws_redshift_producer_data_shares` ([#36481](https://github.com/hashicorp/terraform-provider-aws/issues/36481))
+* **New Resource:** `aws_devopsguru_event_sources_config` ([#36485](https://github.com/hashicorp/terraform-provider-aws/issues/36485))
 
 ENHANCEMENTS:
 
