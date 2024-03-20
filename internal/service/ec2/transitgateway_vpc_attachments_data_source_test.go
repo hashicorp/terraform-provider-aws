@@ -22,7 +22,7 @@ func testAccTransitGatewayVPCAttachmentsDataSource_Filter(t *testing.T, semaphor
 		PreCheck: func() {
 			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckTransitGateway(ctx, t)
+			testAccPreCheckTransitGatewayVPCAttachment(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
