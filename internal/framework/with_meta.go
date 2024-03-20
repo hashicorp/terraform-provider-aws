@@ -7,7 +7,6 @@ import (
 	"context"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
@@ -38,13 +37,6 @@ func (w *withMeta) RegionalARN(service, resource string) string {
 		AccountID: w.meta.AccountID,
 		Resource:  resource,
 	}.String()
-}
-
-// WithNoUpdate is intended to be embedded in resources which cannot be updated.
-type WithNoUpdate struct{}
-
-func (w *WithNoUpdate) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	response.Diagnostics.Append(diag.NewErrorDiagnostic("not supported", "This resource's Update method should not have been called"))
 }
 
 // WithNoOpUpdate is intended to be embedded in resources which have no need of a custom Update method.
