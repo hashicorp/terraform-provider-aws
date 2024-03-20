@@ -24,6 +24,7 @@ BUG FIXES:
 * resource/aws_datasync_location_smb: Fix missing `server_hostname` attribute value from state read/refresh ([#36072](https://github.com/hashicorp/terraform-provider-aws/issues/36072))
 * resource/aws_dms_replication_config: Fix persistent change in `replication_settings` ([#35670](https://github.com/hashicorp/terraform-provider-aws/issues/35670))
 * resource/aws_dms_replication_task: Fix persistent change in `replication_task_settings` ([#35670](https://github.com/hashicorp/terraform-provider-aws/issues/35670))
+* resource/aws_eks_access_entry: Always send `kubernetes_groups` and `user_name` values on update when configured ([#36484](https://github.com/hashicorp/terraform-provider-aws/issues/36484))
 * resource/aws_glue_job: Adjust `number_of_workers` minimum value to `1` ([#36458](https://github.com/hashicorp/terraform-provider-aws/issues/36458))
 * resource/aws_vpn_connection: `local_ipv6_network_cidr`, `remote_ipv6_network_cidr`, `tunnel1_inside_ipv6_cidr`, and `tunnel2_inside_ipv6_cidr` no longer require `transit_gateway_id` to be specified ([#36405](https://github.com/hashicorp/terraform-provider-aws/issues/36405))
 
