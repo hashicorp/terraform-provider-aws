@@ -317,7 +317,7 @@ sanity: prereq-go ## Run sanity checks with failures allowed
 
 semall: semgrep-validate ## Run semgrep on all files
 	@echo "make: running Semgrep checks locally (must have semgrep installed)..."
-	@semgrep --error --metrics=off \
+	@SEMGREP_TIMEOUT=60 semgrep --error --metrics=off \
 		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
 		--config .ci/.semgrep.yml \
 		--config .ci/.semgrep-caps-aws-ec2.yml \
@@ -338,7 +338,7 @@ semfix: semgrep-validate ## Run semgrep on all files
 	@echo "make: running Semgrep checks locally (must have semgrep installed)..."
 	@echo "make: applying fixes with --autofix"
 	@echo "make: WARNING: This will not fix rules that don't have autofixes"
-	@semgrep --error --metrics=off --autofix \
+	@SEMGREP_TIMEOUT=60 semgrep --error --metrics=off --autofix \
 		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
 		--config .ci/.semgrep.yml \
 		--config .ci/.semgrep-caps-aws-ec2.yml \
@@ -356,7 +356,7 @@ semfix: semgrep-validate ## Run semgrep on all files
 		--config 'r/dgryski.semgrep-go.oserrors'
 
 semgrep-validate: ## Validate semgrep configuration files
-	@semgrep --error --validate \
+	@SEMGREP_TIMEOUT=60 semgrep --error --validate \
 		--config .ci/.semgrep.yml \
 		--config .ci/.semgrep-caps-aws-ec2.yml \
 		--config .ci/.semgrep-configs.yml \
