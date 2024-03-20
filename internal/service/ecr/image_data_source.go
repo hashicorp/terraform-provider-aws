@@ -8,14 +8,15 @@ import (
 	"fmt"
 	"slices"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ecr"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ecr"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
@@ -76,14 +77,14 @@ func DataSourceImage() *schema.Resource {
 
 func dataSourceImageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRConn(ctx)
+	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
 	input := &ecr.DescribeImagesInput{
 		RepositoryName: aws.String(d.Get("repository_name").(string)),
 	}
 
 	if v, ok := d.GetOk("image_digest"); ok {
-		input.ImageIds = []*ecr.ImageIdentifier{
+		input.ImageIds = []awstypes.ImageIdentifier{
 			{
 				ImageDigest: aws.String(v.(string)),
 			},
@@ -92,7 +93,7 @@ func dataSourceImageRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if v, ok := d.GetOk("image_tag"); ok {
 		if len(input.ImageIds) == 0 {
-			input.ImageIds = []*ecr.ImageIdentifier{
+			input.ImageIds = []awstypes.ImageIdentifier{
 				{
 					ImageTag: aws.String(v.(string)),
 				},
@@ -121,11 +122,11 @@ func dataSourceImageRead(ctx context.Context, d *schema.ResourceData, meta inter
 			return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more specific search criteria, or set `most_recent` attribute to true.")
 		}
 
-		slices.SortFunc(imageDetails, func(a, b *ecr.ImageDetail) int {
-			if aws.TimeValue(a.ImagePushedAt).After(aws.TimeValue(b.ImagePushedAt)) {
+		slices.SortFunc(imageDetails, func(a, b *awstypes.ImageDetail) int {
+			if aws.ToTime(a.ImagePushedAt).After(aws.ToTime(b.ImagePushedAt)) {
 				return -1
 			}
-			if aws.TimeValue(a.ImagePushedAt).Before(aws.TimeValue(b.ImagePushedAt)) {
+			if aws.ToTime(a.ImagePushedAt).Before(aws.ToTime(b.ImagePushedAt)) {
 				return 1
 			}
 			return 0
@@ -134,9 +135,9 @@ func dataSourceImageRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	imageDetail := imageDetails[0]
 
-	repositoryName := aws.StringValue(imageDetail.RepositoryName)
+	repositoryName := aws.ToString(imageDetail.RepositoryName)
 	repositoryInput := &ecr.DescribeRepositoriesInput{
-		RepositoryNames: aws.StringSlice([]string{repositoryName}),
+		RepositoryNames: []string{repositoryName},
 		RegistryId:      imageDetail.RegistryId,
 	}
 
@@ -146,36 +147,35 @@ func dataSourceImageRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "reading ECR Images: %s", err)
 	}
 
-	d.SetId(aws.StringValue(imageDetail.ImageDigest))
+	d.SetId(aws.ToString(imageDetail.ImageDigest))
 	d.Set("image_digest", imageDetail.ImageDigest)
 	d.Set("image_pushed_at", imageDetail.ImagePushedAt.Unix())
 	d.Set("image_size_in_bytes", imageDetail.ImageSizeInBytes)
-	d.Set("image_tags", aws.StringValueSlice(imageDetail.ImageTags))
-	d.Set("image_uri", fmt.Sprintf("%s@%s", aws.StringValue(repository.RepositoryUri), aws.StringValue(imageDetail.ImageDigest)))
+	d.Set("image_tags", imageDetail.ImageTags)
+	d.Set("image_uri", fmt.Sprintf("%s@%s", aws.ToString(repository.RepositoryUri), aws.ToString(imageDetail.ImageDigest)))
 	d.Set("registry_id", imageDetail.RegistryId)
 	d.Set("repository_name", imageDetail.RepositoryName)
 
 	return diags
 }
 
-func FindImageDetails(ctx context.Context, conn *ecr.ECR, input *ecr.DescribeImagesInput) ([]*ecr.ImageDetail, error) {
-	var output []*ecr.ImageDetail
+func FindImageDetails(ctx context.Context, conn *ecr.Client, input *ecr.DescribeImagesInput) ([]*awstypes.ImageDetail, error) {
+	var output []*awstypes.ImageDetail
 
-	err := conn.DescribeImagesPagesWithContext(ctx, input, func(page *ecr.DescribeImagesOutput, lastPage bool) bool {
+	err := describeImagesPages(ctx, conn, input, func(page *ecr.DescribeImagesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
 		for _, v := range page.ImageDetails {
-			if v != nil {
-				output = append(output, v)
-			}
+			imageDetail := v
+			output = append(output, &imageDetail)
 		}
 
 		return !lastPage
 	})
 
-	if tfawserr.ErrCodeEquals(err, ecr.ErrCodeRepositoryNotFoundException) {
+	if errs.IsA[*awstypes.RepositoryNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

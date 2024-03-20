@@ -8,14 +8,14 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ecr"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ecr"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -54,11 +54,11 @@ func ResourceRepository() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"encryption_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							Default:      ecr.EncryptionTypeAes256,
-							ValidateFunc: validation.StringInSlice(ecr.EncryptionType_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							ForceNew:         true,
+							Default:          awstypes.EncryptionTypeAes256,
+							ValidateDiagFunc: enum.Validate[awstypes.EncryptionType](),
 						},
 						"kms_key": {
 							Type:     schema.TypeString,
@@ -90,10 +90,10 @@ func ResourceRepository() *schema.Resource {
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 			},
 			"image_tag_mutability": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      ecr.ImageTagMutabilityMutable,
-				ValidateFunc: validation.StringInSlice(ecr.ImageTagMutability_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.ImageTagMutabilityMutable,
+				ValidateDiagFunc: enum.Validate[awstypes.ImageTagMutability](),
 			},
 			"name": {
 				Type:     schema.TypeString,
@@ -116,44 +116,44 @@ func ResourceRepository() *schema.Resource {
 
 func resourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRConn(ctx)
+	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
 	name := d.Get("name").(string)
 	input := &ecr.CreateRepositoryInput{
 		EncryptionConfiguration: expandRepositoryEncryptionConfiguration(d.Get("encryption_configuration").([]interface{})),
-		ImageTagMutability:      aws.String(d.Get("image_tag_mutability").(string)),
+		ImageTagMutability:      awstypes.ImageTagMutability((d.Get("image_tag_mutability").(string))),
 		RepositoryName:          aws.String(name),
 		Tags:                    getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("image_scanning_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		tfMap := v.([]interface{})[0].(map[string]interface{})
-		input.ImageScanningConfiguration = &ecr.ImageScanningConfiguration{
-			ScanOnPush: aws.Bool(tfMap["scan_on_push"].(bool)),
+		input.ImageScanningConfiguration = &awstypes.ImageScanningConfiguration{
+			ScanOnPush: tfMap["scan_on_push"].(bool),
 		}
 	}
 
-	output, err := conn.CreateRepositoryWithContext(ctx, input)
+	output, err := conn.CreateRepository(ctx, input)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
-	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
 		input.Tags = nil
 
-		output, err = conn.CreateRepositoryWithContext(ctx, input)
+		output, err = conn.CreateRepository(ctx, input)
 	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating ECR Repository (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.Repository.RepositoryName))
+	d.SetId(aws.ToString(output.Repository.RepositoryName))
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
 	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
-		err := createTags(ctx, conn, aws.StringValue(output.Repository.RepositoryArn), tags)
+		err := createTags(ctx, conn, aws.ToString(output.Repository.RepositoryArn), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
 			return append(diags, resourceRepositoryRead(ctx, d, meta)...)
 		}
 
@@ -167,7 +167,7 @@ func resourceRepositoryCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRConn(ctx)
+	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
 		return FindRepositoryByName(ctx, conn, d.Id())
@@ -183,7 +183,7 @@ func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading ECR Repository (%s): %s", d.Id(), err)
 	}
 
-	repository := outputRaw.(*ecr.Repository)
+	repository := outputRaw.(*awstypes.Repository)
 
 	d.Set("arn", repository.RepositoryArn)
 	if err := d.Set("encryption_configuration", flattenRepositoryEncryptionConfiguration(repository.EncryptionConfiguration)); err != nil {
@@ -202,16 +202,16 @@ func resourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceRepositoryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRConn(ctx)
+	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
 	if d.HasChange("image_tag_mutability") {
 		input := &ecr.PutImageTagMutabilityInput{
-			ImageTagMutability: aws.String(d.Get("image_tag_mutability").(string)),
+			ImageTagMutability: awstypes.ImageTagMutability((d.Get("image_tag_mutability").(string))),
 			RegistryId:         aws.String(d.Get("registry_id").(string)),
 			RepositoryName:     aws.String(d.Id()),
 		}
 
-		_, err := conn.PutImageTagMutabilityWithContext(ctx, input)
+		_, err := conn.PutImageTagMutability(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting ECR Repository (%s) image tag mutability: %s", d.Id(), err)
@@ -220,17 +220,17 @@ func resourceRepositoryUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 	if d.HasChange("image_scanning_configuration") {
 		input := &ecr.PutImageScanningConfigurationInput{
-			ImageScanningConfiguration: &ecr.ImageScanningConfiguration{},
+			ImageScanningConfiguration: &awstypes.ImageScanningConfiguration{},
 			RegistryId:                 aws.String(d.Get("registry_id").(string)),
 			RepositoryName:             aws.String(d.Id()),
 		}
 
 		if v, ok := d.GetOk("image_scanning_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			tfMap := v.([]interface{})[0].(map[string]interface{})
-			input.ImageScanningConfiguration.ScanOnPush = aws.Bool(tfMap["scan_on_push"].(bool))
+			input.ImageScanningConfiguration.ScanOnPush = tfMap["scan_on_push"].(bool)
 		}
 
-		_, err := conn.PutImageScanningConfigurationWithContext(ctx, input)
+		_, err := conn.PutImageScanningConfiguration(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting ECR Repository (%s) image scanning configuration: %s", d.Id(), err)
@@ -242,20 +242,18 @@ func resourceRepositoryUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceRepositoryDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRConn(ctx)
+	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
 	log.Printf("[DEBUG] Deleting ECR Repository: %s", d.Id())
-	_, err := conn.DeleteRepositoryWithContext(ctx, &ecr.DeleteRepositoryInput{
-		Force:          aws.Bool(d.Get("force_delete").(bool)),
+	_, err := conn.DeleteRepository(ctx, &ecr.DeleteRepositoryInput{
+		Force:          d.Get("force_delete").(bool),
 		RegistryId:     aws.String(d.Get("registry_id").(string)),
 		RepositoryName: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, ecr.ErrCodeRepositoryNotFoundException) {
+	if errs.IsA[*awstypes.RepositoryNotFoundException](err) {
 		return diags
-	}
-
-	if tfawserr.ErrCodeEquals(err, ecr.ErrCodeRepositoryNotEmptyException) {
+	} else if errs.IsA[*awstypes.RepositoryNotEmptyException](err) {
 		return sdkdiag.AppendErrorf(diags, "ECR Repository (%s) not empty, consider using force_delete: %s", d.Id(), err)
 	}
 
@@ -274,9 +272,9 @@ func resourceRepositoryDelete(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func FindRepositoryByName(ctx context.Context, conn *ecr.ECR, name string) (*ecr.Repository, error) {
+func FindRepositoryByName(ctx context.Context, conn *ecr.Client, name string) (*awstypes.Repository, error) {
 	input := &ecr.DescribeRepositoriesInput{
-		RepositoryNames: aws.StringSlice([]string{name}),
+		RepositoryNames: []string{name},
 	}
 
 	output, err := FindRepository(ctx, conn, input)
@@ -286,7 +284,7 @@ func FindRepositoryByName(ctx context.Context, conn *ecr.ECR, name string) (*ecr
 	}
 
 	// Eventual consistency check.
-	if aws.StringValue(output.RepositoryName) != name {
+	if aws.ToString(output.RepositoryName) != name {
 		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}
@@ -295,10 +293,10 @@ func FindRepositoryByName(ctx context.Context, conn *ecr.ECR, name string) (*ecr
 	return output, nil
 }
 
-func FindRepository(ctx context.Context, conn *ecr.ECR, input *ecr.DescribeRepositoriesInput) (*ecr.Repository, error) {
-	output, err := conn.DescribeRepositoriesWithContext(ctx, input)
+func FindRepository(ctx context.Context, conn *ecr.Client, input *ecr.DescribeRepositoriesInput) (*awstypes.Repository, error) {
+	output, err := conn.DescribeRepositories(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, ecr.ErrCodeRepositoryNotFoundException) {
+	if errs.IsA[*awstypes.RepositoryNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -309,7 +307,7 @@ func FindRepository(ctx context.Context, conn *ecr.ECR, input *ecr.DescribeRepos
 		return nil, err
 	}
 
-	if output == nil || len(output.Repositories) == 0 || output.Repositories[0] == nil {
+	if output == nil || len(output.Repositories) == 0 {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
@@ -317,30 +315,30 @@ func FindRepository(ctx context.Context, conn *ecr.ECR, input *ecr.DescribeRepos
 		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
 
-	return output.Repositories[0], nil
+	return &output.Repositories[0], nil
 }
 
-func flattenImageScanningConfiguration(isc *ecr.ImageScanningConfiguration) []map[string]interface{} {
+func flattenImageScanningConfiguration(isc *awstypes.ImageScanningConfiguration) []map[string]interface{} {
 	if isc == nil {
 		return nil
 	}
 
 	config := make(map[string]interface{})
-	config["scan_on_push"] = aws.BoolValue(isc.ScanOnPush)
+	config["scan_on_push"] = isc.ScanOnPush
 
 	return []map[string]interface{}{
 		config,
 	}
 }
 
-func expandRepositoryEncryptionConfiguration(data []interface{}) *ecr.EncryptionConfiguration {
+func expandRepositoryEncryptionConfiguration(data []interface{}) *awstypes.EncryptionConfiguration {
 	if len(data) == 0 || data[0] == nil {
 		return nil
 	}
 
 	ec := data[0].(map[string]interface{})
-	config := &ecr.EncryptionConfiguration{
-		EncryptionType: aws.String(ec["encryption_type"].(string)),
+	config := &awstypes.EncryptionConfiguration{
+		EncryptionType: awstypes.EncryptionType((ec["encryption_type"].(string))),
 	}
 	if v, ok := ec["kms_key"]; ok {
 		if s := v.(string); s != "" {
@@ -350,14 +348,14 @@ func expandRepositoryEncryptionConfiguration(data []interface{}) *ecr.Encryption
 	return config
 }
 
-func flattenRepositoryEncryptionConfiguration(ec *ecr.EncryptionConfiguration) []map[string]interface{} {
+func flattenRepositoryEncryptionConfiguration(ec *awstypes.EncryptionConfiguration) []map[string]interface{} {
 	if ec == nil {
 		return nil
 	}
 
 	config := map[string]interface{}{
-		"encryption_type": aws.StringValue(ec.EncryptionType),
-		"kms_key":         aws.StringValue(ec.KmsKey),
+		"encryption_type": ec.EncryptionType,
+		"kms_key":         aws.ToString(ec.KmsKey),
 	}
 
 	return []map[string]interface{}{

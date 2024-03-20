@@ -11,16 +11,17 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ecr"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
-	"github.com/aws/aws-sdk-go/service/ecr"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -67,7 +68,7 @@ func ResourceLifecyclePolicy() *schema.Resource {
 
 func resourceLifecyclePolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRConn(ctx)
+	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 
@@ -80,18 +81,18 @@ func resourceLifecyclePolicyCreate(ctx context.Context, d *schema.ResourceData, 
 		LifecyclePolicyText: aws.String(policy),
 	}
 
-	resp, err := conn.PutLifecyclePolicyWithContext(ctx, input)
+	resp, err := conn.PutLifecyclePolicy(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating ECR Lifecycle Policy (%s): %s", d.Get("repository").(string), err)
 	}
-	d.SetId(aws.StringValue(resp.RepositoryName))
+	d.SetId(aws.ToString(resp.RepositoryName))
 	d.Set("registry_id", resp.RegistryId)
 	return append(diags, resourceLifecyclePolicyRead(ctx, d, meta)...)
 }
 
 func resourceLifecyclePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRConn(ctx)
+	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
 	input := &ecr.GetLifecyclePolicyInput{
 		RepositoryName: aws.String(d.Id()),
@@ -102,13 +103,9 @@ func resourceLifecyclePolicyRead(ctx context.Context, d *schema.ResourceData, me
 	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		var err error
 
-		resp, err = conn.GetLifecyclePolicyWithContext(ctx, input)
+		resp, err = conn.GetLifecyclePolicy(ctx, input)
 
-		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, ecr.ErrCodeLifecyclePolicyNotFoundException) {
-			return retry.RetryableError(err)
-		}
-
-		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, ecr.ErrCodeRepositoryNotFoundException) {
+		if d.IsNewResource() && (errs.IsA[*awstypes.LifecyclePolicyNotFoundException](err) || errs.IsA[*awstypes.RepositoryNotFoundException](err)) {
 			return retry.RetryableError(err)
 		}
 
@@ -120,16 +117,16 @@ func resourceLifecyclePolicyRead(ctx context.Context, d *schema.ResourceData, me
 	})
 
 	if tfresource.TimedOut(err) {
-		resp, err = conn.GetLifecyclePolicyWithContext(ctx, input)
+		resp, err = conn.GetLifecyclePolicy(ctx, input)
 	}
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ecr.ErrCodeLifecyclePolicyNotFoundException) {
+	if d.IsNewResource() && errs.IsA[*awstypes.LifecyclePolicyNotFoundException](err) {
 		log.Printf("[WARN] ECR Lifecycle Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ecr.ErrCodeRepositoryNotFoundException) {
+	if d.IsNewResource() && errs.IsA[*awstypes.RepositoryNotFoundException](err) {
 		log.Printf("[WARN] ECR Lifecycle Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -146,14 +143,14 @@ func resourceLifecyclePolicyRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("repository", resp.RepositoryName)
 	d.Set("registry_id", resp.RegistryId)
 
-	equivalent, err := equivalentLifecyclePolicyJSON(d.Get("policy").(string), aws.StringValue(resp.LifecyclePolicyText))
+	equivalent, err := equivalentLifecyclePolicyJSON(d.Get("policy").(string), aws.ToString(resp.LifecyclePolicyText))
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "while comparing policy (state: %s) (from AWS: %s), encountered: %s", d.Get("policy").(string), aws.StringValue(resp.LifecyclePolicyText), err)
+		return sdkdiag.AppendErrorf(diags, "while comparing policy (state: %s) (from AWS: %s), encountered: %s", d.Get("policy").(string), aws.ToString(resp.LifecyclePolicyText), err)
 	}
 
 	if !equivalent {
-		policyToSet, err := structure.NormalizeJsonString(aws.StringValue(resp.LifecyclePolicyText))
+		policyToSet, err := structure.NormalizeJsonString(aws.ToString(resp.LifecyclePolicyText))
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policyToSet, err)
@@ -167,20 +164,18 @@ func resourceLifecyclePolicyRead(ctx context.Context, d *schema.ResourceData, me
 
 func resourceLifecyclePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRConn(ctx)
+	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
 	input := &ecr.DeleteLifecyclePolicyInput{
 		RepositoryName: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeleteLifecyclePolicyWithContext(ctx, input)
+	_, err := conn.DeleteLifecyclePolicy(ctx, input)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, ecr.ErrCodeRepositoryNotFoundException) {
+		if d.IsNewResource() && (errs.IsA[*awstypes.LifecyclePolicyNotFoundException](err) || errs.IsA[*awstypes.RepositoryNotFoundException](err)) {
 			return diags
 		}
-		if tfawserr.ErrCodeEquals(err, ecr.ErrCodeLifecyclePolicyNotFoundException) {
-			return diags
-		}
+
 		return sdkdiag.AppendErrorf(diags, "deleting ECR Lifecycle Policy (%s): %s", d.Id(), err)
 	}
 
@@ -212,7 +207,7 @@ type lifecyclePolicy struct {
 
 func (lp *lifecyclePolicy) reduce() {
 	sort.Slice(lp.Rules, func(i, j int) bool {
-		return aws.Int64Value(lp.Rules[i].RulePriority) < aws.Int64Value(lp.Rules[j].RulePriority)
+		return aws.ToInt64(lp.Rules[i].RulePriority) < aws.ToInt64(lp.Rules[j].RulePriority)
 	})
 
 	for _, rule := range lp.Rules {
@@ -222,7 +217,7 @@ func (lp *lifecyclePolicy) reduce() {
 
 func (lprs *lifecyclePolicyRuleSelection) reduce() {
 	sort.Slice(lprs.TagPrefixList, func(i, j int) bool {
-		return aws.StringValue(lprs.TagPrefixList[i]) < aws.StringValue(lprs.TagPrefixList[j])
+		return aws.ToString(lprs.TagPrefixList[i]) < aws.ToString(lprs.TagPrefixList[j])
 	})
 
 	if len(lprs.TagPrefixList) == 0 {

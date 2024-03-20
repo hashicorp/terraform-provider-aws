@@ -7,14 +7,15 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ecr"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ecr"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -52,7 +53,7 @@ func ResourceRegistryPolicy() *schema.Resource {
 
 func resourceRegistryPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRConn(ctx)
+	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 
@@ -64,12 +65,12 @@ func resourceRegistryPolicyPut(ctx context.Context, d *schema.ResourceData, meta
 		PolicyText: aws.String(policy),
 	}
 
-	out, err := conn.PutRegistryPolicyWithContext(ctx, &input)
+	out, err := conn.PutRegistryPolicy(ctx, &input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating ECR Registry Policy: %s", err)
 	}
 
-	regID := aws.StringValue(out.RegistryId)
+	regID := aws.ToString(out.RegistryId)
 
 	d.SetId(regID)
 
@@ -78,12 +79,12 @@ func resourceRegistryPolicyPut(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceRegistryPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRConn(ctx)
+	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
 	log.Printf("[DEBUG] Reading registry policy %s", d.Id())
-	out, err := conn.GetRegistryPolicyWithContext(ctx, &ecr.GetRegistryPolicyInput{})
+	out, err := conn.GetRegistryPolicy(ctx, &ecr.GetRegistryPolicyInput{})
 	if err != nil {
-		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, ecr.ErrCodeRegistryPolicyNotFoundException) {
+		if !d.IsNewResource() && errs.IsA[*awstypes.RegistryPolicyNotFoundException](err) {
 			log.Printf("[WARN] ECR Registry (%s) not found, removing from state", d.Id())
 			d.SetId("")
 			return diags
@@ -93,7 +94,7 @@ func resourceRegistryPolicyRead(ctx context.Context, d *schema.ResourceData, met
 
 	d.Set("registry_id", out.RegistryId)
 
-	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), aws.StringValue(out.PolicyText))
+	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), aws.ToString(out.PolicyText))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ECR Registry Policy (%s): setting policy: %s", d.Id(), err)
@@ -112,11 +113,11 @@ func resourceRegistryPolicyRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceRegistryPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRConn(ctx)
+	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
-	_, err := conn.DeleteRegistryPolicyWithContext(ctx, &ecr.DeleteRegistryPolicyInput{})
+	_, err := conn.DeleteRegistryPolicy(ctx, &ecr.DeleteRegistryPolicyInput{})
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, ecr.ErrCodeRegistryPolicyNotFoundException) {
+		if errs.IsA[*awstypes.RegistryPolicyNotFoundException](err) {
 			return diags
 		}
 		return sdkdiag.AppendErrorf(diags, "deleting ECR Registry Policy (%s): %s", d.Id(), err)

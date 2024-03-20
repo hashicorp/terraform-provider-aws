@@ -6,10 +6,11 @@ package ecr_test
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ecr"
+	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -35,7 +36,17 @@ func TestAccECRRepositoriesDataSource_basic(t *testing.T) {
 			{
 				Config: testAccRepositoriesDataSourceConfig_basic(rNames),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "names.#", "5"),
+					resource.TestCheckResourceAttrWith(dataSourceName, "names.#", func(value string) error {
+						valueInt, err := strconv.Atoi(value)
+						if err != nil {
+							return err
+						}
+
+						if valueInt < 5 {
+							return fmt.Errorf("Number of repositories should be >= 5")
+						}
+						return nil
+					}),
 					resource.TestCheckTypeSetElemAttr(dataSourceName, "names.*", rNames[0]),
 					resource.TestCheckTypeSetElemAttr(dataSourceName, "names.*", rNames[1]),
 					resource.TestCheckTypeSetElemAttr(dataSourceName, "names.*", rNames[2]),

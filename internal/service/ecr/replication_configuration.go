@@ -7,12 +7,13 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ecr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ecr"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -76,9 +77,9 @@ func ResourceReplicationConfiguration() *schema.Resource {
 													Required: true,
 												},
 												"filter_type": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringInSlice(ecr.RepositoryFilterType_Values(), false),
+													Type:             schema.TypeString,
+													Required:         true,
+													ValidateDiagFunc: enum.Validate[awstypes.RepositoryFilterType](),
 												},
 											},
 										},
@@ -95,13 +96,13 @@ func ResourceReplicationConfiguration() *schema.Resource {
 
 func resourceReplicationConfigurationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRConn(ctx)
+	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
 	input := ecr.PutReplicationConfigurationInput{
 		ReplicationConfiguration: expandReplicationConfigurationReplicationConfiguration(d.Get("replication_configuration").([]interface{})),
 	}
 
-	_, err := conn.PutReplicationConfigurationWithContext(ctx, &input)
+	_, err := conn.PutReplicationConfiguration(ctx, &input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating ECR Replication Configuration: %s", err)
 	}
@@ -113,10 +114,10 @@ func resourceReplicationConfigurationPut(ctx context.Context, d *schema.Resource
 
 func resourceReplicationConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRConn(ctx)
+	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
 	log.Printf("[DEBUG] Reading ECR Replication Configuration %s", d.Id())
-	out, err := conn.DescribeRegistryWithContext(ctx, &ecr.DescribeRegistryInput{})
+	out, err := conn.DescribeRegistry(ctx, &ecr.DescribeRegistryInput{})
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ECR Replication Configuration: %s", err)
 	}
@@ -132,15 +133,15 @@ func resourceReplicationConfigurationRead(ctx context.Context, d *schema.Resourc
 
 func resourceReplicationConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRConn(ctx)
+	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
 	input := ecr.PutReplicationConfigurationInput{
-		ReplicationConfiguration: &ecr.ReplicationConfiguration{
-			Rules: []*ecr.ReplicationRule{},
+		ReplicationConfiguration: &awstypes.ReplicationConfiguration{
+			Rules: []awstypes.ReplicationRule{},
 		},
 	}
 
-	_, err := conn.PutReplicationConfigurationWithContext(ctx, &input)
+	_, err := conn.PutReplicationConfiguration(ctx, &input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting ECR Replication Configuration: %s", err)
 	}
@@ -148,19 +149,19 @@ func resourceReplicationConfigurationDelete(ctx context.Context, d *schema.Resou
 	return diags
 }
 
-func expandReplicationConfigurationReplicationConfiguration(data []interface{}) *ecr.ReplicationConfiguration {
+func expandReplicationConfigurationReplicationConfiguration(data []interface{}) *awstypes.ReplicationConfiguration {
 	if len(data) == 0 || data[0] == nil {
 		return nil
 	}
 
 	ec := data[0].(map[string]interface{})
-	config := &ecr.ReplicationConfiguration{
+	config := &awstypes.ReplicationConfiguration{
 		Rules: expandReplicationConfigurationReplicationConfigurationRules(ec["rule"].([]interface{})),
 	}
 	return config
 }
 
-func flattenReplicationConfigurationReplicationConfiguration(ec *ecr.ReplicationConfiguration) []map[string]interface{} {
+func flattenReplicationConfigurationReplicationConfiguration(ec *awstypes.ReplicationConfiguration) []map[string]interface{} {
 	if ec == nil {
 		return nil
 	}
@@ -174,16 +175,16 @@ func flattenReplicationConfigurationReplicationConfiguration(ec *ecr.Replication
 	}
 }
 
-func expandReplicationConfigurationReplicationConfigurationRules(data []interface{}) []*ecr.ReplicationRule {
+func expandReplicationConfigurationReplicationConfigurationRules(data []interface{}) []awstypes.ReplicationRule {
 	if len(data) == 0 || data[0] == nil {
 		return nil
 	}
 
-	var rules []*ecr.ReplicationRule
+	var rules []awstypes.ReplicationRule
 
 	for _, rule := range data {
 		ec := rule.(map[string]interface{})
-		config := &ecr.ReplicationRule{
+		config := awstypes.ReplicationRule{
 			Destinations:      expandReplicationConfigurationReplicationConfigurationRulesDestinations(ec["destination"].([]interface{})),
 			RepositoryFilters: expandReplicationConfigurationReplicationConfigurationRulesRepositoryFilters(ec["repository_filter"].([]interface{})),
 		}
@@ -193,7 +194,7 @@ func expandReplicationConfigurationReplicationConfigurationRules(data []interfac
 	return rules
 }
 
-func flattenReplicationConfigurationReplicationConfigurationRules(ec []*ecr.ReplicationRule) []interface{} {
+func flattenReplicationConfigurationReplicationConfigurationRules(ec []awstypes.ReplicationRule) []interface{} {
 	if len(ec) == 0 {
 		return nil
 	}
@@ -212,16 +213,16 @@ func flattenReplicationConfigurationReplicationConfigurationRules(ec []*ecr.Repl
 	return tfList
 }
 
-func expandReplicationConfigurationReplicationConfigurationRulesDestinations(data []interface{}) []*ecr.ReplicationDestination {
+func expandReplicationConfigurationReplicationConfigurationRulesDestinations(data []interface{}) []awstypes.ReplicationDestination {
 	if len(data) == 0 || data[0] == nil {
 		return nil
 	}
 
-	var dests []*ecr.ReplicationDestination
+	var dests []awstypes.ReplicationDestination
 
 	for _, dest := range data {
 		ec := dest.(map[string]interface{})
-		config := &ecr.ReplicationDestination{
+		config := awstypes.ReplicationDestination{
 			Region:     aws.String(ec["region"].(string)),
 			RegistryId: aws.String(ec["registry_id"].(string)),
 		}
@@ -231,7 +232,7 @@ func expandReplicationConfigurationReplicationConfigurationRulesDestinations(dat
 	return dests
 }
 
-func flattenReplicationConfigurationReplicationConfigurationRulesDestinations(ec []*ecr.ReplicationDestination) []interface{} {
+func flattenReplicationConfigurationReplicationConfigurationRulesDestinations(ec []awstypes.ReplicationDestination) []interface{} {
 	if len(ec) == 0 {
 		return nil
 	}
@@ -240,8 +241,8 @@ func flattenReplicationConfigurationReplicationConfigurationRulesDestinations(ec
 
 	for _, apiObject := range ec {
 		tfMap := map[string]interface{}{
-			"region":      aws.StringValue(apiObject.Region),
-			"registry_id": aws.StringValue(apiObject.RegistryId),
+			"region":      aws.ToString(apiObject.Region),
+			"registry_id": aws.ToString(apiObject.RegistryId),
 		}
 
 		tfList = append(tfList, tfMap)
@@ -250,18 +251,18 @@ func flattenReplicationConfigurationReplicationConfigurationRulesDestinations(ec
 	return tfList
 }
 
-func expandReplicationConfigurationReplicationConfigurationRulesRepositoryFilters(data []interface{}) []*ecr.RepositoryFilter {
+func expandReplicationConfigurationReplicationConfigurationRulesRepositoryFilters(data []interface{}) []awstypes.RepositoryFilter {
 	if len(data) == 0 || data[0] == nil {
 		return nil
 	}
 
-	var filters []*ecr.RepositoryFilter
+	var filters []awstypes.RepositoryFilter
 
 	for _, filter := range data {
 		ec := filter.(map[string]interface{})
-		config := &ecr.RepositoryFilter{
+		config := awstypes.RepositoryFilter{
 			Filter:     aws.String(ec["filter"].(string)),
-			FilterType: aws.String(ec["filter_type"].(string)),
+			FilterType: awstypes.RepositoryFilterType((ec["filter_type"].(string))),
 		}
 
 		filters = append(filters, config)
@@ -269,7 +270,7 @@ func expandReplicationConfigurationReplicationConfigurationRulesRepositoryFilter
 	return filters
 }
 
-func flattenReplicationConfigurationReplicationConfigurationRulesRepositoryFilters(ec []*ecr.RepositoryFilter) []interface{} {
+func flattenReplicationConfigurationReplicationConfigurationRulesRepositoryFilters(ec []awstypes.RepositoryFilter) []interface{} {
 	if len(ec) == 0 {
 		return nil
 	}
@@ -278,8 +279,8 @@ func flattenReplicationConfigurationReplicationConfigurationRulesRepositoryFilte
 
 	for _, apiObject := range ec {
 		tfMap := map[string]interface{}{
-			"filter":      aws.StringValue(apiObject.Filter),
-			"filter_type": aws.StringValue(apiObject.FilterType),
+			"filter":      aws.ToString(apiObject.Filter),
+			"filter_type": apiObject.FilterType,
 		}
 
 		tfList = append(tfList, tfMap)

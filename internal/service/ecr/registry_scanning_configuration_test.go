@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ecr"
+	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -135,14 +135,14 @@ func testAccRegistryScanningConfiguration_update(t *testing.T) {
 
 func testAccCheckRegistryScanningConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ecr_registry_scanning_configuration" {
 				continue
 			}
 
-			_, err := conn.GetRegistryScanningConfigurationWithContext(ctx, &ecr.GetRegistryScanningConfigurationInput{})
+			_, err := conn.GetRegistryScanningConfiguration(ctx, &ecr.GetRegistryScanningConfigurationInput{})
 
 			if err != nil {
 				return err
@@ -164,9 +164,9 @@ func testAccRegistryScanningConfigurationExists(ctx context.Context, name string
 			return fmt.Errorf("No ECR Registry Scanning Configuration ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRClient(ctx)
 
-		output, err := conn.GetRegistryScanningConfigurationWithContext(ctx, &ecr.GetRegistryScanningConfigurationInput{})
+		output, err := conn.GetRegistryScanningConfiguration(ctx, &ecr.GetRegistryScanningConfigurationInput{})
 
 		if err != nil {
 			return err
