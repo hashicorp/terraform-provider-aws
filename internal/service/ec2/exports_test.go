@@ -5,6 +5,7 @@ package ec2
 
 // Exports for use in tests only.
 var (
+	ResourceCustomerGateway                 = resourceCustomerGateway
 	ResourceDefaultNetworkACL               = resourceDefaultNetworkACL
 	ResourceDefaultRouteTable               = resourceDefaultRouteTable
 	ResourceEBSFastSnapshotRestore          = newResourceEBSFastSnapshotRestore
@@ -17,6 +18,11 @@ var (
 	ResourceSecurityGroupIngressRule        = newSecurityGroupIngressRuleResource
 	ResourceTag                             = resourceTag
 	ResourceTransitGatewayPeeringAttachment = resourceTransitGatewayPeeringAttachment
+	ResourceVPNConnection                   = resourceVPNConnection
+	ResourceVPNConnectionRoute              = resourceVPNConnectionRoute
+	ResourceVPNGateway                      = resourceVPNGateway
+	ResourceVPNGatewayAttachment            = resourceVPNGatewayAttachment
+	ResourceVPNGatewayRoutePropagation      = resourceVPNGatewayRoutePropagation
 
 	CustomFiltersSchema            = customFiltersSchema
 	FindEBSFastSnapshotRestoreByID = findEBSFastSnapshotRestoreByID

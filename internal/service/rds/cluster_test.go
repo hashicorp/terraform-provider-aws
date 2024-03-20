@@ -40,6 +40,7 @@ func testAccClusterImportStep(n string) resource.TestStep {
 			"cluster_members",
 			"db_instance_parameter_group_name",
 			"enable_global_write_forwarding",
+			"enable_local_write_forwarding",
 			"manage_master_user_password",
 			"master_password",
 			"master_user_secret_kms_key_id",
@@ -411,6 +412,7 @@ func TestAccRDSCluster_onlyMajorVersion(t *testing.T) {
 					"cluster_members",
 					"db_instance_parameter_group_name",
 					"enable_global_write_forwarding",
+					"enable_local_write_forwarding",
 					"engine_version",
 					"master_password",
 					"skip_final_snapshot",
@@ -2706,6 +2708,31 @@ func testAccCheckClusterNotRecreated(i, j *rds.DBCluster) resource.TestCheckFunc
 
 		return nil
 	}
+}
+
+func TestAccRDSCluster_localWriteForwarding(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dbCluster rds.DBCluster
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_rds_cluster.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_localWriteForwarding(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &dbCluster),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "rds", fmt.Sprintf("cluster:%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "enable_local_write_forwarding", "true"),
+				),
+			},
+			testAccClusterImportStep(resourceName),
+		},
+	})
 }
 
 func testAccClusterConfig_basic(rName string) string {
@@ -5082,4 +5109,19 @@ resource "aws_rds_cluster" "test" {
   delete_automated_backups = false
 }
 `, rName, tfrds.ClusterEngineAuroraMySQL, preferredBackupWindow)
+}
+
+func testAccClusterConfig_localWriteForwarding(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_rds_cluster" "test" {
+  cluster_identifier            = %[1]q
+  database_name                 = "test"
+  engine                        = "aurora-mysql"
+  engine_version                = "8.0.mysql_aurora.3.04.0"
+  enable_local_write_forwarding = true
+  master_username               = "tfacctest"
+  master_password               = "avoid-plaintext-passwords"
+  skip_final_snapshot           = true
+}
+`, rName)
 }
