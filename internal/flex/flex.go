@@ -179,6 +179,13 @@ func ExpandBoolMap(m map[string]interface{}) map[string]*bool {
 	})
 }
 
+// Expands a map of string to interface to a map of string to *bool
+func ExpandBoolValueMap(m map[string]interface{}) map[string]bool {
+	return tfmaps.ApplyToAllValues(m, func(v any) bool {
+		return v.(bool)
+	})
+}
+
 // Takes the result of schema.Set of strings and returns a []*string
 func ExpandStringSet(configured *schema.Set) []*string {
 	return ExpandStringList(configured.List()) // nosemgrep:ci.helper-schema-Set-extraneous-ExpandStringList-with-List
@@ -410,6 +417,30 @@ func DiffStringMaps(oldMap, newMap map[string]interface{}) (map[string]*string, 
 			remove[k] = aws.String(v)
 		} else if ok {
 			unchanged[k] = aws.String(v)
+			// Already present, so remove from new.
+			delete(add, k)
+		}
+	}
+
+	return add, remove, unchanged
+}
+
+// DiffStringValueMaps returns the set of keys and values that must be created, the set of keys
+// and values that must be destroyed, and the set of keys and values that are unchanged.
+func DiffStringValueMaps(oldMap, newMap map[string]interface{}) (map[string]string, map[string]string, map[string]string) {
+	// First, we're creating everything we have.
+	add := ExpandStringValueMap(newMap)
+
+	// Build the maps of what to remove and what is unchanged.
+	remove := make(map[string]string)
+	unchanged := make(map[string]string)
+	for k, v := range oldMap {
+		v := v.(string)
+		if old, ok := add[k]; !ok || old != v {
+			// Delete it!
+			remove[k] = v
+		} else if ok {
+			unchanged[k] = v
 			// Already present, so remove from new.
 			delete(add, k)
 		}
