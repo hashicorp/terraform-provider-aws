@@ -1,5 +1,9 @@
 ## 5.42.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `aws_redshift_producer_data_shares` ([#36481](https://github.com/hashicorp/terraform-provider-aws/issues/36481))
+
 ENHANCEMENTS:
 
 * data-source/aws_vpc_peering_connection: Add `ipv6_cidr_block_set` and `peer_ipv6_cidr_block_set` attributes ([#36391](https://github.com/hashicorp/terraform-provider-aws/issues/36391))
