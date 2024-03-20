@@ -168,6 +168,6 @@ jobs:
           issue-number: ${{ github.event.issue.number }}
           body: |
             > [!WARNING]
-            > This issue has been closed, meaning that any additional comments are hard for our team to see.
+            > This issue has been closed, meaning that any additional comments are hard for our team to see. Please assume that the maintainers will not see them.
             >
-            > Ongoing conversations amongst community members under this issue are welcomed, however, the issue will be locked after 30 days, so these conversations may fit better in the [AWS Provider forum](https://discuss.hashicorp.com/c/terraform-providers/tf-aws/33). If additional assistance is needed, please open a new issue, referencing this one where needed.
+            > Ongoing conversations amongst community members are welcome, however, the issue will be locked after 30 days. Moving conversations to another venue, such as the [AWS Provider forum](https://discuss.hashicorp.com/c/terraform-providers/tf-aws/33), is recommended. If you have additional concerns, please open a new issue, referencing this one where needed.
