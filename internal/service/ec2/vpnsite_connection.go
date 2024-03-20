@@ -32,7 +32,7 @@ import (
 
 // @SDKResource("aws_vpn_connection", name="VPN Connection")
 // @Tags(identifierAttribute="id")
-func ResourceVPNConnection() *schema.Resource {
+func resourceVPNConnection() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPNConnectionCreate,
 		ReadWithoutTimeout:   resourceVPNConnectionRead,
