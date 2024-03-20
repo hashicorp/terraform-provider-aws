@@ -12,11 +12,9 @@ Terraform resource for managing an AWS DynamoDB Table Export. Terraform will wai
 
 See the [AWS Documentation](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/S3DataExport.HowItWorks.html) for more information on how this process works.
 
-~> **TIP:**
-Point-in-time Recovery must be enabled on the target DynamoDB Table.
+~> **TIP:** Point-in-time Recovery must be enabled on the target DynamoDB Table.
 
-~> **NOTE:**
-Once a AWS DynamoDB Table Export has been created it is immutable. The AWS API does not delete this resource. When you run destroy the provider will remove the resource from the Terraform state, no exported data will be deleted.
+~> **NOTE:** Once a AWS DynamoDB Table Export has been created it is immutable. The AWS API does not delete this resource. When you run destroy the provider will remove the resource from the Terraform state, no exported data will be deleted.
 
 ## Example Usage
 
