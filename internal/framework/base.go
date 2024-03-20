@@ -48,24 +48,9 @@ func (w *withMeta) RegionalARN(service, resource string) string {
 	}.String()
 }
 
-type withMigratedFromPluginSDK struct {
-	migrated bool
-}
-
-// SetMigratedFromPluginSDK sets whether or not the resource (or data source) has been migrated from terraform-plugin-sdk.
-func (w *withMigratedFromPluginSDK) SetMigratedFromPluginSDK(migrated bool) {
-	w.migrated = migrated
-}
-
-// MigratedFromPluginSDK returns whether or not the resource (or data source) has been migrated from terraform-plugin-sdk.
-func (w *withMigratedFromPluginSDK) MigratedFromPluginSDK() bool {
-	return w.migrated
-}
-
 // ResourceWithConfigure is a structure to be embedded within a Resource that implements the ResourceWithConfigure interface.
 type ResourceWithConfigure struct {
 	withMeta
-	withMigratedFromPluginSDK
 }
 
 // Configure enables provider-level data or clients to be set in the
@@ -147,7 +132,6 @@ func (w *WithNoOpDelete) Delete(ctx context.Context, request resource.DeleteRequ
 // DataSourceWithConfigure is a structure to be embedded within a DataSource that implements the DataSourceWithConfigure interface.
 type DataSourceWithConfigure struct {
 	withMeta
-	withMigratedFromPluginSDK
 }
 
 // Configure enables provider-level data or clients to be set in the
