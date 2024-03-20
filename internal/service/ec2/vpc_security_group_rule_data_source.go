@@ -19,10 +19,14 @@ import (
 
 // @FrameworkDataSource(name="Security Group Rule")
 func newSecurityGroupRuleDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &securityGroupRuleDataSource{}, nil
+	d := &securityGroupRuleDataSource{}
+	d.securityGroupRuleBase.withMeta = d
+
+	return d, nil
 }
 
 type securityGroupRuleDataSource struct {
+	securityGroupRuleBase
 	framework.DataSourceWithConfigure
 }
 
@@ -111,7 +115,7 @@ func (d *securityGroupRuleDataSource) Read(ctx context.Context, request datasour
 	}
 
 	data.ID = flex.StringToFramework(ctx, output.SecurityGroupRuleId)
-	data.ARN = securityGroupRuleARN(ctx, d, data.ID.ValueString())
+	data.ARN = d.securityGroupRuleARN(ctx, data.ID.ValueString())
 	data.CIDRIPv4 = flex.StringToFramework(ctx, output.CidrIpv4)
 	data.CIDRIPv6 = flex.StringToFramework(ctx, output.CidrIpv6)
 	data.Description = flex.StringToFramework(ctx, output.Description)
@@ -119,7 +123,7 @@ func (d *securityGroupRuleDataSource) Read(ctx context.Context, request datasour
 	data.IPProtocol = flex.StringToFramework(ctx, output.IpProtocol)
 	data.IsEgress = flex.BoolToFramework(ctx, output.IsEgress)
 	data.PrefixListID = flex.StringToFramework(ctx, output.PrefixListId)
-	data.ReferencedSecurityGroupID = flattenReferencedSecurityGroup(ctx, d, output.ReferencedGroupInfo)
+	data.ReferencedSecurityGroupID = d.flattenReferencedSecurityGroup(ctx, output.ReferencedGroupInfo)
 	data.SecurityGroupID = flex.StringToFramework(ctx, output.GroupId)
 	data.SecurityGroupRuleID = flex.StringToFramework(ctx, output.SecurityGroupRuleId)
 	data.Tags = flex.FlattenFrameworkStringValueMapLegacy(ctx, KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
