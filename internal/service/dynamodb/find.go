@@ -142,7 +142,7 @@ func FindTableExportByID(ctx context.Context, conn *dynamodb.DynamoDB, id string
 	out, err := conn.DescribeExportWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}

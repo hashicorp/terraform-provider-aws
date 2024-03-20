@@ -3,25 +3,20 @@ subcategory: "DynamoDB"
 layout: "aws"
 page_title: "AWS: aws_dynamodb_table_export"
 description: |-
-Terraform resource for managing an AWS DynamoDB Table Export.
+  Terraform resource for managing an AWS DynamoDB Table Export.
 ---
 
 # Resource: aws_dynamodb_table_export
 
-Terraform resource for managing an AWS DynamoDB Table Export. Terraform will wait until the Table export reaches a
-status of
-`COMPLETED` or `FAILED`.
+Terraform resource for managing an AWS DynamoDB Table Export. Terraform will wait until the Table export reaches a status of `COMPLETED` or `FAILED`.
 
-See
-the [AWS Documentation](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/S3DataExport.HowItWorks.html)
-for more information on how this process works.
+See the [AWS Documentation](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/S3DataExport.HowItWorks.html) for more information on how this process works.
 
 ~> **TIP:**
 Point-in-time Recovery must be enabled on the target DynamoDB Table.
 
 ~> **NOTE:**
-Once a AWS DynamoDB Table Export has been created it is immutable. The AWS API does not delete this resource.
-When you run destroy the provider will remove the resource from the Terraform state, no exported data will be deleted.
+Once a AWS DynamoDB Table Export has been created it is immutable. The AWS API does not delete this resource. When you run destroy the provider will remove the resource from the Terraform state, no exported data will be deleted.
 
 ## Example Usage
 
@@ -32,12 +27,6 @@ When you run destroy the provider will remove the resource from the Terraform st
 resource "aws_s3_bucket" "example" {
   bucket_prefix = "example"
   force_destroy = true
-}
-
-
-resource "aws_s3_bucket_acl" "example" {
-  bucket = aws_s3_bucket.example.id
-  acl    = "private"
 }
 
 resource "aws_dynamodb_table" "example" {
@@ -74,43 +63,28 @@ resource "aws_dynamodb_table_export" "example" {
 
 The following arguments are required:
 
-* `table_arn` - (Required, Forces new resource) Amazon Resource Name (ARN) associated with the table to export.
-* `s3_bucket` - (Required, Forces new resource) name of the Amazon S3 bucket to export the snapshot to. See
-  the [AWS Documentation](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/S3DataExport_Requesting.html#S3DataExport_Requesting_Permissions)
-  for information on how configure this S3 bucket.
+* `s3_bucket` - (Required, Forces new resource) Name of the Amazon S3 bucket to export the snapshot to. See the [AWS Documentation](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/S3DataExport_Requesting.html#S3DataExport_Requesting_Permissions) for information on how configure this S3 bucket.
+* `table_arn` - (Required, Forces new resource) ARN associated with the table to export.
 
 The following arguments are optional:
 
-* `export_format` - (Optional, Forces new resource) - Format for the exported data. Valid values are `DYNAMODB_JSON` or `ION`. See
-  the [AWS Documentation](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/S3DataExport.Output.html#S3DataExport.Output_Data)
-  for more information on these export formats. Default is `DYNAMODB_JSON`.
-* `export_time` - (Optional, Forces new resource) - Time in RFC3339 format from which to export table data. The table
-  export will be a snapshot of the table's state at this point in time. Omitting this value will result in a snapshot
-  from the current time.
-* `s3_bucket_owner` - (Optional, Forces new resource) ID of the AWS account that owns the bucket the export will be
-  stored in.
-* `s3_prefix` - (Optional, Forces new resource) Amazon S3 bucket prefix to use as the file name and path of the exported
-  snapshot.
-* `s3_sse_algorithm` - (Optional, Forces new resource) Type of encryption used on the bucket where export data will be
-  stored. Valid values are: `AES256`, `KMS`.
-* `s3_sse_kms_key_id` - (Optional, Forces new resource) ID of the AWS KMS managed key used to encrypt the S3 bucket
-  where export data will be stored (if applicable).
+* `export_format` - (Optional, Forces new resource) Format for the exported data. Valid values are `DYNAMODB_JSON` or `ION`. See the [AWS Documentation](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/S3DataExport.Output.html#S3DataExport.Output_Data) for more information on these export formats. Default is `DYNAMODB_JSON`.
+* `export_time` - (Optional, Forces new resource) Time in RFC3339 format from which to export table data. The table export will be a snapshot of the table's state at this point in time. Omitting this value will result in a snapshot from the current time.
+* `s3_bucket_owner` - (Optional, Forces new resource) ID of the AWS account that owns the bucket the export will be stored in.
+* `s3_prefix` - (Optional, Forces new resource) Amazon S3 bucket prefix to use as the file name and path of the exported snapshot.
+* `s3_sse_algorithm` - (Optional, Forces new resource) Type of encryption used on the bucket where export data will be stored. Valid values are: `AES256`, `KMS`.
+* `s3_sse_kms_key_id` - (Optional, Forces new resource) ID of the AWS KMS managed key used to encrypt the S3 bucket where export data will be stored (if applicable).
 
 ## Attributes Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Table Export. Do not begin the description with "An", "The", "Defines", "Indicates", or "
-  Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of
-  storage," without losing any information.
-* `billed_size_in_bytes` - Billable size of the table export
+* `arn` - ARN of the Table Export.
+* `billed_size_in_bytes` - Billable size of the table export.
 * `end_time` - Time at which the export task completed.
-* `export_status` - Status of the export - export can be in one of the following states `IN_PROGRESS`, `COMPLETED`,
-  or `FAILED`.
+* `export_status` - Status of the export - export can be in one of the following states `IN_PROGRESS`, `COMPLETED`, or `FAILED`.
 * `item_count` - Number of items exported.
-* `manifest_files_s3_key` - Name of the manifest file for the export task. See
-  the [AWS Documentation](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/S3DataExport.Output.html#S3DataExport.Output_Manifest)
-  for more information on this manifest file.
+* `manifest_files_s3_key` - Name of the manifest file for the export task. See the [AWS Documentation](https://docs.aws.amazon.com/amazondynamodb/latest/developerguide/S3DataExport.Output.html#S3DataExport.Output_Manifest) for more information on this manifest file.
 * `start_time` - Time at which the export task began.
 
 ## Timeouts
@@ -118,16 +92,22 @@ In addition to all arguments above, the following attributes are exported:
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
+* `update` - (Default `120m`)
+* `delete` - (Default `60m`)
 
 ## Import
 
-DynamoDB Table Export can be imported using the `arn`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DynamoDB table exports using the `arn`. For example:
 
+```terraform
+import {
+  to = aws_dynamodb_table_export.example
+  id = "arn:aws:dynamodb:us-west-2:12345678911:table/my-table-1/export/01580735656614-2c2f422e"
+}
 ```
 
-$ terraform import aws_dynamodb_table_export.example arn:aws:dynamodb:us-west-2:12345678911:
-table/my-table-1/export/01580735656614-2c2f422e
+Using `terraform import`, import DynamoDB table exports using the `arn`. For example:
 
+```console
+% terraform import aws_dynamodb_table_export.example arn:aws:dynamodb:us-west-2:12345678911:table/my-table-1/export/01580735656614-2c2f422e
 ```

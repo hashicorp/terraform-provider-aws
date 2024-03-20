@@ -30,7 +30,9 @@ func ResourceTableExport() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(30 * time.Minute),
+			Create: schema.DefaultTimeout(60 * time.Minute),
+			Update: schema.DefaultTimeout(120 * time.Minute),
+			Delete: schema.DefaultTimeout(60 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -122,7 +124,7 @@ const (
 )
 
 func resourceTableExportCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DynamoDBConn()
+	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
 	s3Bucket := d.Get("s3_bucket").(string)
 	tableArn := d.Get("table_arn").(string)
@@ -177,7 +179,7 @@ func resourceTableExportCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceTableExportRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DynamoDBConn()
+	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
 	out, err := FindTableExportByID(ctx, conn, d.Id())
 

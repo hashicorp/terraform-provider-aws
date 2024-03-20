@@ -10,7 +10,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
@@ -279,7 +278,7 @@ func waitContributorInsightsDeleted(ctx context.Context, conn *dynamodb.DynamoDB
 }
 
 func waitTableExportCreated(ctx context.Context, conn *dynamodb.DynamoDB, id string, timeout time.Duration) (*dynamodb.ExportDescription, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{dynamodb.ExportStatusInProgress},
 		Target:  []string{dynamodb.ExportStatusCompleted, dynamodb.ExportStatusFailed},
 		Refresh: statusTableExport(ctx, conn, id),

@@ -207,7 +207,7 @@ func statusContributorInsights(ctx context.Context, conn *dynamodb.DynamoDB, tab
 	}
 }
 
-func statusTableExport(ctx context.Context, conn *dynamodb.DynamoDB, id string) resource.StateRefreshFunc {
+func statusTableExport(ctx context.Context, conn *dynamodb.DynamoDB, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := FindTableExportByID(ctx, conn, id)
 		if tfresource.NotFound(err) {

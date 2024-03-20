@@ -7,10 +7,11 @@ import (
 	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -30,12 +31,8 @@ func TestAccDynamoDBTableExport_basic(t *testing.T) {
 	s3BucketResourceName := "aws_s3_bucket.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.DynamoDB)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
@@ -55,7 +52,7 @@ func TestAccDynamoDBTableExport_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "export_time"),
 					resource.TestCheckResourceAttrSet(resourceName, "start_time"),
 					resource.TestCheckResourceAttrSet(resourceName, "end_time"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "dynamodb", regexp.MustCompile(
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "dynamodb", regexache.MustCompile(
 						fmt.Sprintf("table\\/%s\\/export\\/+.", rName),
 					)),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "table_arn", "dynamodb", fmt.Sprintf("table/%s", rName)),
@@ -187,7 +184,7 @@ func testAccCheckTableExportExists(ctx context.Context, name string, tableexport
 			return create.Error(names.DynamoDB, create.ErrActionCheckingExistence, tfdynamodb.ResNameTableExport, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn()
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn(ctx)
 		resp, err := tfdynamodb.FindTableExportByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
@@ -201,7 +198,7 @@ func testAccCheckTableExportExists(ctx context.Context, name string, tableexport
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn()
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn(ctx)
 
 	input := &dynamodb.ListExportsInput{}
 	_, err := conn.ListExportsWithContext(ctx, input)
@@ -220,11 +217,6 @@ func testAccTableExportConfig_baseConfig(tableName string) string {
 resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_dynamodb_table" "test" {
