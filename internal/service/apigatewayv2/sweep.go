@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/apigatewayv2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -49,7 +49,7 @@ func sweepAPIs(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.APIGatewayV2Conn(ctx)
+	conn := client.APIGatewayV2Client(ctx)
 	input := &apigatewayv2.GetApisInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -61,7 +61,7 @@ func sweepAPIs(region string) error {
 		for _, v := range page.Items {
 			r := ResourceAPI()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.ApiId))
+			d.SetId(aws.ToString(v.ApiId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -93,7 +93,7 @@ func sweepAPIMappings(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.APIGatewayV2Conn(ctx)
+	conn := client.APIGatewayV2Client(ctx)
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -104,7 +104,7 @@ func sweepAPIMappings(region string) error {
 		}
 
 		for _, v := range page.Items {
-			domainName := aws.StringValue(v.DomainName)
+			domainName := aws.ToString(v.DomainName)
 			input := &apigatewayv2.GetApiMappingsInput{
 				DomainName: aws.String(domainName),
 			}
@@ -117,7 +117,7 @@ func sweepAPIMappings(region string) error {
 				for _, v := range page.Items {
 					r := ResourceAPIMapping()
 					d := r.Data(nil)
-					d.SetId(aws.StringValue(v.ApiMappingId))
+					d.SetId(aws.ToString(v.ApiMappingId))
 					d.Set("domain_name", domainName)
 
 					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
@@ -162,7 +162,7 @@ func sweepDomainNames(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.APIGatewayV2Conn(ctx)
+	conn := client.APIGatewayV2Client(ctx)
 	input := &apigatewayv2.GetDomainNamesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -174,7 +174,7 @@ func sweepDomainNames(region string) error {
 		for _, v := range page.Items {
 			r := ResourceDomainName()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.DomainName))
+			d.SetId(aws.ToString(v.DomainName))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -206,7 +206,7 @@ func sweepVPCLinks(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.APIGatewayV2Conn(ctx)
+	conn := client.APIGatewayV2Client(ctx)
 	input := &apigatewayv2.GetVpcLinksInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -218,7 +218,7 @@ func sweepVPCLinks(region string) error {
 		for _, v := range page.Items {
 			r := ResourceVPCLink()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(v.VpcLinkId))
+			d.SetId(aws.ToString(v.VpcLinkId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

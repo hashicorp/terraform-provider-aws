@@ -9,13 +9,15 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/apigatewayv2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -44,15 +46,15 @@ func ResourceIntegration() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
 			"connection_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      apigatewayv2.ConnectionTypeInternet,
-				ValidateFunc: validation.StringInSlice(apigatewayv2.ConnectionType_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          string(awstypes.ConnectionTypeInternet),
+				ValidateDiagFunc: enum.Validate[awstypes.ConnectionType](),
 			},
 			"content_handling_strategy": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(apigatewayv2.ContentHandlingStrategy_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.ContentHandlingStrategy](),
 			},
 			"credentials_arn": {
 				Type:         schema.TypeString,
@@ -69,7 +71,7 @@ func ResourceIntegration() *schema.Resource {
 				ValidateFunc: validHTTPMethod(),
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					// Default HTTP method for Lambda integration is POST.
-					if v := d.Get("integration_type").(string); (v == apigatewayv2.IntegrationTypeAws || v == apigatewayv2.IntegrationTypeAwsProxy) && old == "POST" && new == "" {
+					if v := d.Get("integration_type").(string); (v == string(awstypes.IntegrationTypeAws) || v == string(awstypes.IntegrationTypeAwsProxy)) && old == "POST" && new == "" {
 						return true
 					}
 
@@ -87,23 +89,23 @@ func ResourceIntegration() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 128),
 			},
 			"integration_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(apigatewayv2.IntegrationType_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.IntegrationType](),
 			},
 			"integration_uri": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
 			"passthrough_behavior": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      apigatewayv2.PassthroughBehaviorWhenNoMatch,
-				ValidateFunc: validation.StringInSlice(apigatewayv2.PassthroughBehavior_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          string(awstypes.PassthroughBehaviorWhenNoMatch),
+				ValidateDiagFunc: enum.Validate[awstypes.PassthroughBehavior](),
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					// Not set for HTTP APIs.
-					if old == "" && new == apigatewayv2.PassthroughBehaviorWhenNoMatch {
+					if old == "" && new == string(awstypes.PassthroughBehaviorWhenNoMatch) {
 						return true
 					}
 					return false
@@ -178,20 +180,20 @@ func ResourceIntegration() *schema.Resource {
 
 func resourceIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	req := &apigatewayv2.CreateIntegrationInput{
 		ApiId:           aws.String(d.Get("api_id").(string)),
-		IntegrationType: aws.String(d.Get("integration_type").(string)),
+		IntegrationType: awstypes.IntegrationType(d.Get("integration_type").(string)),
 	}
 	if v, ok := d.GetOk("connection_id"); ok {
 		req.ConnectionId = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("connection_type"); ok {
-		req.ConnectionType = aws.String(v.(string))
+		req.ConnectionType = awstypes.ConnectionType(v.(string))
 	}
 	if v, ok := d.GetOk("content_handling_strategy"); ok {
-		req.ContentHandlingStrategy = aws.String(v.(string))
+		req.ContentHandlingStrategy = awstypes.ContentHandlingStrategy(v.(string))
 	}
 	if v, ok := d.GetOk("credentials_arn"); ok {
 		req.CredentialsArn = aws.String(v.(string))
@@ -209,16 +211,16 @@ func resourceIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta
 		req.IntegrationUri = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("passthrough_behavior"); ok {
-		req.PassthroughBehavior = aws.String(v.(string))
+		req.PassthroughBehavior = awstypes.PassthroughBehavior(v.(string))
 	}
 	if v, ok := d.GetOk("payload_format_version"); ok {
 		req.PayloadFormatVersion = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("request_parameters"); ok {
-		req.RequestParameters = flex.ExpandStringMap(v.(map[string]interface{}))
+		req.RequestParameters = flex.ExpandStringValueMap(v.(map[string]interface{}))
 	}
 	if v, ok := d.GetOk("request_templates"); ok {
-		req.RequestTemplates = flex.ExpandStringMap(v.(map[string]interface{}))
+		req.RequestTemplates = flex.ExpandStringValueMap(v.(map[string]interface{}))
 	}
 	if v, ok := d.GetOk("response_parameters"); ok && v.(*schema.Set).Len() > 0 {
 		req.ResponseParameters = expandIntegrationResponseParameters(v.(*schema.Set).List())
@@ -227,32 +229,32 @@ func resourceIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta
 		req.TemplateSelectionExpression = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("timeout_milliseconds"); ok {
-		req.TimeoutInMillis = aws.Int64(int64(v.(int)))
+		req.TimeoutInMillis = aws.Int32(int32(v.(int)))
 	}
 	if v, ok := d.GetOk("tls_config"); ok {
 		req.TlsConfig = expandTLSConfig(v.([]interface{}))
 	}
 
-	log.Printf("[DEBUG] Creating API Gateway v2 integration: %s", req)
-	resp, err := conn.CreateIntegrationWithContext(ctx, req)
+	log.Printf("[DEBUG] Creating API Gateway v2 integration: %+v", req)
+	resp, err := conn.CreateIntegration(ctx, req)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating API Gateway v2 integration: %s", err)
 	}
 
-	d.SetId(aws.StringValue(resp.IntegrationId))
+	d.SetId(aws.ToString(resp.IntegrationId))
 
 	return append(diags, resourceIntegrationRead(ctx, d, meta)...)
 }
 
 func resourceIntegrationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-	resp, err := conn.GetIntegrationWithContext(ctx, &apigatewayv2.GetIntegrationInput{
+	resp, err := conn.GetIntegration(ctx, &apigatewayv2.GetIntegrationInput{
 		ApiId:         aws.String(d.Get("api_id").(string)),
 		IntegrationId: aws.String(d.Id()),
 	})
-	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) && !d.IsNewResource() {
+	if errs.IsA[*awstypes.NotFoundException](err) && !d.IsNewResource() {
 		log.Printf("[WARN] API Gateway v2 integration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -273,11 +275,11 @@ func resourceIntegrationRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("integration_uri", resp.IntegrationUri)
 	d.Set("passthrough_behavior", resp.PassthroughBehavior)
 	d.Set("payload_format_version", resp.PayloadFormatVersion)
-	err = d.Set("request_parameters", flex.FlattenStringMap(resp.RequestParameters))
+	err = d.Set("request_parameters", resp.RequestParameters)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting request_parameters: %s", err)
 	}
-	err = d.Set("request_templates", flex.FlattenStringMap(resp.RequestTemplates))
+	err = d.Set("request_templates", resp.RequestTemplates)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting request_templates: %s", err)
 	}
@@ -296,22 +298,22 @@ func resourceIntegrationRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	req := &apigatewayv2.UpdateIntegrationInput{
 		ApiId:         aws.String(d.Get("api_id").(string)),
 		IntegrationId: aws.String(d.Id()),
 		// Always specify the integration type.
-		IntegrationType: aws.String(d.Get("integration_type").(string)),
+		IntegrationType: awstypes.IntegrationType(d.Get("integration_type").(string)),
 	}
 	if d.HasChange("connection_id") {
 		req.ConnectionId = aws.String(d.Get("connection_id").(string))
 	}
 	if d.HasChange("connection_type") {
-		req.ConnectionType = aws.String(d.Get("connection_type").(string))
+		req.ConnectionType = awstypes.ConnectionType(d.Get("connection_type").(string))
 	}
 	if d.HasChange("content_handling_strategy") {
-		req.ContentHandlingStrategy = aws.String(d.Get("content_handling_strategy").(string))
+		req.ContentHandlingStrategy = awstypes.ContentHandlingStrategy(d.Get("content_handling_strategy").(string))
 	}
 	if d.HasChange("credentials_arn") {
 		req.CredentialsArn = aws.String(d.Get("credentials_arn").(string))
@@ -330,18 +332,18 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 		req.IntegrationUri = aws.String(d.Get("integration_uri").(string))
 	}
 	if d.HasChange("passthrough_behavior") {
-		req.PassthroughBehavior = aws.String(d.Get("passthrough_behavior").(string))
+		req.PassthroughBehavior = awstypes.PassthroughBehavior(d.Get("passthrough_behavior").(string))
 	}
 	if d.HasChange("payload_format_version") {
 		req.PayloadFormatVersion = aws.String(d.Get("payload_format_version").(string))
 	}
 	if d.HasChange("request_parameters") {
 		o, n := d.GetChange("request_parameters")
-		add, del, nop := flex.DiffStringMaps(o.(map[string]interface{}), n.(map[string]interface{}))
+		add, del, nop := flex.DiffStringValueMaps(o.(map[string]interface{}), n.(map[string]interface{}))
 
 		// Parameters are removed by setting the associated value to "".
 		for k := range del {
-			del[k] = aws.String("")
+			del[k] = ""
 		}
 		variables := del
 		for k, v := range add {
@@ -356,7 +358,7 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 		req.RequestParameters = variables
 	}
 	if d.HasChange("request_templates") {
-		req.RequestTemplates = flex.ExpandStringMap(d.Get("request_templates").(map[string]interface{}))
+		req.RequestTemplates = flex.ExpandStringValueMap(d.Get("request_templates").(map[string]interface{}))
 	}
 	if d.HasChange("response_parameters") {
 		o, n := d.GetChange("response_parameters")
@@ -376,9 +378,9 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 			if v, ok := tfMap["status_code"].(string); ok && v != "" {
 				if req.ResponseParameters == nil {
-					req.ResponseParameters = map[string]map[string]*string{}
+					req.ResponseParameters = map[string]map[string]string{}
 				}
-				req.ResponseParameters[v] = map[string]*string{}
+				req.ResponseParameters[v] = map[string]string{}
 			}
 		}
 	}
@@ -386,14 +388,14 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 		req.TemplateSelectionExpression = aws.String(d.Get("template_selection_expression").(string))
 	}
 	if d.HasChange("timeout_milliseconds") {
-		req.TimeoutInMillis = aws.Int64(int64(d.Get("timeout_milliseconds").(int)))
+		req.TimeoutInMillis = aws.Int32(int32(d.Get("timeout_milliseconds").(int)))
 	}
 	if d.HasChange("tls_config") {
 		req.TlsConfig = expandTLSConfig(d.Get("tls_config").([]interface{}))
 	}
 
-	log.Printf("[DEBUG] Updating API Gateway v2 integration: %s", req)
-	_, err := conn.UpdateIntegrationWithContext(ctx, req)
+	log.Printf("[DEBUG] Updating API Gateway v2 integration: %+v", req)
+	_, err := conn.UpdateIntegration(ctx, req)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating API Gateway v2 integration: %s", err)
 	}
@@ -403,14 +405,14 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceIntegrationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 integration (%s)", d.Id())
-	_, err := conn.DeleteIntegrationWithContext(ctx, &apigatewayv2.DeleteIntegrationInput{
+	_, err := conn.DeleteIntegration(ctx, &apigatewayv2.DeleteIntegrationInput{
 		ApiId:         aws.String(d.Get("api_id").(string)),
 		IntegrationId: aws.String(d.Id()),
 	})
-	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
 	}
 	if err != nil {
@@ -429,9 +431,9 @@ func resourceIntegrationImport(ctx context.Context, d *schema.ResourceData, meta
 	apiId := parts[0]
 	integrationId := parts[1]
 
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-	resp, err := conn.GetIntegrationWithContext(ctx, &apigatewayv2.GetIntegrationInput{
+	resp, err := conn.GetIntegration(ctx, &apigatewayv2.GetIntegrationInput{
 		ApiId:         aws.String(apiId),
 		IntegrationId: aws.String(integrationId),
 	})
@@ -439,7 +441,7 @@ func resourceIntegrationImport(ctx context.Context, d *schema.ResourceData, meta
 		return nil, err
 	}
 
-	if aws.BoolValue(resp.ApiGatewayManaged) {
+	if aws.ToBool(resp.ApiGatewayManaged) {
 		return nil, fmt.Errorf("API Gateway v2 integration (%s) was created via quick create", integrationId)
 	}
 
@@ -449,8 +451,8 @@ func resourceIntegrationImport(ctx context.Context, d *schema.ResourceData, meta
 	return []*schema.ResourceData{d}, nil
 }
 
-func expandTLSConfig(vConfig []interface{}) *apigatewayv2.TlsConfigInput {
-	config := &apigatewayv2.TlsConfigInput{}
+func expandTLSConfig(vConfig []interface{}) *awstypes.TlsConfigInput {
+	config := &awstypes.TlsConfigInput{}
 
 	if len(vConfig) == 0 || vConfig[0] == nil {
 		return config
@@ -464,22 +466,22 @@ func expandTLSConfig(vConfig []interface{}) *apigatewayv2.TlsConfigInput {
 	return config
 }
 
-func flattenTLSConfig(config *apigatewayv2.TlsConfig) []interface{} {
+func flattenTLSConfig(config *awstypes.TlsConfig) []interface{} {
 	if config == nil {
 		return []interface{}{}
 	}
 
 	return []interface{}{map[string]interface{}{
-		"server_name_to_verify": aws.StringValue(config.ServerNameToVerify),
+		"server_name_to_verify": aws.ToString(config.ServerNameToVerify),
 	}}
 }
 
-func expandIntegrationResponseParameters(tfList []interface{}) map[string]map[string]*string {
+func expandIntegrationResponseParameters(tfList []interface{}) map[string]map[string]string {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	responseParameters := map[string]map[string]*string{}
+	responseParameters := map[string]map[string]string{}
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -490,7 +492,7 @@ func expandIntegrationResponseParameters(tfList []interface{}) map[string]map[st
 
 		if vStatusCode, ok := tfMap["status_code"].(string); ok && vStatusCode != "" {
 			if v, ok := tfMap["mappings"].(map[string]interface{}); ok && len(v) > 0 {
-				responseParameters[vStatusCode] = flex.ExpandStringMap(v)
+				responseParameters[vStatusCode] = flex.ExpandStringValueMap(v)
 			}
 		}
 	}
@@ -498,7 +500,7 @@ func expandIntegrationResponseParameters(tfList []interface{}) map[string]map[st
 	return responseParameters
 }
 
-func flattenIntegrationResponseParameters(responseParameters map[string]map[string]*string) []interface{} {
+func flattenIntegrationResponseParameters(responseParameters map[string]map[string]string) []interface{} {
 	if len(responseParameters) == 0 {
 		return nil
 	}
@@ -513,7 +515,7 @@ func flattenIntegrationResponseParameters(responseParameters map[string]map[stri
 		tfMap := map[string]interface{}{}
 
 		tfMap["status_code"] = statusCode
-		tfMap["mappings"] = aws.StringValueMap(mappings)
+		tfMap["mappings"] = mappings
 
 		tfList = append(tfList, tfMap)
 	}

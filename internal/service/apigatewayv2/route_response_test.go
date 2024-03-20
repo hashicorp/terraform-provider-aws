@@ -9,14 +9,15 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/apigatewayv2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -118,19 +119,19 @@ func TestAccAPIGatewayV2RouteResponse_model(t *testing.T) {
 
 func testAccCheckRouteResponseDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_apigatewayv2_route_response" {
 				continue
 			}
 
-			_, err := conn.GetRouteResponseWithContext(ctx, &apigatewayv2.GetRouteResponseInput{
+			_, err := conn.GetRouteResponse(ctx, &apigatewayv2.GetRouteResponseInput{
 				ApiId:           aws.String(rs.Primary.Attributes["api_id"]),
 				RouteId:         aws.String(rs.Primary.Attributes["route_id"]),
 				RouteResponseId: aws.String(rs.Primary.ID),
 			})
-			if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
+			if errs.IsA[*awstypes.NotFoundException](err) {
 				continue
 			}
 			if err != nil {
@@ -146,9 +147,9 @@ func testAccCheckRouteResponseDestroy(ctx context.Context) resource.TestCheckFun
 
 func testAccCheckRouteResponseDisappears(ctx context.Context, apiId, routeId *string, v *apigatewayv2.GetRouteResponseOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-		_, err := conn.DeleteRouteResponseWithContext(ctx, &apigatewayv2.DeleteRouteResponseInput{
+		_, err := conn.DeleteRouteResponse(ctx, &apigatewayv2.DeleteRouteResponseInput{
 			ApiId:           apiId,
 			RouteId:         routeId,
 			RouteResponseId: v.RouteResponseId,
@@ -169,11 +170,11 @@ func testAccCheckRouteResponseExists(ctx context.Context, n string, vApiId, vRou
 			return fmt.Errorf("No API Gateway v2 route response ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 		apiId := aws.String(rs.Primary.Attributes["api_id"])
 		routeId := aws.String(rs.Primary.Attributes["route_id"])
-		resp, err := conn.GetRouteResponseWithContext(ctx, &apigatewayv2.GetRouteResponseInput{
+		resp, err := conn.GetRouteResponse(ctx, &apigatewayv2.GetRouteResponseInput{
 			ApiId:           apiId,
 			RouteId:         routeId,
 			RouteResponseId: aws.String(rs.Primary.ID),

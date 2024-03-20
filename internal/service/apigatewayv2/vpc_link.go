@@ -9,15 +9,17 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/apigatewayv2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -71,23 +73,23 @@ func ResourceVPCLink() *schema.Resource {
 
 func resourceVPCLinkCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	name := d.Get("name").(string)
 	input := &apigatewayv2.CreateVpcLinkInput{
 		Name:             aws.String(name),
-		SecurityGroupIds: flex.ExpandStringSet(d.Get("security_group_ids").(*schema.Set)),
-		SubnetIds:        flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
+		SecurityGroupIds: flex.ExpandStringValueSet(d.Get("security_group_ids").(*schema.Set)),
+		SubnetIds:        flex.ExpandStringValueSet(d.Get("subnet_ids").(*schema.Set)),
 		Tags:             getTagsIn(ctx),
 	}
 
-	output, err := conn.CreateVpcLinkWithContext(ctx, input)
+	output, err := conn.CreateVpcLink(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating API Gateway v2 VPC Link (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.VpcLinkId))
+	d.SetId(aws.ToString(output.VpcLinkId))
 
 	if _, err := waitVPCLinkAvailable(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for API Gateway v2 VPC Link (%s) create: %s", d.Id(), err)
@@ -98,7 +100,7 @@ func resourceVPCLinkCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceVPCLinkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	output, err := FindVPCLinkByID(ctx, conn, d.Id())
 
@@ -120,8 +122,8 @@ func resourceVPCLinkRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}.String()
 	d.Set("arn", arn)
 	d.Set("name", output.Name)
-	d.Set("security_group_ids", aws.StringValueSlice(output.SecurityGroupIds))
-	d.Set("subnet_ids", aws.StringValueSlice(output.SubnetIds))
+	d.Set("security_group_ids", output.SecurityGroupIds)
+	d.Set("subnet_ids", output.SubnetIds)
 
 	setTagsOut(ctx, output.Tags)
 
@@ -130,7 +132,7 @@ func resourceVPCLinkRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceVPCLinkUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &apigatewayv2.UpdateVpcLinkInput{
@@ -138,7 +140,7 @@ func resourceVPCLinkUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			VpcLinkId: aws.String(d.Id()),
 		}
 
-		_, err := conn.UpdateVpcLinkWithContext(ctx, input)
+		_, err := conn.UpdateVpcLink(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating API Gateway v2 VPC Link (%s): %s", d.Id(), err)
@@ -150,14 +152,14 @@ func resourceVPCLinkUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceVPCLinkDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 VPC Link: %s", d.Id())
-	_, err := conn.DeleteVpcLinkWithContext(ctx, &apigatewayv2.DeleteVpcLinkInput{
+	_, err := conn.DeleteVpcLink(ctx, &apigatewayv2.DeleteVpcLinkInput{
 		VpcLinkId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
 	}
 
@@ -172,7 +174,7 @@ func resourceVPCLinkDelete(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func FindVPCLinkByID(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, id string) (*apigatewayv2.GetVpcLinkOutput, error) {
+func FindVPCLinkByID(ctx context.Context, conn *apigatewayv2.Client, id string) (*apigatewayv2.GetVpcLinkOutput, error) {
 	input := &apigatewayv2.GetVpcLinkInput{
 		VpcLinkId: aws.String(id),
 	}
@@ -180,10 +182,10 @@ func FindVPCLinkByID(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, id st
 	return findVPCLink(ctx, conn, input)
 }
 
-func findVPCLink(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, input *apigatewayv2.GetVpcLinkInput) (*apigatewayv2.GetVpcLinkOutput, error) {
-	output, err := conn.GetVpcLinkWithContext(ctx, input)
+func findVPCLink(ctx context.Context, conn *apigatewayv2.Client, input *apigatewayv2.GetVpcLinkInput) (*apigatewayv2.GetVpcLinkOutput, error) {
+	output, err := conn.GetVpcLink(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -201,7 +203,7 @@ func findVPCLink(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, input *ap
 	return output, nil
 }
 
-func statusVPCLink(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, id string) retry.StateRefreshFunc {
+func statusVPCLink(ctx context.Context, conn *apigatewayv2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindVPCLinkByID(ctx, conn, id)
 
@@ -213,17 +215,17 @@ func statusVPCLink(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, id stri
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.VpcLinkStatus), nil
+		return output, string(output.VpcLinkStatus), nil
 	}
 }
 
-func waitVPCLinkAvailable(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, id string) (*apigatewayv2.GetVpcLinkOutput, error) {
+func waitVPCLinkAvailable(ctx context.Context, conn *apigatewayv2.Client, id string) (*apigatewayv2.GetVpcLinkOutput, error) {
 	const (
 		timeout = 10 * time.Minute
 	)
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{apigatewayv2.VpcLinkStatusPending},
-		Target:  []string{apigatewayv2.VpcLinkStatusAvailable},
+		Pending: enum.Slice(awstypes.VpcLinkStatusPending),
+		Target:  enum.Slice(awstypes.VpcLinkStatusAvailable),
 		Refresh: statusVPCLink(ctx, conn, id),
 		Timeout: timeout,
 	}
@@ -231,7 +233,7 @@ func waitVPCLinkAvailable(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*apigatewayv2.GetVpcLinkOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.StringValue(output.VpcLinkStatusMessage)))
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.VpcLinkStatusMessage)))
 
 		return output, err
 	}
@@ -239,12 +241,12 @@ func waitVPCLinkAvailable(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, 
 	return nil, err
 }
 
-func waitVPCLinkDeleted(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, vpcLinkId string) (*apigatewayv2.GetVpcLinkOutput, error) {
+func waitVPCLinkDeleted(ctx context.Context, conn *apigatewayv2.Client, vpcLinkId string) (*apigatewayv2.GetVpcLinkOutput, error) {
 	const (
 		timeout = 10 * time.Minute
 	)
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{apigatewayv2.VpcLinkStatusDeleting},
+		Pending: enum.Slice(awstypes.VpcLinkStatusDeleting),
 		Target:  []string{},
 		Refresh: statusVPCLink(ctx, conn, vpcLinkId),
 		Timeout: timeout,
@@ -253,7 +255,7 @@ func waitVPCLinkDeleted(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, vp
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*apigatewayv2.GetVpcLinkOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.StringValue(output.VpcLinkStatusMessage)))
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.VpcLinkStatusMessage)))
 
 		return output, err
 	}

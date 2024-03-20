@@ -9,15 +9,16 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
 	"github.com/aws/aws-sdk-go/service/apigateway"
-	"github.com/aws/aws-sdk-go/service/apigatewayv2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -1100,18 +1101,18 @@ func TestAccAPIGatewayV2Stage_tags(t *testing.T) {
 
 func testAccCheckStageDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_apigatewayv2_stage" {
 				continue
 			}
 
-			_, err := conn.GetStageWithContext(ctx, &apigatewayv2.GetStageInput{
+			_, err := conn.GetStage(ctx, &apigatewayv2.GetStageInput{
 				ApiId:     aws.String(rs.Primary.Attributes["api_id"]),
 				StageName: aws.String(rs.Primary.ID),
 			})
-			if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
+			if errs.IsA[*awstypes.NotFoundException](err) {
 				continue
 			}
 			if err != nil {
@@ -1136,10 +1137,10 @@ func testAccCheckStageExists(ctx context.Context, n string, vApiId *string, v *a
 			return fmt.Errorf("No API Gateway v2 stage ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 		apiId := aws.String(rs.Primary.Attributes["api_id"])
-		resp, err := conn.GetStageWithContext(ctx, &apigatewayv2.GetStageInput{
+		resp, err := conn.GetStage(ctx, &apigatewayv2.GetStageInput{
 			ApiId:     apiId,
 			StageName: aws.String(rs.Primary.ID),
 		})
@@ -1553,7 +1554,7 @@ func testAccPreCheckAPIGatewayAccountCloudWatchRoleARN(ctx context.Context, t *t
 		t.Fatalf("error reading API Gateway Account: %s", err)
 	}
 
-	if output == nil || aws.StringValue(output.CloudwatchRoleArn) == "" {
+	if output == nil || aws.ToString(output.CloudwatchRoleArn) == "" {
 		t.Skip("skipping tests; no API Gateway CloudWatch role ARN has been configured in this region")
 	}
 }

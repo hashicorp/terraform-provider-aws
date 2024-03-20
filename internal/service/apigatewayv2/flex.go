@@ -8,6 +8,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
-func flattenCaseInsensitiveStringSet(list []*string) *schema.Set {
-	return schema.NewSet(hashStringCaseInsensitive, flex.FlattenStringList(list))
+func flattenCaseInsensitiveStringSet(list []string) *schema.Set {
+	return schema.NewSet(hashStringCaseInsensitive, flex.FlattenStringValueList(list))
 }

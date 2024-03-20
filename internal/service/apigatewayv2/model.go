@@ -10,14 +10,15 @@ import (
 	"strings"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/apigatewayv2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -76,7 +77,7 @@ func ResourceModel() *schema.Resource {
 
 func resourceModelCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	req := &apigatewayv2.CreateModelInput{
 		ApiId:       aws.String(d.Get("api_id").(string)),
@@ -88,26 +89,26 @@ func resourceModelCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		req.Description = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating API Gateway v2 model: %s", req)
-	resp, err := conn.CreateModelWithContext(ctx, req)
+	log.Printf("[DEBUG] Creating API Gateway v2 model: %+v", req)
+	resp, err := conn.CreateModel(ctx, req)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating API Gateway v2 model: %s", err)
 	}
 
-	d.SetId(aws.StringValue(resp.ModelId))
+	d.SetId(aws.ToString(resp.ModelId))
 
 	return append(diags, resourceModelRead(ctx, d, meta)...)
 }
 
 func resourceModelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-	resp, err := conn.GetModelWithContext(ctx, &apigatewayv2.GetModelInput{
+	resp, err := conn.GetModel(ctx, &apigatewayv2.GetModelInput{
 		ApiId:   aws.String(d.Get("api_id").(string)),
 		ModelId: aws.String(d.Id()),
 	})
-	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) && !d.IsNewResource() {
+	if errs.IsA[*awstypes.NotFoundException](err) && !d.IsNewResource() {
 		log.Printf("[WARN] API Gateway v2 model (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -126,7 +127,7 @@ func resourceModelRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceModelUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	req := &apigatewayv2.UpdateModelInput{
 		ApiId:   aws.String(d.Get("api_id").(string)),
@@ -145,8 +146,8 @@ func resourceModelUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		req.Schema = aws.String(d.Get("schema").(string))
 	}
 
-	log.Printf("[DEBUG] Updating API Gateway v2 model: %s", req)
-	_, err := conn.UpdateModelWithContext(ctx, req)
+	log.Printf("[DEBUG] Updating API Gateway v2 model: %+v", req)
+	_, err := conn.UpdateModel(ctx, req)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating API Gateway v2 model: %s", err)
 	}
@@ -156,14 +157,14 @@ func resourceModelUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceModelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 model (%s)", d.Id())
-	_, err := conn.DeleteModelWithContext(ctx, &apigatewayv2.DeleteModelInput{
+	_, err := conn.DeleteModel(ctx, &apigatewayv2.DeleteModelInput{
 		ApiId:   aws.String(d.Get("api_id").(string)),
 		ModelId: aws.String(d.Id()),
 	})
-	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
 	}
 	if err != nil {

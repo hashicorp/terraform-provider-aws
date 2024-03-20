@@ -6,8 +6,9 @@ package apigatewayv2
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/apigatewayv2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -43,7 +44,7 @@ func DataSourceAPIs() *schema.Resource {
 
 func dataSourceAPIsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	tagsToMatch := tftags.New(ctx, d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -57,11 +58,11 @@ func dataSourceAPIsRead(ctx context.Context, d *schema.ResourceData, meta interf
 	var ids []*string
 
 	for _, api := range apis {
-		if v, ok := d.GetOk("name"); ok && v.(string) != aws.StringValue(api.Name) {
+		if v, ok := d.GetOk("name"); ok && v.(string) != aws.ToString(api.Name) {
 			continue
 		}
 
-		if v, ok := d.GetOk("protocol_type"); ok && v.(string) != aws.StringValue(api.ProtocolType) {
+		if v, ok := d.GetOk("protocol_type"); ok && v.(string) != string(api.ProtocolType) {
 			continue
 		}
 
@@ -81,8 +82,8 @@ func dataSourceAPIsRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func findAPIs(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, input *apigatewayv2.GetApisInput) ([]*apigatewayv2.Api, error) {
-	var apis []*apigatewayv2.Api
+func findAPIs(ctx context.Context, conn *apigatewayv2.Client, input *apigatewayv2.GetApisInput) ([]awstypes.Api, error) {
+	var apis []awstypes.Api
 
 	err := getAPIsPages(ctx, conn, input, func(page *apigatewayv2.GetApisOutput, lastPage bool) bool {
 		if page == nil {
@@ -90,10 +91,6 @@ func findAPIs(ctx context.Context, conn *apigatewayv2.ApiGatewayV2, input *apiga
 		}
 
 		for _, item := range page.Items {
-			if item == nil {
-				continue
-			}
-
 			apis = append(apis, item)
 		}
 
