@@ -127,6 +127,7 @@ const (
 )
 
 func resourceTableExportCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
 	s3Bucket := d.Get("s3_bucket").(string)
@@ -165,23 +166,24 @@ func resourceTableExportCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	out, err := conn.ExportTableToPointInTimeWithContext(ctx, in)
 	if err != nil {
-		return create.DiagError(names.DynamoDB, create.ErrActionCreating, ResNameTableExport, d.Get("table_arn").(string), err)
+		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionCreating, ResNameTableExport, d.Get("table_arn").(string), err)
 	}
 
 	if out == nil || out.ExportDescription == nil {
-		return create.DiagError(names.DynamoDB, create.ErrActionCreating, ResNameTableExport, d.Get("table_arn").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionCreating, ResNameTableExport, d.Get("table_arn").(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.StringValue(out.ExportDescription.ExportArn))
 
 	if _, err := waitTableExportCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.DiagError(names.DynamoDB, create.ErrActionWaitingForCreation, ResNameTableExport, d.Id(), err)
+		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionWaitingForCreation, ResNameTableExport, d.Id(), err)
 	}
 
-	return resourceTableExportRead(ctx, d, meta)
+	return append(diags, resourceTableExportRead(ctx, d, meta)...)
 }
 
 func resourceTableExportRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
 	out, err := FindTableExportByID(ctx, conn, d.Id())
@@ -189,11 +191,11 @@ func resourceTableExportRead(ctx context.Context, d *schema.ResourceData, meta i
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DynamoDB TableExport (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.DynamoDB, create.ErrActionReading, ResNameTableExport, d.Id(), err)
+		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionReading, ResNameTableExport, d.Id(), err)
 	}
 	desc := out.ExportDescription
 
@@ -219,5 +221,5 @@ func resourceTableExportRead(ctx context.Context, d *schema.ResourceData, meta i
 		d.Set("export_time", aws.TimeValue(desc.ExportTime).Format(time.RFC3339))
 	}
 
-	return nil
+	return diags
 }

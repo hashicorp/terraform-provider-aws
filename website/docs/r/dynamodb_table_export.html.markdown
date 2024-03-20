@@ -75,7 +75,7 @@ The following arguments are optional:
 * `s3_sse_algorithm` - (Optional, Forces new resource) Type of encryption used on the bucket where export data will be stored. Valid values are: `AES256`, `KMS`.
 * `s3_sse_kms_key_id` - (Optional, Forces new resource) ID of the AWS KMS managed key used to encrypt the S3 bucket where export data will be stored (if applicable).
 
-## Attributes Reference
+## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 

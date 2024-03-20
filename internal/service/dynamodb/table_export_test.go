@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -88,7 +87,7 @@ func TestAccDynamoDBTableExport_kms(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.DynamoDB)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
@@ -108,7 +107,7 @@ func TestAccDynamoDBTableExport_kms(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "export_time"),
 					resource.TestCheckResourceAttrSet(resourceName, "start_time"),
 					resource.TestCheckResourceAttrSet(resourceName, "end_time"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "dynamodb", regexp.MustCompile(
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "dynamodb", regexache.MustCompile(
 						fmt.Sprintf("table\\/%s\\/export\\/+.", rName),
 					)),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "table_arn", "dynamodb", fmt.Sprintf("table/%s", rName)),
@@ -141,7 +140,7 @@ func TestAccDynamoDBTableExport_s3Prefix(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.DynamoDB)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
@@ -161,7 +160,7 @@ func TestAccDynamoDBTableExport_s3Prefix(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "export_time"),
 					resource.TestCheckResourceAttrSet(resourceName, "start_time"),
 					resource.TestCheckResourceAttrSet(resourceName, "end_time"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "dynamodb", regexp.MustCompile(
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "dynamodb", regexache.MustCompile(
 						fmt.Sprintf("table\\/%s\\/export\\/+.", rName),
 					)),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "table_arn", "dynamodb", fmt.Sprintf("table/%s", rName)),
