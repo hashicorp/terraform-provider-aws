@@ -18,10 +18,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfecs "github.com/hashicorp/terraform-provider-aws/internal/service/ecs"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(ecs.EndpointsID, testAccErrorCheckSkip)
+	acctest.RegisterServiceErrorCheckFunc(names.ECSServiceID, testAccErrorCheckSkip)
 }
 
 func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
@@ -74,7 +75,7 @@ func TestAccECSTaskDefinition_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -84,6 +85,7 @@ func TestAccECSTaskDefinition_basic(t *testing.T) {
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ecs", regexache.MustCompile(`task-definition/.+`)),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn_without_revision", "ecs", regexache.MustCompile(`task-definition/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "track_latest", "false"),
 				),
 			},
 			{
@@ -99,7 +101,7 @@ func TestAccECSTaskDefinition_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy"},
+				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
 			},
 		},
 	})
@@ -114,7 +116,7 @@ func TestAccECSTaskDefinition_scratchVolume(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -129,7 +131,7 @@ func TestAccECSTaskDefinition_scratchVolume(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy"},
+				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
 			},
 		},
 	})
@@ -143,7 +145,7 @@ func TestAccECSTaskDefinition_DockerVolume_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -172,7 +174,7 @@ func TestAccECSTaskDefinition_DockerVolume_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy"},
+				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
 			},
 		},
 	})
@@ -186,7 +188,7 @@ func TestAccECSTaskDefinition_DockerVolume_minimal(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -207,7 +209,7 @@ func TestAccECSTaskDefinition_DockerVolume_minimal(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy"},
+				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
 			},
 		},
 	})
@@ -221,7 +223,7 @@ func TestAccECSTaskDefinition_runtimePlatform(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartition(t, endpoints.AwsPartitionID) }, // runtime platform not support on GovCloud
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -241,7 +243,7 @@ func TestAccECSTaskDefinition_runtimePlatform(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy"},
+				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
 			},
 		},
 	})
@@ -255,7 +257,7 @@ func TestAccECSTaskDefinition_Fargate_runtimePlatform(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartition(t, endpoints.AwsPartitionID) }, // runtime platform not support on GovCloud
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -275,7 +277,7 @@ func TestAccECSTaskDefinition_Fargate_runtimePlatform(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy"},
+				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
 			},
 		},
 	})
@@ -289,7 +291,7 @@ func TestAccECSTaskDefinition_Fargate_runtimePlatformWithoutArch(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartition(t, endpoints.AwsPartitionID) }, // runtime platform not support on GovCloud
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -308,7 +310,7 @@ func TestAccECSTaskDefinition_Fargate_runtimePlatformWithoutArch(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy"},
+				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
 			},
 		},
 	})
@@ -322,7 +324,7 @@ func TestAccECSTaskDefinition_EFSVolume_minimal(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -343,7 +345,7 @@ func TestAccECSTaskDefinition_EFSVolume_minimal(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy"},
+				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
 			},
 		},
 	})
@@ -357,7 +359,7 @@ func TestAccECSTaskDefinition_EFSVolume_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -379,7 +381,7 @@ func TestAccECSTaskDefinition_EFSVolume_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy"},
+				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
 			},
 		},
 	})
@@ -393,7 +395,7 @@ func TestAccECSTaskDefinition_EFSVolume_transitEncryptionMinimal(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -417,7 +419,7 @@ func TestAccECSTaskDefinition_EFSVolume_transitEncryptionMinimal(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy"},
+				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
 			},
 		},
 	})
@@ -431,7 +433,7 @@ func TestAccECSTaskDefinition_EFSVolume_transitEncryption(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -455,7 +457,7 @@ func TestAccECSTaskDefinition_EFSVolume_transitEncryption(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy"},
+				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
 			},
 		},
 	})
@@ -469,7 +471,7 @@ func TestAccECSTaskDefinition_EFSVolume_transitEncryptionDisabled(t *testing.T) 
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -492,7 +494,7 @@ func TestAccECSTaskDefinition_EFSVolume_transitEncryptionDisabled(t *testing.T) 
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy"},
+				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
 			},
 		},
 	})
@@ -506,7 +508,7 @@ func TestAccECSTaskDefinition_EFSVolume_accessPoint(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -533,7 +535,7 @@ func TestAccECSTaskDefinition_EFSVolume_accessPoint(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy"},
+				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
 			},
 		},
 	})
@@ -556,7 +558,7 @@ func TestAccECSTaskDefinition_fsxWinFileSystem(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -581,7 +583,7 @@ func TestAccECSTaskDefinition_fsxWinFileSystem(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy"},
+				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
 			},
 		},
 	})
@@ -595,7 +597,7 @@ func TestAccECSTaskDefinition_DockerVolume_taskScoped(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -606,13 +608,6 @@ func TestAccECSTaskDefinition_DockerVolume_taskScoped(t *testing.T) {
 					testAccCheckTaskDefinitionDockerVolumeConfigurationAutoprovisionNil(&def),
 					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
 				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy"},
 			},
 		},
 	})
@@ -628,7 +623,7 @@ func TestAccECSTaskDefinition_service(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -651,7 +646,7 @@ func TestAccECSTaskDefinition_service(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy"},
+				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
 			},
 		},
 	})
@@ -665,7 +660,7 @@ func TestAccECSTaskDefinition_taskRoleARN(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -680,7 +675,7 @@ func TestAccECSTaskDefinition_taskRoleARN(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy"},
+				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
 			},
 		},
 	})
@@ -694,7 +689,7 @@ func TestAccECSTaskDefinition_networkMode(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -710,7 +705,7 @@ func TestAccECSTaskDefinition_networkMode(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy"},
+				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
 			},
 		},
 	})
@@ -724,7 +719,7 @@ func TestAccECSTaskDefinition_ipcMode(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -740,7 +735,7 @@ func TestAccECSTaskDefinition_ipcMode(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy"},
+				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
 			},
 		},
 	})
@@ -754,7 +749,7 @@ func TestAccECSTaskDefinition_pidMode(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -770,7 +765,7 @@ func TestAccECSTaskDefinition_pidMode(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy"},
+				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
 			},
 		},
 	})
@@ -784,7 +779,7 @@ func TestAccECSTaskDefinition_constraint(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -801,7 +796,7 @@ func TestAccECSTaskDefinition_constraint(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy"},
+				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
 			},
 		},
 	})
@@ -815,7 +810,7 @@ func TestAccECSTaskDefinition_changeVolumesForcesNewResource(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -837,7 +832,7 @@ func TestAccECSTaskDefinition_changeVolumesForcesNewResource(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy"},
+				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
 			},
 		},
 	})
@@ -852,7 +847,7 @@ func TestAccECSTaskDefinition_arrays(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -867,7 +862,7 @@ func TestAccECSTaskDefinition_arrays(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy"},
+				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
 			},
 		},
 	})
@@ -881,7 +876,7 @@ func TestAccECSTaskDefinition_Fargate_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -899,7 +894,7 @@ func TestAccECSTaskDefinition_Fargate_basic(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy"},
+				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
 			},
 			{
 				ExpectNonEmptyPlan: false,
@@ -918,7 +913,7 @@ func TestAccECSTaskDefinition_Fargate_ephemeralStorage(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -938,7 +933,7 @@ func TestAccECSTaskDefinition_Fargate_ephemeralStorage(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy"},
+				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
 			},
 		},
 	})
@@ -952,7 +947,7 @@ func TestAccECSTaskDefinition_executionRole(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -967,7 +962,7 @@ func TestAccECSTaskDefinition_executionRole(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy"},
+				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
 			},
 		},
 	})
@@ -982,7 +977,7 @@ func TestAccECSTaskDefinition_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1010,7 +1005,7 @@ func TestAccECSTaskDefinition_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1027,7 +1022,7 @@ func TestAccECSTaskDefinition_tags(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy"},
+				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
 			},
 			{
 				Config: testAccTaskDefinitionConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
@@ -1067,7 +1062,7 @@ func TestAccECSTaskDefinition_proxy(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1083,7 +1078,7 @@ func TestAccECSTaskDefinition_proxy(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy"},
+				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
 			},
 		},
 	})
@@ -1097,7 +1092,7 @@ func TestAccECSTaskDefinition_inferenceAccelerator(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1113,7 +1108,7 @@ func TestAccECSTaskDefinition_inferenceAccelerator(t *testing.T) {
 				ImportState:             true,
 				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"skip_destroy"},
+				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
 			},
 		},
 	})
@@ -1125,13 +1120,45 @@ func TestAccECSTaskDefinition_invalidContainerDefinition(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccTaskDefinitionConfig_invalidContainerDefinition(rName),
 				ExpectError: regexache.MustCompile(`invalid container definition supplied at index \(1\)`),
+			},
+		},
+	})
+}
+
+func TestAccECSTaskDefinition_trackLatest(t *testing.T) {
+	ctx := acctest.Context(t)
+	var def ecs.TaskDefinition
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_task_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTaskDefinitionConfig_trackLatest(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ecs", regexache.MustCompile(`task-definition/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn_without_revision", "ecs", regexache.MustCompile(`task-definition/.+`)),
+					resource.TestCheckResourceAttr(resourceName, "track_latest", "true"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
 			},
 		},
 	})
@@ -2865,6 +2892,60 @@ resource "aws_ecs_task_definition" "test" {
 	null
 ]
 TASK_DEFINITION
+}
+`, rName)
+}
+
+func testAccTaskDefinitionConfig_trackLatest(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_task_definition" "test" {
+  family = %[1]q
+
+  container_definitions = <<TASK_DEFINITION
+[
+	{
+		"cpu": 10,
+		"command": ["sleep", "10"],
+		"entryPoint": ["/"],
+		"environment": [
+			{"name": "VARNAME", "value": "VARVAL"}
+		],
+		"essential": true,
+		"image": "jenkins",
+		"links": ["mongodb"],
+		"memory": 128,
+		"name": "jenkins",
+		"portMappings": [
+			{
+				"containerPort": 80,
+				"hostPort": 8080
+			}
+		]
+	},
+	{
+		"cpu": 10,
+		"command": ["sleep", "10"],
+		"entryPoint": ["/"],
+		"essential": true,
+		"image": "mongodb",
+		"memory": 128,
+		"name": "mongodb",
+		"portMappings": [
+			{
+				"containerPort": 28017,
+				"hostPort": 28017
+			}
+		]
+	}
+]
+TASK_DEFINITION
+
+  volume {
+    name      = "jenkins-home"
+    host_path = "/ecs/jenkins-home"
+  }
+
+  track_latest = true
 }
 `, rName)
 }

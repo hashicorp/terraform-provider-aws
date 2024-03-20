@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -149,6 +150,8 @@ func ResourceFaq() *schema.Resource {
 }
 
 func resourceFaqCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	name := d.Get("name").(string)
@@ -189,11 +192,11 @@ func resourceFaqCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	)
 
 	if err != nil {
-		return diag.Errorf("creating Kendra Faq (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Kendra Faq (%s): %s", name, err)
 	}
 
 	if outputRaw == nil {
-		return diag.Errorf("creating Kendra Faq (%s): empty output", name)
+		return sdkdiag.AppendErrorf(diags, "creating Kendra Faq (%s): empty output", name)
 	}
 
 	output := outputRaw.(*kendra.CreateFaqOutput)
@@ -204,18 +207,20 @@ func resourceFaqCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.SetId(fmt.Sprintf("%s/%s", id, indexId))
 
 	if _, err := waitFaqCreated(ctx, conn, id, indexId, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for Faq (%s) creation: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Faq (%s) creation: %s", d.Id(), err)
 	}
 
-	return resourceFaqRead(ctx, d, meta)
+	return append(diags, resourceFaqRead(ctx, d, meta)...)
 }
 
 func resourceFaqRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	id, indexId, err := FaqParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	resp, err := FindFaqByID(ctx, conn, id, indexId)
@@ -223,11 +228,11 @@ func resourceFaqRead(ctx context.Context, d *schema.ResourceData, meta interface
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Kendra Faq (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("getting Kendra Faq (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "getting Kendra Faq (%s): %s", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -252,10 +257,10 @@ func resourceFaqRead(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("updated_at", aws.ToTime(resp.UpdatedAt).Format(time.RFC3339))
 
 	if err := d.Set("s3_path", flattenS3Path(resp.S3Path)); err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceFaqUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -264,13 +269,15 @@ func resourceFaqUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 }
 
 func resourceFaqDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	log.Printf("[INFO] Deleting Kendra Faq %s", d.Id())
 
 	id, indexId, err := FaqParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	_, err = conn.DeleteFaq(ctx, &kendra.DeleteFaqInput{
@@ -280,18 +287,18 @@ func resourceFaqDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	var resourceNotFoundException *types.ResourceNotFoundException
 	if errors.As(err, &resourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Kendra Faq (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Kendra Faq (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitFaqDeleted(ctx, conn, id, indexId, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for Kendra Faq (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Kendra Faq (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func waitFaqCreated(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) (*kendra.DescribeFaqOutput, error) {

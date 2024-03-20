@@ -284,7 +284,7 @@ func resourceStageRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		Resource:  fmt.Sprintf("%s/%s", restAPIID, stageName),
 	}.String()
 	d.Set("execution_arn", executionARN)
-	d.Set("invoke_url", meta.(*conns.AWSClient).APIGatewayInvokeURL(restAPIID, stageName))
+	d.Set("invoke_url", meta.(*conns.AWSClient).APIGatewayInvokeURL(ctx, restAPIID, stageName))
 	if err := d.Set("variables", aws.StringValueMap(stage.Variables)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting variables: %s", err)
 	}

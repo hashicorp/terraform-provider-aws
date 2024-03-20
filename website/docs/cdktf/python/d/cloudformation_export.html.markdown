@@ -51,4 +51,4 @@ This data source exports the following attributes in addition to the arguments a
 * `value` - Value from Cloudformation export identified by the export name found from [list-exports](http://docs.aws.amazon.com/cli/latest/reference/cloudformation/list-exports.html)
 * `exporting_stack_id` - ARN of stack that contains the exported output name and value.
 
-<!-- cache-key: cdktf-0.19.0 input-ea221c8f2e1fb315847f21fd305282c9ac5244739898e9391797602940e42bd3 -->
+<!-- cache-key: cdktf-0.20.1 input-ea221c8f2e1fb315847f21fd305282c9ac5244739898e9391797602940e42bd3 -->

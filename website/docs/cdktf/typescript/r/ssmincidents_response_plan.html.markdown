@@ -146,8 +146,8 @@ The `incidentTemplate` configuration block is required and supports the followin
 * `dedupeString` - (Optional) A string used to stop Incident Manager from creating multiple incident records for the same incident.
 * `incidentTags` - (Optional) The tags assigned to an incident template. When an incident starts, Incident Manager assigns the tags specified in the template to the incident.
 * `summary` - (Optional) The summary of an incident.
-* `notificationTarget` - (Optional) The Amazon Simple Notification Service (Amazon SNS) targets that this incident notifies when it is updated. The `notification_target` configuration block supports the following argument:
-    * `sns_topic_arn` - (Required) The ARN of the Amazon SNS topic.
+* `notificationTarget` - (Optional) The Amazon Simple Notification Service (Amazon SNS) targets that this incident notifies when it is updated. The `notificationTarget` configuration block supports the following argument:
+    * `snsTopicArn` - (Required) The ARN of the Amazon SNS topic.
 
 The following arguments are optional:
 
@@ -156,20 +156,20 @@ The following arguments are optional:
 * `chatChannel` - (Optional) The Chatbot chat channel used for collaboration during an incident.
 * `engagements` - (Optional) The Amazon Resource Name (ARN) for the contacts and escalation plans that the response plan engages during an incident.
 * `action` - (Optional) The actions that the response plan starts at the beginning of an incident.
-    * `ssm_automation` - (Optional) The Systems Manager automation document to start as the runbook at the beginning of the incident. The following values are supported:
-        * `document_name` - (Required) The automation document's name.
-        * `role_arn` - (Required) The Amazon Resource Name (ARN) of the role that the automation document assumes when it runs commands.
-        * `document_version` - (Optional) The version of the automation document to use at runtime.
-        * `target_account` -  (Optional) The account that the automation document runs in. This can be in either the management account or an application account.
+    * `ssmAutomation` - (Optional) The Systems Manager automation document to start as the runbook at the beginning of the incident. The following values are supported:
+        * `documentName` - (Required) The automation document's name.
+        * `roleArn` - (Required) The Amazon Resource Name (ARN) of the role that the automation document assumes when it runs commands.
+        * `documentVersion` - (Optional) The version of the automation document to use at runtime.
+        * `targetAccount` -  (Optional) The account that the automation document runs in. This can be in either the management account or an application account.
         * `parameter` - (Optional) The key-value pair parameters to use when the automation document runs. The following values are supported:
             * `name` - The name of parameter.
             * `values` - The values for the associated parameter name.
-        * `dynamic_parameters` - (Optional) The key-value pair to resolve dynamic parameter values when processing a Systems Manager Automation runbook.
+        * `dynamicParameters` - (Optional) The key-value pair to resolve dynamic parameter values when processing a Systems Manager Automation runbook.
 * `integration` - (Optional) Information about third-party services integrated into the response plan. The following values are supported:
     * `pagerduty` - (Optional) Details about the PagerDuty configuration for a response plan. The following values are supported:
         * `name` - (Required) The name of the PagerDuty configuration.
-        * `service_id` - (Required) The ID of the PagerDuty service that the response plan associated with the incident at launch.
-        * `secret_id` - (Required) The ID of the AWS Secrets Manager secret that stores your PagerDuty key &mdash; either a General Access REST API Key or User Token REST API Key &mdash; and other user credentials.
+        * `serviceId` - (Required) The ID of the PagerDuty service that the response plan associated with the incident at launch.
+        * `secretId` - (Required) The ID of the AWS Secrets Manager secret that stores your PagerDuty key &mdash; either a General Access REST API Key or User Token REST API Key &mdash; and other user credentials.
 
 For more information about the constraints for each field, see [CreateResponsePlan](https://docs.aws.amazon.com/incident-manager/latest/APIReference/API_CreateResponsePlan.html) in the *AWS Systems Manager Incident Manager API Reference*.
   
@@ -178,7 +178,7 @@ For more information about the constraints for each field, see [CreateResponsePl
 This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the response plan.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
@@ -188,9 +188,19 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { SsmincidentsResponsePlan } from "./.gen/providers/aws/ssmincidents-response-plan";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    SsmincidentsResponsePlan.generateConfigForImport(
+      this,
+      "responsePlanName",
+      "ARNValue"
+    );
   }
 }
 
@@ -202,4 +212,4 @@ Using `terraform import`, import an Incident Manager response plan using the res
 % terraform import aws_ssmincidents_response_plan.responsePlanName ARNValue
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-5361abe938254390d796107fc777680b0ac2ec3e08a7c3e24cc29d54aae3c456 -->
+<!-- cache-key: cdktf-0.20.1 input-5361abe938254390d796107fc777680b0ac2ec3e08a7c3e24cc29d54aae3c456 -->

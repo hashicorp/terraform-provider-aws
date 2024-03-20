@@ -17,7 +17,7 @@ Uses IAM credentials from the AWS provider to generate a temporary token that is
 This can be used to authenticate to an EKS cluster or to a cluster that has the AWS IAM Authenticator
 server configured.
 
-~> **NOTE:** Dynamically configuring a Terraform Provider via data sources currently has implications on [resource import support](https://github.com/hashicorp/terraform/issues/13018) on Terraform `<130`.
+~> **NOTE:** Dynamically configuring a Terraform Provider via data sources currently has implications on [resource import support](https://github.com/hashicorp/terraform/issues/13018) on Terraform `<1.3.0`.
 
 ## Example Usage
 
@@ -74,4 +74,4 @@ This data source exports the following attributes in addition to the arguments a
 * `id` - Name of the cluster.
 * `token` - Token to use to authenticate with the cluster.
 
-<!-- cache-key: cdktf-0.19.0 input-45d83dddba9412e716f03bde08f7185de087e8a46407d442260f7b0e6e29f02a -->
+<!-- cache-key: cdktf-0.20.1 input-45d83dddba9412e716f03bde08f7185de087e8a46407d442260f7b0e6e29f02a -->

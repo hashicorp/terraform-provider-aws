@@ -17,18 +17,18 @@ import (
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
+var (
+	_ xattr.TypeWithValidate   = (*cidrBlockType)(nil)
+	_ basetypes.StringTypable  = (*cidrBlockType)(nil)
+	_ basetypes.StringValuable = (*CIDRBlock)(nil)
+)
+
 type cidrBlockType struct {
 	basetypes.StringType
 }
 
 var (
 	CIDRBlockType = cidrBlockType{}
-)
-
-var (
-	_ xattr.TypeWithValidate   = (*cidrBlockType)(nil)
-	_ basetypes.StringTypable  = (*cidrBlockType)(nil)
-	_ basetypes.StringValuable = (*CIDRBlock)(nil)
 )
 
 func (t cidrBlockType) Equal(o attr.Type) bool {

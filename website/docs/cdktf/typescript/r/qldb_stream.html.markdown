@@ -50,12 +50,12 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `exclusiveEndTime` - (Optional) The exclusive date and time that specifies when the stream ends. If you don't define this parameter, the stream runs indefinitely until you cancel it. It must be in ISO 8601 date and time format and in Universal Coordinated Time (UTC). For example: `"2019-06-13T21:36:34Z"`.
-* `inclusiveStartTime` - (Required) The inclusive start date and time from which to start streaming journal data. This parameter must be in ISO 8601 date and time format and in Universal Coordinated Time (UTC). For example: `"2019-06-13T21:36:34Z"`.  This cannot be in the future and must be before `exclusive_end_time`.  If you provide a value that is before the ledger's `CreationDateTime`, QLDB effectively defaults it to the ledger's `CreationDateTime`.
+* `inclusiveStartTime` - (Required) The inclusive start date and time from which to start streaming journal data. This parameter must be in ISO 8601 date and time format and in Universal Coordinated Time (UTC). For example: `"2019-06-13T21:36:34Z"`.  This cannot be in the future and must be before `exclusiveEndTime`.  If you provide a value that is before the ledger's `CreationDateTime`, QLDB effectively defaults it to the ledger's `CreationDateTime`.
 * `kinesisConfiguration` - (Required) The configuration settings of the Kinesis Data Streams destination for your stream request. Documented below.
 * `ledgerName` - (Required) The name of the QLDB ledger.
 * `roleArn` - (Required) The Amazon Resource Name (ARN) of the IAM role that grants QLDB permissions for a journal stream to write data records to a Kinesis Data Streams resource.
 * `streamName` - (Required) The name that you want to assign to the QLDB journal stream. User-defined names can help identify and indicate the purpose of a stream.  Your stream name must be unique among other active streams for a given ledger. Stream names have the same naming constraints as ledger names, as defined in the [Amazon QLDB Developer Guide](https://docs.aws.amazon.com/qldb/latest/developerguide/limits.html#limits.naming).
-* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### kinesis_configuration
 
@@ -70,7 +70,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - The ID of the QLDB Stream.
 * `arn` - The ARN of the QLDB Stream.
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
@@ -79,4 +79,4 @@ This resource exports the following attributes in addition to the arguments abov
 - `create` - (Default `8m`)
 - `delete` - (Default `5m`)
 
-<!-- cache-key: cdktf-0.19.0 input-35ccfcf2d29f7f918b217c8f22a5948a35ed05cac3acbaacc55e0a1fd3e71f2a -->
+<!-- cache-key: cdktf-0.20.1 input-35ccfcf2d29f7f918b217c8f22a5948a35ed05cac3acbaacc55e0a1fd3e71f2a -->

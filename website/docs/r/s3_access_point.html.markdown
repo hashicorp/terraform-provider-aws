@@ -14,9 +14,11 @@ Provides a resource to manage an S3 Access Point.
 
 -> Advanced usage: To use a custom API endpoint for this Terraform resource, use the [`s3control` endpoint provider configuration](/docs/providers/aws/index.html#s3control), not the `s3` endpoint provider configuration.
 
+-> This resource cannot be used with S3 directory buckets.
+
 ## Example Usage
 
-### AWS Partition Bucket
+### AWS Partition General Purpose Bucket
 
 ```terraform
 resource "aws_s3_bucket" "example" {
@@ -55,7 +57,7 @@ resource "aws_vpc" "example" {
 
 The following arguments are required:
 
-* `bucket` - (Required) Name of an AWS Partition S3 Bucket or the ARN of S3 on Outposts Bucket that you want to associate this access point with.
+* `bucket` - (Required) Name of an AWS Partition S3 General Purpose Bucket or the ARN of S3 on Outposts Bucket that you want to associate this access point with.
 * `name` - (Required) Name you want to assign to this access point.
 
 The following arguments are optional:

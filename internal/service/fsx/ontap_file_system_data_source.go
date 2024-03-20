@@ -102,6 +102,10 @@ func DataSourceONTAPFileSystem() *schema.Resource {
 					},
 				},
 			},
+			"ha_pairs": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -148,6 +152,10 @@ func DataSourceONTAPFileSystem() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"throughput_capacity_per_ha_pair": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -178,30 +186,40 @@ func dataSourceONTAPFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "reading FSx for NetApp ONTAP File System (%s): %s", id, err)
 	}
 
+	ontapConfig := filesystem.OntapConfiguration
+
 	d.SetId(aws.StringValue(filesystem.FileSystemId))
 	d.Set("arn", filesystem.ResourceARN)
-	d.Set("automatic_backup_retention_days", filesystem.OntapConfiguration.AutomaticBackupRetentionDays)
-	d.Set("daily_automatic_backup_start_time", filesystem.OntapConfiguration.DailyAutomaticBackupStartTime)
-	d.Set("deployment_type", filesystem.OntapConfiguration.DeploymentType)
-	if err := d.Set("disk_iops_configuration", flattenOntapFileDiskIopsConfiguration(filesystem.OntapConfiguration.DiskIopsConfiguration)); err != nil {
+	d.Set("automatic_backup_retention_days", ontapConfig.AutomaticBackupRetentionDays)
+	d.Set("daily_automatic_backup_start_time", ontapConfig.DailyAutomaticBackupStartTime)
+	d.Set("deployment_type", ontapConfig.DeploymentType)
+	if err := d.Set("disk_iops_configuration", flattenOntapFileDiskIopsConfiguration(ontapConfig.DiskIopsConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting disk_iops_configuration: %s", err)
 	}
 	d.Set("dns_name", filesystem.DNSName)
-	d.Set("endpoint_ip_address_range", filesystem.OntapConfiguration.EndpointIpAddressRange)
-	if err := d.Set("endpoints", flattenOntapFileSystemEndpoints(filesystem.OntapConfiguration.Endpoints)); err != nil {
+	d.Set("endpoint_ip_address_range", ontapConfig.EndpointIpAddressRange)
+	if err := d.Set("endpoints", flattenOntapFileSystemEndpoints(ontapConfig.Endpoints)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoints: %s", err)
 	}
+	haPairs := aws.Int64Value(ontapConfig.HAPairs)
+	d.Set("ha_pairs", haPairs)
 	d.Set("kms_key_id", filesystem.KmsKeyId)
 	d.Set("network_interface_ids", aws.StringValueSlice(filesystem.NetworkInterfaceIds))
 	d.Set("owner_id", filesystem.OwnerId)
-	d.Set("preferred_subnet_id", filesystem.OntapConfiguration.PreferredSubnetId)
-	d.Set("route_table_ids", aws.StringValueSlice(filesystem.OntapConfiguration.RouteTableIds))
+	d.Set("preferred_subnet_id", ontapConfig.PreferredSubnetId)
+	d.Set("route_table_ids", aws.StringValueSlice(ontapConfig.RouteTableIds))
 	d.Set("storage_capacity", filesystem.StorageCapacity)
 	d.Set("storage_type", filesystem.StorageType)
 	d.Set("subnet_ids", aws.StringValueSlice(filesystem.SubnetIds))
-	d.Set("throughput_capacity", filesystem.OntapConfiguration.ThroughputCapacity)
+	if haPairs > 1 {
+		d.Set("throughput_capacity", nil)
+		d.Set("throughput_capacity_per_ha_pair", ontapConfig.ThroughputCapacityPerHAPair)
+	} else {
+		d.Set("throughput_capacity", ontapConfig.ThroughputCapacity)
+		d.Set("throughput_capacity_per_ha_pair", nil)
+	}
 	d.Set("vpc_id", filesystem.VpcId)
-	d.Set("weekly_maintenance_start_time", filesystem.OntapConfiguration.WeeklyMaintenanceStartTime)
+	d.Set("weekly_maintenance_start_time", ontapConfig.WeeklyMaintenanceStartTime)
 
 	tags := KeyValueTags(ctx, filesystem.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 

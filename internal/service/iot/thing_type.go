@@ -143,7 +143,7 @@ func resourceThingTypeRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if err != nil {
-		return diag.Errorf("reading IoT Thing Type (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading IoT Thing Type (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", output.ThingTypeArn)
@@ -187,7 +187,7 @@ func resourceThingTypeDelete(ctx context.Context, d *schema.ResourceData, meta i
 	})
 
 	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
@@ -202,7 +202,7 @@ func resourceThingTypeDelete(ctx context.Context, d *schema.ResourceData, meta i
 	}, iot.ErrCodeInvalidRequestException, "Please wait for 5 minutes after deprecation and then retry")
 
 	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {

@@ -4,6 +4,7 @@
 package schema
 
 import (
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -74,6 +75,20 @@ func kpiVisualSchema() *schema.Schema {
 											},
 										},
 										"secondary_value_font_configuration": fontConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontConfiguration.html
+										"sparkline": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_KPISparklineOptions.html
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 1,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"color":              stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
+													"tooltip_visibility": stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
+													"type":               stringSchema(true, validation.StringInSlice(quicksight.KPISparklineType_Values(), false)),
+													"visibility":         stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
+												},
+											},
+										},
 										"trend_arrows": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_TrendArrowOptions.html
 											Type:     schema.TypeList,
 											Optional: true,
@@ -82,6 +97,27 @@ func kpiVisualSchema() *schema.Schema {
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
 													"visibility": stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
+												},
+											},
+										},
+										"visual_layout_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_KPIVisualLayoutOptions.html
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 1,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"standard_layout": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_KPIVisualStandardLayout.html
+														Type:     schema.TypeList,
+														Optional: true,
+														MinItems: 1,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"type": stringSchema(true, validation.StringInSlice(quicksight.KPIVisualStandardLayoutType_Values(), false)),
+															},
+														},
+													},
 												},
 											},
 										},
@@ -118,6 +154,30 @@ func kpiVisualSchema() *schema.Schema {
 								MaxItems: 100,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
+										"actual_value": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_KPIActualValueConditionalFormatting.html
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 1,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"icon":       conditionalFormattingIconSchema(),  // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ConditionalFormattingIcon.html
+													"text_color": conditionalFormattingColorSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ConditionalFormattingColor.html
+												},
+											},
+										},
+										"comparison_value": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_KPIComparisonValueConditionalFormatting.html
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 1,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"icon":       conditionalFormattingIconSchema(),  // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ConditionalFormattingIcon.html
+													"text_color": conditionalFormattingColorSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ConditionalFormattingColor.html
+												},
+											},
+										},
 										"primary_value": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_KPIPrimaryValueConditionalFormatting.html
 											Type:     schema.TypeList,
 											Optional: true,
@@ -270,8 +330,14 @@ func expandKPIOptions(tfList []interface{}) *quicksight.KPIOptions {
 	if v, ok := tfMap["secondary_value_font_configuration"].([]interface{}); ok && len(v) > 0 {
 		options.SecondaryValueFontConfiguration = expandFontConfiguration(v)
 	}
+	if v, ok := tfMap["sparkline"].([]interface{}); ok && len(v) > 0 {
+		options.Sparkline = expandKPISparklineOptions(v)
+	}
 	if v, ok := tfMap["trend_arrows"].([]interface{}); ok && len(v) > 0 {
 		options.TrendArrows = expandTrendArrowOptions(v)
+	}
+	if v, ok := tfMap["visual_layout_options"].([]interface{}); ok && len(v) > 0 {
+		options.VisualLayoutOptions = expandKPIVisualLayoutOptions(v)
 	}
 
 	return options
@@ -315,6 +381,34 @@ func expandSecondaryValueOptions(tfList []interface{}) *quicksight.SecondaryValu
 	return options
 }
 
+func expandKPISparklineOptions(tfList []interface{}) *quicksight.KPISparklineOptions {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	options := &quicksight.KPISparklineOptions{}
+
+	if v, ok := tfMap["color"].(string); ok && v != "" {
+		options.Color = aws.String(v)
+	}
+	if v, ok := tfMap["tooltip_visibility"].(string); ok && v != "" {
+		options.TooltipVisibility = aws.String(v)
+	}
+	if v, ok := tfMap["type"].(string); ok && v != "" {
+		options.Type = aws.String(v)
+	}
+	if v, ok := tfMap["visibility"].(string); ok && v != "" {
+		options.Visibility = aws.String(v)
+	}
+
+	return options
+}
+
 func expandTrendArrowOptions(tfList []interface{}) *quicksight.TrendArrowOptions {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
@@ -329,6 +423,44 @@ func expandTrendArrowOptions(tfList []interface{}) *quicksight.TrendArrowOptions
 
 	if v, ok := tfMap["visibility"].(string); ok && v != "" {
 		options.Visibility = aws.String(v)
+	}
+
+	return options
+}
+
+func expandKPIVisualLayoutOptions(tfList []interface{}) *quicksight.KPIVisualLayoutOptions {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	options := &quicksight.KPIVisualLayoutOptions{}
+
+	if v, ok := tfMap["standard_layout"].([]interface{}); ok && len(v) > 0 {
+		options.StandardLayout = expandKPIVisualStandardLayout(v)
+	}
+
+	return options
+}
+
+func expandKPIVisualStandardLayout(tfList []interface{}) *quicksight.KPIVisualStandardLayout {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	options := &quicksight.KPIVisualStandardLayout{}
+
+	if v, ok := tfMap["type"].(string); ok && v != "" {
+		options.Type = aws.String(v)
 	}
 
 	return options
@@ -402,11 +534,61 @@ func expandKPIConditionalFormattingOption(tfMap map[string]interface{}) *quicksi
 
 	options := &quicksight.KPIConditionalFormattingOption{}
 
+	if v, ok := tfMap["actual_value"].([]interface{}); ok && len(v) > 0 {
+		options.ActualValue = expandKPIActualValueConditionalFormatting(v)
+	}
+	if v, ok := tfMap["comparison_value"].([]interface{}); ok && len(v) > 0 {
+		options.ComparisonValue = expandKPIComparisonValueConditionalFormatting(v)
+	}
 	if v, ok := tfMap["primary_value"].([]interface{}); ok && len(v) > 0 {
 		options.PrimaryValue = expandKPIPrimaryValueConditionalFormatting(v)
 	}
 	if v, ok := tfMap["progress_bar"].([]interface{}); ok && len(v) > 0 {
 		options.ProgressBar = expandKPIProgressBarConditionalFormatting(v)
+	}
+
+	return options
+}
+
+func expandKPIActualValueConditionalFormatting(tfList []interface{}) *quicksight.KPIActualValueConditionalFormatting {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	options := &quicksight.KPIActualValueConditionalFormatting{}
+
+	if v, ok := tfMap["icon"].([]interface{}); ok && len(v) > 0 {
+		options.Icon = expandConditionalFormattingIcon(v)
+	}
+	if v, ok := tfMap["text_color"].([]interface{}); ok && len(v) > 0 {
+		options.TextColor = expandConditionalFormattingColor(v)
+	}
+
+	return options
+}
+
+func expandKPIComparisonValueConditionalFormatting(tfList []interface{}) *quicksight.KPIComparisonValueConditionalFormatting {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	options := &quicksight.KPIComparisonValueConditionalFormatting{}
+
+	if v, ok := tfMap["icon"].([]interface{}); ok && len(v) > 0 {
+		options.Icon = expandConditionalFormattingIcon(v)
+	}
+	if v, ok := tfMap["text_color"].([]interface{}); ok && len(v) > 0 {
+		options.TextColor = expandConditionalFormattingColor(v)
 	}
 
 	return options
@@ -545,8 +727,14 @@ func flattenKPIOptions(apiObject *quicksight.KPIOptions) []interface{} {
 	if apiObject.SecondaryValueFontConfiguration != nil {
 		tfMap["secondary_value_font_configuration"] = flattenFontConfiguration(apiObject.SecondaryValueFontConfiguration)
 	}
+	if apiObject.Sparkline != nil {
+		tfMap["sparkline"] = flattenKPISparklineOptions(apiObject.Sparkline)
+	}
 	if apiObject.TrendArrows != nil {
 		tfMap["trend_arrows"] = flattenTrendArrowOptions(apiObject.TrendArrows)
+	}
+	if apiObject.VisualLayoutOptions != nil {
+		tfMap["visual_layout_options"] = flattenKPIVisualLayoutOptions(apiObject.VisualLayoutOptions)
 	}
 
 	return []interface{}{tfMap}
@@ -578,6 +766,28 @@ func flattenSecondaryValueOptions(apiObject *quicksight.SecondaryValueOptions) [
 	return []interface{}{tfMap}
 }
 
+func flattenKPISparklineOptions(apiObject *quicksight.KPISparklineOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Color != nil {
+		tfMap["color"] = aws.StringValue(apiObject.Color)
+	}
+	if apiObject.TooltipVisibility != nil {
+		tfMap["tooltip_visibility"] = aws.StringValue(apiObject.TooltipVisibility)
+	}
+	if apiObject.Type != nil {
+		tfMap["type"] = aws.StringValue(apiObject.Type)
+	}
+	if apiObject.Visibility != nil {
+		tfMap["visibility"] = aws.StringValue(apiObject.Visibility)
+	}
+
+	return []interface{}{tfMap}
+}
+
 func flattenTrendArrowOptions(apiObject *quicksight.TrendArrowOptions) []interface{} {
 	if apiObject == nil {
 		return nil
@@ -586,6 +796,32 @@ func flattenTrendArrowOptions(apiObject *quicksight.TrendArrowOptions) []interfa
 	tfMap := map[string]interface{}{}
 	if apiObject.Visibility != nil {
 		tfMap["visibility"] = aws.StringValue(apiObject.Visibility)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenKPIVisualLayoutOptions(apiObject *quicksight.KPIVisualLayoutOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.StandardLayout != nil {
+		tfMap["standard_layout"] = flattenKPIVisualStandardLayout(apiObject.StandardLayout)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenKPIVisualStandardLayout(apiObject *quicksight.KPIVisualStandardLayout) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Type != nil {
+		tfMap["type"] = aws.StringValue(apiObject.Type)
 	}
 
 	return []interface{}{tfMap}
@@ -629,6 +865,12 @@ func flattenKPIConditionalFormattingOption(apiObject []*quicksight.KPIConditiona
 		}
 
 		tfMap := map[string]interface{}{}
+		if config.ActualValue != nil {
+			tfMap["actual_value"] = flattenKPIActualValueConditionalFormatting(config.ActualValue)
+		}
+		if config.ComparisonValue != nil {
+			tfMap["comparison_value"] = flattenKPIComparisonValueConditionalFormatting(config.ComparisonValue)
+		}
 		if config.PrimaryValue != nil {
 			tfMap["primary_value"] = flattenKPIPrimaryValueConditionalFormatting(config.PrimaryValue)
 		}
@@ -640,6 +882,38 @@ func flattenKPIConditionalFormattingOption(apiObject []*quicksight.KPIConditiona
 	}
 
 	return tfList
+}
+
+func flattenKPIActualValueConditionalFormatting(apiObject *quicksight.KPIActualValueConditionalFormatting) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Icon != nil {
+		tfMap["icon"] = flattenConditionalFormattingIcon(apiObject.Icon)
+	}
+	if apiObject.TextColor != nil {
+		tfMap["text_color"] = flattenConditionalFormattingColor(apiObject.TextColor)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenKPIComparisonValueConditionalFormatting(apiObject *quicksight.KPIComparisonValueConditionalFormatting) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.Icon != nil {
+		tfMap["icon"] = flattenConditionalFormattingIcon(apiObject.Icon)
+	}
+	if apiObject.TextColor != nil {
+		tfMap["text_color"] = flattenConditionalFormattingColor(apiObject.TextColor)
+	}
+
+	return []interface{}{tfMap}
 }
 
 func flattenKPIPrimaryValueConditionalFormatting(apiObject *quicksight.KPIPrimaryValueConditionalFormatting) []interface{} {

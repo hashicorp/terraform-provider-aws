@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccResourcePolicy_basic(t *testing.T) {
@@ -31,7 +32,7 @@ func testAccResourcePolicy_basic(t *testing.T) {
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx),
-		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourcePolicyConfig_basic(),
@@ -64,7 +65,7 @@ func testAccResourcePolicy_disappears(t *testing.T) {
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx),
-		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourcePolicyConfig_basic(),
@@ -91,7 +92,7 @@ func testAccResourcePolicy_tags(t *testing.T) {
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckResourcePolicyDestroy(ctx),
-		ErrorCheck:               acctest.ErrorCheck(t, organizations.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OrganizationsServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccResourcePolicyConfig_tags1("key1", "value1"),

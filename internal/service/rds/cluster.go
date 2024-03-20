@@ -175,6 +175,14 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 			},
+			"domain": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"domain_iam_role_name": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"enable_global_write_forwarding": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -619,6 +627,14 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.DBSubnetGroupName = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("domain"); ok {
+			input.Domain = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("domain_iam_role_name"); ok {
+			input.DomainIAMRoleName = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && v.(*schema.Set).Len() > 0 {
 			input.EnableCloudwatchLogsExports = flex.ExpandStringSet(v.(*schema.Set))
 		}
@@ -737,6 +753,14 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.DBSubnetGroupName = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("domain"); ok {
+			input.Domain = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("domain_iam_role_name"); ok {
+			input.DomainIAMRoleName = aws.String(v.(string))
+		}
+
 		if v, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && v.(*schema.Set).Len() > 0 {
 			input.EnableCloudwatchLogsExports = flex.ExpandStringSet(v.(*schema.Set))
 		}
@@ -851,6 +875,14 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if v, ok := d.GetOk("db_subnet_group_name"); ok {
 			input.DBSubnetGroupName = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("domain"); ok {
+			input.Domain = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("domain_iam_role_name"); ok {
+			input.DomainIAMRoleName = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && v.(*schema.Set).Len() > 0 {
@@ -969,6 +1001,14 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if v, ok := d.GetOk("db_system_id"); ok {
 			input.DBSystemId = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("domain"); ok {
+			input.Domain = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("domain_iam_role_name"); ok {
+			input.DomainIAMRoleName = aws.String(v.(string))
 		}
 
 		if v, ok := d.GetOk("enable_global_write_forwarding"); ok {
@@ -1153,6 +1193,14 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("db_subnet_group_name", dbc.DBSubnetGroup)
 	d.Set("db_system_id", dbc.DBSystemId)
 	d.Set("deletion_protection", dbc.DeletionProtection)
+	if len(dbc.DomainMemberships) > 0 && dbc.DomainMemberships[0] != nil {
+		domainMembership := dbc.DomainMemberships[0]
+		d.Set("domain", domainMembership.Domain)
+		d.Set("domain_iam_role_name", domainMembership.IAMRoleName)
+	} else {
+		d.Set("domain", nil)
+		d.Set("domain_iam_role_name", nil)
+	}
 	d.Set("enabled_cloudwatch_logs_exports", aws.StringValueSlice(dbc.EnabledCloudwatchLogsExports))
 	d.Set("enable_http_endpoint", dbc.HttpEndpointEnabled)
 	d.Set("endpoint", dbc.Endpoint)
@@ -1293,6 +1341,11 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if d.HasChange("deletion_protection") {
 			input.DeletionProtection = aws.Bool(d.Get("deletion_protection").(bool))
+		}
+
+		if d.HasChanges("domain", "domain_iam_role_name") {
+			input.Domain = aws.String(d.Get("domain").(string))
+			input.DomainIAMRoleName = aws.String(d.Get("domain_iam_role_name").(string))
 		}
 
 		if d.HasChange("enable_global_write_forwarding") {

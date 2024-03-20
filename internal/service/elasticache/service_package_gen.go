@@ -5,6 +5,8 @@ package elasticache
 import (
 	"context"
 
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	elasticache_sdkv2 "github.com/aws/aws-sdk-go-v2/service/elasticache"
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	elasticache_sdkv1 "github.com/aws/aws-sdk-go/service/elasticache"
@@ -20,7 +22,15 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
+	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory: newServerlessCacheResource,
+			Name:    "Serverless Cache",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
@@ -34,8 +44,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_elasticache_replication_group",
 		},
 		{
-			Factory:  DataSourceSubnetGroup,
+			Factory:  dataSourceSubnetGroup,
 			TypeName: "aws_elasticache_subnet_group",
+			Name:     "Subnet Group",
 		},
 		{
 			Factory:  DataSourceUser,
@@ -75,7 +86,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceSubnetGroup,
+			Factory:  resourceSubnetGroup,
 			TypeName: "aws_elasticache_subnet_group",
 			Name:     "Subnet Group",
 			Tags: &types.ServicePackageResourceTags{
@@ -114,6 +125,17 @@ func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*e
 	sess := config["session"].(*session_sdkv1.Session)
 
 	return elasticache_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+}
+
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*elasticache_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+
+	return elasticache_sdkv2.NewFromConfig(cfg, func(o *elasticache_sdkv2.Options) {
+		if endpoint := config["endpoint"].(string); endpoint != "" {
+			o.BaseEndpoint = aws_sdkv2.String(endpoint)
+		}
+	}), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

@@ -47,4 +47,4 @@ returned attributes - they are identical for all attributes, except the `tagsAll
 
 * `tags` - A map of tags assigned to the resource.
 
-<!-- cache-key: cdktf-0.19.0 input-c73b6ed9b7618d5c8808fa4b51f8b555a3290543f06a5030843096caf98e0ba8 -->
+<!-- cache-key: cdktf-0.20.1 input-c73b6ed9b7618d5c8808fa4b51f8b555a3290543f06a5030843096caf98e0ba8 -->

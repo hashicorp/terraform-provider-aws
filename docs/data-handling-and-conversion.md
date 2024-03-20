@@ -291,7 +291,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
         var diags diag.Diagnostics
         elemType := types.ObjectType{AttrTypes: structureAttrTypes}
         
-        if len(apiObject) == 0 {
+        if len(apiObjects) == 0 {
             return types.ListNull(elemType), diags
         }
         
@@ -310,7 +310,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
             elems = append(elems, objVal)
         }
         
-        listVal, d := types.ListValue(elemType, []attr.Value{objVal})
+        listVal, d := types.ListValue(elemType, elems)
         diags.Append(d...)
         
         return listVal, diags
@@ -526,7 +526,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
     
     ```go
     if err := d.Set("attribute_name", flattenStructures(output.Thing.AttributeName)); err != nil {
-        return diag.Errorf("setting attribute_name: %s", err)
+        return sdkdiag.AppendErrorf(diags, "setting attribute_name: %s", err)
     }
     ```
 
@@ -575,7 +575,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
     ```go
     if output.Thing.AttributeName != nil {
         if err := d.Set("attribute_name", []interface{}{flattenStructure(output.Thing.AttributeName)}); err != nil {
-            return diag.Errorf("setting attribute_name: %s", err)
+            return sdkdiag.AppendErrorf(diags, "setting attribute_name: %s", err)
         }
     } else {
         d.Set("attribute_name", nil)
@@ -697,7 +697,7 @@ Define FLatten and EXpand (i.e., flex) functions at the _most local level_ possi
 
     ```go
     if err := d.Set("attribute_name", flattenStructures(output.Thing.AttributeNames)); err != nil {
-        return diag.Errorf("setting attribute_name: %s", err)
+        return sdkdiag.AppendErrorf(diags, "setting attribute_name: %s", err)
     }
     ```
 

@@ -34,7 +34,7 @@ func TestAccRDSExportTask_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, rdsv1.EndpointsID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, rdsv1.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckExportTaskDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -71,7 +71,7 @@ func TestAccRDSExportTask_optional(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, rdsv1.EndpointsID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, rdsv1.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckExportTaskDestroy(ctx),
 		Steps: []resource.TestStep{

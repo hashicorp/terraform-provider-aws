@@ -1,0 +1,11 @@
+```release-note:enhancement
+data-source/aws_imagebuilder_components: Add support for `ThirdParty` `owner` value
+```
+
+```release-note:enhancement
+data-source/aws_imagebuilder_container_recipes: Add support for `ThirdParty` `owner` value
+```
+
+```release-note:enhancement
+data-source/aws_imagebuilder_image_recipes: Add support for `ThirdParty` `owner` value
+```

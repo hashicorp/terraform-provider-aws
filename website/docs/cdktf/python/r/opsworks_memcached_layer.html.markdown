@@ -80,4 +80,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `arn` - The Amazon Resource Name(ARN) of the layer.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
-<!-- cache-key: cdktf-0.19.0 input-05a372e54fd07197c1f42442567c63b5866c6980883edb9054bbf50151850fd4 -->
+<!-- cache-key: cdktf-0.20.1 input-05a372e54fd07197c1f42442567c63b5866c6980883edb9054bbf50151850fd4 -->

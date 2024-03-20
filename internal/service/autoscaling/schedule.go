@@ -207,7 +207,7 @@ func resourceScheduleDelete(ctx context.Context, d *schema.ResourceData, meta in
 		ScheduledActionName:  aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
+	if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
 		return diags
 	}
 
@@ -262,7 +262,7 @@ func FindScheduledUpdateGroupAction(ctx context.Context, conn *autoscaling.AutoS
 		return !lastPage
 	})
 
-	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
+	if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

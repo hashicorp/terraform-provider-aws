@@ -43,4 +43,4 @@ The following arguments are required:
 
 See the [`aws_dms_endpoint` resource](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/dms_endpoint) for details on the returned attributes - they are identical.
 
-<!-- cache-key: cdktf-0.19.0 input-998a5893daed445684f6f9e1f26e5c03b27e3ac275e8cdebccf3ef05a470a1a7 -->
+<!-- cache-key: cdktf-0.20.1 input-998a5893daed445684f6f9e1f26e5c03b27e3ac275e8cdebccf3ef05a470a1a7 -->

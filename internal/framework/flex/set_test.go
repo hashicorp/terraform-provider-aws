@@ -115,20 +115,23 @@ func TestExpandFrameworkStringValueSet(t *testing.T) {
 func TestFlattenFrameworkStringValueSet(t *testing.T) {
 	t.Parallel()
 
+	// AWS enums use custom types with an underlying string type
+	type custom string
+
 	type testCase struct {
-		input    []string
+		input    []custom
 		expected types.Set
 	}
 	tests := map[string]testCase{
 		"two elements": {
-			input: []string{"GET", "HEAD"},
+			input: []custom{"GET", "HEAD"},
 			expected: types.SetValueMust(types.StringType, []attr.Value{
 				types.StringValue("GET"),
 				types.StringValue("HEAD"),
 			}),
 		},
 		"zero elements": {
-			input:    []string{},
+			input:    []custom{},
 			expected: types.SetNull(types.StringType),
 		},
 		"nil array": {
@@ -154,20 +157,23 @@ func TestFlattenFrameworkStringValueSet(t *testing.T) {
 func TestFlattenFrameworkStringValueSetLegacy(t *testing.T) {
 	t.Parallel()
 
+	// AWS enums use custom types with an underlying string type
+	type custom string
+
 	type testCase struct {
-		input    []string
+		input    []custom
 		expected types.Set
 	}
 	tests := map[string]testCase{
 		"two elements": {
-			input: []string{"GET", "HEAD"},
+			input: []custom{"GET", "HEAD"},
 			expected: types.SetValueMust(types.StringType, []attr.Value{
 				types.StringValue("GET"),
 				types.StringValue("HEAD"),
 			}),
 		},
 		"zero elements": {
-			input:    []string{},
+			input:    []custom{},
 			expected: types.SetValueMust(types.StringType, []attr.Value{}),
 		},
 		"nil array": {

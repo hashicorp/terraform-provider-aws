@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -78,6 +79,8 @@ func ResourceEventIntegration() *schema.Resource {
 }
 
 func resourceEventIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppIntegrationsConn(ctx)
 
 	name := d.Get("name").(string)
@@ -97,20 +100,22 @@ func resourceEventIntegrationCreate(ctx context.Context, d *schema.ResourceData,
 	output, err := conn.CreateEventIntegrationWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating AppIntegrations Event Integration (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating AppIntegrations Event Integration (%s): %s", name, err)
 	}
 
 	if output == nil {
-		return diag.Errorf("creating AppIntegrations Event Integration (%s): empty output", name)
+		return sdkdiag.AppendErrorf(diags, "creating AppIntegrations Event Integration (%s): empty output", name)
 	}
 
 	// Name is unique
 	d.SetId(name)
 
-	return resourceEventIntegrationRead(ctx, d, meta)
+	return append(diags, resourceEventIntegrationRead(ctx, d, meta)...)
 }
 
 func resourceEventIntegrationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppIntegrationsConn(ctx)
 
 	name := d.Id()
@@ -122,15 +127,15 @@ func resourceEventIntegrationRead(ctx context.Context, d *schema.ResourceData, m
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, appintegrationsservice.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] AppIntegrations Event Integration (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("getting AppIntegrations Event Integration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "getting AppIntegrations Event Integration (%s): %s", d.Id(), err)
 	}
 
 	if resp == nil {
-		return diag.Errorf("getting AppIntegrations Event Integration (%s): empty response", d.Id())
+		return sdkdiag.AppendErrorf(diags, "getting AppIntegrations Event Integration (%s): empty response", d.Id())
 	}
 
 	d.Set("arn", resp.EventIntegrationArn)
@@ -139,15 +144,17 @@ func resourceEventIntegrationRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("name", resp.Name)
 
 	if err := d.Set("event_filter", flattenEventFilter(resp.EventFilter)); err != nil {
-		return diag.Errorf("setting event_filter: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting event_filter: %s", err)
 	}
 
 	setTagsOut(ctx, resp.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceEventIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppIntegrationsConn(ctx)
 
 	name := d.Id()
@@ -159,14 +166,16 @@ func resourceEventIntegrationUpdate(ctx context.Context, d *schema.ResourceData,
 		})
 
 		if err != nil {
-			return diag.Errorf("updating EventIntegration (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating EventIntegration (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceEventIntegrationRead(ctx, d, meta)
+	return append(diags, resourceEventIntegrationRead(ctx, d, meta)...)
 }
 
 func resourceEventIntegrationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppIntegrationsConn(ctx)
 
 	name := d.Id()
@@ -176,10 +185,10 @@ func resourceEventIntegrationDelete(ctx context.Context, d *schema.ResourceData,
 	})
 
 	if err != nil {
-		return diag.Errorf("deleting EventIntegration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting EventIntegration (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandEventFilter(eventFilter []interface{}) *appintegrationsservice.EventFilter {

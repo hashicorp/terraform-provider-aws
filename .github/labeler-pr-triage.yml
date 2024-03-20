@@ -109,6 +109,9 @@ service/appconfig:
 service/appconfigdata:
   - 'internal/service/appconfigdata/**/*'
   - 'website/**/appconfigdata_*'
+service/appfabric:
+  - 'internal/service/appfabric/**/*'
+  - 'website/**/appfabric_*'
 service/appflow:
   - 'internal/service/appflow/**/*'
   - 'website/**/appflow_*'
@@ -158,6 +161,9 @@ service/batch:
 service/bedrock:
   - 'internal/service/bedrock/**/*'
   - 'website/**/bedrock_*'
+service/bedrockagent:
+  - 'internal/service/bedrockagent/**/*'
+  - 'website/**/bedrock_agent_*'
 service/billingconductor:
   - 'internal/service/billingconductor/**/*'
   - 'website/**/billingconductor_*'
@@ -206,6 +212,9 @@ service/cloudformation:
 service/cloudfront:
   - 'internal/service/cloudfront/**/*'
   - 'website/**/cloudfront_*'
+service/cloudfrontkeyvaluestore:
+  - 'internal/service/cloudfrontkeyvaluestore/**/*'
+  - 'website/**/cloudfront_keyvaluestore_*'
 service/cloudhsmv2:
   - 'internal/service/cloudhsmv2/**/*'
   - 'website/**/cloudhsm*'
@@ -281,6 +290,9 @@ service/configservice:
 service/connect:
   - 'internal/service/connect/**/*'
   - 'website/**/connect_*'
+service/connectcases:
+  - 'internal/service/connectcases/**/*'
+  - 'website/**/connectcases_*'
 service/connectcontactlens:
   - 'internal/service/connectcontactlens/**/*'
   - 'website/**/connectcontactlens_*'
@@ -290,6 +302,9 @@ service/connectparticipant:
 service/controltower:
   - 'internal/service/controltower/**/*'
   - 'website/**/controltower_*'
+service/costoptimizationhub:
+  - 'internal/service/costoptimizationhub/**/*'
+  - 'website/**/costoptimizationhub_*'
 service/cur:
   - 'internal/service/cur/**/*'
   - 'website/**/cur_*'
@@ -432,6 +447,7 @@ service/elbv2:
   - 'website/**/lb_listener*'
   - 'website/**/lb_target_group*'
   - 'website/**/lb_hosted*'
+  - 'website/**/lb_trust_store*'
 service/emr:
   - 'internal/service/emr/**/*'
   - 'website/**/emr_*'
@@ -597,6 +613,7 @@ service/keyspaces:
 service/kinesis:
   - 'internal/service/kinesis/**/*'
   - 'website/**/kinesis_stream*'
+  - 'website/**/kinesis_resource_policy*'
 service/kinesisanalytics:
   - 'internal/service/kinesisanalytics/**/*'
   - 'website/**/kinesis_analytics_*'
@@ -624,6 +641,9 @@ service/lakeformation:
 service/lambda:
   - 'internal/service/lambda/**/*'
   - 'website/**/lambda_*'
+service/launchwizard:
+  - 'internal/service/launchwizard/**/*'
+  - 'website/**/launchwizard_*'
 service/lexmodels:
   - 'internal/service/lexmodels/**/*'
   - 'website/**/lex_*'
@@ -658,6 +678,9 @@ service/lookoutmetrics:
 service/lookoutvision:
   - 'internal/service/lookoutvision/**/*'
   - 'website/**/lookoutvision_*'
+service/m2:
+  - 'internal/service/m2/**/*'
+  - 'website/**/m2_*'
 service/machinelearning:
   - 'internal/service/machinelearning/**/*'
   - 'website/**/machinelearning_*'
@@ -694,6 +717,9 @@ service/medialive:
 service/mediapackage:
   - 'internal/service/mediapackage/**/*'
   - 'website/**/media_package_*'
+service/mediapackagev2:
+  - 'internal/service/mediapackagev2/**/*'
+  - 'website/**/media_packagev2_*'
 service/mediapackagevod:
   - 'internal/service/mediapackagevod/**/*'
   - 'website/**/mediapackagevod_*'
@@ -784,6 +810,9 @@ service/outposts:
 service/panorama:
   - 'internal/service/panorama/**/*'
   - 'website/**/panorama_*'
+service/pcaconnectorad:
+  - 'internal/service/pcaconnectorad/**/*'
+  - 'website/**/pcaconnectorad_*'
 service/personalize:
   - 'internal/service/personalize/**/*'
   - 'website/**/personalize_*'
@@ -817,6 +846,9 @@ service/pricing:
 service/proton:
   - 'internal/service/proton/**/*'
   - 'website/**/proton_*'
+service/qbusiness:
+  - 'internal/service/qbusiness/**/*'
+  - 'website/**/qbusiness_*'
 service/qldb:
   - 'internal/service/qldb/**/*'
   - 'website/**/qldb_*'
@@ -902,6 +934,7 @@ service/rum:
 service/s3:
   - 'internal/service/s3/**/*'
   - 'website/**/s3_bucket*'
+  - 'website/**/s3_directory_bucket*'
   - 'website/**/s3_object*'
   - 'website/**/canonical_user_id*'
 service/s3control:
@@ -1002,6 +1035,9 @@ service/ssmcontacts:
 service/ssmincidents:
   - 'internal/service/ssmincidents/**/*'
   - 'website/**/ssmincidents_*'
+service/ssmsap:
+  - 'internal/service/ssmsap/**/*'
+  - 'website/**/ssmsap_*'
 service/sso:
   - 'internal/service/sso/**/*'
   - 'website/**/sso_*'

@@ -23,12 +23,16 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
-// @SDKDataSource("aws_s3_bucket_object")
-func DataSourceBucketObject() *schema.Resource {
+// @SDKDataSource("aws_s3_bucket_object", name="Bucket Object")
+func dataSourceBucketObject() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceBucketObjectRead,
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"body": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -159,7 +163,7 @@ func dataSourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) Object (%s): %s", bucket, key, err)
 	}
 
-	if out.DeleteMarker {
+	if aws.ToBool(out.DeleteMarker) {
 		return sdkdiag.AppendErrorf(diags, "S3 Bucket (%s) Object (%s) has been deleted", bucket, key)
 	}
 
@@ -168,6 +172,12 @@ func dataSourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, met
 		id += "@" + v.(string)
 	}
 	d.SetId(id)
+
+	arn, err := newObjectARN(meta.(*conns.AWSClient).Partition, bucket, key)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) Object (%s): %s", bucket, key, err)
+	}
+	d.Set("arn", arn.String())
 
 	d.Set("bucket_key_enabled", out.BucketKeyEnabled)
 	d.Set("cache_control", out.CacheControl)
@@ -228,7 +238,7 @@ func dataSourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, met
 		d.Set("body", buf.String())
 	}
 
-	tags, err := ObjectListTags(ctx, conn, bucket, key)
+	tags, err := objectListTags(ctx, conn, bucket, key)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for S3 Bucket (%s) Object (%s): %s", bucket, key, err)

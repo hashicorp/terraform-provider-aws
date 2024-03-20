@@ -6,7 +6,6 @@ package autoscaling
 import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"context"
 	"crypto/sha1"
-	"encoding/base64"
 	"encoding/hex"
 	"fmt"
 	"log"
@@ -26,10 +25,11 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_launch_configuration")
+// @SDKResource("aws_launch_configuration", name="Launch Configuration")
 func ResourceLaunchConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLaunchConfigurationCreate,
@@ -302,15 +302,7 @@ func ResourceLaunchConfiguration() *schema.Resource {
 				Optional:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"user_data"},
-				ValidateFunc: func(v interface{}, name string) (warns []string, errs []error) {
-					s := v.(string)
-					if !verify.IsBase64Encoded([]byte(s)) {
-						errs = append(errs, fmt.Errorf(
-							"%s: must be base64-encoded", name,
-						))
-					}
-					return
-				},
+				ValidateFunc:  verify.ValidBase64String,
 			},
 		},
 	}
@@ -363,7 +355,7 @@ func resourceLaunchConfigurationCreate(ctx context.Context, d *schema.ResourceDa
 	}
 
 	if v, ok := d.GetOk("user_data"); ok {
-		input.UserData = aws.String(verify.Base64Encode([]byte(v.(string))))
+		input.UserData = flex.StringValueToBase64String(v.(string))
 	} else if v, ok := d.GetOk("user_data_base64"); ok {
 		input.UserData = aws.String(v.(string))
 	}
@@ -414,8 +406,8 @@ func resourceLaunchConfigurationCreate(ctx context.Context, d *schema.ResourceDa
 			return autoscalingconn.CreateLaunchConfigurationWithContext(ctx, &input)
 		},
 		func(err error) (bool, error) {
-			if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "Invalid IamInstanceProfile") ||
-				tfawserr.ErrMessageContains(err, ErrCodeValidationError, "You are not authorized to perform this operation") {
+			if tfawserr.ErrMessageContains(err, errCodeValidationError, "Invalid IamInstanceProfile") ||
+				tfawserr.ErrMessageContains(err, errCodeValidationError, "You are not authorized to perform this operation") {
 				return true, err
 			}
 
@@ -531,7 +523,7 @@ func resourceLaunchConfigurationDelete(ctx context.Context, d *schema.ResourceDa
 		},
 		autoscaling.ErrCodeResourceInUseFault)
 
-	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
+	if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
 		return diags
 	}
 
@@ -805,8 +797,7 @@ func userDataHashSum(userData string) string {
 	// Check whether the user_data is not Base64 encoded.
 	// Always calculate hash of base64 decoded value since we
 	// check against double-encoding when setting it.
-	v, err := base64.StdEncoding.DecodeString(userData)
-
+	v, err := itypes.Base64Decode(userData)
 	if err != nil {
 		v = []byte(userData)
 	}

@@ -16,9 +16,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKDataSource("aws_ram_resource_share")
+// @SDKDataSource("aws_ram_resource_share", name="Resource Shared")
 // @Tags
 func dataSourceResourceShare() *schema.Resource {
 	return &schema.Resource{
@@ -48,7 +49,8 @@ func dataSourceResourceShare() *schema.Resource {
 			},
 			"name": {
 				Type:     schema.TypeString,
-				Required: true,
+				Optional: true,
+				Computed: true,
 			},
 			"owning_account_id": {
 				Type:     schema.TypeString,
@@ -84,11 +86,13 @@ func dataSourceResourceShareRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RAMConn(ctx)
 
-	name := d.Get("name").(string)
 	resourceOwner := d.Get("resource_owner").(string)
 	inputG := &ram.GetResourceSharesInput{
-		Name:          aws.String(name),
 		ResourceOwner: aws.String(resourceOwner),
+	}
+
+	if v, ok := d.GetOk("name"); ok {
+		inputG.Name = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("filter"); ok && v.(*schema.Set).Len() > 0 {
@@ -102,7 +106,7 @@ func dataSourceResourceShareRead(ctx context.Context, d *schema.ResourceData, me
 	share, err := findResourceShare(ctx, conn, inputG)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading RAM Resource Share (%s): %s", name, err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("RAM Resource Share", err))
 	}
 
 	arn := aws.StringValue(share.ResourceShareArn)

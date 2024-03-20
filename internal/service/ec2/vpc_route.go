@@ -46,8 +46,8 @@ var routeValidTargets = []string{
 	"vpc_peering_connection_id",
 }
 
-// @SDKResource("aws_route")
-func ResourceRoute() *schema.Resource {
+// @SDKResource("aws_route", name="Route")
+func resourceRoute() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRouteCreate,
 		ReadWithoutTimeout:   resourceRouteRead,
@@ -184,13 +184,11 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	destinationAttributeKey, destination, err := routeDestinationAttribute(d)
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	targetAttributeKey, target, err := routeTargetAttribute(d)
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -239,6 +237,17 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.VpcPeeringConnectionId = target
 	default:
 		return sdkdiag.AppendErrorf(diags, "creating Route: unexpected route target attribute: %q", targetAttributeKey)
+	}
+
+	_, err = routeFinder(ctx, conn, routeTableID, destination)
+
+	switch {
+	case err == nil:
+		return sdkdiag.AppendFromErr(diags, routeAlreadyExistsError(routeTableID, destination))
+	case tfresource.NotFound(err):
+		break
+	default:
+		return sdkdiag.AppendErrorf(diags, "reading Route: %s", err)
 	}
 
 	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate),

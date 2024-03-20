@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_iot_billing_group
+```
+
+```release-note:new-resource
+aws_iot_event_configurations
+```

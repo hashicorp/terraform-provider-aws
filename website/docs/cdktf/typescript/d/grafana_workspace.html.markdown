@@ -46,7 +46,7 @@ The following arguments are required:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `accountAccessType` - (Required) Type of account access for the workspace. Valid values are `CURRENT_ACCOUNT` and `ORGANIZATION`. If `ORGANIZATION` is specified, then `organizational_units` must also be present.
+* `accountAccessType` - (Required) Type of account access for the workspace. Valid values are `CURRENT_ACCOUNT` and `ORGANIZATION`. If `ORGANIZATION` is specified, then `organizationalUnits` must also be present.
 * `authenticationProviders` - (Required) Authentication providers for the workspace. Valid values are `AWS_SSO`, `SAML`, or both.
 * `arn` - ARN of the Grafana workspace.
 * `createdDate` - Creation date of the Grafana workspace.
@@ -65,4 +65,4 @@ This data source exports the following attributes in addition to the arguments a
 * `status` - Status of the Grafana workspace.
 * `tags` - Tags assigned to the resource
 
-<!-- cache-key: cdktf-0.19.0 input-22d8f7cb4cb1f894ad0c40dec87b3b5711ec96e9e1e76be61286f5e1e2493124 -->
+<!-- cache-key: cdktf-0.20.1 input-22d8f7cb4cb1f894ad0c40dec87b3b5711ec96e9e1e76be61286f5e1e2493124 -->

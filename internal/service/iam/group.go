@@ -21,8 +21,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_iam_group")
-func ResourceGroup() *schema.Resource {
+// @SDKResource("aws_iam_group", name="Group")
+func resourceGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGroupCreate,
 		ReadWithoutTimeout:   resourceGroupRead,
@@ -86,7 +86,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	d.SetId(aws.StringValue(output.Group.GroupName))
 
 	_, err = tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (interface{}, error) {
-		return FindGroupByName(ctx, conn, d.Id())
+		return findGroupByName(ctx, conn, d.Id())
 	})
 
 	if err != nil {
@@ -100,7 +100,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
-	group, err := FindGroupByName(ctx, conn, d.Id())
+	group, err := findGroupByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IAM Group (%s) not found, removing from state", d.Id())
@@ -151,6 +151,10 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		GroupName: aws.String(d.Id()),
 	})
 
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting IAM Group (%s): %s", d.Id(), err)
 	}
@@ -158,7 +162,7 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func FindGroupByName(ctx context.Context, conn *iam.IAM, name string) (*iam.Group, error) {
+func findGroupByName(ctx context.Context, conn *iam.IAM, name string) (*iam.Group, error) {
 	input := &iam.GetGroupInput{
 		GroupName: aws.String(name),
 	}

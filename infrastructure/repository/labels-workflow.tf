@@ -9,6 +9,10 @@ variable "workflow_labels" {
       color       = "844fba", # color:terraform (main)
       description = "Pertains to authentication; to the provider itself of otherwise."
     },
+    "aws-sdk-go-migration" = {
+      color       = "844fba", # color:terraform (main)
+      description = "Issues that are related to the providers migration to AWS SDK for Go v2."
+    },
     "breaking-change" = {
       color       = "ec585d", # color:boundary
       description = "Introduces a breaking change in current functionality; usually deferred to the next major release."
@@ -89,6 +93,10 @@ variable "workflow_labels" {
       color       = "ac72f0", # color:terraform (link on black)
       description = "Introduces a new data source."
     },
+    "new-function" = {
+      color       = "ac72f0", # color:terraform (link on black)
+      description = "Introduces a new function."
+    },
     "new-resource" = {
       color       = "8040c9", # color:terraform (link on white)
       description = "Introduces a new resource."
@@ -132,10 +140,6 @@ variable "workflow_labels" {
     "repository" = {
       color       = "828a90", # color:stale grey
       description = "Repository modifications; GitHub Actions, developer docs, issue templates, codeowners, changelog."
-    },
-    "service/meta" = {
-      color       = "7b42bc", # color:terraform (logomark)
-      description = "Issues and PRs that correspond to meta data sources."
     },
     "size/XS" = {
       color       = "62d4dc", # color:lightest-darkest waypoint gradient

@@ -29,7 +29,7 @@ func TestAccCECostAllocationTag_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
-		ErrorCheck:               acctest.ErrorCheck(t, costexplorer.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CEServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCostAllocationTagConfig_basic(rName, "Active"),

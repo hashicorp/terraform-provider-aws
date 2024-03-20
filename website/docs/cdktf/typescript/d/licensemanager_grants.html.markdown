@@ -87,4 +87,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arns` - List of all the license grant ARNs found.
 
-<!-- cache-key: cdktf-0.19.0 input-9865dc418cc55462aa5e6fc80f9e8a92e3c35a931c3b06a21d23c361cfa3f823 -->
+<!-- cache-key: cdktf-0.20.1 input-9865dc418cc55462aa5e6fc80f9e8a92e3c35a931c3b06a21d23c361cfa3f823 -->

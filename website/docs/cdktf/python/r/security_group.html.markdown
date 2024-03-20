@@ -33,33 +33,42 @@ from cdktf import TerraformStack
 # See https://cdk.tf/provider-generation for more details.
 #
 from imports.aws.security_group import SecurityGroup
+from imports.aws.vpc_security_group_egress_rule import VpcSecurityGroupEgressRule
+from imports.aws.vpc_security_group_ingress_rule import VpcSecurityGroupIngressRule
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
-        SecurityGroup(self, "allow_tls",
-            description="Allow TLS inbound traffic",
-            egress=[SecurityGroupEgress(
-                cidr_blocks=["0.0.0.0/0"],
-                from_port=0,
-                ipv6_cidr_blocks=["::/0"],
-                protocol="-1",
-                to_port=0
-            )
-            ],
-            ingress=[SecurityGroupIngress(
-                cidr_blocks=[main.cidr_block],
-                description="TLS from VPC",
-                from_port=443,
-                ipv6_cidr_blocks=[main.ipv6_cidr_block],
-                protocol="tcp",
-                to_port=443
-            )
-            ],
+        allow_tls = SecurityGroup(self, "allow_tls",
+            description="Allow TLS inbound traffic and all outbound traffic",
             name="allow_tls",
             tags={
                 "Name": "allow_tls"
             },
             vpc_id=main.id
+        )
+        VpcSecurityGroupEgressRule(self, "allow_all_traffic_ipv4",
+            cidr_ipv4="0.0.0.0/0",
+            ip_protocol="-1",
+            security_group_id=allow_tls.id
+        )
+        VpcSecurityGroupEgressRule(self, "allow_all_traffic_ipv6",
+            cidr_ipv6="::/0",
+            ip_protocol="-1",
+            security_group_id=allow_tls.id
+        )
+        VpcSecurityGroupIngressRule(self, "allow_tls_ipv4",
+            cidr_ipv4=main.cidr_block,
+            from_port=443,
+            ip_protocol="tcp",
+            security_group_id=allow_tls.id,
+            to_port=443
+        )
+        VpcSecurityGroupIngressRule(self, "allow_tls_ipv6",
+            cidr_ipv6=main.ipv6_cidr_block,
+            from_port=443,
+            ip_protocol="tcp",
+            security_group_id=allow_tls.id,
+            to_port=443
         )
 ```
 
@@ -318,7 +327,7 @@ The following arguments are required:
 
 * `from_port` - (Required) Start port (or ICMP type number if protocol is `icmp` or `icmpv6`).
 * `to_port` - (Required) End range port (or ICMP code if protocol is `icmp`).
-* `protocol` - (Required) Protocol. If you select a protocol of `-1` (semantically equivalent to `all`, which is not a valid value here), you must specify a `from_port` and `to_port` equal to 0.  The supported values are defined in the `IpProtocol` argument on the [IpPermission](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_IpPermission.html) API reference. This argument is normalized to a lowercase value to match the AWS API requirement when using with Terraform 0.12.x and above, please make sure that the value of the protocol is specified as lowercase when using with older version of Terraform to avoid an issue during upgrade.
+* `protocol` - (Required) Protocol. If you select a protocol of `-1` (semantically equivalent to `all`, which is not a valid value here), you must specify a `from_port` and `to_port` equal to 0. The supported values are defined in the `IpProtocol` argument on the [IpPermission](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_IpPermission.html) API reference. This argument is normalized to a lowercase value to match the AWS API requirement when using with Terraform 0.12.x and above, please make sure that the value of the protocol is specified as lowercase when using with older version of Terraform to avoid an issue during upgrade.
 
 The following arguments are optional:
 
@@ -348,7 +357,7 @@ The following arguments are optional:
 * `description` - (Optional) Description of this egress rule.
 * `ipv6_cidr_blocks` - (Optional) List of IPv6 CIDR blocks.
 * `prefix_list_ids` - (Optional) List of Prefix List IDs.
-* `protocol` - (Required) Protocol. If you select a protocol of `-1` (semantically equivalent to `all`, which is not a valid value here), you must specify a `from_port` and `to_port` equal to 0.  The supported values are defined in the `IpProtocol` argument in the [IpPermission](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_IpPermission.html) API reference. This argument is normalized to a lowercase value to match the AWS API requirement when using Terraform 0.12.x and above. Please make sure that the value of the protocol is specified as lowercase when used with older version of Terraform to avoid issues during upgrade.
+* `protocol` - (Required) Protocol. If you select a protocol of `-1` (semantically equivalent to `all`, which is not a valid value here), you must specify a `from_port` and `to_port` equal to 0. The supported values are defined in the `IpProtocol` argument in the [IpPermission](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_IpPermission.html) API reference. This argument is normalized to a lowercase value to match the AWS API requirement when using Terraform 0.12.x and above. Please make sure that the value of the protocol is specified as lowercase when used with older version of Terraform to avoid issues during upgrade.
 * `security_groups` - (Optional) List of security groups. A group name can be used relative to the default VPC. Otherwise, group ID.
 * `self` - (Optional) Whether the security group itself will be added as a source to this egress rule.
 
@@ -376,9 +385,15 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 # DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 from constructs import Construct
 from cdktf import TerraformStack
+#
+# Provider bindings are generated by running `cdktf get`.
+# See https://cdk.tf/provider-generation for more details.
+#
+from imports.aws.security_group import SecurityGroup
 class MyConvertedCode(TerraformStack):
     def __init__(self, scope, name):
         super().__init__(scope, name)
+        SecurityGroup.generate_config_for_import(self, "elbSg", "sg-903004f8")
 ```
 
 Using `terraform import`, import Security Groups using the security group `id`. For example:
@@ -387,4 +402,4 @@ Using `terraform import`, import Security Groups using the security group `id`. 
 % terraform import aws_security_group.elb_sg sg-903004f8
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-6bcc9835f16447ac7bb124f5ed74bb0497f70dd790dd17824e05e55e14536c7a -->
+<!-- cache-key: cdktf-0.20.1 input-93222372e6881ccaba4ffb1efdf5422fdc272507a55ffdf74984bc8bf0bd0d39 -->
