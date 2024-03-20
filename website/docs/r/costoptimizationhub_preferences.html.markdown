@@ -3,19 +3,12 @@ subcategory: "Cost Optimization Hub"
 layout: "aws"
 page_title: "AWS: aws_costoptimizationhub_preferences"
 description: |-
-  Terraform resource for managing an AWS Cost Optimization Hub Preferences.
+  Terraform resource for managing AWS Cost Optimization Hub Preferences.
 ---
-<!---
-TIP: A few guiding principles for writing documentation:
-1. Use simple language while avoiding jargon and figures of speech.
-2. Focus on brevity and clarity to keep a reader's attention.
-3. Use active voice and present tense whenever you can.
-4. Document your feature as it exists now; do not mention the future or past if you can help it.
-5. Use accessible and inclusive language.
---->`
+
 # Resource: aws_costoptimizationhub_preferences
 
-Terraform resource for managing an AWS Cost Optimization Hub Preferences.
+Terraform resource for managing AWS Cost Optimization Hub Preferences.
 
 ## Example Usage
 
@@ -26,44 +19,41 @@ resource "aws_costoptimizationhub_preferences" "example" {
 }
 ```
 
+### Usage with all the arguments
+
+```terraform
+resource "aws_costoptimizationhub_preferences" "example" {
+  member_account_discount_visibility = "None"
+  savings_estimation_mode            = "AfterDiscounts"
+}
+```
+
 ## Argument Reference
-
-The following arguments are required:
-
-* `example_arg` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
 
 The following arguments are optional:
 
-* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `member_account_discount_visibility` - (Optional) Customize whether the member accounts can see the estimated discounts or not. Valid values are `All` and `None`. Default value is `All`.
+* `savings_estimation_mode` - (Optional) Customize how estimated monthly savings are calculated. Valid values are `BeforeDiscounts` and `AfterDiscounts`. Default value is `BeforeDiscounts`.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Preferences. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-
-## Timeouts
-
-[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
-
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
+* `id` - Unique identifier for the preferences resource. Since preferences are for the entire account, this will be the 12-digit account id.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cost Optimization Hub Preferences using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cost Optimization Hub Enrollment Status using the `id`. For example:
 
 ```terraform
 import {
   to = aws_costoptimizationhub_preferences.example
-  id = "preferences-id-12345678"
+  id = "111222333444"
 }
 ```
 
-Using `terraform import`, import Cost Optimization Hub Preferences using the `example_id_arg`. For example:
+Using `terraform import`, import Cost Optimization Hub Enrollment Status using the `id`. For example:
 
 ```console
-% terraform import aws_costoptimizationhub_preferences.example preferences-id-12345678
+% terraform import aws_costoptimizationhub_preferences.example 111222333444
 ```

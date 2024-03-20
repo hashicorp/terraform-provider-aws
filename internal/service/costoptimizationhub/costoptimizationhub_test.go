@@ -18,6 +18,12 @@ func TestAccCostOptimizationHub_serial(t *testing.T) {
 			acctest.CtDisappears:    testAccEnrollmentStatus_disappears,
 			"includeMemberAccounts": testAccEnrollmentStatus_includeMemberAccounts,
 		},
+		"Preferences": {
+			"basic":                            testAccPreferences_basic,
+			"disappears":                       testAccPreferences_disappears,
+			"memberAccountsDiscountVisibility": testAccPreferences_memberAccountsDiscountVisibility,
+			"savingsEstimationMode":            testAccPreferences_savingsEstimationMode,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)
