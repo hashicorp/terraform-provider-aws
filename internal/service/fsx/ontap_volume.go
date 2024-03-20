@@ -10,6 +10,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -20,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -52,6 +54,40 @@ func ResourceONTAPVolume() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"aggregate_configuration": {
+				Type:             schema.TypeList,
+				Optional:         true,
+				MaxItems:         1,
+				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"aggregates": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							ForceNew: true,
+							MaxItems: 12,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringMatch(regexache.MustCompile("^(aggr[0-9]{1,2})$"), "Each value must be in the format aggrX, where X is a number between 1 and the number of ha_pairs"),
+							},
+						},
+						"constituents_per_aggregate": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Computed:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.IntBetween(1, 200),
+						},
+						"total_constituents": {
+							Type:     schema.TypeInt,
+							Optional: false,
+							Required: false,
+							Computed: true,
+						},
+					},
+				},
+			},
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -98,10 +134,19 @@ func ResourceONTAPVolume() *schema.Resource {
 				Computed:     true,
 				ValidateFunc: validation.StringInSlice(fsx.StorageVirtualMachineRootVolumeSecurityStyle_Values(), false),
 			},
+			"size_in_bytes": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntBetween(0, 22517998000000000),
+				ExactlyOneOf: []string{"size_in_bytes", "size_in_megabytes"},
+			},
 			"size_in_megabytes": {
 				Type:         schema.TypeInt,
-				Required:     true,
+				Optional:     true,
+				Computed:     true,
 				ValidateFunc: validation.IntBetween(0, 2147483647),
+				ExactlyOneOf: []string{"size_in_bytes", "size_in_megabytes"},
 			},
 			"skip_final_backup": {
 				Type:     schema.TypeBool,
@@ -261,6 +306,7 @@ func ResourceONTAPVolume() *schema.Resource {
 						"cooling_period": {
 							Type:         schema.TypeInt,
 							Optional:     true,
+							Computed:     true,
 							ValidateFunc: validation.IntBetween(2, 183),
 						},
 						"name": {
@@ -285,8 +331,14 @@ func ResourceONTAPVolume() *schema.Resource {
 				Default:      fsx.VolumeTypeOntap,
 				ValidateFunc: validation.StringInSlice(fsx.VolumeType_Values(), false),
 			},
+			"volume_style": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				Default:      fsx.VolumeStyleFlexvol,
+				ValidateFunc: validation.StringInSlice(fsx.VolumeStyle_Values(), false),
+			},
 		},
-
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
@@ -296,8 +348,11 @@ func resourceONTAPVolumeCreate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).FSxConn(ctx)
 
 	ontapConfig := &fsx.CreateOntapVolumeConfiguration{
-		SizeInMegabytes:         aws.Int64(int64(d.Get("size_in_megabytes").(int))),
 		StorageVirtualMachineId: aws.String(d.Get("storage_virtual_machine_id").(string)),
+	}
+
+	if v, ok := d.GetOk("aggregate_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		ontapConfig.AggregateConfiguration = expandAggregateConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("copy_tags_to_backups"); ok {
@@ -316,6 +371,14 @@ func resourceONTAPVolumeCreate(ctx context.Context, d *schema.ResourceData, meta
 		ontapConfig.SecurityStyle = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("size_in_megabytes"); ok {
+		ontapConfig.SizeInMegabytes = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("size_in_bytes"); ok {
+		ontapConfig.SizeInBytes = aws.Int64(int64(v.(int)))
+	}
+
 	if v, ok := d.GetOk("snaplock_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		ontapConfig.SnaplockConfiguration = expandCreateSnaplockConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
@@ -330,6 +393,10 @@ func resourceONTAPVolumeCreate(ctx context.Context, d *schema.ResourceData, meta
 
 	if v, ok := d.GetOk("tiering_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		ontapConfig.TieringPolicy = expandTieringPolicy(v.([]interface{})[0].(map[string]interface{}))
+	}
+
+	if v, ok := d.GetOk("volume_style"); ok {
+		ontapConfig.VolumeStyle = aws.String(v.(string))
 	}
 
 	name := d.Get("name").(string)
@@ -373,6 +440,13 @@ func resourceONTAPVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	ontapConfig := volume.OntapConfiguration
 
+	if ontapConfig.AggregateConfiguration != nil {
+		if err := d.Set("aggregate_configuration", []interface{}{flattenAggregateConfiguration(ontapConfig.AggregateConfiguration)}); err != nil {
+			return sdkdiag.AppendErrorf(diags, "setting aggregate_configuration: %s", err)
+		}
+	} else {
+		d.Set("aggregate_configuration", nil)
+	}
 	d.Set("arn", volume.ResourceARN)
 	d.Set("copy_tags_to_backups", ontapConfig.CopyTagsToBackups)
 	d.Set("file_system_id", volume.FileSystemId)
@@ -381,6 +455,7 @@ func resourceONTAPVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("ontap_volume_type", ontapConfig.OntapVolumeType)
 	d.Set("security_style", ontapConfig.SecurityStyle)
 	d.Set("size_in_megabytes", ontapConfig.SizeInMegabytes)
+	d.Set("size_in_bytes", ontapConfig.SizeInBytes)
 	if ontapConfig.SnaplockConfiguration != nil {
 		if err := d.Set("snaplock_configuration", []interface{}{flattenSnaplockConfiguration(ontapConfig.SnaplockConfiguration)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting snaplock_configuration: %s", err)
@@ -400,6 +475,7 @@ func resourceONTAPVolumeRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 	d.Set("uuid", ontapConfig.UUID)
 	d.Set("volume_type", volume.VolumeType)
+	d.Set("volume_style", ontapConfig.VolumeStyle)
 
 	return diags
 }
@@ -425,6 +501,10 @@ func resourceONTAPVolumeUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		if d.HasChange("size_in_megabytes") {
 			ontapConfig.SizeInMegabytes = aws.Int64(int64(d.Get("size_in_megabytes").(int)))
+		}
+
+		if d.HasChange("size_in_bytes") {
+			ontapConfig.SizeInBytes = aws.Int64(int64(d.Get("size_in_bytes").(int)))
 		}
 
 		if d.HasChange("snaplock_configuration") {
@@ -498,6 +578,50 @@ func resourceONTAPVolumeDelete(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	return diags
+}
+
+func expandAggregateConfiguration(tfMap map[string]interface{}) *fsx.CreateAggregateConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &fsx.CreateAggregateConfiguration{}
+
+	if v, ok := tfMap["aggregates"].([]interface{}); ok && v != nil {
+		apiObject.Aggregates = flex.ExpandStringList(v)
+	}
+
+	if v, ok := tfMap["constituents_per_aggregate"].(int); ok && v != 0 {
+		apiObject.ConstituentsPerAggregate = aws.Int64(int64(v))
+	}
+
+	return apiObject
+}
+
+func flattenAggregateConfiguration(apiObject *fsx.AggregateConfiguration) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	var aggregates int64
+
+	if v := apiObject.Aggregates; v != nil {
+		if v := aws.StringValueSlice(v); v != nil {
+			tfMap["aggregates"] = v
+			//Need to get the count of aggregates for calculating constituents_per_aggregate
+			aggregates = int64(len(v))
+		}
+	}
+
+	if v := apiObject.TotalConstituents; v != nil {
+		tfMap["total_constituents"] = aws.Int64Value(v)
+		//Since the api only returns totalConstituents, need to calculate the value of ConstituentsPerAggregate so state will be consistent with config
+		tfMap["constituents_per_aggregate"] = aws.Int64Value(v) / aggregates
+	}
+
+	return tfMap
 }
 
 const minTieringPolicyCoolingPeriod = 2

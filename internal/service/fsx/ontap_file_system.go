@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/fsx"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -156,7 +157,7 @@ func ResourceONTAPFileSystem() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.IntBetween(1, 6),
+				ValidateFunc: validation.IntBetween(1, 12),
 			},
 			"kms_key_id": {
 				Type:         schema.TypeString,
@@ -197,8 +198,8 @@ func ResourceONTAPFileSystem() *schema.Resource {
 			},
 			"storage_capacity": {
 				Type:         schema.TypeInt,
-				Optional:     true,
-				ValidateFunc: validation.IntBetween(1024, 192*1024),
+				Required:     true,
+				ValidateFunc: validation.IntBetween(1024, 1024*1024),
 			},
 			"storage_type": {
 				Type:         schema.TypeString,
@@ -219,15 +220,16 @@ func ResourceONTAPFileSystem() *schema.Resource {
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"throughput_capacity": {
 				Type:         schema.TypeInt,
+				Computed:     true,
 				Optional:     true,
 				ValidateFunc: validation.IntInSlice([]int{128, 256, 512, 1024, 2048, 4096}),
 				ExactlyOneOf: []string{"throughput_capacity", "throughput_capacity_per_ha_pair"},
 			},
 			"throughput_capacity_per_ha_pair": {
 				Type:         schema.TypeInt,
+				Computed:     true,
 				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.IntInSlice([]int{3072, 6144}),
+				ValidateFunc: validation.IntInSlice([]int{128, 256, 512, 1024, 2048, 3072, 4096, 6144}),
 				ExactlyOneOf: []string{"throughput_capacity", "throughput_capacity_per_ha_pair"},
 			},
 			"vpc_id": {
@@ -245,7 +247,16 @@ func ResourceONTAPFileSystem() *schema.Resource {
 			},
 		},
 
-		CustomizeDiff: verify.SetTagsDiff,
+		CustomizeDiff: customdiff.All(
+			verify.SetTagsDiff,
+			customdiff.ForceNewIfChange("throughput_capacity_per_ha_pair", func(ctx context.Context, old, new, meta any) bool {
+				if new != nil && new != 0 {
+					return new.(int) != old.(int)
+				} else {
+					return false
+				}
+			}),
+		),
 	}
 }
 
@@ -287,7 +298,7 @@ func resourceONTAPFileSystemCreate(ctx context.Context, d *schema.ResourceData, 
 		v := int64(v.(int))
 		input.OntapConfiguration.HAPairs = aws.Int64(v)
 
-		if v > 1 {
+		if v > 0 {
 			if v, ok := d.GetOk("throughput_capacity_per_ha_pair"); ok {
 				input.OntapConfiguration.ThroughputCapacityPerHAPair = aws.Int64(int64(v.(int)))
 			}
@@ -370,12 +381,12 @@ func resourceONTAPFileSystemRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("storage_capacity", filesystem.StorageCapacity)
 	d.Set("storage_type", filesystem.StorageType)
 	d.Set("subnet_ids", aws.StringValueSlice(filesystem.SubnetIds))
-	if haPairs > 1 {
+	if aws.StringValue(ontapConfig.DeploymentType) == "SINGLE_AZ_2" {
 		d.Set("throughput_capacity", nil)
 		d.Set("throughput_capacity_per_ha_pair", ontapConfig.ThroughputCapacityPerHAPair)
 	} else {
 		d.Set("throughput_capacity", ontapConfig.ThroughputCapacity)
-		d.Set("throughput_capacity_per_ha_pair", nil)
+		d.Set("throughput_capacity_per_ha_pair", ontapConfig.ThroughputCapacityPerHAPair)
 	}
 	d.Set("vpc_id", filesystem.VpcId)
 	d.Set("weekly_maintenance_start_time", ontapConfig.WeeklyMaintenanceStartTime)
