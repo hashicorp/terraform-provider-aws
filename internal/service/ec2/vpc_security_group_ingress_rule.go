@@ -180,7 +180,10 @@ func (r *securityGroupRuleResource) Create(ctx context.Context, request resource
 		return
 	}
 
-	data.ID = types.StringValue(securityGroupRuleID)
+	// Set values for unknowns.
+	data.ARN = securityGroupRuleARN(ctx, r, securityGroupRuleID)
+	data.SecurityGroupRuleID = types.StringValue(securityGroupRuleID)
+	data.setID()
 
 	conn := r.Meta().EC2Conn(ctx)
 	if err := createTags(ctx, conn, data.ID.ValueString(), getTagsIn(ctx)); err != nil {
@@ -189,10 +192,6 @@ func (r *securityGroupRuleResource) Create(ctx context.Context, request resource
 		return
 	}
 
-	// Set values for unknowns.
-	data.ARN = securityGroupRuleARN(ctx, r, securityGroupRuleID)
-	data.SecurityGroupRuleID = types.StringValue(securityGroupRuleID)
-
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
@@ -200,6 +199,12 @@ func (r *securityGroupRuleResource) Read(ctx context.Context, request resource.R
 	var data securityGroupRuleResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if err := data.InitFromID(); err != nil {
+		response.Diagnostics.AddError("parsing resource ID", err.Error())
+
 		return
 	}
 
@@ -382,6 +387,16 @@ type securityGroupRuleResourceModel struct {
 	Tags                      types.Map    `tfsdk:"tags"`
 	TagsAll                   types.Map    `tfsdk:"tags_all"`
 	ToPort                    types.Int64  `tfsdk:"to_port"`
+}
+
+func (model *securityGroupRuleResourceModel) InitFromID() error {
+	model.SecurityGroupRuleID = model.ID
+
+	return nil
+}
+
+func (model *securityGroupRuleResourceModel) setID() {
+	model.ID = model.SecurityGroupRuleID
 }
 
 func (d *securityGroupRuleResourceModel) expandIPPermission(ctx context.Context) *ec2.IpPermission {
