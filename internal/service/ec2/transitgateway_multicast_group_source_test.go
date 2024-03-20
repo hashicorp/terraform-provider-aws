@@ -26,7 +26,7 @@ func testAccTransitGatewayMulticastGroupSource_basic(t *testing.T, semaphore tfs
 	resourceName := "aws_ec2_transit_gateway_multicast_group_source.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
@@ -52,7 +52,7 @@ func testAccTransitGatewayMulticastGroupSource_disappears(t *testing.T, semaphor
 	resourceName := "aws_ec2_transit_gateway_multicast_group_source.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
@@ -81,7 +81,7 @@ func testAccTransitGatewayMulticastGroupSource_Disappears_domain(t *testing.T, s
 	domainResourceName := "aws_ec2_transit_gateway_multicast_domain.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)

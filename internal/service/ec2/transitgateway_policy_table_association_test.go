@@ -28,7 +28,7 @@ func testAccTransitGatewayPolicyTableAssociation_basic(t *testing.T, semaphore t
 	transitGatewayPeeringResourceName := "aws_networkmanager_transit_gateway_peering.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
@@ -63,7 +63,7 @@ func testAccTransitGatewayPolicyTableAssociation_disappears(t *testing.T, semaph
 	resourceName := "aws_ec2_transit_gateway_policy_table_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)

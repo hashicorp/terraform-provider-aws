@@ -26,7 +26,7 @@ func testAccTransitGatewayMulticastDomainAssociation_basic(t *testing.T, semapho
 	resourceName := "aws_ec2_transit_gateway_multicast_domain_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
@@ -52,7 +52,7 @@ func testAccTransitGatewayMulticastDomainAssociation_disappears(t *testing.T, se
 	resourceName := "aws_ec2_transit_gateway_multicast_domain_association.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
@@ -81,7 +81,7 @@ func testAccTransitGatewayMulticastDomainAssociation_Disappears_domain(t *testin
 	domainResourceName := "aws_ec2_transit_gateway_multicast_domain.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
@@ -110,7 +110,7 @@ func testAccTransitGatewayMulticastDomainAssociation_twoAssociations(t *testing.
 	resource2Name := "aws_ec2_transit_gateway_multicast_domain_association.test2"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
