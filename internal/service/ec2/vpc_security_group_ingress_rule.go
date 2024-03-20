@@ -9,7 +9,6 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
@@ -40,7 +39,6 @@ import (
 func newSecurityGroupIngressRuleResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &securityGroupIngressRuleResource{}
 	r.securityGroupRule = r
-	r.securityGroupRuleBase.withMeta = r
 
 	return r, nil
 }
@@ -89,10 +87,6 @@ func (r *securityGroupIngressRuleResource) findByID(ctx context.Context, id stri
 
 // Base structure and methods for VPC security group rules.
 
-type securityGroupRuleBase struct {
-	withMeta framework.WithMeta
-}
-
 type securityGroupRule interface {
 	create(context.Context, *securityGroupRuleResourceModel) (string, error)
 	delete(context.Context, *securityGroupRuleResourceModel) error
@@ -101,7 +95,6 @@ type securityGroupRule interface {
 
 type securityGroupRuleResource struct {
 	securityGroupRule
-	securityGroupRuleBase
 	framework.ResourceWithConfigure
 	framework.WithImportByID
 }
@@ -235,7 +228,7 @@ func (r *securityGroupRuleResource) Read(ctx context.Context, request resource.R
 	data.Description = flex.StringToFramework(ctx, output.Description)
 	data.IPProtocol = flex.StringToFrameworkValuable[ipProtocol](ctx, output.IpProtocol)
 	data.PrefixListID = flex.StringToFramework(ctx, output.PrefixListId)
-	data.ReferencedSecurityGroupID = r.flattenReferencedSecurityGroup(ctx, output.ReferencedGroupInfo)
+	data.ReferencedSecurityGroupID = flattenReferencedSecurityGroup(ctx, output.ReferencedGroupInfo, r.Meta().AccountID)
 	data.SecurityGroupID = flex.StringToFramework(ctx, output.GroupId)
 	data.SecurityGroupRuleID = flex.StringToFramework(ctx, output.SecurityGroupRuleId)
 
@@ -352,25 +345,16 @@ func (r *securityGroupRuleResource) ConfigValidators(context.Context) []resource
 	}
 }
 
-func (r *securityGroupRuleBase) securityGroupRuleARN(_ context.Context, id string) types.String {
-	meta := r.withMeta.Meta()
-	arn := arn.ARN{
-		Partition: meta.Partition,
-		Service:   names.EC2,
-		Region:    meta.Region,
-		AccountID: meta.AccountID,
-		Resource:  fmt.Sprintf("security-group-rule/%s", id),
-	}.String()
-
-	return types.StringValue(arn)
+func (r *securityGroupRuleResource) securityGroupRuleARN(_ context.Context, id string) types.String {
+	return types.StringValue(r.RegionalARN(names.EC2, fmt.Sprintf("security-group-rule/%s", id)))
 }
 
-func (r *securityGroupRuleBase) flattenReferencedSecurityGroup(ctx context.Context, apiObject *ec2.ReferencedSecurityGroup) types.String {
+func flattenReferencedSecurityGroup(ctx context.Context, apiObject *ec2.ReferencedSecurityGroup, accountID string) types.String {
 	if apiObject == nil {
 		return types.StringNull()
 	}
 
-	if apiObject.UserId == nil || aws.StringValue(apiObject.UserId) == r.withMeta.Meta().AccountID {
+	if apiObject.UserId == nil || aws.StringValue(apiObject.UserId) == accountID {
 		return flex.StringToFramework(ctx, apiObject.GroupId)
 	}
 

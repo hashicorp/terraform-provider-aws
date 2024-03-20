@@ -5,6 +5,7 @@ package ec2
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
@@ -20,13 +21,11 @@ import (
 // @FrameworkDataSource(name="Security Group Rule")
 func newSecurityGroupRuleDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &securityGroupRuleDataSource{}
-	d.securityGroupRuleBase.withMeta = d
 
 	return d, nil
 }
 
 type securityGroupRuleDataSource struct {
-	securityGroupRuleBase
 	framework.DataSourceWithConfigure
 }
 
@@ -123,13 +122,17 @@ func (d *securityGroupRuleDataSource) Read(ctx context.Context, request datasour
 	data.IPProtocol = flex.StringToFramework(ctx, output.IpProtocol)
 	data.IsEgress = flex.BoolToFramework(ctx, output.IsEgress)
 	data.PrefixListID = flex.StringToFramework(ctx, output.PrefixListId)
-	data.ReferencedSecurityGroupID = d.flattenReferencedSecurityGroup(ctx, output.ReferencedGroupInfo)
+	data.ReferencedSecurityGroupID = flattenReferencedSecurityGroup(ctx, output.ReferencedGroupInfo, d.Meta().AccountID)
 	data.SecurityGroupID = flex.StringToFramework(ctx, output.GroupId)
 	data.SecurityGroupRuleID = flex.StringToFramework(ctx, output.SecurityGroupRuleId)
 	data.Tags = flex.FlattenFrameworkStringValueMapLegacy(ctx, KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
 	data.ToPort = flex.Int64ToFramework(ctx, output.ToPort)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+}
+
+func (d *securityGroupRuleDataSource) securityGroupRuleARN(_ context.Context, id string) types.String {
+	return types.StringValue(d.RegionalARN(names.EC2, fmt.Sprintf("security-group-rule/%s", id)))
 }
 
 type securityGroupRuleDataSourceModel struct {

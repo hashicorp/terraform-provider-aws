@@ -17,7 +17,6 @@ import (
 func newSecurityGroupEgressRuleResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &securityGroupEgressRuleResource{}
 	r.securityGroupRule = r
-	r.securityGroupRuleBase.withMeta = r
 
 	return r, nil
 }

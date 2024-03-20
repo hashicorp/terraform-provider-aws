@@ -20,7 +20,9 @@ import (
 
 // @FrameworkDataSource(name="Security Group Rules")
 func newSecurityGroupRulesDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &securityGroupRulesDataSource{}, nil
+	d := &securityGroupRulesDataSource{}
+
+	return d, nil
 }
 
 type securityGroupRulesDataSource struct {
