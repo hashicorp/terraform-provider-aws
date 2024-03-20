@@ -20,7 +20,7 @@ func testAccTransitGatewayRouteTableDataSource_Filter(t *testing.T, semaphore tf
 	resourceName := "aws_ec2_transit_gateway_route_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
@@ -50,7 +50,7 @@ func testAccTransitGatewayRouteTableDataSource_ID(t *testing.T, semaphore tfsync
 	resourceName := "aws_ec2_transit_gateway_route_table.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)

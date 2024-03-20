@@ -22,7 +22,7 @@ func testAccTransitGatewayVPNAttachmentDataSource_idAndVPNConnectionID(t *testin
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 	vpnConnectionResourceName := "aws_vpn_connection.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
@@ -52,7 +52,7 @@ func testAccTransitGatewayVPNAttachmentDataSource_filter(t *testing.T, semaphore
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 	vpnConnectionResourceName := "aws_vpn_connection.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)

@@ -22,7 +22,7 @@ func testAccTransitGatewayDxGatewayAttachmentDataSource_TransitGatewayIdAndDxGat
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 	dxGatewayResourceName := "aws_dx_gateway.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
@@ -52,7 +52,7 @@ func testAccTransitGatewayDxGatewayAttachmentDataSource_filter(t *testing.T, sem
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 	dxGatewayResourceName := "aws_dx_gateway.test"
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)

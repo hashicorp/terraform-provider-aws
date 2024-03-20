@@ -19,7 +19,7 @@ func testAccTransitGatewayAttachmentsDataSource_Filter(t *testing.T, semaphore t
 	dataSourceName := "data.aws_ec2_transit_gateway_attachments.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
