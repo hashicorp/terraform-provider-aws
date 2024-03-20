@@ -90,9 +90,7 @@ func findAPIs(ctx context.Context, conn *apigatewayv2.Client, input *apigatewayv
 			return !lastPage
 		}
 
-		for _, item := range page.Items {
-			apis = append(apis, item)
-		}
+		apis = append(apis, page.Items...)
 
 		return !lastPage
 	})

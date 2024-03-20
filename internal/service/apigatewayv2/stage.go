@@ -566,7 +566,7 @@ func flattenRouteSettings(settings map[string]awstypes.RouteSettings) []interfac
 		vSettings = append(vSettings, map[string]interface{}{
 			"data_trace_enabled":       aws.ToBool(routeSetting.DataTraceEnabled),
 			"detailed_metrics_enabled": aws.ToBool(routeSetting.DetailedMetricsEnabled),
-			"logging_level":            awstypes.LoggingLevel(routeSetting.LoggingLevel),
+			"logging_level":            routeSetting.LoggingLevel,
 			"route_key":                k,
 			"throttling_burst_limit":   int(aws.ToInt32(routeSetting.ThrottlingBurstLimit)),
 			"throttling_rate_limit":    aws.ToFloat64(routeSetting.ThrottlingRateLimit),
