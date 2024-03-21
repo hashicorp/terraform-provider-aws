@@ -22,7 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_batch_scheduling_policy", name="Job Definition")
+// @SDKResource("aws_batch_scheduling_policy", name="Scheduling Policy")
 // @Tags(identifierAttribute="arn")
 func ResourceSchedulingPolicy() *schema.Resource {
 	return &schema.Resource{
