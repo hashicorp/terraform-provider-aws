@@ -207,6 +207,11 @@ func TestAccIPAM_tier(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tier", "advanced"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
