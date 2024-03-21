@@ -79,7 +79,6 @@ func ResourceConnection() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
 			"owner_account_id": {
 				Type:     schema.TypeString,

@@ -74,7 +74,6 @@ func ResourceHostedPublicVirtualInterface() *schema.Resource {
 			"connection_id": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
 			"customer_address": {
 				Type:     schema.TypeString,
@@ -85,7 +84,6 @@ func ResourceHostedPublicVirtualInterface() *schema.Resource {
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
-				ForceNew: true,
 			},
 			"owner_account_id": {
 				Type:         schema.TypeString,
