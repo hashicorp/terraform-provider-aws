@@ -29,6 +29,11 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_identitystore_group",
 		},
 		{
+			Factory:  DataSourceGroupMemberships,
+			TypeName: "aws_identitystore_group_memberships",
+			Name:     "Group Memberships",
+		},
+		{
 			Factory:  DataSourceUser,
 			TypeName: "aws_identitystore_user",
 		},
