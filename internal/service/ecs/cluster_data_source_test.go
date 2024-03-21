@@ -94,6 +94,33 @@ func TestAccECSClusterDataSource_tags(t *testing.T) {
 	})
 }
 
+func TestAccECSClusterDataSource_ecsClusterCapacityProvider(t *testing.T) {
+	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_ecs_cluster.test"
+	resourceName := "aws_ecs_cluster.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterDataSourceConfig_capacityProvider(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttr(dataSourceName, "pending_tasks_count", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "registered_container_instances_count", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "running_tasks_count", "0"),
+					resource.TestCheckResourceAttr(dataSourceName, "status", "ACTIVE"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "capacity_providers.#", resourceName, "capacity_providers.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "default_capacity_provider_strategy.#", resourceName, "default_capacity_provider_strategy.#"),
+				),
+			},
+		},
+	})
+}
+
 func testAccClusterDataSourceConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
@@ -127,14 +154,31 @@ func testAccClusterDataSourceConfig_tags(rName, tagKey, tagValue string) string 
 	return fmt.Sprintf(`
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
-
   tags = {
     %[2]q = %[3]q
+  }
+}
+data "aws_ecs_cluster" "test" {
+  cluster_name = aws_ecs_cluster.test.name
+}
+`, rName, tagKey, tagValue)
+}
+
+func testAccClusterDataSourceConfig_capacityProvider(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_cluster" "test" {
+  name               = %[1]q
+  capacity_providers = ["FARGATE", "FARGATE_SPOT"]
+
+  default_capacity_provider_strategy {
+    base              = 0
+    weight            = 1
+    capacity_provider = "FARGATE_SPOT"
   }
 }
 
 data "aws_ecs_cluster" "test" {
   cluster_name = aws_ecs_cluster.test.name
 }
-`, rName, tagKey, tagValue)
+`, rName)
 }

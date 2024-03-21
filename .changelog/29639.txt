@@ -1,0 +1,3 @@
+```release-note:enhancement
+data-source/aws_ecs_cluster: Add `default_capacity_provider_strategy` and `capacity_providers` attributes
+```
