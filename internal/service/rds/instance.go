@@ -152,6 +152,9 @@ func ResourceInstance() *schema.Resource {
 				Computed:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(backupTarget_Values(), false),
+				ConflictsWith: []string{
+					"s3_import",
+				},
 			},
 			"backup_window": {
 				Type:         schema.TypeString,
@@ -182,6 +185,9 @@ func ResourceInstance() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
+				ConflictsWith: []string{
+					"s3_import",
+				},
 			},
 			"copy_tags_to_snapshot": {
 				Type:     schema.TypeBool,
@@ -628,6 +634,9 @@ func ResourceInstance() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
+				ConflictsWith: []string{
+					"s3_import",
+				},
 			},
 			"username": {
 				Type:          schema.TypeString,
@@ -901,15 +910,6 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 		if _, ok := d.GetOk("username"); !ok {
 			diags = sdkdiag.AppendErrorf(diags, `"username": required field is not set`)
-		}
-		if _, ok := d.GetOk("character_set_name"); ok {
-			diags = sdkdiag.AppendErrorf(diags, `"character_set_name" doesn't work with restores"`)
-		}
-		if _, ok := d.GetOk("timezone"); ok {
-			diags = sdkdiag.AppendErrorf(diags, `"timezone" doesn't work with restores"`)
-		}
-		if _, ok := d.GetOk("backup_target"); ok {
-			diags = sdkdiag.AppendErrorf(diags, `"backup_target" doesn't work with restores"`)
 		}
 		if diags.HasError() {
 			return diags
