@@ -323,30 +323,32 @@ func testAccKxDataviewConfig_readWrite(rName string) string {
 		testAccKxDataviewConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_finspace_kx_volume" "test" {
-	name               = %[1]q
-	environment_id     = aws_finspace_kx_environment.test.id
-	availability_zones = [aws_finspace_kx_environment.test.availability_zones[0]]
-	az_mode            = "SINGLE"
-	type               = "NAS_1"
-	nas1_configuration {
-		size = 1200
-		type = "SSD_250"
-	}
+  name               = %[1]q
+  environment_id     = aws_finspace_kx_environment.test.id
+  availability_zones = [aws_finspace_kx_environment.test.availability_zones[0]]
+  az_mode            = "SINGLE"
+  type               = "NAS_1"
+
+  nas1_configuration {
+    size = 1200
+    type = "SSD_250"
+  }
 }
 
 resource "aws_finspace_kx_dataview" "test" {
-	name                 = %[1]q
-	environment_id       = aws_finspace_kx_environment.test.id
-	database_name        = aws_finspace_kx_database.test.name
-	auto_update          = false
-	az_mode              = "SINGLE"
-	availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
-	read_write            = true
-	segment_configurations {
-		db_paths    = ["/*"]
-		volume_name = aws_finspace_kx_volume.test.name
-		on_demand = false
-	}
+  name                 = %[1]q
+  environment_id       = aws_finspace_kx_environment.test.id
+  database_name        = aws_finspace_kx_database.test.name
+  auto_update          = false
+  az_mode              = "SINGLE"
+  availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
+  read_write            = true
+
+  segment_configurations {
+    db_paths    = ["/*"]
+    volume_name = aws_finspace_kx_volume.test.name
+    on_demand = false
+  }
 }
 `, rName))
 }
@@ -356,29 +358,31 @@ func testAccKxDataviewConfig_onDemand(rName string) string {
 		testAccKxDataviewConfigBase(rName),
 		fmt.Sprintf(`
 resource "aws_finspace_kx_volume" "test" {
-	name               = %[1]q
-	environment_id     = aws_finspace_kx_environment.test.id
-	availability_zones = [aws_finspace_kx_environment.test.availability_zones[0]]
-	az_mode            = "SINGLE"
-	type               = "NAS_1"
-	nas1_configuration {
-		size = 1200
-		type = "SSD_250"
-	}
+  name               = %[1]q
+  environment_id     = aws_finspace_kx_environment.test.id
+  availability_zones = [aws_finspace_kx_environment.test.availability_zones[0]]
+  az_mode            = "SINGLE"
+  type               = "NAS_1"
+
+  nas1_configuration {
+    size = 1200
+    type = "SSD_250"
+  }
 }
 
 resource "aws_finspace_kx_dataview" "test" {
-	name                 = %[1]q
-	environment_id       = aws_finspace_kx_environment.test.id
-	database_name        = aws_finspace_kx_database.test.name
-	auto_update          = false
-	az_mode              = "SINGLE"
-	availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
-	segment_configurations {
-		db_paths    = ["/*"]
-		volume_name = aws_finspace_kx_volume.test.name
-		on_demand = true
-	}
+  name                 = %[1]q
+  environment_id       = aws_finspace_kx_environment.test.id
+  database_name        = aws_finspace_kx_database.test.name
+  auto_update          = false
+  az_mode              = "SINGLE"
+  availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
+
+  segment_configurations {
+    db_paths    = ["/*"]
+    volume_name = aws_finspace_kx_volume.test.name
+    on_demand = true
+  }
 }
 `, rName))
 }
