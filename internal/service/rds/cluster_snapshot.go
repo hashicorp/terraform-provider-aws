@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -95,6 +96,11 @@ func ResourceClusterSnapshot() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"shared_accounts": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"source_db_cluster_snapshot_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -148,6 +154,19 @@ func resourceClusterSnapshotCreate(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Cluster Snapshot (%s) create: %s", d.Id(), err)
 	}
 
+	if v, ok := d.GetOk("shared_accounts"); ok && v.(*schema.Set).Len() > 0 {
+		input := &rds.ModifyDBClusterSnapshotAttributeInput{
+			AttributeName:               aws.String("restore"),
+			DBClusterSnapshotIdentifier: aws.String(d.Id()),
+			ValuesToAdd:                 flex.ExpandStringSet(v.(*schema.Set)),
+		}
+
+		_, err := conn.ModifyDBClusterSnapshotAttributeWithContext(ctx, input)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "modifying RDS DB Cluster Snapshot (%s) attribute: %s", d.Id(), err)
+		}
+	}
+
 	return append(diags, resourceClusterSnapshotRead(ctx, d, meta)...)
 }
 
@@ -183,6 +202,18 @@ func resourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("storage_encrypted", snapshot.StorageEncrypted)
 	d.Set("vpc_id", snapshot.VpcId)
 
+	input := &rds.DescribeDBClusterSnapshotAttributesInput{
+		DBClusterSnapshotIdentifier: aws.String(d.Id()),
+	}
+
+	output, err := conn.DescribeDBClusterSnapshotAttributesWithContext(ctx, input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading RDS DB Cluster Snapshot (%s) attributes: %s", d.Id(), err)
+	}
+
+	d.Set("shared_accounts", flex.FlattenStringSet(output.DBClusterSnapshotAttributesResult.DBClusterSnapshotAttributes[0].AttributeValues))
+
 	setTagsOut(ctx, snapshot.TagList)
 
 	return diags
@@ -190,8 +221,29 @@ func resourceClusterSnapshotRead(ctx context.Context, d *schema.ResourceData, me
 
 func resourceClusterSnapshotUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
 
-	// Tags only.
+	if d.HasChange("shared_accounts") {
+		o, n := d.GetChange("shared_accounts")
+		os := o.(*schema.Set)
+		ns := n.(*schema.Set)
+
+		additionList := ns.Difference(os)
+		removalList := os.Difference(ns)
+
+		input := &rds.ModifyDBClusterSnapshotAttributeInput{
+			AttributeName:               aws.String("restore"),
+			DBClusterSnapshotIdentifier: aws.String(d.Id()),
+			ValuesToAdd:                 flex.ExpandStringSet(additionList),
+			ValuesToRemove:              flex.ExpandStringSet(removalList),
+		}
+
+		_, err := conn.ModifyDBClusterSnapshotAttributeWithContext(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "modifying RDS DB Cluster Snapshot (%s) attributes: %s", d.Id(), err)
+		}
+	}
 
 	return append(diags, resourceClusterSnapshotRead(ctx, d, meta)...)
 }

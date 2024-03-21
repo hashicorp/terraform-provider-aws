@@ -44,12 +44,21 @@ func TestAccRDSClusterSnapshot_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "kms_key_id", ""),
 					resource.TestCheckResourceAttrSet(resourceName, "license_model"),
 					resource.TestCheckResourceAttrSet(resourceName, "port"),
+					resource.TestCheckResourceAttr(resourceName, "shared_accounts.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_type", "manual"),
 					resource.TestCheckResourceAttr(resourceName, "source_db_cluster_snapshot_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "status", "available"),
 					resource.TestCheckResourceAttr(resourceName, "storage_encrypted", "false"),
 					resource.TestMatchResourceAttr(resourceName, "vpc_id", regexache.MustCompile(`^vpc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				Config: testAccClusterSnapshotConfig_sharedAccounts(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterSnapshotExists(ctx, resourceName, &dbClusterSnapshot),
+					resource.TestCheckResourceAttr(resourceName, "shared_accounts.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "shared_accounts.*", "all"),
 				),
 			},
 			{
@@ -226,4 +235,16 @@ resource "aws_db_cluster_snapshot" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccClusterSnapshotConfig_sharedAccounts(rName string) string {
+	return acctest.ConfigCompose(
+		testAccClusterSnapshotConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_db_cluster_snapshot" "test" {
+  db_cluster_identifier          = aws_rds_cluster.test.id
+  db_cluster_snapshot_identifier = %[1]q
+  shared_accounts = ["all"]
+}
+`, rName))
 }
