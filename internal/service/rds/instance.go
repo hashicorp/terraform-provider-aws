@@ -21,6 +21,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	tfawserr_sdkv2 "github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -187,6 +188,19 @@ func ResourceInstance() *schema.Resource {
 				ForceNew: true,
 				ConflictsWith: []string{
 					"s3_import",
+				},
+				DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+					for _, conflictAttr := range []string{
+						"replicate_source_db",
+						// s3_import is handled by the schema ConflictsWith
+						"snapshot_identifier",
+						"restore_to_point_in_time",
+					} {
+						if _, ok := d.GetOk(conflictAttr); ok {
+							return true
+						}
+					}
+					return false
 				},
 			},
 			"copy_tags_to_snapshot": {
@@ -705,6 +719,23 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	identifier := create.Name(d.Get("identifier").(string), d.Get("identifier_prefix").(string))
 
 	var resourceID string // will be assigned depending on how it is created
+
+	if _, ok := d.GetOk("character_set_name"); ok {
+		charSetPath := cty.GetAttrPath("character_set_name")
+		for _, conflictAttr := range []string{
+			"replicate_source_db",
+			// s3_import is handled by the schema ConflictsWith
+			"snapshot_identifier",
+			"restore_to_point_in_time",
+		} {
+			if _, ok := d.GetOk(conflictAttr); ok {
+				diags = append(diags, errs.NewAttributeConflictsWillBeError(
+					charSetPath,
+					cty.GetAttrPath(conflictAttr),
+				))
+			}
+		}
+	}
 
 	if v, ok := d.GetOk("replicate_source_db"); ok {
 		sourceDBInstanceID := v.(string)
