@@ -65,19 +65,20 @@ func validTargetGroupName(v interface{}, k string) (ws []string, errors []error)
 	value := v.(string)
 	if len(value) > 32 {
 		errors = append(errors, fmt.Errorf(
-			"%q cannot be longer than 32 characters", k))
+			"%q cannot be longer than 32 characters: %q", k, value))
 	}
 	if !regexache.MustCompile(`^[0-9A-Za-z-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
-			"only alphanumeric characters and hyphens allowed in %q", k))
+			"only alphanumeric characters and hyphens allowed in %q: %q",
+			k, value))
 	}
 	if regexache.MustCompile(`^-`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
-			"%q cannot begin with a hyphen", k))
+			"%q cannot begin with a hyphen: %q", k, value))
 	}
 	if regexache.MustCompile(`-$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
-			"%q cannot end with a hyphen", k))
+			"%q cannot end with a hyphen: %q", k, value))
 	}
 	return
 }
