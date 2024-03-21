@@ -498,7 +498,7 @@ func environmentHasChanges(_ context.Context, plan, state resourceEnvironmentDat
 		!plan.EngineVersion.Equal(state.EngineVersion) ||
 		!plan.HighAvailabilityConfig.Equal(state.HighAvailabilityConfig) ||
 		!plan.InstanceType.Equal(state.InstanceType) ||
-		!plan.KmsKeyId.Equal(state.KmsKeyId) ||
+		!plan.KmsKeyId.Equal(state.InstanceType) ||
 		!plan.Name.Equal(state.Name) ||
 		!plan.PreferredMaintenanceWindow.Equal(state.PreferredMaintenanceWindow) ||
 		!plan.PubliclyAccessible.Equal(state.PubliclyAccessible) ||

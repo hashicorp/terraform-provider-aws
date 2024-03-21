@@ -21,17 +21,6 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newResourceApplication,
-			Name:    "M2 Application",
-			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "arn",
-			},
-		},
-		{
-			Factory: newResourceDeployment,
-			Name:    "M2 Deployment",
-		},
-		{
 			Factory: newResourceEnvironment,
 			Name:    "M2 Environment",
 			Tags: &types.ServicePackageResourceTags{
