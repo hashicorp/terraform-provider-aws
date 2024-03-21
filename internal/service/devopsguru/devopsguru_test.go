@@ -17,6 +17,13 @@ func TestAccDevOpsGuru_serial(t *testing.T) {
 			"basic":      testAccEventSourcesConfig_basic,
 			"disappears": testAccEventSourcesConfig_disappears,
 		},
+		"ResourceCollection": {
+			"basic":            testAccResourceCollection_basic,
+			"cloudformation":   testAccResourceCollection_cloudformation,
+			"disappears":       testAccResourceCollection_disappears,
+			"tags":             testAccResourceCollection_tags,
+			"tagsAllResources": testAccResourceCollection_tagsAllResources,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)

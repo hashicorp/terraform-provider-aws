@@ -6,6 +6,8 @@ package devopsguru
 // Exports for use in tests only.
 var (
 	ResourceEventSourcesConfig = newResourceEventSourcesConfig
+	ResourceResourceCollection = newResourceResourceCollection
 
-	FindEventSourcesConfig = findEventSourcesConfig
+	FindEventSourcesConfig     = findEventSourcesConfig
+	FindResourceCollectionByID = findResourceCollectionByID
 )
