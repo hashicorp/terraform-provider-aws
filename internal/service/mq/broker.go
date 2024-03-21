@@ -615,8 +615,6 @@ func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating MQ Broker (%s) auto minor version upgrade: %s", d.Id(), err)
 		}
-
-		requiresReboot = true
 	}
 
 	if d.HasChange("maintenance_window_start_time") {
@@ -630,8 +628,6 @@ func resourceBrokerUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating MQ Broker (%s) maintenance window start time: %s", d.Id(), err)
 		}
-
-		requiresReboot = true
 	}
 
 	if d.HasChange("data_replication_mode") {
