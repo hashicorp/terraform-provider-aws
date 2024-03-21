@@ -342,12 +342,12 @@ resource "aws_finspace_kx_dataview" "test" {
   auto_update          = false
   az_mode              = "SINGLE"
   availability_zone_id = aws_finspace_kx_environment.test.availability_zones[0]
-  read_write            = true
+  read_write           = true
 
   segment_configurations {
     db_paths    = ["/*"]
     volume_name = aws_finspace_kx_volume.test.name
-    on_demand = false
+    on_demand   = false
   }
 }
 `, rName))
@@ -381,7 +381,7 @@ resource "aws_finspace_kx_dataview" "test" {
   segment_configurations {
     db_paths    = ["/*"]
     volume_name = aws_finspace_kx_volume.test.name
-    on_demand = true
+    on_demand   = true
   }
 }
 `, rName))
