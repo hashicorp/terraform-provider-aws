@@ -807,7 +807,14 @@ func findCertificateByARN(ctx context.Context, conn *acm.Client, arn string) (*t
 		return nil, err
 	}
 
-	if status := output.Status; status == types.CertificateStatusValidationTimedOut {
+	failedStatuses := map[types.CertificateStatus]bool{
+		types.CertificateStatusValidationTimedOut: true,
+		types.CertificateStatusFailed:             true,
+		types.CertificateStatusExpired:            true,
+		types.CertificateStatusRevoked:            true,
+	}
+
+	if status := output.Status; failedStatuses[status] {
 		return nil, &retry.NotFoundError{
 			Message:     string(status),
 			LastRequest: input,
