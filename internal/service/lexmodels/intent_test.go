@@ -349,6 +349,26 @@ func TestAccLexModelsIntent_followUpPrompt(t *testing.T) {
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"create_version"},
 			},
+			{
+				Config: testAccIntentConfig_followUpPromptUpdateWithoutRejectionStatement(testIntentID),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckIntentExists(ctx, rName, &v),
+
+					resource.TestCheckResourceAttr(rName, "follow_up_prompt.0.prompt.0.max_attempts", "3"),
+					resource.TestCheckResourceAttr(rName, "follow_up_prompt.0.prompt.0.message.#", "3"),
+					resource.TestCheckResourceAttr(rName, "follow_up_prompt.0.prompt.0.message.0.content", "Would you like to order more flowers?"),
+					resource.TestCheckResourceAttr(rName, "follow_up_prompt.0.prompt.0.message.0.content_type", "PlainText"),
+					resource.TestCheckResourceAttr(rName, "follow_up_prompt.0.prompt.0.message.1.content", "Would you like to start another order?"),
+					resource.TestCheckResourceAttr(rName, "follow_up_prompt.0.prompt.0.message.1.content_type", "PlainText"),
+					resource.TestCheckResourceAttr(rName, "follow_up_prompt.0.prompt.0.response_card", "{\"version\":1,\"contentType\":\"application/vnd.amazonaws.card.generic\",\"genericAttachments\":[{\"title\":\"Would you like to start another order?\",\"buttons\":[{\"text\":\"Yes\",\"value\":\"yes\"},{\"text\":\"No\",\"value\":\"no\"}]}]}"),
+				),
+			},
+			{
+				ResourceName:            rName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"create_version"},
+			},
 		},
 	})
 }
@@ -1008,6 +1028,31 @@ resource "aws_lex_intent" "test" {
         content_type = "PlainText"
       }
       response_card = "Okay, additional flowers will be ordered."
+    }
+  }
+}
+`, rName)
+}
+
+func testAccIntentConfig_followUpPromptUpdateWithoutRejectionStatement(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_lex_intent" "test" {
+  name = "%s"
+  fulfillment_activity {
+    type = "ReturnIntent"
+  }
+  follow_up_prompt {
+    prompt {
+      max_attempts = 3
+      message {
+        content      = "Would you like to order more flowers?"
+        content_type = "PlainText"
+      }
+      message {
+        content      = "Would you like to start another order?"
+        content_type = "PlainText"
+      }
+      response_card = "{\"version\":1,\"contentType\":\"application/vnd.amazonaws.card.generic\",\"genericAttachments\":[{\"title\":\"Would you like to start another order?\",\"buttons\":[{\"text\":\"Yes\",\"value\":\"yes\"},{\"text\":\"No\",\"value\":\"no\"}]}]}"
     }
   }
 }
