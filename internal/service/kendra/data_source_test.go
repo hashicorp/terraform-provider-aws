@@ -5,11 +5,14 @@ package kendra_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"reflect"
 	"strconv"
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/service/kendra/document"
 	"github.com/aws/aws-sdk-go-v2/service/kendra/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -1780,6 +1783,145 @@ func TestAccKendraDataSource_CustomDocumentEnrichmentConfiguration_ExtractionHoo
 		},
 	})
 }
+func TestAccKendraDataSource_Configuration_TemplateConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName2 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	rName4 := sdkacctest.RandomWithPrefix("resource-test-terraform")
+	resourceName := "aws_kendra_data_source.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.KendraEndpointID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataSourceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSourceConfig_template(rName, rName2, rName3, rName4),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSourceExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.template_configuration.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccKendraDataSource_ExpandTemplateConfiguration(t *testing.T) {
+	t.Parallel()
+	t.Run("Will parse a Template configuration", func(t *testing.T) {
+		t.Parallel()
+		templateJson := map[string]any{
+			"firstKey":  "firstKey",
+			"secondKey": 2,
+			"thirdKey": map[string]any{
+				"nested": false,
+			},
+		}
+		templateJsonString, _ := json.Marshal(templateJson)
+
+		var config []interface{}
+		var templateConfiguration []interface{}
+
+		templateConfiguration = append(templateConfiguration, map[string]interface{}{
+			"template": string(templateJsonString),
+		})
+
+		config = append(config, map[string]interface{}{
+			"template_configuration": templateConfiguration,
+		})
+
+		result := tfkendra.ExpandDataSourceConfiguration(config)
+
+		actual, err := result.TemplateConfiguration.Template.MarshalSmithyDocument()
+		if err != nil {
+			t.Errorf("Unable to marhsal the Template %s", err)
+		}
+
+		expected, err := document.NewLazyDocument(templateJson).MarshalSmithyDocument()
+		if err != nil {
+			t.Errorf("Unable to marhsal the Template %s", err)
+		}
+
+		compareJsonStr(t, string(expected[:]), string(actual[:]))
+	})
+	t.Run("Will throw an error on invalid json", func(t *testing.T) {
+		t.Parallel()
+		templateJsonString := "{invalidJson}"
+
+		var config []interface{}
+		configuration := map[string]string{
+			"template_configuration": templateJsonString,
+		}
+		config = append(config, configuration)
+
+		result := tfkendra.ExpandDataSourceConfiguration(config)
+		if result != nil {
+			t.Errorf("Should have returned nil from bad JSON")
+		}
+	})
+}
+
+func TestAccKendraDataSource_FlattenTemplateConfiguration(t *testing.T) {
+	t.Parallel()
+	t.Run("Will flatten the Template configuration", func(t *testing.T) {
+		t.Parallel()
+		Template := document.NewLazyDocument(map[string]interface{}{
+			"firstKey":  "firstKey",
+			"secondKey": 2,
+			"thirdKey": map[string]any{
+				"nested": false,
+			},
+		})
+		apiObject := &types.DataSourceConfiguration{
+			TemplateConfiguration: &types.TemplateConfiguration{
+				Template: Template,
+			},
+		}
+		templateJsonString, _ := Template.MarshalSmithyDocument()
+
+		result := tfkendra.FlattenDataSourceConfiguration(apiObject)
+
+		actualTemplateConfig, ok := result[0].(map[string]interface{})
+		if !ok {
+			t.Error("Should have a single entry of the correct type")
+		}
+
+		actualTemplateArray, ok := actualTemplateConfig["template_configuration"].([]interface{})
+		if !ok {
+			t.Error("Should have a 'template_configuration' field")
+		}
+
+		actualTemplate, ok := actualTemplateArray[0].(map[string]interface{})
+		if !ok {
+			t.Error("Should have a single entry of the correct type")
+		}
+
+		compareJsonStr(t, string(templateJsonString[:]), actualTemplate["template"].(string))
+	})
+}
+
+func compareJsonStr(t *testing.T, expectedJsonString, actualJsonString string) {
+	var expected interface{}
+	var actual interface{}
+
+	if err := json.Unmarshal([]byte(expectedJsonString), &expected); err != nil {
+		t.Errorf("Unable to parse expected JSON string: %s", err)
+	}
+
+	if err := json.Unmarshal([]byte(actualJsonString), &actual); err != nil {
+		t.Errorf("Unable to parse actual JSON string: %s", err)
+	}
+	if !reflect.DeepEqual(expected, actual) {
+		t.Fatalf("JSON objects do not match; expected \n%#v\ngot\n%#v\n", expected, actual)
+	}
+}
 
 func testAccCheckDataSourceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -2240,6 +2382,66 @@ resource "aws_kendra_data_source" "test" {
   }
 }
 `, rName6, schedule))
+}
+
+func testAccDataSourceConfig_template(rName, rName2, rName3, dataSourceName string) string {
+	return acctest.ConfigCompose(
+		testAccDataSourceConfigBase(rName, rName2, rName3),
+		fmt.Sprintf(`
+resource "aws_kendra_data_source" "test" {
+  index_id = aws_kendra_index.test.id
+  name     = %[1]q
+  type     = "TEMPLATE"
+  role_arn = aws_iam_role.test_data_source.arn
+
+  configuration {
+    template_configuration {
+      template = jsonencode({
+        connectionConfiguration = {
+          repositoryEndpointMetadata = {
+            authentication     = "NoAuthentication"
+            s3SeedUrl          = null
+            s3SiteMapUrl       = null
+            siteMapUrls        = null
+            seedUrlConnections = [
+              {
+                "seedUrl": "https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/kendra_index"
+              },
+            ]
+          }
+        }
+        additionalProperties = {
+          crawlSubDomain = false
+          crawlAllDomain = false
+          crawlDomainsOnly = true
+          honorRobots = true
+          crawlAttachments = false
+          rateLimit = "10"
+          maxFileSize = "10"
+          crawlDepth = "1"
+          maxLinksPerUrl = "1"
+          inclusionURLCrawlPatterns = []
+          exclusionURLCrawlPatterns = []
+          inclusionURLIndexPatterns = [
+            "https:\\/\\/registry[.]terraform[.]io\\/providers\\/hashicorp\\/aws\\/latest\\/docs\\/resources\\/kendra_index",
+          ]
+          exclusionURLIndexPatterns = []
+          inclusionFileIndexPatterns = []
+          exclusionFileIndexPatterns = []
+          proxy = {}
+        }
+        enableIdentityCrawler = false
+        version = "1.0.0"
+        syncMode = "FULL_CRAWL"
+        type = "WEBCRAWLERV2"
+        repositoryConfigurations = {
+            
+		}
+      })
+    }
+  }
+}
+`, dataSourceName))
 }
 
 func testAccDataSourceConfig_tags1(rName, rName2, rName3, rName4, tag, value string) string {
