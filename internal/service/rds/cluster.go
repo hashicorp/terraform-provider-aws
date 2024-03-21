@@ -841,6 +841,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	} else if v, ok := d.GetOk("restore_to_point_in_time"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		tfMap := v.([]interface{})[0].(map[string]interface{})
 		input := &rds.RestoreDBClusterToPointInTimeInput{
+			CopyTagsToSnapshot:        aws.Bool(d.Get("copy_tags_to_snapshot").(bool)),
 			DBClusterIdentifier:       aws.String(identifier),
 			DeletionProtection:        aws.Bool(d.Get("deletion_protection").(bool)),
 			SourceDBClusterIdentifier: aws.String(tfMap["source_cluster_identifier"].(string)),
