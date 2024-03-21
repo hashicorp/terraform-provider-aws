@@ -6,6 +6,7 @@ package fis
 import (
 	"context"
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -572,9 +573,13 @@ func expandExperimentTemplateCloudWatchLogsConfiguration(l []interface{}) *types
 	}
 
 	raw := l[0].(map[string]interface{})
+	logGroupArn := raw["log_group_arn"].(string)
+	if !strings.HasSuffix(logGroupArn, ":*") {
+		logGroupArn += ":*"
+	}
 
 	config := types.ExperimentTemplateCloudWatchLogsLogConfigurationInput{
-		LogGroupArn: aws.String(raw["log_group_arn"].(string)),
+		LogGroupArn: aws.String(logGroupArn),
 	}
 	return &config
 }
