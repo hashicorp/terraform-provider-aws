@@ -448,7 +448,7 @@ func flattenSegmentConfiguration(apiObject *types.KxDataviewSegmentConfiguration
 	if v := apiObject.DbPaths; v != nil {
 		m["db_paths"] = v
 	}
-	if v := apiObject.OnDemand; v != false {
+	if v := apiObject.OnDemand; v {
 		m["on_demand"] = v
 	}
 	return m
