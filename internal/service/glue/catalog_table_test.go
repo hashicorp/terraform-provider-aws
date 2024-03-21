@@ -1440,6 +1440,30 @@ resource "aws_glue_catalog_database" "test2" {
 resource "aws_glue_catalog_table" "test2" {
   name          = "%[1]s-2"
   database_name = aws_glue_catalog_database.test2.name
+
+  columns {
+	name    = "my_column_1"
+	type    = "int"
+	comment = "my_column1_comment"
+  }
+
+  columns {
+	name    = "my_column_2"
+	type    = "string"
+	comment = "my_column2_comment"
+  }
+
+  partition_keys {
+    name    = "my_column_1"
+    type    = "int"
+    comment = "my_column_1_comment"
+  }
+
+  partition_keys {
+    name    = "my_column_2"
+    type    = "string"
+    comment = "my_column_2_comment"
+  }
 }
 `, rName)
 }
