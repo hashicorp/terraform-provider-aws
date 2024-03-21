@@ -239,13 +239,14 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "creating Route: unexpected route target attribute: %q", targetAttributeKey)
 	}
 
-	_, err = routeFinder(ctx, conn, routeTableID, destination)
+	route, err := routeFinder(ctx, conn, routeTableID, destination)
 
 	switch {
 	case err == nil:
-		return sdkdiag.AppendFromErr(diags, routeAlreadyExistsError(routeTableID, destination))
+		if aws.StringValue(route.Origin) == ec2.RouteOriginCreateRoute {
+			return sdkdiag.AppendFromErr(diags, routeAlreadyExistsError(routeTableID, destination))
+		}
 	case tfresource.NotFound(err):
-		break
 	default:
 		return sdkdiag.AppendErrorf(diags, "reading Route: %s", err)
 	}
