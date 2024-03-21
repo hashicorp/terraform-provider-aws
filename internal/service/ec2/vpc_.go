@@ -161,6 +161,11 @@ func ResourceVPC() *schema.Resource {
 				ConflictsWith: []string{"ipv6_cidr_block"},
 				RequiredWith:  []string{"ipv6_ipam_pool_id"},
 			},
+			"wait_for_ipam_deallocation": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  true,
+			},
 			"main_route_table_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -480,7 +485,9 @@ func resourceVPCDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 			ipamPoolID = v.(string)
 		}
 	}
-	if ipamPoolID != "" && ipamPoolID != amazonIPv6PoolID {
+	var wait_for_ipam_deallocation = d.Get("wait_for_ipam_deallocation").(bool)
+	log.Printf("[INFO] Should wait for IPAM: %s", wait_for_ipam_deallocation)
+	if ipamPoolID != "" && ipamPoolID != amazonIPv6PoolID && wait_for_ipam_deallocation {
 		const (
 			timeout = 35 * time.Minute // IPAM eventual consistency. It can take ~30 min to release allocations.
 		)

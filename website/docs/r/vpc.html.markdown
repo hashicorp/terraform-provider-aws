@@ -76,6 +76,7 @@ This resource supports the following arguments:
 * `ipv6_ipam_pool_id` - (Optional) IPAM Pool ID for a IPv6 pool. Conflicts with `assign_generated_ipv6_cidr_block`.
 * `ipv6_netmask_length` - (Optional) Netmask length to request from IPAM Pool. Conflicts with `ipv6_cidr_block`. This can be omitted if IPAM pool as a `allocation_default_netmask_length` set. Valid values: `56`.
 * `ipv6_cidr_block_network_border_group` - (Optional) By default when an IPv6 CIDR is assigned to a VPC a default ipv6_cidr_block_network_border_group will be set to the region of the VPC. This can be changed to restrict advertisement of public addresses to specific Network Border Groups such as LocalZones.
+* `wait_for_ipam_deallocation` - (Optional) A boolean flag to enable/disable waiting for IPAM deallocation on VPC destroy. Defaults to true.
 * `enable_dns_support` - (Optional) A boolean flag to enable/disable DNS support in the VPC. Defaults to true.
 * `enable_network_address_usage_metrics` - (Optional) Indicates whether Network Address Usage metrics are enabled for your VPC. Defaults to false.
 * `enable_dns_hostnames` - (Optional) A boolean flag to enable/disable DNS hostnames in the VPC. Defaults false.
