@@ -7,6 +7,7 @@ import (
 	"context"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -129,6 +130,10 @@ func resourcePortfolioShareCreate(ctx context.Context, d *schema.ResourceData, m
 		input.ShareTagOptions = aws.Bool(v.(bool))
 	}
 
+	// mutex lock for creation/deletion serialization
+	conns.GlobalMutexKV.Lock("servicecatalog-portfolio-share")
+	defer conns.GlobalMutexKV.Unlock("servicecatalog-portfolio-share")
+
 	var output *servicecatalog.CreatePortfolioShareOutput
 	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
 		var err error
@@ -176,6 +181,13 @@ func resourcePortfolioShareCreate(ctx context.Context, d *schema.ResourceData, m
 		}
 	}
 
+	// Only one share create/second is allowed, but unfortunately not all throttling
+	// happens as a return from CreatePortfolioShare(). That can succeed and then
+	// the throttling can happen as part of the account accepting. If everything
+	// else succeeds, sleep a bit to give us time between sequentially executed
+	// portfolio shares.
+	time.Sleep(15 * time.Second)
+
 	return append(diags, resourcePortfolioShareRead(ctx, d, meta)...)
 }
 
@@ -196,7 +208,7 @@ func resourcePortfolioShareRead(ctx context.Context, d *schema.ResourceData, met
 
 	output, err := WaitPortfolioShareReady(ctx, conn, portfolioID, shareType, principalID, waitForAcceptance, d.Timeout(schema.TimeoutRead))
 
-	if !d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && (tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) || tfresource.NotFound(err)) {
 		log.Printf("[WARN] Service Catalog Portfolio Share (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -302,6 +314,10 @@ func resourcePortfolioShareDelete(ctx context.Context, d *schema.ResourceData, m
 
 		input.OrganizationNode = orgNode
 	}
+
+	// mutex lock for creation/deletion serialization
+	conns.GlobalMutexKV.Lock("servicecatalog-portfolio-share")
+	defer conns.GlobalMutexKV.Unlock("servicecatalog-portfolio-share")
 
 	output, err := conn.DeletePortfolioShareWithContext(ctx, input)
 

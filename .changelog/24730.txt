@@ -1,0 +1,5 @@
+```release-note:bug
+resource/aws_servicecatalog_portfolio_share: Create/Delete shares sequentially
+resource/aws_servicecatalog_portfolio_share: Add a delay after creation to prevent ThrottlingException
+resource/aws_servicecatalog_portfolio_share: Fix error for drift when a share is deleted
+```
