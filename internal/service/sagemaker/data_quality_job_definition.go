@@ -705,16 +705,32 @@ func flattenBatchTransformInput(config *sagemaker.BatchTransformInput_) []map[st
 
 	m := map[string]interface{}{}
 
-	if config.LocalPath != nil {
-		m["local_path"] = aws.StringValue(config.LocalPath)
-	}
-
 	if config.DataCapturedDestinationS3Uri != nil {
 		m["data_captured_destination_s3_uri"] = aws.StringValue(config.DataCapturedDestinationS3Uri)
 	}
 
-	if config.DatasetFormat != nil {
-		m["dataset_format"] = flattenMonitoringDatasetFormat(config.DatasetFormat)
+	if config.EndTimeOffset != nil {
+		m["end_time_offset"] = aws.StringValue(config.EndTimeOffset)
+	}
+
+	if config.FeaturesAttribute != nil {
+		m["features_attribute"] = aws.StringValue(config.FeaturesAttribute)
+	}
+
+	if config.InferenceAttribute != nil {
+		m["inference_attribute"] = aws.StringValue(config.InferenceAttribute)
+	}
+
+	if config.LocalPath != nil {
+		m["local_path"] = aws.StringValue(config.LocalPath)
+	}
+
+	if config.ProbabilityAttribute != nil {
+		m["probability_attribute"] = aws.StringValue(config.ProbabilityAttribute)
+	}
+
+	if config.ProbabilityThresholdAttribute != nil {
+		m["probability_threshold_attribute"] = aws.Float64Value(config.ProbabilityThresholdAttribute)
 	}
 
 	if config.S3DataDistributionType != nil {
@@ -723,6 +739,10 @@ func flattenBatchTransformInput(config *sagemaker.BatchTransformInput_) []map[st
 
 	if config.S3InputMode != nil {
 		m["s3_input_mode"] = aws.StringValue(config.S3InputMode)
+	}
+
+	if config.StartTimeOffset != nil {
+		m["start_time_offset"] = aws.StringValue(config.StartTimeOffset)
 	}
 
 	return []map[string]interface{}{m}
@@ -785,8 +805,28 @@ func flattenEndpointInput(config *sagemaker.EndpointInput) []map[string]interfac
 		m["endpoint_name"] = aws.StringValue(config.EndpointName)
 	}
 
+	if config.EndTimeOffset != nil {
+		m["end_time_offset"] = aws.StringValue(config.EndTimeOffset)
+	}
+
+	if config.FeaturesAttribute != nil {
+		m["features_attribute"] = aws.StringValue(config.FeaturesAttribute)
+	}
+
+	if config.InferenceAttribute != nil {
+		m["inference_attribute"] = aws.StringValue(config.InferenceAttribute)
+	}
+
 	if config.LocalPath != nil {
 		m["local_path"] = aws.StringValue(config.LocalPath)
+	}
+
+	if config.ProbabilityAttribute != nil {
+		m["probability_attribute"] = aws.StringValue(config.ProbabilityAttribute)
+	}
+
+	if config.ProbabilityThresholdAttribute != nil {
+		m["probability_threshold_attribute"] = aws.Float64Value(config.ProbabilityThresholdAttribute)
 	}
 
 	if config.S3DataDistributionType != nil {
@@ -795,6 +835,10 @@ func flattenEndpointInput(config *sagemaker.EndpointInput) []map[string]interfac
 
 	if config.S3InputMode != nil {
 		m["s3_input_mode"] = aws.StringValue(config.S3InputMode)
+	}
+
+	if config.StartTimeOffset != nil {
+		m["start_time_offset"] = aws.StringValue(config.StartTimeOffset)
 	}
 
 	return []map[string]interface{}{m}
@@ -1059,8 +1103,32 @@ func expandEndpointInput(configured []interface{}) *sagemaker.EndpointInput {
 		c.EndpointName = aws.String(v)
 	}
 
+	if v, ok := m["end_time_offset"].(string); ok && v != "" {
+		c.EndTimeOffset = aws.String(v)
+	}
+
+	if v, ok := m["features_attribute"].(string); ok && v != "" {
+		c.FeaturesAttribute = aws.String(v)
+	}
+
+	if v, ok := m["inference_attribute"].(string); ok && v != "" {
+		c.InferenceAttribute = aws.String(v)
+	}
+
+	if v, ok := m["s3_input_mode"].(string); ok && v != "" {
+		c.S3InputMode = aws.String(v)
+	}
+
 	if v, ok := m["local_path"].(string); ok && v != "" {
 		c.LocalPath = aws.String(v)
+	}
+
+	if v, ok := m["probability_attribute"].(string); ok && v != "" {
+		c.ProbabilityAttribute = aws.String(v)
+	}
+
+	if v, ok := m["probability_threshold_attribute"].(float64); ok && v != -1 {
+		c.ProbabilityThresholdAttribute = aws.Float64(v)
 	}
 
 	if v, ok := m["s3_data_distribution_type"].(string); ok && v != "" {
@@ -1069,6 +1137,10 @@ func expandEndpointInput(configured []interface{}) *sagemaker.EndpointInput {
 
 	if v, ok := m["s3_input_mode"].(string); ok && v != "" {
 		c.S3InputMode = aws.String(v)
+	}
+
+	if v, ok := m["start_time_offset"].(string); ok && v != "" {
+		c.StartTimeOffset = aws.String(v)
 	}
 
 	return c
@@ -1091,8 +1163,32 @@ func expandBatchTransformInput(configured []interface{}) *sagemaker.BatchTransfo
 		c.DatasetFormat = expandMonitoringDatasetFormat(v)
 	}
 
+	if v, ok := m["end_time_offset"].(string); ok && v != "" {
+		c.EndTimeOffset = aws.String(v)
+	}
+
+	if v, ok := m["features_attribute"].(string); ok && v != "" {
+		c.FeaturesAttribute = aws.String(v)
+	}
+
+	if v, ok := m["inference_attribute"].(string); ok && v != "" {
+		c.InferenceAttribute = aws.String(v)
+	}
+
+	if v, ok := m["s3_input_mode"].(string); ok && v != "" {
+		c.S3InputMode = aws.String(v)
+	}
+
 	if v, ok := m["local_path"].(string); ok && v != "" {
 		c.LocalPath = aws.String(v)
+	}
+
+	if v, ok := m["probability_attribute"].(string); ok && v != "" {
+		c.ProbabilityAttribute = aws.String(v)
+	}
+
+	if v, ok := m["probability_threshold_attribute"].(float64); ok && v != -1 {
+		c.ProbabilityThresholdAttribute = aws.Float64(v)
 	}
 
 	if v, ok := m["s3_data_distribution_type"].(string); ok && v != "" {
@@ -1103,6 +1199,9 @@ func expandBatchTransformInput(configured []interface{}) *sagemaker.BatchTransfo
 		c.S3InputMode = aws.String(v)
 	}
 
+	if v, ok := m["start_time_offset"].(string); ok && v != "" {
+		c.StartTimeOffset = aws.String(v)
+	}
 	return c
 }
 

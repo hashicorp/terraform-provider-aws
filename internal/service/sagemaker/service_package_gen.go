@@ -159,6 +159,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_sagemaker_model_package_group_policy",
 		},
 		{
+			Factory:  ResourceModelQualityJobDefinition,
+			TypeName: "aws_sagemaker_model_quality_job_definition",
+			Name:     "Model Quality Job Definition",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
 			Factory:  ResourceMonitoringSchedule,
 			TypeName: "aws_sagemaker_monitoring_schedule",
 			Tags: &types.ServicePackageResourceTags{
