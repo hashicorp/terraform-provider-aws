@@ -539,12 +539,12 @@ github.com/golangci/dupl v0.0.0-20180902072040-3e9179ac440a h1:w8hkcTqaFpzKqonE9
 github.com/golangci/dupl v0.0.0-20180902072040-3e9179ac440a/go.mod h1:ryS0uhF+x9jgbj/N71xsEqODy9BN81/GonCZiOzirOk=
 github.com/golangci/gofmt v0.0.0-20231018234816-f50ced29576e h1:ULcKCDV1LOZPFxGZaA6TlQbiM3J2GCPnkx/bGF6sX/g=
 github.com/golangci/gofmt v0.0.0-20231018234816-f50ced29576e/go.mod h1:Pm5KhLPA8gSnQwrQ6ukebRcapGb/BG9iUkdaiCcGHJM=
-github.com/golangci/golangci-lint v1.57.0 h1:wDlrnpFzqh16IqVuaDxUK7WBzkGgtbvXd4EpqUBnhCI=
-github.com/golangci/golangci-lint v1.57.0/go.mod h1:xPTMopcNJBEEhxKaL1iW8kGTCc8SuqAqHY68MnlihyI=
+github.com/golangci/golangci-lint v1.57.1 h1:cqhpzkzjDwdN12rfMf1SUyyKyp88a1SltNqEYGS0nJw=
+github.com/golangci/golangci-lint v1.57.1/go.mod h1:zLcHhz3NHc88T5zV2j75lyc0zH3LdOPOybblYa4p0oI=
 github.com/golangci/misspell v0.4.1 h1:+y73iSicVy2PqyX7kmUefHusENlrP9YwuHZHPLGQj/g=
 github.com/golangci/misspell v0.4.1/go.mod h1:9mAN1quEo3DlpbaIKKyEvRxK1pwqR9s/Sea1bJCtlNI=
-github.com/golangci/plugin-module-register v0.1.0 h1:py0VsgNTwBNC5IqhcWFvMZpcKjaSGmyO8TqIJ+0KnEE=
-github.com/golangci/plugin-module-register v0.1.0/go.mod h1:TTpqoB6KkwOJMV8u7+NyXMrkwwESJLOkfl9TxR1DGFc=
+github.com/golangci/plugin-module-register v0.1.1 h1:TCmesur25LnyJkpsVrupv1Cdzo+2f7zX0H6Jkw1Ol6c=
+github.com/golangci/plugin-module-register v0.1.1/go.mod h1:TTpqoB6KkwOJMV8u7+NyXMrkwwESJLOkfl9TxR1DGFc=
 github.com/golangci/revgrep v0.5.2 h1:EndcWoRhcnfj2NHQ+28hyuXpLMF+dQmCN+YaeeIl4FU=
 github.com/golangci/revgrep v0.5.2/go.mod h1:bjAMA+Sh/QUfTDcHzxfyHxr4xKvllVr/0sCv2e7jJHA=
 github.com/golangci/unconvert v0.0.0-20240309020433-c5143eacb3ed h1:IURFTjxeTfNFP0hTEi1YKjB/ub8zkpaOqFFMApi2EAs=
@@ -951,8 +951,8 @@ github.com/pavius/impi v0.0.3/go.mod h1:x/hU0bfdWIhuOT1SKwiJg++yvkk6EuOtJk8WtDZq
 github.com/pelletier/go-toml v1.7.0/go.mod h1:vwGMzjaWMwyfHwgIBhI2YUM4fB6nL6lVAvS1LBMMhTE=
 github.com/pelletier/go-toml v1.9.5 h1:4yBQzkHv+7BHq2PQUZF3Mx0IYxG7LsP222s7Agd3ve8=
 github.com/pelletier/go-toml v1.9.5/go.mod h1:u1nR/EPcESfeI/szUZKdtJ0xRNbUoANCkoOuaOx1Y+c=
-github.com/pelletier/go-toml/v2 v2.1.1 h1:LWAJwfNvjQZCFIDKWYQaM62NcYeYViCmWIwmOStowAI=
-github.com/pelletier/go-toml/v2 v2.1.1/go.mod h1:tJU2Z3ZkXwnxa4DPO899bsyIoywizdUvyaeZurnPPDc=
+github.com/pelletier/go-toml/v2 v2.2.0 h1:QLgLl2yMN7N+ruc31VynXs1vhMZa7CeHHejIeBAsoHo=
+github.com/pelletier/go-toml/v2 v2.2.0/go.mod h1:1t835xjRzz80PqgE6HHgN2JOsmgYu/h4qDAS4n929Rs=
 github.com/pierrec/lz4 v2.0.5+incompatible/go.mod h1:pdkljMzZIN41W+lC3N2tnIh5sFi+IEE17M5jbnwPHcY=
 github.com/pjbgf/sha1cd v0.3.0 h1:4D5XXmUUBUl/xQ6IjCkEAbqXskkq/4O7LmGn0AqMDs4=
 github.com/pjbgf/sha1cd v0.3.0/go.mod h1:nZ1rrWOcGJ5uZgEEVL1VUM9iRQiZvWdbZjkKyFzPPsI=
