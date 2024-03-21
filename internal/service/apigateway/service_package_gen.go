@@ -54,6 +54,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_api_gateway_rest_api",
 		},
 		{
+			Factory:  DataSourceRestAPIs,
+			TypeName: "aws_api_gateway_rest_apis",
+		},
+		{
 			Factory:  DataSourceSdk,
 			TypeName: "aws_api_gateway_sdk",
 		},
