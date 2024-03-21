@@ -20,6 +20,10 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
+			Factory: newDataSourceInstanceTypesFromInstanceRequirements,
+			Name:    "Instance Types From Instance Requirements",
+		},
+		{
 			Factory: newDataSourceSecurityGroupRule,
 		},
 		{
