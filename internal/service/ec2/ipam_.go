@@ -180,6 +180,7 @@ func resourceIPAMRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("public_default_scope_id", ipam.PublicDefaultScopeId)
 	d.Set("private_default_scope_id", ipam.PrivateDefaultScopeId)
 	d.Set("scope_count", ipam.ScopeCount)
+	d.Set("tier", ipam.Tier)
 
 	setTagsOut(ctx, ipam.Tags)
 
