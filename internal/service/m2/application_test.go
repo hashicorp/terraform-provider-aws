@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/m2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/m2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -27,7 +27,7 @@ func TestAccApplication_basic(t *testing.T) {
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_m2_application.test"
-	var application m2.GetApplicationOutput
+	var application awstypes.ApplicationSummary
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -47,10 +47,9 @@ func TestAccApplication_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"definition.#", "definition.0.%", "definition.0.s3_location"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -64,7 +63,7 @@ func TestAccApplication_full(t *testing.T) {
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_m2_application.test"
-	var application m2.GetApplicationOutput
+	var application awstypes.ApplicationSummary
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -104,7 +103,7 @@ func TestAccApplication_update(t *testing.T) {
 	descriptionOld := "MicroFocus M2 Application"
 	descriptionNew := "MicroFocus M2 Application Updated"
 	resourceName := "aws_m2_application.test"
-	var application m2.GetApplicationOutput
+	var application awstypes.ApplicationSummary
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -153,7 +152,7 @@ func TestAccApplicatioon_tags(t *testing.T) {
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_m2_application.test"
-	var application m2.GetApplicationOutput
+	var application awstypes.ApplicationSummary
 
 	tags1 := `
   tags = {
@@ -208,7 +207,7 @@ func TestAccApplicatioon_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckApplicationExists(ctx context.Context, resourceName string, v *m2.GetApplicationOutput) resource.TestCheckFunc {
+func testAccCheckApplicationExists(ctx context.Context, resourceName string, v *awstypes.ApplicationSummary) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {

@@ -9,10 +9,8 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/m2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/m2/types"
-	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -35,9 +33,6 @@ import (
 // @Tags(identifierAttribute="arn")
 func newResourceApplication(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceApplication{}
-	r.SetDefaultCreateTimeout(40 * time.Minute)
-	r.SetDefaultUpdateTimeout(80 * time.Minute)
-	r.SetDefaultDeleteTimeout(40 * time.Minute)
 	return r, nil
 }
 
@@ -47,7 +42,6 @@ const (
 
 type resourceApplication struct {
 	framework.ResourceWithConfigure
-	framework.WithTimeouts
 }
 
 func (r *resourceApplication) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
@@ -57,8 +51,8 @@ func (r *resourceApplication) Metadata(_ context.Context, request resource.Metad
 func (r *resourceApplication) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn":            framework.ARNAttributeComputedOnly(),
-			"application_id": framework.IDAttribute(),
+			"application_arn": framework.ARNAttributeComputedOnly(),
+			"application_id":  framework.IDAttribute(),
 			"application_version": schema.Int64Attribute{
 				Computed: true,
 			},
@@ -67,23 +61,18 @@ func (r *resourceApplication) Schema(ctx context.Context, request resource.Schem
 			},
 			"description": schema.StringAttribute{
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"engine_type": schema.StringAttribute{
-				Required: true,
+				CustomType: fwtypes.StringEnumType[awstypes.EngineType](),
+				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			// "engine_type": schema.StringAttribute{
-			// 	CustomType: fwtypes.StringEnumType[awstypes.EngineType](),
-			// 	Required:   true,
-			// 	PlanModifiers: []planmodifier.String{
-			// 		stringplanmodifier.RequiresReplace(),
-			// 	},
-			// },
 			"id": framework.IDAttribute(),
 			"kms_key_id": schema.StringAttribute{
 				Optional: true,
@@ -99,6 +88,7 @@ func (r *resourceApplication) Schema(ctx context.Context, request resource.Schem
 			},
 			"role_arn": schema.StringAttribute{
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -126,9 +116,6 @@ func (r *resourceApplication) Schema(ctx context.Context, request resource.Schem
 									path.MatchRelative().AtParent().AtName("s3_location"),
 								),
 							},
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.UseStateForUnknown(),
-							},
 						},
 						"s3_location": schema.StringAttribute{
 							Optional: true,
@@ -140,9 +127,6 @@ func (r *resourceApplication) Schema(ctx context.Context, request resource.Schem
 									path.MatchRelative().AtParent().AtName("content"),
 								),
 							},
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.UseStateForUnknown(),
-							},
 						},
 					},
 				},
@@ -153,11 +137,6 @@ func (r *resourceApplication) Schema(ctx context.Context, request resource.Schem
 	if s.Blocks == nil {
 		s.Blocks = make(map[string]schema.Block)
 	}
-	s.Blocks["timeouts"] = timeouts.Block(ctx, timeouts.Opts{
-		Create: true,
-		Update: true,
-		Delete: true,
-	})
 
 	response.Schema = s
 }
@@ -176,19 +155,33 @@ func (r *resourceApplication) Create(ctx context.Context, request resource.Creat
 	if response.Diagnostics.HasError() {
 		return
 	}
-
-	engineType := awstypes.EngineType(*flex.StringFromFramework(ctx, data.EngineType))
-	s3location := &awstypes.DefinitionMemberS3Location{
-		Value: *flex.StringFromFramework(ctx, definition.S3Location),
+	//content := &awstypes.DefinitionMemberContent{}
+	s3location := &awstypes.DefinitionMemberS3Location{}
+	//response.Diagnostics.Append(flex.Expand(ctx, definition, &content.Value)...)
+	response.Diagnostics.Append(flex.Expand(ctx, definition, s3location.Value)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
-
+	print(*&s3location.Value)
 	input := &m2.CreateApplicationInput{
 		Definition: s3location,
-		//EngineType: data.EngineType.ValueEnum(),
-		EngineType: engineType,
+		EngineType: data.EngineType.ValueEnum(),
 		Name:       data.Name.ValueStringPointer(),
 		Tags:       getTagsIn(ctx),
 	}
+
+	// if len(content.Value) > 0 {
+	// 	input.Definition = content
+	// } else if len(s3location.Value) > 0 {
+	// 	input.Definition = s3location
+	// }
+	//response.Diagnostics.Append(flex.Expand(ctx, data, input)...)
+
+	//if response.Diagnostics.HasError() {
+	//	return
+	//}
+
+	//input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateApplication(ctx, input)
 	if err != nil {
@@ -201,24 +194,14 @@ func (r *resourceApplication) Create(ctx context.Context, request resource.Creat
 
 	state := data
 	state.ID = flex.StringToFramework(ctx, output.ApplicationId)
-	state.ApplicationId = flex.StringToFramework(ctx, output.ApplicationId)
-	state.ARN = flex.StringToFramework(ctx, output.ApplicationArn)
+	state.ApplicationArn = flex.StringToFramework(ctx, output.ApplicationArn)
 	state.ApplicationVersion = flex.Int32ToFramework(ctx, output.ApplicationVersion)
-	createTimeout := r.CreateTimeout(ctx, data.Timeouts)
-	out, err := waitApplicationCreated(ctx, conn, state.ID.ValueString(), createTimeout)
 
-	if err != nil {
-		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.M2, create.ErrActionWaitingForCreation, ResNameEnvironment, data.Name.ValueString(), err),
-			err.Error(),
-		)
-		return
-	}
-	response.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
+	//response.Diagnostics.Append(flex.Flatten(ctx, output, &state)...)
 
-	if response.Diagnostics.HasError() {
-		return
-	}
+	//if response.Diagnostics.HasError() {
+	//	return
+	//}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
 }
@@ -249,30 +232,16 @@ func (r *resourceApplication) Read(ctx context.Context, request resource.ReadReq
 		return
 	}
 
-	//version, err := findApplicationVersion(ctx, conn, data.ID.ValueString(), *out.LatestVersion.ApplicationVersion)
+	//response.Diagnostics.Append(flex.Flatten(ctx, out, &data)...)
 
-	if tfresource.NotFound(err) {
-		response.State.RemoveResource(ctx)
-		return
-	}
+	//if response.Diagnostics.HasError() {
+	//	return
+	//}
 
-	if err != nil {
-		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.M2, create.ErrActionSetting, ResNameApplication, data.ApplicationId.ValueString(), err),
-			err.Error(),
-		)
-		return
-	}
-
-	response.Diagnostics.Append(data.refreshFromOutput(ctx, out)...)
-	// data.Definition = fwtypes.NewListNestedObjectValueOfPtr(ctx, &definition{
-	// 	Content:    flex.StringValueToFramework(ctx, *version.DefinitionContent),
-	// 	S3Location: types.StringNull(),
-	// })
-
-	if response.Diagnostics.HasError() {
-		return
-	}
+	data.ID = flex.StringToFramework(ctx, out.ApplicationId)
+	data.ApplicationArn = flex.StringToFramework(ctx, out.ApplicationArn)
+	data.ApplicationVersion = flex.Int32ToFramework(ctx, out.ApplicationVersion)
+	//I Might have to flaatten more fields
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 
@@ -308,16 +277,6 @@ func (r *resourceApplication) Delete(ctx context.Context, request resource.Delet
 	if err != nil {
 		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.M2, create.ErrActionDeleting, ResNameApplication, state.ApplicationId.ValueString(), err),
-			err.Error(),
-		)
-		return
-	}
-
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitApplicationDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
-	if err != nil {
-		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.M2, create.ErrActionWaitingForDeletion, ResNameApplication, state.ID.String(), err),
 			err.Error(),
 		)
 		return
@@ -376,21 +335,19 @@ func (r *resourceApplication) ModifyPlan(ctx context.Context, request resource.M
 }
 
 type resourceApplicationData struct {
-	ARN                types.String                                `tfsdk:"arn"`
+	ApplicationArn     types.String                                `tfsdk:"application_arn"`
 	ApplicationId      types.String                                `tfsdk:"application_id"`
 	ApplicationVersion types.Int64                                 `tfsdk:"application_version"`
 	ClientToken        types.String                                `tfsdk:"client_token"`
 	Definition         fwtypes.ListNestedObjectValueOf[definition] `tfsdk:"definition"`
 	Description        types.String                                `tfsdk:"description"`
-	//EngineType         fwtypes.StringEnum[awstypes.EngineType]     `tfsdk:"engine_type"`
-	EngineType types.String   `tfsdk:"engine_type"`
-	ID         types.String   `tfsdk:"id"`
-	KmsKeyId   types.String   `tfsdk:"kms_key_id"`
-	RoleARN    types.String   `tfsdk:"role_arn"`
-	Name       types.String   `tfsdk:"name"`
-	Tags       types.Map      `tfsdk:"tags"`
-	TagsAll    types.Map      `tfsdk:"tags_all"`
-	Timeouts   timeouts.Value `tfsdk:"timeouts"`
+	EngineType         fwtypes.StringEnum[awstypes.EngineType]     `tfsdk:"engine_type"`
+	ID                 types.String                                `tfsdk:"id"`
+	KmsKeyId           types.String                                `tfsdk:"kms_key_id"`
+	RoleARN            types.String                                `tfsdk:"role_arn"`
+	Name               types.String                                `tfsdk:"name"`
+	Tags               types.Map                                   `tfsdk:"tags"`
+	TagsAll            types.Map                                   `tfsdk:"tags_all"`
 }
 
 type definition struct {
@@ -406,16 +363,4 @@ func applicationHasChanges(_ context.Context, plan, state resourceApplicationDat
 		!plan.RoleARN.Equal(state.RoleARN) ||
 		!plan.Definition.Equal(state.Definition)
 
-}
-
-func (r *resourceApplicationData) refreshFromOutput(ctx context.Context, app *m2.GetApplicationOutput) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	//diags.Append(flex.Flatten(ctx, app, r)...)
-	r.ARN = flex.StringToFramework(ctx, app.ApplicationArn)
-	r.ID = flex.StringToFramework(ctx, app.ApplicationId)
-	r.ApplicationVersion = flex.Int32ToFramework(ctx, app.LatestVersion.ApplicationVersion)
-	r.Name = flex.StringToFramework(ctx, app.Name)
-	r.EngineType = flex.StringToFramework(ctx, (*string)(&app.EngineType))
-	return diags
 }
