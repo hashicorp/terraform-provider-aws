@@ -26,7 +26,7 @@ import (
 
 // @SDKResource("aws_datasync_location_nfs", name="Location NFS")
 // @Tags(identifierAttribute="id")
-func ResourceLocationNFS() *schema.Resource {
+func resourceLocationNFS() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationNFSCreate,
 		ReadWithoutTimeout:   resourceLocationNFSRead,
@@ -140,7 +140,7 @@ func resourceLocationNFSRead(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
-	output, err := FindLocationNFSByARN(ctx, conn, d.Id())
+	output, err := findLocationNFSByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DataSync Location NFS (%s) not found, removing from state", d.Id())
@@ -153,6 +153,10 @@ func resourceLocationNFSRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	uri := aws.StringValue(output.LocationUri)
+	serverHostName, err := globalIDFromLocationURI(uri)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
 	subdirectory, err := subdirectoryFromLocationURI(uri)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
@@ -165,6 +169,7 @@ func resourceLocationNFSRead(ctx context.Context, d *schema.ResourceData, meta i
 	if err := d.Set("on_prem_config", flattenOnPremConfig(output.OnPremConfig)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting on_prem_config: %s", err)
 	}
+	d.Set("server_hostname", serverHostName)
 	d.Set("subdirectory", subdirectory)
 	d.Set("uri", uri)
 
@@ -216,7 +221,7 @@ func resourceLocationNFSDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func FindLocationNFSByARN(ctx context.Context, conn *datasync.DataSync, arn string) (*datasync.DescribeLocationNfsOutput, error) {
+func findLocationNFSByARN(ctx context.Context, conn *datasync.DataSync, arn string) (*datasync.DescribeLocationNfsOutput, error) {
 	input := &datasync.DescribeLocationNfsInput{
 		LocationArn: aws.String(arn),
 	}

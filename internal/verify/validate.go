@@ -142,7 +142,7 @@ func ValidAccountID(v interface{}, k string) (ws []string, errors []error) {
 func ValidBase64String(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 
-	if !IsBase64Encoded([]byte(value)) {
+	if !itypes.IsBase64Encoded(value) {
 		errors = append(errors, fmt.Errorf(
 			"%q (%q) must be base64-encoded",
 			k, value))

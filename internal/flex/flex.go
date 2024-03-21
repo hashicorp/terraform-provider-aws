@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 const (
@@ -175,6 +176,13 @@ func ExpandStringValueMap(m map[string]interface{}) map[string]string {
 func ExpandBoolMap(m map[string]interface{}) map[string]*bool {
 	return tfmaps.ApplyToAllValues(m, func(v any) *bool {
 		return aws.Bool(v.(bool))
+	})
+}
+
+// Expands a map of string to interface to a map of string to *bool
+func ExpandBoolValueMap(m map[string]interface{}) map[string]bool {
+	return tfmaps.ApplyToAllValues(m, func(v any) bool {
+		return v.(bool)
 	})
 }
 
@@ -350,6 +358,11 @@ func StringToIntValue(v *string) int {
 	return i
 }
 
+// StringValueToBase64String converts a string to a Go base64 string pointer.
+func StringValueToBase64String(v string) *string {
+	return aws.String(itypes.Base64EncodeOnce([]byte(v)))
+}
+
 // StringValueToInt64 converts a string to a Go int64 pointer.
 // Invalid integer strings are converted to 0.
 func StringValueToInt64(v string) *int64 {
@@ -404,6 +417,30 @@ func DiffStringMaps(oldMap, newMap map[string]interface{}) (map[string]*string, 
 			remove[k] = aws.String(v)
 		} else if ok {
 			unchanged[k] = aws.String(v)
+			// Already present, so remove from new.
+			delete(add, k)
+		}
+	}
+
+	return add, remove, unchanged
+}
+
+// DiffStringValueMaps returns the set of keys and values that must be created, the set of keys
+// and values that must be destroyed, and the set of keys and values that are unchanged.
+func DiffStringValueMaps(oldMap, newMap map[string]interface{}) (map[string]string, map[string]string, map[string]string) {
+	// First, we're creating everything we have.
+	add := ExpandStringValueMap(newMap)
+
+	// Build the maps of what to remove and what is unchanged.
+	remove := make(map[string]string)
+	unchanged := make(map[string]string)
+	for k, v := range oldMap {
+		v := v.(string)
+		if old, ok := add[k]; !ok || old != v {
+			// Delete it!
+			remove[k] = v
+		} else if ok {
+			unchanged[k] = v
 			// Already present, so remove from new.
 			delete(add, k)
 		}
