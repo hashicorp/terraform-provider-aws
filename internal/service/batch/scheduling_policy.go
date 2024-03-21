@@ -19,11 +19,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_batch_scheduling_policy", name="Scheduling Policy")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go/service/batch.SchedulingPolicyDetail")
 func ResourceSchedulingPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSchedulingPolicyCreate,
@@ -97,6 +99,8 @@ func ResourceSchedulingPolicy() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
+
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
