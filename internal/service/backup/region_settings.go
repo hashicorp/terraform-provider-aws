@@ -67,18 +67,33 @@ func resourceRegionSettingsUpdate(ctx context.Context, d *schema.ResourceData, m
 	return append(diags, resourceRegionSettingsRead(ctx, d, meta)...)
 }
 
+func selectValues(source map[string]bool, values map[string]bool) map[string]bool {
+	result := make(map[string]bool)
+	for k, v := range source {
+		if values[k] {
+			result[k] = v
+		}
+	}
+	return result
+}
+
 func resourceRegionSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BackupConn(ctx)
-
 	output, err := conn.DescribeRegionSettingsWithContext(ctx, &backup.DescribeRegionSettingsInput{})
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Backup Region Settings (%s): %s", d.Id(), err)
 	}
-
-	d.Set("resource_type_opt_in_preference", aws.BoolValueMap(output.ResourceTypeOptInPreference))
-	d.Set("resource_type_management_preference", aws.BoolValueMap(output.ResourceTypeManagementPreference))
-
+	readSelectedValues(d, output.ResourceTypeManagementPreference, "resource_type_management_preference")
+	readSelectedValues(d, output.ResourceTypeOptInPreference, "resource_type_opt_in_preference")
 	return diags
+}
+
+func readSelectedValues(d *schema.ResourceData, output map[string]*bool, attribute string) {
+	if v, ok := d.GetOk(attribute); ok && len(v.(map[string]interface{})) > 0 {
+		desiredValues := aws.BoolValueMap(flex.ExpandBoolMap(v.(map[string]interface{})))
+		existingValues := aws.BoolValueMap(output)
+		values := selectValues(existingValues, desiredValues)
+		d.Set(attribute, values)
+	}
 }
