@@ -43,6 +43,11 @@ func TestAccCognitoIDPUserInGroup_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "username", userResourceName, "username"),
 				),
 			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
 		},
 	})
 }
