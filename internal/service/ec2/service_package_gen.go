@@ -365,6 +365,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_vpc_ipam_pool",
 		},
 		{
+			Factory:  DataSourceIPAMPoolCIDRAllocations,
+			TypeName: "aws_vpc_ipam_pool_cidr_allocations",
+		},
+		{
 			Factory:  DataSourceIPAMPoolCIDRs,
 			TypeName: "aws_vpc_ipam_pool_cidrs",
 		},
