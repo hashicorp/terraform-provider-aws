@@ -275,6 +275,35 @@ func ResourceDistributionConfiguration() *schema.Resource {
 							Required:     true,
 							ValidateFunc: validation.StringLenBetween(0, 1024),
 						},
+						"s3_export_configuration": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"disk_image_format": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(imagebuilder.DiskImageFormat_Values(), false),
+									},
+									"role_name": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringLenBetween(1, 1024),
+									},
+									"s3_bucket": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringLenBetween(1, 1024),
+									},
+									"s3_prefix": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringLenBetween(1, 1024),
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -528,6 +557,10 @@ func expandDistribution(tfMap map[string]interface{}) *imagebuilder.Distribution
 		apiObject.Region = aws.String(v)
 	}
 
+	if v, ok := tfMap["s3_export_configuration"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.S3ExportConfiguration = expandS3ExportConfiguration(v[0].(map[string]interface{}))
+	}
+
 	return apiObject
 }
 
@@ -722,6 +755,32 @@ func expandLaunchTemplateConfiguration(tfMap map[string]interface{}) *imagebuild
 	return apiObject
 }
 
+func expandS3ExportConfiguration(tfMap map[string]interface{}) *imagebuilder.S3ExportConfiguration {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &imagebuilder.S3ExportConfiguration{}
+
+	if v, ok := tfMap["disk_image_format"].(string); ok && len(v) > 0 {
+		apiObject.DiskImageFormat = aws.String(v)
+	}
+
+	if v, ok := tfMap["role_name"].(string); ok && v != "" {
+		apiObject.RoleName = aws.String(v)
+	}
+
+	if v, ok := tfMap["s3_bucket"].(string); ok && v != "" {
+		apiObject.S3Bucket = aws.String(v)
+	}
+
+	if v, ok := tfMap["s3_prefix"].(string); ok && v != "" {
+		apiObject.S3Prefix = aws.String(v)
+	}
+
+	return apiObject
+}
+
 func flattenAMIDistributionConfiguration(apiObject *imagebuilder.AmiDistributionConfiguration) map[string]interface{} {
 	if apiObject == nil {
 		return nil
@@ -825,6 +884,10 @@ func flattenDistribution(apiObject *imagebuilder.Distribution) map[string]interf
 
 	if v := apiObject.Region; v != nil {
 		tfMap["region"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.S3ExportConfiguration; v != nil {
+		tfMap["s3_export_configuration"] = []interface{}{flattenS3ExportConfiguration(v)}
 	}
 
 	return tfMap
@@ -993,6 +1056,32 @@ func flattenFastLaunchSnapshotConfiguration(apiObject *imagebuilder.FastLaunchSn
 
 	if v := apiObject.TargetResourceCount; v != nil {
 		tfMap["target_resource_count"] = aws.Int64Value(v)
+	}
+
+	return tfMap
+}
+
+func flattenS3ExportConfiguration(apiObject *imagebuilder.S3ExportConfiguration) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.DiskImageFormat; v != nil {
+		tfMap["disk_image_format"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.RoleName; v != nil {
+		tfMap["role_name"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.S3Bucket; v != nil {
+		tfMap["s3_bucket"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.S3Prefix; v != nil {
+		tfMap["s3_prefix"] = aws.StringValue(v)
 	}
 
 	return tfMap
