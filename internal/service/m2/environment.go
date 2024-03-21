@@ -68,7 +68,7 @@ func (r *resourceEnvironment) Schema(ctx context.Context, request resource.Schem
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"engine_type": schema.StringAttribute{
@@ -85,7 +85,16 @@ func (r *resourceEnvironment) Schema(ctx context.Context, request resource.Schem
 				},
 			},
 			"environment_id": framework.IDAttribute(),
-			"id":             framework.IDAttribute(),
+			// "high_availability_config": schema.ListAttribute{
+			// 	CustomType:  fwtypes.NewListNestedObjectTypeOf[highAvailabilityConfig](ctx),
+			// 	ElementType: fwtypes.NewObjectTypeOf[highAvailabilityConfig](ctx),
+			// 	Optional:    true,
+			// 	Computed:    true,
+			// 	PlanModifiers: []planmodifier.List{
+			// 		listplanmodifier.UseStateForUnknown(),
+			// 	},
+			// },
+			"id": framework.IDAttribute(),
 			"instance_type": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{

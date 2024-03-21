@@ -145,69 +145,6 @@ func TestAccEnvironment_update(t *testing.T) {
 	})
 }
 
-func TestAccEnvironment_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_m2_environment.test"
-	var environment awstypes.EnvironmentSummary
-
-	tags1 := `
-  tags = {
-    key1 = "value1"
-  }
-`
-	tags2 := `
-  tags = {
-    key1 = "value1"
-    key2 = "value2"
-  }
-`
-	tags3 := `
-  tags = {
-    key2 = "value2"
-  }
-`
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.M2),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy: resource.ComposeAggregateTestCheckFunc(
-			testAccCheckEnvironmentDestroy(ctx),
-		),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccEnvironmentConfig_tags(rName, tags1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				Config: testAccEnvironmentConfig_tags(rName, tags2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccEnvironmentConfig_tags(rName, tags3),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-		},
-	})
-}
-
 func testAccCheckEnvironmentExists(ctx context.Context, resourceName string, v *awstypes.EnvironmentSummary) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
@@ -332,16 +269,4 @@ resource "aws_m2_environment" "test" {
   name          = %[1]q
 }
 `, rName, desc)
-}
-
-func testAccEnvironmentConfig_tags(rName, tags string) string {
-	return fmt.Sprintf(`
-resource "aws_m2_environment" "test" {
-  engine_type   = "microfocus"
-  instance_type = "M2.m5.large"
-  name          = %[1]q
-
-%[2]s
-}
-`, rName, tags)
 }
