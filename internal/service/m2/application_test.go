@@ -261,61 +261,9 @@ resource "aws_s3_bucket" "test" {
   bucket        = %[1]q
   force_destroy = true
 }
-resource "aws_s3_object" "test" {
-  bucket       = aws_s3_bucket.test.id
-  key          = "test.json"
-  content_type = "application/json"
-  content = <<JSON
-{
-	"template-version": "2.0",
-	"source-locations": [
-	  {
-		"source-id": "s3-source",
-		"source-type": "s3",
-		"properties": {
-		  "s3-bucket": "my-bankdemo-bucket",
-		  "s3-key-prefix": "v1"
-		}
-	  }
-	],
-	"definition": {
-	  "listeners": [
-		{
-		  "port": 6000,
-		  "type": "tn3270"
-		}
-	  ],
-	  "batch-settings": {
-		"initiators": [
-		  {
-			"classes": ["A","B"],
-			"description": "initiator_AB...."
-		  },
-		  {
-			"classes": ["C","D"],
-			"description": "initiator_CD...."
-		  }
-		],
-		"jcl-file-location": "${aws_s3_bucket.test.id}/jcl"
-	  },
-	  "cics-settings": {
-		"binary-file-location": "${aws_s3_bucket.test.id}/transaction",
-		"csd-file-location": "${aws_s3_bucket.test.id}/RDEF",
-		"system-initialization-table": "BNKCICV"
-	  },
-	  "xa-resources": [
-		{
-		  "name": "XASQL",
-		  "module": "${aws_s3_bucket.test.id}/xa/ESPGSQLXA64.so"
-		}
-	  ]
-	}
-} 
-JSON
-}
 resource "aws_m2_application" "test" {
   definition {
-	s3_location = "s3://${aws_s3_object.test.bucket}/${aws_s3_object.test.key}"
+	s3_location = "s3://${aws_s3_bucket.test.bucket}/test"
   }
   engine_type   = "microfocus"
   name          = %[1]q

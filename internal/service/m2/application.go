@@ -143,47 +143,26 @@ func (r *resourceApplication) Schema(ctx context.Context, request resource.Schem
 
 func (r *resourceApplication) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	conn := r.Meta().M2Client(ctx)
-
 	var data resourceApplicationData
+
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	definition, diags := data.Definition.ToPtr(ctx)
-	response.Diagnostics.Append(diags...)
+	input := &m2.CreateApplicationInput{}
+
+	response.Diagnostics.Append(flex.Expand(ctx, data, input)...)
+
 	if response.Diagnostics.HasError() {
 		return
 	}
-	//content := &awstypes.DefinitionMemberContent{}
-	s3location := &awstypes.DefinitionMemberS3Location{}
-	//response.Diagnostics.Append(flex.Expand(ctx, definition, &content.Value)...)
-	response.Diagnostics.Append(flex.Expand(ctx, definition, s3location.Value)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-	print(*&s3location.Value)
-	input := &m2.CreateApplicationInput{
-		Definition: s3location,
-		EngineType: data.EngineType.ValueEnum(),
-		Name:       data.Name.ValueStringPointer(),
-		Tags:       getTagsIn(ctx),
-	}
 
-	// if len(content.Value) > 0 {
-	// 	input.Definition = content
-	// } else if len(s3location.Value) > 0 {
-	// 	input.Definition = s3location
-	// }
-	//response.Diagnostics.Append(flex.Expand(ctx, data, input)...)
-
-	//if response.Diagnostics.HasError() {
-	//	return
-	//}
-
-	//input.Tags = getTagsIn(ctx)
+	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateApplication(ctx, input)
+
 	if err != nil {
 		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.M2, create.ErrActionCreating, ResNameApplication, data.ApplicationId.ValueString(), err),
@@ -194,14 +173,12 @@ func (r *resourceApplication) Create(ctx context.Context, request resource.Creat
 
 	state := data
 	state.ID = flex.StringToFramework(ctx, output.ApplicationId)
-	state.ApplicationArn = flex.StringToFramework(ctx, output.ApplicationArn)
-	state.ApplicationVersion = flex.Int32ToFramework(ctx, output.ApplicationVersion)
 
-	//response.Diagnostics.Append(flex.Flatten(ctx, output, &state)...)
+	response.Diagnostics.Append(flex.Flatten(ctx, output, &state)...)
 
-	//if response.Diagnostics.HasError() {
-	//	return
-	//}
+	if response.Diagnostics.HasError() {
+		return
+	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
 }
@@ -232,16 +209,13 @@ func (r *resourceApplication) Read(ctx context.Context, request resource.ReadReq
 		return
 	}
 
-	//response.Diagnostics.Append(flex.Flatten(ctx, out, &data)...)
+	response.Diagnostics.Append(flex.Flatten(ctx, out, &data)...)
 
-	//if response.Diagnostics.HasError() {
-	//	return
-	//}
+	if response.Diagnostics.HasError() {
+		return
+	}
 
 	data.ID = flex.StringToFramework(ctx, out.ApplicationId)
-	data.ApplicationArn = flex.StringToFramework(ctx, out.ApplicationArn)
-	data.ApplicationVersion = flex.Int32ToFramework(ctx, out.ApplicationVersion)
-	//I Might have to flaatten more fields
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 
