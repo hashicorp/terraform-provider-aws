@@ -29,6 +29,7 @@ import (
 
 // @SDKResource("aws_iam_virtual_mfa_device", name="Virtual MFA Device")
 // @Tags(identifierAttribute="id", resourceType="VirtualMFADevice")
+// @Testing(existsType="github.com/aws/aws-sdk-go/service/iam.VirtualMFADevice", importIgnore="base_32_string_seed;qr_code_png")
 func resourceVirtualMFADevice() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVirtualMFADeviceCreate,
@@ -168,15 +169,12 @@ func resourceVirtualMFADeviceRead(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	// The call above returns empty tags.
-	output, err := conn.ListMFADeviceTagsWithContext(ctx, &iam.ListMFADeviceTagsInput{
-		SerialNumber: aws.String(d.Id()),
-	})
-
+	tags, err := virtualMFADeviceTags(ctx, conn, d.Id())
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing IAM Virtual MFA Device (%s) tags: %s", d.Id(), err)
 	}
 
-	setTagsOut(ctx, output.Tags)
+	setTagsOut(ctx, tags)
 
 	return diags
 }
@@ -265,4 +263,15 @@ func parseVirtualMFADeviceARN(s string) (path, name string, err error) {
 	}
 
 	return matches[1], matches[2], nil
+}
+
+func virtualMFADeviceTags(ctx context.Context, conn *iam.IAM, identifier string) ([]*iam.Tag, error) {
+	output, err := conn.ListMFADeviceTagsWithContext(ctx, &iam.ListMFADeviceTagsInput{
+		SerialNumber: aws.String(identifier),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return output.Tags, nil
 }

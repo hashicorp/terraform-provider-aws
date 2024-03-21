@@ -4,7 +4,7 @@
 	ctx := acctest.Context(t)
 	{{ if .ExistsTypeName -}}
 	var v {{ .ExistsTypeName }}
-	{{- end }}
+	{{ end -}}
 	resourceName := "{{ .TypeName}}.test"
 	{{ if .Generator -}}
 	rName := {{ .Generator }}
@@ -58,7 +58,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags(t *testing.T) {
 			{
 				Config: testAcc{{ .Name }}Config_tags1(rName, "key1", "value1"),
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -67,7 +67,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags(t *testing.T) {
 			{
 				Config: testAcc{{ .Name }}Config_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -77,7 +77,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags(t *testing.T) {
 			{
 				Config: testAcc{{ .Name }}Config_tags1(rName, "key2", "value2"),
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -86,7 +86,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags(t *testing.T) {
 			{
 				Config: testAcc{{ .Name }}Config_tags0(rName),
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -104,7 +104,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_null(t *testing.T) {
 			{
 				Config: testAcc{{ .Name }}Config_tagsNull(rName, "key1"),
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -127,14 +127,14 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_AddOnUpdate(t *testing.T) {
 			{
 				Config: testAcc{{ .Name }}Config_tags0(rName),
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
 				Config: testAcc{{ .Name }}Config_tags1(rName, "key1", "value1"),
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -153,7 +153,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_EmptyTag_OnCreate(t *testin
 			{
 				Config: testAcc{{ .Name }}Config_tags1(rName, "key1", ""),
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", ""),
 				),
@@ -162,7 +162,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_EmptyTag_OnCreate(t *testin
 			{
 				Config: testAcc{{ .Name }}Config_tags0(rName),
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -180,7 +180,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_EmptyTag_OnUpdate_Add(t *te
 			{
 				Config: testAcc{{ .Name }}Config_tags1(rName, "key1", "value1"),
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -188,7 +188,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_EmptyTag_OnUpdate_Add(t *te
 			{
 				Config: testAcc{{ .Name }}Config_tags2(rName, "key1", "value1", "key2", ""),
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", ""),
@@ -198,7 +198,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_EmptyTag_OnUpdate_Add(t *te
 			{
 				Config: testAcc{{ .Name }}Config_tags1(rName, "key1", "value1"),
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -217,7 +217,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_EmptyTag_OnUpdate_Replace(t
 			{
 				Config: testAcc{{ .Name }}Config_tags1(rName, "key1", "value1"),
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -225,7 +225,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_EmptyTag_OnUpdate_Replace(t
 			{
 				Config: testAcc{{ .Name }}Config_tags1(rName, "key1", ""),
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", ""),
 				),
@@ -247,7 +247,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_providerOnly(t 
 					testAcc{{ .Name }}Config_tags0(rName),
 				),
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
@@ -260,7 +260,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_providerOnly(t 
 					testAcc{{ .Name }}Config_tags0(rName),
 				),
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1updated"),
@@ -274,7 +274,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_providerOnly(t 
 					testAcc{{ .Name }}Config_tags0(rName),
 				),
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key2", "value2"),
@@ -287,7 +287,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_providerOnly(t 
 					testAcc{{ .Name }}Config_tags0(rName),
 				),
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 				),
@@ -309,7 +309,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_nonOverlapping(
 					testAcc{{ .Name }}Config_tags1(rName, "resourcekey1", "resourcevalue1"),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.resourcekey1", "resourcevalue1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
@@ -324,7 +324,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_nonOverlapping(
 					testAcc{{ .Name }}Config_tags2(rName, "resourcekey1", "resourcevalue1updated", "resourcekey2", "resourcevalue2"),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.resourcekey1", "resourcevalue1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.resourcekey2", "resourcevalue2"),
@@ -341,7 +341,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_nonOverlapping(
 					testAcc{{ .Name }}Config_tags0(rName),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 				),
@@ -363,7 +363,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_overlapping(t *
 					testAcc{{ .Name }}Config_tags1(rName, "overlapkey1", "resourcevalue1"),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.overlapkey1", "resourcevalue1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
@@ -377,7 +377,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_overlapping(t *
 					testAcc{{ .Name }}Config_tags2(rName, "overlapkey1", "resourcevalue1", "overlapkey2", "resourcevalue2"),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.overlapkey1", "resourcevalue1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.overlapkey2", "resourcevalue2"),
@@ -393,7 +393,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_overlapping(t *
 					testAcc{{ .Name }}Config_tags1(rName, "overlapkey1", "resourcevalue2"),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.overlapkey1", "resourcevalue2"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
@@ -414,7 +414,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_updateToProvide
 			{
 				Config: testAcc{{ .Name }}Config_tags1(rName, "key1", "value1"),
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
@@ -427,7 +427,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_updateToProvide
 					testAcc{{ .Name }}Config_tags0(rName),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
@@ -450,7 +450,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_updateToResourc
 					testAcc{{ .Name }}Config_tags0(rName),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "value1"),
@@ -459,7 +459,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_updateToResourc
 			{
 				Config: testAcc{{ .Name }}Config_tags1(rName, "key1", "value1"),
 				Check:  resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
@@ -483,7 +483,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_emptyResourceTa
 					testAcc{{ .Name }}Config_tags1(rName, "key1", ""),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", ""),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
@@ -507,7 +507,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_nullOverlapping
 					testAcc{{ .Name }}Config_tagsNull(rName, "key1"),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.key1", "providervalue1"),
@@ -530,7 +530,7 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_nullNonOverlapp
 					testAcc{{ .Name }}Config_tagsNull(rName, "resourcekey1"),
 				),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheck{{ .Name }}Exists(ctx, resourceName, &v),
+					testAccCheck{{ .Name }}Exists(ctx, resourceName {{ if .ExistsTypeName}}, &v{{ end }}),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.providerkey1", "providervalue1"),

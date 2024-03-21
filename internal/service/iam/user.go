@@ -28,6 +28,7 @@ import (
 
 // @SDKResource("aws_iam_user", name="User")
 // @Tags(identifierAttribute="id", resourceType="User")
+// @Testing(existsType="github.com/aws/aws-sdk-go/service/iam.User", importIgnore="force_destroy")
 func resourceUser() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserCreate,
@@ -525,4 +526,15 @@ func deleteServiceSpecificCredentials(ctx context.Context, conn *iam.IAM, userna
 	}
 
 	return nil
+}
+
+func userTags(ctx context.Context, conn *iam.IAM, identifier string) ([]*iam.Tag, error) {
+	output, err := conn.ListUserTagsWithContext(ctx, &iam.ListUserTagsInput{
+		UserName: aws.String(identifier),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return output.Tags, nil
 }
