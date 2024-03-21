@@ -897,7 +897,8 @@ func TestAccExample_basic(t *testing.T) {
 }
 
 func testAccExampleConfig() string {
-  return acctest.ConfigAlternateAccountProvider() + fmt.Sprintf(`
+  return acctest.ConfigCompose(
+    acctest.ConfigAlternateAccountProvider(), fmt.Sprintf(`
 # Cross account resources should be handled by the cross account provider.
 # The standardized provider block to use is awsalternate as seen below.
 resource "aws_cross_account_example" "test" {
@@ -911,7 +912,7 @@ resource "aws_cross_account_example" "test" {
 resource "aws_example" "test" {
   # ... configuration ...
 }
-`)
+`, ...))
 }
 ```
 
@@ -961,7 +962,8 @@ func TestAccExample_basic(t *testing.T) {
 }
 
 func testAccExampleConfig() string {
-  return acctest.ConfigMultipleRegionProvider(2) + fmt.Sprintf(`
+  return acctest.ConfigCompose(
+    acctest.ConfigMultipleRegionProvider(2), fmt.Sprintf(`
 # Cross region resources should be handled by the cross region provider.
 # The standardized provider is awsalternate as seen below.
 resource "aws_cross_region_example" "test" {
@@ -975,7 +977,7 @@ resource "aws_cross_region_example" "test" {
 resource "aws_example" "test" {
   # ... configuration ...
 }
-`)
+`, ...))
 }
 ```
 

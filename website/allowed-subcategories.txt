@@ -73,6 +73,7 @@ Data Exchange
 Data Pipeline
 DataSync
 Detective
+DevOps Guru
 Device Farm
 Direct Connect
 Directory Service

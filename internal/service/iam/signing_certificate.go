@@ -21,8 +21,8 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_iam_signing_certificate")
-func ResourceSigningCertificate() *schema.Resource {
+// @SDKResource("aws_iam_signing_certificate", name="Signing Certificate")
+func resourceSigningCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSigningCertificateCreate,
 		ReadWithoutTimeout:   resourceSigningCertificateRead,

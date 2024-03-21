@@ -5,7 +5,6 @@ package kms
 
 import (
 	"context"
-	"encoding/base64"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
@@ -15,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 // @SDKDataSource("aws_kms_secrets")
@@ -81,8 +81,7 @@ func dataSourceSecretsRead(ctx context.Context, d *schema.ResourceData, meta int
 		name := secret["name"].(string)
 
 		// base64 decode the payload
-		payload, err := base64.StdEncoding.DecodeString(secret["payload"].(string))
-
+		payload, err := itypes.Base64Decode(secret["payload"].(string))
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "invalid base64 value for secret (%s): %s", name, err)
 		}

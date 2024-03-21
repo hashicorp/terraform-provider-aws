@@ -10,21 +10,22 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cognitoidentity"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentity"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentity/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfcognitoidentity "github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidentity"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCognitoIdentityPool_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2 cognitoidentity.IdentityPool
+	var v1, v2 cognitoidentity.DescribeIdentityPoolOutput
 	name := sdkacctest.RandString(10)
 	updatedName := sdkacctest.RandString(10)
 	resourceName := "aws_cognito_identity_pool.test"
@@ -64,7 +65,7 @@ func TestAccCognitoIdentityPool_basic(t *testing.T) {
 
 func TestAccCognitoIdentityPool_DeveloperProviderName(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2 cognitoidentity.IdentityPool
+	var v1, v2 cognitoidentity.DescribeIdentityPoolOutput
 	name := sdkacctest.RandString(10)
 	developerProviderName := sdkacctest.RandString(10)
 	developerProviderNameUpdated := sdkacctest.RandString(10)
@@ -104,7 +105,7 @@ func TestAccCognitoIdentityPool_DeveloperProviderName(t *testing.T) {
 
 func TestAccCognitoIdentityPool_supportedLoginProviders(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2, v3 cognitoidentity.IdentityPool
+	var v1, v2, v3 cognitoidentity.DescribeIdentityPoolOutput
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_cognito_identity_pool.test"
 
@@ -154,7 +155,7 @@ func TestAccCognitoIdentityPool_supportedLoginProviders(t *testing.T) {
 
 func TestAccCognitoIdentityPool_openidConnectProviderARNs(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2, v3 cognitoidentity.IdentityPool
+	var v1, v2, v3 cognitoidentity.DescribeIdentityPoolOutput
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_cognito_identity_pool.test"
 
@@ -201,7 +202,7 @@ func TestAccCognitoIdentityPool_openidConnectProviderARNs(t *testing.T) {
 
 func TestAccCognitoIdentityPool_samlProviderARNs(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2, v3 cognitoidentity.IdentityPool
+	var v1, v2, v3 cognitoidentity.DescribeIdentityPoolOutput
 	name := sdkacctest.RandString(10)
 	idpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
 	secondaryIdpEntityId := fmt.Sprintf("https://%s", acctest.RandomDomainName())
@@ -252,7 +253,7 @@ func TestAccCognitoIdentityPool_samlProviderARNs(t *testing.T) {
 
 func TestAccCognitoIdentityPool_cognitoIdentityProviders(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2, v3 cognitoidentity.IdentityPool
+	var v1, v2, v3 cognitoidentity.DescribeIdentityPoolOutput
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_cognito_identity_pool.test"
 
@@ -314,7 +315,7 @@ func TestAccCognitoIdentityPool_cognitoIdentityProviders(t *testing.T) {
 
 func TestAccCognitoIdentityPool_addingNewProviderKeepsOldProvider(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2, v3 cognitoidentity.IdentityPool
+	var v1, v2, v3 cognitoidentity.DescribeIdentityPoolOutput
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_cognito_identity_pool.test"
 
@@ -363,7 +364,7 @@ func TestAccCognitoIdentityPool_addingNewProviderKeepsOldProvider(t *testing.T) 
 
 func TestAccCognitoIdentityPool_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2, v3 cognitoidentity.IdentityPool
+	var v1, v2, v3 cognitoidentity.DescribeIdentityPoolOutput
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_cognito_identity_pool.test"
 
@@ -411,7 +412,7 @@ func TestAccCognitoIdentityPool_tags(t *testing.T) {
 
 func TestAccCognitoIdentityPool_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1 cognitoidentity.IdentityPool
+	var v1 cognitoidentity.DescribeIdentityPoolOutput
 	name := sdkacctest.RandString(10)
 	resourceName := "aws_cognito_identity_pool.test"
 
@@ -433,7 +434,7 @@ func TestAccCognitoIdentityPool_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckPoolExists(ctx context.Context, n string, identityPool *cognitoidentity.IdentityPool) resource.TestCheckFunc {
+func testAccCheckPoolExists(ctx context.Context, n string, identityPool *cognitoidentity.DescribeIdentityPoolOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -444,9 +445,9 @@ func testAccCheckPoolExists(ctx context.Context, n string, identityPool *cognito
 			return errors.New("No Cognito Identity Pool ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityClient(ctx)
 
-		result, err := conn.DescribeIdentityPoolWithContext(ctx, &cognitoidentity.DescribeIdentityPoolInput{
+		result, err := conn.DescribeIdentityPool(ctx, &cognitoidentity.DescribeIdentityPoolInput{
 			IdentityPoolId: aws.String(rs.Primary.ID),
 		})
 		if err != nil {
@@ -465,18 +466,18 @@ func testAccCheckPoolExists(ctx context.Context, n string, identityPool *cognito
 
 func testAccCheckPoolDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cognito_identity_pool" {
 				continue
 			}
 
-			_, err := conn.DescribeIdentityPoolWithContext(ctx, &cognitoidentity.DescribeIdentityPoolInput{
+			_, err := conn.DescribeIdentityPool(ctx, &cognitoidentity.DescribeIdentityPoolInput{
 				IdentityPoolId: aws.String(rs.Primary.ID),
 			})
 
-			if tfawserr.ErrCodeEquals(err, cognitoidentity.ErrCodeResourceNotFoundException) {
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				continue
 			}
 
@@ -490,13 +491,13 @@ func testAccCheckPoolDestroy(ctx context.Context) resource.TestCheckFunc {
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIdentityClient(ctx)
 
 	input := &cognitoidentity.ListIdentityPoolsInput{
-		MaxResults: aws.Int64(1),
+		MaxResults: aws.Int32(1),
 	}
 
-	_, err := conn.ListIdentityPoolsWithContext(ctx, input)
+	_, err := conn.ListIdentityPools(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -507,7 +508,7 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccCheckPoolRecreated(i, j *cognitoidentity.IdentityPool) resource.TestCheckFunc {
+func testAccCheckPoolRecreated(i, j *cognitoidentity.DescribeIdentityPoolOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if poolIdentityEqual(i, j) {
 			return fmt.Errorf("Cognito Identity Pool not recreated")
@@ -516,7 +517,7 @@ func testAccCheckPoolRecreated(i, j *cognitoidentity.IdentityPool) resource.Test
 	}
 }
 
-func testAccCheckPoolNotRecreated(i, j *cognitoidentity.IdentityPool) resource.TestCheckFunc {
+func testAccCheckPoolNotRecreated(i, j *cognitoidentity.DescribeIdentityPoolOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if !poolIdentityEqual(i, j) {
 			return fmt.Errorf("Cognito Identity Pool recreated")
@@ -525,11 +526,11 @@ func testAccCheckPoolNotRecreated(i, j *cognitoidentity.IdentityPool) resource.T
 	}
 }
 
-func poolIdentity(v *cognitoidentity.IdentityPool) string {
-	return aws.StringValue(v.IdentityPoolId)
+func poolIdentity(v *cognitoidentity.DescribeIdentityPoolOutput) string {
+	return aws.ToString(v.IdentityPoolId)
 }
 
-func poolIdentityEqual(i, j *cognitoidentity.IdentityPool) bool {
+func poolIdentityEqual(i, j *cognitoidentity.DescribeIdentityPoolOutput) bool {
 	return poolIdentity(i) == poolIdentity(j)
 }
 

@@ -1282,7 +1282,7 @@ func sweepNetworkACLs(region string) error {
 				continue
 			}
 
-			r := ResourceNetworkACL()
+			r := resourceNetworkACL()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.NetworkAclId))
 
@@ -2156,7 +2156,7 @@ func sweepTransitGatewayPeeringAttachments(region string) error {
 				continue
 			}
 
-			r := ResourceTransitGatewayPeeringAttachment()
+			r := resourceTransitGatewayPeeringAttachment()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.TransitGatewayAttachmentId))
 
@@ -2575,7 +2575,7 @@ func sweepVPNConnections(region string) error {
 			continue
 		}
 
-		r := ResourceVPNConnection()
+		r := resourceVPNConnection()
 		d := r.Data(nil)
 		d.SetId(aws.StringValue(v.VpnConnectionId))
 
@@ -2617,7 +2617,7 @@ func sweepVPNGateways(region string) error {
 			continue
 		}
 
-		r := ResourceVPNGateway()
+		r := resourceVPNGateway()
 		d := r.Data(nil)
 		d.SetId(aws.StringValue(v.VpnGatewayId))
 
@@ -2667,7 +2667,7 @@ func sweepCustomerGateways(region string) error {
 			continue
 		}
 
-		r := ResourceCustomerGateway()
+		r := resourceCustomerGateway()
 		d := r.Data(nil)
 		d.SetId(aws.StringValue(v.CustomerGatewayId))
 

@@ -8,8 +8,7 @@ import (
 	"log"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/elasticbeanstalk"
+	"github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -45,28 +44,28 @@ func DataSourceSolutionStack() *schema.Resource {
 // dataSourceSolutionStackRead performs the API lookup.
 func dataSourceSolutionStackRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ElasticBeanstalkConn(ctx)
+	conn := meta.(*conns.AWSClient).ElasticBeanstalkClient(ctx)
 
 	nameRegex := d.Get("name_regex")
 
 	var params *elasticbeanstalk.ListAvailableSolutionStacksInput
 
 	log.Printf("[DEBUG] Reading Elastic Beanstalk Solution Stack: %s", params)
-	resp, err := conn.ListAvailableSolutionStacksWithContext(ctx, params)
+	resp, err := conn.ListAvailableSolutionStacks(ctx, params)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Elastic Beanstalk Solution Stack: %s", err)
 	}
 
-	var filteredSolutionStacks []*string
+	var filteredSolutionStacks []string
 
 	r := regexache.MustCompile(nameRegex.(string))
 	for _, solutionStack := range resp.SolutionStacks {
-		if r.MatchString(*solutionStack) {
+		if r.MatchString(solutionStack) {
 			filteredSolutionStacks = append(filteredSolutionStacks, solutionStack)
 		}
 	}
 
-	var solutionStack *string
+	var solutionStack string
 	if len(filteredSolutionStacks) < 1 {
 		return sdkdiag.AppendErrorf(diags, "Your query returned no results. Please change your search criteria and try again.")
 	}
@@ -85,13 +84,13 @@ func dataSourceSolutionStackRead(ctx context.Context, d *schema.ResourceData, me
 		}
 	}
 
-	d.SetId(aws.StringValue(solutionStack))
+	d.SetId(solutionStack)
 	d.Set("name", solutionStack)
 
 	return diags
 }
 
 // Returns the most recent solution stack out of a slice of stacks.
-func mostRecentSolutionStack(solutionStacks []*string) *string {
+func mostRecentSolutionStack(solutionStacks []string) string {
 	return solutionStacks[0]
 }

@@ -23,8 +23,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_iam_group_policy")
-func ResourceGroupPolicy() *schema.Resource {
+// @SDKResource("aws_iam_group_policy", name="Group Policy")
+func resourceGroupPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGroupPolicyPut,
 		ReadWithoutTimeout:   resourceGroupPolicyRead,

@@ -16,6 +16,7 @@ import (
 	"github.com/aws/smithy-go/middleware"
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -653,7 +654,7 @@ func TestIntentAutoFlex(t *testing.T) {
 		BotVersion:             types.StringValue(testString),
 		ClosingSetting:         fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &intentClosingSettingTF),
 		ConfirmationSetting:    fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &intentConfirmationSettingTF),
-		CreationDateTime:       fwtypes.TimestampValue(testTimeStr),
+		CreationDateTime:       timetypes.NewRFC3339ValueMust(testTimeStr),
 		Description:            types.StringValue(testString),
 		DialogCodeHook:         fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &dialogCodeHookSettingsTF),
 		FulfillmentCodeHook:    fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &fulfillmentCodeHookSettingsTF),
@@ -661,7 +662,7 @@ func TestIntentAutoFlex(t *testing.T) {
 		InitialResponseSetting: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &initialResponseSettingTF),
 		InputContext:           fwtypes.NewListNestedObjectValueOfValueSliceMust[tflexv2models.InputContext](ctx, inputContextsTF),
 		KendraConfiguration:    fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &kendraConfigurationTF),
-		LastUpdatedDateTime:    fwtypes.TimestampValue(testTimeStr),
+		LastUpdatedDateTime:    timetypes.NewRFC3339ValueMust(testTimeStr),
 		LocaleID:               types.StringValue(testString),
 		Name:                   types.StringValue(testString),
 		OutputContext:          fwtypes.NewListNestedObjectValueOfValueSliceMust[tflexv2models.OutputContext](ctx, outputContextsTF),
