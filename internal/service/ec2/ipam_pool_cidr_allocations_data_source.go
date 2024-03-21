@@ -31,6 +31,10 @@ func DataSourceIPAMPoolCIDRAllocations() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 			},
+			"ipam_pool_allocation_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			"ipam_pool_allocations": {
 				Type:     schema.TypeSet,
 				Computed: true,
@@ -76,9 +80,16 @@ func dataSourceIPAMPoolCIDRAllocationsRead(ctx context.Context, d *schema.Resour
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	poolID := d.Get("ipam_pool_id").(string)
+	var allocationID string
+	if v, ok := d.GetOk("ipam_pool_allocation_id"); ok {
+		allocationID = v.(string)
+	}
 
 	input := &ec2.GetIpamPoolAllocationsInput{
 		IpamPoolId: aws.String(poolID),
+	}
+	if allocationID != "" {
+		input.IpamPoolAllocationId = aws.String(allocationID)
 	}
 
 	input.Filters = append(input.Filters, newCustomFilterListV2(
