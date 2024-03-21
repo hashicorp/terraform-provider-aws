@@ -1372,7 +1372,11 @@ func resourceTopicRuleUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			TopicRulePayload: expandTopicRulePayload(d),
 		}
 
-		_, err := conn.ReplaceTopicRuleWithContext(ctx, input)
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
+			func() (interface{}, error) {
+				return conn.ReplaceTopicRuleWithContext(ctx, input)
+			},
+			iot.ErrCodeInvalidRequestException, "sts:AssumeRole")
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "replacing IoT Topic Rule (%s): %s", d.Id(), err)
