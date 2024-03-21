@@ -30,13 +30,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -300,7 +300,7 @@ func (r *environmentResource) Create(ctx context.Context, request resource.Creat
 	}
 
 	// Additional fields.
-	input.ClientToken = aws.String(id.UniqueId())
+	input.ClientToken = aws.String(sdkid.UniqueId())
 	input.Tags = getTagsIn(ctx)
 	input.StorageConfigurations = storageConfigurations
 
@@ -313,7 +313,7 @@ func (r *environmentResource) Create(ctx context.Context, request resource.Creat
 	}
 
 	// Set values for unknowns.
-	data.EnvironmentID = flex.StringToFramework(ctx, output.EnvironmentId)
+	data.EnvironmentID = fwflex.StringToFramework(ctx, output.EnvironmentId)
 	data.setID()
 
 	env, err := waitEnvironmentCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
@@ -333,29 +333,37 @@ func (r *environmentResource) Create(ctx context.Context, request resource.Creat
 }
 
 func (r *environmentResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	conn := r.Meta().M2Client(ctx)
-
-	var state environmentResourceModel
-	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+	var data environmentResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findEnvironmentByID(ctx, conn, state.ID.ValueString())
-	if tfresource.NotFound(err) {
-		response.State.RemoveResource(ctx)
-		return
-	}
-	if err != nil {
-		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.M2, create.ErrActionSetting, ResNameEnvironment, state.ID.String(), err),
-			err.Error(),
-		)
+	if err := data.InitFromID(); err != nil {
+		response.Diagnostics.AddError("parsing resource ID", err.Error())
+
 		return
 	}
 
-	response.Diagnostics.Append(state.refreshFromOutput(ctx, out)...)
-	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
+	conn := r.Meta().M2Client(ctx)
+
+	out, err := findEnvironmentByID(ctx, conn, data.ID.ValueString())
+
+	if tfresource.NotFound(err) {
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
+		return
+	}
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading Mainframe Modernization Environment (%s)", data.ID.ValueString()), err.Error())
+
+		return
+	}
+
+	response.Diagnostics.Append(data.refreshFromOutput(ctx, out)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 func (r *environmentResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
@@ -389,7 +397,7 @@ func (r *environmentResource) Update(ctx context.Context, request resource.Updat
 		return
 	}
 
-	plan.ID = flex.StringToFramework(ctx, out.EnvironmentId)
+	plan.ID = fwflex.StringToFramework(ctx, out.EnvironmentId)
 
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
 	env, err := waitEnvironmentUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
@@ -401,7 +409,7 @@ func (r *environmentResource) Update(ctx context.Context, request resource.Updat
 		return
 	}
 
-	response.Diagnostics.Append(flex.Flatten(ctx, env, &plan)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, env, &plan)...)
 
 	if response.Diagnostics.HasError() {
 		return
@@ -412,28 +420,28 @@ func (r *environmentResource) Update(ctx context.Context, request resource.Updat
 
 func (r *environmentResource) updateEnvironmentInput(ctx context.Context, plan, state environmentResourceModel, resp *resource.UpdateResponse) (*m2.UpdateEnvironmentInput, bool) {
 	in := &m2.UpdateEnvironmentInput{
-		EnvironmentId: flex.StringFromFramework(ctx, plan.ID),
+		EnvironmentId: fwflex.StringFromFramework(ctx, plan.ID),
 	}
 
 	if r.hasChangesForMaintenance(plan, state) {
 		in.ApplyDuringMaintenanceWindow = true
-		in.EngineVersion = flex.StringFromFramework(ctx, plan.EngineVersion)
+		in.EngineVersion = fwflex.StringFromFramework(ctx, plan.EngineVersion)
 	} else if r.hasChanges(plan, state) {
 		if !plan.EngineVersion.Equal(state.EngineVersion) {
-			in.EngineVersion = flex.StringFromFramework(ctx, plan.EngineVersion)
+			in.EngineVersion = fwflex.StringFromFramework(ctx, plan.EngineVersion)
 		}
 		if !plan.InstanceType.Equal(state.InstanceType) {
-			in.InstanceType = flex.StringFromFramework(ctx, plan.InstanceType)
+			in.InstanceType = fwflex.StringFromFramework(ctx, plan.InstanceType)
 		}
 		if !plan.PreferredMaintenanceWindow.Equal(state.PreferredMaintenanceWindow) {
-			in.PreferredMaintenanceWindow = flex.StringFromFramework(ctx, plan.PreferredMaintenanceWindow)
+			in.PreferredMaintenanceWindow = fwflex.StringFromFramework(ctx, plan.PreferredMaintenanceWindow)
 		}
 
 		if !plan.HighAvailabilityConfig.Equal(state.HighAvailabilityConfig) {
 			v, d := plan.HighAvailabilityConfig.ToSlice(ctx)
 			resp.Diagnostics.Append(d...)
 			if len(v) > 0 {
-				in.DesiredCapacity = flex.Int32FromFramework(ctx, v[0].DesiredCapacity)
+				in.DesiredCapacity = fwflex.Int32FromFramework(ctx, v[0].DesiredCapacity)
 			}
 		}
 	} else {
@@ -447,37 +455,31 @@ func (r *environmentResource) updateEnvironmentInput(ctx context.Context, plan, 
 }
 
 func (r *environmentResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	conn := r.Meta().M2Client(ctx)
-
-	var state environmentResourceModel
-	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+	var data environmentResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	in := &m2.DeleteEnvironmentInput{
-		EnvironmentId: aws.String(state.ID.ValueString()),
-	}
+	conn := r.Meta().M2Client(ctx)
 
-	_, err := conn.DeleteEnvironment(ctx, in)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
-		}
-		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.M2, create.ErrActionDeleting, ResNameEnvironment, state.ID.String(), err),
-			err.Error(),
-		)
+	_, err := conn.DeleteEnvironment(ctx, &m2.DeleteEnvironmentInput{
+		EnvironmentId: aws.String(data.ID.ValueString()),
+	})
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
 
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitEnvironmentDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
 	if err != nil {
-		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.M2, create.ErrActionWaitingForDeletion, ResNameEnvironment, state.ID.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Mainframe Modernization Environment (%s)", data.ID.ValueString()), err.Error())
+
+		return
+	}
+
+	if _, err := waitEnvironmentDeleted(ctx, conn, data.ID.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Mainframe Modernization Environment (%s) delete", data.ID.ValueString()), err.Error())
+
 		return
 	}
 }
@@ -583,9 +585,9 @@ func waitEnvironmentDeleted(ctx context.Context, conn *m2.Client, id string, tim
 func (rd *environmentResourceModel) refreshFromOutput(ctx context.Context, out *m2.GetEnvironmentOutput) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	diags.Append(flex.Flatten(ctx, out, rd)...)
-	rd.ARN = flex.StringToFramework(ctx, out.EnvironmentArn)
-	rd.ID = flex.StringToFramework(ctx, out.EnvironmentId)
+	diags.Append(fwflex.Flatten(ctx, out, rd)...)
+	rd.ARN = fwflex.StringToFramework(ctx, out.EnvironmentArn)
+	rd.ID = fwflex.StringToFramework(ctx, out.EnvironmentId)
 	storage, d := flattenStorageConfigurations(ctx, out.StorageConfigurations)
 	diags.Append(d...)
 	rd.StorageConfiguration = storage
@@ -693,8 +695,8 @@ func expandStorageConfigurationMemberEFS(ctx context.Context, efsStorageConfigur
 
 	return &awstypes.StorageConfigurationMemberEfs{
 		Value: awstypes.EfsStorageConfiguration{
-			FileSystemId: flex.StringFromFramework(ctx, efsStorageConfigurationModels[0].FileSystemID),
-			MountPoint:   flex.StringFromFramework(ctx, efsStorageConfigurationModels[0].MountPoint),
+			FileSystemId: fwflex.StringFromFramework(ctx, efsStorageConfigurationModels[0].FileSystemID),
+			MountPoint:   fwflex.StringFromFramework(ctx, efsStorageConfigurationModels[0].MountPoint),
 		},
 	}
 }
@@ -706,8 +708,8 @@ func expandStorageConfigurationMemberFSX(ctx context.Context, fsxStorageConfigur
 
 	return &awstypes.StorageConfigurationMemberFsx{
 		Value: awstypes.FsxStorageConfiguration{
-			FileSystemId: flex.StringFromFramework(ctx, fsxStorageConfigurationModels[0].FileSystemID),
-			MountPoint:   flex.StringFromFramework(ctx, fsxStorageConfigurationModels[0].MountPoint),
+			FileSystemId: fwflex.StringFromFramework(ctx, fsxStorageConfigurationModels[0].FileSystemID),
+			MountPoint:   fwflex.StringFromFramework(ctx, fsxStorageConfigurationModels[0].MountPoint),
 		},
 	}
 }
@@ -741,8 +743,8 @@ func flattenMountPoint(ctx context.Context, fileSystemId, mountPoint *string, mo
 	var diags diag.Diagnostics
 
 	obj := map[string]attr.Value{
-		"file_system_id": flex.StringToFramework(ctx, fileSystemId),
-		"mount_point":    flex.StringToFramework(ctx, mountPoint),
+		"file_system_id": fwflex.StringToFramework(ctx, fileSystemId),
+		"mount_point":    fwflex.StringToFramework(ctx, mountPoint),
 	}
 
 	mountValue, d := types.ObjectValue(mountAttrTypes, obj)
