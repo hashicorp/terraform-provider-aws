@@ -8,12 +8,15 @@ import (
 	"errors"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/m2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/m2/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -67,22 +70,23 @@ func (r *environmentResource) Metadata(_ context.Context, request resource.Metad
 func (r *environmentResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
 			"apply_changes_during_maintenance_window": schema.BoolAttribute{
 				Optional: true,
 			},
-			"client_token": schema.StringAttribute{
-				Optional: true,
-			},
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"description": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
+				Validators: []validator.String{
+					stringvalidator.LengthAtMost(500),
+				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"engine_type": schema.StringAttribute{
-				Required: true,
+				CustomType: fwtypes.StringEnumType[awstypes.EngineType](),
+				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -90,21 +94,27 @@ func (r *environmentResource) Schema(ctx context.Context, request resource.Schem
 			"engine_version": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(regexache.MustCompile(`^\S{1,10}$`), ""),
+				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"environment_id": framework.IDAttribute(),
-			"force_update": schema.BoolAttribute{
+			"force_update": schema.BoolAttribute{ // TODO ????
 				Optional: true,
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"instance_type": schema.StringAttribute{
-				Required:   true,
-				Validators: []validator.String{},
+				Required: true,
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(regexache.MustCompile(`^\S{1,20}$`), ""),
+				},
 			},
 			"kms_key_id": schema.StringAttribute{
-				Optional: true,
+				CustomType: fwtypes.ARNType,
+				Optional:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -114,11 +124,14 @@ func (r *environmentResource) Schema(ctx context.Context, request resource.Schem
 			},
 			"name": schema.StringAttribute{
 				Required: true,
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_\-]{1,59}$`), ""),
+				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"preferred_maintenance_window": schema.StringAttribute{
+			"preferred_maintenance_window": schema.StringAttribute{ // TODO Custom type?
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
@@ -129,31 +142,34 @@ func (r *environmentResource) Schema(ctx context.Context, request resource.Schem
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
 					boolplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"security_groups": schema.SetAttribute{
+			"security_group_ids": schema.SetAttribute{
+				CustomType:  fwtypes.SetOfStringType,
+				ElementType: types.StringType,
 				Optional:    true,
 				Computed:    true,
-				ElementType: types.StringType,
 				Validators: []validator.Set{
 					setvalidator.SizeAtLeast(1),
 				},
 				PlanModifiers: []planmodifier.Set{
-					setplanmodifier.UseStateForUnknown(),
 					setplanmodifier.RequiresReplace(),
+					setplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"subnet_ids": schema.SetAttribute{
+				CustomType:  fwtypes.SetOfStringType,
+				ElementType: types.StringType,
 				Optional:    true,
 				Computed:    true,
-				ElementType: types.StringType,
 				Validators: []validator.Set{
 					setvalidator.SizeAtLeast(2),
 				},
 				PlanModifiers: []planmodifier.Set{
-					setplanmodifier.UseStateForUnknown(),
 					setplanmodifier.RequiresReplace(),
+					setplanmodifier.UseStateForUnknown(),
 				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
@@ -161,14 +177,18 @@ func (r *environmentResource) Schema(ctx context.Context, request resource.Schem
 		},
 		Blocks: map[string]schema.Block{
 			"high_availability_config": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[haData](ctx),
+				CustomType: fwtypes.NewListNestedObjectTypeOf[highAvailabilityConfigModel](ctx),
 				Validators: []validator.List{
+					listvalidator.IsRequired(),
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"desired_capacity": schema.Int64Attribute{
 							Required: true,
+							Validators: []validator.Int64{
+								int64validator.Between(1, 100),
+							},
 						},
 					},
 				},
@@ -227,7 +247,7 @@ func (r *environmentResource) Schema(ctx context.Context, request resource.Schem
 func (r *environmentResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	conn := r.Meta().M2Client(ctx)
 
-	var plan resourceEnvironmentData
+	var plan environmentResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -237,15 +257,7 @@ func (r *environmentResource) Create(ctx context.Context, request resource.Creat
 
 	response.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
 
-	var clientToken string
-	if plan.ClientToken.IsNull() || plan.ClientToken.IsUnknown() {
-		clientToken = id.UniqueId()
-	} else {
-		clientToken = plan.ClientToken.ValueString()
-	}
-
-	in.ClientToken = aws.String(clientToken)
-
+	in.ClientToken = aws.String(id.UniqueId())
 	in.Tags = getTagsIn(ctx)
 
 	if !plan.StorageConfiguration.IsNull() {
@@ -295,7 +307,7 @@ func (r *environmentResource) Create(ctx context.Context, request resource.Creat
 func (r *environmentResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	conn := r.Meta().M2Client(ctx)
 
-	var state resourceEnvironmentData
+	var state environmentResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -321,7 +333,7 @@ func (r *environmentResource) Read(ctx context.Context, request resource.ReadReq
 func (r *environmentResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	conn := r.Meta().M2Client(ctx)
 
-	var plan, state resourceEnvironmentData
+	var plan, state environmentResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 	if response.Diagnostics.HasError() {
@@ -370,7 +382,7 @@ func (r *environmentResource) Update(ctx context.Context, request resource.Updat
 	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
 }
 
-func (r *environmentResource) updateEnvironmentInput(ctx context.Context, plan, state resourceEnvironmentData, resp *resource.UpdateResponse) (*m2.UpdateEnvironmentInput, bool) {
+func (r *environmentResource) updateEnvironmentInput(ctx context.Context, plan, state environmentResourceModel, resp *resource.UpdateResponse) (*m2.UpdateEnvironmentInput, bool) {
 	in := &m2.UpdateEnvironmentInput{
 		EnvironmentId: flex.StringFromFramework(ctx, plan.ID),
 	}
@@ -409,7 +421,7 @@ func (r *environmentResource) updateEnvironmentInput(ctx context.Context, plan, 
 func (r *environmentResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	conn := r.Meta().M2Client(ctx)
 
-	var state resourceEnvironmentData
+	var state environmentResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -533,7 +545,7 @@ func findEnvironmentByID(ctx context.Context, conn *m2.Client, id string) (*m2.G
 	return out, nil
 }
 
-func (rd *resourceEnvironmentData) refreshFromOutput(ctx context.Context, out *m2.GetEnvironmentOutput) diag.Diagnostics {
+func (rd *environmentResourceModel) refreshFromOutput(ctx context.Context, out *m2.GetEnvironmentOutput) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	diags.Append(flex.Flatten(ctx, out, rd)...)
@@ -546,29 +558,28 @@ func (rd *resourceEnvironmentData) refreshFromOutput(ctx context.Context, out *m
 	return diags
 }
 
-type resourceEnvironmentData struct {
-	ARN                          types.String                            `tfsdk:"arn"`
-	ApplyDuringMaintenanceWindow types.Bool                              `tfsdk:"apply_changes_during_maintenance_window"`
-	ClientToken                  types.String                            `tfsdk:"client_token"`
-	Description                  types.String                            `tfsdk:"description"`
-	ID                           types.String                            `tfsdk:"id"`
-	EngineType                   types.String                            `tfsdk:"engine_type"`
-	EngineVersion                types.String                            `tfsdk:"engine_version"`
-	EnvironmentId                types.String                            `tfsdk:"environment_id"`
-	ForceUpdate                  types.Bool                              `tfsdk:"force_update"`
-	HighAvailabilityConfig       fwtypes.ListNestedObjectValueOf[haData] `tfsdk:"high_availability_config"`
-	InstanceType                 types.String                            `tfsdk:"instance_type"`
-	KmsKeyId                     types.String                            `tfsdk:"kms_key_id"`
-	LoadBalancerArn              types.String                            `tfsdk:"load_balancer_arn"`
-	PreferredMaintenanceWindow   types.String                            `tfsdk:"preferred_maintenance_window"`
-	PubliclyAccessible           types.Bool                              `tfsdk:"publicly_accessible"`
-	SecurityGroupIds             types.Set                               `tfsdk:"security_groups"`
-	StorageConfiguration         types.List                              `tfsdk:"storage_configuration"`
-	SubnetIds                    types.Set                               `tfsdk:"subnet_ids"`
-	Name                         types.String                            `tfsdk:"name"`
-	Tags                         types.Map                               `tfsdk:"tags"`
-	TagsAll                      types.Map                               `tfsdk:"tags_all"`
-	Timeouts                     timeouts.Value                          `tfsdk:"timeouts"`
+type environmentResourceModel struct {
+	ARN                          types.String                                                 `tfsdk:"arn"`
+	ApplyDuringMaintenanceWindow types.Bool                                                   `tfsdk:"apply_changes_during_maintenance_window"`
+	Description                  types.String                                                 `tfsdk:"description"`
+	EngineType                   fwtypes.StringEnum[awstypes.EngineType]                      `tfsdk:"engine_type"`
+	EngineVersion                types.String                                                 `tfsdk:"engine_version"`
+	EnvironmentID                types.String                                                 `tfsdk:"environment_id"`
+	ForceUpdate                  types.Bool                                                   `tfsdk:"force_update"`
+	HighAvailabilityConfig       fwtypes.ListNestedObjectValueOf[highAvailabilityConfigModel] `tfsdk:"high_availability_config"`
+	ID                           types.String                                                 `tfsdk:"id"`
+	InstanceType                 types.String                                                 `tfsdk:"instance_type"`
+	KmsKeyID                     fwtypes.ARN                                                  `tfsdk:"kms_key_id"`
+	LoadBalancerArn              types.String                                                 `tfsdk:"load_balancer_arn"`
+	Name                         types.String                                                 `tfsdk:"name"`
+	PreferredMaintenanceWindow   types.String                                                 `tfsdk:"preferred_maintenance_window"`
+	PubliclyAccessible           types.Bool                                                   `tfsdk:"publicly_accessible"`
+	SecurityGroupIDs             fwtypes.SetValueOf[types.String]                             `tfsdk:"security_group_ids"`
+	StorageConfiguration         types.List                                                   `tfsdk:"storage_configuration"`
+	SubnetIDs                    fwtypes.SetValueOf[types.String]                             `tfsdk:"subnet_ids"`
+	Tags                         types.Map                                                    `tfsdk:"tags"`
+	TagsAll                      types.Map                                                    `tfsdk:"tags_all"`
+	Timeouts                     timeouts.Value                                               `tfsdk:"timeouts"`
 }
 
 type storageConfiguration struct {
@@ -586,7 +597,7 @@ type fsx struct {
 	MountPoint   types.String `tfsdk:"mount_point"`
 }
 
-type haData struct {
+type highAvailabilityConfigModel struct {
 	DesiredCapacity types.Int64 `tfsdk:"desired_capacity"`
 }
 
@@ -719,13 +730,13 @@ func flattenMountPoint(ctx context.Context, fileSystemId, mountPoint *string, mo
 	return configValue, diags
 }
 
-func (r *environmentResource) hasChanges(plan, state resourceEnvironmentData) bool {
+func (r *environmentResource) hasChanges(plan, state environmentResourceModel) bool {
 	return !plan.HighAvailabilityConfig.Equal(state.HighAvailabilityConfig) ||
 		!plan.EngineVersion.Equal(state.EngineVersion) ||
 		!plan.InstanceType.Equal(state.EngineType) ||
 		!plan.PreferredMaintenanceWindow.Equal(state.PreferredMaintenanceWindow)
 }
 
-func (r *environmentResource) hasChangesForMaintenance(plan, state resourceEnvironmentData) bool {
+func (r *environmentResource) hasChangesForMaintenance(plan, state environmentResourceModel) bool {
 	return plan.ApplyDuringMaintenanceWindow.ValueBool() && !plan.EngineVersion.Equal(state.EngineVersion)
 }
