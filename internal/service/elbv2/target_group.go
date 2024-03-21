@@ -390,11 +390,8 @@ func resourceTargetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 			input.ProtocolVersion = aws.String(d.Get("protocol_version").(string))
 		}
 		input.VpcId = aws.String(d.Get("vpc_id").(string))
-
-		if targetType == elbv2.TargetTypeEnumIp {
-			if v, ok := d.GetOk("ip_address_type"); ok {
-				input.IpAddressType = aws.String(v.(string))
-			}
+		if v, ok := d.GetOk("ip_address_type"); ok {
+			input.IpAddressType = aws.String(v.(string))
 		}
 	}
 
