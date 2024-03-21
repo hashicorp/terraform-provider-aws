@@ -1,0 +1,3 @@
+```release-note:bugfix
+resource/aws_cognito_user: Usage of `message_action` when updating a user. Ignoring it if it fails the requirements, requiring a one-time implementation only and just leave-it-be for users that should automatically renew.
+```

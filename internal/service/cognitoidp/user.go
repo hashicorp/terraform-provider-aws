@@ -155,39 +155,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		UserPoolId: aws.String(userPoolId),
 	}
 
-	if v, ok := d.GetOk("client_metadata"); ok {
-		metadata := v.(map[string]interface{})
-		params.ClientMetadata = expandUserClientMetadata(metadata)
-	}
-
-	if v, ok := d.GetOk("desired_delivery_mediums"); ok {
-		mediums := v.(*schema.Set)
-		params.DesiredDeliveryMediums = expandUserDesiredDeliveryMediums(mediums)
-	}
-
-	if v, ok := d.GetOk("force_alias_creation"); ok {
-		params.ForceAliasCreation = aws.Bool(v.(bool))
-	}
-
-	if v, ok := d.GetOk("message_action"); ok {
-		params.MessageAction = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("attributes"); ok {
-		attributes := v.(map[string]interface{})
-		params.UserAttributes = expandAttribute(attributes)
-	}
-
-	if v, ok := d.GetOk("validation_data"); ok {
-		attributes := v.(map[string]interface{})
-		// aws sdk uses the same type for both validation data and user attributes
-		// https://docs.aws.amazon.com/sdk-for-go/api/service/cognitoidentityprovider/#AdminCreateUserInput
-		params.ValidationData = expandAttribute(attributes)
-	}
-
-	if v, ok := d.GetOk("temporary_password"); ok {
-		params.TemporaryPassword = aws.String(v.(string))
-	}
+	fillCreateUserParameters(d, params)
 
 	log.Print("[DEBUG] Creating Cognito User")
 
@@ -265,7 +233,37 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
+	username := d.Get("username").(string)
+	userPoolId := d.Get("user_pool_id").(string)
+
 	log.Println("[DEBUG] Updating Cognito User")
+
+	if d.HasChange("message_action") {
+
+		_, new := d.GetChange("message_action")
+
+		if new != nil { //Value does not get stored, so if new value is nil don't do anything
+
+			//Reading current state is necessary because operation is only allowed in FORCE_CHANGE_PASSWORD state
+			resourceUserRead(d, meta)
+			if d.Get("status") == "FORCE_CHANGE_PASSWORD" {
+
+				params := &cognitoidentityprovider.AdminCreateUserInput{
+					Username:   aws.String(username),
+					UserPoolId: aws.String(userPoolId),
+				}
+				fillCreateUserParameters(d, params)
+
+				log.Print("[DEBUG] Call Create User in Update for message_action")
+
+				_, err := conn.AdminCreateUser(params)
+
+				if err != nil {
+					return fmt.Errorf("error creating Cognito User (%s/%s): %w", userPoolId, username, err)
+				}
+			}
+		}
+	}
 
 	if d.HasChange("attributes") {
 		old, new := d.GetChange("attributes")
@@ -274,8 +272,8 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 		if len(upd) > 0 {
 			params := &cognitoidentityprovider.AdminUpdateUserAttributesInput{
-				Username:       aws.String(d.Get("username").(string)),
-				UserPoolId:     aws.String(d.Get("user_pool_id").(string)),
+				Username:       aws.String(username),
+				UserPoolId:     aws.String(userPoolId),
 				UserAttributes: expandAttribute(upd),
 			}
 
@@ -291,8 +289,8 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 		if len(del) > 0 {
 			params := &cognitoidentityprovider.AdminDeleteUserAttributesInput{
-				Username:           aws.String(d.Get("username").(string)),
-				UserPoolId:         aws.String(d.Get("user_pool_id").(string)),
+				Username:           aws.String(username),
+				UserPoolId:         aws.String(userPoolId),
 				UserAttributeNames: expandUserAttributesDelete(del),
 			}
 			_, err := conn.AdminDeleteUserAttributesWithContext(ctx, params)
@@ -307,8 +305,8 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 		if enabled {
 			enableParams := &cognitoidentityprovider.AdminEnableUserInput{
-				Username:   aws.String(d.Get("username").(string)),
-				UserPoolId: aws.String(d.Get("user_pool_id").(string)),
+				Username:   aws.String(username),
+				UserPoolId: aws.String(userPoolId),
 			}
 			_, err := conn.AdminEnableUserWithContext(ctx, enableParams)
 			if err != nil {
@@ -316,8 +314,8 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			}
 		} else {
 			disableParams := &cognitoidentityprovider.AdminDisableUserInput{
-				Username:   aws.String(d.Get("username").(string)),
-				UserPoolId: aws.String(d.Get("user_pool_id").(string)),
+				Username:   aws.String(username),
+				UserPoolId: aws.String(userPoolId),
 			}
 			_, err := conn.AdminDisableUserWithContext(ctx, disableParams)
 			if err != nil {
@@ -331,8 +329,8 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 		if password != "" {
 			setPasswordParams := &cognitoidentityprovider.AdminSetUserPasswordInput{
-				Username:   aws.String(d.Get("username").(string)),
-				UserPoolId: aws.String(d.Get("user_pool_id").(string)),
+				Username:   aws.String(username),
+				UserPoolId: aws.String(userPoolId),
 				Password:   aws.String(password),
 				Permanent:  aws.Bool(false),
 			}
@@ -351,8 +349,8 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 		if password != "" {
 			setPasswordParams := &cognitoidentityprovider.AdminSetUserPasswordInput{
-				Username:   aws.String(d.Get("username").(string)),
-				UserPoolId: aws.String(d.Get("user_pool_id").(string)),
+				Username:   aws.String(username),
+				UserPoolId: aws.String(userPoolId),
 				Password:   aws.String(password),
 				Permanent:  aws.Bool(true),
 			}
@@ -482,7 +480,7 @@ func flattenUserAttributes(apiList []*cognitoidentityprovider.AttributeType) map
 
 // computeUserAttributesUpdate computes which user attributes should be updated and which ones should be deleted.
 // We should do it like this because we cannot set a list of user attributes in cognito.
-// We can either perfor update or delete operation
+// We can either perform update or delete operation
 func computeUserAttributesUpdate(old interface{}, new interface{}) (map[string]interface{}, []*string) {
 	oldMap := old.(map[string]interface{})
 	newMap := new.(map[string]interface{})
@@ -572,4 +570,40 @@ func UserAttributeKeyMatchesStandardAttribute(input string) bool {
 		}
 	}
 	return false
+}
+
+func fillCreateUserParameters(d *schema.ResourceData, params *cognitoidentityprovider.AdminCreateUserInput) {
+	if v, ok := d.GetOk("client_metadata"); ok {
+		metadata := v.(map[string]interface{})
+		params.ClientMetadata = expandUserClientMetadata(metadata)
+	}
+
+	if v, ok := d.GetOk("desired_delivery_mediums"); ok {
+		mediums := v.(*schema.Set)
+		params.DesiredDeliveryMediums = expandUserDesiredDeliveryMediums(mediums)
+	}
+
+	if v, ok := d.GetOk("force_alias_creation"); ok {
+		params.ForceAliasCreation = aws.Bool(v.(bool))
+	}
+
+	if v, ok := d.GetOk("message_action"); ok {
+		params.MessageAction = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("attributes"); ok {
+		attributes := v.(map[string]interface{})
+		params.UserAttributes = expandAttribute(attributes)
+	}
+
+	if v, ok := d.GetOk("validation_data"); ok {
+		attributes := v.(map[string]interface{})
+		// aws sdk uses the same type for both validation data and user attributes
+		// https://docs.aws.amazon.com/sdk-for-go/api/service/cognitoidentityprovider/#AdminCreateUserInput
+		params.ValidationData = expandAttribute(attributes)
+	}
+
+	if v, ok := d.GetOk("temporary_password"); ok {
+		params.TemporaryPassword = aws.String(v.(string))
+	}
 }
