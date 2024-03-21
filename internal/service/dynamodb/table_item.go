@@ -5,6 +5,9 @@ package dynamodb
 
 import (
 	"context"
+	"encoding/base64"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"log"
 	"reflect"
@@ -30,6 +33,9 @@ func ResourceTableItem() *schema.Resource {
 		ReadWithoutTimeout:   resourceTableItemRead,
 		UpdateWithoutTimeout: resourceTableItemUpdate,
 		DeleteWithoutTimeout: resourceTableItemDelete,
+		Importer: &schema.ResourceImporter{
+			State: resourceTableItemImport,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"table_name": {
@@ -239,6 +245,144 @@ func resourceTableItemDelete(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	return diags
+}
+
+func parseTableItemQueryKey(d *schema.ResourceData, keyType string, keyName string, keyValue string, tableDescription *dynamodb.TableDescription, attrs map[string]*dynamodb.AttributeValue) error {
+	if keyValue == "" {
+		return fmt.Errorf("No value given for %s %s", keyType, keyName)
+	}
+
+	var value *dynamodb.AttributeValue
+	found := false
+
+	// Find the matching attribute definition and construct an appropriate attribute value based on the type
+	for _, attr := range tableDescription.AttributeDefinitions {
+		if *attr.AttributeName == keyName {
+			found = true
+			switch *attr.AttributeType {
+			case "B":
+				data, err := base64.StdEncoding.DecodeString(keyValue)
+				if err != nil {
+					return err
+				}
+				value = &dynamodb.AttributeValue{
+					B: data,
+				}
+			case "S":
+				value = &dynamodb.AttributeValue{
+					S: aws.String(keyValue),
+				}
+			case "N":
+				value = &dynamodb.AttributeValue{
+					N: aws.String(keyValue),
+				}
+			default:
+				return fmt.Errorf("%s %s has invalid type %s", keyType, keyName, *attr.AttributeType)
+			}
+		}
+	}
+
+	// Set both the resource attribute and the attribute query parameter
+	if !found {
+		return fmt.Errorf("%s %s not found in table", keyType, keyName)
+	}
+	d.Set(keyType, keyName)
+	attrs[keyName] = value
+
+	return nil
+}
+
+func resourceTableItemImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	ctx := context.Background()
+	// Parse given id string as either a pipe-delimited string or json
+	var id []string
+	if strings.HasPrefix(d.Id(), "[") {
+		err := json.Unmarshal([]byte(d.Id()), &id)
+		if err != nil {
+			return nil, err
+		}
+	} else {
+		id = strings.Split(d.Id(), "|")
+	}
+
+	// Check for proper number of array elements
+	if len(id) == 2 {
+		id = append(id, "")
+	}
+	if len(id) != 3 || id[0] == "" || id[1] == "" {
+		return nil, errors.New("Invalid id, must be of the form table_name|hash_key_value[|range_key_value] or json [ \"table_name\", \"hash_key_value\", \"range_key_value\" ]")
+	}
+
+	// Initialize table query parameters
+	tableName := id[0]
+	hashKey := ""
+	rangeKey := ""
+	hashKeyValueString := id[1]
+	rangeKeyValueString := id[2]
+	params := &dynamodb.GetItemInput{
+		TableName:      aws.String(tableName),
+		ConsistentRead: aws.Bool(true),
+		Key:            map[string]*dynamodb.AttributeValue{},
+	}
+
+	// Query table description to determine its hash/range key attributes
+	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
+	tableResult, err := conn.DescribeTable(&dynamodb.DescribeTableInput{
+		TableName: aws.String(tableName),
+	})
+	if err != nil {
+		return nil, err
+	}
+	tableDescription := tableResult.Table
+
+	// Build attribute query using given hash/range key values
+	for _, key := range tableDescription.KeySchema {
+		switch *key.KeyType {
+		case "HASH":
+			hashKey = *key.AttributeName
+			err := parseTableItemQueryKey(d, "hash_key", hashKey, hashKeyValueString, tableDescription, params.Key)
+			if err != nil {
+				return nil, err
+			}
+		case "RANGE":
+			rangeKey = *key.AttributeName
+			err := parseTableItemQueryKey(d, "range_key", rangeKey, rangeKeyValueString, tableDescription, params.Key)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	// Error if we were given a range key value but the table has no range key
+	if rangeKey == "" && rangeKeyValueString != "" {
+		return nil, fmt.Errorf("Table %s has no range key but a range key value was given", tableName)
+	}
+
+	// Query table for matching record
+	result, err := conn.GetItem(params)
+	if err != nil {
+		return nil, err
+	}
+	if result.Item == nil {
+		return nil, fmt.Errorf("No item matching %s found to import", d.Id())
+	}
+	itemAttrs, err := flattenTableItemAttributes(result.Item)
+	if err != nil {
+		return nil, err
+	}
+
+	// Set required resource attributes
+	d.Set("table_name", tableName)
+	d.Set("hash_key", hashKey)
+	if rangeKey != "" {
+		d.Set("range_key", rangeKey)
+	}
+	d.Set("item", itemAttrs)
+
+	// Always set id to canonical format
+	d.SetId(buildTableItemID(tableName, hashKey, rangeKey, params.Key))
+
+	return []*schema.ResourceData{d}, nil
 }
 
 // Helpers

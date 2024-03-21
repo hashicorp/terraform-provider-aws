@@ -5,7 +5,9 @@ package dynamodb_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"reflect"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -35,6 +37,10 @@ func TestAccDynamoDBTableItem_basic(t *testing.T) {
 	"four": {"N": "44444"}
 }`
 
+	checkFn := func(s []*terraform.InstanceState) error {
+		return testAccDynamoDbTableItemCompareItemAttribute(itemContent, s)
+	}
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
@@ -50,6 +56,22 @@ func TestAccDynamoDBTableItem_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test", "table_name", tableName),
 					acctest.CheckResourceAttrEquivalentJSON("aws_dynamodb_table_item.test", "item", itemContent),
 				),
+			},
+			{
+				ResourceName:            "aws_dynamodb_table_item.test",
+				ImportStateId:           fmt.Sprintf("%s|%s", tableName, "something"),
+				ImportStateCheck:        checkFn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"item"},
+			},
+			{
+				ResourceName:            "aws_dynamodb_table_item.test",
+				ImportStateId:           fmt.Sprintf("[\"%s\", \"%s\"]", tableName, "something"),
+				ImportStateCheck:        checkFn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"item"},
 			},
 		},
 	})
@@ -71,6 +93,10 @@ func TestAccDynamoDBTableItem_rangeKey(t *testing.T) {
 	"four": {"N": "44444"}
 }`
 
+	checkFn := func(s []*terraform.InstanceState) error {
+		return testAccDynamoDbTableItemCompareItemAttribute(itemContent, s)
+	}
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
@@ -87,6 +113,22 @@ func TestAccDynamoDBTableItem_rangeKey(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test", "table_name", tableName),
 					acctest.CheckResourceAttrEquivalentJSON("aws_dynamodb_table_item.test", "item", itemContent),
 				),
+			},
+			{
+				ResourceName:            "aws_dynamodb_table_item.test",
+				ImportStateId:           fmt.Sprintf("%s|%s|%s", tableName, "something", "something-else"),
+				ImportStateCheck:        checkFn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"item"},
+			},
+			{
+				ResourceName:            "aws_dynamodb_table_item.test",
+				ImportStateId:           fmt.Sprintf("[\"%s\", \"%s\", \"%s\"]", tableName, "something", "something-else"),
+				ImportStateCheck:        checkFn,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"item"},
 			},
 		},
 	})
@@ -395,6 +437,147 @@ func TestAccDynamoDBTableItem_disappears(t *testing.T) {
 	})
 }
 
+func TestAccDynamoDBTableItem_importWithHashKey(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf dynamodb.GetItemOutput
+
+	tableName := fmt.Sprintf("tf-acc-test-%v", acctest.RandInt(t))
+	hashKey := "hashKey"
+	hashKeyValue := "importHashKey"
+
+	item := fmt.Sprintf(`{
+	"%s": {"S": "%s"},
+	"otherAttrS": {"S": "otherStringValue"},
+	"otherAttrN": {"N": "123"},
+	"otherAttrSS": {"SS": ["a", "b", "c"]},
+	"otherAttrNS": {"NS": ["0", "1.1", "-2.22"]},
+	"otherAttrBool": {"BOOL": false},
+	"otherAttrNull": {"NULL": true}
+}`, hashKey, hashKeyValue)
+
+	checkFn := func(s []*terraform.InstanceState) error {
+		return testAccDynamoDbTableItemCompareItemAttribute(item, s)
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableItemImport_hashKey(tableName, hashKey, item),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTableItemExists(ctx, "aws_dynamodb_table_item.test", &conf),
+					testAccCheckTableItemCount(ctx, tableName, 1),
+					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test", "hash_key", hashKey),
+					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test", "table_name", tableName),
+					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test", "item", item+"\n"),
+				),
+			},
+			{
+				ResourceName:            "aws_dynamodb_table_item.test",
+				ImportState:             true,
+				ImportStateId:           fmt.Sprintf("%s|%s", tableName, hashKeyValue),
+				ImportStateCheck:        checkFn,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"item"},
+			},
+			{
+				ResourceName:            "aws_dynamodb_table_item.test",
+				ImportState:             true,
+				ImportStateId:           fmt.Sprintf("[ \"%s\", \"%s\" ]", tableName, hashKeyValue),
+				ImportStateCheck:        checkFn,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"item"},
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTableItem_importWithRangeKey(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf dynamodb.GetItemOutput
+
+	tableName := fmt.Sprintf("tf-acc-test-%v", acctest.RandInt(t))
+	hashKey := "hashKey"
+	hashKeyValue := "dGhpcyB0ZXh0IGlzIGJhc2U2NC1lbmNvZGVk"
+	rangeKey := "rangeKey"
+	rangeKeyValue := "100"
+
+	item := fmt.Sprintf(`{
+	"%s": {"B": "%s"},
+	"%s": {"N": "%s"},
+	"otherAttrS": {"S": "otherStringValue"},
+	"otherAttrN": {"N": "123"},
+	"otherAttrSS": {"SS": ["a", "b", "c"]},
+	"otherAttrNS": {"NS": ["0", "1.1", "-2.22"]},
+	"otherAttrBool": {"BOOL": false},
+	"otherAttrNull": {"NULL": true}
+}`, hashKey, hashKeyValue, rangeKey, rangeKeyValue)
+
+	checkFn := func(s []*terraform.InstanceState) error {
+		return testAccDynamoDbTableItemCompareItemAttribute(item, s)
+	}
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableItemImport_rangeKey(tableName, hashKey, rangeKey, item),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTableItemExists(ctx, "aws_dynamodb_table_item.test", &conf),
+					testAccCheckTableItemCount(ctx, tableName, 1),
+					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test", "hash_key", hashKey),
+					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test", "range_key", rangeKey),
+					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test", "table_name", tableName),
+					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test", "item", item+"\n"),
+				),
+			},
+			{
+				ResourceName:            "aws_dynamodb_table_item.test",
+				ImportState:             true,
+				ImportStateId:           fmt.Sprintf("%s|%s|%s", tableName, hashKeyValue, rangeKeyValue),
+				ImportStateCheck:        checkFn,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"item"},
+			},
+			{
+				ResourceName:            "aws_dynamodb_table_item.test",
+				ImportState:             true,
+				ImportStateId:           fmt.Sprintf("[ \"%s\", \"%s\", \"%s\" ]", tableName, hashKeyValue, rangeKeyValue),
+				ImportStateCheck:        checkFn,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"item"},
+			},
+		},
+	})
+}
+
+func testAccDynamoDbTableItemCompareItemAttribute(item string, s []*terraform.InstanceState) error {
+	if len(s) != 1 {
+		return fmt.Errorf("expected 1 state: %#v", s)
+	}
+	var a, b map[string]interface{}
+
+	err := json.Unmarshal([]byte(item), &a)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal([]byte(s[0].Attributes["item"]), &b)
+	if err != nil {
+		return err
+	}
+
+	if !reflect.DeepEqual(a, b) {
+		return fmt.Errorf("item attributes not equal:\n\texpected: %#v\n\tactual: %#v", a, b)
+	}
+
+	return nil
+}
+
 func TestAccDynamoDBTableItem_mapOutOfBandUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf dynamodb.GetItemOutput
@@ -560,6 +743,56 @@ func testAccCheckTableItemCount(ctx context.Context, tableName string, count int
 	}
 }
 
+func testAccTableItemImport_hashKey(tableName, hashKey, item string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name           = "%s"
+  read_capacity  = 5
+  write_capacity = 5
+	hash_key       = "%s"
+  attribute {
+    name = "%s"
+    type = "S"
+  }
+}
+resource "aws_dynamodb_table_item" "test" {
+  table_name = "${aws_dynamodb_table.test.name}"
+	hash_key   = "${aws_dynamodb_table.test.hash_key}"
+  item = <<ITEM
+%s
+ITEM
+}
+`, tableName, hashKey, hashKey, item)
+}
+
+func testAccTableItemImport_rangeKey(tableName, hashKey, rangeKey, item string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name           = "%s"
+  read_capacity  = 5
+  write_capacity = 5
+	hash_key       = "%s"
+	range_key      = "%s"
+  attribute {
+    name = "%s"
+    type = "B"
+  }
+  attribute {
+    name = "%s"
+    type = "N"
+  }
+}
+resource "aws_dynamodb_table_item" "test" {
+  table_name = "${aws_dynamodb_table.test.name}"
+	hash_key   = "${aws_dynamodb_table.test.hash_key}"
+	range_key  = "${aws_dynamodb_table.test.range_key}"
+  item = <<ITEM
+%s
+ITEM
+}
+`, tableName, hashKey, rangeKey, hashKey, rangeKey, item)
+}
+
 func testAccTableItemConfig_basic(tableName, hashKey, item string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
@@ -691,6 +924,28 @@ ITEM
 `, tableName, hashKey, rangeKey, item)
 }
 
+func testAccADynamoDbItemCompareItemAttribute(item string, s []*terraform.InstanceState) error {
+	if len(s) != 1 {
+		return fmt.Errorf("expected 1 state: %#v", s)
+	}
+	var a, b map[string]interface{}
+
+	err := json.Unmarshal([]byte(item), &a)
+	if err != nil {
+		return err
+	}
+
+	err = json.Unmarshal([]byte(s[0].Attributes["item"]), &b)
+	if err != nil {
+		return err
+	}
+
+	if !reflect.DeepEqual(a, b) {
+		return fmt.Errorf("item attributes not equal:\n\texpected: %#v\n\tactual: %#v", a, b)
+	}
+
+	return nil
+}
 func testAccTableItemConfig_map(tableName, hashKey, content string) string {
 	return fmt.Sprintf(`
 resource "aws_dynamodb_table" "test" {
