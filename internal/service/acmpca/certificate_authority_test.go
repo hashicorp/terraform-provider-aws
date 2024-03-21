@@ -21,6 +21,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+var testAccCheckCertificateAuthorityExists = acctest.CheckACMPCACertificateAuthorityExists
+
 func TestAccACMPCACertificateAuthority_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var certificateAuthority acmpca.CertificateAuthority
@@ -705,55 +707,6 @@ func TestAccACMPCACertificateAuthority_RevocationOcsp_customCNAME(t *testing.T) 
 	})
 }
 
-func TestAccACMPCACertificateAuthority_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var certificateAuthority acmpca.CertificateAuthority
-	resourceName := "aws_acmpca_certificate_authority.test"
-	commonName := acctest.RandomDomainName()
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckCertificateAuthorityDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccCertificateAuthorityConfig_tags1(commonName, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckACMPCACertificateAuthorityExists(ctx, resourceName, &certificateAuthority),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"permanent_deletion_time_in_days",
-				},
-			},
-			{
-				Config: testAccCertificateAuthorityConfig_tags2(commonName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckACMPCACertificateAuthorityExists(ctx, resourceName, &certificateAuthority),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccCertificateAuthorityConfig_tags1(commonName, "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckACMPCACertificateAuthorityExists(ctx, resourceName, &certificateAuthority),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-		},
-	})
-}
-
 func testAccCheckCertificateAuthorityDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn(ctx)
@@ -1137,6 +1090,24 @@ resource "aws_s3_bucket_policy" "test" {
 `, rName)
 }
 
+func testAccCertificateAuthorityConfig_tags0(commonName string) string {
+	return fmt.Sprintf(`
+resource "aws_acmpca_certificate_authority" "test" {
+  permanent_deletion_time_in_days = 7
+  usage_mode                      = "SHORT_LIVED_CERTIFICATE"
+
+  certificate_authority_configuration {
+    key_algorithm     = "RSA_4096"
+    signing_algorithm = "SHA512WITHRSA"
+
+    subject {
+      common_name = %[1]q
+    }
+  }
+}
+`, commonName)
+}
+
 func testAccCertificateAuthorityConfig_tags1(commonName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_acmpca_certificate_authority" "test" {
@@ -1180,6 +1151,28 @@ resource "aws_acmpca_certificate_authority" "test" {
   }
 }
 `, commonName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccCertificateAuthorityConfig_tagsNull(commonName, tagKey1 string) string {
+	return fmt.Sprintf(`
+resource "aws_acmpca_certificate_authority" "test" {
+  permanent_deletion_time_in_days = 7
+  usage_mode                      = "SHORT_LIVED_CERTIFICATE"
+
+  certificate_authority_configuration {
+    key_algorithm     = "RSA_4096"
+    signing_algorithm = "SHA512WITHRSA"
+
+    subject {
+      common_name = %[1]q
+    }
+  }
+
+  tags = {
+    %[2]q = null
+  }
+}
+`, commonName, tagKey1)
 }
 
 func testAccCertificateAuthorityConfig_keyStorageSecurityStandard(commonName, certificateAuthorityType, keyStorageSecurityStandard string) string {

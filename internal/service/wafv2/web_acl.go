@@ -63,6 +63,10 @@ func ResourceWebACL() *schema.Resource {
 					Type:     schema.TypeString,
 					Computed: true,
 				},
+				"application_integration_url": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 				"association_config": associationConfigSchema(),
 				"capacity": {
 					Type:     schema.TypeInt,
@@ -232,8 +236,8 @@ func resourceWebACLRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	webACL := output.WebACL
-	arn := aws.StringValue(webACL.ARN)
-	d.Set("arn", arn)
+	d.Set("application_integration_url", output.ApplicationIntegrationURL)
+	d.Set("arn", webACL.ARN)
 	d.Set("capacity", webACL.Capacity)
 	if err := d.Set("association_config", flattenAssociationConfig(webACL.AssociationConfig)); err != nil {
 		return diag.Errorf("setting association_config: %s", err)

@@ -248,7 +248,7 @@ func (r tagsResourceInterceptor) run(ctx context.Context, d schemaResourceData, 
 				break
 			}
 
-			if d.GetRawPlan().GetAttr("tags_all").IsWhollyKnown() {
+			if d.GetRawPlan().GetAttr(names.AttrTagsAll).IsWhollyKnown() {
 				if d.HasChange(names.AttrTagsAll) {
 					if identifierAttribute := r.tags.IdentifierAttribute; identifierAttribute != "" {
 						var identifier string

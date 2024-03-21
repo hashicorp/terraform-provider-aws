@@ -6,6 +6,7 @@ package appflow
 import (
 	"context"
 	"log"
+	"slices"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -1143,10 +1144,23 @@ func resourceFlow() *schema.Resource {
 						},
 						"source_fields": {
 							Type:     schema.TypeList,
-							Required: true,
+							Optional: true,
+							Computed: true,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
 								ValidateFunc: validation.StringLenBetween(0, 2048),
+							},
+							DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+								if v, ok := d.Get("task").(*schema.Set); ok && v.Len() == 1 {
+									if tl, ok := v.List()[0].(map[string]interface{}); ok && len(tl) > 0 {
+										if sf, ok := tl["source_fields"].([]interface{}); ok && len(sf) == 1 {
+											if sf[0] == "" {
+												return oldValue == "0" && newValue == "1"
+											}
+										}
+									}
+								}
+								return false
 							},
 						},
 						"task_properties": {
@@ -1341,8 +1355,9 @@ func resourceFlowUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			TriggerConfig:             expandTriggerConfig(d.Get("trigger_config").([]interface{})[0].(map[string]interface{})),
 		}
 
-		if d.HasChange(names.AttrDescription) {
-			input.Description = aws.String(d.Get(names.AttrDescription).(string))
+		// always send description when updating a task
+		if v, ok := d.GetOk(names.AttrDescription); ok {
+			input.Description = aws.String(v.(string))
 		}
 
 		_, err := conn.UpdateFlow(ctx, input)
@@ -2440,6 +2455,8 @@ func expandTask(tfMap map[string]interface{}) *types.Task {
 
 	if v, ok := tfMap["source_fields"].([]interface{}); ok && len(v) > 0 {
 		a.SourceFields = flex.ExpandStringValueList(v)
+	} else {
+		a.SourceFields = []string{} // send an empty object if source_fields is empty (required by API)
 	}
 
 	if v, ok := tfMap["task_properties"].(map[string]interface{}); ok && len(v) > 0 {
@@ -3465,6 +3482,15 @@ func flattenTasks(tasks []types.Task) []interface{} {
 	}
 
 	var l []interface{}
+
+	t := slices.IndexFunc(tasks, func(t types.Task) bool {
+		return t.TaskType == types.TaskTypeMapAll
+	})
+
+	if t != -1 {
+		l = append(l, flattenTask(tasks[t]))
+		return l
+	}
 
 	for _, task := range tasks {
 		l = append(l, flattenTask(task))

@@ -1090,6 +1090,12 @@ func rateBasedStatementSchema(level int) *schema.Schema {
 						},
 					},
 				},
+				"evaluation_window_sec": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      300,
+					ValidateFunc: validation.IntInSlice([]int{60, 120, 300, 600}),
+				},
 				"forwarded_ip_config": forwardedIPConfigSchema(),
 				"limit": {
 					Type:         schema.TypeInt,

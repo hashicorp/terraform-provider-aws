@@ -305,7 +305,7 @@ func TestAccLambdaLayerVersion_skipDestroy(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop, // this purposely leaves dangling resources, since skip_destroy = true
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLayerVersionConfig_skipDestroy(rName, "nodejs14.x"),
+				Config: testAccLayerVersionConfig_skipDestroy(rName, "nodejs18.x"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerVersionExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("layer:%s:1", rName)),
@@ -314,7 +314,7 @@ func TestAccLambdaLayerVersion_skipDestroy(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccLayerVersionConfig_skipDestroy(rName, "nodejs16.x"),
+				Config: testAccLayerVersionConfig_skipDestroy(rName, "nodejs20.x"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLayerVersionExists(ctx, resourceName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "lambda", fmt.Sprintf("layer:%s:2", rName)),
@@ -436,7 +436,7 @@ resource "aws_lambda_layer_version" "test" {
   filename   = "test-fixtures/lambdatest.zip"
   layer_name = %[1]q
 
-  compatible_runtimes = ["nodejs14.x", "nodejs16.x"]
+  compatible_runtimes = ["nodejs18.x", "nodejs20.x"]
 }
 `, rName)
 }
