@@ -1238,3 +1238,94 @@ resource "aws_quicksight_data_set" "test" {
 }
 `, rId, rName))
 }
+
+func TestAccQuicksightDataTransforms_many(t *testing.T) {
+	ctx := acctest.Context(t)
+	var dataSet quicksight.DataSet
+	resourceName := "aws_quicksight_dataset.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rId := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, quicksight.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataSetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataSetConfigManyDataTransforms(rId, rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataSetExists(ctx, resourceName, &dataSet),
+					resource.TestCheckResourceAttr(resourceName, "data_set_id", rId),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "quicksight", fmt.Sprintf("dataset/%s", rId)),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "import_mode", "SPICE"),
+					resource.TestCheckResourceAttr(resourceName, "physical_table_map.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.logical_table_map_id", rId),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.alias", "Group1"),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.source.0.physical_table_id", rId),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.source.0.data_transforms.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.source.0.data_transforms.cast_column_type_operation.0.column_name", "DateTimeAsStringColumn"),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.source.0.data_transforms.cast_column_type_operation.0.new_column_type", "DATETIME"),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.source.0.data_transforms.rename_column_operation.0.column_name", "DateTimeAsStringColumn"),
+					resource.TestCheckResourceAttr(resourceName, "logical_table_map.0.source.0.data_transforms.rename_column_operation.0.new_column_name", "DateTime"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccDataSetConfigManyDataTransforms(rId, rName string) string {
+	return acctest.ConfigCompose(
+		testAccDataSetConfigBase(rId, rName),
+		fmt.Sprintf(`
+resource "aws_quicksight_data_set" "test" {
+  data_set_id = %[1]q
+  name        = %[2]q
+  import_mode = "SPICE"
+  
+  physical_table_map {
+    physical_table_map_id = %[1]q
+    s3_source {
+    data_source_arn = aws_quicksight_data_source.test.arn
+    input_columns {
+      name = "DateTimeAsStringColumn"
+      type = "STRING"
+    }
+    upload_settings {}
+    }
+  }
+
+  logical_table_map {
+    logical_table_map_id = %[1]q
+    alias                = "Group1"
+    source {
+      physical_table_id = %[1]q
+    }
+
+    data_transforms {
+      cast_column_type_operation {
+        column_name = "DateTimeAsStringColumn"
+        new_column_type = "DATETIME"
+        format = "yyyy-MM-dd'T'HH:mm:ss.SSSSSSZ"
+      }
+
+	  rename_column_operation {
+		column_name = "DateTimeAsStringColumn"
+		new_column_name = "DateTime"
+	  }
+    
+      project_operation {
+        projected_columns = ["DateTime"]
+      }
+    }
+  }
+}
+`, rId, rName))
+}

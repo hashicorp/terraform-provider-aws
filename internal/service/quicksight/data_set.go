@@ -1372,61 +1372,64 @@ func expandDataSetDataTransforms(tfList []interface{}) []*quicksight.TransformOp
 		return nil
 	}
 
-	var transformOperations []*quicksight.TransformOperation
-	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
+	tfMap := tfList[0].(map[string]interface{})
+
+	var transformedOperations []*quicksight.TransformOperation
+	for key, operations := range tfMap {
+		operations, ok := operations.([]interface{})
 		if !ok {
 			continue
 		}
 
-		transformOperation := expandDataSetDataTransform(tfMap)
-		if transformOperation == nil {
-			continue
-		}
+		// parse each operation and add it to operations list
+		for _, operation := range operations {
+			operation, ok := operation.(map[string]interface{})
+			if !ok {
+				continue
+			}
 
-		transformOperations = append(transformOperations, transformOperation)
+			transformedOperation := expandDataSetDataTransformOperation(key, operation)
+			transformedOperations = append(transformedOperations, transformedOperation)
+		}
 	}
 
-	return transformOperations
+	return transformedOperations
 }
 
-func expandDataSetDataTransform(tfMap map[string]interface{}) *quicksight.TransformOperation {
-	if tfMap == nil {
+func expandDataSetDataTransformOperation(key string, rawOperation map[string]interface{}) *quicksight.TransformOperation {
+	transformOperation := &quicksight.TransformOperation{}
+
+	if rawOperation == nil {
 		return nil
 	}
 
-	transformOperation := &quicksight.TransformOperation{}
-	if v, ok := tfMap["cast_column_type_operation"].([]interface{}); ok && len(v) > 0 {
-		transformOperation.CastColumnTypeOperation = expandDataSetCastColumnTypeOperation(v)
+	if key == "cast_column_type_operation" {
+		transformOperation.CastColumnTypeOperation = expandDataSetCastColumnTypeOperation(rawOperation)
 	}
-	if v, ok := tfMap["create_columns_operation"].([]interface{}); ok && len(v) > 0 {
-		transformOperation.CreateColumnsOperation = expandDataSetCreateColumnsOperation(v)
+	if key == "create_columns_operation" {
+		transformOperation.CreateColumnsOperation = expandDataSetCreateColumnsOperation(rawOperation)
 	}
-	if v, ok := tfMap["filter_operation"].([]interface{}); ok && len(v) > 0 {
-		transformOperation.FilterOperation = expandDataSetFilterOperation(v)
+	if key == "filter_operation" {
+		transformOperation.FilterOperation = expandDataSetFilterOperation(rawOperation)
 	}
-	if v, ok := tfMap["project_operation"].([]interface{}); ok && len(v) > 0 {
-		transformOperation.ProjectOperation = expandDataSetProjectOperation(v)
+	if key == "project_operation" {
+		transformOperation.ProjectOperation = expandDataSetProjectOperation(rawOperation)
 	}
-	if v, ok := tfMap["rename_column_operation"].([]interface{}); ok && len(v) > 0 {
-		transformOperation.RenameColumnOperation = expandDataSetRenameColumnOperation(v)
+	if key == "rename_column_operation" {
+		transformOperation.RenameColumnOperation = expandDataSetRenameColumnOperation(rawOperation)
 	}
-	if v, ok := tfMap["tag_column_operation"].([]interface{}); ok && len(v) > 0 {
-		transformOperation.TagColumnOperation = expandDataSetTagColumnOperation(v)
+	if key == "tag_column_operation" {
+		transformOperation.TagColumnOperation = expandDataSetTagColumnOperation(rawOperation)
 	}
-	if v, ok := tfMap["untag_column_operation"].([]interface{}); ok && len(v) > 0 {
-		transformOperation.UntagColumnOperation = expandDataSetUntagColumnOperation(v)
+	if key == "untag_column_operation" {
+		transformOperation.UntagColumnOperation = expandDataSetUntagColumnOperation(rawOperation)
 	}
 
 	return transformOperation
 }
 
-func expandDataSetCastColumnTypeOperation(tfList []interface{}) *quicksight.CastColumnTypeOperation {
-	if len(tfList) == 0 || tfList[0] == nil {
-		return nil
-	}
-	tfMap, ok := tfList[0].(map[string]interface{})
-	if !ok {
+func expandDataSetCastColumnTypeOperation(tfMap map[string]interface{}) *quicksight.CastColumnTypeOperation {
+	if tfMap == nil {
 		return nil
 	}
 
@@ -1444,12 +1447,8 @@ func expandDataSetCastColumnTypeOperation(tfList []interface{}) *quicksight.Cast
 	return castColumnTypeOperation
 }
 
-func expandDataSetCreateColumnsOperation(tfList []interface{}) *quicksight.CreateColumnsOperation {
-	if len(tfList) == 0 || tfList[0] == nil {
-		return nil
-	}
-	tfMap, ok := tfList[0].(map[string]interface{})
-	if !ok {
+func expandDataSetCreateColumnsOperation(tfMap map[string]interface{}) *quicksight.CreateColumnsOperation {
+	if tfMap == nil {
 		return nil
 	}
 
@@ -1503,12 +1502,8 @@ func expandDataSetCalculatedColumn(tfMap map[string]interface{}) *quicksight.Cal
 	return calculatedColumn
 }
 
-func expandDataSetFilterOperation(tfList []interface{}) *quicksight.FilterOperation {
-	if len(tfList) == 0 || tfList[0] == nil {
-		return nil
-	}
-	tfMap, ok := tfList[0].(map[string]interface{})
-	if !ok {
+func expandDataSetFilterOperation(tfMap map[string]interface{}) *quicksight.FilterOperation {
+	if tfMap == nil {
 		return nil
 	}
 
@@ -1520,12 +1515,8 @@ func expandDataSetFilterOperation(tfList []interface{}) *quicksight.FilterOperat
 	return filterOperation
 }
 
-func expandDataSetProjectOperation(tfList []interface{}) *quicksight.ProjectOperation {
-	if len(tfList) == 0 || tfList[0] == nil {
-		return nil
-	}
-	tfMap, ok := tfList[0].(map[string]interface{})
-	if !ok {
+func expandDataSetProjectOperation(tfMap map[string]interface{}) *quicksight.ProjectOperation {
+	if tfMap == nil {
 		return nil
 	}
 
@@ -1537,12 +1528,8 @@ func expandDataSetProjectOperation(tfList []interface{}) *quicksight.ProjectOper
 	return projectOperation
 }
 
-func expandDataSetRenameColumnOperation(tfList []interface{}) *quicksight.RenameColumnOperation {
-	if len(tfList) == 0 || tfList[0] == nil {
-		return nil
-	}
-	tfMap, ok := tfList[0].(map[string]interface{})
-	if !ok {
+func expandDataSetRenameColumnOperation(tfMap map[string]interface{}) *quicksight.RenameColumnOperation {
+	if tfMap == nil {
 		return nil
 	}
 
@@ -1557,12 +1544,8 @@ func expandDataSetRenameColumnOperation(tfList []interface{}) *quicksight.Rename
 	return renameColumnOperation
 }
 
-func expandDataSetTagColumnOperation(tfList []interface{}) *quicksight.TagColumnOperation {
-	if len(tfList) == 0 || tfList[0] == nil {
-		return nil
-	}
-	tfMap, ok := tfList[0].(map[string]interface{})
-	if !ok {
+func expandDataSetTagColumnOperation(tfMap map[string]interface{}) *quicksight.TagColumnOperation {
+	if tfMap == nil {
 		return nil
 	}
 
@@ -1629,12 +1612,8 @@ func expandDataSetColumnDescription(tfMap map[string]interface{}) *quicksight.Co
 	return columnDescription
 }
 
-func expandDataSetUntagColumnOperation(tfList []interface{}) *quicksight.UntagColumnOperation {
-	if len(tfList) == 0 || tfList[0] == nil {
-		return nil
-	}
-	tfMap, ok := tfList[0].(map[string]interface{})
-	if !ok {
+func expandDataSetUntagColumnOperation(tfMap map[string]interface{}) *quicksight.UntagColumnOperation {
+	if tfMap == nil {
 		return nil
 	}
 
