@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
@@ -39,11 +38,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource(name="Environment")
 // @Tags(identifierAttribute="arn")
-func newResourceEnvironment(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceEnvironment{}
+func newEnvironmentResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &environmentResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
@@ -56,17 +54,18 @@ const (
 	ResNameEnvironment = "Environment"
 )
 
-type resourceEnvironment struct {
+type environmentResource struct {
 	framework.ResourceWithConfigure
+	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *resourceEnvironment) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_m2_environment"
+func (r *environmentResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_m2_environment"
 }
 
-func (r *resourceEnvironment) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *environmentResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"arn": framework.ARNAttributeComputedOnly(),
 			"apply_changes_during_maintenance_window": schema.BoolAttribute{
@@ -225,18 +224,18 @@ func (r *resourceEnvironment) Schema(ctx context.Context, req resource.SchemaReq
 	}
 }
 
-func (r *resourceEnvironment) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *environmentResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	conn := r.Meta().M2Client(ctx)
 
 	var plan resourceEnvironmentData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	in := &m2.CreateEnvironmentInput{}
 
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
+	response.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
 
 	var clientToken string
 	if plan.ClientToken.IsNull() || plan.ClientToken.IsUnknown() {
@@ -251,26 +250,26 @@ func (r *resourceEnvironment) Create(ctx context.Context, req resource.CreateReq
 
 	if !plan.StorageConfiguration.IsNull() {
 		var sc []storageConfiguration
-		resp.Diagnostics.Append(plan.StorageConfiguration.ElementsAs(ctx, &sc, false)...)
+		response.Diagnostics.Append(plan.StorageConfiguration.ElementsAs(ctx, &sc, false)...)
 		storageConfig, d := expandStorageConfigurations(ctx, sc)
-		resp.Diagnostics.Append(d...)
+		response.Diagnostics.Append(d...)
 		in.StorageConfigurations = storageConfig
 	}
 
-	if resp.Diagnostics.HasError() {
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	out, err := conn.CreateEnvironment(ctx, in)
 	if err != nil {
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.M2, create.ErrActionCreating, ResNameEnvironment, plan.Name.String(), err),
 			err.Error(),
 		)
 		return
 	}
 	if out == nil || out.EnvironmentId == nil {
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.M2, create.ErrActionCreating, ResNameEnvironment, plan.Name.String(), nil),
 			errors.New("empty output").Error(),
 		)
@@ -282,68 +281,68 @@ func (r *resourceEnvironment) Create(ctx context.Context, req resource.CreateReq
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	env, err := waitEnvironmentCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
 	if err != nil {
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.M2, create.ErrActionWaitingForCreation, ResNameEnvironment, plan.Name.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
-	resp.Diagnostics.Append(plan.refreshFromOutput(ctx, env)...)
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	response.Diagnostics.Append(plan.refreshFromOutput(ctx, env)...)
+	response.Diagnostics.Append(response.State.Set(ctx, plan)...)
 }
 
-func (r *resourceEnvironment) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *environmentResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	conn := r.Meta().M2Client(ctx)
 
 	var state resourceEnvironmentData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	out, err := findEnvironmentByID(ctx, conn, state.ID.ValueString())
 	if tfresource.NotFound(err) {
-		resp.State.RemoveResource(ctx)
+		response.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.M2, create.ErrActionSetting, ResNameEnvironment, state.ID.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
-	resp.Diagnostics.Append(state.refreshFromOutput(ctx, out)...)
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(state.refreshFromOutput(ctx, out)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
 }
 
-func (r *resourceEnvironment) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *environmentResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	conn := r.Meta().M2Client(ctx)
 
 	var plan, state resourceEnvironmentData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
+	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	in, updateRequired := r.updateEnvironmentInput(ctx, plan, state, resp)
+	in, updateRequired := r.updateEnvironmentInput(ctx, plan, state, response)
 	if !updateRequired {
 		return
 	}
 
 	out, err := conn.UpdateEnvironment(ctx, in)
 	if err != nil {
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.M2, create.ErrActionUpdating, ResNameEnvironment, plan.ID.String(), err),
 			err.Error(),
 		)
 		return
 	}
 	if out == nil || out.EnvironmentId == nil {
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.M2, create.ErrActionUpdating, ResNameEnvironment, plan.ID.String(), nil),
 			errors.New("empty output").Error(),
 		)
@@ -355,23 +354,23 @@ func (r *resourceEnvironment) Update(ctx context.Context, req resource.UpdateReq
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
 	env, err := waitEnvironmentUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
 	if err != nil {
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.M2, create.ErrActionWaitingForUpdate, ResNameEnvironment, plan.ID.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, env, &plan)...)
+	response.Diagnostics.Append(flex.Flatten(ctx, env, &plan)...)
 
-	if resp.Diagnostics.HasError() {
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceEnvironment) updateEnvironmentInput(ctx context.Context, plan, state resourceEnvironmentData, resp *resource.UpdateResponse) (*m2.UpdateEnvironmentInput, bool) {
+func (r *environmentResource) updateEnvironmentInput(ctx context.Context, plan, state resourceEnvironmentData, resp *resource.UpdateResponse) (*m2.UpdateEnvironmentInput, bool) {
 	in := &m2.UpdateEnvironmentInput{
 		EnvironmentId: flex.StringFromFramework(ctx, plan.ID),
 	}
@@ -407,12 +406,12 @@ func (r *resourceEnvironment) updateEnvironmentInput(ctx context.Context, plan, 
 	return in, true
 }
 
-func (r *resourceEnvironment) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *environmentResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	conn := r.Meta().M2Client(ctx)
 
 	var state resourceEnvironmentData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
@@ -425,7 +424,7 @@ func (r *resourceEnvironment) Delete(ctx context.Context, req resource.DeleteReq
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return
 		}
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.M2, create.ErrActionDeleting, ResNameEnvironment, state.ID.String(), err),
 			err.Error(),
 		)
@@ -435,16 +434,12 @@ func (r *resourceEnvironment) Delete(ctx context.Context, req resource.DeleteReq
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
 	_, err = waitEnvironmentDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
 	if err != nil {
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.M2, create.ErrActionWaitingForDeletion, ResNameEnvironment, state.ID.String(), err),
 			err.Error(),
 		)
 		return
 	}
-}
-
-func (r *resourceEnvironment) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
 func waitEnvironmentCreated(ctx context.Context, conn *m2.Client, id string, timeout time.Duration) (*m2.GetEnvironmentOutput, error) {
@@ -609,7 +604,7 @@ var (
 	}
 )
 
-func (r *resourceEnvironment) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+func (r *environmentResource) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
 	r.SetTagsAll(ctx, req, resp)
 }
 
@@ -724,13 +719,13 @@ func flattenMountPoint(ctx context.Context, fileSystemId, mountPoint *string, mo
 	return configValue, diags
 }
 
-func (r *resourceEnvironment) hasChanges(plan, state resourceEnvironmentData) bool {
+func (r *environmentResource) hasChanges(plan, state resourceEnvironmentData) bool {
 	return !plan.HighAvailabilityConfig.Equal(state.HighAvailabilityConfig) ||
 		!plan.EngineVersion.Equal(state.EngineVersion) ||
 		!plan.InstanceType.Equal(state.EngineType) ||
 		!plan.PreferredMaintenanceWindow.Equal(state.PreferredMaintenanceWindow)
 }
 
-func (r *resourceEnvironment) hasChangesForMaintenance(plan, state resourceEnvironmentData) bool {
+func (r *environmentResource) hasChangesForMaintenance(plan, state resourceEnvironmentData) bool {
 	return plan.ApplyDuringMaintenanceWindow.ValueBool() && !plan.EngineVersion.Equal(state.EngineVersion)
 }
