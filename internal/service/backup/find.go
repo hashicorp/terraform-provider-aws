@@ -113,3 +113,38 @@ func FindVaultByName(ctx context.Context, conn *backup.Backup, name string) (*ba
 
 	return output, nil
 }
+
+func FindPlanByName(ctx context.Context, conn *backup.Backup, name string) (*backup.GetBackupPlanOutput, error) {
+	plans, err := conn.ListBackupPlans(&backup.ListBackupPlansInput{})
+	if err != nil {
+		return nil, err
+	}
+
+	output := &backup.GetBackupPlanOutput{}
+
+	for _, output := range plans.BackupPlansList {
+		if *output.BackupPlanName == name {
+			return conn.GetBackupPlan(&backup.GetBackupPlanInput{
+				BackupPlanId: output.BackupPlanId,
+				VersionId:    output.VersionId,
+			})
+		}
+	}
+
+	if tfawserr.ErrCodeEquals(err, backup.ErrCodeResourceNotFoundException, errCodeAccessDeniedException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: name,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(name)
+	}
+
+	return output, nil
+}

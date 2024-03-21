@@ -22,7 +22,8 @@ data "aws_backup_plan" "example" {
 
 This data source supports the following arguments:
 
-* `plan_id` - (Required) Backup plan ID.
+* `plan_id` - (Optional) Backup plan ID.
+* `name` - (Optional) Backup plan name.
 
 ## Attribute Reference
 
