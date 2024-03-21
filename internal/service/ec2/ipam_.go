@@ -89,6 +89,10 @@ func ResourceIPAM() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"tier": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
@@ -126,6 +130,10 @@ func resourceIPAMCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("tier"); ok {
+		input.Tier = aws.String(v.(string))
 	}
 
 	output, err := conn.CreateIpamWithContext(ctx, input)
@@ -209,6 +217,10 @@ func resourceIPAMUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			if len(operatingRegionUpdateRemove) != 0 {
 				input.RemoveOperatingRegions = operatingRegionUpdateRemove
 			}
+		}
+
+		if d.HasChange("tier") {
+			input.Tier = aws.String(d.Get("tier").(string))
 		}
 
 		_, err := conn.ModifyIpamWithContext(ctx, input)

@@ -182,6 +182,35 @@ func TestAccIPAM_cascade(t *testing.T) {
 	})
 }
 
+func TestAccIPAM_tier(t *testing.T) {
+	ctx := acctest.Context(t)
+	var ipam ec2.Ipam
+	resourceName := "aws_vpc_ipam.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIPAMDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIPAMConfig_tier("free"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIPAMExists(ctx, resourceName, &ipam),
+					resource.TestCheckResourceAttr(resourceName, "tier", "free"),
+				),
+			},
+			{
+				Config: testAccIPAMConfig_tier("advanced"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIPAMExists(ctx, resourceName, &ipam),
+					resource.TestCheckResourceAttr(resourceName, "tier", "advanced"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccIPAM_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ipam ec2.Ipam
@@ -377,4 +406,17 @@ resource "aws_vpc_ipam" "test" {
   }
 }
 `, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccIPAMConfig_tier(tier string) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+resource "aws_vpc_ipam" "test" {
+  operating_regions {
+    region_name = data.aws_region.current.name
+  }
+  tier = "%s"
+}
+`, tier)
 }
