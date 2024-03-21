@@ -95,6 +95,10 @@ func ResourceRule() *schema.Resource {
 					"state",
 				},
 			},
+			"force_delete": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -237,6 +241,7 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		d.Set("is_enabled", false)
 	}
 	d.Set("state", output.State)
+	d.Set("force_delete", d.Get("force_delete").(bool))
 	d.Set("name", output.Name)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(output.Name)))
 	d.Set("role_arn", output.RoleArn)
@@ -280,6 +285,12 @@ func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	input := &eventbridge.DeleteRuleInput{
 		Name: aws.String(ruleName),
 	}
+
+	forceDeletion := d.Get("force_delete").(bool)
+	if forceDeletion {
+		input.Force = aws.Bool(forceDeletion)
+	}
+
 	if eventBusName != "" {
 		input.EventBusName = aws.String(eventBusName)
 	}
