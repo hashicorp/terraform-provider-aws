@@ -54,7 +54,7 @@ resource "aws_dynamodb_table" "basic-dynamodb-table" {
   }
 
   ttl {
-    attribute_name = "TimeToExist"
+    attribute_name = ""
     enabled        = false
   }
 
@@ -263,6 +263,8 @@ Optional arguments:
 
 * `enabled` - (Required) Whether TTL is enabled.
 * `attribute_name` - (Required) Name of the table attribute to store the TTL timestamp in.
+
+~> **Note:** If `enabled` is set to `false` then `attribute_name` must be an empty string `""`. Giving it any other name will result in an error during a subsequent `apply`.
 
 ## Attribute Reference
 
