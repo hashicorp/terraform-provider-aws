@@ -6,6 +6,7 @@ package m2
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/YakDriver/regexache"
@@ -19,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
@@ -35,6 +37,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -52,10 +55,6 @@ func newEnvironmentResource(context.Context) (resource.ResourceWithConfigure, er
 
 	return r, nil
 }
-
-const (
-	ResNameEnvironment = "Environment"
-)
 
 type environmentResource struct {
 	framework.ResourceWithConfigure
@@ -194,6 +193,7 @@ func (r *environmentResource) Schema(ctx context.Context, request resource.Schem
 				},
 			},
 			"storage_configuration": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[storageConfigurationModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
@@ -205,14 +205,27 @@ func (r *environmentResource) Schema(ctx context.Context, request resource.Schem
 						"efs": schema.ListNestedBlock{
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
+								listvalidator.ExactlyOneOf(
+									path.MatchRelative().AtParent().AtName("efs"),
+									path.MatchRelative().AtParent().AtName("fsx"),
+								),
+							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"file_system_id": schema.StringAttribute{
 										Required: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 									"mount_point": schema.StringAttribute{
 										Required: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 								},
 							},
@@ -221,13 +234,22 @@ func (r *environmentResource) Schema(ctx context.Context, request resource.Schem
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
 							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
+							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"file_system_id": schema.StringAttribute{
 										Required: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 									"mount_point": schema.StringAttribute{
 										Required: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 								},
 							},
@@ -245,63 +267,69 @@ func (r *environmentResource) Schema(ctx context.Context, request resource.Schem
 }
 
 func (r *environmentResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data environmentResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().M2Client(ctx)
 
-	var plan environmentResourceModel
-	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
+	// We can't use AutoFlEx for StorageConfigurations as it's a union.
+	var storageConfigurations []awstypes.StorageConfiguration
+	if !data.StorageConfiguration.IsNull() {
+		var storageConfigurationModels []storageConfigurationModel
+		response.Diagnostics.Append(data.StorageConfiguration.ElementsAs(ctx, &storageConfigurationModels, false)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
 
-	in := &m2.CreateEnvironmentInput{}
-
-	response.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
-
-	in.ClientToken = aws.String(id.UniqueId())
-	in.Tags = getTagsIn(ctx)
-
-	if !plan.StorageConfiguration.IsNull() {
-		var sc []storageConfiguration
-		response.Diagnostics.Append(plan.StorageConfiguration.ElementsAs(ctx, &sc, false)...)
-		storageConfig, d := expandStorageConfigurations(ctx, sc)
+		var d diag.Diagnostics
+		storageConfigurations, d = expandStorageConfigurations(ctx, storageConfigurationModels)
 		response.Diagnostics.Append(d...)
-		in.StorageConfigurations = storageConfig
+		if response.Diagnostics.HasError() {
+			return
+		}
 	}
 
+	name := data.Name.ValueString()
+	input := &m2.CreateEnvironmentInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := conn.CreateEnvironment(ctx, in)
+	// Additional fields.
+	input.ClientToken = aws.String(id.UniqueId())
+	input.Tags = getTagsIn(ctx)
+	input.StorageConfigurations = storageConfigurations
+
+	output, err := conn.CreateEnvironment(ctx, input)
+
 	if err != nil {
-		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.M2, create.ErrActionCreating, ResNameEnvironment, plan.Name.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil || out.EnvironmentId == nil {
-		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.M2, create.ErrActionCreating, ResNameEnvironment, plan.Name.String(), nil),
-			errors.New("empty output").Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("creating Mainframe Modernization Environment (%s)", name), err.Error())
+
 		return
 	}
 
-	plan.ID = flex.StringToFramework(ctx, out.EnvironmentId)
+	// Set values for unknowns.
+	data.EnvironmentID = flex.StringToFramework(ctx, output.EnvironmentId)
+	data.setID()
 
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	env, err := waitEnvironmentCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
+	env, err := waitEnvironmentCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+
 	if err != nil {
-		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.M2, create.ErrActionWaitingForCreation, ResNameEnvironment, plan.Name.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Mainframe Modernization Environment (%s) create", data.ID.ValueString()), err.Error())
+
 		return
 	}
 
-	response.Diagnostics.Append(plan.refreshFromOutput(ctx, env)...)
-	response.Diagnostics.Append(response.State.Set(ctx, plan)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, env, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
 func (r *environmentResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
@@ -454,19 +482,61 @@ func (r *environmentResource) Delete(ctx context.Context, request resource.Delet
 	}
 }
 
+func findEnvironmentByID(ctx context.Context, conn *m2.Client, id string) (*m2.GetEnvironmentOutput, error) {
+	input := &m2.GetEnvironmentInput{
+		EnvironmentId: aws.String(id),
+	}
+
+	output, err := conn.GetEnvironment(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func statusEnvironment(ctx context.Context, conn *m2.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findEnvironmentByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status), nil
+	}
+}
+
 func waitEnvironmentCreated(ctx context.Context, conn *m2.Client, id string, timeout time.Duration) (*m2.GetEnvironmentOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.EnvironmentLifecycleCreating),
-		Target:                    enum.Slice(awstypes.EnvironmentLifecycleAvailable),
-		Refresh:                   statusEnvironment(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
+		Pending: enum.Slice(awstypes.EnvironmentLifecycleCreating),
+		Target:  enum.Slice(awstypes.EnvironmentLifecycleAvailable),
+		Refresh: statusEnvironment(ctx, conn, id),
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*m2.GetEnvironmentOutput); ok {
-		return out, err
+
+	if output, ok := outputRaw.(*m2.GetEnvironmentOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+
+		return output, err
 	}
 
 	return nil, err
@@ -474,17 +544,18 @@ func waitEnvironmentCreated(ctx context.Context, conn *m2.Client, id string, tim
 
 func waitEnvironmentUpdated(ctx context.Context, conn *m2.Client, id string, timeout time.Duration) (*m2.GetEnvironmentOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.EnvironmentLifecycleUpdating),
-		Target:                    enum.Slice(awstypes.EnvironmentLifecycleAvailable),
-		Refresh:                   statusEnvironment(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
+		Pending: enum.Slice(awstypes.EnvironmentLifecycleUpdating),
+		Target:  enum.Slice(awstypes.EnvironmentLifecycleAvailable),
+		Refresh: statusEnvironment(ctx, conn, id),
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*m2.GetEnvironmentOutput); ok {
-		return out, err
+
+	if output, ok := outputRaw.(*m2.GetEnvironmentOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+
+		return output, err
 	}
 
 	return nil, err
@@ -499,50 +570,14 @@ func waitEnvironmentDeleted(ctx context.Context, conn *m2.Client, id string, tim
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*m2.GetEnvironmentOutput); ok {
-		return out, err
+
+	if output, ok := outputRaw.(*m2.GetEnvironmentOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+
+		return output, err
 	}
 
 	return nil, err
-}
-
-func statusEnvironment(ctx context.Context, conn *m2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		out, err := findEnvironmentByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return out, string(out.Status), nil
-	}
-}
-
-func findEnvironmentByID(ctx context.Context, conn *m2.Client, id string) (*m2.GetEnvironmentOutput, error) {
-	in := &m2.GetEnvironmentInput{
-		EnvironmentId: aws.String(id),
-	}
-
-	out, err := conn.GetEnvironment(ctx, in)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
-
-		return nil, err
-	}
-
-	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-
-	return out, nil
 }
 
 func (rd *environmentResourceModel) refreshFromOutput(ctx context.Context, out *m2.GetEnvironmentOutput) diag.Diagnostics {
@@ -575,25 +610,35 @@ type environmentResourceModel struct {
 	PreferredMaintenanceWindow   types.String                                                 `tfsdk:"preferred_maintenance_window"`
 	PubliclyAccessible           types.Bool                                                   `tfsdk:"publicly_accessible"`
 	SecurityGroupIDs             fwtypes.SetValueOf[types.String]                             `tfsdk:"security_group_ids"`
-	StorageConfiguration         types.List                                                   `tfsdk:"storage_configuration"`
+	StorageConfiguration         fwtypes.ListNestedObjectValueOf[storageConfigurationModel]   `tfsdk:"storage_configuration"`
 	SubnetIDs                    fwtypes.SetValueOf[types.String]                             `tfsdk:"subnet_ids"`
 	Tags                         types.Map                                                    `tfsdk:"tags"`
 	TagsAll                      types.Map                                                    `tfsdk:"tags_all"`
 	Timeouts                     timeouts.Value                                               `tfsdk:"timeouts"`
 }
 
-type storageConfiguration struct {
+func (model *environmentResourceModel) InitFromID() error {
+	model.EnvironmentID = model.ID
+
+	return nil
+}
+
+func (model *environmentResourceModel) setID() {
+	model.ID = model.EnvironmentID
+}
+
+type storageConfigurationModel struct {
 	EFS types.List `tfsdk:"efs"`
 	FSX types.List `tfsdk:"fsx"`
 }
 
-type efs struct {
-	FileSystemId types.String `tfsdk:"file_system_id"`
+type efsStorageConfigurationModel struct {
+	FileSystemID types.String `tfsdk:"file_system_id"`
 	MountPoint   types.String `tfsdk:"mount_point"`
 }
 
-type fsx struct {
-	FileSystemId types.String `tfsdk:"file_system_id"`
+type fsxStorageConfigurationModel struct {
+	FileSystemID types.String `tfsdk:"file_system_id"`
 	MountPoint   types.String `tfsdk:"mount_point"`
 }
 
@@ -619,48 +664,50 @@ func (r *environmentResource) ModifyPlan(ctx context.Context, req resource.Modif
 	r.SetTagsAll(ctx, req, resp)
 }
 
-func expandStorageConfigurations(ctx context.Context, storageConfigurations []storageConfiguration) ([]awstypes.StorageConfiguration, diag.Diagnostics) {
-	storage := []awstypes.StorageConfiguration{}
+func expandStorageConfigurations(ctx context.Context, storageConfigurationModels []storageConfigurationModel) ([]awstypes.StorageConfiguration, diag.Diagnostics) {
 	var diags diag.Diagnostics
+	storageConfigurations := []awstypes.StorageConfiguration{}
 
-	for _, mount := range storageConfigurations {
-		if !mount.EFS.IsNull() {
-			var efsMounts []efs
-			diags.Append(mount.EFS.ElementsAs(ctx, &efsMounts, false)...)
-			mp := expandEFSMountPoint(ctx, efsMounts)
-			storage = append(storage, mp)
+	for _, item := range storageConfigurationModels {
+		if !item.EFS.IsNull() && (len(item.EFS.Elements()) > 0) {
+			var efsStorageConfigurationModels []efsStorageConfigurationModel
+			diags.Append(item.EFS.ElementsAs(ctx, &efsStorageConfigurationModels, false)...)
+			v := expandStorageConfigurationMemberEFS(ctx, efsStorageConfigurationModels)
+			storageConfigurations = append(storageConfigurations, v)
 		}
-		if !mount.FSX.IsNull() {
-			var fsxMounts []fsx
-			diags.Append(mount.FSX.ElementsAs(ctx, &fsxMounts, false)...)
-			mp := expandFSxMountPoint(ctx, fsxMounts)
-			storage = append(storage, mp)
+		if !item.FSX.IsNull() && (len(item.FSX.Elements()) > 0) {
+			var fsxStorageConfigurationModels []fsxStorageConfigurationModel
+			diags.Append(item.FSX.ElementsAs(ctx, &fsxStorageConfigurationModels, false)...)
+			v := expandStorageConfigurationMemberFSX(ctx, fsxStorageConfigurationModels)
+			storageConfigurations = append(storageConfigurations, v)
 		}
 	}
 
-	return storage, diags
+	return storageConfigurations, diags
 }
 
-func expandEFSMountPoint(ctx context.Context, efs []efs) *awstypes.StorageConfigurationMemberEfs {
-	if len(efs) == 0 {
+func expandStorageConfigurationMemberEFS(ctx context.Context, efsStorageConfigurationModels []efsStorageConfigurationModel) *awstypes.StorageConfigurationMemberEfs {
+	if len(efsStorageConfigurationModels) == 0 {
 		return nil
 	}
+
 	return &awstypes.StorageConfigurationMemberEfs{
 		Value: awstypes.EfsStorageConfiguration{
-			FileSystemId: flex.StringFromFramework(ctx, efs[0].FileSystemId),
-			MountPoint:   flex.StringFromFramework(ctx, efs[0].MountPoint),
+			FileSystemId: flex.StringFromFramework(ctx, efsStorageConfigurationModels[0].FileSystemID),
+			MountPoint:   flex.StringFromFramework(ctx, efsStorageConfigurationModels[0].MountPoint),
 		},
 	}
 }
 
-func expandFSxMountPoint(ctx context.Context, fsx []fsx) *awstypes.StorageConfigurationMemberFsx {
-	if len(fsx) == 0 {
+func expandStorageConfigurationMemberFSX(ctx context.Context, fsxStorageConfigurationModels []fsxStorageConfigurationModel) *awstypes.StorageConfigurationMemberFsx {
+	if len(fsxStorageConfigurationModels) == 0 {
 		return nil
 	}
+
 	return &awstypes.StorageConfigurationMemberFsx{
 		Value: awstypes.FsxStorageConfiguration{
-			FileSystemId: flex.StringFromFramework(ctx, fsx[0].FileSystemId),
-			MountPoint:   flex.StringFromFramework(ctx, fsx[0].MountPoint),
+			FileSystemId: flex.StringFromFramework(ctx, fsxStorageConfigurationModels[0].FileSystemID),
+			MountPoint:   flex.StringFromFramework(ctx, fsxStorageConfigurationModels[0].MountPoint),
 		},
 	}
 }
