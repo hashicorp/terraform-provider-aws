@@ -45,19 +45,27 @@ func TestAccM2Environment_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentConfig_basic(rName, testAccEngineType, testAccEngineVersion),
-				Check: resource.ComposeTestCheckFunc(
+				Config: testAccEnvironmentConfig_basic(rName, testAccEngineType),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
-					resource.TestCheckResourceAttr(resourceName, "description", rName),
-					resource.TestCheckResourceAttr(resourceName, "engine_type", testAccEngineType),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", testAccEngineVersion),
+					resource.TestCheckNoResourceAttr(resourceName, "apply_changes_during_maintenance_window"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "m2", regexache.MustCompile(`env/+.`)),
+					resource.TestCheckNoResourceAttr(resourceName, "description"),
+					resource.TestCheckResourceAttr(resourceName, "engine_type", testAccEngineType),
+					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
+					resource.TestCheckResourceAttrSet(resourceName, "environment_id"),
+					resource.TestCheckNoResourceAttr(resourceName, "force_update"),
 					resource.TestCheckResourceAttr(resourceName, "high_availability_config.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "efs_mount.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "fsx_mount.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "instance_type", "M2.m5.large"),
+					resource.TestCheckNoResourceAttr(resourceName, "kms_key_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "load_balancer_arn"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "preferred_maintenance_window"),
+					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
+					acctest.CheckResourceAttrGreaterThanValue(resourceName, "security_group_ids.#", 0),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(resourceName, "subnet_ids.#", 0),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -135,7 +143,7 @@ func TestAccM2Environment_update(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "m2", regexache.MustCompile(`env/+.`)),
 					resource.TestCheckResourceAttr(resourceName, "high_availability_config.0.desired_capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "instance_type", "M2.m5.large"),
@@ -151,7 +159,7 @@ func TestAccM2Environment_update(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "m2", regexache.MustCompile(`env/+.`)),
 					resource.TestCheckResourceAttr(resourceName, "high_availability_config.0.desired_capacity", "1"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "instance_type", "M2.m6i.large"),
@@ -191,7 +199,7 @@ func TestAccM2Environment_highAvailability(t *testing.T) {
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "m2", regexache.MustCompile(`env/+.`)),
 					resource.TestCheckResourceAttr(resourceName, "high_availability_config.0.desired_capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "instance_type", "M2.m5.large"),
@@ -310,7 +318,7 @@ func TestAccM2Environment_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentConfig_basic(rName, testAccEngineType, testAccEngineVersion),
+				Config: testAccEnvironmentConfig_basic(rName, testAccEngineType),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfm2.ResourceEnvironment, resourceName),
@@ -444,122 +452,8 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccEnvironmentConfig_basic(rName, engineType, engineVersion string) string {
-	return acctest.ConfigCompose(testAccEnvironmentConfig_base(rName),
-		fmt.Sprintf(`
-resource "aws_m2_environment" "test" {
-  name            = %[1]q
-  description     = %[1]q
-  engine_type     = %[2]q
-  engine_version  = %[3]q
-  instance_type   = "M2.m5.large"
-  security_groups = [aws_security_group.test.id]
-  subnet_ids      = aws_subnet.test[*].id
-
-  tags = {
-    key = "value"
-  }
-}
-`, rName, engineType, engineVersion))
-}
-
-func testAccEnvironmentConfig_update(rName, engineType, engineVersion string, desiredCapacity int32) string {
-	return acctest.ConfigCompose(testAccEnvironmentConfig_base(rName),
-		fmt.Sprintf(`
-resource "aws_m2_environment" "test" {
-  name            = %[1]q
-  description     = %[1]q
-  engine_type     = %[2]q
-  engine_version  = %[3]q
-  instance_type   = "M2.m6i.large"
-  security_groups = [aws_security_group.test.id]
-  subnet_ids      = aws_subnet.test[*].id
-
-  preferred_maintenance_window = "sat:03:35-sat:05:35"
-
-  high_availability_config {
-    desired_capacity = %[4]d
-  }
-
-  tags = {
-    key = "%[4]d"
-  }
-}
-`, rName, engineType, engineVersion, desiredCapacity))
-}
-
-func testAccEnvironmentConfig_highAvailability(rName, engineType, engineVersion string, desiredCapacity int32) string {
-	return acctest.ConfigCompose(testAccEnvironmentConfig_base(rName),
-		fmt.Sprintf(`
-resource "aws_m2_environment" "test" {
-  name            = %[1]q
-  description     = %[1]q
-  engine_type     = %[2]q
-  engine_version  = %[3]q
-  instance_type   = "M2.m5.large"
-  security_groups = [aws_security_group.test.id]
-  subnet_ids      = aws_subnet.test[*].id
-
-  high_availability_config {
-    desired_capacity = %[4]d
-  }
-  tags = {
-    key = "%[4]d"
-  }
-
-}
-`, rName, engineType, engineVersion, desiredCapacity))
-}
-
-func testAccEnvironmentConfig_efsComplete(rName, engineType, engineVersion string) string {
-	return acctest.ConfigCompose(testAccEnvironmentConfig_base(rName),
-		testAccEnvironmentConfig_efs(rName),
-		fmt.Sprintf(`
-resource "aws_m2_environment" "test" {
-  name            = %[1]q
-  description     = %[1]q
-  engine_type     = %[2]q
-  engine_version  = %[3]q
-  instance_type   = "M2.m5.large"
-  security_groups = [aws_security_group.test.id]
-  subnet_ids      = aws_subnet.test[*].id
-
-  storage_configuration {
-    efs {
-      file_system_id = aws_efs_file_system.test.id
-      mount_point    = "/m2/mount/example"
-    }
-  }
-}
-`, rName, engineType, engineVersion))
-}
-
-func testAccEnvironmentConfig_fsxComplete(rName, engineType, engineVersion string) string {
-	return acctest.ConfigCompose(testAccEnvironmentConfig_base(rName),
-		testAccEnvironmentConfig_fsx(rName),
-		fmt.Sprintf(`
-resource "aws_m2_environment" "test" {
-  name            = %[1]q
-  description     = %[1]q
-  engine_type     = %[2]q
-  engine_version  = %[3]q
-  instance_type   = "M2.m5.large"
-  security_groups = [aws_security_group.test.id]
-  subnet_ids      = aws_subnet.test[*].id
-
-  storage_configuration {
-    fsx {
-      file_system_id = aws_fsx_lustre_file_system.test.id
-      mount_point    = "/m2/mount/example"
-    }
-  }
-}
-`, rName, engineType, engineVersion))
-}
-
 func testAccEnvironmentConfig_base(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptInDefaultExclude(), fmt.Sprintf(`
 resource "aws_vpc" "test" {
   cidr_block           = "10.0.0.0/16"
   enable_dns_support   = true
@@ -581,8 +475,7 @@ resource "aws_subnet" "test" {
     Name = %[1]q
   }
 }
-`, rName),
-		fmt.Sprintf(`
+
 resource "aws_security_group" "test" {
   name   = %[1]q
   vpc_id = aws_vpc.test.id
@@ -590,6 +483,7 @@ resource "aws_security_group" "test" {
   tags = {
     Name = %[1]q
   }
+
   egress {
     from_port   = 0
     to_port     = 0
@@ -606,10 +500,59 @@ resource "aws_security_group" "test" {
 `, rName))
 }
 
-func testAccEnvironmentConfig_efs(rName string) string {
-	return fmt.Sprintf(`
+func testAccEnvironmentConfig_basic(rName, engineType string) string {
+	return acctest.ConfigCompose(testAccEnvironmentConfig_base(rName), fmt.Sprintf(`
+resource "aws_m2_environment" "test" {
+  name          = %[1]q
+  engine_type   = %[2]q
+  instance_type = "M2.m5.large"
+}
+`, rName, engineType))
+}
+
+func testAccEnvironmentConfig_update(rName, engineType, engineVersion string, desiredCapacity int32) string {
+	return acctest.ConfigCompose(testAccEnvironmentConfig_base(rName), fmt.Sprintf(`
+resource "aws_m2_environment" "test" {
+  name               = %[1]q
+  description        = %[1]q
+  engine_type        = %[2]q
+  engine_version     = %[3]q
+  instance_type      = "M2.m6i.large"
+  security_group_ids = [aws_security_group.test.id]
+  subnet_ids         = aws_subnet.test[*].id
+
+  preferred_maintenance_window = "sat:03:35-sat:05:35"
+
+  high_availability_config {
+    desired_capacity = %[4]d
+  }
+}
+`, rName, engineType, engineVersion, desiredCapacity))
+}
+
+func testAccEnvironmentConfig_highAvailability(rName, engineType, engineVersion string, desiredCapacity int32) string {
+	return acctest.ConfigCompose(testAccEnvironmentConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_m2_environment" "test" {
+  name               = %[1]q
+  description        = %[1]q
+  engine_type        = %[2]q
+  engine_version     = %[3]q
+  instance_type      = "M2.m5.large"
+  security_group_ids = [aws_security_group.test.id]
+  subnet_ids         = aws_subnet.test[*].id
+
+  high_availability_config {
+    desired_capacity = %[4]d
+  }
+}
+`, rName, engineType, engineVersion, desiredCapacity))
+}
+
+func testAccEnvironmentConfig_efsComplete(rName, engineType, engineVersion string) string {
+	return acctest.ConfigCompose(testAccEnvironmentConfig_base(rName),
+		fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
-  creation_token = %[1]q
   tags = {
     Name = %[1]q
   }
@@ -617,9 +560,11 @@ resource "aws_efs_file_system" "test" {
 
 resource "aws_efs_access_point" "test" {
   file_system_id = aws_efs_file_system.test.id
+
   root_directory {
     path = "/"
   }
+
   tags = {
     Name = %[1]q
   }
@@ -632,20 +577,55 @@ resource "aws_efs_mount_target" "test" {
   subnet_id       = aws_subnet.test[count.index].id
   security_groups = [aws_security_group.test.id]
 }
-`, rName)
+
+resource "aws_m2_environment" "test" {
+  name            = %[1]q
+  description     = %[1]q
+  engine_type     = %[2]q
+  engine_version  = %[3]q
+  instance_type   = "M2.m5.large"
+  security_group_ids = [aws_security_group.test.id]
+  subnet_ids      = aws_subnet.test[*].id
+
+  storage_configuration {
+    efs {
+      file_system_id = aws_efs_file_system.test.id
+      mount_point    = "/m2/mount/example"
+    }
+  }
+}
+`, rName, engineType, engineVersion))
 }
 
-func testAccEnvironmentConfig_fsx(rName string) string {
-	return fmt.Sprintf(`
+func testAccEnvironmentConfig_fsxComplete(rName, engineType, engineVersion string) string {
+	return acctest.ConfigCompose(testAccEnvironmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_fsx_lustre_file_system" "test" {
   storage_capacity   = 1200
   subnet_ids         = [aws_subnet.test[0].id]
   security_group_ids = [aws_security_group.test.id]
+
   tags = {
     Name = %[1]q
   }
 }
-`, rName)
+
+resource "aws_m2_environment" "test" {
+  name               = %[1]q
+  description        = %[1]q
+  engine_type        = %[2]q
+  engine_version     = %[3]q
+  instance_type      = "M2.m5.large"
+  security_group_ids = [aws_security_group.test.id]
+  subnet_ids         = aws_subnet.test[*].id
+
+  storage_configuration {
+    fsx {
+      file_system_id = aws_fsx_lustre_file_system.test.id
+      mount_point    = "/m2/mount/example"
+    }
+  }
+}
+`, rName, engineType, engineVersion))
 }
 
 func testAccEnvironmentConfig_tags(rName, tags string) string {
@@ -660,55 +640,25 @@ resource "aws_m2_environment" "test" {
 }
 
 func testAccEnvironmentConfig_full(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEnvironmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_m2_environment" "test" {
   description    = "Test-1"
   engine_type    = "microfocus"
   engine_version = "8.0.10"
+
   high_availability_config {
     desired_capacity = 1
   }
-  instance_type   = "M2.m5.large"
-  kms_key_id      = aws_kms_key.test.arn
-  name            = %[1]q
-  security_groups = [aws_security_group.test.id]
-  subnet_ids      = aws_subnet.test[*].id
-  tags = {
-    Name = %[1]q
-  }
+
+  instance_type      = "M2.m5.large"
+  kms_key_id         = aws_kms_key.test.arn
+  name               = %[1]q
+  security_group_ids = [aws_security_group.test.id]
+  subnet_ids         = aws_subnet.test[*].id
 }
-resource "aws_vpc" "test" {
-  cidr_block           = "10.0.0.0/16"
-  enable_dns_support   = true
-  enable_dns_hostnames = true
-  tags = {
-    Name = %[1]q
-  }
-}
-resource "aws_subnet" "test" {
-  count             = 2
-  vpc_id            = aws_vpc.test.id
-  availability_zone = data.aws_availability_zones.available.names[count.index]
-  cidr_block        = cidrsubnet(aws_vpc.test.cidr_block, 8, count.index)
-  tags = {
-    Name = %[1]q
-  }
-}
+
 resource "aws_kms_key" "test" {
-  description = "tf-test-cmk-kms-key-id"
-}
-
-resource "aws_security_group" "test" {
-  name        = %[1]q
   description = %[1]q
-  vpc_id      = aws_vpc.test.id
-
-  ingress {
-    from_port   = -1
-    to_port     = -1
-    protocol    = "icmp"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
 }
 `, rName))
 }
