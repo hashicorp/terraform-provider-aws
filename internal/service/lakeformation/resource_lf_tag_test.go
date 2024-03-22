@@ -160,23 +160,23 @@ func lfTagsCustomStateFunc() func(ctx context.Context, state *tfsdk.State, is *t
 	return func(ctx context.Context, state *tfsdk.State, is *terraform.InstanceState) error {
 		var lfdata tflakeformation.ResourceResourceLFTagData
 		var lt tflakeformation.LFTag
-		for name, v := range is.Attributes {
-			if name == "database.0.name" {
-				lfdata.Database = fwtypes.NewListNestedObjectValueOfPtrMust[tflakeformation.Database](ctx, &tflakeformation.Database{
-					Name: fwflex.StringValueToFramework(ctx, v),
-				})
-			}
 
-			if name == "lf_tag.0.key" {
-				lt.Key = fwflex.StringValueToFramework(ctx, v)
-			}
-			if name == "lf_tag.0.value" {
-				lt.Value = fwflex.StringValueToFramework(ctx, v)
-			}
+		if v, ok := is.Attributes["catalog_id"]; ok {
+			lfdata.CatalogID = fwflex.StringValueToFramework(ctx, v)
+		}
 
-			if name == "catalog_id" {
-				lfdata.CatalogID = fwflex.StringValueToFramework(ctx, v)
-			}
+		if v, ok := is.Attributes["database.0.name"]; ok {
+			lfdata.Database = fwtypes.NewListNestedObjectValueOfPtrMust[tflakeformation.Database](ctx, &tflakeformation.Database{
+				Name: fwflex.StringValueToFramework(ctx, v),
+			})
+		}
+
+		if v, ok := is.Attributes["lf_tag.0.key"]; ok {
+			lt.Key = fwflex.StringValueToFramework(ctx, v)
+		}
+
+		if v, ok := is.Attributes["lf_tag.0.value"]; ok {
+			lt.Value = fwflex.StringValueToFramework(ctx, v)
 		}
 
 		lfdata.LFTag = fwtypes.NewListNestedObjectValueOfPtrMust[tflakeformation.LFTag](ctx, &lt)
