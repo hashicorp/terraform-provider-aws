@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 )
 
 // @FrameworkResource(name="Security Group Egress Rule")
@@ -37,7 +37,7 @@ func (r *securityGroupEgressRuleResource) create(ctx context.Context, data *secu
 	conn := r.Meta().EC2Conn(ctx)
 
 	input := &ec2.AuthorizeSecurityGroupEgressInput{
-		GroupId:       flex.StringFromFramework(ctx, data.SecurityGroupID),
+		GroupId:       fwflex.StringFromFramework(ctx, data.SecurityGroupID),
 		IpPermissions: []*ec2.IpPermission{data.expandIPPermission(ctx)},
 	}
 
@@ -54,8 +54,8 @@ func (r *securityGroupEgressRuleResource) delete(ctx context.Context, data *secu
 	conn := r.Meta().EC2Conn(ctx)
 
 	_, err := conn.RevokeSecurityGroupEgressWithContext(ctx, &ec2.RevokeSecurityGroupEgressInput{
-		GroupId:              flex.StringFromFramework(ctx, data.SecurityGroupID),
-		SecurityGroupRuleIds: flex.StringSliceFromFramework(ctx, data.ID),
+		GroupId:              fwflex.StringFromFramework(ctx, data.SecurityGroupID),
+		SecurityGroupRuleIds: fwflex.StringSliceFromFramework(ctx, data.ID),
 	})
 
 	return err

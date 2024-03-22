@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -143,10 +144,10 @@ func ResourceSecurityGroupRule() *schema.Resource {
 				},
 			},
 			"type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(securityGroupRuleType_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[securityGroupRuleType](),
 			},
 		},
 	}
@@ -168,8 +169,8 @@ func resourceSecurityGroupRuleCreate(ctx context.Context, d *schema.ResourceData
 	}
 
 	ipPermission := expandIPPermission(d, sg)
-	ruleType := d.Get("type").(string)
-	id := SecurityGroupRuleCreateID(securityGroupID, ruleType, ipPermission)
+	ruleType := securityGroupRuleType(d.Get("type").(string))
+	id := SecurityGroupRuleCreateID(securityGroupID, string(ruleType), ipPermission)
 
 	switch ruleType {
 	case securityGroupRuleTypeIngress:
@@ -257,7 +258,7 @@ func resourceSecurityGroupRuleRead(ctx context.Context, d *schema.ResourceData, 
 
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	securityGroupID := d.Get("security_group_id").(string)
-	ruleType := d.Get("type").(string)
+	ruleType := securityGroupRuleType(d.Get("type").(string))
 
 	sg, err := FindSecurityGroupByID(ctx, conn, securityGroupID)
 
@@ -300,7 +301,7 @@ func resourceSecurityGroupRuleRead(ctx context.Context, d *schema.ResourceData, 
 
 	if strings.Contains(d.Id(), securityGroupRuleIDSeparator) {
 		// import so fix the id
-		id := SecurityGroupRuleCreateID(securityGroupID, ruleType, ipPermission)
+		id := SecurityGroupRuleCreateID(securityGroupID, string(ruleType), ipPermission)
 		d.SetId(id)
 	}
 
@@ -339,7 +340,7 @@ func resourceSecurityGroupRuleUpdate(ctx context.Context, d *schema.ResourceData
 		}
 
 		ipPermission := expandIPPermission(d, sg)
-		ruleType := d.Get("type").(string)
+		ruleType := securityGroupRuleType(d.Get("type").(string))
 
 		switch ruleType {
 		case securityGroupRuleTypeIngress:
@@ -383,7 +384,7 @@ func resourceSecurityGroupRuleDelete(ctx context.Context, d *schema.ResourceData
 	}
 
 	ipPermission := expandIPPermission(d, sg)
-	ruleType := d.Get("type").(string)
+	ruleType := securityGroupRuleType(d.Get("type").(string))
 
 	switch ruleType {
 	case securityGroupRuleTypeIngress:
@@ -432,7 +433,7 @@ func resourceSecurityGroupRuleImport(_ context.Context, d *schema.ResourceData, 
 	}
 
 	securityGroupID := parts[0]
-	ruleType := parts[1]
+	ruleType := securityGroupRuleType(parts[1])
 	protocol := parts[2]
 	fromPort := parts[3]
 	toPort := parts[4]
@@ -616,7 +617,7 @@ func findRuleMatch(p *ec2.IpPermission, rules []*ec2.IpPermission) (*ec2.IpPermi
 	return rule, description
 }
 
-func findSecurityGroupRuleMatch(p *ec2.IpPermission, securityGroupRules []*ec2.SecurityGroupRule, ruleType string) string {
+func findSecurityGroupRuleMatch(p *ec2.IpPermission, securityGroupRules []*ec2.SecurityGroupRule, ruleType securityGroupRuleType) string {
 	for _, r := range securityGroupRules {
 		if ruleType == securityGroupRuleTypeIngress && aws.BoolValue(r.IsEgress) {
 			continue

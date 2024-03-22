@@ -331,16 +331,16 @@ func resourceSecurityGroupUpdate(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "reading Security Group (%s): %s", d.Id(), err)
 	}
 
-	err = updateSecurityGroupRules(ctx, conn, d, securityGroupRuleTypeIngress, group)
+	err = updateSecurityGroupRules(ctx, conn, d, "ingress", group)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Security Group (%s) %s rules: %s", d.Id(), securityGroupRuleTypeIngress, err)
+		return sdkdiag.AppendErrorf(diags, "updating Security Group (%s) ingress rules: %s", d.Id(), err)
 	}
 
-	err = updateSecurityGroupRules(ctx, conn, d, securityGroupRuleTypeEgress, group)
+	err = updateSecurityGroupRules(ctx, conn, d, "egress", group)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Security Group (%s) %s rules: %s", d.Id(), securityGroupRuleTypeEgress, err)
+		return sdkdiag.AppendErrorf(diags, "updating Security Group (%s) egress rules: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceSecurityGroupRead(ctx, d, meta)...)
@@ -769,7 +769,7 @@ func updateSecurityGroupRules(ctx context.Context, conn *ec2.EC2, d *schema.Reso
 	// not have service issues.
 
 	if len(del) > 0 {
-		if ruleType == securityGroupRuleTypeEgress {
+		if ruleType == "egress" {
 			input := &ec2.RevokeSecurityGroupEgressInput{
 				GroupId:       group.GroupId,
 				IpPermissions: del,
@@ -791,7 +791,7 @@ func updateSecurityGroupRules(ctx context.Context, conn *ec2.EC2, d *schema.Reso
 	}
 
 	if len(add) > 0 {
-		if ruleType == securityGroupRuleTypeEgress {
+		if ruleType == "egress" {
 			input := &ec2.AuthorizeSecurityGroupEgressInput{
 				GroupId:       group.GroupId,
 				IpPermissions: add,
