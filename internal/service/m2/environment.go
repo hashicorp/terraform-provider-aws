@@ -127,9 +127,10 @@ func (r *environmentResource) Schema(ctx context.Context, request resource.Schem
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"preferred_maintenance_window": schema.StringAttribute{ // TODO Custom type? See internal/types/timestamp/timestamp.go.
-				Optional: true,
-				Computed: true,
+			"preferred_maintenance_window": schema.StringAttribute{
+				CustomType: fwtypes.OnceAWeekWindowType,
+				Optional:   true,
+				Computed:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -593,7 +594,7 @@ type environmentResourceModel struct {
 	KmsKeyID                     fwtypes.ARN                                                  `tfsdk:"kms_key_id"`
 	LoadBalancerArn              types.String                                                 `tfsdk:"load_balancer_arn"`
 	Name                         types.String                                                 `tfsdk:"name"`
-	PreferredMaintenanceWindow   types.String                                                 `tfsdk:"preferred_maintenance_window"`
+	PreferredMaintenanceWindow   fwtypes.OnceAWeekWindow                                      `tfsdk:"preferred_maintenance_window"`
 	PubliclyAccessible           types.Bool                                                   `tfsdk:"publicly_accessible"`
 	SecurityGroupIDs             fwtypes.SetValueOf[types.String]                             `tfsdk:"security_group_ids"`
 	StorageConfigurations        fwtypes.ListNestedObjectValueOf[storageConfigurationModel]   `tfsdk:"storage_configuration"`
