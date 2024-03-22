@@ -202,6 +202,37 @@ func TestAccECSTaskSet_withCapacityProviderStrategy(t *testing.T) {
 	})
 }
 
+func TestAccECSTaskSet_withPrimaryTaskSet(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_task_set.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskSetDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTaskSetConfig_primaryTaskSet(rName, true, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTaskSetExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "primary", "true"),
+					resource.TestCheckResourceAttr(resourceName, "force_delete", "true"),
+				),
+			},
+			{
+				ResourceName: resourceName,
+				ImportState:  true,
+				ImportStateVerifyIgnore: []string{
+					"wait_until_stable",
+					"wait_until_stable_timeout",
+				},
+			},
+		},
+	})
+}
+
 func TestAccECSTaskSet_withAlb(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -623,6 +654,20 @@ resource "aws_ecs_task_set" "test" {
   }
 }
 `, rName))
+}
+
+func testAccTaskSetConfig_primaryTaskSet(rName string, primary, force_delete bool) string {
+	return acctest.ConfigCompose(
+		testAccTaskSetBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_ecs_task_set" "test" {
+  service         = aws_ecs_service.test.id
+  cluster         = aws_ecs_cluster.test.id
+  task_definition = aws_ecs_task_definition.test.arn
+  primary         = %[1]t
+  force_delete    = %[2]t
+}
+`, primary, force_delete))
 }
 
 func testAccTaskSetConfig_tags1(rName, tag1Key, tag1Value string) string {

@@ -728,8 +728,7 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	// When creating a service that uses the EXTERNAL deployment controller,
 	// you can specify only parameters that aren't controlled at the task set level
-	// hence TaskDefinition will not be set by aws sdk
-	if service.TaskDefinition != nil {
+	if service.TaskDefinition != nil && aws.StringValue(service.DeploymentController.Type) != "EXTERNAL" {
 		// Save task definition in the same format
 		if strings.HasPrefix(d.Get("task_definition").(string), "arn:"+meta.(*conns.AWSClient).Partition+":ecs:") {
 			d.Set("task_definition", service.TaskDefinition)
