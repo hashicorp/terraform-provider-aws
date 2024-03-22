@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	fwtypes "github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -427,6 +428,11 @@ func (r tagsResourceInterceptor) read(ctx context.Context, request resource.Read
 						ListTags(context.Context, any, string, string) error
 					}); ok && r.tags.ResourceType != "" {
 						err = v.ListTags(ctx, meta, identifier, r.tags.ResourceType) // Sets tags in Context
+					} else {
+						tflog.Warn(ctx, "No ListTags method found", map[string]interface{}{
+							"ServicePackage": sp.ServicePackageName(),
+							"ResourceType":   r.tags.ResourceType,
+						})
 					}
 
 					// ISO partitions may not support tagging, giving error.
@@ -554,6 +560,11 @@ func (r tagsResourceInterceptor) update(ctx context.Context, request resource.Up
 						UpdateTags(context.Context, any, string, string, any, any) error
 					}); ok && r.tags.ResourceType != "" {
 						err = v.UpdateTags(ctx, meta, identifier, r.tags.ResourceType, oldTagsAll, newTagsAll)
+					} else {
+						tflog.Warn(ctx, "No UpdateTags method found", map[string]interface{}{
+							"ServicePackage": sp.ServicePackageName(),
+							"ResourceType":   r.tags.ResourceType,
+						})
 					}
 
 					// ISO partitions may not support tagging, giving error.

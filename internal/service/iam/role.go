@@ -40,6 +40,7 @@ const (
 
 // @SDKResource("aws_iam_role", name="Role")
 // @Tags(identifierAttribute="id", resourceType="Role")
+// @Testing(existsType="github.com/aws/aws-sdk-go/service/iam.Role")
 func resourceRole() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRoleCreate,
@@ -952,4 +953,15 @@ func inlinePoliciesEquivalent(readPolicies, configPolicies []*iam.PutRolePolicyI
 	}
 
 	return matches == len(readPolicies)
+}
+
+func roleTags(ctx context.Context, conn *iam.IAM, identifier string) ([]*iam.Tag, error) {
+	output, err := conn.ListRoleTagsWithContext(ctx, &iam.ListRoleTagsInput{
+		RoleName: aws.String(identifier),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return output.Tags, nil
 }
