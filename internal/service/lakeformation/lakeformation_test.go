@@ -76,8 +76,10 @@ func TestAccLakeFormation_serial(t *testing.T) {
 			"valuesOverFifty": testAccLFTag_Values_overFifty,
 		},
 		"ResourceLFTag": {
-			"basic":      testAccResourceLFTag_basic,
-			"disappears": testAccResourceLFTag_disappears,
+			"basic":            testAccResourceLFTag_basic,
+			"disappears":       testAccResourceLFTag_disappears,
+			"table":            testAccResourceLFTag_table,
+			"tableWithColumns": testAccResourceLFTag_tableWithColumns,
 		},
 		"ResourceLFTags": {
 			"basic":                testAccResourceLFTags_basic,

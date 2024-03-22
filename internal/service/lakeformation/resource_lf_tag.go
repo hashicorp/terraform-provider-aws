@@ -143,7 +143,6 @@ func (r *resourceResourceLFTag) Schema(ctx context.Context, req resource.SchemaR
 						},
 						"name": schema.StringAttribute{
 							Optional: true,
-							Computed: true,
 							Validators: []validator.String{
 								stringvalidator.AtLeastOneOf(
 									path.MatchRelative().AtParent().AtName("name"),
@@ -152,12 +151,10 @@ func (r *resourceResourceLFTag) Schema(ctx context.Context, req resource.SchemaR
 							},
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
-								stringplanmodifier.UseStateForUnknown(),
 							},
 						},
 						"wildcard": schema.BoolAttribute{
 							Optional: true,
-							Computed: true,
 							Validators: []validator.Bool{
 								boolvalidator.AtLeastOneOf(
 									path.MatchRelative().AtParent().AtName("name"),
@@ -166,7 +163,6 @@ func (r *resourceResourceLFTag) Schema(ctx context.Context, req resource.SchemaR
 							},
 							PlanModifiers: []planmodifier.Bool{
 								boolplanmodifier.RequiresReplace(),
-								boolplanmodifier.UseStateForUnknown(),
 							},
 						},
 					},
