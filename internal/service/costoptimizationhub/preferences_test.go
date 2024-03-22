@@ -208,7 +208,7 @@ resource "aws_costoptimizationhub_enrollment_status" "test_enrollment_status" {
 func testAccPreferencesConfig_basic() string {
 	return testAccPreferencesBase() + `
 resource "aws_costoptimizationhub_preferences" "test" {
-depends_on = [aws_costoptimizationhub_enrollment_status.test_enrollment_status]
+  depends_on = [aws_costoptimizationhub_enrollment_status.test_enrollment_status]
 }
 `
 }
@@ -217,7 +217,7 @@ func testAccPreferencesConfig_MemberAccountDiscountVisibility() string {
 	return testAccPreferencesBase() + `
 resource "aws_costoptimizationhub_preferences" "test" {
   member_account_discount_visibility = "None"
-  depends_on = [aws_costoptimizationhub_enrollment_status.test_enrollment_status]
+  depends_on                         = [aws_costoptimizationhub_enrollment_status.test_enrollment_status]
 }
 `
 }
@@ -226,7 +226,7 @@ func testAccPreferencesConfig_SavingsEstimationMode() string {
 	return testAccPreferencesBase() + `
 resource "aws_costoptimizationhub_preferences" "test" {
   savings_estimation_mode = "AfterDiscounts"
-  depends_on = [aws_costoptimizationhub_enrollment_status.test_enrollment_status]
+  depends_on              = [aws_costoptimizationhub_enrollment_status.test_enrollment_status]
 }
 `
 }
