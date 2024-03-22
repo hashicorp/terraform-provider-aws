@@ -1,4 +1,11 @@
 ## 5.43.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_quicksight_dashboard: Fix failure when updating a dashboard takes a while ([#34227](https://github.com/hashicorp/terraform-provider-aws/issues/34227))
+* resource/aws_quicksight_template: Fix "Invalid address to set" errors ([#34227](https://github.com/hashicorp/terraform-provider-aws/issues/34227))
+* resource/aws_quicksight_template: Fix "a number is required" errors when state contains an empty string ([#34227](https://github.com/hashicorp/terraform-provider-aws/issues/34227))
+
 ## 5.42.0 (March 22, 2024)
 
 FEATURES:
