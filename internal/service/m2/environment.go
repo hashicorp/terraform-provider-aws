@@ -73,7 +73,6 @@ func (r *environmentResource) Schema(ctx context.Context, request resource.Schem
 			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"description": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 				Validators: []validator.String{
 					stringvalidator.LengthAtMost(500),
 				},
@@ -176,7 +175,6 @@ func (r *environmentResource) Schema(ctx context.Context, request resource.Schem
 			"high_availability_config": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[highAvailabilityConfigModel](ctx),
 				Validators: []validator.List{
-					listvalidator.IsRequired(),
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
@@ -582,11 +580,11 @@ func waitEnvironmentDeleted(ctx context.Context, conn *m2.Client, id string, tim
 }
 
 type environmentResourceModel struct {
-	ARN                          types.String                                                 `tfsdk:"arn"`
 	ApplyDuringMaintenanceWindow types.Bool                                                   `tfsdk:"apply_changes_during_maintenance_window"`
 	Description                  types.String                                                 `tfsdk:"description"`
 	EngineType                   fwtypes.StringEnum[awstypes.EngineType]                      `tfsdk:"engine_type"`
 	EngineVersion                types.String                                                 `tfsdk:"engine_version"`
+	EnvironmentARN               types.String                                                 `tfsdk:"arn"`
 	EnvironmentID                types.String                                                 `tfsdk:"environment_id"`
 	ForceUpdate                  types.Bool                                                   `tfsdk:"force_update"`
 	HighAvailabilityConfig       fwtypes.ListNestedObjectValueOf[highAvailabilityConfigModel] `tfsdk:"high_availability_config"`
