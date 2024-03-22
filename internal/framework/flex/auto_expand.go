@@ -616,10 +616,24 @@ func (expander autoExpander) nestedObjectCollection(ctx context.Context, vFrom f
 				diags.Append(expander.nestedObjectToSlice(ctx, vFrom, tTo, tElem, vTo)...)
 				return diags
 			}
+
+		case reflect.Interface:
+			//
+			// types.List(OfObject) -> []interface.
+			//
+			// Smithy union type handling not yet implemented. Silently skip.
+			return diags
 		}
+
+	case reflect.Interface:
+		//
+		// types.List(OfObject) -> interface.
+		//
+		// Smithy union type handling not yet implemented. Silently skip.
+		return diags
 	}
 
-	diags.AddError("Incompatible types", fmt.Sprintf("nestedObject[%s] cannot be expanded to %s", vFrom.Type(ctx).(attr.TypeWithElementType).ElementType(), vTo.Kind()))
+	diags.AddError("Incompatible types", fmt.Sprintf("nestedObjectCollection[%s] cannot be expanded to %s", vFrom.Type(ctx).(attr.TypeWithElementType).ElementType(), vTo.Kind()))
 	return diags
 }
 
