@@ -515,12 +515,12 @@ resource "aws_efs_mount_target" "test" {
 }
 
 resource "aws_m2_environment" "test" {
-  name            = %[1]q
-  engine_type     = "bluage"
-  engine_version  = "3.7.0"
-  instance_type   = "M2.m5.large"
+  name               = %[1]q
+  engine_type        = "bluage"
+  engine_version     = "3.7.0"
+  instance_type      = "M2.m5.large"
   security_group_ids = [aws_security_group.test.id]
-  subnet_ids      = aws_subnet.test[*].id
+  subnet_ids         = aws_subnet.test[*].id
 
   storage_configuration {
     efs {
