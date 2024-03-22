@@ -66,7 +66,7 @@ func (r *resourceResourceLFTag) Metadata(_ context.Context, req resource.Metadat
 func (r *resourceResourceLFTag) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"catalog_id": catalogIDSchema(),
+			"catalog_id": catalogIDSchemaOptional(),
 			"id":         framework.IDAttribute(),
 		},
 		Blocks: map[string]schema.Block{
@@ -80,7 +80,7 @@ func (r *resourceResourceLFTag) Schema(ctx context.Context, req resource.SchemaR
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"catalog_id": catalogIDSchema(),
+						"catalog_id": catalogIDSchemaOptional(),
 						"name": schema.StringAttribute{
 							Required: true,
 							PlanModifiers: []planmodifier.String{
@@ -101,7 +101,7 @@ func (r *resourceResourceLFTag) Schema(ctx context.Context, req resource.SchemaR
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"catalog_id": catalogIDSchema(),
+						"catalog_id": catalogIDSchemaOptionalComputed(),
 						"key": schema.StringAttribute{
 							Required: true,
 							Validators: []validator.String{
@@ -134,7 +134,7 @@ func (r *resourceResourceLFTag) Schema(ctx context.Context, req resource.SchemaR
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"catalog_id": catalogIDSchema(),
+						"catalog_id": catalogIDSchemaOptional(),
 						"database_name": schema.StringAttribute{
 							Required: true,
 							PlanModifiers: []planmodifier.String{
@@ -182,7 +182,7 @@ func (r *resourceResourceLFTag) Schema(ctx context.Context, req resource.SchemaR
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"catalog_id": catalogIDSchema(),
+						"catalog_id": catalogIDSchemaOptional(),
 						"column_names": schema.SetAttribute{
 							CustomType: fwtypes.SetOfStringType,
 							Optional:   true,
@@ -253,11 +253,22 @@ func (r *resourceResourceLFTag) Schema(ctx context.Context, req resource.SchemaR
 	}
 }
 
-func catalogIDSchema() schema.StringAttribute {
+func catalogIDSchemaOptional() schema.StringAttribute {
 	return schema.StringAttribute{
 		Optional: true,
 		PlanModifiers: []planmodifier.String{
 			stringplanmodifier.RequiresReplace(),
+		},
+	}
+}
+
+func catalogIDSchemaOptionalComputed() schema.StringAttribute {
+	return schema.StringAttribute{
+		Optional: true,
+		Computed: true,
+		PlanModifiers: []planmodifier.String{
+			stringplanmodifier.RequiresReplace(),
+			stringplanmodifier.UseStateForUnknown(),
 		},
 	}
 }
@@ -287,39 +298,6 @@ func (r *resourceResourceLFTag) Create(ctx context.Context, req resource.CreateR
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	//if !plan.Database.IsNull() {
-	//	var db awstypes.DatabaseResource
-	//	resp.Diagnostics.Append(fwflex.Expand(ctx, plan.Database, &db)...)
-	//
-	//	if resp.Diagnostics.HasError() {
-	//		return
-	//	}
-	//
-	//	in.Resource.Database = &db
-	//}
-	//
-	//if !plan.Table.IsNull() {
-	//	var tb awstypes.TableResource
-	//	resp.Diagnostics.Append(fwflex.Expand(ctx, plan.Table, &tb)...)
-	//
-	//	if resp.Diagnostics.HasError() {
-	//		return
-	//	}
-	//
-	//	in.Resource.Table = &tb
-	//}
-	//
-	//if !plan.TableWithColumns.IsNull() {
-	//	var tbc awstypes.TableWithColumnsResource
-	//	resp.Diagnostics.Append(fwflex.Expand(ctx, plan.TableWithColumns, &tbc)...)
-	//
-	//	if resp.Diagnostics.HasError() {
-	//		return
-	//	}
-	//
-	//	in.Resource.TableWithColumns = &tbc
-	//}
 
 	lfTag, lfDiags := plan.LFTag.ToPtr(ctx)
 	resp.Diagnostics.Append(lfDiags...)
@@ -383,17 +361,23 @@ func (r *resourceResourceLFTag) Create(ctx context.Context, req resource.CreateR
 	id := fmt.Sprintf("%d", create.StringHashcode(prettify(in)))
 	state.ID = fwflex.StringValueToFramework(ctx, id)
 
-	//out, err := findResourceLFTagByID(ctx, conn, state.CatalogId.ValueString(), res)
-	//
-	//if err != nil {
-	//	resp.Diagnostics.AddError(
-	//		create.ProblemStandardMessage(names.LakeFormation, create.ErrActionSetting, ResNameResourceLFTag, state.ID.String(), err),
-	//		err.Error(),
-	//	)
-	//	return
-	//}
-	//
-	//lftagger.
+	out, err := findResourceLFTagByID(ctx, conn, state.CatalogId.ValueString(), res)
+
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.LakeFormation, create.ErrActionSetting, ResNameResourceLFTag, state.ID.String(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	outputTag := lftagger.findTag(ctx, out, &resp.Diagnostics)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	state.LFTag = outputTag
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, state)...)
 }
 
@@ -435,7 +419,7 @@ func (r *resourceResourceLFTag) Read(ctx context.Context, req resource.ReadReque
 		return
 	}
 
-	state.LFTag = fwtypes.NewListNestedObjectValueOfPtrMust[lfTag](ctx, outputTag)
+	state.LFTag = outputTag
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -568,7 +552,7 @@ func findResourceLFTagByID(ctx context.Context, conn *lakeformation.Client, cata
 
 type lfTagTagger interface {
 	expandResource(context.Context, diag.Diagnostics) *awstypes.Resource
-	findTag(context.Context, *lakeformation.GetResourceLFTagsOutput, *diag.Diagnostics) *lfTag
+	findTag(context.Context, *lakeformation.GetResourceLFTagsOutput, *diag.Diagnostics) fwtypes.ListNestedObjectValueOf[lfTag]
 }
 
 type dbTagger struct {
@@ -617,11 +601,11 @@ func (d *dbTagger) expandResource(ctx context.Context, diags diag.Diagnostics) *
 	return &r
 }
 
-func (d *dbTagger) findTag(ctx context.Context, input *lakeformation.GetResourceLFTagsOutput, diags *diag.Diagnostics) *lfTag {
+func (d *dbTagger) findTag(ctx context.Context, input *lakeformation.GetResourceLFTagsOutput, diags *diag.Diagnostics) fwtypes.ListNestedObjectValueOf[lfTag] {
 	tag, err := d.data.LFTag.ToPtr(ctx)
 	if err != nil {
 		diags.Append(err...)
-		return nil
+		return fwtypes.NewListNestedObjectValueOfNull[lfTag](ctx)
 	}
 
 	for _, v := range input.LFTagOnDatabase {
@@ -631,30 +615,45 @@ func (d *dbTagger) findTag(ctx context.Context, input *lakeformation.GetResource
 			})
 
 			if t != -1 {
-				return &lfTag{
+				out := fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &lfTag{
 					CatalogID: fwflex.StringToFramework(ctx, v.CatalogId),
 					Key:       fwflex.StringToFramework(ctx, v.TagKey),
 					Value:     fwflex.StringValueToFramework(ctx, v.TagValues[t]),
-				}
+				})
+
+				return out
 			}
 		}
 	}
 
-	return nil
+	return fwtypes.NewListNestedObjectValueOfNull[lfTag](ctx)
 }
 
 func (d *tbTagger) expandResource(ctx context.Context, diags diag.Diagnostics) *awstypes.Resource {
 	var r awstypes.Resource
-	diags.Append(fwflex.Expand(ctx, d.data.Table, &r)...)
+
+	tbptr, err := d.data.Table.ToPtr(ctx)
+	diags.Append(err...)
+	if diags.HasError() {
+		return nil
+	}
+
+	var tb awstypes.TableResource
+	diags.Append(fwflex.Expand(ctx, tbptr, &tb)...)
+	if diags.HasError() {
+		return nil
+	}
+
+	r.Table = &tb
 
 	return &r
 }
 
-func (d *tbTagger) findTag(ctx context.Context, input *lakeformation.GetResourceLFTagsOutput, diags *diag.Diagnostics) *lfTag {
+func (d *tbTagger) findTag(ctx context.Context, input *lakeformation.GetResourceLFTagsOutput, diags *diag.Diagnostics) fwtypes.ListNestedObjectValueOf[lfTag] {
 	tag, err := d.data.LFTag.ToPtr(ctx)
 	if err != nil {
 		diags.Append(err...)
-		return nil
+		return fwtypes.NewListNestedObjectValueOfNull[lfTag](ctx)
 	}
 
 	for _, v := range input.LFTagsOnTable {
@@ -664,34 +663,48 @@ func (d *tbTagger) findTag(ctx context.Context, input *lakeformation.GetResource
 			})
 
 			if t != -1 {
-				return &lfTag{
+				out := fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &lfTag{
 					CatalogID: fwflex.StringToFramework(ctx, v.CatalogId),
 					Key:       fwflex.StringToFramework(ctx, v.TagKey),
 					Value:     fwflex.StringValueToFramework(ctx, v.TagValues[t]),
-				}
+				})
+
+				return out
 			}
 		}
 	}
 
-	return nil
+	return fwtypes.NewListNestedObjectValueOfNull[lfTag](ctx)
 }
 
 func (d *tbcTagger) expandResource(ctx context.Context, diags diag.Diagnostics) *awstypes.Resource {
 	var r awstypes.Resource
-	diags.Append(fwflex.Expand(ctx, d.data.TableWithColumns, &r)...)
+	tcbptr, err := d.data.TableWithColumns.ToPtr(ctx)
+	diags.Append(err...)
+	if diags.HasError() {
+		return nil
+	}
+
+	var tcb awstypes.TableWithColumnsResource
+	diags.Append(fwflex.Expand(ctx, tcbptr, &tcb)...)
+	if diags.HasError() {
+		return nil
+	}
+
+	r.TableWithColumns = &tcb
 
 	return &r
 }
 
-func (d *tbcTagger) findTag(ctx context.Context, input *lakeformation.GetResourceLFTagsOutput, diags *diag.Diagnostics) *lfTag {
+func (d *tbcTagger) findTag(ctx context.Context, input *lakeformation.GetResourceLFTagsOutput, diags *diag.Diagnostics) fwtypes.ListNestedObjectValueOf[lfTag] {
 	tag, err := d.data.LFTag.ToPtr(ctx)
 	if err != nil {
 		diags.Append(err...)
-		return nil
+		return fwtypes.NewListNestedObjectValueOfNull[lfTag](ctx)
 	}
 
 	if len(input.LFTagsOnColumns) == 0 {
-		return nil
+		return fwtypes.NewListNestedObjectValueOfNull[lfTag](ctx)
 	}
 
 	for _, v := range input.LFTagsOnColumns[0].LFTags {
@@ -701,16 +714,17 @@ func (d *tbcTagger) findTag(ctx context.Context, input *lakeformation.GetResourc
 			})
 
 			if t != -1 {
-				return &lfTag{
+				out := fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &lfTag{
 					CatalogID: fwflex.StringToFramework(ctx, v.CatalogId),
 					Key:       fwflex.StringToFramework(ctx, v.TagKey),
 					Value:     fwflex.StringValueToFramework(ctx, v.TagValues[t]),
-				}
+				})
+				return out
 			}
 		}
 	}
 
-	return nil
+	return fwtypes.NewListNestedObjectValueOfNull[lfTag](ctx)
 }
 
 type resourceResourceLFTagData struct {
