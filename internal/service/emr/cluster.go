@@ -569,18 +569,23 @@ func ResourceCluster() *schema.Resource {
 				Default:      1,
 				ValidateFunc: validation.IntBetween(1, 256),
 			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"termination_protection": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Computed: true,
+			},
+			"unhealthy_node_replacement": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
 			},
 			"visible_to_all_users": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
 			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -784,9 +789,16 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	if v, ok := d.GetOk("termination_protection"); ok {
 		terminationProtection = v.(bool)
 	}
+
+	unhealthyNodeReplacement := false
+	if v, ok := d.GetOk("unhealthy_node_replacement"); ok {
+		unhealthyNodeReplacement = v.(bool)
+	}
+
 	instanceConfig := &emr.JobFlowInstancesConfig{
 		KeepJobFlowAliveWhenNoSteps: aws.Bool(keepJobFlowAliveWhenNoSteps),
 		TerminationProtected:        aws.Bool(terminationProtection),
+		UnhealthyNodeReplacement:    aws.Bool(unhealthyNodeReplacement),
 	}
 
 	if l := d.Get("master_instance_group").([]interface{}); len(l) > 0 && l[0] != nil {
@@ -1116,6 +1128,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("ebs_root_volume_size", cluster.EbsRootVolumeSize)
 	d.Set("scale_down_behavior", cluster.ScaleDownBehavior)
 	d.Set("termination_protection", cluster.TerminationProtected)
+	d.Set("unhealthy_node_replacement", cluster.UnhealthyNodeReplacement)
 	d.Set("step_concurrency_level", cluster.StepConcurrencyLevel)
 
 	d.Set("custom_ami_id", cluster.CustomAmiId)
@@ -1259,6 +1272,16 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		})
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EMR Cluster (%s): setting termination protection: %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("unhealthy_node_replacement") {
+		_, err := conn.SetUnhealthyNodeReplacementWithContext(ctx, &emr.SetUnhealthyNodeReplacementInput{
+			JobFlowIds:               []*string{aws.String(d.Id())},
+			UnhealthyNodeReplacement: aws.Bool(d.Get("unhealthy_node_replacement").(bool)),
+		})
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating EMR Cluster (%s): setting unhealthy node replacement: %s", d.Id(), err)
 		}
 	}
 
