@@ -203,8 +203,7 @@ func (r *resourceResourceLFTag) Schema(ctx context.Context, req resource.SchemaR
 							},
 						},
 						"name": schema.StringAttribute{
-							Optional: true,
-							Computed: true,
+							Required: true,
 							Validators: []validator.String{
 								stringvalidator.AtLeastOneOf(
 									path.MatchRelative().AtParent().AtName("name"),
