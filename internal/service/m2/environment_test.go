@@ -5,38 +5,31 @@ package m2_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/m2"
-	"github.com/aws/aws-sdk-go-v2/service/m2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfm2 "github.com/hashicorp/terraform-provider-aws/internal/service/m2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
-	testEngineType    = "bluage"
-	testEngineVersion = "3.7.0"
+	testAccEngineType    = "bluage"
+	testAccEngineVersion = "3.7.0"
 )
 
 func TestAccM2Environment_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-
 	var environment m2.GetEnvironmentOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_m2_environment.test"
@@ -52,12 +45,12 @@ func TestAccM2Environment_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentConfig_basic(rName, testEngineType, testEngineVersion),
+				Config: testAccEnvironmentConfig_basic(rName, testAccEngineType, testAccEngineVersion),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
 					resource.TestCheckResourceAttr(resourceName, "description", rName),
-					resource.TestCheckResourceAttr(resourceName, "engine_type", testEngineType),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", testEngineVersion),
+					resource.TestCheckResourceAttr(resourceName, "engine_type", testAccEngineType),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", testAccEngineVersion),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "m2", regexache.MustCompile(`env/+.`)),
 					resource.TestCheckResourceAttr(resourceName, "high_availability_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
@@ -81,7 +74,6 @@ func TestAccM2Environment_full(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_m2_environment.test"
 	var environment m2.GetEnvironmentOutput
@@ -116,12 +108,9 @@ func TestAccM2Environment_full(t *testing.T) {
 
 func TestAccM2Environment_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-
 	var environment m2.GetEnvironmentOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_m2_environment.test"
@@ -137,12 +126,12 @@ func TestAccM2Environment_update(t *testing.T) {
 		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentConfig_highAvailability(rName, testEngineType, testEngineVersion, 2),
+				Config: testAccEnvironmentConfig_highAvailability(rName, testAccEngineType, testAccEngineVersion, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
 					resource.TestCheckResourceAttr(resourceName, "description", rName),
-					resource.TestCheckResourceAttr(resourceName, "engine_type", testEngineType),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", testEngineVersion),
+					resource.TestCheckResourceAttr(resourceName, "engine_type", testAccEngineType),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", testAccEngineVersion),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "m2", regexache.MustCompile(`env/+.`)),
 					resource.TestCheckResourceAttr(resourceName, "high_availability_config.0.desired_capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
@@ -153,12 +142,12 @@ func TestAccM2Environment_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccEnvironmentConfig_update(rName, testEngineType, testEngineVersion, 1),
+				Config: testAccEnvironmentConfig_update(rName, testAccEngineType, testAccEngineVersion, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
 					resource.TestCheckResourceAttr(resourceName, "description", rName),
-					resource.TestCheckResourceAttr(resourceName, "engine_type", testEngineType),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", testEngineVersion),
+					resource.TestCheckResourceAttr(resourceName, "engine_type", testAccEngineType),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", testAccEngineVersion),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "m2", regexache.MustCompile(`env/+.`)),
 					resource.TestCheckResourceAttr(resourceName, "high_availability_config.0.desired_capacity", "1"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
@@ -175,12 +164,9 @@ func TestAccM2Environment_update(t *testing.T) {
 
 func TestAccM2Environment_highAvailability(t *testing.T) {
 	ctx := acctest.Context(t)
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-
 	var environment m2.GetEnvironmentOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_m2_environment.test"
@@ -196,12 +182,12 @@ func TestAccM2Environment_highAvailability(t *testing.T) {
 		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentConfig_highAvailability(rName, testEngineType, testEngineVersion, 2),
+				Config: testAccEnvironmentConfig_highAvailability(rName, testAccEngineType, testAccEngineVersion, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
 					resource.TestCheckResourceAttr(resourceName, "description", rName),
-					resource.TestCheckResourceAttr(resourceName, "engine_type", testEngineType),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", testEngineVersion),
+					resource.TestCheckResourceAttr(resourceName, "engine_type", testAccEngineType),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", testAccEngineVersion),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "m2", regexache.MustCompile(`env/+.`)),
 					resource.TestCheckResourceAttr(resourceName, "high_availability_config.0.desired_capacity", "2"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
@@ -222,12 +208,9 @@ func TestAccM2Environment_highAvailability(t *testing.T) {
 
 func TestAccM2Environment_efs(t *testing.T) {
 	ctx := acctest.Context(t)
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-
 	var environment m2.GetEnvironmentOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_m2_environment.test"
@@ -243,12 +226,12 @@ func TestAccM2Environment_efs(t *testing.T) {
 		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentConfig_efsComplete(rName, testEngineType, testEngineVersion),
+				Config: testAccEnvironmentConfig_efsComplete(rName, testAccEngineType, testAccEngineVersion),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
 					resource.TestCheckResourceAttr(resourceName, "description", rName),
-					resource.TestCheckResourceAttr(resourceName, "engine_type", testEngineType),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", testEngineVersion),
+					resource.TestCheckResourceAttr(resourceName, "engine_type", testAccEngineType),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", testAccEngineVersion),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "m2", regexache.MustCompile(`env/+.`)),
 					resource.TestCheckResourceAttr(resourceName, "high_availability_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
@@ -267,8 +250,6 @@ func TestAccM2Environment_efs(t *testing.T) {
 }
 func TestAccM2Environment_fsx(t *testing.T) {
 	ctx := acctest.Context(t)
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -276,7 +257,6 @@ func TestAccM2Environment_fsx(t *testing.T) {
 	var environment m2.GetEnvironmentOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_m2_environment.test"
-
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
@@ -288,12 +268,12 @@ func TestAccM2Environment_fsx(t *testing.T) {
 		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentConfig_fsxComplete(rName, testEngineType, testEngineVersion),
+				Config: testAccEnvironmentConfig_fsxComplete(rName, testAccEngineType, testAccEngineVersion),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
 					resource.TestCheckResourceAttr(resourceName, "description", rName),
-					resource.TestCheckResourceAttr(resourceName, "engine_type", testEngineType),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", testEngineVersion),
+					resource.TestCheckResourceAttr(resourceName, "engine_type", testAccEngineType),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", testAccEngineVersion),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "m2", regexache.MustCompile(`env/+.`)),
 					resource.TestCheckResourceAttr(resourceName, "high_availability_config.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
@@ -315,7 +295,6 @@ func TestAccM2Environment_disappears(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-
 	var environment m2.GetEnvironmentOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_m2_environment.test"
@@ -331,7 +310,7 @@ func TestAccM2Environment_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentConfig_basic(rName, testEngineType, testEngineVersion),
+				Config: testAccEnvironmentConfig_basic(rName, testAccEngineType, testAccEngineVersion),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfm2.ResourceEnvironment, resourceName),
@@ -347,7 +326,6 @@ func TestAccM2Environment_tags(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_m2_environment.test"
 	var environment m2.GetEnvironmentOutput
@@ -414,44 +392,39 @@ func testAccCheckEnvironmentDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			_, err := conn.GetEnvironment(ctx, &m2.GetEnvironmentInput{
-				EnvironmentId: aws.String(rs.Primary.ID),
-			})
-			if errs.IsA[*types.ResourceNotFoundException](err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.M2, create.ErrActionCheckingDestroyed, tfm2.ResNameEnvironment, rs.Primary.ID, err)
+			_, err := tfm2.FindEnvironmentByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			return create.Error(names.M2, create.ErrActionCheckingDestroyed, tfm2.ResNameEnvironment, rs.Primary.ID, errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Mainframe Modernization Environment %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckEnvironmentExists(ctx context.Context, name string, environment *m2.GetEnvironmentOutput) resource.TestCheckFunc {
+func testAccCheckEnvironmentExists(ctx context.Context, n string, v *m2.GetEnvironmentOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.M2, create.ErrActionCheckingExistence, tfm2.ResNameEnvironment, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.M2, create.ErrActionCheckingExistence, tfm2.ResNameEnvironment, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).M2Client(ctx)
-		resp, err := conn.GetEnvironment(ctx, &m2.GetEnvironmentInput{
-			EnvironmentId: aws.String(rs.Primary.ID),
-		})
+
+		output, err := tfm2.FindEnvironmentByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
-			return create.Error(names.M2, create.ErrActionCheckingExistence, tfm2.ResNameEnvironment, rs.Primary.ID, err)
+			return err
 		}
 
-		*environment = *resp
+		*v = *output
 
 		return nil
 	}
