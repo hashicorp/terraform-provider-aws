@@ -21,6 +21,9 @@ func ResourceResourceGroup() *schema.Resource {
 		CreateWithoutTimeout: resourceResourceGroupCreate,
 		ReadWithoutTimeout:   resourceResourceGroupRead,
 		DeleteWithoutTimeout: resourceResourceGroupDelete,
+		Importer: &schema.ResourceImporter{
+			StateContext: schema.ImportStatePassthroughContext,
+		},
 
 		Schema: map[string]*schema.Schema{
 			"tags": {
