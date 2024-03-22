@@ -32,7 +32,7 @@ resource "aws_costoptimizationhub_preferences" "example" {
 
 The following arguments are optional:
 
-* `member_account_discount_visibility` - (Optional) Customize whether the member accounts can see the estimated discounts or not. Valid values are `All` and `None`. Default value is `All`.
+* `member_account_discount_visibility` - (Optional) Customize whether the member accounts can see the "After Discounts" savings estimates. Valid values are `All` and `None`. Default value is `All`.
 * `savings_estimation_mode` - (Optional) Customize how estimated monthly savings are calculated. Valid values are `BeforeDiscounts` and `AfterDiscounts`. Default value is `BeforeDiscounts`.
 
 ## Attribute Reference
@@ -43,7 +43,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cost Optimization Hub Enrollment Status using the `id`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cost Optimization Hub Preferences using the `id`. For example:
 
 ```terraform
 import {
@@ -52,7 +52,7 @@ import {
 }
 ```
 
-Using `terraform import`, import Cost Optimization Hub Enrollment Status using the `id`. For example:
+Using `terraform import`, import Cost Optimization Hub Preferences using the `id`. For example:
 
 ```console
 % terraform import aws_costoptimizationhub_preferences.example 111222333444

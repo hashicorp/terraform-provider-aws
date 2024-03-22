@@ -130,7 +130,7 @@ func (r *resourcePreferences) Read(ctx context.Context, req resource.ReadRequest
 	if err != nil {
 		//Check if err is of type AccessDeniedException and contains the message "AWS account is not enrolled for recommendations"
 		//If that is the case, the Enrollment Status is inactive and hence this resource needs to be removed from state
-		if errs.MessageContains(err, "AccessDenied", "AWS account is not enrolled for recommendations") {
+		if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "AWS account is not enrolled for recommendations") {
 			resp.State.RemoveResource(ctx)
 			return
 		}
@@ -140,15 +140,6 @@ func (r *resourcePreferences) Read(ctx context.Context, req resource.ReadRequest
 			err.Error(),
 		)
 		return
-	}
-
-	if err != nil {
-		if err, ok := err.(*awstypes.AccessDeniedException); ok {
-			if err.Message != nil && *err.Message == "AWS account is not enrolled for recommendations" {
-				resp.State.RemoveResource(ctx)
-				return
-			}
-		}
 	}
 
 	state.ID = flex.StringValueToFramework(ctx, r.Meta().AccountID)
