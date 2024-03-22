@@ -62,7 +62,7 @@ servicediscovery,servicediscovery,servicediscovery,servicediscovery,,servicedisc
 cloud9,cloud9,cloud9,cloud9,,cloud9,,,Cloud9,Cloud9,,,2,,aws_cloud9_,,cloud9_,Cloud9,AWS,,,,,,,Cloud9,ListEnvironments,,
 cloudformation,cloudformation,cloudformation,cloudformation,,cloudformation,,,CloudFormation,CloudFormation,,1,,,aws_cloudformation_,,cloudformation_,CloudFormation,AWS,,,,,,,CloudFormation,ListStackInstances,,
 cloudfront,cloudfront,cloudfront,cloudfront,,cloudfront,,,CloudFront,CloudFront,,1,2,,aws_cloudfront_,,cloudfront_,CloudFront,Amazon,,,,,,,CloudFront,ListDistributions,,
-cloudfront-keyvaluestore,cloudfrontkeyvaluestore,,cloudfrontkeyvaluestore,,cloudfrontkeyvaluestore,,,CloudFrontKeyValueStore,CloudFrontKeyValueStore,,,2,,aws_cloudfrontkeyvaluestore_,,cloudfront_keyvaluestore_,CloudFront KeyValueStore,Amazon,,,,,,,CloudFront KeyValueStore,ListKeys,"KvsARN: aws_sdkv2.String(""arn:aws:cloudfront::111122223333:key-value-store/MaxAge"")",
+cloudfront-keyvaluestore,cloudfrontkeyvaluestore,,cloudfrontkeyvaluestore,,cloudfrontkeyvaluestore,,,CloudFrontKeyValueStore,CloudFrontKeyValueStore,,,2,,aws_cloudfrontkeyvaluestore_,,cloudfrontkeyvaluestore_,CloudFront KeyValueStore,Amazon,,,,,,,CloudFront KeyValueStore,ListKeys,"KvsARN: aws_sdkv2.String(""arn:aws:cloudfront::111122223333:key-value-store/MaxAge"")",
 cloudhsm,cloudhsm,cloudhsm,cloudhsm,,,,,,,,,,,,,,CloudHSM,AWS,x,,,,,,,,,Legacy
 cloudhsmv2,cloudhsmv2,cloudhsmv2,cloudhsmv2,,cloudhsmv2,,cloudhsm,CloudHSMV2,CloudHSMV2,x,,2,aws_cloudhsm_v2_,aws_cloudhsmv2_,,cloudhsm,CloudHSM,AWS,,,,,,,CloudHSM V2,DescribeClusters,,
 cloudsearch,cloudsearch,cloudsearch,cloudsearch,,cloudsearch,,,CloudSearch,CloudSearch,,,2,,aws_cloudsearch_,,cloudsearch_,CloudSearch,Amazon,,,,,,,CloudSearch,ListDomainNames,,
