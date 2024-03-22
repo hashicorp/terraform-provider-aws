@@ -120,7 +120,7 @@ func TestAccFSxONTAPVolume_aggregateConfiguration(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"bypass_snaplock_enterprise_retention", "skip_final_backup"},
 			},
 			{
-				Config: testAccONTAPVolumeConfig_aggregateConstituents(rName, ConstituentsPerAggregate),
+				Config: testAccONTAPVolumeConfig_aggregateConstituents(rName, ConstituentsPerAggregate, ConstituentsPerAggregate*204800),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPVolumeExists(ctx, resourceName, &volume2),
 					testAccCheckONTAPVolumeRecreated(&volume1, &volume2),
@@ -129,6 +129,7 @@ func TestAccFSxONTAPVolume_aggregateConfiguration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "aggregate_configuration.0.aggregates.0", "aggr1"),
 					resource.TestCheckResourceAttr(resourceName, "aggregate_configuration.0.aggregates.1", "aggr2"),
 					resource.TestCheckResourceAttr(resourceName, "aggregate_configuration.0.total_constituents", fmt.Sprint(ConstituentsPerAggregate*2)),
+					resource.TestCheckResourceAttr(resourceName, "size_in_megabytes", fmt.Sprint(ConstituentsPerAggregate*204800)),
 				),
 			},
 		},
@@ -783,12 +784,12 @@ resource "aws_fsx_ontap_storage_virtual_machine" "test" {
 func testAccONTAPVolumeConfig_baseScaleOut(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_fsx_ontap_file_system" "test" {
-  storage_capacity    = 2048
-  subnet_ids          = [aws_subnet.test[0].id]
-  deployment_type     = "SINGLE_AZ_2"
-  ha_pairs            = 2
+  storage_capacity                = 2048
+  subnet_ids                      = [aws_subnet.test[0].id]
+  deployment_type                 = "SINGLE_AZ_2"
+  ha_pairs                        = 2
   throughput_capacity_per_ha_pair = 3072
-  preferred_subnet_id = aws_subnet.test[0].id
+  preferred_subnet_id             = aws_subnet.test[0].id
 
   tags = {
     Name = %[1]q
@@ -825,30 +826,30 @@ resource "aws_fsx_ontap_volume" "test" {
   volume_style               = "FLEXGROUP"
 
   aggregate_configuration {
-	aggregates = ["aggr1","aggr2"]
+    aggregates = ["aggr1", "aggr2"]
   }
 
 }
 `, rName))
 }
 
-func testAccONTAPVolumeConfig_aggregateConstituents(rName string, ConstituentsPerAggregate int) string {
+func testAccONTAPVolumeConfig_aggregateConstituents(rName string, ConstituentsPerAggregate int, size int) string {
 	return acctest.ConfigCompose(testAccONTAPVolumeConfig_baseScaleOut(rName), fmt.Sprintf(`
 resource "aws_fsx_ontap_volume" "test" {
   name                       = %[1]q
   junction_path              = "/%[1]s"
-  size_in_megabytes          = %[2]d * 2 * 102400
+  size_in_megabytes          = %[3]d
   storage_efficiency_enabled = true
   storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
   volume_style               = "FLEXGROUP"
-  
+
   aggregate_configuration {
-	aggregates = ["aggr1","aggr2"]
-	constituents_per_aggregate = %[2]d
+    aggregates                 = ["aggr1", "aggr2"]
+    constituents_per_aggregate = %[2]d
   }
 
 }
-`, rName, ConstituentsPerAggregate))
+`, rName, ConstituentsPerAggregate, size))
 }
 
 func testAccONTAPVolumeConfig_copyTagsToBackups(rName string, copyTagsToBackups bool) string {
@@ -918,7 +919,7 @@ func testAccONTAPVolumeConfig_sizeBytes(rName string, size int64) string {
 resource "aws_fsx_ontap_volume" "test" {
   name                       = %[1]q
   junction_path              = "/%[1]s"
-  size_in_bytes          = %[2]d
+  size_in_bytes              = %[2]d
   storage_efficiency_enabled = true
   storage_virtual_machine_id = aws_fsx_ontap_storage_virtual_machine.test.id
   volume_style               = "FLEXGROUP"

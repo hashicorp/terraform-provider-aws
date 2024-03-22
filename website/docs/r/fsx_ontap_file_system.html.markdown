@@ -25,14 +25,13 @@ resource "aws_fsx_ontap_file_system" "test" {
 
 ```terraform
 resource "aws_fsx_ontap_file_system" "testhapairs" {
-  storage_capacity    = 2048
-  subnet_ids          = [aws_subnet.test1.id]
-  deployment_type     = "SINGLE_AZ_2"
+  storage_capacity                = 2048
+  subnet_ids                      = [aws_subnet.test1.id]
+  deployment_type                 = "SINGLE_AZ_2"
   throughput_capacity_per_ha_pair = 3072
-  preferred_subnet_id = aws_subnet.test1.id
+  preferred_subnet_id             = aws_subnet.test1.id
 }
 ```
-
 
 ## Argument Reference
 
@@ -49,13 +48,13 @@ This resource supports the following arguments:
 * `daily_automatic_backup_start_time` - (Optional) A recurring daily time, in the format HH:MM. HH is the zero-padded hour of the day (0-23), and MM is the zero-padded minute of the hour. For example, 05:00 specifies 5 AM daily. Requires `automatic_backup_retention_days` to be set.
 * `disk_iops_configuration` - (Optional) The SSD IOPS configuration for the Amazon FSx for NetApp ONTAP file system. See [Disk Iops Configuration](#disk-iops-configuration) below.
 * `endpoint_ip_address_range` - (Optional) Specifies the IP address range in which the endpoints to access your file system will be created. By default, Amazon FSx selects an unused IP address range for you from the 198.19.* range.
-* `ha_pairs` - (Optional) - The number of ha_pairs to deploy for the file system. Valid values are 1 through 6. Value of 2 or greater required for `SINGLE_AZ_2`. Only value of 1 is supported with `SINGLE_AZ_1` or `MULTI_AZ_1` but not required.
+* `ha_pairs` - (Optional) - The number of ha_pairs to deploy for the file system. Valid values are 1 through 12. Value of 2 or greater required for `SINGLE_AZ_2`. Only value of 1 is supported with `SINGLE_AZ_1` or `MULTI_AZ_1` but not required.
 * `storage_type` - (Optional) - The filesystem storage type. defaults to `SSD`.
 * `fsx_admin_password` - (Optional) The ONTAP administrative password for the fsxadmin user that you can use to administer your file system using the ONTAP CLI and REST API.
 * `route_table_ids` - (Optional) Specifies the VPC route tables in which your file system's endpoints will be created. You should specify all VPC route tables associated with the subnets in which your clients are located. By default, Amazon FSx selects your VPC's default route table.
 * `tags` - (Optional) A map of tags to assign to the file system. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `throughput_capacity` - (Optional) Sets the throughput capacity (in MBps) for the file system that you're creating. Valid values are `128`, `256`, `512`, `1024`, `2048`, and `4096`. This parameter is only supported when not using the ha_pairs parameter. Either throughput_capacity or throughput_capacity_per_ha_pair must be specified.
-* `throughput_capacity_per_ha_pair` - (Optional) Sets the throughput capacity (in MBps) for the file system that you're creating. Valid value when using 1 har_pair are `128`, `256`, `512`, `1024`, `2048`, and `4096`. Valid values when using 2 or more ha_pairs are `3072`,`6144`. This parameter is only supported when specifying the ha_pairs parameter. Either throughput_capacity or throughput_capacity_per_ha_pair must be specified.
+* `throughput_capacity_per_ha_pair` - (Optional) Sets the throughput capacity (in MBps) for the file system that you're creating. Valid value when using 1 ha_pair are `128`, `256`, `512`, `1024`, `2048`, and `4096`. Valid values when using 2 or more ha_pairs are `3072`,`6144`. This parameter is only supported when specifying the ha_pairs parameter. Either throughput_capacity or throughput_capacity_per_ha_pair must be specified.
 
 ### Disk Iops Configuration
 

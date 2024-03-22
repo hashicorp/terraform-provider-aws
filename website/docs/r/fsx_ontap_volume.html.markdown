@@ -55,8 +55,8 @@ This resource supports the following arguments:
 * `junction_path` - (Optional) Specifies the location in the storage virtual machine's namespace where the volume is mounted. The junction_path must have a leading forward slash, such as `/vol3`
 * `ontap_volume_type` - (Optional) Specifies the type of volume, valid values are `RW`, `DP`. Default value is `RW`. These can be set by the ONTAP CLI or API. This setting is used as part of migration and replication [Migrating to Amazon FSx for NetApp ONTAP](https://docs.aws.amazon.com/fsx/latest/ONTAPGuide/migrating-fsx-ontap.html)
 * `security_style` - (Optional) Specifies the volume security style, Valid values are `UNIX`, `NTFS`, and `MIXED`.
-* `size_in_bytes` - (Optional) Specifies the size of the volume, in megabytes (MB), that you are creating. Should be used for creating volumes over 2 PB. Either size_in_bytes or size_in_megabytes must be specified.
-* `size_in_megabytes` - (Optional) Specifies the size of the volume, in megabytes (MB), that you are creating. Supported when creating volumes under 2 PB. Either size_in_bytes or size_in_megabytes must be specified.
+* `size_in_bytes` - (Optional) Specifies the size of the volume, in megabytes (MB), that you are creating. Can be used for any size but required for volumes over 2 PB. Either size_in_bytes or size_in_megabytes must be specified. Minimum size for `FLEXGROUP` volumes are 100GiB per constituent. 
+* `size_in_megabytes` - (Optional) Specifies the size of the volume, in megabytes (MB), that you are creating. Supported when creating volumes under 2 PB. Either size_in_bytes or size_in_megabytes must be specified. Minimum size for `FLEXGROUP` volumes are 100GiB per constituent. 
 * `skip_final_backup` - (Optional) When enabled, will skip the default final backup taken when the volume is deleted. This configuration must be applied separately before attempting to delete the resource to have the desired behavior. Defaults to `false`.
 * `snaplock_configuration` - (Optional) The SnapLock configuration for an FSx for ONTAP volume. See [SnapLock Configuration](#snaplock-configuration) below.
 * `snapshot_policy` - (Optional) Specifies the snapshot policy for the volume. See [snapshot policies](https://docs.aws.amazon.com/fsx/latest/ONTAPGuide/snapshots-ontap.html#snapshot-policies) in the Amazon FSx ONTAP User Guide
@@ -68,8 +68,8 @@ This resource supports the following arguments:
 
 ### Aggregate Configuration
 
-* `aggregates` - (Optional) Used to specify the names of the aggregates on which the volume will be created. Each aggregate needs to be in the format aggrX where X is the number of the aggregate. 
-* `constituents_per_aggregate` - (Optional) Used to explicity set the number of constituents within the FlexGroup per storage aggregate. the default value is `8`.
+* `aggregates` - (Optional) Used to specify the names of the aggregates on which the volume will be created. Each aggregate needs to be in the format aggrX where X is the number of the aggregate.
+* `constituents_per_aggregate` - (Optional) Used to explicitly set the number of constituents within the FlexGroup per storage aggregate. the default value is `8`.
 
 ### SnapLock Configuration
 
@@ -105,7 +105,7 @@ This resource supports the following arguments:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `aggregate_configuration.total_constituents` - The total amount of constituents for a `FLEXGROUP` volume. This would equal constituents_per_aggregate x aggregates. 
+* `aggregate_configuration.total_constituents` - The total amount of constituents for a `FLEXGROUP` volume. This would equal constituents_per_aggregate x aggregates.
 * `arn` - Amazon Resource Name of the volune.
 * `id` - Identifier of the volume, e.g., `fsvol-12345678`
 * `file_system_id` - Describes the file system for the volume, e.g. `fs-12345679`

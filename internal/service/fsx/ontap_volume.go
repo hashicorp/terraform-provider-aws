@@ -81,8 +81,6 @@ func ResourceONTAPVolume() *schema.Resource {
 						},
 						"total_constituents": {
 							Type:     schema.TypeInt,
-							Optional: false,
-							Required: false,
 							Computed: true,
 						},
 					},
@@ -618,7 +616,11 @@ func flattenAggregateConfiguration(apiObject *fsx.AggregateConfiguration) map[st
 	if v := apiObject.TotalConstituents; v != nil {
 		tfMap["total_constituents"] = aws.Int64Value(v)
 		//Since the api only returns totalConstituents, need to calculate the value of ConstituentsPerAggregate so state will be consistent with config
-		tfMap["constituents_per_aggregate"] = aws.Int64Value(v) / aggregates
+		if aggregates != 0 {
+			tfMap["constituents_per_aggregate"] = aws.Int64Value(v) / aggregates
+		} else {
+			tfMap["constituents_per_aggregate"] = aws.Int64Value(v)
+		}
 	}
 
 	return tfMap

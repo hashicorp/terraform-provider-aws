@@ -141,7 +141,7 @@ func TestAccFSxONTAPFileSystem_haPair(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckONTAPFileSystemExists(ctx, resourceName, &filesystem),
 					resource.TestCheckResourceAttr(resourceName, "ha_pairs", "1"),
-					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", "0"),
+					resource.TestCheckResourceAttr(resourceName, "throughput_capacity", fmt.Sprint(throughput2)),
 					resource.TestCheckResourceAttr(resourceName, "throughput_capacity_per_ha_pair", fmt.Sprint(throughput2)),
 				),
 			},
