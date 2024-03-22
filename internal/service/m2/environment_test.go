@@ -20,11 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const (
-	testAccEngineType    = "bluage"
-	testAccEngineVersion = "3.7.0"
-)
-
 func TestAccM2Environment_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -45,13 +40,13 @@ func TestAccM2Environment_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentConfig_basic(rName, testAccEngineType),
+				Config: testAccEnvironmentConfig_basic(rName, "bluage"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
 					resource.TestCheckNoResourceAttr(resourceName, "apply_changes_during_maintenance_window"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "m2", regexache.MustCompile(`env/+.`)),
 					resource.TestCheckNoResourceAttr(resourceName, "description"),
-					resource.TestCheckResourceAttr(resourceName, "engine_type", testAccEngineType),
+					resource.TestCheckResourceAttr(resourceName, "engine_type", "bluage"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine_version"),
 					resource.TestCheckResourceAttrSet(resourceName, "environment_id"),
 					resource.TestCheckNoResourceAttr(resourceName, "force_update"),
@@ -97,7 +92,7 @@ func TestAccM2Environment_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentConfig_basic(rName, testAccEngineType),
+				Config: testAccEnvironmentConfig_basic(rName, "bluage"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfm2.ResourceEnvironment, resourceName),
@@ -180,11 +175,25 @@ func TestAccM2Environment_full(t *testing.T) {
 				Config: testAccEnvironmentConfig_full(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
+					resource.TestCheckNoResourceAttr(resourceName, "apply_changes_during_maintenance_window"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "m2", regexache.MustCompile(`env/+.`)),
+					resource.TestCheckResourceAttr(resourceName, "description", "Test-1"),
+					resource.TestCheckResourceAttr(resourceName, "engine_type", "microfocus"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "8.0.10"),
 					resource.TestCheckResourceAttrSet(resourceName, "environment_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "name"),
-					resource.TestCheckResourceAttrSet(resourceName, "engine_type"),
-					resource.TestCheckResourceAttrSet(resourceName, "instance_type"),
-					resource.TestCheckResourceAttrSet(resourceName, "subnet_ids.#"),
+					resource.TestCheckNoResourceAttr(resourceName, "force_update"),
+					resource.TestCheckResourceAttr(resourceName, "high_availability_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "high_availability_config.0.desired_capacity", "5"),
+					resource.TestCheckResourceAttr(resourceName, "instance_type", "M2.m5.large"),
+					resource.TestCheckResourceAttrSet(resourceName, "kms_key_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "load_balancer_arn"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "preferred_maintenance_window"),
+					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
+					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
@@ -216,81 +225,24 @@ func TestAccM2Environment_update(t *testing.T) {
 		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentConfig_highAvailability(rName, testAccEngineType, testAccEngineVersion, 2),
+				Config: testAccEnvironmentConfig_update(rName, "M2.m5.large", 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
-					resource.TestCheckResourceAttr(resourceName, "description", rName),
-					resource.TestCheckResourceAttr(resourceName, "engine_type", testAccEngineType),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", testAccEngineVersion),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "m2", regexache.MustCompile(`env/+.`)),
+					resource.TestCheckResourceAttr(resourceName, "high_availability_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "high_availability_config.0.desired_capacity", "2"),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "instance_type", "M2.m5.large"),
-				),
-			},
-			{
-				Config: testAccEnvironmentConfig_update(rName, testAccEngineType, testAccEngineVersion, 1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
-					resource.TestCheckResourceAttr(resourceName, "description", rName),
-					resource.TestCheckResourceAttr(resourceName, "engine_type", testAccEngineType),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", testAccEngineVersion),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "m2", regexache.MustCompile(`env/+.`)),
-					resource.TestCheckResourceAttr(resourceName, "high_availability_config.0.desired_capacity", "1"),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", "M2.m6i.large"),
 					resource.TestCheckResourceAttr(resourceName, "preferred_maintenance_window", "sat:03:35-sat:05:35"),
 				),
 			},
-		},
-	})
-}
-
-func TestAccM2Environment_highAvailability(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-	var environment m2.GetEnvironmentOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_m2_environment.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.M2EndpointID)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.M2ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
-		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentConfig_highAvailability(rName, testAccEngineType, testAccEngineVersion, 2),
+				Config: testAccEnvironmentConfig_update(rName, "M2.m6i.large", 3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
-					resource.TestCheckResourceAttr(resourceName, "description", rName),
-					resource.TestCheckResourceAttr(resourceName, "engine_type", testAccEngineType),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", testAccEngineVersion),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "m2", regexache.MustCompile(`env/+.`)),
-					resource.TestCheckResourceAttr(resourceName, "high_availability_config.0.desired_capacity", "2"),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "security_group_ids.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", "M2.m5.large"),
+					resource.TestCheckResourceAttr(resourceName, "high_availability_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "high_availability_config.0.desired_capacity", "3"),
+					resource.TestCheckResourceAttr(resourceName, "instance_type", "M2.m6i.large"),
+					resource.TestCheckResourceAttr(resourceName, "preferred_maintenance_window", "sat:03:35-sat:05:35"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
@@ -316,18 +268,13 @@ func TestAccM2Environment_efs(t *testing.T) {
 		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentConfig_efsComplete(rName, testAccEngineType, testAccEngineVersion),
+				Config: testAccEnvironmentConfig_efsComplete(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
-					resource.TestCheckResourceAttr(resourceName, "description", rName),
-					resource.TestCheckResourceAttr(resourceName, "engine_type", testAccEngineType),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", testAccEngineVersion),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "m2", regexache.MustCompile(`env/+.`)),
-					resource.TestCheckResourceAttr(resourceName, "high_availability_config.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.efs.0.mount_point", "/m2/mount/example"),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", "M2.m5.large"),
+					resource.TestCheckResourceAttrSet(resourceName, "storage_configuration.0.efs.0.file_system_id"),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.efs.0.mount_point", "/m2/mount/efsexample"),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.fsx.#", "0"),
 				),
 			},
 			{
@@ -358,18 +305,13 @@ func TestAccM2Environment_fsx(t *testing.T) {
 		CheckDestroy:             testAccCheckEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccEnvironmentConfig_fsxComplete(rName, testAccEngineType, testAccEngineVersion),
+				Config: testAccEnvironmentConfig_fsxComplete(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEnvironmentExists(ctx, resourceName, &environment),
-					resource.TestCheckResourceAttr(resourceName, "description", rName),
-					resource.TestCheckResourceAttr(resourceName, "engine_type", testAccEngineType),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", testAccEngineVersion),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "m2", regexache.MustCompile(`env/+.`)),
-					resource.TestCheckResourceAttr(resourceName, "high_availability_config.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "storage_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.fsx.0.mount_point", "/m2/mount/example"),
-					resource.TestCheckResourceAttr(resourceName, "instance_type", "M2.m5.large"),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.efs.#", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "storage_configuration.0.fsx.0.file_system_id"),
+					resource.TestCheckResourceAttr(resourceName, "storage_configuration.0.fsx.0.mount_point", "/m2/mount/fsxexample"),
 				),
 			},
 			{
@@ -508,7 +450,7 @@ resource "aws_m2_environment" "test" {
   engine_version = "8.0.10"
 
   high_availability_config {
-    desired_capacity = 1
+    desired_capacity = 5
   }
 
   instance_type      = "M2.m5.large"
@@ -524,46 +466,26 @@ resource "aws_kms_key" "test" {
 `, rName))
 }
 
-func testAccEnvironmentConfig_update(rName, engineType, engineVersion string, desiredCapacity int32) string {
+func testAccEnvironmentConfig_update(rName, instanceType string, desiredCapacity int32) string {
 	return acctest.ConfigCompose(testAccEnvironmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_m2_environment" "test" {
   name               = %[1]q
-  description        = %[1]q
-  engine_type        = %[2]q
-  engine_version     = %[3]q
-  instance_type      = "M2.m6i.large"
+  engine_type        = "bluage"
+  engine_version     = "3.7.0"
+  instance_type      = %[2]q
   security_group_ids = [aws_security_group.test.id]
   subnet_ids         = aws_subnet.test[*].id
 
   preferred_maintenance_window = "sat:03:35-sat:05:35"
 
   high_availability_config {
-    desired_capacity = %[4]d
+    desired_capacity = %[3]d
   }
 }
-`, rName, engineType, engineVersion, desiredCapacity))
+`, rName, instanceType, desiredCapacity))
 }
 
-func testAccEnvironmentConfig_highAvailability(rName, engineType, engineVersion string, desiredCapacity int32) string {
-	return acctest.ConfigCompose(testAccEnvironmentConfig_base(rName),
-		fmt.Sprintf(`
-resource "aws_m2_environment" "test" {
-  name               = %[1]q
-  description        = %[1]q
-  engine_type        = %[2]q
-  engine_version     = %[3]q
-  instance_type      = "M2.m5.large"
-  security_group_ids = [aws_security_group.test.id]
-  subnet_ids         = aws_subnet.test[*].id
-
-  high_availability_config {
-    desired_capacity = %[4]d
-  }
-}
-`, rName, engineType, engineVersion, desiredCapacity))
-}
-
-func testAccEnvironmentConfig_efsComplete(rName, engineType, engineVersion string) string {
+func testAccEnvironmentConfig_efsComplete(rName string) string {
 	return acctest.ConfigCompose(testAccEnvironmentConfig_base(rName),
 		fmt.Sprintf(`
 resource "aws_efs_file_system" "test" {
@@ -594,9 +516,8 @@ resource "aws_efs_mount_target" "test" {
 
 resource "aws_m2_environment" "test" {
   name            = %[1]q
-  description     = %[1]q
-  engine_type     = %[2]q
-  engine_version  = %[3]q
+  engine_type     = "bluage"
+  engine_version  = "3.7.0"
   instance_type   = "M2.m5.large"
   security_group_ids = [aws_security_group.test.id]
   subnet_ids      = aws_subnet.test[*].id
@@ -604,14 +525,14 @@ resource "aws_m2_environment" "test" {
   storage_configuration {
     efs {
       file_system_id = aws_efs_file_system.test.id
-      mount_point    = "/m2/mount/example"
+      mount_point    = "/m2/mount/efsexample"
     }
   }
 }
-`, rName, engineType, engineVersion))
+`, rName))
 }
 
-func testAccEnvironmentConfig_fsxComplete(rName, engineType, engineVersion string) string {
+func testAccEnvironmentConfig_fsxComplete(rName string) string {
 	return acctest.ConfigCompose(testAccEnvironmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_fsx_lustre_file_system" "test" {
   storage_capacity   = 1200
@@ -625,9 +546,8 @@ resource "aws_fsx_lustre_file_system" "test" {
 
 resource "aws_m2_environment" "test" {
   name               = %[1]q
-  description        = %[1]q
-  engine_type        = %[2]q
-  engine_version     = %[3]q
+  engine_type        = "bluage"
+  engine_version     = "3.7.0"
   instance_type      = "M2.m5.large"
   security_group_ids = [aws_security_group.test.id]
   subnet_ids         = aws_subnet.test[*].id
@@ -635,11 +555,11 @@ resource "aws_m2_environment" "test" {
   storage_configuration {
     fsx {
       file_system_id = aws_fsx_lustre_file_system.test.id
-      mount_point    = "/m2/mount/example"
+      mount_point    = "/m2/mount/fsxexample"
     }
   }
 }
-`, rName, engineType, engineVersion))
+`, rName))
 }
 
 func testAccEnvironmentConfig_tags1(rName, tagKey1, tagValue1 string) string {
