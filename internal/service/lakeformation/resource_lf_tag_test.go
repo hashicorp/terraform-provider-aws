@@ -148,7 +148,7 @@ func testAccResourceLFTag_disappears(t *testing.T) {
 				Config: testAccResourceLFTagConfig_basic(rName, []string{"value"}, "value"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceLFTagExists(ctx, resourceName, &resourcelftag),
-					acctest.CheckFrameworkResourceDisappearsWithStateFunc(ctx, acctest.Provider, tflakeformation.ResourceResourceLFTag, resourceName, lfTagsCustomStateFunc()),
+					acctest.CheckFrameworkResourceDisappearsWithStateFunc(ctx, acctest.Provider, tflakeformation.ResourceResourceLFTag, resourceName, lfTagsDisappearsStateFunc),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -156,45 +156,43 @@ func testAccResourceLFTag_disappears(t *testing.T) {
 	})
 }
 
-func lfTagsCustomStateFunc() func(ctx context.Context, state *tfsdk.State, is *terraform.InstanceState) error {
-	return func(ctx context.Context, state *tfsdk.State, is *terraform.InstanceState) error {
-		var lfdata tflakeformation.ResourceResourceLFTagData
-		var lt tflakeformation.LFTag
+func lfTagsDisappearsStateFunc(ctx context.Context, state *tfsdk.State, is *terraform.InstanceState) error {
+	var lfdata tflakeformation.ResourceResourceLFTagData
+	var lt tflakeformation.LFTag
 
-		if v, ok := is.Attributes["catalog_id"]; ok {
-			lfdata.CatalogID = fwflex.StringValueToFramework(ctx, v)
-		}
-
-		if v, ok := is.Attributes["database.0.name"]; ok {
-			lfdata.Database = fwtypes.NewListNestedObjectValueOfPtrMust[tflakeformation.Database](ctx, &tflakeformation.Database{
-				Name: fwflex.StringValueToFramework(ctx, v),
-			})
-		}
-
-		if v, ok := is.Attributes["lf_tag.0.key"]; ok {
-			lt.Key = fwflex.StringValueToFramework(ctx, v)
-		}
-
-		if v, ok := is.Attributes["lf_tag.0.value"]; ok {
-			lt.Value = fwflex.StringValueToFramework(ctx, v)
-		}
-
-		lfdata.LFTag = fwtypes.NewListNestedObjectValueOfPtrMust[tflakeformation.LFTag](ctx, &lt)
-
-		if err := fwdiag.DiagnosticsError(state.SetAttribute(ctx, path.Root("catalog_id"), lfdata.Database)); err != nil {
-			log.Printf("[WARN] %s", err)
-		}
-
-		if err := fwdiag.DiagnosticsError(state.SetAttribute(ctx, path.Root("database"), lfdata.Database)); err != nil {
-			log.Printf("[WARN] %s", err)
-		}
-
-		if err := fwdiag.DiagnosticsError(state.SetAttribute(ctx, path.Root("lf_tag"), lfdata.LFTag)); err != nil {
-			log.Printf("[WARN] %s", err)
-		}
-
-		return nil
+	if v, ok := is.Attributes["catalog_id"]; ok {
+		lfdata.CatalogID = fwflex.StringValueToFramework(ctx, v)
 	}
+
+	if v, ok := is.Attributes["database.0.name"]; ok {
+		lfdata.Database = fwtypes.NewListNestedObjectValueOfPtrMust[tflakeformation.Database](ctx, &tflakeformation.Database{
+			Name: fwflex.StringValueToFramework(ctx, v),
+		})
+	}
+
+	if v, ok := is.Attributes["lf_tag.0.key"]; ok {
+		lt.Key = fwflex.StringValueToFramework(ctx, v)
+	}
+
+	if v, ok := is.Attributes["lf_tag.0.value"]; ok {
+		lt.Value = fwflex.StringValueToFramework(ctx, v)
+	}
+
+	lfdata.LFTag = fwtypes.NewListNestedObjectValueOfPtrMust[tflakeformation.LFTag](ctx, &lt)
+
+	if err := fwdiag.DiagnosticsError(state.SetAttribute(ctx, path.Root("catalog_id"), lfdata.Database)); err != nil {
+		log.Printf("[WARN] %s", err)
+	}
+
+	if err := fwdiag.DiagnosticsError(state.SetAttribute(ctx, path.Root("database"), lfdata.Database)); err != nil {
+		log.Printf("[WARN] %s", err)
+	}
+
+	if err := fwdiag.DiagnosticsError(state.SetAttribute(ctx, path.Root("lf_tag"), lfdata.LFTag)); err != nil {
+		log.Printf("[WARN] %s", err)
+	}
+
+	return nil
 }
 
 func testAccCheckResourceLFTagDestroy(ctx context.Context) resource.TestCheckFunc {
