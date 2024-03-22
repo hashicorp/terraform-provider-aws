@@ -111,7 +111,7 @@ func (r *resourceSlot) Schema(ctx context.Context, req resource.SchemaRequest, r
 
 	messageNBO := schema.NestedBlockObject{
 		Blocks: map[string]schema.Block{
-			"custom_playload": schema.ListNestedBlock{
+			"custom_payload": schema.ListNestedBlock{
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},

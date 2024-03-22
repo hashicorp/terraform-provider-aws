@@ -587,44 +587,6 @@ func TestAccIAMRole_permissionsBoundary(t *testing.T) {
 	})
 }
 
-func TestAccIAMRole_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var role iam.Role
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_iam_role.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccRoleConfig_tags(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleExists(ctx, resourceName, &role),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.tag1", "test-value1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.tag2", "test-value2"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccRoleConfig_tagsUpdate(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleExists(ctx, resourceName, &role),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.tag2", "test-value"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccIAMRole_InlinePolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var role iam.Role
@@ -1712,7 +1674,29 @@ resource "aws_iam_role" "test" {
 `, rName)
 }
 
-func testAccRoleConfig_tags(rName string) string {
+func testAccRoleConfig_tags0(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Principal = {
+        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+      }
+      Effect = "Allow"
+      Sid    = ""
+    }]
+  })
+}
+`, rName)
+}
+
+func testAccRoleConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1732,14 +1716,13 @@ resource "aws_iam_role" "test" {
   })
 
   tags = {
-    tag1 = "test-value1"
-    tag2 = "test-value2"
+    %[2]q = %[3]q
   }
 }
-`, rName)
+`, rName, tagKey1, tagValue1)
 }
 
-func testAccRoleConfig_tagsUpdate(rName string) string {
+func testAccRoleConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1759,10 +1742,37 @@ resource "aws_iam_role" "test" {
   })
 
   tags = {
-    tag2 = "test-value"
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
-`, rName)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccRoleConfig_tagsNull(rName, tagKey1 string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Principal = {
+        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+      }
+      Effect = "Allow"
+      Sid    = ""
+    }]
+  })
+
+  tags = {
+    %[2]q = null
+  }
+}
+`, rName, tagKey1)
 }
 
 func testAccRoleConfig_policyInline(roleName, policyName string) string {
