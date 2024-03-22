@@ -7,12 +7,16 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
+	"strconv"
+	"strings"
 	"testing"
 
-	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
-	"github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-framework/tfsdk"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -20,135 +24,115 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tflakeformation "github.com/hashicorp/terraform-provider-aws/internal/service/lakeformation"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestResourceLFTagExampleUnitTest(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		TestName string
-		Input    string
-		Expected string
-		Error    bool
-	}{
-		{
-			TestName: "empty",
-			Input:    "",
-			Expected: "",
-			Error:    true,
-		},
-		{
-			TestName: "descriptive name",
-			Input:    "some input",
-			Expected: "some output",
-			Error:    false,
-		},
-		{
-			TestName: "another descriptive name",
-			Input:    "more input",
-			Expected: "more output",
-			Error:    false,
-		},
-	}
-
-	for _, testCase := range testCases {
-		testCase := testCase
-		t.Run(testCase.TestName, func(t *testing.T) {
-			t.Parallel()
-			got, err := tflakeformation.FunctionFromResource(testCase.Input)
-
-			if err != nil && !testCase.Error {
-				t.Errorf("got error (%s), expected no error", err)
-			}
-
-			if err == nil && testCase.Error {
-				t.Errorf("got (%s) and no error, expected error", got)
-			}
-
-			if got != testCase.Expected {
-				t.Errorf("got %s, expected %s", got, testCase.Expected)
-			}
-		})
-	}
-}
-
-func TestAccLakeFormationResourceLFTag_basic(t *testing.T) {
+func testAccResourceLFTag_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var resourcelftag lakeformation.DescribeResourceLFTagResponse
+	var resourcelftag lakeformation.GetResourceLFTagsOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_resource_lf_tag.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
-			testAccPreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormation)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, lakeformation.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResourceLFTagDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceLFTagConfig_basic(rName),
+				Config: testAccResourceLFTagConfig_basic(rName, []string{"value"}, "value"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceLFTagExists(ctx, resourceName, &resourcelftag),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
-						"console_access": "false",
-						"groups.#":       "0",
-						"username":       "Test",
-						"password":       "TestTest1234",
-					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "lakeformation", regexache.MustCompile(`resourcelftag:+.`)),
+					acctest.CheckResourceAttrAccountID(resourceName, "catalog_id"),
+					resource.TestCheckResourceAttr(resourceName, "lf_tag.0.key", rName),
+					resource.TestCheckResourceAttr(resourceName, "lf_tag.0.value", "value"),
 				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
 			},
 		},
 	})
 }
 
-func TestAccLakeFormationResourceLFTag_disappears(t *testing.T) {
+func testAccResourceLFTag_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var resourcelftag lakeformation.DescribeResourceLFTagResponse
+	var resourcelftag lakeformation.GetResourceLFTagsOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_resource_lf_tag.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.LakeFormationEndpointID)
-			testAccPreCheck(t)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormation)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, lakeformation.ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResourceLFTagDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccResourceLFTagConfig_basic(rName, testAccResourceLFTagVersionNewer),
+				Config: testAccResourceLFTagConfig_basic(rName, []string{"value"}, "value"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckResourceLFTagExists(ctx, resourceName, &resourcelftag),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tflakeformation.ResourceResourceLFTag, resourceName),
+					acctest.CheckFrameworkResourceDisappearsWithStateFunc(ctx, acctest.Provider, tflakeformation.ResourceResourceLFTag, resourceName, lfTagsCustomStateFunc()),
 				),
 				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
+}
+
+func lfTagsCustomStateFunc() func(ctx context.Context, state *tfsdk.State, is *terraform.InstanceState) error {
+	return func(ctx context.Context, state *tfsdk.State, is *terraform.InstanceState) error {
+		var lfdata tflakeformation.ResourceResourceLFTagData
+		var lt tflakeformation.LFTag
+		for name, v := range is.Attributes {
+			if name == "database.0.name" {
+				lfdata.Database = fwtypes.NewListNestedObjectValueOfPtrMust[tflakeformation.Database](ctx, &tflakeformation.Database{
+					Name: fwflex.StringValueToFramework(ctx, v),
+				})
+			}
+
+			if name == "lf_tag.0.key" {
+				lt.Key = fwflex.StringValueToFramework(ctx, v)
+			}
+			if name == "lf_tag.0.value" {
+				lt.Value = fwflex.StringValueToFramework(ctx, v)
+			}
+
+			if name == "catalog_id" {
+				lfdata.CatalogID = fwflex.StringValueToFramework(ctx, v)
+			}
+		}
+
+		lfdata.LFTag = fwtypes.NewListNestedObjectValueOfPtrMust[tflakeformation.LFTag](ctx, &lt)
+
+		if err := fwdiag.DiagnosticsError(state.SetAttribute(ctx, path.Root("catalog_id"), lfdata.Database)); err != nil {
+			log.Printf("[WARN] %s", err)
+		}
+
+		if err := fwdiag.DiagnosticsError(state.SetAttribute(ctx, path.Root("database"), lfdata.Database)); err != nil {
+			log.Printf("[WARN] %s", err)
+		}
+
+		if err := fwdiag.DiagnosticsError(state.SetAttribute(ctx, path.Root("lf_tag"), lfdata.LFTag)); err != nil {
+			log.Printf("[WARN] %s", err)
+		}
+
+		return nil
+	}
 }
 
 func testAccCheckResourceLFTagDestroy(ctx context.Context) resource.TestCheckFunc {
@@ -160,15 +144,93 @@ func testAccCheckResourceLFTagDestroy(ctx context.Context) resource.TestCheckFun
 				continue
 			}
 
-			input := &lakeformation.DescribeResourceLFTagInput{
-				ResourceLFTagId: aws.String(rs.Primary.ID),
+			input := &lakeformation.GetResourceLFTagsInput{
+				Resource:           &awstypes.Resource{},
+				ShowAssignedLFTags: aws.Bool(true),
 			}
-			_, err := conn.DescribeResourceLFTag(ctx, &lakeformation.DescribeResourceLFTagInput{
-				ResourceLFTagId: aws.String(rs.Primary.ID),
-			})
-			if errs.IsA[*types.ResourceNotFoundException](err) {
-				return nil
+
+			if v, ok := rs.Primary.Attributes["catalog_id"]; ok {
+				input.CatalogId = aws.String(v)
 			}
+
+			if v, ok := rs.Primary.Attributes["database.0.name"]; ok {
+				input.Resource.Database = &awstypes.DatabaseResource{
+					Name: aws.String(v),
+				}
+
+				if v, ok := rs.Primary.Attributes["database.0.catalog_id"]; ok && len(v) > 1 {
+					input.Resource.Database.CatalogId = aws.String(v)
+				}
+			}
+
+			if v, ok := rs.Primary.Attributes["table.0.database_name"]; ok {
+				input.Resource.Table = &awstypes.TableResource{
+					DatabaseName: aws.String(v),
+				}
+
+				if v, ok := rs.Primary.Attributes["table.0.catalog_id"]; ok && len(v) > 1 {
+					input.Resource.Table.CatalogId = aws.String(v)
+				}
+
+				if v, ok := rs.Primary.Attributes["table.0.name"]; ok {
+					input.Resource.Table.Name = aws.String(v)
+				}
+
+				if v, ok := rs.Primary.Attributes["table.0.wildcard"]; ok && v == "true" {
+					input.Resource.Table.TableWildcard = &awstypes.TableWildcard{}
+				}
+			}
+
+			if v, ok := rs.Primary.Attributes["table_with_columns.0.database_name"]; ok {
+				input.Resource.TableWithColumns = &awstypes.TableWithColumnsResource{
+					DatabaseName: aws.String(v),
+				}
+
+				if v, ok := rs.Primary.Attributes["table_with_columns.0.name"]; ok {
+					input.Resource.TableWithColumns.Name = aws.String(v)
+				}
+
+				if v, ok := rs.Primary.Attributes["table_with_columns.0.catalog_id"]; ok && len(v) > 1 {
+					input.Resource.TableWithColumns.CatalogId = aws.String(v)
+				}
+
+				if n, err := strconv.Atoi(rs.Primary.Attributes["table_with_columns.0.column_names.#"]); err == nil && n > 0 {
+					var cols []string
+					for i := 0; i < n; i++ {
+						cols = append(cols, rs.Primary.Attributes[fmt.Sprintf("table_with_columns.0.column_names.%d", i)])
+					}
+					input.Resource.TableWithColumns.ColumnNames = cols
+				}
+
+				if n, err := strconv.Atoi(rs.Primary.Attributes["table_with_columns.0.column_wildcard.#"]); err == nil && n > 0 {
+					input.Resource.TableWithColumns.ColumnWildcard = &awstypes.ColumnWildcard{}
+				}
+
+				if n, err := strconv.Atoi(rs.Primary.Attributes["table_with_columns.0.column_wildcard.0.excluded_column_names.#"]); err == nil && n > 0 {
+					var cols []string
+					for i := 0; i < n; i++ {
+						cols = append(cols, rs.Primary.Attributes[fmt.Sprintf("table_with_columns.0.column_wildcard.0.excluded_column_names.%d", i)])
+					}
+					input.Resource.TableWithColumns.ColumnWildcard = &awstypes.ColumnWildcard{
+						ExcludedColumnNames: cols,
+					}
+				}
+			}
+			_, err := conn.GetResourceLFTags(ctx, input)
+
+			if errs.IsA[*awstypes.EntityNotFoundException](err) {
+				continue
+			}
+
+			if errs.IsAErrorMessageContains[*awstypes.InvalidInputException](err, "not found") {
+				continue
+			}
+
+			// If the lake formation admin has been revoked, there will be access denied instead of entity not found
+			if errs.IsA[*awstypes.AccessDeniedException](err) {
+				continue
+			}
+
 			if err != nil {
 				return create.Error(names.LakeFormation, create.ErrActionCheckingDestroyed, tflakeformation.ResNameResourceLFTag, rs.Primary.ID, err)
 			}
@@ -180,7 +242,7 @@ func testAccCheckResourceLFTagDestroy(ctx context.Context) resource.TestCheckFun
 	}
 }
 
-func testAccCheckResourceLFTagExists(ctx context.Context, name string, resourcelftag *lakeformation.DescribeResourceLFTagResponse) resource.TestCheckFunc {
+func testAccCheckResourceLFTagExists(ctx context.Context, name string, resourcelftag *lakeformation.GetResourceLFTagsOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -191,10 +253,81 @@ func testAccCheckResourceLFTagExists(ctx context.Context, name string, resourcel
 			return create.Error(names.LakeFormation, create.ErrActionCheckingExistence, tflakeformation.ResNameResourceLFTag, name, errors.New("not set"))
 		}
 
+		input := &lakeformation.GetResourceLFTagsInput{
+			Resource:           &awstypes.Resource{},
+			ShowAssignedLFTags: aws.Bool(true),
+		}
+
+		if v, ok := rs.Primary.Attributes["catalog_id"]; ok {
+			input.CatalogId = aws.String(v)
+		}
+
+		if v, ok := rs.Primary.Attributes["database.0.name"]; ok {
+			input.Resource.Database = &awstypes.DatabaseResource{
+				Name: aws.String(v),
+			}
+
+			if v, ok := rs.Primary.Attributes["database.0.catalog_id"]; ok && len(v) > 1 {
+				input.Resource.Database.CatalogId = aws.String(v)
+			}
+		}
+
+		if v, ok := rs.Primary.Attributes["table.0.database_name"]; ok {
+			input.Resource.Table = &awstypes.TableResource{
+				DatabaseName: aws.String(v),
+			}
+
+			if v, ok := rs.Primary.Attributes["table.0.catalog_id"]; ok && len(v) > 1 {
+				input.Resource.Table.CatalogId = aws.String(v)
+			}
+
+			if v, ok := rs.Primary.Attributes["table.0.name"]; ok {
+				input.Resource.Table.Name = aws.String(v)
+			}
+
+			if v, ok := rs.Primary.Attributes["table.0.wildcard"]; ok && v == "true" {
+				input.Resource.Table.TableWildcard = &awstypes.TableWildcard{}
+			}
+		}
+
+		if v, ok := rs.Primary.Attributes["table_with_columns.0.database_name"]; ok {
+			input.Resource.TableWithColumns = &awstypes.TableWithColumnsResource{
+				DatabaseName: aws.String(v),
+			}
+
+			if v, ok := rs.Primary.Attributes["table_with_columns.0.name"]; ok {
+				input.Resource.TableWithColumns.Name = aws.String(v)
+			}
+
+			if v, ok := rs.Primary.Attributes["table_with_columns.0.catalog_id"]; ok && len(v) > 1 {
+				input.Resource.TableWithColumns.CatalogId = aws.String(v)
+			}
+
+			if n, err := strconv.Atoi(rs.Primary.Attributes["table_with_columns.0.column_names.#"]); err == nil && n > 0 {
+				var cols []string
+				for i := 0; i < n; i++ {
+					cols = append(cols, rs.Primary.Attributes[fmt.Sprintf("table_with_columns.0.column_names.%d", i)])
+				}
+				input.Resource.TableWithColumns.ColumnNames = cols
+			}
+
+			if n, err := strconv.Atoi(rs.Primary.Attributes["table_with_columns.0.column_wildcard.#"]); err == nil && n > 0 {
+				input.Resource.TableWithColumns.ColumnWildcard = &awstypes.ColumnWildcard{}
+			}
+
+			if n, err := strconv.Atoi(rs.Primary.Attributes["table_with_columns.0.column_wildcard.0.excluded_column_names.#"]); err == nil && n > 0 {
+				var cols []string
+				for i := 0; i < n; i++ {
+					cols = append(cols, rs.Primary.Attributes[fmt.Sprintf("table_with_columns.0.column_wildcard.0.excluded_column_names.%d", i)])
+				}
+				input.Resource.TableWithColumns.ColumnWildcard = &awstypes.ColumnWildcard{
+					ExcludedColumnNames: cols,
+				}
+			}
+		}
+
 		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationClient(ctx)
-		resp, err := conn.DescribeResourceLFTag(ctx, &lakeformation.DescribeResourceLFTagInput{
-			ResourceLFTagId: aws.String(rs.Primary.ID),
-		})
+		resp, err := conn.GetResourceLFTags(ctx, input)
 
 		if err != nil {
 			return create.Error(names.LakeFormation, create.ErrActionCheckingExistence, tflakeformation.ResNameResourceLFTag, rs.Primary.ID, err)
@@ -206,53 +339,44 @@ func testAccCheckResourceLFTagExists(ctx context.Context, name string, resourcel
 	}
 }
 
-func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationClient(ctx)
-
-	input := &lakeformation.ListResourceLFTagsInput{}
-	_, err := conn.ListResourceLFTags(ctx, input)
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-}
-
-func testAccCheckResourceLFTagNotRecreated(before, after *lakeformation.DescribeResourceLFTagResponse) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.ResourceLFTagId), aws.ToString(after.ResourceLFTagId); before != after {
-			return create.Error(names.LakeFormation, create.ErrActionCheckingNotRecreated, tflakeformation.ResNameResourceLFTag, aws.ToString(before.ResourceLFTagId), errors.New("recreated"))
-		}
-
-		return nil
-	}
-}
-
-func testAccResourceLFTagConfig_basic(rName, version string) string {
+func testAccResourceLFTagConfig_basic(rName string, values []string, value string) string {
 	return fmt.Sprintf(`
-resource "aws_security_group" "test" {
+data "aws_caller_identity" "current" {}
+
+data "aws_iam_session_context" "current" {
+  arn = data.aws_caller_identity.current.arn
+}
+
+resource "aws_lakeformation_data_lake_settings" "test" {
+  admins = [data.aws_iam_session_context.current.issuer_arn]
+}
+
+resource "aws_glue_catalog_database" "test" {
   name = %[1]q
 }
 
-resource "aws_lakeformation_resource_lf_tag" "test" {
-  resource_lf_tag_name             = %[1]q
-  engine_type             = "ActiveLakeFormation"
-  engine_version          = %[2]q
-  host_instance_type      = "lakeformation.t2.micro"
-  security_groups         = [aws_security_group.test.id]
-  authentication_strategy = "simple"
-  storage_type            = "efs"
+resource "aws_lakeformation_lf_tag" "test" {
+  key    = %[1]q
+  values = [%[2]s]
 
-  logs {
-    general = true
-  }
-
-  user {
-    username = "Test"
-    password = "TestTest1234"
-  }
+  # for consistency, ensure that admins are set up before testing
+  depends_on = [aws_lakeformation_data_lake_settings.test]
 }
-`, rName, version)
+
+resource "aws_lakeformation_resource_lf_tag" "test" {
+  catalog_id = data.aws_caller_identity.current.account_id
+
+  database {
+    name = aws_glue_catalog_database.test.name
+  }
+
+  lf_tag {
+    key   = aws_lakeformation_lf_tag.test.key
+    value = %[3]q
+  }
+
+  # for consistency, ensure that admins are set up before testing
+  depends_on = [aws_lakeformation_data_lake_settings.test]
+}
+`, rName, fmt.Sprintf(`"%s"`, strings.Join(values, `", "`)), value)
 }
