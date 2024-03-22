@@ -320,6 +320,7 @@ func (r *environmentResource) Create(ctx context.Context, request resource.Creat
 	env, err := waitEnvironmentCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
 
 	if err != nil {
+		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for Mainframe Modernization Environment (%s) create", data.ID.ValueString()), err.Error())
 
 		return
