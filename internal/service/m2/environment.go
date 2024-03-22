@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -32,7 +31,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
@@ -384,91 +382,71 @@ func (r *environmentResource) Read(ctx context.Context, request resource.ReadReq
 }
 
 func (r *environmentResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var old, new environmentResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().M2Client(ctx)
 
-	var plan, state environmentResourceModel
-	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
-	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	in, updateRequired := r.updateEnvironmentInput(ctx, plan, state, response)
-	if !updateRequired {
-		return
-	}
-
-	out, err := conn.UpdateEnvironment(ctx, in)
-	if err != nil {
-		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.M2, create.ErrActionUpdating, ResNameEnvironment, plan.ID.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil || out.EnvironmentId == nil {
-		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.M2, create.ErrActionUpdating, ResNameEnvironment, plan.ID.String(), nil),
-			errors.New("empty output").Error(),
-		)
-		return
-	}
-
-	plan.ID = fwflex.StringToFramework(ctx, out.EnvironmentId)
-
-	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	env, err := waitEnvironmentUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
-	if err != nil {
-		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.M2, create.ErrActionWaitingForUpdate, ResNameEnvironment, plan.ID.String(), err),
-			err.Error(),
-		)
-		return
-	}
-
-	response.Diagnostics.Append(fwflex.Flatten(ctx, env, &plan)...)
-
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
-}
-
-func (r *environmentResource) updateEnvironmentInput(ctx context.Context, plan, state environmentResourceModel, resp *resource.UpdateResponse) (*m2.UpdateEnvironmentInput, bool) {
-	in := &m2.UpdateEnvironmentInput{
-		EnvironmentId: fwflex.StringFromFramework(ctx, plan.ID),
-	}
-
-	if r.hasChangesForMaintenance(plan, state) {
-		in.ApplyDuringMaintenanceWindow = true
-		in.EngineVersion = fwflex.StringFromFramework(ctx, plan.EngineVersion)
-	} else if r.hasChanges(plan, state) {
-		if !plan.EngineVersion.Equal(state.EngineVersion) {
-			in.EngineVersion = fwflex.StringFromFramework(ctx, plan.EngineVersion)
-		}
-		if !plan.InstanceType.Equal(state.InstanceType) {
-			in.InstanceType = fwflex.StringFromFramework(ctx, plan.InstanceType)
-		}
-		if !plan.PreferredMaintenanceWindow.Equal(state.PreferredMaintenanceWindow) {
-			in.PreferredMaintenanceWindow = fwflex.StringFromFramework(ctx, plan.PreferredMaintenanceWindow)
+	if !new.EngineVersion.Equal(old.EngineVersion) ||
+		!new.HighAvailabilityConfig.Equal(old.HighAvailabilityConfig) ||
+		!new.InstanceType.Equal(old.InstanceType) ||
+		!new.PreferredMaintenanceWindow.Equal(old.PreferredMaintenanceWindow) {
+		input := &m2.UpdateEnvironmentInput{
+			EnvironmentId: fwflex.StringFromFramework(ctx, new.ID),
 		}
 
-		if !plan.HighAvailabilityConfig.Equal(state.HighAvailabilityConfig) {
-			v, d := plan.HighAvailabilityConfig.ToSlice(ctx)
-			resp.Diagnostics.Append(d...)
-			if len(v) > 0 {
-				in.DesiredCapacity = fwflex.Int32FromFramework(ctx, v[0].DesiredCapacity)
+		if !new.ForceUpdate.IsNull() {
+			input.ForceUpdate = new.ForceUpdate.ValueBool()
+		}
+
+		// https://docs.aws.amazon.com/m2/latest/APIReference/API_UpdateEnvironment.html#m2-UpdateEnvironment-request-applyDuringMaintenanceWindow.
+		// "Currently, AWS Mainframe Modernization accepts the engineVersion parameter only if applyDuringMaintenanceWindow is true. If any parameter other than engineVersion is provided in UpdateEnvironmentRequest, it will fail if applyDuringMaintenanceWindow is set to true."
+		if new.ApplyDuringMaintenanceWindow.ValueBool() && !new.EngineVersion.Equal(old.EngineVersion) {
+			input.ApplyDuringMaintenanceWindow = true
+			input.EngineVersion = fwflex.StringFromFramework(ctx, new.EngineVersion)
+		} else {
+			if !new.EngineVersion.Equal(old.EngineVersion) {
+				input.EngineVersion = fwflex.StringFromFramework(ctx, new.EngineVersion)
+			}
+			if !new.HighAvailabilityConfig.Equal(old.HighAvailabilityConfig) {
+				highAvailabilityConfigData, diags := new.HighAvailabilityConfig.ToPtr(ctx)
+				response.Diagnostics.Append(diags...)
+				if response.Diagnostics.HasError() {
+					return
+				}
+
+				input.DesiredCapacity = fwflex.Int32FromFramework(ctx, highAvailabilityConfigData.DesiredCapacity)
+			}
+			if !new.InstanceType.Equal(old.InstanceType) {
+				input.InstanceType = fwflex.StringFromFramework(ctx, new.InstanceType)
+			}
+			if !new.PreferredMaintenanceWindow.Equal(old.PreferredMaintenanceWindow) {
+				input.PreferredMaintenanceWindow = fwflex.StringFromFramework(ctx, new.PreferredMaintenanceWindow)
 			}
 		}
-	} else {
-		return nil, false
+		_, err := conn.UpdateEnvironment(ctx, input)
+
+		if err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("updating Mainframe Modernization Environment (%s)", new.ID.ValueString()), err.Error())
+
+			return
+		}
+
+		if _, err := waitEnvironmentUpdated(ctx, conn, new.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for Mainframe Modernization Environment (%s) update", new.ID.ValueString()), err.Error())
+
+			return
+		}
 	}
 
-	if !plan.ForceUpdate.IsNull() {
-		in.ForceUpdate = plan.ForceUpdate.ValueBool()
-	}
-	return in, true
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
 func (r *environmentResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
@@ -603,19 +581,6 @@ func waitEnvironmentDeleted(ctx context.Context, conn *m2.Client, id string, tim
 	return nil, err
 }
 
-func (rd *environmentResourceModel) refreshFromOutput(ctx context.Context, out *m2.GetEnvironmentOutput) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	diags.Append(fwflex.Flatten(ctx, out, rd)...)
-	rd.ARN = fwflex.StringToFramework(ctx, out.EnvironmentArn)
-	rd.ID = fwflex.StringToFramework(ctx, out.EnvironmentId)
-	storage, d := flattenStorageConfigurations(ctx, out.StorageConfigurations)
-	diags.Append(d...)
-	rd.StorageConfigurations = storage
-
-	return diags
-}
-
 type environmentResourceModel struct {
 	ARN                          types.String                                                 `tfsdk:"arn"`
 	ApplyDuringMaintenanceWindow types.Bool                                                   `tfsdk:"apply_changes_during_maintenance_window"`
@@ -668,20 +633,6 @@ type fsxStorageConfigurationModel struct {
 type highAvailabilityConfigModel struct {
 	DesiredCapacity types.Int64 `tfsdk:"desired_capacity"`
 }
-
-var (
-	storageDataAttrTypes = map[string]attr.Type{
-		"efs": types.ListType{ElemType: mountObjectType},
-		"fsx": types.ListType{ElemType: mountObjectType},
-	}
-
-	mountObjectType = types.ObjectType{AttrTypes: mountAttrTypes}
-
-	mountAttrTypes = map[string]attr.Type{
-		"file_system_id": types.StringType,
-		"mount_point":    types.StringType,
-	}
-)
 
 func expandStorageConfigurations(ctx context.Context, storageConfigurationsData []*storageConfigurationModel) ([]awstypes.StorageConfiguration, diag.Diagnostics) {
 	var diags diag.Diagnostics
@@ -756,15 +707,4 @@ func flattenStorageConfigurations(ctx context.Context, apiObjects []awstypes.Sto
 	}
 
 	return storageConfigurationsData, diags
-}
-
-func (r *environmentResource) hasChanges(plan, state environmentResourceModel) bool {
-	return !plan.HighAvailabilityConfig.Equal(state.HighAvailabilityConfig) ||
-		!plan.EngineVersion.Equal(state.EngineVersion) ||
-		!plan.InstanceType.Equal(state.EngineType) ||
-		!plan.PreferredMaintenanceWindow.Equal(state.PreferredMaintenanceWindow)
-}
-
-func (r *environmentResource) hasChangesForMaintenance(plan, state environmentResourceModel) bool {
-	return plan.ApplyDuringMaintenanceWindow.ValueBool() && !plan.EngineVersion.Equal(state.EngineVersion)
 }
