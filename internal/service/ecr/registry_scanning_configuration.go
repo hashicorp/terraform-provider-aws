@@ -8,12 +8,14 @@ import (
 	"log"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ecr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ecr"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
@@ -55,25 +57,25 @@ func ResourceRegistryScanningConfiguration() *schema.Resource {
 										),
 									},
 									"filter_type": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice(ecr.ScanningRepositoryFilterType_Values(), false),
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.ScanningRepositoryFilterType](),
 									},
 								},
 							},
 						},
 						"scan_frequency": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(ecr.ScanFrequency_Values(), false),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.ScanFrequency](),
 						},
 					},
 				},
 			},
 			"scan_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(ecr.ScanType_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.ScanType](),
 			},
 		},
 	}
@@ -81,14 +83,14 @@ func ResourceRegistryScanningConfiguration() *schema.Resource {
 
 func resourceRegistryScanningConfigurationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRConn(ctx)
+	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
 	input := ecr.PutRegistryScanningConfigurationInput{
-		ScanType: aws.String(d.Get("scan_type").(string)),
+		ScanType: awstypes.ScanType(d.Get("scan_type").(string)),
 		Rules:    expandScanningRegistryRules(d.Get("rule").(*schema.Set).List()),
 	}
 
-	_, err := conn.PutRegistryScanningConfigurationWithContext(ctx, &input)
+	_, err := conn.PutRegistryScanningConfiguration(ctx, &input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating ECR Registry Scanning Configuration: %s", err)
@@ -101,9 +103,9 @@ func resourceRegistryScanningConfigurationPut(ctx context.Context, d *schema.Res
 
 func resourceRegistryScanningConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRConn(ctx)
+	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
-	out, err := conn.GetRegistryScanningConfigurationWithContext(ctx, &ecr.GetRegistryScanningConfigurationInput{})
+	out, err := conn.GetRegistryScanningConfiguration(ctx, &ecr.GetRegistryScanningConfigurationInput{})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ECR Registry Scanning Configuration (%s): %s", d.Id(), err)
@@ -118,12 +120,12 @@ func resourceRegistryScanningConfigurationRead(ctx context.Context, d *schema.Re
 
 func resourceRegistryScanningConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRConn(ctx)
+	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
 	log.Printf("[DEBUG] Deleting ECR Registry Scanning Configuration: (%s)", d.Id())
-	_, err := conn.PutRegistryScanningConfigurationWithContext(ctx, &ecr.PutRegistryScanningConfigurationInput{
-		Rules:    []*ecr.RegistryScanningRule{},
-		ScanType: aws.String(ecr.ScanTypeBasic),
+	_, err := conn.PutRegistryScanningConfiguration(ctx, &ecr.PutRegistryScanningConfigurationInput{
+		Rules:    []awstypes.RegistryScanningRule{},
+		ScanType: awstypes.ScanTypeBasic,
 	})
 
 	if err != nil {
@@ -135,8 +137,8 @@ func resourceRegistryScanningConfigurationDelete(ctx context.Context, d *schema.
 
 // Helper functions
 
-func expandScanningRegistryRules(l []interface{}) []*ecr.RegistryScanningRule {
-	rules := make([]*ecr.RegistryScanningRule, 0)
+func expandScanningRegistryRules(l []interface{}) []awstypes.RegistryScanningRule {
+	rules := make([]awstypes.RegistryScanningRule, 0)
 
 	for _, rule := range l {
 		if rule == nil {
@@ -148,52 +150,52 @@ func expandScanningRegistryRules(l []interface{}) []*ecr.RegistryScanningRule {
 	return rules
 }
 
-func expandScanningRegistryRule(m map[string]interface{}) *ecr.RegistryScanningRule {
+func expandScanningRegistryRule(m map[string]interface{}) awstypes.RegistryScanningRule {
 	if m == nil {
-		return nil
+		return awstypes.RegistryScanningRule{}
 	}
 
-	rule := &ecr.RegistryScanningRule{
+	rule := awstypes.RegistryScanningRule{
 		RepositoryFilters: expandScanningRegistryRuleRepositoryFilters(m["repository_filter"].(*schema.Set).List()),
-		ScanFrequency:     aws.String(m["scan_frequency"].(string)),
+		ScanFrequency:     awstypes.ScanFrequency((m["scan_frequency"].(string))),
 	}
 
 	return rule
 }
 
-func expandScanningRegistryRuleRepositoryFilters(l []interface{}) []*ecr.ScanningRepositoryFilter {
+func expandScanningRegistryRuleRepositoryFilters(l []interface{}) []awstypes.ScanningRepositoryFilter {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
-	filters := make([]*ecr.ScanningRepositoryFilter, 0)
+	filters := make([]awstypes.ScanningRepositoryFilter, 0)
 
 	for _, f := range l {
 		if f == nil {
 			continue
 		}
 		m := f.(map[string]interface{})
-		filters = append(filters, &ecr.ScanningRepositoryFilter{
+		filters = append(filters, awstypes.ScanningRepositoryFilter{
 			Filter:     aws.String(m["filter"].(string)),
-			FilterType: aws.String(m["filter_type"].(string)),
+			FilterType: awstypes.ScanningRepositoryFilterType((m["filter_type"].(string))),
 		})
 	}
 
 	return filters
 }
 
-func flattenScanningConfigurationRules(r []*ecr.RegistryScanningRule) interface{} {
+func flattenScanningConfigurationRules(r []awstypes.RegistryScanningRule) interface{} {
 	out := make([]map[string]interface{}, len(r))
 	for i, rule := range r {
 		m := make(map[string]interface{})
-		m["scan_frequency"] = aws.StringValue(rule.ScanFrequency)
+		m["scan_frequency"] = rule.ScanFrequency
 		m["repository_filter"] = flattenScanningConfigurationFilters(rule.RepositoryFilters)
 		out[i] = m
 	}
 	return out
 }
 
-func flattenScanningConfigurationFilters(l []*ecr.ScanningRepositoryFilter) []interface{} {
+func flattenScanningConfigurationFilters(l []awstypes.ScanningRepositoryFilter) []interface{} {
 	if len(l) == 0 {
 		return nil
 	}
@@ -201,8 +203,8 @@ func flattenScanningConfigurationFilters(l []*ecr.ScanningRepositoryFilter) []in
 	out := make([]interface{}, len(l))
 	for i, filter := range l {
 		out[i] = map[string]interface{}{
-			"filter":      aws.StringValue(filter.Filter),
-			"filter_type": aws.StringValue(filter.FilterType),
+			"filter":      aws.ToString(filter.Filter),
+			"filter_type": filter.FilterType,
 		}
 	}
 

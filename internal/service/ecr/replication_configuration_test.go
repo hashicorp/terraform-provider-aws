@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ecr"
+	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -153,8 +153,8 @@ func testAccCheckReplicationConfigurationExists(ctx context.Context, name string
 			return fmt.Errorf("Not found: %s", name)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn(ctx)
-		out, err := conn.DescribeRegistryWithContext(ctx, &ecr.DescribeRegistryInput{})
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRClient(ctx)
+		out, err := conn.DescribeRegistry(ctx, &ecr.DescribeRegistryInput{})
 		if err != nil {
 			return fmt.Errorf("ECR replication rules not found: %w", err)
 		}
@@ -169,14 +169,14 @@ func testAccCheckReplicationConfigurationExists(ctx context.Context, name string
 
 func testAccCheckReplicationConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ecr_replication_configuration" {
 				continue
 			}
 
-			out, err := conn.DescribeRegistryWithContext(ctx, &ecr.DescribeRegistryInput{})
+			out, err := conn.DescribeRegistry(ctx, &ecr.DescribeRegistryInput{})
 			if err != nil {
 				return err
 			}

@@ -8,9 +8,10 @@ import (
 	"log"
 	"slices"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ecr"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/ecr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -86,12 +87,12 @@ func DataSourceRepository() *schema.Resource {
 
 func dataSourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRConn(ctx)
+	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
 	input := &ecr.DescribeRepositoriesInput{
-		RepositoryNames: aws.StringSlice([]string{name}),
+		RepositoryNames: []string{name},
 	}
 
 	if v, ok := d.GetOk("registry_id"); ok {
@@ -104,8 +105,8 @@ func dataSourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading ECR Repository (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(repository.RepositoryName))
-	arn := aws.StringValue(repository.RepositoryArn)
+	d.SetId(aws.ToString(repository.RepositoryName))
+	arn := aws.ToString(repository.RepositoryArn)
 	d.Set("arn", arn)
 	if err := d.Set("encryption_configuration", flattenRepositoryEncryptionConfiguration(repository.EncryptionConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting encryption_configuration: %s", err)
@@ -121,7 +122,7 @@ func dataSourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta 
 	tags, err := listTags(ctx, conn, arn)
 
 	// Some partitions (i.e., ISO) may not support tagging, giving error
-	if meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+	if meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
 		log.Printf("[WARN] failed listing tags for ECR Repository (%s): %s", d.Id(), err)
 		return diags
 	}
@@ -144,17 +145,17 @@ func dataSourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if len(imageDetails) >= 1 {
-		slices.SortFunc(imageDetails, func(a, b *ecr.ImageDetail) int {
-			if aws.TimeValue(a.ImagePushedAt).After(aws.TimeValue(b.ImagePushedAt)) {
+		slices.SortFunc(imageDetails, func(a, b *awstypes.ImageDetail) int {
+			if aws.ToTime(a.ImagePushedAt).After(aws.ToTime(b.ImagePushedAt)) {
 				return -1
 			}
-			if aws.TimeValue(a.ImagePushedAt).Before(aws.TimeValue(b.ImagePushedAt)) {
+			if aws.ToTime(a.ImagePushedAt).Before(aws.ToTime(b.ImagePushedAt)) {
 				return 1
 			}
 			return 0
 		})
 
-		d.Set("most_recent_image_tags", aws.StringValueSlice(imageDetails[0].ImageTags))
+		d.Set("most_recent_image_tags", imageDetails[0].ImageTags)
 	} else {
 		d.Set("most_recent_image_tags", nil)
 	}

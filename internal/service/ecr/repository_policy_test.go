@@ -9,14 +9,15 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ecr"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ecr"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfecr "github.com/hashicorp/terraform-provider-aws/internal/service/ecr"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -170,20 +171,20 @@ func TestAccECRRepositoryPolicy_Disappears_repository(t *testing.T) {
 
 func testAccCheckRepositoryPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ecr_repository_policy" {
 				continue
 			}
 
-			_, err := conn.GetRepositoryPolicyWithContext(ctx, &ecr.GetRepositoryPolicyInput{
+			_, err := conn.GetRepositoryPolicy(ctx, &ecr.GetRepositoryPolicyInput{
 				RegistryId:     aws.String(rs.Primary.Attributes["registry_id"]),
 				RepositoryName: aws.String(rs.Primary.ID),
 			})
 			if err != nil {
-				if tfawserr.ErrCodeEquals(err, ecr.ErrCodeRepositoryNotFoundException) ||
-					tfawserr.ErrCodeEquals(err, ecr.ErrCodeRepositoryPolicyNotFoundException) {
+				if errs.IsA[*awstypes.RepositoryNotFoundException](err) ||
+					errs.IsA[*awstypes.RepositoryPolicyNotFoundException](err) {
 					return nil
 				}
 				return err

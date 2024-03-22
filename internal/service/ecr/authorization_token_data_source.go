@@ -9,8 +9,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ecr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ecr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -56,21 +56,19 @@ func DataSourceAuthorizationToken() *schema.Resource {
 
 func dataSourceAuthorizationTokenRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ECRConn(ctx)
+	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 	params := &ecr.GetAuthorizationTokenInput{}
-	if v, ok := d.GetOk("registry_id"); ok {
-		params.RegistryIds = []*string{aws.String(v.(string))}
-	}
+
 	log.Printf("[DEBUG] Getting ECR authorization token")
-	out, err := conn.GetAuthorizationTokenWithContext(ctx, params)
+	out, err := conn.GetAuthorizationToken(ctx, params)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "getting ECR authorization token: %s", err)
 	}
 	log.Printf("[DEBUG] Received ECR AuthorizationData %v", out.AuthorizationData)
 	authorizationData := out.AuthorizationData[0]
-	authorizationToken := aws.StringValue(authorizationData.AuthorizationToken)
-	expiresAt := aws.TimeValue(authorizationData.ExpiresAt).Format(time.RFC3339)
-	proxyEndpoint := aws.StringValue(authorizationData.ProxyEndpoint)
+	authorizationToken := aws.ToString(authorizationData.AuthorizationToken)
+	expiresAt := aws.ToTime(authorizationData.ExpiresAt).Format(time.RFC3339)
+	proxyEndpoint := aws.ToString(authorizationData.ProxyEndpoint)
 	authBytes, err := itypes.Base64Decode(authorizationToken)
 	if err != nil {
 		d.SetId("")
