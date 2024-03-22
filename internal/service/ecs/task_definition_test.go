@@ -215,6 +215,40 @@ func TestAccECSTaskDefinition_DockerVolume_minimal(t *testing.T) {
 	})
 }
 
+func TestAccECSTaskDefinition_EBSVolumeConfiguredAtLaunch(t *testing.T) {
+	ctx := acctest.Context(t)
+	var def ecs.TaskDefinition
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_task_definition.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTaskDefinitionConfig_ebsVolumeConfiguredAtLaunch(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
+					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "volume.*", map[string]string{
+						"name":                 rName,
+						"configured_at_launch": "true",
+					}),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccTaskDefinitionImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_destroy", "track_latest"},
+			},
+		},
+	})
+}
+
 func TestAccECSTaskDefinition_runtimePlatform(t *testing.T) {
 	ctx := acctest.Context(t)
 	var def ecs.TaskDefinition
@@ -1859,6 +1893,35 @@ TASK_DEFINITION
     docker_volume_configuration {
       autoprovision = true
     }
+  }
+}
+`, rName)
+}
+
+func testAccTaskDefinitionConfig_ebsVolumeConfiguredAtLaunch(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_task_definition" "test" {
+  family = %[1]q
+
+  container_definitions = <<TASK_DEFINITION
+[
+  {
+    "name": "sleep",
+    "image": "busybox",
+    "mountPoints": [
+      {"sourceVolume": %[1]q, "containerPath": "/vol1"}
+    ],
+    "cpu": 10,
+    "command": ["sleep","360"],
+    "memory": 10,
+    "essential": true
+  }
+]
+TASK_DEFINITION
+
+  volume {
+    name = %[1]q
+	configured_at_launch = true
   }
 }
 `, rName)
