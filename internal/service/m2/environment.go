@@ -372,13 +372,13 @@ func (r *environmentResource) Read(ctx context.Context, request resource.ReadReq
 
 	// AutoFlEx doesn't yet handle union types.
 	if output.StorageConfigurations != nil {
-		x, diags := flattenStorageConfigurations(ctx, output.StorageConfigurations)
+		storageConfigurationsData, diags := flattenStorageConfigurations(ctx, output.StorageConfigurations)
 		response.Diagnostics.Append(diags...)
 		if response.Diagnostics.HasError() {
 			return
 		}
 
-		data.StorageConfigurations = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, x)
+		data.StorageConfigurations = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, storageConfigurationsData)
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
@@ -685,7 +685,7 @@ func flattenStorageConfigurations(ctx context.Context, apiObjects []awstypes.Sto
 		switch v := apiObject.(type) {
 		case *awstypes.StorageConfigurationMemberEfs:
 			var efsStorageConfigurationData efsStorageConfigurationModel
-			d := fwflex.Flatten(ctx, &v.Value, &efsStorageConfigurationData)
+			d := fwflex.Flatten(ctx, v.Value, &efsStorageConfigurationData)
 			diags.Append(d...)
 			if diags.HasError() {
 				return nil, diags
@@ -693,17 +693,19 @@ func flattenStorageConfigurations(ctx context.Context, apiObjects []awstypes.Sto
 
 			storageConfigurationsData = append(storageConfigurationsData, &storageConfigurationModel{
 				EFS: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &efsStorageConfigurationData),
+				FSX: fwtypes.NewListNestedObjectValueOfNull[fsxStorageConfigurationModel](ctx),
 			})
 
 		case *awstypes.StorageConfigurationMemberFsx:
 			var fsxStorageConfigurationData fsxStorageConfigurationModel
-			d := fwflex.Flatten(ctx, &v.Value, &fsxStorageConfigurationData)
+			d := fwflex.Flatten(ctx, v.Value, &fsxStorageConfigurationData)
 			diags.Append(d...)
 			if diags.HasError() {
 				return nil, diags
 			}
 
 			storageConfigurationsData = append(storageConfigurationsData, &storageConfigurationModel{
+				EFS: fwtypes.NewListNestedObjectValueOfNull[efsStorageConfigurationModel](ctx),
 				FSX: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &fsxStorageConfigurationData),
 			})
 		}
