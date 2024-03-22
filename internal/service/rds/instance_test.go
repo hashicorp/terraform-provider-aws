@@ -2116,18 +2116,6 @@ func TestAccRDSInstance_ReplicateSourceDB_characterSet_Replica(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "replicate_source_db", sourceResourceName, "identifier"),
 					resource.TestCheckResourceAttr(resourceName, "character_set_name", "WE8ISO8859P15"),
 				),
-				ConfigPlanChecks: resource.ConfigPlanChecks{
-					PreApply: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionCreate),
-					},
-					PostApplyPreRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
-					},
-					PostApplyPostRefresh: []plancheck.PlanCheck{
-						plancheck.ExpectResourceAction(resourceName, plancheck.ResourceActionReplace),
-					},
-				},
-				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
