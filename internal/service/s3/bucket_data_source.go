@@ -5,7 +5,6 @@ package s3
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
@@ -94,7 +93,7 @@ func dataSourceBucketRead(ctx context.Context, d *schema.ResourceData, meta inte
 		}.String()
 		d.Set("arn", arn)
 	}
-	d.Set("bucket_domain_name", awsClient.PartitionHostname(fmt.Sprintf("%s.s3", bucket)))
+	d.Set("bucket_domain_name", awsClient.PartitionHostname(ctx, bucket+".s3"))
 	d.Set("bucket_regional_domain_name", bucketRegionalDomainName(bucket, region))
 	if hostedZoneID, err := hostedZoneIDForRegion(region); err == nil {
 		d.Set("hosted_zone_id", hostedZoneID)

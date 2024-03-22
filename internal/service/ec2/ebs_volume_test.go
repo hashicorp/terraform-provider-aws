@@ -964,7 +964,7 @@ func testAccCheckVolumeFinalSnapshotExists(ctx context.Context, v *ec2.Volume) r
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 		input := &ec2.DescribeSnapshotsInput{
-			Filters: tfec2.BuildAttributeFilterList(map[string]string{
+			Filters: tfec2.NewAttributeFilterList(map[string]string{
 				"volume-id": aws.StringValue(v.VolumeId),
 				"status":    ec2.SnapshotStateCompleted,
 			}),

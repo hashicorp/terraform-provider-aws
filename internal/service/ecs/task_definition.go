@@ -83,6 +83,7 @@ func ResourceTaskDefinition() *schema.Resource {
 					// spurious reorderings in plans (diff is suppressed if the environment variables haven't changed,
 					// but they still show in the plan if some other property changes).
 					orderedCDs, _ := expandContainerDefinitions(v.(string))
+					containerDefinitions(orderedCDs).OrderContainers()
 					containerDefinitions(orderedCDs).OrderEnvironmentVariables()
 					containerDefinitions(orderedCDs).OrderSecrets()
 					unnormalizedJson, _ := flattenContainerDefinitions(orderedCDs)
@@ -613,6 +614,7 @@ func resourceTaskDefinitionRead(ctx context.Context, d *schema.ResourceData, met
 	// Sort the lists of environment variables as they come in, so we won't get spurious reorderings in plans
 	// (diff is suppressed if the environment variables haven't changed, but they still show in the plan if
 	// some other property changes).
+	containerDefinitions(taskDefinition.ContainerDefinitions).OrderContainers()
 	containerDefinitions(taskDefinition.ContainerDefinitions).OrderEnvironmentVariables()
 	containerDefinitions(taskDefinition.ContainerDefinitions).OrderSecrets()
 

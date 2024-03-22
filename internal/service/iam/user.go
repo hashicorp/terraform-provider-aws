@@ -5,6 +5,7 @@ package iam
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 
@@ -12,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -454,22 +454,25 @@ func deleteUserLoginProfile(ctx context.Context, conn *iam.IAM, username string)
 }
 
 func deleteUserAccessKeys(ctx context.Context, conn *iam.IAM, username string) error {
-	accessKeys, err := FindAccessKeys(ctx, conn, username)
+	accessKeys, err := findAccessKeysByUser(ctx, conn, username)
+
 	if err != nil && !tfresource.NotFound(err) {
 		return fmt.Errorf("listing access keys for IAM User (%s): %w", username, err)
 	}
-	var errs *multierror.Error
+
+	var errs []error
+
 	for _, k := range accessKeys {
 		_, err := conn.DeleteAccessKeyWithContext(ctx, &iam.DeleteAccessKeyInput{
 			UserName:    aws.String(username),
 			AccessKeyId: k.AccessKeyId,
 		})
 		if err != nil {
-			errs = multierror.Append(errs, fmt.Errorf("deleting Access Key (%s) from User (%s): %w", aws.StringValue(k.AccessKeyId), username, err))
+			errs = append(errs, fmt.Errorf("deleting Access Key (%s) from User (%s): %w", aws.StringValue(k.AccessKeyId), username, err))
 		}
 	}
 
-	return errs.ErrorOrNil()
+	return errors.Join(errs...)
 }
 
 func deleteUserSigningCertificates(ctx context.Context, conn *iam.IAM, userName string) error {

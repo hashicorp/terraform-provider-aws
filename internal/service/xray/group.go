@@ -24,6 +24,7 @@ import (
 
 // @SDKResource("aws_xray_group", name="Group")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/xray/types.Group")
 func resourceGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGroupCreate,

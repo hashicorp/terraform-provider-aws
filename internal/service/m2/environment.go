@@ -6,15 +6,18 @@ package m2
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/m2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/m2/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
@@ -26,24 +29,23 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource(name="Environment")
 // @Tags(identifierAttribute="arn")
-func newResourceEnvironment(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceEnvironment{}
+func newEnvironmentResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &environmentResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
@@ -52,38 +54,35 @@ func newResourceEnvironment(_ context.Context) (resource.ResourceWithConfigure, 
 	return r, nil
 }
 
-const (
-	ResNameEnvironment = "Environment"
-)
-
-type resourceEnvironment struct {
+type environmentResource struct {
 	framework.ResourceWithConfigure
+	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *resourceEnvironment) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_m2_environment"
+func (r *environmentResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_m2_environment"
 }
 
-func (r *resourceEnvironment) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *environmentResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
 			"apply_changes_during_maintenance_window": schema.BoolAttribute{
 				Optional: true,
 			},
-			"client_token": schema.StringAttribute{
-				Optional: true,
-			},
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"description": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
+				Validators: []validator.String{
+					stringvalidator.LengthAtMost(500),
+				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"engine_type": schema.StringAttribute{
-				Required: true,
+				CustomType: fwtypes.StringEnumType[awstypes.EngineType](),
+				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -91,6 +90,9 @@ func (r *resourceEnvironment) Schema(ctx context.Context, req resource.SchemaReq
 			"engine_version": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(regexache.MustCompile(`^\S{1,10}$`), ""),
+				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -99,29 +101,39 @@ func (r *resourceEnvironment) Schema(ctx context.Context, req resource.SchemaReq
 			"force_update": schema.BoolAttribute{
 				Optional: true,
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"instance_type": schema.StringAttribute{
-				Required:   true,
-				Validators: []validator.String{},
+				Required: true,
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(regexache.MustCompile(`^\S{1,20}$`), ""),
+				},
 			},
 			"kms_key_id": schema.StringAttribute{
-				Optional: true,
+				CustomType: fwtypes.ARNType,
+				Optional:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"load_balancer_arn": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"name": schema.StringAttribute{
 				Required: true,
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_\-]{1,59}$`), ""),
+				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"preferred_maintenance_window": schema.StringAttribute{
-				Optional: true,
-				Computed: true,
+				CustomType: fwtypes.OnceAWeekWindowType,
+				Optional:   true,
+				Computed:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -130,31 +142,34 @@ func (r *resourceEnvironment) Schema(ctx context.Context, req resource.SchemaReq
 				Optional: true,
 				Computed: true,
 				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.RequiresReplace(),
 					boolplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"security_groups": schema.SetAttribute{
+			"security_group_ids": schema.SetAttribute{
+				CustomType:  fwtypes.SetOfStringType,
+				ElementType: types.StringType,
 				Optional:    true,
 				Computed:    true,
-				ElementType: types.StringType,
 				Validators: []validator.Set{
 					setvalidator.SizeAtLeast(1),
 				},
 				PlanModifiers: []planmodifier.Set{
-					setplanmodifier.UseStateForUnknown(),
 					setplanmodifier.RequiresReplace(),
+					setplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"subnet_ids": schema.SetAttribute{
+				CustomType:  fwtypes.SetOfStringType,
+				ElementType: types.StringType,
 				Optional:    true,
 				Computed:    true,
-				ElementType: types.StringType,
 				Validators: []validator.Set{
 					setvalidator.SizeAtLeast(2),
 				},
 				PlanModifiers: []planmodifier.Set{
-					setplanmodifier.UseStateForUnknown(),
 					setplanmodifier.RequiresReplace(),
+					setplanmodifier.UseStateForUnknown(),
 				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
@@ -162,7 +177,7 @@ func (r *resourceEnvironment) Schema(ctx context.Context, req resource.SchemaReq
 		},
 		Blocks: map[string]schema.Block{
 			"high_availability_config": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[haData](ctx),
+				CustomType: fwtypes.NewListNestedObjectTypeOf[highAvailabilityConfigModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
@@ -170,11 +185,15 @@ func (r *resourceEnvironment) Schema(ctx context.Context, req resource.SchemaReq
 					Attributes: map[string]schema.Attribute{
 						"desired_capacity": schema.Int64Attribute{
 							Required: true,
+							Validators: []validator.Int64{
+								int64validator.Between(1, 100),
+							},
 						},
 					},
 				},
 			},
 			"storage_configuration": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[storageConfigurationModel](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
@@ -184,31 +203,55 @@ func (r *resourceEnvironment) Schema(ctx context.Context, req resource.SchemaReq
 				NestedObject: schema.NestedBlockObject{
 					Blocks: map[string]schema.Block{
 						"efs": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[efsStorageConfigurationModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
+								listvalidator.ExactlyOneOf(
+									path.MatchRelative().AtParent().AtName("efs"),
+									path.MatchRelative().AtParent().AtName("fsx"),
+								),
+							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"file_system_id": schema.StringAttribute{
 										Required: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 									"mount_point": schema.StringAttribute{
 										Required: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 								},
 							},
 						},
 						"fsx": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[fsxStorageConfigurationModel](ctx),
 							Validators: []validator.List{
 								listvalidator.SizeAtMost(1),
+							},
+							PlanModifiers: []planmodifier.List{
+								listplanmodifier.RequiresReplace(),
 							},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"file_system_id": schema.StringAttribute{
 										Required: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 									"mount_point": schema.StringAttribute{
 										Required: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplace(),
+										},
 									},
 								},
 							},
@@ -225,241 +268,279 @@ func (r *resourceEnvironment) Schema(ctx context.Context, req resource.SchemaReq
 	}
 }
 
-func (r *resourceEnvironment) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *environmentResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data environmentResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().M2Client(ctx)
 
-	var plan resourceEnvironmentData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+	name := data.Name.ValueString()
+	input := &m2.CreateEnvironmentInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	in := &m2.CreateEnvironmentInput{}
-
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
-
-	var clientToken string
-	if plan.ClientToken.IsNull() || plan.ClientToken.IsUnknown() {
-		clientToken = id.UniqueId()
-	} else {
-		clientToken = plan.ClientToken.ValueString()
-	}
-
-	in.ClientToken = aws.String(clientToken)
-
-	in.Tags = getTagsIn(ctx)
-
-	if !plan.StorageConfiguration.IsNull() {
-		var sc []storageConfiguration
-		resp.Diagnostics.Append(plan.StorageConfiguration.ElementsAs(ctx, &sc, false)...)
-		storageConfig, d := expandStorageConfigurations(ctx, sc)
-		resp.Diagnostics.Append(d...)
-		in.StorageConfigurations = storageConfig
-	}
-
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	out, err := conn.CreateEnvironment(ctx, in)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.M2, create.ErrActionCreating, ResNameEnvironment, plan.Name.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil || out.EnvironmentId == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.M2, create.ErrActionCreating, ResNameEnvironment, plan.Name.String(), nil),
-			errors.New("empty output").Error(),
-		)
-		return
-	}
-
-	plan.ID = flex.StringToFramework(ctx, out.EnvironmentId)
-
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	env, err := waitEnvironmentCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.M2, create.ErrActionWaitingForCreation, ResNameEnvironment, plan.Name.String(), err),
-			err.Error(),
-		)
-		return
-	}
-
-	resp.Diagnostics.Append(plan.refreshFromOutput(ctx, env)...)
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
-}
-
-func (r *resourceEnvironment) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().M2Client(ctx)
-
-	var state resourceEnvironmentData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	out, err := findEnvironmentByID(ctx, conn, state.ID.ValueString())
-	if tfresource.NotFound(err) {
-		resp.State.RemoveResource(ctx)
-		return
-	}
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.M2, create.ErrActionSetting, ResNameEnvironment, state.ID.String(), err),
-			err.Error(),
-		)
-		return
-	}
-
-	resp.Diagnostics.Append(state.refreshFromOutput(ctx, out)...)
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
-}
-
-func (r *resourceEnvironment) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().M2Client(ctx)
-
-	var plan, state resourceEnvironmentData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	in, updateRequired := r.updateEnvironmentInput(ctx, plan, state, resp)
-	if !updateRequired {
-		return
-	}
-
-	out, err := conn.UpdateEnvironment(ctx, in)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.M2, create.ErrActionUpdating, ResNameEnvironment, plan.ID.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil || out.EnvironmentId == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.M2, create.ErrActionUpdating, ResNameEnvironment, plan.ID.String(), nil),
-			errors.New("empty output").Error(),
-		)
-		return
-	}
-
-	plan.ID = flex.StringToFramework(ctx, out.EnvironmentId)
-
-	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-	env, err := waitEnvironmentUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.M2, create.ErrActionWaitingForUpdate, ResNameEnvironment, plan.ID.String(), err),
-			err.Error(),
-		)
-		return
-	}
-
-	resp.Diagnostics.Append(flex.Flatten(ctx, env, &plan)...)
-
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
-}
-
-func (r *resourceEnvironment) updateEnvironmentInput(ctx context.Context, plan, state resourceEnvironmentData, resp *resource.UpdateResponse) (*m2.UpdateEnvironmentInput, bool) {
-	in := &m2.UpdateEnvironmentInput{
-		EnvironmentId: flex.StringFromFramework(ctx, plan.ID),
-	}
-
-	if r.hasChangesForMaintenance(plan, state) {
-		in.ApplyDuringMaintenanceWindow = true
-		in.EngineVersion = flex.StringFromFramework(ctx, plan.EngineVersion)
-	} else if r.hasChanges(plan, state) {
-		if !plan.EngineVersion.Equal(state.EngineVersion) {
-			in.EngineVersion = flex.StringFromFramework(ctx, plan.EngineVersion)
-		}
-		if !plan.InstanceType.Equal(state.InstanceType) {
-			in.InstanceType = flex.StringFromFramework(ctx, plan.InstanceType)
-		}
-		if !plan.PreferredMaintenanceWindow.Equal(state.PreferredMaintenanceWindow) {
-			in.PreferredMaintenanceWindow = flex.StringFromFramework(ctx, plan.PreferredMaintenanceWindow)
-		}
-
-		if !plan.HighAvailabilityConfig.Equal(state.HighAvailabilityConfig) {
-			v, d := plan.HighAvailabilityConfig.ToSlice(ctx)
-			resp.Diagnostics.Append(d...)
-			if len(v) > 0 {
-				in.DesiredCapacity = flex.Int32FromFramework(ctx, v[0].DesiredCapacity)
-			}
-		}
-	} else {
-		return nil, false
-	}
-
-	if !plan.ForceUpdate.IsNull() {
-		in.ForceUpdate = plan.ForceUpdate.ValueBool()
-	}
-	return in, true
-}
-
-func (r *resourceEnvironment) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().M2Client(ctx)
-
-	var state resourceEnvironmentData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	in := &m2.DeleteEnvironmentInput{
-		EnvironmentId: aws.String(state.ID.ValueString()),
-	}
-
-	_, err := conn.DeleteEnvironment(ctx, in)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+	// AutoFlEx doesn't yet handle union types.
+	if !data.StorageConfigurations.IsNull() {
+		storageConfigurationsData, diags := data.StorageConfigurations.ToSlice(ctx)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
 			return
 		}
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.M2, create.ErrActionDeleting, ResNameEnvironment, state.ID.String(), err),
-			err.Error(),
-		)
+
+		storageConfigurations, diags := expandStorageConfigurations(ctx, storageConfigurationsData)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		input.StorageConfigurations = storageConfigurations
+	}
+
+	// Additional fields.
+	input.ClientToken = aws.String(sdkid.UniqueId())
+	input.Tags = getTagsIn(ctx)
+
+	output, err := conn.CreateEnvironment(ctx, input)
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("creating Mainframe Modernization Environment (%s)", name), err.Error())
+
 		return
 	}
 
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitEnvironmentDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
+	// Set values for unknowns.
+	data.EnvironmentID = fwflex.StringToFramework(ctx, output.EnvironmentId)
+	data.setID()
+
+	env, err := waitEnvironmentCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.M2, create.ErrActionWaitingForDeletion, ResNameEnvironment, state.ID.String(), err),
-			err.Error(),
-		)
+		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Mainframe Modernization Environment (%s) create", data.ID.ValueString()), err.Error())
+
+		return
+	}
+
+	response.Diagnostics.Append(fwflex.Flatten(ctx, env, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
+}
+
+func (r *environmentResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data environmentResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	if err := data.InitFromID(); err != nil {
+		response.Diagnostics.AddError("parsing resource ID", err.Error())
+
+		return
+	}
+
+	conn := r.Meta().M2Client(ctx)
+
+	output, err := findEnvironmentByID(ctx, conn, data.ID.ValueString())
+
+	if tfresource.NotFound(err) {
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
+		return
+	}
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading Mainframe Modernization Environment (%s)", data.ID.ValueString()), err.Error())
+
+		return
+	}
+
+	// Set attributes for import.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	// AutoFlEx doesn't yet handle union types.
+	if output.StorageConfigurations != nil {
+		storageConfigurationsData, diags := flattenStorageConfigurations(ctx, output.StorageConfigurations)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		data.StorageConfigurations = fwtypes.NewListNestedObjectValueOfSliceMust(ctx, storageConfigurationsData)
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
+}
+
+func (r *environmentResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var old, new environmentResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().M2Client(ctx)
+
+	if !new.EngineVersion.Equal(old.EngineVersion) ||
+		!new.HighAvailabilityConfig.Equal(old.HighAvailabilityConfig) ||
+		!new.InstanceType.Equal(old.InstanceType) ||
+		!new.PreferredMaintenanceWindow.Equal(old.PreferredMaintenanceWindow) {
+		input := &m2.UpdateEnvironmentInput{
+			EnvironmentId: fwflex.StringFromFramework(ctx, new.ID),
+		}
+
+		if !new.ForceUpdate.IsNull() {
+			input.ForceUpdate = new.ForceUpdate.ValueBool()
+		}
+
+		// https://docs.aws.amazon.com/m2/latest/APIReference/API_UpdateEnvironment.html#m2-UpdateEnvironment-request-applyDuringMaintenanceWindow.
+		// "Currently, AWS Mainframe Modernization accepts the engineVersion parameter only if applyDuringMaintenanceWindow is true. If any parameter other than engineVersion is provided in UpdateEnvironmentRequest, it will fail if applyDuringMaintenanceWindow is set to true."
+		if new.ApplyDuringMaintenanceWindow.ValueBool() && !new.EngineVersion.Equal(old.EngineVersion) {
+			input.ApplyDuringMaintenanceWindow = true
+			input.EngineVersion = fwflex.StringFromFramework(ctx, new.EngineVersion)
+		} else {
+			if !new.EngineVersion.Equal(old.EngineVersion) {
+				input.EngineVersion = fwflex.StringFromFramework(ctx, new.EngineVersion)
+			}
+			if !new.HighAvailabilityConfig.Equal(old.HighAvailabilityConfig) {
+				highAvailabilityConfigData, diags := new.HighAvailabilityConfig.ToPtr(ctx)
+				response.Diagnostics.Append(diags...)
+				if response.Diagnostics.HasError() {
+					return
+				}
+
+				input.DesiredCapacity = fwflex.Int32FromFramework(ctx, highAvailabilityConfigData.DesiredCapacity)
+			}
+			if !new.InstanceType.Equal(old.InstanceType) {
+				input.InstanceType = fwflex.StringFromFramework(ctx, new.InstanceType)
+			}
+			if !new.PreferredMaintenanceWindow.Equal(old.PreferredMaintenanceWindow) {
+				input.PreferredMaintenanceWindow = fwflex.StringFromFramework(ctx, new.PreferredMaintenanceWindow)
+			}
+		}
+		_, err := conn.UpdateEnvironment(ctx, input)
+
+		if err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("updating Mainframe Modernization Environment (%s)", new.ID.ValueString()), err.Error())
+
+			return
+		}
+
+		if _, err := waitEnvironmentUpdated(ctx, conn, new.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for Mainframe Modernization Environment (%s) update", new.ID.ValueString()), err.Error())
+
+			return
+		}
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
+}
+
+func (r *environmentResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data environmentResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().M2Client(ctx)
+
+	_, err := conn.DeleteEnvironment(ctx, &m2.DeleteEnvironmentInput{
+		EnvironmentId: aws.String(data.ID.ValueString()),
+	})
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Mainframe Modernization Environment (%s)", data.ID.ValueString()), err.Error())
+
+		return
+	}
+
+	if _, err := waitEnvironmentDeleted(ctx, conn, data.ID.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Mainframe Modernization Environment (%s) delete", data.ID.ValueString()), err.Error())
+
 		return
 	}
 }
 
-func (r *resourceEnvironment) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+func (r *environmentResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	r.SetTagsAll(ctx, request, response)
+}
+
+func findEnvironmentByID(ctx context.Context, conn *m2.Client, id string) (*m2.GetEnvironmentOutput, error) {
+	input := &m2.GetEnvironmentInput{
+		EnvironmentId: aws.String(id),
+	}
+
+	output, err := conn.GetEnvironment(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func statusEnvironment(ctx context.Context, conn *m2.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findEnvironmentByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status), nil
+	}
 }
 
 func waitEnvironmentCreated(ctx context.Context, conn *m2.Client, id string, timeout time.Duration) (*m2.GetEnvironmentOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.EnvironmentLifecycleCreating),
-		Target:                    enum.Slice(awstypes.EnvironmentLifecycleAvailable),
-		Refresh:                   statusEnvironment(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
+		Pending: enum.Slice(awstypes.EnvironmentLifecycleCreating),
+		Target:  enum.Slice(awstypes.EnvironmentLifecycleAvailable),
+		Refresh: statusEnvironment(ctx, conn, id),
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*m2.GetEnvironmentOutput); ok {
-		return out, err
+
+	if output, ok := outputRaw.(*m2.GetEnvironmentOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+
+		return output, err
 	}
 
 	return nil, err
@@ -467,17 +548,18 @@ func waitEnvironmentCreated(ctx context.Context, conn *m2.Client, id string, tim
 
 func waitEnvironmentUpdated(ctx context.Context, conn *m2.Client, id string, timeout time.Duration) (*m2.GetEnvironmentOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.EnvironmentLifecycleUpdating),
-		Target:                    enum.Slice(awstypes.EnvironmentLifecycleAvailable),
-		Refresh:                   statusEnvironment(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
+		Pending: enum.Slice(awstypes.EnvironmentLifecycleUpdating),
+		Target:  enum.Slice(awstypes.EnvironmentLifecycleAvailable),
+		Refresh: statusEnvironment(ctx, conn, id),
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*m2.GetEnvironmentOutput); ok {
-		return out, err
+
+	if output, ok := outputRaw.(*m2.GetEnvironmentOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+
+		return output, err
 	}
 
 	return nil, err
@@ -492,245 +574,142 @@ func waitEnvironmentDeleted(ctx context.Context, conn *m2.Client, id string, tim
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*m2.GetEnvironmentOutput); ok {
-		return out, err
+
+	if output, ok := outputRaw.(*m2.GetEnvironmentOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+
+		return output, err
 	}
 
 	return nil, err
 }
 
-func statusEnvironment(ctx context.Context, conn *m2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		out, err := findEnvironmentByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return out, string(out.Status), nil
-	}
+type environmentResourceModel struct {
+	ApplyDuringMaintenanceWindow types.Bool                                                   `tfsdk:"apply_changes_during_maintenance_window"`
+	Description                  types.String                                                 `tfsdk:"description"`
+	EngineType                   fwtypes.StringEnum[awstypes.EngineType]                      `tfsdk:"engine_type"`
+	EngineVersion                types.String                                                 `tfsdk:"engine_version"`
+	EnvironmentARN               types.String                                                 `tfsdk:"arn"`
+	EnvironmentID                types.String                                                 `tfsdk:"environment_id"`
+	ForceUpdate                  types.Bool                                                   `tfsdk:"force_update"`
+	HighAvailabilityConfig       fwtypes.ListNestedObjectValueOf[highAvailabilityConfigModel] `tfsdk:"high_availability_config"`
+	ID                           types.String                                                 `tfsdk:"id"`
+	InstanceType                 types.String                                                 `tfsdk:"instance_type"`
+	KmsKeyID                     fwtypes.ARN                                                  `tfsdk:"kms_key_id"`
+	LoadBalancerArn              types.String                                                 `tfsdk:"load_balancer_arn"`
+	Name                         types.String                                                 `tfsdk:"name"`
+	PreferredMaintenanceWindow   fwtypes.OnceAWeekWindow                                      `tfsdk:"preferred_maintenance_window"`
+	PubliclyAccessible           types.Bool                                                   `tfsdk:"publicly_accessible"`
+	SecurityGroupIDs             fwtypes.SetValueOf[types.String]                             `tfsdk:"security_group_ids"`
+	StorageConfigurations        fwtypes.ListNestedObjectValueOf[storageConfigurationModel]   `tfsdk:"storage_configuration"`
+	SubnetIDs                    fwtypes.SetValueOf[types.String]                             `tfsdk:"subnet_ids"`
+	Tags                         types.Map                                                    `tfsdk:"tags"`
+	TagsAll                      types.Map                                                    `tfsdk:"tags_all"`
+	Timeouts                     timeouts.Value                                               `tfsdk:"timeouts"`
 }
 
-func findEnvironmentByID(ctx context.Context, conn *m2.Client, id string) (*m2.GetEnvironmentOutput, error) {
-	in := &m2.GetEnvironmentInput{
-		EnvironmentId: aws.String(id),
-	}
+func (model *environmentResourceModel) InitFromID() error {
+	model.EnvironmentID = model.ID
 
-	out, err := conn.GetEnvironment(ctx, in)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
-
-		return nil, err
-	}
-
-	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-
-	return out, nil
+	return nil
 }
 
-func (rd *resourceEnvironmentData) refreshFromOutput(ctx context.Context, out *m2.GetEnvironmentOutput) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	diags.Append(flex.Flatten(ctx, out, rd)...)
-	rd.ARN = flex.StringToFramework(ctx, out.EnvironmentArn)
-	rd.ID = flex.StringToFramework(ctx, out.EnvironmentId)
-	storage, d := flattenStorageConfigurations(ctx, out.StorageConfigurations)
-	diags.Append(d...)
-	rd.StorageConfiguration = storage
-
-	return diags
+func (model *environmentResourceModel) setID() {
+	model.ID = model.EnvironmentID
 }
 
-type resourceEnvironmentData struct {
-	ARN                          types.String                            `tfsdk:"arn"`
-	ApplyDuringMaintenanceWindow types.Bool                              `tfsdk:"apply_changes_during_maintenance_window"`
-	ClientToken                  types.String                            `tfsdk:"client_token"`
-	Description                  types.String                            `tfsdk:"description"`
-	ID                           types.String                            `tfsdk:"id"`
-	EngineType                   types.String                            `tfsdk:"engine_type"`
-	EngineVersion                types.String                            `tfsdk:"engine_version"`
-	EnvironmentId                types.String                            `tfsdk:"environment_id"`
-	ForceUpdate                  types.Bool                              `tfsdk:"force_update"`
-	HighAvailabilityConfig       fwtypes.ListNestedObjectValueOf[haData] `tfsdk:"high_availability_config"`
-	InstanceType                 types.String                            `tfsdk:"instance_type"`
-	KmsKeyId                     types.String                            `tfsdk:"kms_key_id"`
-	LoadBalancerArn              types.String                            `tfsdk:"load_balancer_arn"`
-	PreferredMaintenanceWindow   types.String                            `tfsdk:"preferred_maintenance_window"`
-	PubliclyAccessible           types.Bool                              `tfsdk:"publicly_accessible"`
-	SecurityGroupIds             types.Set                               `tfsdk:"security_groups"`
-	StorageConfiguration         types.List                              `tfsdk:"storage_configuration"`
-	SubnetIds                    types.Set                               `tfsdk:"subnet_ids"`
-	Name                         types.String                            `tfsdk:"name"`
-	Tags                         types.Map                               `tfsdk:"tags"`
-	TagsAll                      types.Map                               `tfsdk:"tags_all"`
-	Timeouts                     timeouts.Value                          `tfsdk:"timeouts"`
+type storageConfigurationModel struct {
+	EFS fwtypes.ListNestedObjectValueOf[efsStorageConfigurationModel] `tfsdk:"efs"`
+	FSX fwtypes.ListNestedObjectValueOf[fsxStorageConfigurationModel] `tfsdk:"fsx"`
 }
 
-type storageConfiguration struct {
-	EFS types.List `tfsdk:"efs"`
-	FSX types.List `tfsdk:"fsx"`
-}
-
-type efs struct {
-	FileSystemId types.String `tfsdk:"file_system_id"`
+type efsStorageConfigurationModel struct {
+	FileSystemID types.String `tfsdk:"file_system_id"`
 	MountPoint   types.String `tfsdk:"mount_point"`
 }
 
-type fsx struct {
-	FileSystemId types.String `tfsdk:"file_system_id"`
+type fsxStorageConfigurationModel struct {
+	FileSystemID types.String `tfsdk:"file_system_id"`
 	MountPoint   types.String `tfsdk:"mount_point"`
 }
 
-type haData struct {
+type highAvailabilityConfigModel struct {
 	DesiredCapacity types.Int64 `tfsdk:"desired_capacity"`
 }
 
-var (
-	storageDataAttrTypes = map[string]attr.Type{
-		"efs": types.ListType{ElemType: mountObjectType},
-		"fsx": types.ListType{ElemType: mountObjectType},
-	}
-
-	mountObjectType = types.ObjectType{AttrTypes: mountAttrTypes}
-
-	mountAttrTypes = map[string]attr.Type{
-		"file_system_id": types.StringType,
-		"mount_point":    types.StringType,
-	}
-)
-
-func (r *resourceEnvironment) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	r.SetTagsAll(ctx, req, resp)
-}
-
-func expandStorageConfigurations(ctx context.Context, storageConfigurations []storageConfiguration) ([]awstypes.StorageConfiguration, diag.Diagnostics) {
-	storage := []awstypes.StorageConfiguration{}
+func expandStorageConfigurations(ctx context.Context, storageConfigurationsData []*storageConfigurationModel) ([]awstypes.StorageConfiguration, diag.Diagnostics) {
 	var diags diag.Diagnostics
+	apiObjects := []awstypes.StorageConfiguration{}
 
-	for _, mount := range storageConfigurations {
-		if !mount.EFS.IsNull() {
-			var efsMounts []efs
-			diags.Append(mount.EFS.ElementsAs(ctx, &efsMounts, false)...)
-			mp := expandEFSMountPoint(ctx, efsMounts)
-			storage = append(storage, mp)
-		}
-		if !mount.FSX.IsNull() {
-			var fsxMounts []fsx
-			diags.Append(mount.FSX.ElementsAs(ctx, &fsxMounts, false)...)
-			mp := expandFSxMountPoint(ctx, fsxMounts)
-			storage = append(storage, mp)
-		}
-	}
-
-	return storage, diags
-}
-
-func expandEFSMountPoint(ctx context.Context, efs []efs) *awstypes.StorageConfigurationMemberEfs {
-	if len(efs) == 0 {
-		return nil
-	}
-	return &awstypes.StorageConfigurationMemberEfs{
-		Value: awstypes.EfsStorageConfiguration{
-			FileSystemId: flex.StringFromFramework(ctx, efs[0].FileSystemId),
-			MountPoint:   flex.StringFromFramework(ctx, efs[0].MountPoint),
-		},
-	}
-}
-
-func expandFSxMountPoint(ctx context.Context, fsx []fsx) *awstypes.StorageConfigurationMemberFsx {
-	if len(fsx) == 0 {
-		return nil
-	}
-	return &awstypes.StorageConfigurationMemberFsx{
-		Value: awstypes.FsxStorageConfiguration{
-			FileSystemId: flex.StringFromFramework(ctx, fsx[0].FileSystemId),
-			MountPoint:   flex.StringFromFramework(ctx, fsx[0].MountPoint),
-		},
-	}
-}
-
-func flattenStorageConfigurations(ctx context.Context, apiObject []awstypes.StorageConfiguration) (types.List, diag.Diagnostics) {
-	var diags diag.Diagnostics
-	elemType := types.ObjectType{AttrTypes: storageDataAttrTypes}
-
-	elems := []attr.Value{}
-
-	for _, config := range apiObject {
-		switch v := config.(type) {
-		case *awstypes.StorageConfigurationMemberEfs:
-			mountPoint, d := flattenMountPoint(ctx, v.Value.FileSystemId, v.Value.MountPoint, "efs")
-			elems = append(elems, mountPoint)
+	for _, item := range storageConfigurationsData {
+		if !item.EFS.IsNull() {
+			efsStorageConfigurationData, d := item.EFS.ToPtr(ctx)
 			diags.Append(d...)
+			if diags.HasError() {
+				return nil, diags
+			}
+
+			apiObject := &awstypes.StorageConfigurationMemberEfs{}
+			diags.Append(fwflex.Expand(ctx, efsStorageConfigurationData, &apiObject.Value)...)
+			if diags.HasError() {
+				return nil, diags
+			}
+
+			apiObjects = append(apiObjects, apiObject)
+		}
+		if !item.FSX.IsNull() {
+			fsxStorageConfigurationData, d := item.FSX.ToPtr(ctx)
+			diags.Append(d...)
+			if diags.HasError() {
+				return nil, diags
+			}
+
+			apiObject := &awstypes.StorageConfigurationMemberFsx{}
+			diags.Append(fwflex.Expand(ctx, fsxStorageConfigurationData, &apiObject.Value)...)
+			if diags.HasError() {
+				return nil, diags
+			}
+
+			apiObjects = append(apiObjects, apiObject)
+		}
+	}
+
+	return apiObjects, diags
+}
+
+func flattenStorageConfigurations(ctx context.Context, apiObjects []awstypes.StorageConfiguration) ([]*storageConfigurationModel, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	var storageConfigurationsData []*storageConfigurationModel
+
+	for _, apiObject := range apiObjects {
+		switch v := apiObject.(type) {
+		case *awstypes.StorageConfigurationMemberEfs:
+			var efsStorageConfigurationData efsStorageConfigurationModel
+			d := fwflex.Flatten(ctx, v.Value, &efsStorageConfigurationData)
+			diags.Append(d...)
+			if diags.HasError() {
+				return nil, diags
+			}
+
+			storageConfigurationsData = append(storageConfigurationsData, &storageConfigurationModel{
+				EFS: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &efsStorageConfigurationData),
+				FSX: fwtypes.NewListNestedObjectValueOfNull[fsxStorageConfigurationModel](ctx),
+			})
 
 		case *awstypes.StorageConfigurationMemberFsx:
-			mountPoint, d := flattenMountPoint(ctx, v.Value.FileSystemId, v.Value.MountPoint, "fsx")
-			elems = append(elems, mountPoint)
+			var fsxStorageConfigurationData fsxStorageConfigurationModel
+			d := fwflex.Flatten(ctx, v.Value, &fsxStorageConfigurationData)
 			diags.Append(d...)
-		}
-	}
-	listVal, d := types.ListValue(elemType, elems)
-	diags.Append(d...)
+			if diags.HasError() {
+				return nil, diags
+			}
 
-	return listVal, diags
-}
-
-func flattenMountPoint(ctx context.Context, fileSystemId, mountPoint *string, mountType string) (attr.Value, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	obj := map[string]attr.Value{
-		"file_system_id": flex.StringToFramework(ctx, fileSystemId),
-		"mount_point":    flex.StringToFramework(ctx, mountPoint),
-	}
-
-	mountValue, d := types.ObjectValue(mountAttrTypes, obj)
-	diags.Append(d...)
-	if diags.HasError() {
-		return nil, diags
-	}
-
-	mountList := []attr.Value{
-		mountValue,
-	}
-
-	mountListValue, d := types.ListValue(mountObjectType, mountList)
-	diags.Append(d...)
-	if diags.HasError() {
-		return nil, diags
-	}
-
-	configMap := map[string]attr.Value{
-		mountType: mountListValue,
-	}
-
-	for k := range storageDataAttrTypes {
-		if k != mountType {
-			configMap[k] = types.ListNull(mountObjectType)
+			storageConfigurationsData = append(storageConfigurationsData, &storageConfigurationModel{
+				EFS: fwtypes.NewListNestedObjectValueOfNull[efsStorageConfigurationModel](ctx),
+				FSX: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &fsxStorageConfigurationData),
+			})
 		}
 	}
 
-	configValue, d := types.ObjectValue(storageDataAttrTypes, configMap)
-	diags.Append(d...)
-
-	return configValue, diags
-}
-
-func (r *resourceEnvironment) hasChanges(plan, state resourceEnvironmentData) bool {
-	return !plan.HighAvailabilityConfig.Equal(state.HighAvailabilityConfig) ||
-		!plan.EngineVersion.Equal(state.EngineVersion) ||
-		!plan.InstanceType.Equal(state.EngineType) ||
-		!plan.PreferredMaintenanceWindow.Equal(state.PreferredMaintenanceWindow)
-}
-
-func (r *resourceEnvironment) hasChangesForMaintenance(plan, state resourceEnvironmentData) bool {
-	return plan.ApplyDuringMaintenanceWindow.ValueBool() && !plan.EngineVersion.Equal(state.EngineVersion)
+	return storageConfigurationsData, diags
 }

@@ -218,7 +218,7 @@ func (r *dataLakeResource) Create(ctx context.Context, request resource.CreateRe
 	}
 
 	// Set values for unknowns after creation is complete.
-	data.Configurations = fwtypes.NewListNestedObjectValueOfPtr(ctx, &configuration)
+	data.Configurations = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &configuration)
 	data.S3BucketARN = fwflex.StringToFramework(ctx, dataLake.S3BucketArn)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
@@ -260,7 +260,7 @@ func (r *dataLakeResource) Read(ctx context.Context, request resource.ReadReques
 		return
 	}
 
-	data.Configurations = fwtypes.NewListNestedObjectValueOfPtr(ctx, &configuration)
+	data.Configurations = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &configuration)
 	data.S3BucketARN = fwflex.StringToFramework(ctx, dataLake.S3BucketArn)
 
 	// Transparent tagging fails with "ResourceNotFoundException: The request failed because the specified resource doesn't exist."

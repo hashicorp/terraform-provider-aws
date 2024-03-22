@@ -768,6 +768,20 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 			input.OptionGroupName = aws.String(v.(string))
 		}
 
+		if v, ok := d.GetOk("parameter_group_name"); ok {
+			crossRegion := false
+			if arn.IsARN(sourceDBInstanceID) {
+				sourceARN, err := arn.Parse(sourceDBInstanceID)
+				if err != nil {
+					return sdkdiag.AppendErrorf(diags, "creating RDS DB Instance (read replica) (%s): %s", identifier, err)
+				}
+				crossRegion = sourceARN.Region != meta.(*conns.AWSClient).Region
+			}
+			if crossRegion {
+				input.DBParameterGroupName = aws.String(v.(string))
+			}
+		}
+
 		if v, ok := d.GetOk("performance_insights_enabled"); ok {
 			input.EnablePerformanceInsights = aws.Bool(v.(bool))
 		}
@@ -2331,7 +2345,7 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 		needsModify = true
 		input.StorageType = aws.String(d.Get("storage_type").(string))
 
-		if aws.StringValue(input.StorageType) == storageTypeIO1 {
+		if slices.Contains([]string{storageTypeIO1, storageTypeIO2}, aws.StringValue(input.StorageType)) {
 			input.Iops = aws.Int32(int32(d.Get("iops").(int)))
 		}
 	}

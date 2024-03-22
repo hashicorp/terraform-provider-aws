@@ -7,8 +7,10 @@ import (
 	"context"
 	"fmt"
 	"reflect"
+	"strings"
 	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -86,6 +88,10 @@ func (flattener autoFlattener) convert(ctx context.Context, vFrom, vTo reflect.V
 
 	case reflect.Struct:
 		diags.Append(flattener.struct_(ctx, vFrom, false, tTo, vTo)...)
+		return diags
+
+	case reflect.Interface:
+		// Smithy union type handling not yet implemented. Silently skip.
 		return diags
 	}
 
@@ -198,7 +204,10 @@ func (flattener autoFlattener) string(ctx context.Context, vFrom reflect.Value, 
 	case basetypes.StringTypable:
 		stringValue := types.StringNull()
 		if !isNullFrom {
-			stringValue = types.StringValue(vFrom.String())
+			// If the target is a StringEnumType, an empty string value is converted to a null String.
+			if value := vFrom.String(); !strings.HasPrefix(tTo.String(), "StringEnumType[") || value != "" {
+				stringValue = types.StringValue(value)
+			}
 		}
 		v, d := tTo.ValueFromString(ctx, stringValue)
 		diags.Append(d...)
@@ -225,7 +234,7 @@ func (flattener autoFlattener) time(ctx context.Context, vFrom reflect.Value, is
 	var diags diag.Diagnostics
 
 	if isNullFrom {
-		vTo.Set(reflect.ValueOf(fwtypes.TimestampNull()))
+		vTo.Set(reflect.ValueOf(timetypes.NewRFC3339Null()))
 		return diags
 	}
 
@@ -234,9 +243,9 @@ func (flattener autoFlattener) time(ctx context.Context, vFrom reflect.Value, is
 		return diags
 	}
 
-	// time.Time --> fwtypes.Timestamp
+	// time.Time --> timetypes.RFC3339
 	if from, ok := vFrom.Interface().(time.Time); ok {
-		vTo.Set(reflect.ValueOf(fwtypes.TimestampValue(from.Format(time.RFC3339))))
+		vTo.Set(reflect.ValueOf(timetypes.NewRFC3339TimeValue(from)))
 		return diags
 	}
 
@@ -245,9 +254,9 @@ func (flattener autoFlattener) time(ctx context.Context, vFrom reflect.Value, is
 		return diags
 	}
 
-	// *time.Time --> fwtypes.Timestamp
+	// *time.Time --> timetypes.RFC3339
 	if from, ok := vFrom.Elem().Interface().(time.Time); ok {
-		vTo.Set(reflect.ValueOf(fwtypes.TimestampValue(from.Format(time.RFC3339))))
+		vTo.Set(reflect.ValueOf(timetypes.NewRFC3339TimeValue(from)))
 		return diags
 	}
 
@@ -312,7 +321,7 @@ func (flattener autoFlattener) struct_(ctx context.Context, vFrom reflect.Value,
 	}
 
 	switch iTo.(type) {
-	case fwtypes.Timestamp:
+	case timetypes.RFC3339:
 		diags.Append(flattener.time(ctx, vFrom, isNilFrom, vTo)...)
 		return diags
 	}
@@ -489,6 +498,10 @@ func (flattener autoFlattener) slice(ctx context.Context, vFrom reflect.Value, t
 			diags.Append(flattener.sliceOfStructNestedObjectCollection(ctx, vFrom, tTo, vTo)...)
 			return diags
 		}
+
+	case reflect.Interface:
+		// Smithy union type handling not yet implemented. Silently skip.
+		return diags
 	}
 
 	tflog.Info(ctx, "AutoFlex Flatten; incompatible types", map[string]interface{}{

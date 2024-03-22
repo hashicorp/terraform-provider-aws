@@ -53,9 +53,11 @@ func TestAccFirehoseDeliveryStream_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.cloudwatch_logging_options.0.log_group_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.cloudwatch_logging_options.0.log_stream_name", ""),
 					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.compression_format", "UNCOMPRESSED"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.custom_time_zone", "UTC"),
 					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.data_format_conversion_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.dynamic_partitioning_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.error_output_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.file_extension", ""),
 					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.kms_key_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.prefix", ""),
 					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.processing_configuration.#", "1"),
@@ -882,6 +884,58 @@ func TestAccFirehoseDeliveryStream_extendedS3Updates(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
 					testAccCheckDeliveryStreamAttributes(&stream, nil, removeProcessorsExtendedS3DestinationConfig, nil, nil, nil, nil, nil),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFirehoseDeliveryStream_extendedS3CustomTimeZoneAndFileExtensionUpdates(t *testing.T) {
+	ctx := acctest.Context(t)
+	var stream types.DeliveryStreamDescription
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_kinesis_firehose_delivery_stream.test"
+	customTimeZone := "America/Los_Angeles"
+	fileExtension := ".json"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FirehoseServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeliveryStreamDestroy_ExtendedS3(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDeliveryStreamConfig_extendedS3CustomTimeZoneAndFileExtensionUpdates(rName, customTimeZone, fileExtension),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.custom_time_zone", customTimeZone),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.file_extension", fileExtension),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDeliveryStreamConfig_extendedS3CustomTimeZoneAndFileExtensionUpdatesNoValues(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.custom_time_zone", "UTC"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.file_extension", ""),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDeliveryStreamConfig_extendedS3CustomTimeZoneAndFileExtensionUpdates(rName, customTimeZone, fileExtension),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.custom_time_zone", customTimeZone),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.0.file_extension", fileExtension),
 				),
 			},
 		},
@@ -3349,6 +3403,38 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
       role_arn   = aws_iam_role.firehose.arn
       bucket_arn = aws_s3_bucket.bucket.arn
     }
+  }
+}
+`, rName))
+}
+
+func testAccDeliveryStreamConfig_extendedS3CustomTimeZoneAndFileExtensionUpdates(rName, customTimeZone, fileExtension string) string {
+	return acctest.ConfigCompose(testAccDeliveryStreamConfig_base(rName), fmt.Sprintf(`
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  depends_on  = [aws_iam_role_policy.firehose]
+  name        = %[1]q
+  destination = "extended_s3"
+
+  extended_s3_configuration {
+    role_arn         = aws_iam_role.firehose.arn
+    bucket_arn       = aws_s3_bucket.bucket.arn
+    custom_time_zone = %[2]q
+    file_extension   = %[3]q
+  }
+}
+`, rName, customTimeZone, fileExtension))
+}
+
+func testAccDeliveryStreamConfig_extendedS3CustomTimeZoneAndFileExtensionUpdatesNoValues(rName string) string {
+	return acctest.ConfigCompose(testAccDeliveryStreamConfig_base(rName), fmt.Sprintf(`
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  depends_on  = [aws_iam_role_policy.firehose]
+  name        = %[1]q
+  destination = "extended_s3"
+
+  extended_s3_configuration {
+    role_arn   = aws_iam_role.firehose.arn
+    bucket_arn = aws_s3_bucket.bucket.arn
   }
 }
 `, rName))

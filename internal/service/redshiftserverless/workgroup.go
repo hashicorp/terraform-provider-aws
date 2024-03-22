@@ -157,7 +157,6 @@ func ResourceWorkgroup() *schema.Resource {
 			"max_capacity": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Computed: true,
 			},
 			"namespace_name": {
 				Type:     schema.TypeString,
@@ -306,15 +305,72 @@ func resourceWorkgroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
 
-	// You can't update multiple parameters in one request.
+	checkCapacityChange := func(key string) (bool, int, int) {
+		o, n := d.GetChange(key)
+		oldCapacity, newCapacity := o.(int), n.(int)
+		hasCapacityChange := newCapacity != oldCapacity
+		return hasCapacityChange, oldCapacity, newCapacity
+	}
 
-	if d.HasChange("base_capacity") {
-		input := &redshiftserverless.UpdateWorkgroupInput{
-			BaseCapacity:  aws.Int64(int64(d.Get("base_capacity").(int))),
-			WorkgroupName: aws.String(d.Id()),
+	// You can't update multiple workgroup parameters in one request.
+	// This is particularly important when adjusting base_capacity and max_capacity due to their interdependencies:
+	// - base_capacity cannot be increased to a value greater than the current max_capacity.
+	// - max_capacity cannot be decreased to a value smaller than the current base_capacity.
+	// The value 0 of max_capacity in the state signifies "not set".
+	// Sending max_capacity value of -1 to AWS API removes max_capacity limit, but -1 cannot be used as max_capacity in the state,
+	// because AWS API never returns -1 as the value of unset max_capacity. There would be a diff on subsequent apply,
+	// resulting in errors due to the lack of AWS API idempotency.
+	// Some validations, such as increasing base_capacity beyond an unchanged max_capacity, are deferred to the AWS API.
+
+	hasBaseCapacityChange, _, newBaseCapacity := checkCapacityChange("base_capacity")
+	hasMaxCapacityChange, oldMaxCapacity, newMaxCapacity := checkCapacityChange("max_capacity")
+
+	switch {
+	case hasMaxCapacityChange && newMaxCapacity == 0:
+		if err :=
+			updateWorkgroup(ctx, conn,
+				&redshiftserverless.UpdateWorkgroupInput{MaxCapacity: aws.Int64(-1), WorkgroupName: aws.String(d.Id())},
+				d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
-
-		if err := updateWorkgroup(ctx, conn, input, d.Timeout(schema.TimeoutUpdate)); err != nil {
+	case hasBaseCapacityChange && hasMaxCapacityChange && (oldMaxCapacity == 0 || newBaseCapacity <= oldMaxCapacity):
+		if err :=
+			updateWorkgroup(ctx, conn,
+				&redshiftserverless.UpdateWorkgroupInput{BaseCapacity: aws.Int64(int64(newBaseCapacity)), WorkgroupName: aws.String(d.Id())},
+				d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+		if err :=
+			updateWorkgroup(ctx, conn,
+				&redshiftserverless.UpdateWorkgroupInput{MaxCapacity: aws.Int64(int64(newMaxCapacity)), WorkgroupName: aws.String(d.Id())},
+				d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	case hasBaseCapacityChange && hasMaxCapacityChange && newBaseCapacity > oldMaxCapacity:
+		if err :=
+			updateWorkgroup(ctx, conn,
+				&redshiftserverless.UpdateWorkgroupInput{MaxCapacity: aws.Int64(int64(newMaxCapacity)), WorkgroupName: aws.String(d.Id())},
+				d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+		if err :=
+			updateWorkgroup(ctx, conn,
+				&redshiftserverless.UpdateWorkgroupInput{BaseCapacity: aws.Int64(int64(newBaseCapacity)), WorkgroupName: aws.String(d.Id())},
+				d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	case hasBaseCapacityChange:
+		if err :=
+			updateWorkgroup(ctx, conn,
+				&redshiftserverless.UpdateWorkgroupInput{BaseCapacity: aws.Int64(int64(newBaseCapacity)), WorkgroupName: aws.String(d.Id())},
+				d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	case hasMaxCapacityChange:
+		if err :=
+			updateWorkgroup(ctx, conn,
+				&redshiftserverless.UpdateWorkgroupInput{MaxCapacity: aws.Int64(int64(newMaxCapacity)), WorkgroupName: aws.String(d.Id())},
+				d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
@@ -334,17 +390,6 @@ func resourceWorkgroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		input := &redshiftserverless.UpdateWorkgroupInput{
 			EnhancedVpcRouting: aws.Bool(d.Get("enhanced_vpc_routing").(bool)),
 			WorkgroupName:      aws.String(d.Id()),
-		}
-
-		if err := updateWorkgroup(ctx, conn, input, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
-		}
-	}
-
-	if d.HasChange("max_capacity") {
-		input := &redshiftserverless.UpdateWorkgroupInput{
-			MaxCapacity:   aws.Int64(int64(d.Get("max_capacity").(int))),
-			WorkgroupName: aws.String(d.Id()),
 		}
 
 		if err := updateWorkgroup(ctx, conn, input, d.Timeout(schema.TimeoutUpdate)); err != nil {

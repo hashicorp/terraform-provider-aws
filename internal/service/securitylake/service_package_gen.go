@@ -35,6 +35,17 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 				IdentifierAttribute: "arn",
 			},
 		},
+		{
+			Factory: newSubscriberNotificationResource,
+			Name:    "Subscriber Notification",
+		},
+		{
+			Factory: newSubscriberResource,
+			Name:    "Subscriber",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
 	}
 }
 

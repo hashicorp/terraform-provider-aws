@@ -53,13 +53,13 @@ The following arguments are required:
 The following arguments are optional:
 
 * `awsAccountId` - (Optional) AWS account ID.
-* `identities` - (Optional) Amazon QuickSight users, groups, or both to assign the policy to. See [`identities`](#identities).
+* `identities` - (Optional) Amazon QuickSight users, groups, or both to assign the policy to. See [`identities` block](#identities-block).
 * `namespace` - (Optional) Namespace that contains the assignment. Defaults to `default`.
 * `policyArn` - (Optional) ARN of the IAM policy to apply to the Amazon QuickSight users and groups specified in this assignment.
 
-### identities
+### `identities` block
 
-* `groups` - (Optional) Array of Quicksight group names to assign the policy to.
+* `group` - (Optional) Array of Quicksight group names to assign the policy to.
 * `user` - (Optional) Array of Quicksight user names to assign the policy to.
 
 ## Attribute Reference
@@ -101,4 +101,4 @@ Using `terraform import`, import QuickSight IAM Policy Assignment using the AWS 
 % terraform import aws_quicksight_iam_policy_assignment.example 123456789012,default,example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ef52d922a126d93b554f19d053cc37acca38aa991f703b223e6f2532c3d630d9 -->
+<!-- cache-key: cdktf-0.20.1 input-97b3c767d8dd342d64374f0ab17a8d1552269f5e1150cc154507923f2000338e -->

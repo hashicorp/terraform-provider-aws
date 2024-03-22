@@ -39,7 +39,7 @@ class MyConvertedCode extends TerraformStack {
           ],
           ecpuPerSecond: [
             {
-              maximum: 5,
+              maximum: 5000,
             },
           ],
         },
@@ -82,7 +82,7 @@ class MyConvertedCode extends TerraformStack {
           ],
           ecpuPerSecond: [
             {
-              maximum: 5,
+              maximum: 5000,
             },
           ],
         },
@@ -131,12 +131,12 @@ The following arguments are optional:
 
 ### DataStorage Configuration
 
-* `maximum` - The upper limit for data storage the cache is set to use. Set as Integer.
+* `maximum` - The upper limit for data storage the cache is set to use. Must be between 1 and 5,000.
 * `unit` - The unit that the storage is measured in, in GB.
 
 ### ECPUPerSecond Configuration
 
-* `maximum` - The upper limit for data storage the cache is set to use. Set as Integer.
+* `maximum` - The maximum number of ECPUs the cache can consume per second. Must be between 1,000 and 15,000,000.
 
 ## Attribute Reference
 
@@ -195,4 +195,4 @@ Using `terraform import`, import ElastiCache Serverless Cache using the `name`. 
 % terraform import aws_elasticache_serverless_cache.my_cluster my_cluster
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-6f0f50dba314c6b69df2f62dd3a634408ccc1d2651aba0d910d19edd4f2494bd -->
+<!-- cache-key: cdktf-0.20.1 input-c07e1ada9de186d716b2179ba0d3a5345e0b042610cce9ae75e76b68dec9a411 -->

@@ -16,7 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -77,8 +77,8 @@ func TestAccSageMakerNotebookInstanceLifecycleConfiguration_update(t *testing.T)
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckNotebookInstanceLifecycleConfigurationExists(ctx, resourceName, &lifecycleConfig),
 
-					resource.TestCheckResourceAttr(resourceName, "on_create", verify.Base64Encode([]byte("echo bla"))),
-					resource.TestCheckResourceAttr(resourceName, "on_start", verify.Base64Encode([]byte("echo blub"))),
+					resource.TestCheckResourceAttr(resourceName, "on_create", itypes.Base64EncodeOnce([]byte("echo bla"))),
+					resource.TestCheckResourceAttr(resourceName, "on_start", itypes.Base64EncodeOnce([]byte("echo blub"))),
 				),
 			},
 			{

@@ -53,6 +53,7 @@ Environment variables (beyond standard AWS Go SDK ones) used by acceptance testi
 | `AWS_DETECTIVE_MEMBER_EMAIL` | Email address for Detective Member testing. A valid email address associated with an AWS root account is required for tests to pass. |
 | `AWS_EC2_CLIENT_VPN_LIMIT` | Concurrency limit for Client VPN acceptance tests. [Default is 5](https://docs.aws.amazon.com/vpn/latest/clientvpn-admin/limits.html) if not specified. |
 | `AWS_EC2_EIP_PUBLIC_IPV4_POOL` | Identifier for EC2 Public IPv4 Pool for EC2 EIP testing. |
+| `AWS_EC2_TRANSIT_GATEWAY_LIMIT` | Concurrency limit for Transit Gateway acceptance tests. [Default is 5](https://docs.aws.amazon.com/vpc/latest/tgw/transit-gateway-quotas.html) if not specified. |
 | `AWS_EC2_VERIFIED_ACCESS_INSTANCE_LIMIT` | Concurrency limit for Verified Access acceptance tests. [Default is 5](https://docs.aws.amazon.com/verified-access/latest/ug/verified-access-quotas.html) if not specified. |
 | `AWS_GUARDDUTY_MEMBER_ACCOUNT_ID` | Identifier of AWS Account for GuardDuty Member testing. **DEPRECATED:** Should be replaced with standard alternate account handling for tests. |
 | `AWS_GUARDDUTY_MEMBER_EMAIL` | Email address for GuardDuty Member testing. **DEPRECATED:** It may be possible to use a placeholder email address instead. |

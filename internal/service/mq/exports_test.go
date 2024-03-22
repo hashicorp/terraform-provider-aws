@@ -10,4 +10,7 @@ var (
 
 	FindBrokerByID        = findBrokerByID
 	FindConfigurationByID = findConfigurationByID
+
+	WaitBrokerRebooted = waitBrokerRebooted
+	WaitBrokerDeleted  = waitBrokerDeleted
 )

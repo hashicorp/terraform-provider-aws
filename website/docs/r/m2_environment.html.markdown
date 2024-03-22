@@ -82,17 +82,17 @@ resource "aws_m2_environment" "test" {
 The following arguments are required:
 
 * `name` - (Required) Name of the runtime environment. Must be unique within the account.
-* `engine_type` - (Required) Engine type must be `microfocus | bluage`.
+* `engine_type` - (Required) Engine type must be `microfocus` or `bluage`.
 * `instance_type` - (Required) M2 Instance Type.
 
 The following arguments are optional:
 
 * `engine_version` - (Optional) The specific version of the engine for the Environment.
 * `force_update` - (Optional) Force update the environment even if applications are running.
-* `kms_key_id` - (Optional) KMS Key to use for the Environment.
+* `kms_key_id` - (Optional) ARN of the KMS key to use for the Environment.
 * `preferred_maintenance_window` - (Optional) Configures the maintenance window that you want for the runtime environment. The maintenance window must have the format `ddd:hh24:mi-ddd:hh24:mi` and must be less than 24 hours. If not provided a random value will be used.
 * `publicly_accessible` - (Optional) Allow applications deployed to this environment to be publicly accessible.
-* `security_groups` - (Optional) List of security group ids.
+* `security_group_ids` - (Optional) List of security group ids.
 * `subnet_ids` - (Optional) List of subnet ids to deploy environment to.
 * `tags` - (Optional) Key-value tags for the place index. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 

@@ -9,9 +9,8 @@ import (
 	"os"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/shield"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/shield/types"
+	"github.com/aws/aws-sdk-go-v2/service/shield/types"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -19,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfshield "github.com/hashicorp/terraform-provider-aws/internal/service/shield"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -304,13 +303,9 @@ func testAccCheckProtectionDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			input := &shield.DescribeProtectionInput{
-				ProtectionId: aws.String(rs.Primary.ID),
-			}
+			_, err := tfshield.FindProtectionByID(ctx, conn, rs.Primary.ID)
 
-			resp, err := conn.DescribeProtection(ctx, input)
-
-			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
@@ -318,29 +313,23 @@ func testAccCheckProtectionDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			if resp != nil && resp.Protection != nil && aws.ToString(resp.Protection.Id) == rs.Primary.ID {
-				return fmt.Errorf("The Shield protection with ID %v still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("Shield Protection %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckProtectionExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckProtectionExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ShieldClient(ctx)
 
-		input := &shield.DescribeProtectionInput{
-			ProtectionId: aws.String(rs.Primary.ID),
-		}
-
-		_, err := conn.DescribeProtection(ctx, input)
+		_, err := tfshield.FindProtectionByID(ctx, conn, rs.Primary.ID)
 
 		return err
 	}
@@ -351,7 +340,7 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 
 	input := &shield.ListProtectionsInput{}
 
-	errResourceNotFoundException := &awstypes.ResourceNotFoundException{}
+	errResourceNotFoundException := &types.ResourceNotFoundException{}
 
 	_, err := conn.ListProtections(ctx, input)
 
