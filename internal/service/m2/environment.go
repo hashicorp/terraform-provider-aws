@@ -117,6 +117,9 @@ func (r *environmentResource) Schema(ctx context.Context, request resource.Schem
 			},
 			"load_balancer_arn": schema.StringAttribute{
 				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"name": schema.StringAttribute{
 				Required: true,
