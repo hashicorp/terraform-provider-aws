@@ -29,6 +29,10 @@ func (*securityGroupEgressRuleResource) Metadata(_ context.Context, request reso
 	response.TypeName = "aws_vpc_security_group_egress_rule"
 }
 
+func (*securityGroupEgressRuleResource) MoveState(ctx context.Context) []resource.StateMover {
+	return []resource.StateMover{}
+}
+
 func (r *securityGroupEgressRuleResource) create(ctx context.Context, data *securityGroupRuleResourceModel) (string, error) {
 	conn := r.Meta().EC2Conn(ctx)
 

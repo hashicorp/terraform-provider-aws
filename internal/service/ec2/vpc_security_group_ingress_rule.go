@@ -51,6 +51,10 @@ func (*securityGroupIngressRuleResource) Metadata(_ context.Context, request res
 	response.TypeName = "aws_vpc_security_group_ingress_rule"
 }
 
+func (r *securityGroupIngressRuleResource) MoveState(ctx context.Context) []resource.StateMover {
+	return []resource.StateMover{{StateMover: r.moveStateResourceSecurityGroupRule}}
+}
+
 func (r *securityGroupIngressRuleResource) create(ctx context.Context, data *securityGroupRuleResourceModel) (string, error) {
 	conn := r.Meta().EC2Conn(ctx)
 
@@ -83,6 +87,61 @@ func (r *securityGroupIngressRuleResource) findByID(ctx context.Context, id stri
 	conn := r.Meta().EC2Conn(ctx)
 
 	return FindSecurityGroupIngressRuleByID(ctx, conn, id)
+}
+
+// moveStateResourceSecurityGroupRule transforms the state of an `aws_security_group_rule` resource to this resource's schema.
+func (r *securityGroupIngressRuleResource) moveStateResourceSecurityGroupRule(ctx context.Context, request resource.MoveStateRequest, response *resource.MoveStateResponse) {
+	if request.SourceTypeName != "aws_security_group_rule" {
+		return
+	}
+
+	if request.SourceSchemaVersion != 2 {
+		return
+	}
+
+	if !strings.HasSuffix(request.SourceProviderAddress, "hashicorp/aws") {
+		return
+	}
+
+	rawStateValue, err := request.SourceRawState.Unmarshal(tftypes.Object{
+		AttributeTypes: map[string]tftypes.Type{
+			"cidr_blocks":              tftypes.List{ElementType: tftypes.String},
+			"description":              tftypes.String,
+			"from_port":                tftypes.Number,
+			"id":                       tftypes.String,
+			"ipv6_cidr_blocks":         tftypes.List{ElementType: tftypes.String},
+			"prefix_list_ids":          tftypes.List{ElementType: tftypes.String},
+			"protocol":                 tftypes.String,
+			"security_group_id":        tftypes.String,
+			"security_group_rule_id":   tftypes.String,
+			"self":                     tftypes.Bool,
+			"source_security_group_id": tftypes.String,
+			"tags":                     tftypes.Map{ElementType: tftypes.String},
+			"tags_all":                 tftypes.Map{ElementType: tftypes.String},
+			"to_port":                  tftypes.Number,
+			"type":                     tftypes.String,
+		},
+	})
+
+	if err != nil {
+		response.Diagnostics.AddError(
+			"Unable to Unmarshal Source State",
+			err.Error(),
+		)
+
+		return
+	}
+
+	var rawState map[string]tftypes.Value
+
+	if err := rawStateValue.As(&rawState); err != nil {
+		response.Diagnostics.AddError(
+			"Unable to Convert Source State",
+			err.Error(),
+		)
+
+		return
+	}
 }
 
 // Base structure and methods for VPC security group rules.
