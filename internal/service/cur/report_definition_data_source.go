@@ -75,6 +75,10 @@ func dataSourceReportDefinitionRead(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CURConn(ctx)
 
+	if aws.StringValue(conn.Config.Region) != availRegion {
+		return sdkdiag.AppendErrorf(diags, "The AWS Cost And Usage Report service is only available in the %s region.", availRegion)
+	}
+
 	reportName := d.Get("report_name").(string)
 
 	reportDefinition, err := FindReportDefinitionByName(ctx, conn, reportName)
