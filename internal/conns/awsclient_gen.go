@@ -55,6 +55,7 @@ import (
 	dynamodb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
 	ecr_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ecr"
+	ecrpublic_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ecrpublic"
 	ecs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ecs"
 	eks_sdkv2 "github.com/aws/aws-sdk-go-v2/service/eks"
 	elasticache_sdkv2 "github.com/aws/aws-sdk-go-v2/service/elasticache"
@@ -178,7 +179,6 @@ import (
 	dynamodb_sdkv1 "github.com/aws/aws-sdk-go/service/dynamodb"
 	ec2_sdkv1 "github.com/aws/aws-sdk-go/service/ec2"
 	ecr_sdkv1 "github.com/aws/aws-sdk-go/service/ecr"
-	ecrpublic_sdkv1 "github.com/aws/aws-sdk-go/service/ecrpublic"
 	ecs_sdkv1 "github.com/aws/aws-sdk-go/service/ecs"
 	efs_sdkv1 "github.com/aws/aws-sdk-go/service/efs"
 	elasticache_sdkv1 "github.com/aws/aws-sdk-go/service/elasticache"
@@ -592,8 +592,8 @@ func (c *AWSClient) ECRClient(ctx context.Context) *ecr_sdkv2.Client {
 	return errs.Must(client[*ecr_sdkv2.Client](ctx, c, names.ECR, make(map[string]any)))
 }
 
-func (c *AWSClient) ECRPublicConn(ctx context.Context) *ecrpublic_sdkv1.ECRPublic {
-	return errs.Must(conn[*ecrpublic_sdkv1.ECRPublic](ctx, c, names.ECRPublic, make(map[string]any)))
+func (c *AWSClient) ECRPublicClient(ctx context.Context) *ecrpublic_sdkv2.Client {
+	return errs.Must(client[*ecrpublic_sdkv2.Client](ctx, c, names.ECRPublic, make(map[string]any)))
 }
 
 func (c *AWSClient) ECSConn(ctx context.Context) *ecs_sdkv1.ECS {
