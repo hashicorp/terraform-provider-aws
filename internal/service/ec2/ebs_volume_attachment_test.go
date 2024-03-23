@@ -233,6 +233,47 @@ func TestAccEC2EBSVolumeAttachment_stopInstance(t *testing.T) {
 	})
 }
 
+func TestAccEC2EBSVolumeAttachment_deleteOnTermination(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_volume_attachment.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVolumeAttachmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccEBSVolumeAttachmentConfig_deleteOnTermination(rName, true),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVolumeAttachmentExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "delete_on_termination", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccVolumeAttachmentImportStateIDFunc(resourceName),
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccEBSVolumeAttachmentConfig_deleteOnTermination(rName, false),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVolumeAttachmentExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "delete_on_termination", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateIdFunc: testAccVolumeAttachmentImportStateIDFunc(resourceName),
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckVolumeAttachmentExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -377,6 +418,17 @@ resource "aws_volume_attachment" "test" {
   skip_destroy = %[1]t
 }
 `, detach))
+}
+
+func testAccEBSVolumeAttachmentConfig_deleteOnTermination(rName string, delete bool) string {
+	return acctest.ConfigCompose(testAccEBSVolumeAttachmentConfig_base(rName), fmt.Sprintf(`
+resource "aws_volume_attachment" "test" {
+  delete_on_termination = %[1]t
+  device_name           = "/dev/sdh"
+  volume_id             = aws_ebs_volume.test.id
+  instance_id           = aws_instance.test.id
+}
+`, delete))
 }
 
 func testAccVolumeAttachmentImportStateIDFunc(resourceName string) resource.ImportStateIdFunc {

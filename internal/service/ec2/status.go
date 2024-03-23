@@ -944,6 +944,22 @@ func StatusVolumeAttachmentState(ctx context.Context, conn *ec2.EC2, volumeID, i
 	}
 }
 
+func StatusVolumeAttachmentDeleteOnTermination(ctx context.Context, conn *ec2.EC2, volumeID, instanceID, deviceName string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindEBSVolumeAttachment(ctx, conn, volumeID, instanceID, deviceName)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, strconv.FormatBool(aws.BoolValue(output.DeleteOnTermination)), nil
+	}
+}
+
 func StatusVolumeModificationState(ctx context.Context, conn *ec2.EC2, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindVolumeModificationByID(ctx, conn, id)

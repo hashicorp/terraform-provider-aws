@@ -1661,6 +1661,24 @@ func WaitVolumeModificationComplete(ctx context.Context, conn *ec2.EC2, id strin
 	return nil, err
 }
 
+func WaitVolumeAttachmentDeleteOnTerminationUpdated(ctx context.Context, conn *ec2.EC2, volumeID, instanceID, deviceName string, expectedValue bool, timeout time.Duration) (*ec2.VolumeAttachment, error) {
+	stateConf := &retry.StateChangeConf{
+		Target:     []string{strconv.FormatBool(expectedValue)},
+		Refresh:    StatusVolumeAttachmentDeleteOnTermination(ctx, conn, volumeID, instanceID, deviceName),
+		Timeout:    timeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 3 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*ec2.VolumeAttachment); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
 const (
 	vpcCreatedTimeout = 10 * time.Minute
 	vpcDeletedTimeout = 5 * time.Minute

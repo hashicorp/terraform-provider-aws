@@ -17,9 +17,10 @@ detach volumes from AWS Instances.
 
 ```terraform
 resource "aws_volume_attachment" "ebs_att" {
-  device_name = "/dev/sdh"
-  volume_id   = aws_ebs_volume.example.id
-  instance_id = aws_instance.web.id
+  delete_on_termination = false
+  device_name           = "/dev/sdh"
+  volume_id             = aws_ebs_volume.example.id
+  instance_id           = aws_instance.web.id
 }
 
 resource "aws_instance" "web" {
@@ -42,6 +43,7 @@ resource "aws_ebs_volume" "example" {
 
 This resource supports the following arguments:
 
+* `delete_on_termination` - (Optional, Boolean) Indicates whether the EBS volume is deleted on instance termination.
 * `device_name` - (Required) The device name to expose to the instance (for
 example, `/dev/sdh` or `xvdh`).  See [Device Naming on Linux Instances][1] and [Device Naming on Windows Instances][2] for more information.
 * `instance_id` - (Required) ID of the Instance to attach to
