@@ -55,6 +55,7 @@ aws_workspaces_workspace
 ``````
 
 #### New full-length documentation guides (e.g., EKS Getting Started Guide, IAM Policy Documents with Terraform)
+
 A new full-length documentation entry gives the title of the documentation added, using the `release-note:new-guide` header.
 
 ``````

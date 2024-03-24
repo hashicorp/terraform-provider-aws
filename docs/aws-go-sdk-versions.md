@@ -7,7 +7,7 @@ There are two versions of this API, both of which are considered Generally Avail
 - [AWS SDKs and Tools version support matrix](https://docs.aws.amazon.com/sdkref/latest/guide/version-support-matrix.html)
 
 Each Terraform provider implementation for an AWS service relies on a service client, which in turn is constructed based on a specific SDK version.
-While the vast majority of the providers are based on the [AWS SDK for Go v1](https://github.com/aws/aws-sdk-go), the provider also allows the use of the [AWS SDK for Go v2](https://github.com/aws/aws-sdk-go-v2).
+While the vast majority of the provider is based on the [AWS SDK for Go v1](https://github.com/aws/aws-sdk-go), the provider also allows the use of the [AWS SDK for Go v2](https://github.com/aws/aws-sdk-go-v2).
 
 ## Which SDK Version should I use?
 

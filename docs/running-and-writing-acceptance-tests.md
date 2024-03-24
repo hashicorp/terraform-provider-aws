@@ -916,7 +916,7 @@ resource "aws_example" "test" {
 }
 ```
 
-Searching for the usage of `acctest`.PreCheckOrganizationsAccount` in the codebase will yield real-world examples of this setup in action.
+Searching for the usage of `acctest.PreCheckOrganizationsAccount` in the codebase will yield real-world examples of this setup in action.
 
 #### Cross-Region Acceptance Tests
 

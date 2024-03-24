@@ -184,7 +184,7 @@ Individual services vary in which types are moved into the dedicated subpackage,
 ### Enum Types
 
 Enums are now represented with custom types, rather than as strings.
-Because of this type of change, it may be necessary to convert from or to string values depending on the direction in which data is being exchanged.
+Because of this type change it may be necessary to convert from or to string values depending on the direction in which data is being exchanged.
 
 #### Input Structs
 

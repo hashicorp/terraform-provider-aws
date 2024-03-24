@@ -2,6 +2,7 @@
 
 !!! tip
     Provider-defined function support is in technical preview and offered without compatibility promises until Terraform 1.8 is generally available.
+
 Provider-defined functions were introduced with Terraform 1.8, enabling provider developers to expose functions specific to a given cloud provider or use case.
 Functions in the AWS provider provide a utility that is valuable when paired with AWS resources.
 
@@ -18,7 +19,7 @@ Data manipulation tasks tend to be the most common use cases.
 
 ### Fork the provider and create a feature branch
 
-For a new function use a branch named `f-{function name}, for example, `f-arn_parse`.
+For a new function use a branch named `f-{function name}`, for example, `f-arn_parse`.
 See [Raising a Pull Request](raising-a-pull-request.md) for more details.
 
 ### Create and name the function

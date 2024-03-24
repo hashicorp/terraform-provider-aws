@@ -18,7 +18,7 @@ As a generic walkthrough, the following data handling occurs when creating a Ter
 - Terraform CLI sends a Terraform Plugin Protocol request to create the new resource with its planned new state data
 - If the Terraform Plugin is using a higher-level library, such as the Terraform Plugin Framework, that library receives the request and translates the Terraform Plugin Protocol data types into the expected library types
 - Terraform Plugin invokes the resource creation function with the planned new state data
-    - **The planned new state data is converted into a remote system request** (e.g., API creation request) that is invoked**
+    - **The planned new state data is converted into a remote system request (e.g., API creation request) that is invoked**
     - **The remote system response is received and the data is converted into an applied new state**
 - If the Terraform Plugin is using a higher-level library, such as the Terraform Plugin Framework, that library translates the library types back into Terraform Plugin Protocol data types
 - Terraform Plugin responds to Terraform Plugin Protocol request with the new state data

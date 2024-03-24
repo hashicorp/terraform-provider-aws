@@ -53,6 +53,7 @@ package <service>
 ```
 
 Next, generate the client and ensure all dependencies are fetched.
+
 ```console
 make gen
 ```
@@ -60,6 +61,7 @@ make gen
 ```console
 go mod tidy
 ```
+
 At this point a pull request with the re-generated files and new service client can be submitted.
 
 Once the service client has been added, implement the first [resource](./add-a-new-resource.md) or [data source](./add-a-new-datasource.md) in a separate PR.
