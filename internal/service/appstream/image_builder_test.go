@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/appstream"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/appstream/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -37,7 +37,7 @@ func TestAccAppStreamImageBuilder_basic(t *testing.T) {
 					testAccCheckImageBuilderExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
-					resource.TestCheckResourceAttr(resourceName, "state", appstream.ImageBuilderStateRunning),
+					resource.TestCheckResourceAttr(resourceName, "state", string(awstypes.ImageBuilderStateRunning)),
 				),
 			},
 			{
@@ -118,7 +118,7 @@ func TestAccAppStreamImageBuilder_complete(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageBuilderExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "state", appstream.ImageBuilderStateRunning),
+					resource.TestCheckResourceAttr(resourceName, "state", string(awstypes.ImageBuilderStateRunning)),
 					resource.TestCheckResourceAttr(resourceName, "instance_type", instanceType),
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
@@ -135,7 +135,7 @@ func TestAccAppStreamImageBuilder_complete(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageBuilderExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "state", appstream.ImageBuilderStateRunning),
+					resource.TestCheckResourceAttr(resourceName, "state", string(awstypes.ImageBuilderStateRunning)),
 					resource.TestCheckResourceAttr(resourceName, "instance_type", instanceTypeUpdate),
 					resource.TestCheckResourceAttr(resourceName, "description", descriptionUpdated),
 					acctest.CheckResourceAttrRFC3339(resourceName, "created_time"),
@@ -240,7 +240,7 @@ func testAccCheckImageBuilderExists(ctx context.Context, n string) resource.Test
 			return fmt.Errorf("No AppStream ImageBuilder ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamClient(ctx)
 
 		_, err := tfappstream.FindImageBuilderByName(ctx, conn, rs.Primary.ID)
 
@@ -250,7 +250,7 @@ func testAccCheckImageBuilderExists(ctx context.Context, n string) resource.Test
 
 func testAccCheckImageBuilderDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppStreamClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appstream_image_builder" {
