@@ -1,4 +1,5 @@
 # End User Documentation Changes
+
 All practitioner-focused documentation is found in the `/website` folder of the repository.
 
 ```

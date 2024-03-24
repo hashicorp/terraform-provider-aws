@@ -14,6 +14,7 @@ Determine which version of the AWS SDK for Go the resource will be built upon. F
 ## Steps to Add a Resource
 
 ### Fork the provider and create a feature branch
+
 For new resources use a branch named `f-{resource name}` for example: `f-ec2-vpc`. See [Raising a Pull Request](raising-a-pull-request.md) for more details.
 
 ### Create and Name the Resource

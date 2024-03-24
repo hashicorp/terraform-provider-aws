@@ -721,6 +721,7 @@ func TestAccExampleThing_longRunningTest(t *testing.T) {
   })
 }
 ```
+
 When running acceptance tests, tests with these guards can be skipped using the Go `-short` flag. See [Running Only Short Tests](#running-only-short-tests) for examples.
 
 #### Disappears Acceptance Tests
@@ -863,7 +864,6 @@ When testing requires AWS infrastructure in a second AWS account, the below chan
 - For any `TestStep` that includes `ImportState: true`, add the `Config` that matches the previous `TestStep` `Config`
 
 An example acceptance test implementation can be seen below:
-
 
 ```go
 func TestAccExample_basic(t *testing.T) {

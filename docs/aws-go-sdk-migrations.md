@@ -23,7 +23,7 @@ go generate ./internal/conns/...
 ### Add an `EndpointID` Constant
 
 When a service is first migrated, a `{ServiceName}EndpointID` constant must be added to [`names/names.go`](https://github.com/hashicorp/terraform-provider-aws/blob/main/names/names.go) manually.
-Be sure to preserve alphabetical order. 
+Be sure to preserve alphabetical order.
 
 The AWS SDK for Go V1 previously exposed these as constants, but V2 does not.
 This constant is used in common acceptance testing pre-checks, such as `acctest.PreCheckPartitionHasService`.
