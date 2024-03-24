@@ -637,8 +637,10 @@ func expandTieringPolicy(tfMap map[string]interface{}) *fsx.TieringPolicy {
 
 	// Cooling period only accepts a minimum of 2 but int will return 0 not nil if unset.
 	// Therefore we only set it if it is 2 or more.
-	if v, ok := tfMap["cooling_period"].(int); ok && v >= minTieringPolicyCoolingPeriod {
-		apiObject.CoolingPeriod = aws.Int64(int64(v))
+	if tfMap["name"].(string) == "AUTO" || tfMap["name"].(string) == "SNAPSHOT_ONLY" {
+		if v, ok := tfMap["cooling_period"].(int); ok && v >= minTieringPolicyCoolingPeriod {
+			apiObject.CoolingPeriod = aws.Int64(int64(v))
+		}
 	}
 
 	if v, ok := tfMap["name"].(string); ok && v != "" {
