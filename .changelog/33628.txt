@@ -1,0 +1,3 @@
+```release-note:note 
+resource/aws_quicksight_template: The `parameters_declarations` attribute has been deprecated. All configurations using `parameters_declarations` should be updated to use the `parameter_declarations` attribute instead
+```
