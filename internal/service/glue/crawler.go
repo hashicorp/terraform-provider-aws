@@ -612,6 +612,11 @@ func resourceCrawlerUpdate(ctx context.Context, d *schema.ResourceData, meta int
 					return retry.RetryableError(err)
 				}
 
+				// InvalidInputException: Cannot update Crawler while running. Please stop crawl or wait until it completes to update.
+				if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "Cannot update Crawler while running") {
+					return retry.RetryableError(err)
+				}
+
 				return retry.NonRetryableError(err)
 			}
 			return nil
