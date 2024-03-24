@@ -5,23 +5,18 @@ package m2_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"os"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/m2"
-	"github.com/aws/aws-sdk-go-v2/service/m2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfm2 "github.com/hashicorp/terraform-provider-aws/internal/service/m2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -30,9 +25,6 @@ func TestAccM2Application_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-
-	skipIfDemoAppMissing(t)
-
 	var application m2.GetApplicationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_m2_application.test"
@@ -69,7 +61,6 @@ func TestAccM2Application_full(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_m2_application.test"
 	var application m2.GetApplicationOutput
@@ -104,9 +95,6 @@ func TestAccM2Application_update(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-
-	skipIfDemoAppMissing(t)
-
 	var application m2.GetApplicationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_m2_application.test"
@@ -153,9 +141,6 @@ func TestAccM2Application_disappears(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-
-	skipIfDemoAppMissing(t)
-
 	var application m2.GetApplicationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_m2_application.test"
@@ -187,7 +172,6 @@ func TestAccM2Application_tags(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_m2_application.test"
 	var application m2.GetApplicationOutput
@@ -254,44 +238,39 @@ func testAccCheckApplicationDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			_, err := conn.GetApplication(ctx, &m2.GetApplicationInput{
-				ApplicationId: aws.String(rs.Primary.ID),
-			})
-			if errs.IsA[*types.ResourceNotFoundException](err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.M2, create.ErrActionCheckingDestroyed, tfm2.ResNameApplication, rs.Primary.ID, err)
+			_, err := tfm2.FindEnvironmentByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			return create.Error(names.M2, create.ErrActionCheckingDestroyed, tfm2.ResNameApplication, rs.Primary.ID, errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Mainframe Modernization Application %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckApplicationExists(ctx context.Context, name string, application *m2.GetApplicationOutput) resource.TestCheckFunc {
+func testAccCheckApplicationExists(ctx context.Context, n string, v *m2.GetApplicationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.M2, create.ErrActionCheckingExistence, tfm2.ResNameApplication, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.M2, create.ErrActionCheckingExistence, tfm2.ResNameApplication, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).M2Client(ctx)
-		resp, err := conn.GetApplication(ctx, &m2.GetApplicationInput{
-			ApplicationId: aws.String(rs.Primary.ID),
-		})
+
+		output, err := tfm2.FindApplicationByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
-			return create.Error(names.M2, create.ErrActionCheckingExistence, tfm2.ResNameApplication, rs.Primary.ID, err)
+			return err
 		}
 
-		*application = *resp
+		*v = *output
 
 		return nil
 	}
@@ -336,12 +315,6 @@ resource "aws_m2_application" "test" {
   depends_on = [aws_s3_object.test]
 }
 `, rName, engineType, version)
-}
-
-func skipIfDemoAppMissing(t *testing.T) {
-	if _, err := os.Stat("test-fixtures/PlanetsDemo-v1.zip"); errors.Is(err, os.ErrNotExist) {
-		t.Skip("Download test-fixtures/PlanetsDemo-v1.zip from: https://docs.aws.amazon.com/m2/latest/userguide/tutorial-runtime-ba.html")
-	}
 }
 
 func testAccApplicationConfig_full(rName string) string {
