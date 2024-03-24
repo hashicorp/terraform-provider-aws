@@ -8,5 +8,6 @@ var (
 	ResourceApplication = newApplicationResource
 	ResourceEnvironment = newEnvironmentResource
 
+	FindApplicationByID = findApplicationByID
 	FindEnvironmentByID = findEnvironmentByID
 )
