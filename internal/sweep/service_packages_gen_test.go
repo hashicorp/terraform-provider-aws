@@ -71,6 +71,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dataexchange"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/datapipeline"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/datazone"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dax"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/deploy"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/detective"
@@ -303,6 +304,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		dataexchange.ServicePackage(ctx),
 		datapipeline.ServicePackage(ctx),
 		datasync.ServicePackage(ctx),
+		datazone.ServicePackage(ctx),
 		dax.ServicePackage(ctx),
 		deploy.ServicePackage(ctx),
 		detective.ServicePackage(ctx),

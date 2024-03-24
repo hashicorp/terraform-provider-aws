@@ -48,6 +48,7 @@ import (
 	controltower_sdkv2 "github.com/aws/aws-sdk-go-v2/service/controltower"
 	costoptimizationhub_sdkv2 "github.com/aws/aws-sdk-go-v2/service/costoptimizationhub"
 	customerprofiles_sdkv2 "github.com/aws/aws-sdk-go-v2/service/customerprofiles"
+	datazone_sdkv2 "github.com/aws/aws-sdk-go-v2/service/datazone"
 	dax_sdkv2 "github.com/aws/aws-sdk-go-v2/service/dax"
 	devopsguru_sdkv2 "github.com/aws/aws-sdk-go-v2/service/devopsguru"
 	directoryservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/directoryservice"
@@ -538,6 +539,10 @@ func (c *AWSClient) DataPipelineConn(ctx context.Context) *datapipeline_sdkv1.Da
 
 func (c *AWSClient) DataSyncConn(ctx context.Context) *datasync_sdkv1.DataSync {
 	return errs.Must(conn[*datasync_sdkv1.DataSync](ctx, c, names.DataSync, make(map[string]any)))
+}
+
+func (c *AWSClient) DataZoneClient(ctx context.Context) *datazone_sdkv2.Client {
+	return errs.Must(client[*datazone_sdkv2.Client](ctx, c, names.DataZone, make(map[string]any)))
 }
 
 func (c *AWSClient) DeployClient(ctx context.Context) *codedeploy_sdkv2.Client {
