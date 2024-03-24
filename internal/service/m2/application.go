@@ -16,7 +16,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -168,13 +167,7 @@ func (r *applicationResource) Create(ctx context.Context, request resource.Creat
 			return
 		}
 
-		definition, diags := expandDefinition(ctx, definitionData)
-		response.Diagnostics.Append(diags...)
-		if response.Diagnostics.HasError() {
-			return
-		}
-
-		input.Definition = definition
+		input.Definition = expandDefinition(definitionData)
 	}
 
 	// Additional fields.
@@ -296,13 +289,7 @@ func (r *applicationResource) Update(ctx context.Context, request resource.Updat
 					return
 				}
 
-				definition, diags := expandDefinition(ctx, definitionData)
-				response.Diagnostics.Append(diags...)
-				if response.Diagnostics.HasError() {
-					return
-				}
-
-				input.Definition = definition
+				input.Definition = expandDefinition(definitionData)
 			}
 		}
 
@@ -537,20 +524,18 @@ type definitionModel struct {
 	S3Location types.String `tfsdk:"s3_location"`
 }
 
-func expandDefinition(ctx context.Context, definitionData *definitionModel) (awstypes.Definition, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
+func expandDefinition(definitionData *definitionModel) awstypes.Definition {
 	if !definitionData.Content.IsNull() {
 		return &awstypes.DefinitionMemberContent{
 			Value: definitionData.Content.ValueString(),
-		}, diags
+		}
 	}
 
 	if !definitionData.S3Location.IsNull() {
 		return &awstypes.DefinitionMemberS3Location{
 			Value: definitionData.S3Location.ValueString(),
-		}, diags
+		}
 	}
 
-	return nil, diags
+	return nil
 }
