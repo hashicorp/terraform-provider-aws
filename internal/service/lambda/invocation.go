@@ -72,6 +72,7 @@ func ResourceInvocation() *schema.Resource {
 		CustomizeDiff: customdiff.Sequence(
 			customizeDiffValidateInput,
 			customizeDiffInputChangeWithCreateOnlyScope,
+			customizeDiffInputChangeWithCrudScope,
 		),
 	}
 }

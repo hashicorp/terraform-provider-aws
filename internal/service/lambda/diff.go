@@ -39,3 +39,12 @@ func customizeDiffInputChangeWithCreateOnlyScope(_ context.Context, diff *schema
 	}
 	return nil
 }
+
+// customizeDiffInputChangedWithCrudScope invalidates the result of the previous invocation for any changes
+// to the input, causing any dependent resources to refresh their own state, when `lifecycle_scope` is set to "CRUD"
+func customizeDiffInputChangeWithCrudScope(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {
+	if diff.HasChange("input") && diff.Get("lifecycle_scope").(string) == lifecycleScopeCrud {
+		return diff.SetNewComputed("result")
+	}
+	return nil
+}
