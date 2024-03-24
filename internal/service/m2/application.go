@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -35,11 +36,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource(name="Application")
 // @Tags(identifierAttribute="arn")
-func newResourceApplication(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceApplication{}
+func newApplicationResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &applicationResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
@@ -52,25 +52,23 @@ const (
 	ResNameApplication = "Application"
 )
 
-type resourceApplication struct {
+type applicationResource struct {
 	framework.ResourceWithConfigure
+	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *resourceApplication) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_m2_application"
+func (*applicationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_m2_application"
 }
 
-func (r *resourceApplication) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *applicationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"application_id": framework.IDAttribute(),
-			"arn":            framework.ARNAttributeComputedOnly(),
+			names.AttrARN:    framework.ARNAttributeComputedOnly(),
 			"current_version": schema.Int64Attribute{
 				Computed: true,
-			},
-			"client_token": schema.StringAttribute{
-				Optional: true,
 			},
 			"description": schema.StringAttribute{
 				Optional: true,
@@ -84,7 +82,7 @@ func (r *resourceApplication) Schema(ctx context.Context, req resource.SchemaReq
 					stringvalidator.OneOf(enum.Values[awstypes.EngineType]()...),
 				},
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"kms_key_id": schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
@@ -136,44 +134,45 @@ func (r *resourceApplication) Schema(ctx context.Context, req resource.SchemaReq
 	}
 }
 
-func (r *resourceApplication) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *applicationResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	conn := r.Meta().M2Client(ctx)
 
 	var plan resourceApplicationData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	in := &m2.CreateApplicationInput{
-		Tags: getTagsIn(ctx),
-	}
-
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
-	if resp.Diagnostics.HasError() {
+	input := &m2.CreateApplicationInput{}
+	response.Diagnostics.Append(flex.Expand(ctx, plan, input)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
+
+	// Additional fields.
+	input.ClientToken = aws.String(sdkid.UniqueId())
+	input.Tags = getTagsIn(ctx)
 
 	var definition applicationDefinition
-	resp.Diagnostics.Append(plan.Definition.As(ctx, &definition, basetypes.ObjectAsOptions{})...)
+	response.Diagnostics.Append(plan.Definition.As(ctx, &definition, basetypes.ObjectAsOptions{})...)
 
-	if resp.Diagnostics.HasError() {
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	apiDefinition := expandApplicationDefinition(ctx, definition)
-	in.Definition = apiDefinition
+	input.Definition = apiDefinition
 
-	out, err := conn.CreateApplication(ctx, in)
+	out, err := conn.CreateApplication(ctx, input)
 	if err != nil {
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.M2, create.ErrActionCreating, ResNameApplication, plan.Name.String(), err),
 			err.Error(),
 		)
 		return
 	}
 	if out == nil || out.ApplicationId == nil {
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.M2, create.ErrActionCreating, ResNameApplication, plan.Name.String(), nil),
 			errors.New("empty output").Error(),
 		)
@@ -186,32 +185,32 @@ func (r *resourceApplication) Create(ctx context.Context, req resource.CreateReq
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	app, err := waitApplicationCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
 	if err != nil {
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.M2, create.ErrActionWaitingForCreation, ResNameApplication, plan.Name.String(), err),
 			err.Error(),
 		)
 		return
 	}
-	resp.Diagnostics.Append(plan.refreshFromOutput(ctx, app)...)
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	response.Diagnostics.Append(plan.refreshFromOutput(ctx, app)...)
+	response.Diagnostics.Append(response.State.Set(ctx, plan)...)
 }
 
-func (r *resourceApplication) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *applicationResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	conn := r.Meta().M2Client(ctx)
 
 	var state resourceApplicationData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	out, err := findApplicationByID(ctx, conn, state.ID.ValueString())
 	if tfresource.NotFound(err) {
-		resp.State.RemoveResource(ctx)
+		response.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.M2, create.ErrActionSetting, ResNameApplication, state.ID.String(), err),
 			err.Error(),
 		)
@@ -220,11 +219,11 @@ func (r *resourceApplication) Read(ctx context.Context, req resource.ReadRequest
 
 	version, err := findApplicationVersion(ctx, conn, state.ID.ValueString(), *out.LatestVersion.ApplicationVersion)
 	if tfresource.NotFound(err) {
-		resp.State.RemoveResource(ctx)
+		response.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.M2, create.ErrActionSetting, ResNameApplication, state.ID.String(), err),
 			err.Error(),
 		)
@@ -233,7 +232,7 @@ func (r *resourceApplication) Read(ctx context.Context, req resource.ReadRequest
 	// Tags are on GetApplicationOutput, but nil
 	tags, err := listTags(ctx, conn, *out.ApplicationArn)
 	if err != nil {
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.M2, create.ErrActionSetting, ResNameApplication, state.ID.String(), err),
 			err.Error(),
 		)
@@ -241,18 +240,18 @@ func (r *resourceApplication) Read(ctx context.Context, req resource.ReadRequest
 
 	setTagsOut(ctx, tags.Map())
 
-	resp.Diagnostics.Append(state.refreshFromOutput(ctx, out)...)
-	resp.Diagnostics.Append(state.refreshFromVersion(ctx, version)...)
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(state.refreshFromOutput(ctx, out)...)
+	response.Diagnostics.Append(state.refreshFromVersion(ctx, version)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
 }
 
-func (r *resourceApplication) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *applicationResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	conn := r.Meta().M2Client(ctx)
 
 	var plan, state resourceApplicationData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
+	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
@@ -265,9 +264,9 @@ func (r *resourceApplication) Update(ctx context.Context, req resource.UpdateReq
 
 	if !plan.Definition.Equal(state.Definition) {
 		var definition applicationDefinition
-		resp.Diagnostics.Append(plan.Definition.As(ctx, &definition, basetypes.ObjectAsOptions{})...)
+		response.Diagnostics.Append(plan.Definition.As(ctx, &definition, basetypes.ObjectAsOptions{})...)
 
-		if resp.Diagnostics.HasError() {
+		if response.Diagnostics.HasError() {
 			return
 		}
 
@@ -284,14 +283,14 @@ func (r *resourceApplication) Update(ctx context.Context, req resource.UpdateReq
 	if update {
 		out, err := conn.UpdateApplication(ctx, in)
 		if err != nil {
-			resp.Diagnostics.AddError(
+			response.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.M2, create.ErrActionUpdating, ResNameApplication, plan.ID.String(), err),
 				err.Error(),
 			)
 			return
 		}
 		if out == nil || out.ApplicationVersion == nil {
-			resp.Diagnostics.AddError(
+			response.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.M2, create.ErrActionUpdating, ResNameApplication, plan.ID.String(), nil),
 				errors.New("empty output").Error(),
 			)
@@ -301,23 +300,23 @@ func (r *resourceApplication) Update(ctx context.Context, req resource.UpdateReq
 		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
 		version, err := waitApplicationUpdated(ctx, conn, plan.ID.ValueString(), *out.ApplicationVersion, updateTimeout)
 		if err != nil {
-			resp.Diagnostics.AddError(
+			response.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.M2, create.ErrActionWaitingForUpdate, ResNameApplication, plan.ID.String(), err),
 				err.Error(),
 			)
 			return
 		}
-		resp.Diagnostics.Append(plan.refreshFromVersion(ctx, version)...)
-		resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+		response.Diagnostics.Append(plan.refreshFromVersion(ctx, version)...)
+		response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
 	}
 }
 
-func (r *resourceApplication) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *applicationResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	conn := r.Meta().M2Client(ctx)
 
 	var state resourceApplicationData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
@@ -330,7 +329,7 @@ func (r *resourceApplication) Delete(ctx context.Context, req resource.DeleteReq
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return
 		}
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.M2, create.ErrActionDeleting, ResNameApplication, state.ID.String(), err),
 			err.Error(),
 		)
@@ -340,7 +339,7 @@ func (r *resourceApplication) Delete(ctx context.Context, req resource.DeleteReq
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
 	_, err = waitApplicationDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
 	if err != nil {
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.M2, create.ErrActionWaitingForDeletion, ResNameApplication, state.ID.String(), err),
 			err.Error(),
 		)
@@ -348,10 +347,7 @@ func (r *resourceApplication) Delete(ctx context.Context, req resource.DeleteReq
 	}
 }
 
-func (r *resourceApplication) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-}
-func (r *resourceApplication) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+func (r *applicationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
 	r.SetTagsAll(ctx, request, response)
 }
 

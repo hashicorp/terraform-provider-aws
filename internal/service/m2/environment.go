@@ -60,7 +60,7 @@ type environmentResource struct {
 	framework.WithTimeouts
 }
 
-func (r *environmentResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+func (*environmentResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
 	response.TypeName = "aws_m2_environment"
 }
 
