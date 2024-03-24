@@ -15,6 +15,7 @@ import (
 
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	applicationautoscaling_sdkv2 "github.com/aws/aws-sdk-go-v2/service/applicationautoscaling"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/applicationautoscaling/types"
 	"github.com/aws/smithy-go/middleware"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"github.com/google/go-cmp/cmp"
@@ -289,7 +290,9 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) strin
 
 	client := meta.AppAutoScalingClient(ctx)
 
-	_, err := client.DescribeScalableTargets(ctx, &applicationautoscaling_sdkv2.DescribeScalableTargetsInput{},
+	_, err := client.DescribeScalableTargets(ctx, &applicationautoscaling_sdkv2.DescribeScalableTargetsInput{
+		ServiceNamespace: awstypes.ServiceNamespaceEcs,
+	},
 		func(opts *applicationautoscaling_sdkv2.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &endpoint),
