@@ -5,21 +5,17 @@ package m2_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/m2"
-	"github.com/aws/aws-sdk-go-v2/service/m2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfm2 "github.com/hashicorp/terraform-provider-aws/internal/service/m2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -175,57 +171,39 @@ func testAccCheckDeploymentDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			applicationId, deploymentId, err := tfm2.DeploymentParseResourceId(rs.Primary.ID)
-			if err != nil {
-				return create.Error(names.M2, create.ErrActionCheckingDestroyed, tfm2.ResNameDeployment, rs.Primary.ID, err)
+			_, err := tfm2.FindDeploymentByTwoPartKey(ctx, conn, rs.Primary.Attributes["application_id"], rs.Primary.Attributes["deployment_id"])
+
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			_, err = conn.GetDeployment(ctx, &m2.GetDeploymentInput{
-				ApplicationId: aws.String(applicationId),
-				DeploymentId:  aws.String(deploymentId),
-			})
-			if errs.IsA[*types.ResourceNotFoundException](err) {
-				return nil
-			}
 			if err != nil {
-				return create.Error(names.M2, create.ErrActionCheckingDestroyed, tfm2.ResNameDeployment, rs.Primary.ID, err)
+				return err
 			}
 
-			return create.Error(names.M2, create.ErrActionCheckingDestroyed, tfm2.ResNameDeployment, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("Mainframe Modernization Deployment %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckDeploymentExists(ctx context.Context, name string, deployment *m2.GetDeploymentOutput) resource.TestCheckFunc {
+func testAccCheckDeploymentExists(ctx context.Context, n string, v *m2.GetDeploymentOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.M2, create.ErrActionCheckingExistence, tfm2.ResNameDeployment, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.M2, create.ErrActionCheckingExistence, tfm2.ResNameDeployment, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).M2Client(ctx)
 
-		applicationId, deploymentId, err := tfm2.DeploymentParseResourceId(rs.Primary.ID)
-		if err != nil {
-			return create.Error(names.M2, create.ErrActionCheckingDestroyed, tfm2.ResNameDeployment, rs.Primary.ID, err)
-		}
-
-		resp, err := conn.GetDeployment(ctx, &m2.GetDeploymentInput{
-			ApplicationId: aws.String(applicationId),
-			DeploymentId:  aws.String(deploymentId),
-		})
+		output, err := tfm2.FindDeploymentByTwoPartKey(ctx, conn, rs.Primary.Attributes["application_id"], rs.Primary.Attributes["deployment_id"])
 
 		if err != nil {
-			return create.Error(names.M2, create.ErrActionCheckingExistence, tfm2.ResNameDeployment, rs.Primary.ID, err)
+			return err
 		}
 
-		*deployment = *resp
+		*v = *output
 
 		return nil
 	}
@@ -248,7 +226,6 @@ resource "aws_m2_deployment" "test" {
 
 func testAccDeploymentConfig_secretsManagerEndpoint(rName string) string {
 	return fmt.Sprintf(`
-
 data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "secretsmanager" {

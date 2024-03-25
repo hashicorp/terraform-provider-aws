@@ -9,6 +9,7 @@ var (
 	ResourceDeployment  = newDeploymentResource
 	ResourceEnvironment = newEnvironmentResource
 
-	FindApplicationByID = findApplicationByID
-	FindEnvironmentByID = findEnvironmentByID
+	FindApplicationByID        = findApplicationByID
+	FindDeploymentByTwoPartKey = findDeploymentByTwoPartKey
+	FindEnvironmentByID        = findEnvironmentByID
 )
