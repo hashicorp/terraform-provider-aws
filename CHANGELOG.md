@@ -2,10 +2,14 @@
 
 FEATURES:
 
+* **New Resource:** `aws_devopsguru_notification_channel` ([#36557](https://github.com/hashicorp/terraform-provider-aws/issues/36557))
 * **New Resource:** `aws_lakeformation_resource_lf_tag` ([#36537](https://github.com/hashicorp/terraform-provider-aws/issues/36537))
+* **New Resource:** `aws_redshiftserverless_custom_domain_association` ([#35865](https://github.com/hashicorp/terraform-provider-aws/issues/35865))
 
 ENHANCEMENTS:
 
+* data-source/aws_db_snapshot: Add `original_snapshot_create_time` attribute ([#36544](https://github.com/hashicorp/terraform-provider-aws/issues/36544))
+* resource/aws_ec2_host: Add user configurable timeouts ([#36538](https://github.com/hashicorp/terraform-provider-aws/issues/36538))
 * resource/aws_vpc_ipam: Add `tier` argument ([#36504](https://github.com/hashicorp/terraform-provider-aws/issues/36504))
 
 BUG FIXES:
