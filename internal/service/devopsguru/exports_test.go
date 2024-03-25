@@ -5,9 +5,11 @@ package devopsguru
 
 // Exports for use in tests only.
 var (
-	ResourceEventSourcesConfig = newResourceEventSourcesConfig
-	ResourceResourceCollection = newResourceResourceCollection
+	ResourceEventSourcesConfig  = newResourceEventSourcesConfig
+	ResourceNotificationChannel = newResourceNotificationChannel
+	ResourceResourceCollection  = newResourceResourceCollection
 
-	FindEventSourcesConfig     = findEventSourcesConfig
-	FindResourceCollectionByID = findResourceCollectionByID
+	FindEventSourcesConfig      = findEventSourcesConfig
+	FindNotificationChannelByID = findNotificationChannelByID
+	FindResourceCollectionByID  = findResourceCollectionByID
 )
