@@ -90,14 +90,14 @@ func ResourceIPAM() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"tier": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Default:      "advanced",
+				Default:      ec2.IpamTierAdvanced,
 				ValidateFunc: validation.StringInSlice(ec2.IpamTier_Values(), false),
 			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: customdiff.Sequence(
