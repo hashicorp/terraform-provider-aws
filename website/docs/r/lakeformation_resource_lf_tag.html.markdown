@@ -102,3 +102,7 @@ This resource exports no additional attributes.
 
 * `create` - (Default `20m`)
 * `delete` - (Default `20m`)
+
+## Import
+
+You cannot import this resource.
