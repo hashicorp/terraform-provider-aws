@@ -53,6 +53,8 @@ const (
 	IVSChatEndpointID                    = "ivschat"
 	KendraEndpointID                     = "kendra"
 	LexV2ModelsEndpointID                = "models-v2-lex"
+	M2EndpointID                         = "m2"
+	MediaConvertEndpointID               = "mediaconvert"
 	MediaLiveEndpointID                  = "medialive"
 	MQEndpointID                         = "mq"
 	ObservabilityAccessManagerEndpointID = "oam"
