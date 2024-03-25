@@ -145,8 +145,44 @@ func ResourceModel() *schema.Resource {
 													ForceNew:     true,
 													ValidateFunc: validation.StringInSlice(sagemaker.ModelCompressionType_Values(), false),
 												},
+												"model_access_config": {
+													Type:     schema.TypeList,
+													Optional: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"accept_eula": {
+																Type:     schema.TypeBool,
+																Required: true,
+																ForceNew: true,
+															},
+														},
+													},
+												},
 											},
 										},
+									},
+								},
+							},
+						},
+						"inference_specification_name": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validName,
+						},
+						"multi_model_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"model_cache_setting": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.StringInSlice(sagemaker.ModelCacheSetting_Values(), false),
 									},
 								},
 							},
@@ -292,8 +328,45 @@ func ResourceModel() *schema.Resource {
 													ForceNew:     true,
 													ValidateFunc: validation.StringInSlice(sagemaker.ModelCompressionType_Values(), false),
 												},
+												"model_access_config": {
+													Type:     schema.TypeList,
+													Optional: true,
+													ForceNew: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"accept_eula": {
+																Type:     schema.TypeBool,
+																Required: true,
+																ForceNew: true,
+															},
+														},
+													},
+												},
 											},
 										},
+									},
+								},
+							},
+						},
+						"inference_specification_name": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validName,
+						},
+						"multi_model_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"model_cache_setting": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.StringInSlice(sagemaker.ModelCacheSetting_Values(), false),
 									},
 								},
 							},
@@ -521,6 +594,14 @@ func expandContainer(m map[string]interface{}) *sagemaker.ContainerDefinition {
 		container.ImageConfig = expandModelImageConfig(v.([]interface{}))
 	}
 
+	if v, ok := m["inference_specification_name"]; ok && v.(string) != "" {
+		container.InferenceSpecificationName = aws.String(v.(string))
+	}
+
+	if v, ok := m["multi_model_config"].([]interface{}); ok && len(v) > 0 {
+		container.MultiModelConfig = expandMultiModelConfig(v)
+	}
+
 	return &container
 }
 
@@ -557,6 +638,10 @@ func expandS3ModelDataSource(l []interface{}) *sagemaker.S3ModelDataSource {
 	}
 	if v, ok := m["compression_type"]; ok && v.(string) != "" {
 		s3ModelDataSource.CompressionType = aws.String(v.(string))
+	}
+
+	if v, ok := m["model_access_config"].([]interface{}); ok && len(v) > 0 {
+		s3ModelDataSource.ModelAccessConfig = expandModelAccessConfig(v)
 	}
 
 	return &s3ModelDataSource
@@ -604,6 +689,38 @@ func expandContainers(a []interface{}) []*sagemaker.ContainerDefinition {
 	return containers
 }
 
+func expandModelAccessConfig(l []interface{}) *sagemaker.ModelAccessConfig {
+	if len(l) == 0 {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	modelAccessConfig := &sagemaker.ModelAccessConfig{}
+
+	if v, ok := m["accept_eula"].(bool); ok {
+		modelAccessConfig.AcceptEula = aws.Bool(v)
+	}
+
+	return modelAccessConfig
+}
+
+func expandMultiModelConfig(l []interface{}) *sagemaker.MultiModelConfig {
+	if len(l) == 0 {
+		return nil
+	}
+
+	m := l[0].(map[string]interface{})
+
+	multiModelConfig := &sagemaker.MultiModelConfig{}
+
+	if v, ok := m["model_cache_setting"].(string); ok && v != "" {
+		multiModelConfig.ModelCacheSetting = aws.String(v)
+	}
+
+	return multiModelConfig
+}
+
 func flattenContainer(container *sagemaker.ContainerDefinition) []interface{} {
 	if container == nil {
 		return []interface{}{}
@@ -634,9 +751,16 @@ func flattenContainer(container *sagemaker.ContainerDefinition) []interface{} {
 	if container.Environment != nil {
 		cfg["environment"] = aws.StringValueMap(container.Environment)
 	}
-
 	if container.ImageConfig != nil {
 		cfg["image_config"] = flattenImageConfig(container.ImageConfig)
+	}
+
+	if container.InferenceSpecificationName != nil {
+		cfg["inference_specification_name"] = aws.StringValue(container.InferenceSpecificationName)
+	}
+
+	if container.MultiModelConfig != nil {
+		cfg["multi_model_config"] = flattenMultiModelConfig(container.MultiModelConfig)
 	}
 
 	return []interface{}{cfg}
@@ -671,6 +795,10 @@ func flattenS3ModelDataSource(s3ModelDataSource *sagemaker.S3ModelDataSource) []
 	}
 	if s3ModelDataSource.CompressionType != nil {
 		cfg["compression_type"] = aws.StringValue(s3ModelDataSource.CompressionType)
+	}
+
+	if s3ModelDataSource.ModelAccessConfig != nil {
+		cfg["model_access_config"] = flattenModelAccessConfig(s3ModelDataSource.ModelAccessConfig)
 	}
 
 	return []interface{}{cfg}
@@ -712,6 +840,30 @@ func flattenContainers(containers []*sagemaker.ContainerDefinition) []interface{
 		fContainers = append(fContainers, flattenContainer(container)[0].(map[string]interface{}))
 	}
 	return fContainers
+}
+
+func flattenModelAccessConfig(config *sagemaker.ModelAccessConfig) []interface{} {
+	if config == nil {
+		return []interface{}{}
+	}
+
+	cfg := make(map[string]interface{})
+
+	cfg["accept_eula"] = aws.BoolValue(config.AcceptEula)
+
+	return []interface{}{cfg}
+}
+
+func flattenMultiModelConfig(config *sagemaker.MultiModelConfig) []interface{} {
+	if config == nil {
+		return []interface{}{}
+	}
+
+	cfg := make(map[string]interface{})
+
+	cfg["model_cache_setting"] = aws.StringValue(config.ModelCacheSetting)
+
+	return []interface{}{cfg}
 }
 
 func expandModelInferenceExecutionConfig(l []interface{}) *sagemaker.InferenceExecutionConfig {

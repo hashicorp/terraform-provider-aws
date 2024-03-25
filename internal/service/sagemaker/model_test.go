@@ -508,6 +508,114 @@ func testAccCheckModelExists(ctx context.Context, n string) resource.TestCheckFu
 	}
 }
 
+func testAccModel_primaryContainerModelS3DataSourceAcceptEula(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_model.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckModelDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccModelConfig_primaryContainerModelS3DataSourceAcceptEula(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckModelExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.model_data_source.0.s3_data_source.0.model_access_config.0.accept_eula", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccModel_primaryContainerInferenceSpecificationName(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_model.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckModelDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccModelConfig_primaryContainerInferenceSpecificationName(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckModelExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.inference_specification_name", "test"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccModel_primaryContainerMultiModelConfigModelCacheSetting(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_model.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckModelDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccModelConfig_primaryContainerMultiModelConfigModelCacheSetting(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckModelExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "primary_container.0.multi_model_config.0.model_cache_setting", "Disabled"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccModel_containersMultiModelConfigModelCacheSetting(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_model.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckModelDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccModelConfig_containersMultiModelConfigModelCacheSetting(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckModelExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "container.0.multi_model_config.0.model_cache_setting", "Disabled"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccModelConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
@@ -522,9 +630,14 @@ data "aws_iam_policy_document" "test" {
 
     principals {
       type        = "Service"
-      identifiers = ["sagemaker.amazonaws.com"]
+      identifiers = ["sagemaker.${data.aws_partition.current.dns_suffix}"]
     }
   }
+}
+
+resource "aws_iam_role_policy_attachment" "test" {
+  role       = aws_iam_role.test.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonSageMakerFullAccess"
 }
 
 data "aws_sagemaker_prebuilt_ecr_image" "test" {
@@ -952,6 +1065,240 @@ resource "aws_security_group" "test" {
 
   tags = {
     Name = %[1]q
+  }
+}
+`, rName))
+}
+
+func testAccModelConfig_primaryContainerModelS3DataSourceAcceptEula(rName string) string {
+	return acctest.ConfigCompose(testAccModelConfig_base(rName), fmt.Sprintf(`
+data "aws_region" "current" {}
+data "aws_partition" "current" {}
+locals {
+  region_account_map = {
+    us-east-1      = "763104351884"
+    us-east-2      = "763104351884"
+    us-west-1      = "763104351884"
+    us-west-2      = "763104351884"
+    af-south-1     = "626614931356"
+    ca-central-1   = "763104351884"
+    eu-central-1   = "763104351884"
+    eu-central-2   = "380420809688"
+    eu-west-1      = "763104351884"
+    eu-west-2      = "763104351884"
+    eu-west-3      = "763104351884"
+    eu-north-1     = "763104351884"
+    eu-south-1     = "692866216735"
+    eu-south-2     = "503227376785"
+    il-central-1   = "780543022126"
+    me-south-1     = "217643126080"
+    me-central-1   = "914824155844"
+    sa-east-1      = "763104351884"
+    ap-southeast-1 = "763104351884"
+    ap-southeast-2 = "763104351884"
+    ap-southeast-3 = "907027046896"
+    ap-southeast-4 = "457447274322"
+    ap-northeast-1 = "763104351884"
+    ap-northeast-2 = "763104351884"
+    ap-northeast-3 = "364406365360"
+    ap-south-1     = "763104351884"
+    ap-south-2     = "772153158452"
+    ap-east-1      = "871362719292"
+    sa-east-1      = "763104351884"
+    cn-north-1     = "727897471807"
+    cn-northwest-1 = "727897471807"
+  }
+  account = local.region_account_map[data.aws_region.current.name]
+  primary_container_image = format(
+    "%%s.dkr.ecr.%%s.%%s/huggingface-pytorch-tgi-inference:2.0.1-tgi1.1.0-gpu-py39-cu118-ubuntu20.04",
+    local.account,
+    data.aws_region.current.name,
+    data.aws_partition.current.dns_suffix
+    
+  primary_container_model_data_source_s3_uri = format(
+    "s3://jumpstart-private-cache-prod-%%s/meta-textgeneration/meta-textgeneration-llama-2-13b-f/artifacts/inference-prepack/v1.0.0/",
+    data.aws_region.current.name
+  )
+}
+
+resource "aws_sagemaker_model" "test" {
+  name                     = %[1]q
+  enable_network_isolation = true
+  execution_role_arn       = aws_iam_role.test.arn
+  
+  primary_container {
+    image = local.primary_container_image
+    mode = "SingleModel"
+    environment = {
+      ENDPOINT_SERVER_TIMEOUT = 3600
+      HF_MODEL_ID = "/opt/ml/model"
+      MAX_INPUT_LENGTH = 4095
+      MAX_TOTAL_TOKENS = 4096
+      MODEL_CACHE_ROOT = "/opt/ml/model"
+      SAGEMAKER_ENV = 1
+      SAGEMAKER_MODEL_SERVER_WORKERS = 1
+      SAGEMAKER_PROGRAM = "inference.py"
+      SM_NUM_GPUS = 4
+  }
+
+  model_data_source {
+    s3_data_source {
+      compression_type = "None"
+      s3_data_type     = "S3Prefix"
+      s3_uri           = local.primary_container_model_data_source_s3_uri
+      model_access_config {
+        accept_eula = true
+      }
+    }
+  }
+}
+`, rName))
+}
+
+func testAccModelConfig_primaryContainerInferenceSpecificationName(rName string) string {
+	return acctest.ConfigCompose(testAccModelConfig_base(rName), fmt.Sprintf(`
+
+resource "aws_sagemaker_model" "test" {
+  name               = %[1]q
+  execution_role_arn = aws_iam_role.test.arn
+
+  primary_container {
+    image                        = data.aws_sagemaker_prebuilt_ecr_image.test.registry_path
+    inference_specification_name = "test"
+  }
+}
+`, rName))
+}
+
+func testAccModelConfig_primaryContainerMultiModelConfigModelCacheSetting(rName string) string {
+	return acctest.ConfigCompose(testAccModelConfig_base(rName), fmt.Sprintf(`
+data "aws_region" "current" {}
+data "aws_partition" "current" {}
+locals {
+  region_account_map = {
+    "us-east-1"      = "785573368785"
+    "us-east-2"      = "007439368137"
+    "us-west-1"      = "710691900526"
+    "us-west-2"      = "301217895009"
+    "eu-west-1"      = "802834080501"
+    "eu-west-2"      = "205493899709"
+    "eu-west-3"      = "254080097072"
+    "eu-north-1"     = "601324751636"
+    "eu-south-1"     = "966458181534"
+    "eu-central-1"   = "746233611703"
+    "ap-east-1"      = "110948597952"
+    "ap-south-1"     = "763008648453"
+    "ap-northeast-1" = "941853720454"
+    "ap-northeast-2" = "151534178276"
+    "ap-southeast-1" = "324986816169"
+    "ap-southeast-2" = "355873309152"
+    "cn-northwest-1" = "474822919863"
+    "cn-north-1"     = "472730292857"
+    "sa-east-1"      = "756306329178"
+    "ca-central-1"   = "464438896020"
+    "me-south-1"     = "836785723513"
+    "af-south-1"     = "774647643957"
+  }
+  account = local.region_account_map[data.aws_region.current.name]
+  primary_container_image = format(
+    "%%s.dkr.ecr.%%s.%%s/sagemaker-tritonserver:22.07-py3",
+    local.account,
+    data.aws_region.current.name,
+    data.aws_partition.current.dns_suffix
+  )
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_s3_object" "test" {
+  bucket  = aws_s3_bucket.test.bucket
+  key     = "resnet50-mme-gpu/model.tar.gz"
+  content = "some-data"
+}
+
+resource "aws_sagemaker_model" "test" {
+  depends_on = [aws_s3_object.test]
+
+  name               = %[1]q
+  execution_role_arn = aws_iam_role.test.arn
+
+  primary_container {
+    image          = local.primary_container_image
+    mode           = "MultiModel"
+    model_data_url = "s3://${aws_s3_bucket.test.id}/resnet50-mme-gpu/"
+    multi_model_config {
+      model_cache_setting = "Disabled"
+    }
+  }
+}
+`, rName))
+}
+
+func testAccModelConfig_containersMultiModelConfigModelCacheSetting(rName string) string {
+	return acctest.ConfigCompose(testAccModelConfig_base(rName), fmt.Sprintf(`
+data "aws_region" "current" {}
+data "aws_partition" "current" {}
+locals {
+  region_account_map = {
+    "us-east-1"      = "785573368785"
+    "us-east-2"      = "007439368137"
+    "us-west-1"      = "710691900526"
+    "us-west-2"      = "301217895009"
+    "eu-west-1"      = "802834080501"
+    "eu-west-2"      = "205493899709"
+    "eu-west-3"      = "254080097072"
+    "eu-north-1"     = "601324751636"
+    "eu-south-1"     = "966458181534"
+    "eu-central-1"   = "746233611703"
+    "ap-east-1"      = "110948597952"
+    "ap-south-1"     = "763008648453"
+    "ap-northeast-1" = "941853720454"
+    "ap-northeast-2" = "151534178276"
+    "ap-southeast-1" = "324986816169"
+    "ap-southeast-2" = "355873309152"
+    "cn-northwest-1" = "474822919863"
+    "cn-north-1"     = "472730292857"
+    "sa-east-1"      = "756306329178"
+    "ca-central-1"   = "464438896020"
+    "me-south-1"     = "836785723513"
+    "af-south-1"     = "774647643957"
+  }
+  account = local.region_account_map[data.aws_region.current.name]
+  container_image = format(
+    "%%s.dkr.ecr.%%s.%%s/sagemaker-tritonserver:22.07-py3",
+    local.account,
+    data.aws_region.current.name,
+    data.aws_partition.current.dns_suffix
+  )
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_s3_object" "test" {
+  bucket  = aws_s3_bucket.test.bucket
+  key     = "resnet50-mme-gpu/model.tar.gz"
+  content = "some-data"
+}
+
+resource "aws_sagemaker_model" "test" {
+  depends_on = [aws_s3_object.test]
+
+  name               = %[1]q
+  execution_role_arn = aws_iam_role.test.arn
+
+  container {
+    image          = local.container_image
+    mode           = "MultiModel"
+    model_data_url = "s3://${aws_s3_bucket.test.id}/resnet50-mme-gpu/"
+    multi_model_config {
+      model_cache_setting = "Disabled"
+    }
   }
 }
 `, rName))
