@@ -22,7 +22,7 @@ import (
 )
 
 // @SDKResource("aws_redshiftserverless_endpoint_access", name="Endpoint Access")
-func ResourceEndpointAccess() *schema.Resource {
+func resourceEndpointAccess() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEndpointAccessCreate,
 		ReadWithoutTimeout:   resourceEndpointAccessRead,
@@ -164,7 +164,7 @@ func resourceEndpointAccessRead(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
 
-	endpointAccess, err := FindEndpointAccessByName(ctx, conn, d.Id())
+	endpointAccess, err := findEndpointAccessByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift Serverless Endpoint Access (%s) not found, removing from state", d.Id())

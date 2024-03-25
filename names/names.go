@@ -61,6 +61,7 @@ const (
 	PipesEndpointID                      = "pipes"
 	PollyEndpointID                      = "polly"
 	QLDBEndpointID                       = "qldb"
+	RedshiftServerlessEndpointID         = "redshift-serverless"
 	RedshiftEndpointID                   = "redshift"
 	RekognitionEndpointID                = "rekognition"
 	ResourceExplorer2EndpointID          = "resource-explorer-2"
