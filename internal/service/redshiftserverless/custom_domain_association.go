@@ -5,16 +5,14 @@ package redshiftserverless
 
 import (
 	"context"
-	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/redshiftserverless"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/redshiftserverless/types"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -22,18 +20,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource(name="Custom Domain Association")
-func newResourceCustomDomainAssociation(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceCustomDomainAssociation{}
+func newCustomDomainAssociationResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &customDomainAssociationResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
@@ -42,260 +41,225 @@ func newResourceCustomDomainAssociation(_ context.Context) (resource.ResourceWit
 	return r, nil
 }
 
-const (
-	ResNameCustomDomainAssociation = "Custom Domain Association"
-)
-
-type resourceCustomDomainAssociation struct {
+type customDomainAssociationResource struct {
 	framework.ResourceWithConfigure
+	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *resourceCustomDomainAssociation) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_redshiftserverless_custom_domain_association"
+func (*customDomainAssociationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_redshiftserverless_custom_domain_association"
 }
 
-func (r *resourceCustomDomainAssociation) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *customDomainAssociationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"id": framework.IDAttribute(),
+			"custom_domain_certificate_arn": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Required:   true,
+			},
+			"custom_domain_certificate_expiry_time": schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
+			},
+			"custom_domain_name": schema.StringAttribute{
+				Required: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 253),
+				},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			names.AttrID: framework.IDAttribute(),
 			"workgroup_name": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"custom_domain_name": schema.StringAttribute{
-				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
-				Validators: []validator.String{
-					stringvalidator.LengthBetween(1, 253),
-				},
-			},
-			"custom_domain_certificate_arn": schema.StringAttribute{
-				CustomType: fwtypes.ARNType,
-				Required:   true,
-			},
-			"custom_domain_certificate_expiry_time": schema.StringAttribute{
-				Computed: true,
-			},
 		},
 	}
 }
 
-func (r *resourceCustomDomainAssociation) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *customDomainAssociationResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data customDomainAssociationResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().RedshiftServerlessClient(ctx)
 
-	var plan resourceCustomDomainAssociationData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+	input := &redshiftserverless.CreateCustomDomainAssociationInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	in := &redshiftserverless.CreateCustomDomainAssociationInput{
-		CustomDomainCertificateArn: aws.String(plan.CustomDomainCertificateArn.ValueString()),
-		CustomDomainName:           aws.String(plan.CustomDomainName.ValueString()),
-		WorkgroupName:              aws.String(plan.WorkgroupName.ValueString()),
-	}
+	output, err := conn.CreateCustomDomainAssociation(ctx, input)
 
-	out, err := conn.CreateCustomDomainAssociation(ctx, in)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(
-				names.RedshiftServerless,
-				create.ErrActionCreating,
-				ResNameCustomDomainAssociation,
-				fmt.Sprintf("%s,%s", plan.WorkgroupName.String(), plan.CustomDomainName.String()),
-				err),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil || out.CustomDomainCertificateExpiryTime == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(
-				names.RedshiftServerless,
-				create.ErrActionCreating,
-				ResNameCustomDomainAssociation,
-				fmt.Sprintf("%s,%s", plan.WorkgroupName.String(), plan.CustomDomainName.String()),
-				nil),
-			errors.New("empty output").Error(),
-		)
+		response.Diagnostics.AddError("creating Redshift Serverless Custom Domain Association", err.Error())
+
 		return
 	}
 
-	formattedTime := out.CustomDomainCertificateExpiryTime.Format(time.RFC3339)
-	plan.CustomDomainCertificateExpiryTime = flex.StringToFramework(ctx, &formattedTime)
-	plan.ID = types.StringValue(fmt.Sprintf("%s,%s", plan.WorkgroupName, plan.CustomDomainName))
+	// Set values for unknowns.
+	data.CustomDomainCertificateExpiryTime = timetypes.NewRFC3339TimePointerValue(output.CustomDomainCertificateExpiryTime)
+	data.setID()
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceCustomDomainAssociation) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().RedshiftServerlessClient(ctx)
-
-	var state resourceCustomDomainAssociationData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *customDomainAssociationResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data customDomainAssociationResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findCustomDomainAssociationByWorkgroupNameAndDomainName(ctx, conn, state.WorkgroupName.ValueString(), state.CustomDomainName.ValueString())
+	if err := data.InitFromID(); err != nil {
+		response.Diagnostics.AddError("parsing resource ID", err.Error())
+
+		return
+	}
+
+	conn := r.Meta().RedshiftServerlessClient(ctx)
+
+	output, err := findCustomDomainAssociationByTwoPartKey(ctx, conn, data.WorkgroupName.ValueString(), data.CustomDomainName.ValueString())
 
 	if tfresource.NotFound(err) {
-		resp.State.RemoveResource(ctx)
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
 		return
 	}
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(
-				names.RedshiftServerless,
-				create.ErrActionSetting,
-				ResNameCustomDomainAssociation,
-				fmt.Sprintf("%s,%s", state.WorkgroupName.String(), state.CustomDomainName.String()),
-				err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading Redshift Serverless Custom Domain Association (%s)", data.ID.ValueString()), err.Error())
+
 		return
 	}
 
-	state.CustomDomainCertificateArn = flex.StringToFrameworkARN(ctx, out.CustomDomainCertificateArn)
-	formattedTime := out.CustomDomainCertificateExpiryTime.Format(time.RFC3339)
-	state.CustomDomainCertificateExpiryTime = flex.StringToFramework(ctx, &formattedTime)
-	state.CustomDomainName = flex.StringToFramework(ctx, out.CustomDomainName)
-	state.WorkgroupName = flex.StringToFramework(ctx, out.WorkgroupName)
-	state.ID = types.StringValue(fmt.Sprintf("%s,%s", state.WorkgroupName, state.CustomDomainName))
+	// Set attributes for import.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceCustomDomainAssociation) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *customDomainAssociationResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var old, new customDomainAssociationResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().RedshiftServerlessClient(ctx)
 
-	var plan, state resourceCustomDomainAssociationData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+	input := &redshiftserverless.UpdateCustomDomainAssociationInput{
+		CustomDomainCertificateArn: aws.String(new.CustomDomainCertificateARN.ValueString()),
+		CustomDomainName:           aws.String(new.CustomDomainName.ValueString()),
+		WorkgroupName:              aws.String(new.WorkgroupName.ValueString()),
+	}
+
+	output, err := conn.UpdateCustomDomainAssociation(ctx, input)
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("updating Redshift Serverless Custom Domain Association (%s)", new.ID.ValueString()), err.Error())
+
 		return
 	}
 
-	if !plan.CustomDomainCertificateArn.Equal(state.CustomDomainCertificateArn) {
-		in := &redshiftserverless.UpdateCustomDomainAssociationInput{
-			CustomDomainCertificateArn: aws.String(plan.CustomDomainCertificateArn.ValueString()),
-			CustomDomainName:           aws.String(plan.CustomDomainName.ValueString()),
-			WorkgroupName:              aws.String(plan.WorkgroupName.ValueString()),
-		}
+	// Set values for unknowns.
+	new.CustomDomainCertificateExpiryTime = timetypes.NewRFC3339TimePointerValue(output.CustomDomainCertificateExpiryTime)
 
-		out, err := conn.UpdateCustomDomainAssociation(ctx, in)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(
-					names.RedshiftServerless,
-					create.ErrActionUpdating,
-					ResNameCustomDomainAssociation,
-					fmt.Sprintf("%s,%s", plan.WorkgroupName.String(), plan.CustomDomainName.String()), err),
-				err.Error(),
-			)
-			return
-		}
-		if out == nil || out.CustomDomainCertificateExpiryTime == nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(
-					names.RedshiftServerless,
-					create.ErrActionUpdating,
-					ResNameCustomDomainAssociation,
-					fmt.Sprintf("%s,%s", plan.WorkgroupName.String(), plan.CustomDomainName.String()),
-					nil),
-				errors.New("empty output").Error(),
-			)
-			return
-		}
-
-		formattedTime := out.CustomDomainCertificateExpiryTime.Format(time.RFC3339)
-		plan.CustomDomainCertificateExpiryTime = flex.StringToFramework(ctx, &formattedTime)
-		plan.ID = types.StringValue(fmt.Sprintf("%s,%s", plan.WorkgroupName, plan.CustomDomainName))
-	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *resourceCustomDomainAssociation) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *customDomainAssociationResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data customDomainAssociationResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().RedshiftServerlessClient(ctx)
 
-	var state resourceCustomDomainAssociationData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+	_, err := conn.DeleteCustomDomainAssociation(ctx, &redshiftserverless.DeleteCustomDomainAssociationInput{
+		CustomDomainName: aws.String(data.CustomDomainName.ValueString()),
+		WorkgroupName:    aws.String(data.WorkgroupName.ValueString()),
+	})
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
 
-	in := &redshiftserverless.DeleteCustomDomainAssociationInput{
-		CustomDomainName: aws.String(state.CustomDomainName.ValueString()),
-		WorkgroupName:    aws.String(state.WorkgroupName.ValueString()),
-	}
-
-	_, err := conn.DeleteCustomDomainAssociation(ctx, in)
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
-		}
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(
-				names.RedshiftServerless,
-				create.ErrActionDeleting,
-				ResNameCustomDomainAssociation,
-				fmt.Sprintf("%s,%s", state.WorkgroupName.String(), state.CustomDomainName.String()),
-				err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Redshift Serverless Custom Domain Association (%s)", data.ID.ValueString()), err.Error())
+
 		return
 	}
 }
 
-func (r *resourceCustomDomainAssociation) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	idParts := strings.Split(req.ID, ",")
-
-	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-		resp.Diagnostics.AddError(
-			"Unexpected Import Identifier",
-			fmt.Sprintf("Expected import identifier with format: workgroup_name,custom_domain_name. Got: %q", req.ID),
-		)
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("workgroup_name"), idParts[0])...)
-	resp.Diagnostics.Append(resp.State.SetAttribute(ctx, path.Root("custom_domain_name"), idParts[1])...)
-}
-
-func findCustomDomainAssociationByWorkgroupNameAndDomainName(ctx context.Context, conn *redshiftserverless.Client, workgroupName string, customDomainName string) (*redshiftserverless.GetCustomDomainAssociationOutput, error) {
-	in := &redshiftserverless.GetCustomDomainAssociationInput{
-		WorkgroupName:    aws.String(workgroupName),
+func findCustomDomainAssociationByTwoPartKey(ctx context.Context, conn *redshiftserverless.Client, workgroupName, customDomainName string) (*redshiftserverless.GetCustomDomainAssociationOutput, error) {
+	input := &redshiftserverless.GetCustomDomainAssociationInput{
 		CustomDomainName: aws.String(customDomainName),
+		WorkgroupName:    aws.String(workgroupName),
 	}
 
-	out, err := conn.GetCustomDomainAssociation(ctx, in)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
+	output, err := conn.GetCustomDomainAssociation(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
 		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
-	if out == nil || out.CustomDomainCertificateExpiryTime == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+	if output == nil || output.CustomDomainCertificateExpiryTime == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return out, nil
+	return output, nil
 }
 
-type resourceCustomDomainAssociationData struct {
-	ID                                types.String `tfsdk:"id"`
-	WorkgroupName                     types.String `tfsdk:"workgroup_name"`
-	CustomDomainName                  types.String `tfsdk:"custom_domain_name"`
-	CustomDomainCertificateArn        fwtypes.ARN  `tfsdk:"custom_domain_certificate_arn"`
-	CustomDomainCertificateExpiryTime types.String `tfsdk:"custom_domain_certificate_expiry_time"`
+type customDomainAssociationResourceModel struct {
+	CustomDomainCertificateARN        fwtypes.ARN       `tfsdk:"custom_domain_certificate_arn"`
+	CustomDomainCertificateExpiryTime timetypes.RFC3339 `tfsdk:"custom_domain_certificate_expiry_time"`
+	CustomDomainName                  types.String      `tfsdk:"custom_domain_name"`
+	ID                                types.String      `tfsdk:"id"`
+	WorkgroupName                     types.String      `tfsdk:"workgroup_name"`
+}
+
+const (
+	customDomainAssociationResourceIDPartCount = 2
+)
+
+func (data *customDomainAssociationResourceModel) InitFromID() error {
+	id := data.ID.ValueString()
+	parts, err := flex.ExpandResourceId(id, customDomainAssociationResourceIDPartCount, false)
+
+	if err != nil {
+		return err
+	}
+
+	data.WorkgroupName = types.StringValue(parts[0])
+	data.CustomDomainName = types.StringValue(parts[1])
+
+	return nil
+}
+
+func (data *customDomainAssociationResourceModel) setID() {
+	data.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{data.WorkgroupName.ValueString(), data.CustomDomainName.ValueString()}, customDomainAssociationResourceIDPartCount, false)))
 }

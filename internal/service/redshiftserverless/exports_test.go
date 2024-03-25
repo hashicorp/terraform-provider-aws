@@ -5,7 +5,7 @@ package redshiftserverless
 
 // Exports for use in tests only.
 var (
-	ResourceCustomDomainAssociation = newResourceCustomDomainAssociation
+	ResourceCustomDomainAssociation = newCustomDomainAssociationResource
 	ResourceEndpointAccess          = resourceEndpointAccess
 	ResourceNamespace               = resourceNamespace
 	ResourceResourcePolicy          = resourceResourcePolicy
@@ -13,9 +13,10 @@ var (
 	ResourceUsageLimit              = resourceUsageLimit
 	ResourceWorkgroup               = resourceWorkgroup
 
-	FindEndpointAccessByName = findEndpointAccessByName
-	FindNamespaceByName      = findNamespaceByName
-	FindResourcePolicyByARN  = findResourcePolicyByARN
-	FindSnapshotByName       = findSnapshotByName
-	FindUsageLimitByName     = findUsageLimitByName
+	FindCustomDomainAssociationByTwoPartKey = findCustomDomainAssociationByTwoPartKey
+	FindEndpointAccessByName                = findEndpointAccessByName
+	FindNamespaceByName                     = findNamespaceByName
+	FindResourcePolicyByARN                 = findResourcePolicyByARN
+	FindSnapshotByName                      = findSnapshotByName
+	FindUsageLimitByName                    = findUsageLimitByName
 )
