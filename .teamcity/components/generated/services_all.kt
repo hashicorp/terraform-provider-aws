@@ -65,6 +65,7 @@ val services = mapOf(
     "dataexchange" to ServiceSpec("Data Exchange"),
     "datapipeline" to ServiceSpec("Data Pipeline"),
     "datasync" to ServiceSpec("DataSync", vpcLock = true),
+    "datazone" to ServiceSpec("DataZone"),
     "dax" to ServiceSpec("DynamoDB Accelerator (DAX)"),
     "deploy" to ServiceSpec("CodeDeploy", vpcLock = true),
     "detective" to ServiceSpec("Detective"),

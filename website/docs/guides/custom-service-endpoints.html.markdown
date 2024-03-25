@@ -134,6 +134,7 @@ provider "aws" {
   <li><code>dataexchange</code></li>
   <li><code>datapipeline</code></li>
   <li><code>datasync</code></li>
+  <li><code>datazone</code></li>
   <li><code>dax</code></li>
   <li><code>deploy</code> (or <code>codedeploy</code>)</li>
   <li><code>detective</code></li>
