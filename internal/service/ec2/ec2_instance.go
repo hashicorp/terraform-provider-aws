@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"context"
 	"crypto/sha1"
-	"encoding/base64"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -35,6 +34,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -467,7 +467,6 @@ func ResourceInstance() *schema.Resource {
 			"ipv6_address_count": {
 				Type:          schema.TypeInt,
 				Optional:      true,
-				ForceNew:      true,
 				Computed:      true,
 				ConflictsWith: []string{"ipv6_addresses"},
 			},
@@ -822,15 +821,7 @@ func ResourceInstance() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ConflictsWith: []string{"user_data"},
-				ValidateFunc: func(v interface{}, name string) (warns []string, errs []error) {
-					s := v.(string)
-					if !verify.IsBase64Encoded([]byte(s)) {
-						errs = append(errs, fmt.Errorf(
-							"%s: must be base64-encoded", name,
-						))
-					}
-					return
-				},
+				ValidateFunc:  verify.ValidBase64String,
 			},
 			"user_data_replace_on_change": {
 				Type:     schema.TypeBool,
@@ -1319,7 +1310,7 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", d.Id(), err)
 	}
 
-	if err := readBlockDevices(ctx, d, meta, instance); err != nil {
+	if err := readBlockDevices(ctx, d, meta, instance, false); err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", d.Id(), err)
 	}
 
@@ -1604,6 +1595,62 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
+	if d.HasChange("ipv6_address_count") && !d.IsNewResource() {
+		instance, err := FindInstanceByID(ctx, conn, d.Id())
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", d.Id(), err)
+		}
+
+		var primaryInterface *ec2.InstanceNetworkInterface
+		for _, ni := range instance.NetworkInterfaces {
+			if aws.Int64Value(ni.Attachment.DeviceIndex) == 0 {
+				primaryInterface = ni
+			}
+		}
+
+		if primaryInterface == nil {
+			return sdkdiag.AppendErrorf(diags, "Failed to update ipv6_address_count on %q, which does not contain a primary network interface", d.Id())
+		}
+
+		o, n := d.GetChange("ipv6_address_count")
+		os, ns := o.(int), n.(int)
+
+		if ns > os {
+			// Add more to the primary NIC.
+			input := &ec2.AssignIpv6AddressesInput{
+				NetworkInterfaceId: primaryInterface.NetworkInterfaceId,
+				Ipv6AddressCount:   aws.Int64(int64(ns - os)),
+			}
+
+			_, err := conn.AssignIpv6AddressesWithContext(ctx, input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "assigning EC2 Instance (%s) IPv6 addresses: %s", d.Id(), err)
+			}
+		} else if os > ns {
+			// Remove IP addresses.
+			if len(primaryInterface.Ipv6Addresses) != os {
+				return sdkdiag.AppendErrorf(diags, "IPv6 address count (%d) on the instance does not match state's count (%d), we're in a race with something else", len(primaryInterface.Ipv6Addresses), os)
+			}
+
+			toRemove := make([]*string, 0)
+			for _, addr := range primaryInterface.Ipv6Addresses[ns:] { // Can I assume this is strongly ordered?
+				toRemove = append(toRemove, addr.Ipv6Address)
+			}
+
+			input := &ec2.UnassignIpv6AddressesInput{
+				NetworkInterfaceId: primaryInterface.NetworkInterfaceId,
+				Ipv6Addresses:      toRemove,
+			}
+
+			_, err := conn.UnassignIpv6AddressesWithContext(ctx, input)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "unassigning EC2 Instance (%s) IPv6 addresses: %s", d.Id(), err)
+			}
+		}
+	}
+
 	if d.HasChanges("secondary_private_ips", "vpc_security_group_ids") && !d.IsNewResource() {
 		instance, err := FindInstanceByID(ctx, conn, d.Id())
 
@@ -1720,19 +1767,16 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		// Otherwise, you must provide base64-encoded text".
 
 		if d.HasChange("user_data") {
-			log.Printf("[INFO] Modifying user data %s", d.Id())
-
-			// Decode so the AWS SDK doesn't double encode
-			userData, err := base64.StdEncoding.DecodeString(d.Get("user_data").(string))
+			// Decode so the AWS SDK doesn't double encode.
+			v, err := itypes.Base64Decode(d.Get("user_data").(string))
 			if err != nil {
-				log.Printf("[DEBUG] Instance (%s) user_data not base64 decoded", d.Id())
-				userData = []byte(d.Get("user_data").(string))
+				v = []byte(d.Get("user_data").(string))
 			}
 
 			input := &ec2.ModifyInstanceAttributeInput{
 				InstanceId: aws.String(d.Id()),
 				UserData: &ec2.BlobAttributeValue{
-					Value: userData,
+					Value: v,
 				},
 			}
 
@@ -1742,20 +1786,17 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if d.HasChange("user_data_base64") {
-			log.Printf("[INFO] Modifying user data base64 %s", d.Id())
-
 			// Schema validation technically ensures the data is Base64 encoded.
-			// Decode so the AWS SDK doesn't double encode
-			userData, err := base64.StdEncoding.DecodeString(d.Get("user_data_base64").(string))
+			// Decode so the AWS SDK doesn't double encode.
+			v, err := itypes.Base64Decode(d.Get("user_data_base64").(string))
 			if err != nil {
-				log.Printf("[DEBUG] Instance (%s) user_data_base64 not base64 decoded", d.Id())
-				userData = []byte(d.Get("user_data_base64").(string))
+				v = []byte(d.Get("user_data_base64").(string))
 			}
 
 			input := &ec2.ModifyInstanceAttributeInput{
 				InstanceId: aws.String(d.Id()),
 				UserData: &ec2.BlobAttributeValue{
-					Value: userData,
+					Value: v,
 				},
 			}
 
@@ -2161,8 +2202,8 @@ func modifyInstanceAttributeWithStopStart(ctx context.Context, conn *ec2.EC2, in
 	return nil
 }
 
-func readBlockDevices(ctx context.Context, d *schema.ResourceData, meta interface{}, instance *ec2.Instance) error {
-	ibds, err := readBlockDevicesFromInstance(ctx, d, meta, instance)
+func readBlockDevices(ctx context.Context, d *schema.ResourceData, meta interface{}, instance *ec2.Instance, ds bool) error {
+	ibds, err := readBlockDevicesFromInstance(ctx, d, meta, instance, ds)
 	if err != nil {
 		return fmt.Errorf("reading block devices: %w", err)
 	}
@@ -2213,7 +2254,7 @@ func readBlockDevices(ctx context.Context, d *schema.ResourceData, meta interfac
 	return nil
 }
 
-func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, meta interface{}, instance *ec2.Instance) (map[string]interface{}, error) {
+func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, meta interface{}, instance *ec2.Instance, ds bool) (map[string]interface{}, error) {
 	blockDevices := make(map[string]interface{})
 	blockDevices["ebs"] = make([]map[string]interface{}, 0)
 	blockDevices["root"] = nil
@@ -2279,9 +2320,13 @@ func readBlockDevicesFromInstance(ctx context.Context, d *schema.ResourceData, m
 			bd["device_name"] = aws.StringValue(instanceBd.DeviceName)
 		}
 		if v, ok := d.GetOk("volume_tags"); !ok || v == nil || len(v.(map[string]interface{})) == 0 {
-			tags := KeyValueTags(ctx, vol.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-			bd[names.AttrTags] = tags.RemoveDefaultConfig(defaultTagsConfig).Map()
-			bd[names.AttrTagsAll] = tags.Map()
+			if ds {
+				bd[names.AttrTags] = KeyValueTags(ctx, vol.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()
+			} else {
+				tags := KeyValueTags(ctx, vol.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+				bd[names.AttrTags] = tags.RemoveDefaultConfig(defaultTagsConfig).Map()
+				bd[names.AttrTagsAll] = tags.Map()
+			}
 		}
 
 		if blockDeviceIsRoot(instanceBd, instance) {
@@ -2884,7 +2929,7 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interfa
 	userDataBase64 := d.Get("user_data_base64").(string)
 
 	if userData != "" {
-		opts.UserData64 = aws.String(verify.Base64Encode([]byte(userData)))
+		opts.UserData64 = flex.StringValueToBase64String(userData)
 	} else if userDataBase64 != "" {
 		opts.UserData64 = aws.String(userDataBase64)
 	}
@@ -3240,13 +3285,13 @@ func waitInstanceStopped(ctx context.Context, conn *ec2.EC2, id string, timeout 
 	return nil, err
 }
 
-func userDataHashSum(user_data string) string {
+func userDataHashSum(userData string) string {
 	// Check whether the user_data is not Base64 encoded.
 	// Always calculate hash of base64 decoded value since we
-	// check against double-encoding when setting it
-	v, base64DecodeError := base64.StdEncoding.DecodeString(user_data)
-	if base64DecodeError != nil {
-		v = []byte(user_data)
+	// check against double-encoding when setting it.
+	v, err := itypes.Base64Decode(userData)
+	if err != nil {
+		v = []byte(userData)
 	}
 
 	hash := sha1.Sum(v)
@@ -3257,7 +3302,7 @@ func getInstanceVolIDs(ctx context.Context, conn *ec2.EC2, instanceId string) ([
 	volIDs := []string{}
 
 	resp, err := conn.DescribeVolumesWithContext(ctx, &ec2.DescribeVolumesInput{
-		Filters: BuildAttributeFilterList(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"attachment.instance-id": instanceId,
 		}),
 	})
@@ -3841,7 +3886,7 @@ func findLaunchTemplateData(ctx context.Context, conn *ec2.EC2, launchTemplateSp
 	if v := aws.StringValue(launchTemplateSpecification.Version); v != "" {
 		switch v {
 		case LaunchTemplateVersionDefault:
-			input.Filters = BuildAttributeFilterList(map[string]string{
+			input.Filters = newAttributeFilterList(map[string]string{
 				"is-default-version": "true",
 			})
 		case LaunchTemplateVersionLatest:
@@ -3877,7 +3922,7 @@ func findLaunchTemplateNameAndVersions(ctx context.Context, conn *ec2.EC2, id st
 
 func findInstanceTagValue(ctx context.Context, conn *ec2.EC2, instanceID, tagKey string) (string, error) {
 	input := &ec2.DescribeTagsInput{
-		Filters: BuildAttributeFilterList(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"resource-id": instanceID,
 			"key":         tagKey,
 		}),

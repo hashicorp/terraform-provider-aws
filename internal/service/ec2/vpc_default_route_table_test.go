@@ -402,7 +402,7 @@ func TestAccVPCDefaultRouteTable_conditionalCIDRBlock(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRouteDestroy(ctx),
+		CheckDestroy:             testAccCheckRouteTableDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCDefaultRouteTableConfig_conditionalIPv4v6(rName, destinationCidr, destinationIpv6Cidr, false),

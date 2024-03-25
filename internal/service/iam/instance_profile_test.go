@@ -79,52 +79,6 @@ func TestAccIAMInstanceProfile_withoutRole(t *testing.T) {
 	})
 }
 
-func TestAccIAMInstanceProfile_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var conf iam.InstanceProfile
-	resourceName := "aws_iam_instance_profile.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceProfileDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccInstanceProfileConfig_tags1(rName, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceProfileExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccInstanceProfileConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceProfileExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccInstanceProfileConfig_tags1(rName, "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceProfileExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccIAMInstanceProfile_nameGenerated(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf iam.InstanceProfile
@@ -343,6 +297,15 @@ resource "aws_iam_instance_profile" "test" {
 `, namePrefix))
 }
 
+func testAccInstanceProfileConfig_tags0(rName string) string {
+	return acctest.ConfigCompose(testAccInstanceProfileConfig_base(rName), fmt.Sprintf(`
+resource "aws_iam_instance_profile" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.name
+}
+`, rName))
+}
+
 func testAccInstanceProfileConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccInstanceProfileConfig_base(rName), fmt.Sprintf(`
 resource "aws_iam_instance_profile" "test" {
@@ -368,4 +331,17 @@ resource "aws_iam_instance_profile" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccInstanceProfileConfig_tagsNull(rName, tagKey1 string) string {
+	return acctest.ConfigCompose(testAccInstanceProfileConfig_base(rName), fmt.Sprintf(`
+resource "aws_iam_instance_profile" "test" {
+  name = %[1]q
+  role = aws_iam_role.test.name
+
+  tags = {
+    %[2]q = null
+  }
+}
+`, rName, tagKey1))
 }

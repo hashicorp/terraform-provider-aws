@@ -101,6 +101,10 @@ func DataSourceDomain() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
+						"use_off_peak_window": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
 					},
 				},
 			},

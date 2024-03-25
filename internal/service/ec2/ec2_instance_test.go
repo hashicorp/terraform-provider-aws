@@ -1337,6 +1337,50 @@ func TestAccEC2Instance_IPv6_supportAddressCountWithIPv4(t *testing.T) {
 	})
 }
 
+func TestAccEC2Instance_IPv6AddressCount(t *testing.T) {
+	ctx := acctest.Context(t)
+	var original ec2.Instance
+	var updated ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	originalCount := 0
+	updatedCount := 2
+	shrunkenCount := 1
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstance_ipv6AddressCount(rName, originalCount),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &original),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", fmt.Sprint(originalCount)),
+				),
+			},
+			{
+				Config: testAccInstance_ipv6AddressCount(rName, updatedCount),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &updated),
+					testAccCheckInstanceNotRecreated(&original, &updated),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", fmt.Sprint(updatedCount)),
+				),
+			},
+			{
+				Config: testAccInstance_ipv6AddressCount(rName, shrunkenCount),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &updated),
+					testAccCheckInstanceNotRecreated(&original, &updated),
+					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", fmt.Sprint(shrunkenCount)),
+				),
+			},
+		},
+	})
+}
+
 func TestAccEC2Instance_networkInstanceSecurityGroups(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v ec2.Instance
@@ -5765,7 +5809,7 @@ func defaultSubnetCount(ctx context.Context, t *testing.T) int {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.DescribeSubnetsInput{
-		Filters: tfec2.BuildAttributeFilterList(
+		Filters: tfec2.NewAttributeFilterList(
 			map[string]string{
 				"defaultForAz": "true",
 			},
@@ -6764,6 +6808,24 @@ resource "aws_instance" "test" {
   }
 }
 `, rName))
+}
+
+func testAccInstance_ipv6AddressCount(rName string, ipv6AddressCount int) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		testAccInstanceVPCIPv6Config(rName),
+		fmt.Sprintf(`
+resource "aws_instance" "test" {
+  ami                = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  instance_type      = "t2.medium"
+  subnet_id          = aws_subnet.test.id
+  ipv6_address_count = %[2]d
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, ipv6AddressCount))
 }
 
 func testAccInstanceConfig_ebsKMSKeyARN(rName string) string {

@@ -231,6 +231,18 @@ class MyConvertedCode(TerraformStack):
         )
 ```
 
+## Tag Guide
+
+These are the five types of tags you might encounter relative to an `aws_instance`:
+
+1. **Instance tags**: Applied to instances but not to `ebs_block_device` and `root_block_device` volumes.
+2. **Default tags**: Applied to the instance and to `ebs_block_device` and `root_block_device` volumes.
+3. **Volume tags**: Applied during creation to `ebs_block_device` and `root_block_device` volumes.
+4. **Root block device tags**: Applied only to the `root_block_device` volume. These conflict with `volume_tags`.
+5. **EBS block device tags**: Applied only to the specific `ebs_block_device` volume you configure them for and cannot be updated. These conflict with `volume_tags`.
+
+Do not use `volume_tags` if you plan to manage block device tags outside the `aws_instance` configuration, such as using `tags` in an [`aws_ebs_volume`](/docs/providers/aws/r/ebs_volume.html) resource attached via [`aws_volume_attachment`](/docs/providers/aws/r/volume_attachment.html). Doing so will result in resource cycling and inconsistent behavior.
+
 ## Argument Reference
 
 This resource supports the following arguments:
@@ -398,7 +410,7 @@ The `maintenance_options` block supports the following:
 
 The `instance_market_options` block supports the following:
 
-* `market_type` - (Optional) Type of market for the instance. Valid value is `spot`. Defaults to `spot`.
+* `market_type` - (Optional) Type of market for the instance. Valid value is `spot`. Defaults to `spot`. Required if `spot_options` is specified.
 * `spot_options` - (Optional) Block to configure the options for Spot Instances. See [Spot Options](#spot-options) below for details on attributes.
 
 ### Metadata Options
@@ -477,11 +489,13 @@ This resource exports the following attributes in addition to the arguments abov
 For `ebs_block_device`, in addition to the arguments above, the following attribute is exported:
 
 * `volume_id` - ID of the volume. For example, the ID can be accessed like this, `aws_instance.web.ebs_block_device.2.volume_id`.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 For `root_block_device`, in addition to the arguments above, the following attributes are exported:
 
 * `volume_id` - ID of the volume. For example, the ID can be accessed like this, `aws_instance.web.root_block_device.0.volume_id`.
 * `device_name` - Device name, e.g., `/dev/sdh` or `xvdh`.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 For `instance_market_options`, in addition to the arguments above, the following attributes are exported:
 
@@ -522,4 +536,4 @@ Using `terraform import`, import instances using the `id`. For example:
 % terraform import aws_instance.web i-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-318cfccfb4c0a27f772116054dc74518d4f5bcde10e933a76b38c940d6a15d97 -->
+<!-- cache-key: cdktf-0.20.1 input-7592a7bb2443516de6da5bc059dae53369672623089161ded2386f333afc0f55 -->

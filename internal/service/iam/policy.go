@@ -35,6 +35,7 @@ const (
 
 // @SDKResource("aws_iam_policy", name="Policy")
 // @Tags(identifierAttribute="id", resourceType="Policy")
+// @Testing(existsType="github.com/aws/aws-sdk-go/service/iam.Policy")
 func resourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePolicyCreate,
@@ -465,4 +466,15 @@ func findPolicyVersionsByARN(ctx context.Context, conn *iam.IAM, arn string) ([]
 	}
 
 	return output, nil
+}
+
+func policyTags(ctx context.Context, conn *iam.IAM, identifier string) ([]*iam.Tag, error) {
+	output, err := conn.ListPolicyTagsWithContext(ctx, &iam.ListPolicyTagsInput{
+		PolicyArn: aws.String(identifier),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return output.Tags, nil
 }
