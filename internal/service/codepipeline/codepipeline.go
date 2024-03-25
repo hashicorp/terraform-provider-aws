@@ -198,6 +198,11 @@ func resourcePipeline() *schema.Resource {
 										Computed:     true,
 										ValidateFunc: validation.IntBetween(1, 999),
 									},
+									"timeout_in_minutes": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ValidateFunc: validation.IntBetween(5, 86400),
+									},
 									"version": {
 										Type:     schema.TypeString,
 										Required: true,
@@ -875,6 +880,10 @@ func expandActionDeclaration(tfMap map[string]interface{}) *types.ActionDeclarat
 		apiObject.RunOrder = aws.Int32(int32(v))
 	}
 
+	if v, ok := tfMap["timeout_in_minutes"].(int); ok && v != 0 {
+		apiObject.TimeoutInMinutes = aws.Int32(int32(v))
+	}
+
 	if v, ok := tfMap["version"].(string); ok && v != "" {
 		apiObject.ActionTypeId.Version = aws.String(v)
 	}
@@ -1353,6 +1362,10 @@ func flattenActionDeclaration(d *schema.ResourceData, i, j int, apiObject types.
 
 	if v := apiObject.RunOrder; v != nil {
 		tfMap["run_order"] = aws.ToInt32(v)
+	}
+
+	if v := apiObject.TimeoutInMinutes; v != nil {
+		tfMap["timeout_in_minutes"] = aws.ToInt32(v)
 	}
 
 	return tfMap
