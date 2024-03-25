@@ -306,7 +306,7 @@ resource "aws_s3_bucket" "test" {
 }
 
 resource "aws_s3_object" "test" {
-  count  = %[4]d
+  count = %[4]d
 
   bucket = aws_s3_bucket.test.id
   key    = "v${count.index + 1}/PlanetsDemo-v${count.index + 1}.zip"
