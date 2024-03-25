@@ -279,6 +279,43 @@ func TestAccGlueSchema_schemaDefUpdated(t *testing.T) {
 	})
 }
 
+func TestAccGlueSchema_incompatibleSchemaDef(t *testing.T) {
+	ctx := acctest.Context(t)
+	var schema glue.GetSchemaOutput
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_glue_schema.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSchema(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSchemaDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSchemaConfig_compatibility(rName, "FORWARD"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSchemaExists(ctx, resourceName, &schema),
+					resource.TestCheckResourceAttr(resourceName, "compatibility", "FORWARD"),
+					resource.TestCheckResourceAttr(resourceName, "schema_definition", "{\"type\": \"record\", \"name\": \"r1\", \"fields\": [ {\"name\": \"f1\", \"type\": \"int\"}, {\"name\": \"f2\", \"type\": \"string\"} ]}"),
+					resource.TestCheckResourceAttr(resourceName, "latest_schema_version", "1"),
+					resource.TestCheckResourceAttr(resourceName, "next_schema_version", "2"),
+				),
+			},
+			{
+				Config: testAccSchemaConfig_compatibility_definitionUpdated(rName, "FORWARD"),
+
+				// TODO: Assert that this update fails
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccGlueSchema_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var schema glue.GetSchemaOutput
@@ -500,6 +537,18 @@ resource "aws_glue_schema" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccSchemaConfig_compatibility_definitionUpdated(rName, compat string) string {
+	return testAccSchemaBase(rName) + fmt.Sprintf(`
+resource "aws_glue_schema" "test" {
+  schema_name       = %[1]q
+  registry_arn      = aws_glue_registry.test.arn
+  data_format       = "AVRO"
+  compatibility     = %[2]q
+  schema_definition = "{\"type\": \"record\", \"name\": \"r1\", \"fields\": [ {\"name\": \"f1\", \"type\": \"int\"} ]}"
+}
+`, rName, compat)
 }
 
 func testAccSchemaConfig_definitionUpdated(rName string) string {
