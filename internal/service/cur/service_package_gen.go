@@ -23,8 +23,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceReportDefinition,
+			Factory:  dataSourceReportDefinition,
 			TypeName: "aws_cur_report_definition",
+			Name:     "Report Definition",
 		},
 	}
 }
@@ -32,8 +33,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceReportDefinition,
+			Factory:  resourceReportDefinition,
 			TypeName: "aws_cur_report_definition",
+			Name:     "Report Definition",
 		},
 	}
 }
