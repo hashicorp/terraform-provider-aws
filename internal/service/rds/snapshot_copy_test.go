@@ -39,12 +39,54 @@ func TestAccRDSSnapshotCopy_basic(t *testing.T) {
 				Config: testAccSnapshotCopyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSnapshotCopyExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "shared_accounts.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccRDSSnapshotCopy_share(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var v rds.DBSnapshot
+	resourceName := "aws_db_snapshot_copy.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckSnapshotCopyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccSnapshotCopyConfig_share(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSnapshotCopyExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "shared_accounts.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "shared_accounts.*", "all"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccSnapshotCopyConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckSnapshotCopyExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "shared_accounts.#", "0"),
+				),
 			},
 		},
 	})
@@ -242,4 +284,14 @@ resource "aws_db_snapshot_copy" "test" {
     %[4]q = %[5]q
   }
 }`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccSnapshotCopyConfig_share(rName string) string {
+	return acctest.ConfigCompose(testAccSnapshotCopyConfig_base(rName), fmt.Sprintf(`
+resource "aws_db_snapshot_copy" "test" {
+	source_db_snapshot_identifier = aws_db_snapshot.test.db_snapshot_arn
+	target_db_snapshot_identifier = "%[1]s-target"
+	shared_accounts        = ["all"]
+}
+`, rName))
 }

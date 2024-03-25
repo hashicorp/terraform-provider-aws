@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -103,6 +104,11 @@ func ResourceSnapshotCopy() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
+			"shared_accounts": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 			"source_db_snapshot_identifier": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -188,6 +194,20 @@ func resourceSnapshotCopyCreate(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "waiting for RDS DB Snapshot Copy (%s) create: %s", d.Id(), err)
 	}
 
+	if v, ok := d.GetOk("shared_accounts"); ok && v.(*schema.Set).Len() > 0 {
+		input := &rds.ModifyDBSnapshotAttributeInput{
+			AttributeName:        aws.String("restore"),
+			DBSnapshotIdentifier: aws.String(d.Id()),
+			ValuesToAdd:          flex.ExpandStringSet(v.(*schema.Set)),
+		}
+
+		_, err := conn.ModifyDBSnapshotAttributeWithContext(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "modifying RDS DB Snapshot (%s) attribute: %s", d.Id(), err)
+		}
+	}
+
 	return append(diags, resourceSnapshotCopyRead(ctx, d, meta)...)
 }
 
@@ -226,11 +246,47 @@ func resourceSnapshotCopyRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("target_db_snapshot_identifier", snapshot.DBSnapshotIdentifier)
 	d.Set("vpc_id", snapshot.VpcId)
 
+	input := &rds.DescribeDBSnapshotAttributesInput{
+		DBSnapshotIdentifier: aws.String(d.Id()),
+	}
+
+	output, err := conn.DescribeDBSnapshotAttributesWithContext(ctx, input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading RDS DB Snapshot (%s) attributes: %s", d.Id(), err)
+	}
+
+	d.Set("shared_accounts", flex.FlattenStringSet(output.DBSnapshotAttributesResult.DBSnapshotAttributes[0].AttributeValues))
+
 	return diags
 }
 
 func resourceSnapshotCopyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	// Tags only.
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RDSConn(ctx)
+
+	if d.HasChange("shared_accounts") {
+		o, n := d.GetChange("shared_accounts")
+		os := o.(*schema.Set)
+		ns := n.(*schema.Set)
+
+		additionList := ns.Difference(os)
+		removalList := os.Difference(ns)
+
+		input := &rds.ModifyDBSnapshotAttributeInput{
+			AttributeName:        aws.String("restore"),
+			DBSnapshotIdentifier: aws.String(d.Id()),
+			ValuesToAdd:          flex.ExpandStringSet(additionList),
+			ValuesToRemove:       flex.ExpandStringSet(removalList),
+		}
+
+		_, err := conn.ModifyDBSnapshotAttributeWithContext(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "modifying RDS DB Snapshot (%s) attributes: %s", d.Id(), err)
+		}
+	}
+
 	return resourceSnapshotCopyRead(ctx, d, meta)
 }
 
