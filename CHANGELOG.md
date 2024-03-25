@@ -4,6 +4,9 @@ FEATURES:
 
 * **New Resource:** `aws_devopsguru_notification_channel` ([#36557](https://github.com/hashicorp/terraform-provider-aws/issues/36557))
 * **New Resource:** `aws_lakeformation_resource_lf_tag` ([#36537](https://github.com/hashicorp/terraform-provider-aws/issues/36537))
+* **New Resource:** `aws_m2_application` ([#35399](https://github.com/hashicorp/terraform-provider-aws/issues/35399))
+* **New Resource:** `aws_m2_deployment` ([#35408](https://github.com/hashicorp/terraform-provider-aws/issues/35408))
+* **New Resource:** `aws_m2_environment` ([#35311](https://github.com/hashicorp/terraform-provider-aws/issues/35311))
 * **New Resource:** `aws_redshiftserverless_custom_domain_association` ([#35865](https://github.com/hashicorp/terraform-provider-aws/issues/35865))
 
 ENHANCEMENTS:
@@ -14,6 +17,8 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* data-source/aws_cur_report_definition: Direct all API calls to the `us-east-1` endpoint as this is the only Region in which AWS Cost and Usage Reports is available ([#36540](https://github.com/hashicorp/terraform-provider-aws/issues/36540))
+* resource/aws_cur_report_definition: Direct all API calls to the `us-east-1` endpoint as this is the only Region in which AWS Cost and Usage Reports is available ([#36540](https://github.com/hashicorp/terraform-provider-aws/issues/36540))
 * resource/aws_quicksight_dashboard: Fix failure when updating a dashboard takes a while ([#34227](https://github.com/hashicorp/terraform-provider-aws/issues/34227))
 * resource/aws_quicksight_template: Fix "Invalid address to set" errors ([#34227](https://github.com/hashicorp/terraform-provider-aws/issues/34227))
 * resource/aws_quicksight_template: Fix "a number is required" errors when state contains an empty string ([#34227](https://github.com/hashicorp/terraform-provider-aws/issues/34227))
