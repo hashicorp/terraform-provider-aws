@@ -93,7 +93,7 @@ func TestOnceAWeekWindowStringSemanticEquals(t *testing.T) {
 		"not equal": {
 			val1:   fwtypes.OnceAWeekWindowValue("thu:07:44-thu:09:44"),
 			val2:   fwtypes.OnceAWeekWindowValue("thu:07:44-fri:11:09"),
-			equals: true,
+			equals: false,
 		},
 	}
 
