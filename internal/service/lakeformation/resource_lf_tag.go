@@ -200,12 +200,6 @@ func (r *resourceResourceLFTag) Schema(ctx context.Context, req resource.SchemaR
 						},
 						"name": schema.StringAttribute{
 							Required: true,
-							Validators: []validator.String{
-								stringvalidator.AtLeastOneOf(
-									path.MatchRelative().AtParent().AtName("name"),
-									path.MatchRelative().AtParent().AtName("wildcard"),
-								),
-							},
 							PlanModifiers: []planmodifier.String{
 								stringplanmodifier.RequiresReplace(),
 								stringplanmodifier.UseStateForUnknown(),
