@@ -6,6 +6,7 @@ package types
 import (
 	"context"
 	"fmt"
+	"reflect"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -136,11 +137,63 @@ func objectTypeNewObjectPtr[T any](context.Context) (*T, diag.Diagnostics) {
 	return new(T), diags
 }
 
-// nullOutObjectPtrFields sets all applicable fields of the specified object pointer to their null values.
-func nullOutObjectPtrFields[T any](ctx context.Context, t *T) diag.Diagnostics {
+// NullOutObjectPtrFields sets all applicable fields of the specified object pointer to their null values.
+func NullOutObjectPtrFields[T any](ctx context.Context, t *T) diag.Diagnostics {
 	var diags diag.Diagnostics
+	val := reflect.ValueOf(t)
+	typ := val.Type().Elem()
 
-	// 			x, err := v.Type(ctx).ValueFromTerraform(ctx, tftypes.NewValue(tftypes.Bool, nil))
+	if typ.Kind() != reflect.Struct {
+		return diags
+	}
+
+	val = val.Elem()
+
+FieldLoop:
+	for i := 0; i < typ.NumField(); i++ {
+		val := val.Field(i)
+		if !val.CanInterface() {
+			continue FieldLoop
+		}
+
+		var attrType attr.Type
+		var tfType tftypes.Type
+
+		switch v := val.Interface().(type) {
+		case basetypes.BoolValuable:
+			attrType = v.Type(ctx)
+			tfType = tftypes.Bool
+		case basetypes.Float64Valuable:
+			attrType = v.Type(ctx)
+			tfType = tftypes.Number
+		case basetypes.Int64Valuable:
+			attrType = v.Type(ctx)
+			tfType = tftypes.Number
+		case basetypes.StringValuable:
+			attrType = v.Type(ctx)
+			tfType = tftypes.String
+		case basetypes.ListValuable:
+			attrType = v.Type(ctx)
+			tfType = tftypes.List{}
+		case basetypes.SetValuable:
+			attrType = v.Type(ctx)
+			tfType = tftypes.Set{}
+		case basetypes.MapValuable:
+			attrType = v.Type(ctx)
+			tfType = tftypes.Map{}
+		default:
+			continue FieldLoop
+		}
+
+		attrValue, err := attrType.ValueFromTerraform(ctx, tftypes.NewValue(tfType, nil))
+		if err != nil {
+			diags.Append(diag.NewErrorDiagnostic("Type.ValueFromTerraform", err.Error()))
+			return diags
+		}
+
+		val.Set(reflect.ValueOf(attrValue))
+	}
+
 	return diags
 }
 

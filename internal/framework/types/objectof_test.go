@@ -179,3 +179,20 @@ func TestObjectValueOfEqual(t *testing.T) {
 		})
 	}
 }
+
+func TestNullOutObjectPtrFields(t *testing.T) {
+	type A struct {
+		Flag types.Bool `tfsdk:"flag"`
+	}
+
+	ctx := context.Background()
+	a := new(A)
+	a.Flag = types.BoolValue(true)
+	diags := fwtypes.NullOutObjectPtrFields(ctx, a)
+	if diags.HasError() {
+		t.Fatalf("unexpected error: %v", diags)
+	}
+	if !a.Flag.IsNull() {
+		t.Errorf("expected flag to be null")
+	}
+}
