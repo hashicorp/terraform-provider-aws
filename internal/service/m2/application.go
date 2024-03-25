@@ -352,7 +352,7 @@ func (r *applicationResource) ModifyPlan(ctx context.Context, request resource.M
 	r.SetTagsAll(ctx, request, response)
 }
 
-func startApplication(ctx context.Context, conn *m2.Client, id string, timeout time.Duration) (*m2.GetApplicationOutput, error) {
+func startApplication(ctx context.Context, conn *m2.Client, id string, timeout time.Duration) (*m2.GetApplicationOutput, error) { //nolint:unparam
 	input := &m2.StartApplicationInput{
 		ApplicationId: aws.String(id),
 	}
@@ -366,7 +366,7 @@ func startApplication(ctx context.Context, conn *m2.Client, id string, timeout t
 	return waitApplicationRunning(ctx, conn, id, timeout)
 }
 
-func stopApplicationIfRunning(ctx context.Context, conn *m2.Client, id string, forceStop bool, timeout time.Duration) (*m2.GetApplicationOutput, error) {
+func stopApplicationIfRunning(ctx context.Context, conn *m2.Client, id string, forceStop bool, timeout time.Duration) (*m2.GetApplicationOutput, error) { //nolint:unparam
 	app, err := findApplicationByID(ctx, conn, id)
 
 	if tfresource.NotFound(err) {
