@@ -1,5 +1,9 @@
 ## 5.43.0 (Unreleased)
 
+FEATURES:
+
+* **New Resource:** `aws_lakeformation_resource_lf_tag` ([#36537](https://github.com/hashicorp/terraform-provider-aws/issues/36537))
+
 ENHANCEMENTS:
 
 * resource/aws_vpc_ipam: Add `tier` argument ([#36504](https://github.com/hashicorp/terraform-provider-aws/issues/36504))
