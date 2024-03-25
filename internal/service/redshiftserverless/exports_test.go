@@ -12,4 +12,10 @@ var (
 	ResourceSnapshot                = resourceSnapshot
 	ResourceUsageLimit              = resourceUsageLimit
 	ResourceWorkgroup               = resourceWorkgroup
+
+	FindEndpointAccessByName = findEndpointAccessByName
+	FindNamespaceByName      = findNamespaceByName
+	FindResourcePolicyByARN  = findResourcePolicyByARN
+	FindSnapshotByName       = findSnapshotByName
+	FindUsageLimitByName     = findUsageLimitByName
 )

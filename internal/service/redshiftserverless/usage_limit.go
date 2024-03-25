@@ -101,7 +101,7 @@ func resourceUsageLimitRead(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
 
-	out, err := FindUsageLimitByName(ctx, conn, d.Id())
+	out, err := findUsageLimitByName(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift Serverless UsageLimit (%s) not found, removing from state", d.Id())
 		d.SetId("")

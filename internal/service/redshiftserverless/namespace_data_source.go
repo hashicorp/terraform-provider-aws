@@ -69,8 +69,7 @@ func dataSourceNamespaceRead(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
 
 	namespaceName := d.Get("namespace_name").(string)
-
-	resource, err := FindNamespaceByName(ctx, conn, namespaceName)
+	resource, err := findNamespaceByName(ctx, conn, namespaceName)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Redshift Serverless Namespace (%s): %s", namespaceName, err)

@@ -183,7 +183,7 @@ func resourceNamespaceRead(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
 
-	output, err := FindNamespaceByName(ctx, conn, d.Id())
+	output, err := findNamespaceByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift Serverless Namespace (%s) not found, removing from state", d.Id())

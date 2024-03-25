@@ -164,7 +164,7 @@ func resourceEndpointAccessRead(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
 
-	endpointAccess, err := FindEndpointAccessByName(ctx, conn, d.Id())
+	endpointAccess, err := findEndpointAccessByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift Serverless Endpoint Access (%s) not found, removing from state", d.Id())
