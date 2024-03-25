@@ -137,13 +137,12 @@ func objectTypeNewObjectPtr[T any](context.Context) (*T, diag.Diagnostics) {
 }
 
 // nullOutObjectPtrFields sets all applicable fields of the specified object pointer to their null values.
-// func nullOutObjectPtrFields[T any](ctx context.Context, t *T) diag.Diagnostics {
-// 	var diags diag.Diagnostics
-// 	val := reflect.ValueOf(t)
-// 	typ := val.Type().Elem()
+func nullOutObjectPtrFields[T any](ctx context.Context, t *T) diag.Diagnostics {
+	var diags diag.Diagnostics
 
-// 	return diags
-// }
+	// 			x, err := v.Type(ctx).ValueFromTerraform(ctx, tftypes.NewValue(tftypes.Bool, nil))
+	return diags
+}
 
 // ObjectValueOf represents a Terraform Plugin Framework Object value whose corresponding Go type is the structure T.
 type ObjectValueOf[T any] struct {
