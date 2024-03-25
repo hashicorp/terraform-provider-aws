@@ -11,7 +11,6 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	cur "github.com/aws/aws-sdk-go/service/costandusagereportservice"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -19,10 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-)
-
-const (
-	availRegion = endpoints.UsEast1RegionID
 )
 
 // @SDKResource("aws_cur_report_definition")
@@ -116,10 +111,6 @@ func resourceReportDefinitionCreate(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CURConn(ctx)
 
-	if aws.StringValue(conn.Config.Region) != availRegion {
-		return sdkdiag.AppendErrorf(diags, "The AWS Cost And Usage Report service is only available in the %s region.", availRegion)
-	}
-
 	reportName := d.Get("report_name").(string)
 	additionalArtifacts := flex.ExpandStringSet(d.Get("additional_artifacts").(*schema.Set))
 	compression := d.Get("compression").(string)
@@ -177,10 +168,6 @@ func resourceReportDefinitionRead(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CURConn(ctx)
 
-	if aws.StringValue(conn.Config.Region) != availRegion {
-		return sdkdiag.AppendErrorf(diags, "The AWS Cost And Usage Report service is only available in the %s region.", availRegion)
-	}
-
 	reportDefinition, err := FindReportDefinitionByName(ctx, conn, d.Id())
 
 	if err != nil {
@@ -226,10 +213,6 @@ func resourceReportDefinitionRead(ctx context.Context, d *schema.ResourceData, m
 func resourceReportDefinitionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CURConn(ctx)
-
-	if aws.StringValue(conn.Config.Region) != availRegion {
-		return sdkdiag.AppendErrorf(diags, "The AWS Cost And Usage Report service is only available in the %s region.", availRegion)
-	}
 
 	additionalArtifacts := flex.ExpandStringSet(d.Get("additional_artifacts").(*schema.Set))
 	compression := d.Get("compression").(string)
@@ -287,10 +270,6 @@ func resourceReportDefinitionUpdate(ctx context.Context, d *schema.ResourceData,
 func resourceReportDefinitionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CURConn(ctx)
-
-	if aws.StringValue(conn.Config.Region) != availRegion {
-		return sdkdiag.AppendErrorf(diags, "The AWS Cost And Usage Report service is only available in the %s region.", availRegion)
-	}
 
 	log.Printf("[DEBUG] Deleting Cost And Usage Report Definition: %s", d.Id())
 	_, err := conn.DeleteReportDefinitionWithContext(ctx, &cur.DeleteReportDefinitionInput{
