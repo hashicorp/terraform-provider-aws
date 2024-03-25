@@ -20,11 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfbatch "github.com/hashicorp/terraform-provider-aws/internal/service/batch"
-<<<<<<< HEAD
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
-=======
->>>>>>> 1c264545ba (initial remove of ForceNew)
 )
 
 func TestAccBatchJobDefinition_basic(t *testing.T) {
