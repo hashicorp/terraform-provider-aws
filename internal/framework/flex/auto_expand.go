@@ -384,7 +384,13 @@ func (expander autoExpander) listOfString(ctx context.Context, vFrom basetypes.L
 				return diags
 			}
 
-			vTo.Set(reflect.ValueOf(to))
+			// Copy elements individually to enable expansion of lists of
+			// custom string types (AWS enums)
+			vals := reflect.MakeSlice(vTo.Type(), len(to), len(to))
+			for i := 0; i < len(to); i++ {
+				vals.Index(i).SetString(to[i])
+			}
+			vTo.Set(vals)
 			return diags
 
 		case reflect.Ptr:
