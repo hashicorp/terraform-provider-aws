@@ -25,6 +25,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// currently, there is no way to dynamically get the app type from the ARN.
+var sagemakerAppTypes = map[string]string{
+	"jupyterserver":    sagemaker.AppTypeJupyterServer,
+	"kernelgateway":    sagemaker.AppTypeKernelGateway,
+	"detailedprofiler": sagemaker.AppTypeDetailedProfiler,
+	"tensorboard":      sagemaker.AppTypeTensorBoard,
+	"codeeditor":       sagemaker.AppTypeCodeEditor,
+	"jupyterlab":       sagemaker.AppTypeJupyterLab,
+	"rstudioserverpro": sagemaker.AppTypeRStudioServerPro,
+	"rsessiongateway":  sagemaker.AppTypeRSessionGateway,
+	"canvas":           sagemaker.AppTypeCanvas,
+}
+
 // @SDKResource("aws_sagemaker_app", name="App")
 // @Tags(identifierAttribute="arn")
 func ResourceApp() *schema.Resource {
@@ -264,19 +277,6 @@ func decodeAppID(id string) (string, string, string, string, error) {
 
 	domainID := parts[0]
 	userProfileOrSpaceName := parts[1]
-
-	// currently, there is no way to dynamically get the app type from the ARN.
-	sagemakerAppTypes := map[string]string{
-		"jupyterserver":    sagemaker.AppTypeJupyterServer,
-		"kernelgateway":    sagemaker.AppTypeKernelGateway,
-		"detailedprofiler": sagemaker.AppTypeDetailedProfiler,
-		"tensorboard":      sagemaker.AppTypeTensorBoard,
-		"codeeditor":       sagemaker.AppTypeCodeEditor,
-		"jupyterlab":       sagemaker.AppTypeJupyterLab,
-		"rstudioserverpro": sagemaker.AppTypeRStudioServerPro,
-		"rsessiongateway":  sagemaker.AppTypeRSessionGateway,
-		"canvas":           sagemaker.AppTypeCanvas,
-	}
 
 	appType := sagemakerAppTypes[parts[2]]
 
