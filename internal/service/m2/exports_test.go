@@ -6,7 +6,7 @@ package m2
 // Exports for use in tests only.
 var (
 	ResourceApplication = newApplicationResource
-	ResourceDeployment  = newResourceDeployment
+	ResourceDeployment  = newDeploymentResource
 	ResourceEnvironment = newEnvironmentResource
 
 	FindApplicationByID = findApplicationByID

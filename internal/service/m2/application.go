@@ -29,7 +29,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -212,13 +211,13 @@ func (r *applicationResource) Read(ctx context.Context, request resource.ReadReq
 		return
 	}
 
-	conn := r.Meta().M2Client(ctx)
-
 	if err := data.InitFromID(); err != nil {
 		response.Diagnostics.AddError("parsing resource ID", err.Error())
 
 		return
 	}
+
+	conn := r.Meta().M2Client(ctx)
 
 	outputGA, err := findApplicationByID(ctx, conn, data.ID.ValueString())
 
@@ -275,8 +274,8 @@ func (r *applicationResource) Update(ctx context.Context, request resource.Updat
 
 	if !new.Definition.Equal(old.Definition) || !new.Description.Equal(old.Description) {
 		input := &m2.UpdateApplicationInput{
-			ApplicationId:             flex.StringFromFramework(ctx, new.ID),
-			CurrentApplicationVersion: flex.Int32FromFramework(ctx, old.CurrentVersion),
+			ApplicationId:             fwflex.StringFromFramework(ctx, new.ID),
+			CurrentApplicationVersion: fwflex.Int32FromFramework(ctx, old.CurrentVersion),
 		}
 
 		if !new.Definition.Equal(old.Definition) {
@@ -293,7 +292,7 @@ func (r *applicationResource) Update(ctx context.Context, request resource.Updat
 		}
 
 		if !new.Description.Equal(old.Description) {
-			input.Description = flex.StringFromFramework(ctx, new.Description)
+			input.Description = fwflex.StringFromFramework(ctx, new.Description)
 		}
 
 		outputUA, err := conn.UpdateApplication(ctx, input)
@@ -354,48 +353,46 @@ func (r *applicationResource) ModifyPlan(ctx context.Context, request resource.M
 }
 
 func startApplication(ctx context.Context, conn *m2.Client, id string, timeout time.Duration) (*m2.GetApplicationOutput, error) {
-	stopInput := &m2.StartApplicationInput{
-		ApplicationId: &id,
+	input := &m2.StartApplicationInput{
+		ApplicationId: aws.String(id),
 	}
 
-	_, err := conn.StartApplication(ctx, stopInput)
+	_, err := conn.StartApplication(ctx, input)
+
 	if err != nil {
 		return nil, err
 	}
 
-	app, err := waitApplicationRunning(ctx, conn, id, timeout)
-	if err != nil {
-		return nil, err
-	}
-
-	return app, nil
+	return waitApplicationRunning(ctx, conn, id, timeout)
 }
 
-func stopApplicationIfRunning(ctx context.Context, conn *m2.Client, id string, forceStop bool, timeout time.Duration) error {
+func stopApplicationIfRunning(ctx context.Context, conn *m2.Client, id string, forceStop bool, timeout time.Duration) (*m2.GetApplicationOutput, error) {
 	app, err := findApplicationByID(ctx, conn, id)
+
+	if tfresource.NotFound(err) {
+		return nil, nil
+	}
+
 	if err != nil {
-		if tfresource.NotFound(err) {
-			return nil
-		}
-		return err
+		return nil, err
 	}
 
 	if app.Status != awstypes.ApplicationLifecycleRunning {
-		return nil
+		return nil, nil
 	}
 
-	stopInput := &m2.StopApplicationInput{
-		ApplicationId: &id,
+	input := &m2.StopApplicationInput{
+		ApplicationId: aws.String(id),
 		ForceStop:     forceStop,
 	}
 
-	_, err = conn.StopApplication(ctx, stopInput)
+	_, err = conn.StopApplication(ctx, input)
+
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	_, err = waitApplicationStopped(ctx, conn, id, timeout)
-	return err
+	return waitApplicationStopped(ctx, conn, id, timeout)
 }
 
 func findApplicationByID(ctx context.Context, conn *m2.Client, id string) (*m2.GetApplicationOutput, error) {
@@ -547,8 +544,11 @@ func waitApplicationDeletedFromEnvironment(ctx context.Context, conn *m2.Client,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*m2.GetApplicationOutput); ok {
-		return out, err
+
+	if output, ok := outputRaw.(*m2.GetApplicationOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+
+		return output, err
 	}
 
 	return nil, err
@@ -564,8 +564,11 @@ func waitApplicationStopped(ctx context.Context, conn *m2.Client, id string, tim
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*m2.GetApplicationOutput); ok {
-		return out, err
+
+	if output, ok := outputRaw.(*m2.GetApplicationOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+
+		return output, err
 	}
 
 	return nil, err
@@ -581,8 +584,11 @@ func waitApplicationRunning(ctx context.Context, conn *m2.Client, id string, tim
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*m2.GetApplicationOutput); ok {
-		return out, err
+
+	if output, ok := outputRaw.(*m2.GetApplicationOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+
+		return output, err
 	}
 
 	return nil, err

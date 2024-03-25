@@ -45,17 +45,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Mainframe Modernization Deployment using the `APPLICATION-ID_DEPLOYMENT-ID`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Mainframe Modernization Deployment using the `APPLICATION-ID,DEPLOYMENT-ID`. For example:
 
 ```terraform
 import {
   to = aws_m2_deployment.example
-  id = "APPLICATION-ID_DEPLOYMENT-ID"
+  id = "APPLICATION-ID,DEPLOYMENT-ID"
 }
 ```
 
-Using `terraform import`, import Mainframe Modernization Deployment using the `APPLICATION-ID_DEPLOYMENT-ID`. For example:
+Using `terraform import`, import Mainframe Modernization Deployment using the `APPLICATION-ID,DEPLOYMENT-ID`. For example:
 
 ```console
-% terraform import aws_m2_deployment.example APPLICATION-ID_DEPLOYMENT-ID
+% terraform import aws_m2_deployment.example APPLICATION-ID,DEPLOYMENT-ID
 ```

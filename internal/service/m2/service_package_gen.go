@@ -35,7 +35,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			},
 		},
 		{
-			Factory: newResourceDeployment,
+			Factory: newDeploymentResource,
 			Name:    "Deployment",
 		},
 	}

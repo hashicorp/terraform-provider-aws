@@ -7,35 +7,32 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/m2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/m2/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource(name="Deployment")
-func newResourceDeployment(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceDeployment{}
+func newDeploymentResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &deploymentResource{}
 
 	r.SetDefaultCreateTimeout(60 * time.Minute)
 	r.SetDefaultUpdateTimeout(60 * time.Minute)
@@ -44,21 +41,18 @@ func newResourceDeployment(_ context.Context) (resource.ResourceWithConfigure, e
 	return r, nil
 }
 
-const (
-	ResNameDeployment = "Deployment"
-)
-
-type resourceDeployment struct {
+type deploymentResource struct {
 	framework.ResourceWithConfigure
+	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *resourceDeployment) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_m2_deployment"
+func (*deploymentResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_m2_deployment"
 }
 
-func (r *resourceDeployment) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *deploymentResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"application_id": schema.StringAttribute{
 				Required: true,
@@ -69,8 +63,8 @@ func (r *resourceDeployment) Schema(ctx context.Context, req resource.SchemaRequ
 			"application_version": schema.Int64Attribute{
 				Required: true,
 			},
-			"client_token": schema.StringAttribute{
-				Optional: true,
+			"deployment_id": schema.StringAttribute{
+				Computed: true,
 			},
 			"environment_id": schema.StringAttribute{
 				Required: true,
@@ -81,7 +75,7 @@ func (r *resourceDeployment) Schema(ctx context.Context, req resource.SchemaRequ
 			"force_stop": schema.BoolAttribute{
 				Optional: true,
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"start": schema.BoolAttribute{
 				Required: true,
 			},
@@ -96,342 +90,263 @@ func (r *resourceDeployment) Schema(ctx context.Context, req resource.SchemaRequ
 	}
 }
 
-func (r *resourceDeployment) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *deploymentResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data deploymentResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().M2Client(ctx)
 
-	var plan resourceDeploymentData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+	input := &m2.CreateDeploymentInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	in, diags := plan.createDeploymentInput(ctx)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	// Additional fields.
+	input.ClientToken = aws.String(sdkid.UniqueId())
 
-	out, err := conn.CreateDeployment(ctx, in)
+	output, err := conn.CreateDeployment(ctx, input)
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.M2, create.ErrActionCreating, ResNameDeployment, plan.ApplicationId.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil || out.DeploymentId == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.M2, create.ErrActionCreating, ResNameDeployment, plan.ApplicationId.String(), nil),
-			errors.New("empty output").Error(),
-		)
+		response.Diagnostics.AddError("creating Mainframe Modernization Deployment", err.Error())
+
 		return
 	}
 
-	deploymentId := DeploymentId(plan.ApplicationId.ValueString(), *out.DeploymentId)
+	// Set values for unknowns.
+	data.DeploymentID = fwflex.StringToFramework(ctx, output.DeploymentId)
+	data.setID()
 
-	plan.ID = flex.StringValueToFramework(ctx, deploymentId)
+	timeout := r.CreateTimeout(ctx, data.Timeouts)
+	if _, err := waitDeploymentCreated(ctx, conn, data.ApplicationID.ValueString(), data.DeploymentID.ValueString(), timeout); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Mainframe Modernization Deployment (%s) create", data.ID.ValueString()), err.Error())
 
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	deployment, err := waitDeploymentCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.M2, create.ErrActionWaitingForCreation, ResNameDeployment, plan.ApplicationId.String(), err),
-			err.Error(),
-		)
 		return
 	}
 
-	if plan.Start.ValueBool() {
-		_, err = startApplication(ctx, conn, plan.ApplicationId.ValueString(), createTimeout)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.M2, create.ErrActionWaitingForCreation, ResNameDeployment, plan.ApplicationId.String(), err),
-				err.Error(),
-			)
+	if data.Start.ValueBool() {
+		applicationID := data.ApplicationID.ValueString()
+		if _, err := startApplication(ctx, conn, applicationID, timeout); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("starting Mainframe Modernization Application (%s)", applicationID), err.Error())
+
 			return
 		}
 	}
 
-	outDiags := plan.refreshFromOutput(ctx, deployment)
-	resp.Diagnostics.Append(outDiags...)
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceDeployment) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().M2Client(ctx)
-
-	var state resourceDeploymentData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *deploymentResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data deploymentResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findDeploymentByID(ctx, conn, state.ID.ValueString())
+	if err := data.InitFromID(); err != nil {
+		response.Diagnostics.AddError("parsing resource ID", err.Error())
+
+		return
+	}
+
+	conn := r.Meta().M2Client(ctx)
+
+	outputGD, err := findDeploymentByTwoPartKey(ctx, conn, data.ApplicationID.ValueString(), data.DeploymentID.ValueString())
+
 	if tfresource.NotFound(err) {
-		resp.State.RemoveResource(ctx)
-		return
-	}
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.M2, create.ErrActionSetting, ResNameDeployment, state.ID.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	diags := state.refreshFromOutput(ctx, out)
-	resp.Diagnostics.Append(diags...)
-	if resp.Diagnostics.HasError() {
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
 		return
 	}
 
-	applicationId, _, err := DeploymentParseResourceId(state.ID.ValueString())
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.M2, create.ErrActionSetting, ResNameDeployment, state.ID.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading Mainframe Modernization Deployment (%s)", data.ID.ValueString()), err.Error())
+
 		return
 	}
 
-	app, err := findApplicationByID(ctx, conn, applicationId)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.M2, create.ErrActionSetting, ResNameDeployment, state.ID.String(), err),
-			err.Error(),
-		)
+	// Set attributes for import.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, outputGD, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
-	state.refreshFromApplicationOutput(app)
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	// Additional fields.
+	outputGA, err := findApplicationByID(ctx, conn, data.ApplicationID.ValueString())
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading Mainframe Modernization Application (%s)", data.ApplicationID.ValueString()), err.Error())
+
+		return
+	}
+
+	data.Start = types.BoolValue(outputGA.Status == awstypes.ApplicationLifecycleRunning)
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceDeployment) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().M2Client(ctx)
-
-	var plan, state resourceDeploymentData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *deploymentResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var old, new deploymentResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	plan.ID = types.StringUnknown()
+	conn := r.Meta().M2Client(ctx)
 
-	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
+	timeout := r.UpdateTimeout(ctx, new.Timeouts)
+	if !new.ApplicationVersion.Equal(old.ApplicationVersion) {
+		applicationID := new.ApplicationID.ValueString()
 
-	if !plan.ApplicationVersion.Equal(state.ApplicationVersion) {
-		applicationId := flex.StringFromFramework(ctx, plan.ApplicationId)
+		// Stop the application if it was running.
+		if old.Start.ValueBool() {
+			if _, err := stopApplicationIfRunning(ctx, conn, applicationID, new.ForceStop.ValueBool(), timeout); err != nil {
+				response.Diagnostics.AddError(fmt.Sprintf("stopping Mainframe Modernization Application (%s)", applicationID), err.Error())
 
-		// Stop the application if it was running
-		if state.Start.ValueBool() {
-			err := stopApplicationIfRunning(ctx, conn, *applicationId, plan.ForceStop.ValueBool(), updateTimeout)
-			if err != nil {
-				resp.Diagnostics.AddError(
-					create.ProblemStandardMessage(names.M2, create.ErrActionUpdating, ResNameDeployment, plan.ApplicationId.String(), err),
-					err.Error(),
-				)
 				return
 			}
 		}
 
-		// Create the updated deployment
-		in, diags := plan.createDeploymentInput(ctx)
-		resp.Diagnostics.Append(diags...)
-		if resp.Diagnostics.HasError() {
+		input := &m2.CreateDeploymentInput{}
+		response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 
-		out, err := conn.CreateDeployment(ctx, in)
+		// Additional fields.
+		input.ClientToken = aws.String(sdkid.UniqueId())
+
+		output, err := conn.CreateDeployment(ctx, input)
+
 		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.M2, create.ErrActionUpdating, ResNameDeployment, plan.ApplicationId.String(), err),
-				err.Error(),
-			)
-			return
-		}
-		if out == nil || out.DeploymentId == nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.M2, create.ErrActionUpdating, ResNameDeployment, plan.ApplicationId.String(), nil),
-				errors.New("empty output").Error(),
-			)
+			response.Diagnostics.AddError("creating Mainframe Modernization Deployment", err.Error())
+
 			return
 		}
 
-		combinedId := DeploymentId(plan.ApplicationId.ValueString(), *out.DeploymentId)
-		plan.ID = flex.StringValueToFramework(ctx, combinedId)
+		// Set values for unknowns.
+		new.DeploymentID = fwflex.StringToFramework(ctx, output.DeploymentId)
+		new.setID()
 
-		deployment, err := waitDeploymentUpdated(ctx, conn, plan.ID.ValueString(), updateTimeout)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.M2, create.ErrActionWaitingForUpdate, ResNameDeployment, plan.ApplicationId.String(), err),
-				err.Error(),
-			)
-			return
-		}
-		outDiags := plan.refreshFromOutput(ctx, deployment)
-		resp.Diagnostics.Append(outDiags...)
-		if resp.Diagnostics.HasError() {
+		if _, err := waitDeploymentUpdated(ctx, conn, new.ApplicationID.ValueString(), new.DeploymentID.ValueString(), timeout); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for Mainframe Modernization Deployment (%s) update", new.ID.ValueString()), err.Error())
+
 			return
 		}
 	}
 
-	// Start the application if plan says to
-	if plan.Start.ValueBool() {
-		app, err := startApplication(ctx, conn, plan.ApplicationId.ValueString(), updateTimeout)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.M2, create.ErrActionUpdating, ResNameDeployment, plan.ApplicationId.String(), err),
-				err.Error(),
-			)
+	// Start the application if plan says to.
+	if new.Start.ValueBool() {
+		applicationID := new.ApplicationID.ValueString()
+		if _, err := startApplication(ctx, conn, applicationID, timeout); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("starting Mainframe Modernization Application (%s)", applicationID), err.Error())
+
 			return
 		}
-		plan.refreshFromApplicationOutput(app)
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, new)...)
 }
 
-func (r *resourceDeployment) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *deploymentResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data deploymentResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().M2Client(ctx)
 
-	var state resourceDeploymentData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	timeout := r.DeleteTimeout(ctx, data.Timeouts)
+	if data.Start.ValueBool() {
+		applicationID := data.ApplicationID.ValueString()
+		if _, err := stopApplicationIfRunning(ctx, conn, applicationID, data.ForceStop.ValueBool(), timeout); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("stopping Mainframe Modernization Application (%s)", applicationID), err.Error())
 
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-
-	if state.Start.ValueBool() {
-		err := stopApplicationIfRunning(ctx, conn, state.ApplicationId.ValueString(), state.ForceStop.ValueBool(), deleteTimeout)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.M2, create.ErrActionDeleting, ResNameDeployment, state.ApplicationId.String(), err),
-				err.Error(),
-			)
 			return
 		}
 	}
 
-	in := &m2.DeleteApplicationFromEnvironmentInput{
-		ApplicationId: flex.StringFromFramework(ctx, state.ApplicationId),
-		EnvironmentId: flex.StringFromFramework(ctx, state.EnvironmentId),
+	_, err := conn.DeleteApplicationFromEnvironment(ctx, &m2.DeleteApplicationFromEnvironmentInput{
+		ApplicationId: fwflex.StringFromFramework(ctx, data.ApplicationID),
+		EnvironmentId: fwflex.StringFromFramework(ctx, data.EnvironmentID),
+	})
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
 	}
 
-	_, err := conn.DeleteApplicationFromEnvironment(ctx, in)
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Mainframe Modernization Deployment (%s)", data.ID.ValueString()), err.Error())
+
+		return
+	}
+
+	if _, err := waitApplicationDeletedFromEnvironment(ctx, conn, data.ApplicationID.ValueString(), timeout); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Mainframe Modernization Deployment (%s) delete", data.ID.ValueString()), err.Error())
+
+		return
+	}
+}
+
+func (r *deploymentResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	if !request.State.Raw.IsNull() && !request.Plan.Raw.IsNull() {
+		var plan, state deploymentResourceModel
+		response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
+		if response.Diagnostics.HasError() {
 			return
 		}
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.M2, create.ErrActionDeleting, ResNameDeployment, state.ID.String(), err),
-			err.Error(),
-		)
-		return
-	}
-
-	_, err = waitApplicationDeletedFromEnvironment(ctx, conn, state.ApplicationId.ValueString(), deleteTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.M2, create.ErrActionWaitingForDeletion, ResNameDeployment, state.ID.String(), err),
-			err.Error(),
-		)
-		return
-	}
-}
-
-func (r *resourceDeployment) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-}
-
-func (r *resourceDeployment) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
-	if !req.State.Raw.IsNull() && !req.Plan.Raw.IsNull() {
-		var plan, state resourceDeploymentData
-		resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-		resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-		if resp.Diagnostics.HasError() {
+		response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 
 		if !plan.ApplicationVersion.Equal(state.ApplicationVersion) {
-			// if the ApplicationVersion changes, ID becomes unknown
+			// If the ApplicationVersion changes, ID becomes unknown.
 			plan.ID = types.StringUnknown()
 		}
-		resp.Diagnostics.Append(resp.Plan.Set(ctx, &plan)...)
+
+		response.Diagnostics.Append(response.Plan.Set(ctx, &plan)...)
 	}
 }
 
-func (r *resourceDeploymentData) refreshFromOutput(ctx context.Context, out *m2.GetDeploymentOutput) diag.Diagnostics {
-	diags := diag.Diagnostics{}
-
-	diags.Append(flex.Flatten(ctx, out, r)...)
-	combinedId := DeploymentId(*out.ApplicationId, *out.DeploymentId)
-	r.ID = flex.StringValueToFramework(ctx, combinedId)
-	return diags
-}
-
-func (r *resourceDeploymentData) refreshFromApplicationOutput(app *m2.GetApplicationOutput) {
-	r.Start = types.BoolValue(app.Status == awstypes.ApplicationLifecycleRunning)
-}
-
-func (r *resourceDeploymentData) createDeploymentInput(ctx context.Context) (*m2.CreateDeploymentInput, diag.Diagnostics) {
-	diags := diag.Diagnostics{}
-
-	in := m2.CreateDeploymentInput{}
-	diags.Append(flex.Expand(ctx, r, &in)...)
-
-	var clientToken string
-	if r.ClientToken.IsNull() || r.ClientToken.IsUnknown() {
-		clientToken = id.UniqueId()
-	} else {
-		clientToken = r.ClientToken.ValueString()
+func findDeploymentByTwoPartKey(ctx context.Context, conn *m2.Client, applicationID, deploymentID string) (*m2.GetDeploymentOutput, error) {
+	input := &m2.GetDeploymentInput{
+		ApplicationId: aws.String(applicationID),
+		DeploymentId:  aws.String(deploymentID),
 	}
 
-	in.ClientToken = aws.String(clientToken)
+	output, err := conn.GetDeployment(ctx, input)
 
-	return &in, diags
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
 
-func waitDeploymentCreated(ctx context.Context, conn *m2.Client, id string, timeout time.Duration) (*m2.GetDeploymentOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.DeploymentLifecycleDeploying),
-		Target:                    enum.Slice(awstypes.DeploymentLifecycleSucceeded),
-		Refresh:                   statusDeployment(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*m2.GetDeploymentOutput); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func waitDeploymentUpdated(ctx context.Context, conn *m2.Client, id string, timeout time.Duration) (*m2.GetDeploymentOutput, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.DeploymentLifecycleDeployUpdate),
-		Target:                    enum.Slice(awstypes.DeploymentLifecycleSucceeded),
-		Refresh:                   statusDeployment(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*m2.GetDeploymentOutput); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
-func statusDeployment(ctx context.Context, conn *m2.Client, id string) retry.StateRefreshFunc {
+func statusDeployment(ctx context.Context, conn *m2.Client, applicationID, deploymentID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := findDeploymentByID(ctx, conn, id)
+		output, err := findDeploymentByTwoPartKey(ctx, conn, applicationID, deploymentID)
+
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -440,64 +355,77 @@ func statusDeployment(ctx context.Context, conn *m2.Client, id string) retry.Sta
 			return nil, "", err
 		}
 
-		return out, string(out.Status), nil
+		return output, string(output.Status), nil
 	}
 }
 
-func findDeploymentByID(ctx context.Context, conn *m2.Client, id string) (*m2.GetDeploymentOutput, error) {
-	applicationId, deploymentId, err := DeploymentParseResourceId(id)
-	if err != nil {
-		return nil, err
+func waitDeploymentCreated(ctx context.Context, conn *m2.Client, applicationID, deploymentID string, timeout time.Duration) (*m2.GetDeploymentOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.DeploymentLifecycleDeploying),
+		Target:  enum.Slice(awstypes.DeploymentLifecycleSucceeded),
+		Refresh: statusDeployment(ctx, conn, applicationID, deploymentID),
+		Timeout: timeout,
 	}
 
-	in := &m2.GetDeploymentInput{
-		ApplicationId: aws.String(applicationId),
-		DeploymentId:  aws.String(deploymentId),
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*m2.GetDeploymentOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+
+		return output, err
 	}
 
-	out, err := conn.GetDeployment(ctx, in)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
-		return nil, err
-	}
-
-	if out == nil {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-
-	return out, nil
+	return nil, err
 }
 
-type resourceDeploymentData struct {
-	ApplicationId      types.String   `tfsdk:"application_id"`
+func waitDeploymentUpdated(ctx context.Context, conn *m2.Client, applicationID, deploymentID string, timeout time.Duration) (*m2.GetDeploymentOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.DeploymentLifecycleDeployUpdate),
+		Target:  enum.Slice(awstypes.DeploymentLifecycleSucceeded),
+		Refresh: statusDeployment(ctx, conn, applicationID, deploymentID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*m2.GetDeploymentOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+type deploymentResourceModel struct {
+	ApplicationID      types.String   `tfsdk:"application_id"`
 	ApplicationVersion types.Int64    `tfsdk:"application_version"`
-	ClientToken        types.String   `tfsdk:"client_token"`
-	EnvironmentId      types.String   `tfsdk:"environment_id"`
+	DeploymentID       types.String   `tfsdk:"deployment_id"`
+	EnvironmentID      types.String   `tfsdk:"environment_id"`
 	ForceStop          types.Bool     `tfsdk:"force_stop"`
 	ID                 types.String   `tfsdk:"id"`
 	Start              types.Bool     `tfsdk:"start"`
 	Timeouts           timeouts.Value `tfsdk:"timeouts"`
 }
 
-const deploymentIDSeparator = "_"
+const (
+	deploymentResourceIDPartCount = 2
+)
 
-func DeploymentId(applicationId, deploymentId string) string {
-	parts := []string{applicationId, deploymentId}
-	combinedId := strings.Join(parts, deploymentIDSeparator)
-	return combinedId
-}
+func (data *deploymentResourceModel) InitFromID() error {
+	id := data.ID.ValueString()
+	parts, err := flex.ExpandResourceId(id, deploymentResourceIDPartCount, false)
 
-func DeploymentParseResourceId(id string) (string, string, error) {
-	parts := strings.Split(id, deploymentIDSeparator)
-
-	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
-		return parts[0], parts[1], nil
+	if err != nil {
+		return err
 	}
 
-	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected APPLICATION-ID%[2]sDEPLOYMENT-ID", id, deploymentIDSeparator)
+	data.ApplicationID = types.StringValue(parts[0])
+	data.DeploymentID = types.StringValue(parts[1])
+
+	return nil
+}
+
+func (data *deploymentResourceModel) setID() {
+	data.ID = types.StringValue(errs.Must(flex.FlattenResourceId([]string{data.ApplicationID.ValueString(), data.DeploymentID.ValueString()}, deploymentResourceIDPartCount, false)))
 }
