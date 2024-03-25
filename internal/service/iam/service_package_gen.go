@@ -20,7 +20,16 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
+	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory: NewResourceRole,
+			Name:    "Role",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+				ResourceType:        "Role",
+			},
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
@@ -181,15 +190,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  resourcePolicyAttachment,
 			TypeName: "aws_iam_policy_attachment",
 			Name:     "Policy Attachment",
-		},
-		{
-			Factory:  resourceRole,
-			TypeName: "aws_iam_role",
-			Name:     "Role",
-			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "id",
-				ResourceType:        "Role",
-			},
 		},
 		{
 			Factory:  resourceRolePolicy,

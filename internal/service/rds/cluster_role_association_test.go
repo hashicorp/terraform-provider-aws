@@ -118,7 +118,7 @@ func TestAccRDSClusterRoleAssociation_Disappears_role(t *testing.T) {
 				Config: testAccClusterRoleAssociationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterRoleAssociationExists(ctx, resourceName, &dbClusterRole),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceRole(), roleResourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfiam.NewResourceRole, roleResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

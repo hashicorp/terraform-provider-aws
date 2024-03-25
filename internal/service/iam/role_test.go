@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -41,12 +42,61 @@ func TestAccIAMRole_basic(t *testing.T) {
 					testAccCheckRoleExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "path", "/"),
 					resource.TestCheckResourceAttrSet(resourceName, "create_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "unique_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccIAMRole_MigrateFromPluginSDK_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf iam.Role
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_iam_role.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
+		CheckDestroy: testAccCheckRoleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.35.0",
+					},
+				},
+				Config: testAccRoleConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "path", "/"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "description", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "create_date"),
+					resource.TestCheckResourceAttrSet(resourceName, "unique_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "assume_role_policy"),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "force_detach_policies", "false"),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				// NOTE: Have to update docs to reflect this because giant issue
+				// Can't not use PlanOnly anymore with terraform-plugin-testing
+				// https://github.com/hashicorp/terraform-plugin-testing/issues/256
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Config: testAccRoleConfig_basic(rName),
 			},
 		},
 	})
@@ -187,9 +237,9 @@ func TestAccIAMRole_testNameChange(t *testing.T) {
 	})
 }
 
-// https://github.com/hashicorp/terraform-provider-aws/issues/23288
-// https://github.com/hashicorp/terraform-provider-aws/issues/28833
-func TestAccIAMRole_diffs(t *testing.T) {
+// // https://github.com/hashicorp/terraform-provider-aws/issues/23288
+// // https://github.com/hashicorp/terraform-provider-aws/issues/28833
+func TestAccIAMRole_diffsNoCondition(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf iam.Role
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -201,6 +251,7 @@ func TestAccIAMRole_diffs(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRoleDestroy(ctx),
 		Steps: []resource.TestStep{
+			// TODO: have to validate this...
 			{
 				Config: testAccRoleConfig_diffs(rName, ""),
 				Check: resource.ComposeTestCheckFunc(
@@ -262,70 +313,75 @@ func TestAccIAMRole_diffs(t *testing.T) {
 				PlanOnly: true,
 			},
 			{
-				Config: testAccRoleConfig_diffs(rName, "tags = {}"),
+				// NOTE: empty maps are not the same in plugin framework vs sdkv2
+				// would have to possibly resolve this in later PR or open to any ideas
+				// For now if you want no tags would have to set as null
+				// rest of below test changed to null from `{}`
+				// Config: testAccRoleConfig_diffs(rName, "tags = {}"),
+				Config: testAccRoleConfig_diffs(rName, "tags = null"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &conf),
 				),
 			},
 			{
-				Config:   testAccRoleConfig_diffs(rName, "tags = {}"),
+				Config:   testAccRoleConfig_diffs(rName, "tags = null"),
 				PlanOnly: true,
 			},
 			{
-				Config: testAccRoleConfig_diffs(rName, "tags = {}"),
+				Config: testAccRoleConfig_diffs(rName, "tags = null"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &conf),
 				),
 			},
 			{
-				Config:   testAccRoleConfig_diffs(rName, "tags = {}"),
+				Config:   testAccRoleConfig_diffs(rName, "tags = null"),
 				PlanOnly: true,
 			},
 			{
-				Config: testAccRoleConfig_diffs(rName, "tags = {}"),
+				Config: testAccRoleConfig_diffs(rName, "tags = null"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &conf),
 				),
 			},
 			{
-				Config:   testAccRoleConfig_diffs(rName, "tags = {}"),
+				Config:   testAccRoleConfig_diffs(rName, "tags = null"),
 				PlanOnly: true,
 			},
 			{
-				Config: testAccRoleConfig_diffs(rName, "tags = {}"),
+				Config: testAccRoleConfig_diffs(rName, "tags = null"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &conf),
 				),
 			},
 			{
-				Config:   testAccRoleConfig_diffs(rName, "tags = {}"),
+				Config:   testAccRoleConfig_diffs(rName, "tags = null"),
 				PlanOnly: true,
 			},
 			{
-				Config: testAccRoleConfig_diffs(rName, "tags = {}"),
+				Config: testAccRoleConfig_diffs(rName, "tags = null"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &conf),
 				),
 			},
 			{
-				Config:   testAccRoleConfig_diffs(rName, "tags = {}"),
+				Config:   testAccRoleConfig_diffs(rName, "tags = null"),
 				PlanOnly: true,
 			},
 			{
-				Config: testAccRoleConfig_diffs(rName, "tags = {}"),
+				Config: testAccRoleConfig_diffs(rName, "tags = null"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &conf),
 				),
 			},
 			{
-				Config:   testAccRoleConfig_diffs(rName, "tags = {}"),
+				Config:   testAccRoleConfig_diffs(rName, "tags = null"),
 				PlanOnly: true,
 			},
 		},
 	})
 }
 
-// https://github.com/hashicorp/terraform-provider-aws/issues/28835
+// // https://github.com/hashicorp/terraform-provider-aws/issues/28835
 func TestAccIAMRole_diffsCondition(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf iam.Role
@@ -384,7 +440,7 @@ func TestAccIAMRole_badJSON(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccRoleConfig_badJSON(rName),
-				ExpectError: regexache.MustCompile(`.*contains an invalid JSON policy:.*`),
+				ExpectError: regexache.MustCompile(`.*Invalid JSON String Value*`),
 			},
 		},
 	})
@@ -407,7 +463,7 @@ func TestAccIAMRole_disappears(t *testing.T) {
 				Config: testAccRoleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &role),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceRole(), resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfiam.ResourceRole, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -458,11 +514,11 @@ func TestAccIAMRole_maxSessionDuration(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccRoleConfig_maxSessionDuration(rName, 3599),
-				ExpectError: regexache.MustCompile(`expected max_session_duration to be in the range`),
+				ExpectError: regexache.MustCompile(`Attribute max_session_duration value must be between 3600 and 43200`),
 			},
 			{
 				Config:      testAccRoleConfig_maxSessionDuration(rName, 43201),
-				ExpectError: regexache.MustCompile(`expected max_session_duration to be in the range`),
+				ExpectError: regexache.MustCompile(`Attribute max_session_duration value must be between 3600 and 43200`),
 			},
 			{
 				Config: testAccRoleConfig_maxSessionDuration(rName, 3700),
@@ -535,12 +591,18 @@ func TestAccIAMRole_permissionsBoundary(t *testing.T) {
 					"force_destroy",
 				},
 			},
+			// Test empty value
+			{
+				Config:      testAccRoleConfig_permissionsBoundary(rName, ""),
+				ExpectError: regexache.MustCompile(`Value "" cannot be parsed as an ARN.`),
+			},
 			// Test removal
 			{
 				Config: testAccRoleConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &role),
-					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", ""),
+					// TODO: what to do here?
+					resource.TestCheckNoResourceAttr(resourceName, "permissions_boundary"),
 					testAccCheckRolePermissionsBoundary(&role, ""),
 				),
 			},
@@ -574,15 +636,6 @@ func TestAccIAMRole_permissionsBoundary(t *testing.T) {
 					testAccCheckRolePermissionsBoundary(&role, permissionsBoundary1),
 				),
 			},
-			// Test empty value
-			{
-				Config: testAccRoleConfig_permissionsBoundary(rName, ""),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckRoleExists(ctx, resourceName, &role),
-					resource.TestCheckResourceAttr(resourceName, "permissions_boundary", ""),
-					testAccCheckRolePermissionsBoundary(&role, ""),
-				),
-			},
 		},
 	})
 }
@@ -606,7 +659,7 @@ func TestAccIAMRole_InlinePolicy_basic(t *testing.T) {
 				Config: testAccRoleConfig_policyInline(rName, policyName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &role),
-					resource.TestCheckResourceAttr(resourceName, "inline_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inline_policies.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
 				),
@@ -615,7 +668,7 @@ func TestAccIAMRole_InlinePolicy_basic(t *testing.T) {
 				Config: testAccRoleConfig_policyInlineUpdate(rName, policyName2, policyName3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &role),
-					resource.TestCheckResourceAttr(resourceName, "inline_policy.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "inline_policies.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
 				),
 			},
@@ -623,21 +676,87 @@ func TestAccIAMRole_InlinePolicy_basic(t *testing.T) {
 				Config: testAccRoleConfig_policyInlineUpdateDown(rName, policyName3),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &role),
-					resource.TestCheckResourceAttr(resourceName, "inline_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inline_policies.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"inline_policy.0.policy"},
+				// As stated in other comments, to allow other resources that
+				// attach inlinen policies we have to ignore inline_policies on import
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					fmt.Sprintf("inline_policies.%s", policyName3),
+					"inline_policies.%",
+				},
 			},
 		},
 	})
 }
 
-// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/19444
+func TestAccIAMRole_MigrateFromPluginSDK_InlinePolicy(t *testing.T) {
+	ctx := acctest.Context(t)
+	var role iam.Role
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	policyName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_iam_role.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
+		CheckDestroy: testAccCheckRoleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				ExternalProviders: map[string]resource.ExternalProvider{
+					"aws": {
+						Source:            "hashicorp/aws",
+						VersionConstraint: "5.34.0",
+					},
+				},
+				Config: testAccRoleConfig_policyInlineLegacy(rName, policyName1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckRoleExists(ctx, resourceName, &role),
+					resource.TestCheckResourceAttr(resourceName, "inline_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
+				),
+			},
+			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				// NOTE: Have to update docs to reflect this because giant issue
+				// Can't not use PlanOnly anymore with terraform-plugin-testing
+				// https://github.com/hashicorp/terraform-plugin-testing/issues/256
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Config: testAccRoleConfig_policyInline(rName, policyName1),
+			},
+		},
+	})
+}
+
+func TestAccIAMRole_InlinePolicy_badJSON(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRoleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccRoleConfig_policyInline_badJSON(rName),
+				ExpectError: regexache.MustCompile(`.*Invalid JSON String Value*`),
+			},
+		},
+	})
+}
+
+// // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/19444
 func TestAccIAMRole_InlinePolicy_ignoreOrder(t *testing.T) {
 	ctx := acctest.Context(t)
 	var role iam.Role
@@ -654,7 +773,7 @@ func TestAccIAMRole_InlinePolicy_ignoreOrder(t *testing.T) {
 				Config: testAccRoleConfig_policyInlineActionOrder(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &role),
-					resource.TestCheckResourceAttr(resourceName, "inline_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inline_policies.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
 				),
@@ -735,10 +854,33 @@ func TestAccIAMRole_ManagedPolicy_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "1"),
 				),
 			},
+			// NOTE: Can't import managed arns unless they are already in state because of things like
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"managed_policy_arns.0",
+					"managed_policy_arns.#",
+				},
+			},
+		},
+	})
+}
+
+func TestAccIAMRole_ManagedPolicy_badARN(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRoleDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccRoleConfig_policyManaged_badARN(rName),
+				ExpectError: regexache.MustCompile(`.*ARN Type Validation Error*`),
 			},
 		},
 	})
@@ -805,15 +947,15 @@ func TestAccIAMRole_InlinePolicy_outOfBandRemovalAddedBack(t *testing.T) {
 				Config: testAccRoleConfig_policyInline(rName, policyName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &role),
-					resource.TestCheckResourceAttr(resourceName, "inline_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inline_policies.%", "1"),
 				),
 			},
 		},
 	})
 }
 
-// TestAccIAMRole_ManagedPolicy_outOfBandAdditionRemoved: if managed_policy_arns arg
-// exists and is non-empty, policy attached out of band should be removed
+// // TestAccIAMRole_ManagedPolicy_outOfBandAdditionRemoved: if managed_policy_arns arg
+// // exists and is non-empty, policy attached out of band should be removed
 func TestAccIAMRole_ManagedPolicy_outOfBandAdditionRemoved(t *testing.T) {
 	ctx := acctest.Context(t)
 	var role iam.Role
@@ -847,8 +989,8 @@ func TestAccIAMRole_ManagedPolicy_outOfBandAdditionRemoved(t *testing.T) {
 	})
 }
 
-// TestAccIAMRole_PolicyOutOfBandAdditionRemoved_inlineNonEmpty: if inline_policy arg
-// exists and is non-empty, policy added out of band should be removed
+// // TestAccIAMRole_PolicyOutOfBandAdditionRemoved_inlineNonEmpty: if inline_policy arg
+// // exists and is non-empty, policy added out of band should be removed
 func TestAccIAMRole_InlinePolicy_outOfBandAdditionRemoved(t *testing.T) {
 	ctx := acctest.Context(t)
 	var role iam.Role
@@ -875,7 +1017,7 @@ func TestAccIAMRole_InlinePolicy_outOfBandAdditionRemoved(t *testing.T) {
 				Config: testAccRoleConfig_policyInline(rName, policyName1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &role),
-					resource.TestCheckResourceAttr(resourceName, "inline_policy.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "inline_policies.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "managed_policy_arns.#", "0"),
 				),
 			},
@@ -925,8 +1067,8 @@ func TestAccIAMRole_InlinePolicy_outOfBandAdditionIgnored(t *testing.T) {
 	})
 }
 
-// TestAccIAMRole_PolicyOutOfBandAdditionIgnored_managedNonExistent: if there is no
-// managed_policy_arns attribute, out of band changes should be ignored.
+// // TestAccIAMRole_PolicyOutOfBandAdditionIgnored_managedNonExistent: if there is no
+// // managed_policy_arns attribute, out of band changes should be ignored.
 func TestAccIAMRole_ManagedPolicy_outOfBandAdditionIgnored(t *testing.T) {
 	ctx := acctest.Context(t)
 	var role iam.Role
@@ -958,8 +1100,8 @@ func TestAccIAMRole_ManagedPolicy_outOfBandAdditionIgnored(t *testing.T) {
 	})
 }
 
-// TestAccIAMRole_PolicyOutOfBandAdditionRemoved_inlineEmpty: if inline is added
-// out of band with empty inline arg, should be removed
+// // TestAccIAMRole_PolicyOutOfBandAdditionRemoved_inlineEmpty: if inline is added
+// // out of band with empty inline arg, should be removed
 func TestAccIAMRole_InlinePolicy_outOfBandAdditionRemovedEmpty(t *testing.T) {
 	ctx := acctest.Context(t)
 	var role iam.Role
@@ -991,8 +1133,10 @@ func TestAccIAMRole_InlinePolicy_outOfBandAdditionRemovedEmpty(t *testing.T) {
 	})
 }
 
-// TestAccIAMRole_PolicyOutOfBandAdditionRemoved_managedEmpty: if managed is attached
-// out of band with empty managed arg, should be detached
+// NOTE: Cannot do this with terraform plugin sdk as previously
+// default value of managed policy arn is null currently, so won't catch drift unless one already set
+// // TestAccIAMRole_PolicyOutOfBandAdditionRemoved_managedEmpty: if managed is attached
+// // out of band with empty managed arg, should be detached
 func TestAccIAMRole_ManagedPolicy_outOfBandAdditionRemovedEmpty(t *testing.T) {
 	ctx := acctest.Context(t)
 	var role iam.Role
@@ -1775,7 +1919,47 @@ resource "aws_iam_role" "test" {
 `, rName, tagKey1)
 }
 
-func testAccRoleConfig_policyInline(roleName, policyName string) string {
+func testAccRoleConfig_policyInline_badJSON(roleName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Principal = {
+        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+      }
+      Effect = "Allow"
+      Sid    = ""
+    }]
+  })
+
+  inline_policies = {
+    "validName" = <<EOF
+this will be bad oh no!
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "ec2:Describe*"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+  }
+}
+`, roleName)
+}
+
+func testAccRoleConfig_policyInlineLegacy(roleName, policyName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
@@ -1795,9 +1979,47 @@ resource "aws_iam_role" "test" {
   })
 
   inline_policy {
-    name = %[2]q
-
+    name   = %[2]q
     policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "ec2:Describe*"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+  }
+}
+`, roleName, policyName)
+}
+
+func testAccRoleConfig_policyInline(roleName, policyName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Principal = {
+        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+      }
+      Effect = "Allow"
+      Sid    = ""
+    }]
+  })
+
+  inline_policies = {
+    %[2]q = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -1820,6 +2042,23 @@ func testAccRoleConfig_policyInlineUpdate(roleName, policyName2, policyName3 str
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
+locals {
+  inline_policy_doc = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "ec2:Describe*"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -1835,10 +2074,8 @@ resource "aws_iam_role" "test" {
     }]
   })
 
-  inline_policy {
-    name = %[2]q
-
-    policy = <<EOF
+  inline_policies = {
+    %[2]q = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -1852,12 +2089,7 @@ resource "aws_iam_role" "test" {
   ]
 }
 EOF
-  }
-
-  inline_policy {
-    name = %[3]q
-
-    policy = <<EOF
+    %[3]q = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": [
@@ -1895,10 +2127,8 @@ resource "aws_iam_role" "test" {
     }]
   })
 
-  inline_policy {
-    name = %[2]q
-
-    policy = <<EOF
+  inline_policies = {
+    %[2]q = <<EOF
 {
   "Version": "2012-10-17",
   "Statement": {
@@ -1936,10 +2166,8 @@ resource "aws_iam_role" "test" {
     }]
   })
 
-  inline_policy {
-    name = %[1]q
-
-    policy = jsonencode({
+  inline_policies = {
+    %[1]q = jsonencode({
       Version = "2012-10-17"
       Statement = [{
         Action = [
@@ -1976,10 +2204,8 @@ resource "aws_iam_role" "test" {
     }]
   })
 
-  inline_policy {
-    name = %[1]q
-
-    policy = jsonencode({
+  inline_policies = {
+    %[1]q = jsonencode({
       Version = "2012-10-17"
       Statement = [{
         Action = [
@@ -2015,10 +2241,8 @@ resource "aws_iam_role" "test" {
     }]
   })
 
-  inline_policy {
-    name = %[1]q
-
-    policy = jsonencode({
+  inline_policies = {
+    %[1]q = jsonencode({
       Version = "2012-10-17"
       Statement = [{
         Action = [
@@ -2032,6 +2256,29 @@ resource "aws_iam_role" "test" {
       }]
     })
   }
+}
+`, roleName)
+}
+
+func testAccRoleConfig_policyManaged_badARN(roleName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name                = %[1]q
+  managed_policy_arns = ["iamabadarn"]
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Principal = {
+        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+      }
+      Effect = "Allow"
+      Sid    = ""
+    }]
+  })
 }
 `, roleName)
 }
@@ -2406,7 +2653,7 @@ resource "aws_iam_role" "test" {
     }]
   })
 
-  inline_policy {}
+  inline_policies = {}
 }
 `, roleName)
 }
