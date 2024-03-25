@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/imagebuilder"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
-	"github.com/aws/aws-sdk-go-v2/service/m2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -253,7 +252,7 @@ func resourceInfrastructureConfigurationRead(ctx context.Context, d *schema.Reso
 
 	output, err := conn.GetInfrastructureConfiguration(ctx, input)
 
-	if !d.IsNewResource() && errs.IsA[*types.ResourceNotFoundException](err) {
+	if !d.IsNewResource() && errs.MessageContains(err, ResourceNotFoundException, "cannot be found") {
 		log.Printf("[WARN] Image Builder Infrastructure Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -401,7 +400,7 @@ func resourceInfrastructureConfigurationDelete(ctx context.Context, d *schema.Re
 
 	_, err := conn.DeleteInfrastructureConfiguration(ctx, input)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if errs.MessageContains(err, ResourceNotFoundException, "cannot be found") {
 		return diags
 	}
 

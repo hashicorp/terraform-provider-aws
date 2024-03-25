@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/imagebuilder"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/imagebuilder/types"
-	"github.com/aws/aws-sdk-go-v2/service/m2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -340,7 +339,7 @@ func resourceDistributionConfigurationRead(ctx context.Context, d *schema.Resour
 
 	output, err := conn.GetDistributionConfiguration(ctx, input)
 
-	if !d.IsNewResource() && errs.IsA[*types.ResourceNotFoundException](err) {
+	if !d.IsNewResource() && errs.MessageContains(err, ResourceNotFoundException, "cannot be found") {
 		log.Printf("[WARN] Image Builder Distribution Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -406,7 +405,7 @@ func resourceDistributionConfigurationDelete(ctx context.Context, d *schema.Reso
 
 	_, err := conn.DeleteDistributionConfiguration(ctx, input)
 
-	if errs.IsA[*types.ResourceNotFoundException](err) {
+	if errs.MessageContains(err, ResourceNotFoundException, "cannot be found") {
 		return diags
 	}
 
