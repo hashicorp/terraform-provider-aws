@@ -127,9 +127,6 @@ func (r *applicationResource) Schema(ctx context.Context, request resource.Schem
 						},
 						"s3_location": schema.StringAttribute{
 							Optional: true,
-							Validators: []validator.String{
-								stringvalidator.RegexMatches(regexache.MustCompile(`^\S{1,2000}$`), ""),
-							},
 						},
 					},
 				},
@@ -174,7 +171,9 @@ func (r *applicationResource) Create(ctx context.Context, request resource.Creat
 	input.ClientToken = aws.String(sdkid.UniqueId())
 	input.Tags = getTagsIn(ctx)
 
-	output, err := conn.CreateApplication(ctx, input)
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.AccessDeniedException](ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.CreateApplication(ctx, input)
+	}, "does not have proper Trust Policy for M2 service")
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("creating Mainframe Modernization Application (%s)", name), err.Error())
@@ -183,7 +182,7 @@ func (r *applicationResource) Create(ctx context.Context, request resource.Creat
 	}
 
 	// Set values for unknowns.
-	data.ApplicationID = fwflex.StringToFramework(ctx, output.ApplicationId)
+	data.ApplicationID = fwflex.StringToFramework(ctx, outputRaw.(*m2.CreateApplicationOutput).ApplicationId)
 	data.setID()
 
 	app, err := waitApplicationCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
@@ -277,7 +276,7 @@ func (r *applicationResource) Update(ctx context.Context, request resource.Updat
 	if !new.Definition.Equal(old.Definition) || !new.Description.Equal(old.Description) {
 		input := &m2.UpdateApplicationInput{
 			ApplicationId:             flex.StringFromFramework(ctx, new.ID),
-			CurrentApplicationVersion: flex.Int32FromFramework(ctx, new.CurrentVersion),
+			CurrentApplicationVersion: flex.Int32FromFramework(ctx, old.CurrentVersion),
 		}
 
 		if !new.Definition.Equal(old.Definition) {
@@ -313,6 +312,8 @@ func (r *applicationResource) Update(ctx context.Context, request resource.Updat
 		}
 
 		new.CurrentVersion = types.Int64Value(int64(applicationVersion))
+	} else {
+		new.CurrentVersion = old.CurrentVersion
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
@@ -494,8 +495,7 @@ func waitApplicationDeleted(ctx context.Context, conn *m2.Client, id string, tim
 
 type applicationResourceModel struct {
 	ApplicationID  types.String                                     `tfsdk:"application_id"`
-	ARN            types.String                                     `tfsdk:"application_arn"`
-	ClientToken    types.String                                     `tfsdk:"client_token"`
+	ApplicationARN types.String                                     `tfsdk:"arn"`
 	CurrentVersion types.Int64                                      `tfsdk:"current_version"`
 	Definition     fwtypes.ListNestedObjectValueOf[definitionModel] `tfsdk:"definition"`
 	Description    types.String                                     `tfsdk:"description"`
