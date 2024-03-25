@@ -28,15 +28,15 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			},
 		},
 		{
+			Factory: newDeploymentResource,
+			Name:    "Deployment",
+		},
+		{
 			Factory: newEnvironmentResource,
 			Name:    "Environment",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "arn",
 			},
-		},
-		{
-			Factory: newDeploymentResource,
-			Name:    "Deployment",
 		},
 	}
 }
