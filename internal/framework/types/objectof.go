@@ -165,7 +165,12 @@ func (v ObjectValueOf[T]) ToPtr(ctx context.Context) (*T, diag.Diagnostics) {
 func objectValueObjectPtr[T any](ctx context.Context, val attr.Value) (*T, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
-	ptr := new(T)
+	ptr, d := objectTypeNewObjectPtr[T](ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return nil, diags
+	}
+
 	diags.Append(val.(ObjectValueOf[T]).ObjectValue.As(ctx, ptr, basetypes.ObjectAsOptions{})...)
 	if diags.HasError() {
 		return nil, diags
