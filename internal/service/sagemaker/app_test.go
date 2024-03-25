@@ -30,33 +30,36 @@ func testAccApp_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_app.test"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAppDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAppConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppExists(ctx, resourceName, &app),
-					resource.TestCheckResourceAttr(resourceName, "app_name", rName),
-					resource.TestCheckResourceAttrPair(resourceName, "domain_id", "aws_sagemaker_domain.test", "id"),
-					resource.TestCheckResourceAttrPair(resourceName, "user_profile_name", "aws_sagemaker_user_profile.test", "user_profile_name"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "sagemaker", regexache.MustCompile(`app/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "resource_spec.#", "1"),
-					resource.TestCheckResourceAttrSet(resourceName, "resource_spec.0.sagemaker_image_arn"),
-					resource.TestCheckResourceAttr(resourceName, "resource_spec.0.instance_type", "system"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-				),
+	for _, rType := range sagemaker.AppType_Values() {
+		resource.Test(t, resource.TestCase{
+			PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+			ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+			ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+			CheckDestroy:             testAccCheckAppDestroy(ctx),
+			Steps: []resource.TestStep{
+				{
+					Config: testAccAppConfig_basic(rName, rType),
+					Check: resource.ComposeTestCheckFunc(
+						testAccCheckAppExists(ctx, resourceName, &app),
+						resource.TestCheckResourceAttr(resourceName, "app_name", rName),
+						resource.TestCheckResourceAttr(resourceName, "app_type", rType),
+						resource.TestCheckResourceAttrPair(resourceName, "domain_id", "aws_sagemaker_domain.test", "id"),
+						resource.TestCheckResourceAttrPair(resourceName, "user_profile_name", "aws_sagemaker_user_profile.test", "user_profile_name"),
+						acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "sagemaker", regexache.MustCompile(`app/.+`)),
+						resource.TestCheckResourceAttr(resourceName, "resource_spec.#", "1"),
+						resource.TestCheckResourceAttrSet(resourceName, "resource_spec.0.sagemaker_image_arn"),
+						resource.TestCheckResourceAttr(resourceName, "resource_spec.0.instance_type", "system"),
+						resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					),
+				},
+				{
+					ResourceName:      resourceName,
+					ImportState:       true,
+					ImportStateVerify: true,
+				},
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
+		})
+	}
 }
 
 func testAccApp_space(t *testing.T) {
@@ -224,22 +227,24 @@ func testAccApp_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_app.test"
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAppDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccAppConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppExists(ctx, resourceName, &app),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceApp(), resourceName),
-				),
-				ExpectNonEmptyPlan: true,
+	for _, rType := range sagemaker.AppType_Values() {
+		resource.Test(t, resource.TestCase{
+			PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+			ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+			ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+			CheckDestroy:             testAccCheckAppDestroy(ctx),
+			Steps: []resource.TestStep{
+				{
+					Config: testAccAppConfig_basic(rName, rType),
+					Check: resource.ComposeTestCheckFunc(
+						testAccCheckAppExists(ctx, resourceName, &app),
+						acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceApp(), resourceName),
+					),
+					ExpectNonEmptyPlan: true,
+				},
 			},
-		},
-	})
+		})
+	}
 }
 
 func testAccCheckAppDestroy(ctx context.Context) resource.TestCheckFunc {
@@ -362,15 +367,15 @@ resource "aws_sagemaker_user_profile" "test" {
 `, rName))
 }
 
-func testAccAppConfig_basic(rName string) string {
+func testAccAppConfig_basic(rName string, rType string) string {
 	return acctest.ConfigCompose(testAccAppConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_app" "test" {
   domain_id         = aws_sagemaker_domain.test.id
   user_profile_name = aws_sagemaker_user_profile.test.user_profile_name
   app_name          = %[1]q
-  app_type          = "JupyterServer"
+  app_type          = %[2]q
 }
-`, rName))
+`, rName, rType))
 }
 
 func testAccAppConfig_space(rName string) string {

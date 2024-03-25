@@ -264,23 +264,21 @@ func decodeAppID(id string) (string, string, string, string, error) {
 
 	domainID := parts[0]
 	userProfileOrSpaceName := parts[1]
-	appType := parts[2]
 
-	if appType == "jupyterserver" {
-		appType = sagemaker.AppTypeJupyterServer
-	} else if appType == "kernelgateway" {
-		appType = sagemaker.AppTypeKernelGateway
-	} else if appType == "tensorboard" {
-		appType = sagemaker.AppTypeTensorBoard
-	} else if appType == "rstudioserverpro" {
-		appType = sagemaker.AppTypeRstudioServerPro
-	} else if appType == "rsessiongateway" {
-		appType = sagemaker.AppTypeRsessionGateway
-	} else if appType == "codeeditor" {
-		appType = sagemaker.AppTypeCodeEditor
-	} else if appType == "jupyterlab" {
-		appType = sagemaker.AppTypeJupyterLab
+	// currently, there is no way to dynamically get the app type from the ARN.
+	sagemakerAppTypes := map[string]string{
+		"jupyterserver":    sagemaker.AppTypeJupyterServer,
+		"kernelgateway":    sagemaker.AppTypeKernelGateway,
+		"detailedprofiler": sagemaker.AppTypeDetailedProfiler,
+		"tensorboard":      sagemaker.AppTypeTensorBoard,
+		"codeeditor":       sagemaker.AppTypeCodeEditor,
+		"jupyterlab":       sagemaker.AppTypeJupyterLab,
+		"rstudioserverpro": sagemaker.AppTypeRStudioServerPro,
+		"rsessiongateway":  sagemaker.AppTypeRSessionGateway,
+		"canvas":           sagemaker.AppTypeCanvas,
 	}
+
+	appType := sagemakerAppTypes[parts[2]]
 
 	appName := parts[3]
 
