@@ -28,8 +28,6 @@ func TestAccM2Deployment_basic(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-	skipIfDemoAppMissing(t)
-
 	var deployment m2.GetDeploymentOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_m2_deployment.test"
@@ -45,7 +43,7 @@ func TestAccM2Deployment_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckDeploymentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeploymentConfig_basic(rName, "bluage", "3.9.0", 1, 1, "true"),
+				Config: testAccDeploymentConfig_basic(rName, "bluage", 1, 1, "true"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
 					resource.TestCheckResourceAttr(resourceName, "application_version", "1"),
@@ -60,13 +58,11 @@ func TestAccM2Deployment_basic(t *testing.T) {
 	})
 }
 
-func TestAccM2Deployment_nostart(t *testing.T) {
+func TestAccM2Deployment_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-	skipIfDemoAppMissing(t)
-
 	var deployment m2.GetDeploymentOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_m2_deployment.test"
@@ -82,7 +78,38 @@ func TestAccM2Deployment_nostart(t *testing.T) {
 		CheckDestroy:             testAccCheckDeploymentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeploymentConfig_basic(rName, "bluage", "3.9.0", 1, 1, "false"),
+				Config: testAccDeploymentConfig_basic(rName, "bluage", 1, 1, "false"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfm2.ResourceDeployment, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccM2Deployment_nostart(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+	var deployment m2.GetDeploymentOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_m2_deployment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.M2EndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.M2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeploymentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDeploymentConfig_basic(rName, "bluage", 1, 1, "false"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
 					resource.TestCheckResourceAttr(resourceName, "application_version", "1"),
@@ -102,8 +129,6 @@ func TestAccM2Deployment_update(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-	skipIfDemoAppMissing(t)
-
 	var deployment m2.GetDeploymentOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_m2_deployment.test"
@@ -119,14 +144,14 @@ func TestAccM2Deployment_update(t *testing.T) {
 		CheckDestroy:             testAccCheckDeploymentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeploymentConfig_basic(rName, "bluage", "3.9.0", 1, 1, "true"),
+				Config: testAccDeploymentConfig_basic(rName, "bluage", 1, 1, "true"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
 					resource.TestCheckResourceAttr(resourceName, "application_version", "1"),
 				),
 			},
 			{
-				Config: testAccDeploymentConfig_basic(rName, "bluage", "3.9.0", 2, 2, "true"),
+				Config: testAccDeploymentConfig_basic(rName, "bluage", 2, 2, "true"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
 					resource.TestCheckResourceAttr(resourceName, "application_version", "2"),
@@ -136,39 +161,6 @@ func TestAccM2Deployment_update(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccM2Deployment_disappears(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-	skipIfDemoAppMissing(t)
-
-	var deployment m2.GetDeploymentOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_m2_deployment.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.M2EndpointID)
-			testAccPreCheck(ctx, t)
-		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.M2ServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckDeploymentDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccDeploymentConfig_basic(rName, "bluage", "3.9.0", 1, 1, "false"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfm2.ResourceDeployment, resourceName),
-				),
-				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -239,8 +231,8 @@ func testAccCheckDeploymentExists(ctx context.Context, name string, deployment *
 	}
 }
 
-func testAccDeploymentConfig_basic(rName, engineType, engineVersion string, appVersion, deployVersion int32, start string) string {
-	return acctest.ConfigCompose(testAccEnvironmentConfig_basic(rName, engineType, engineVersion),
+func testAccDeploymentConfig_basic(rName, engineType string, appVersion, deployVersion int, start string) string {
+	return acctest.ConfigCompose(testAccEnvironmentConfig_basic(rName, engineType),
 		testAccApplicationConfig_versioned(rName, engineType, appVersion, 2),
 		testAccDeploymentConfig_secretsManagerEndpoint(rName),
 		fmt.Sprintf(`

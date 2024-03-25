@@ -278,9 +278,9 @@ func (r *scraperResource) Create(ctx context.Context, req resource.CreateRequest
 	}
 
 	// Set values for unknowns after creation is complete.
-	sourceData.EKS = fwtypes.NewListNestedObjectValueOfPtr(ctx, eksSourceData)
+	sourceData.EKS = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, eksSourceData)
 	data.RoleARN = flex.StringToFramework(ctx, scraper.RoleArn)
-	data.Source = fwtypes.NewListNestedObjectValueOfPtr(ctx, sourceData)
+	data.Source = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, sourceData)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
@@ -319,8 +319,8 @@ func (r *scraperResource) Read(ctx context.Context, req resource.ReadRequest, re
 			return
 		}
 
-		data.Destination = fwtypes.NewListNestedObjectValueOfPtr(ctx, &scraperDestinationModel{
-			AMP: fwtypes.NewListNestedObjectValueOfPtr(ctx, &ampDestinationData),
+		data.Destination = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &scraperDestinationModel{
+			AMP: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &ampDestinationData),
 		})
 	}
 	data.RoleARN = flex.StringToFramework(ctx, scraper.RoleArn)
@@ -334,8 +334,8 @@ func (r *scraperResource) Read(ctx context.Context, req resource.ReadRequest, re
 			return
 		}
 
-		data.Source = fwtypes.NewListNestedObjectValueOfPtr(ctx, &scraperSourceModel{
-			EKS: fwtypes.NewListNestedObjectValueOfPtr(ctx, &eksSourceData),
+		data.Source = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &scraperSourceModel{
+			EKS: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &eksSourceData),
 		})
 	}
 

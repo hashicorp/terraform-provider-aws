@@ -53,10 +53,6 @@ func (d Diagnostics) Log(ctx context.Context) {
 			diagnosticFields[logging.KeyDiagnosticAttribute] = diagnostic.Attribute.String()
 		}
 
-		if diagnostic.FunctionArgument != nil {
-			diagnosticFields[logging.KeyDiagnosticFunctionArgument] = *diagnostic.FunctionArgument
-		}
-
 		switch diagnostic.Severity {
 		case tfprotov5.DiagnosticSeverityError:
 			logging.ProtocolError(ctx, "Response contains error diagnostic", diagnosticFields)

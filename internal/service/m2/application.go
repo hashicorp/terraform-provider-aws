@@ -6,15 +6,16 @@ package m2
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/m2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/m2/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -22,24 +23,24 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource(name="Application")
 // @Tags(identifierAttribute="arn")
-func newResourceApplication(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceApplication{}
+func newApplicationResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &applicationResource{}
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
@@ -48,43 +49,38 @@ func newResourceApplication(_ context.Context) (resource.ResourceWithConfigure, 
 	return r, nil
 }
 
-const (
-	ResNameApplication = "Application"
-)
-
-type resourceApplication struct {
+type applicationResource struct {
 	framework.ResourceWithConfigure
+	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *resourceApplication) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_m2_application"
+func (*applicationResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_m2_application"
 }
 
-func (r *resourceApplication) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *applicationResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"application_id": framework.IDAttribute(),
-			"arn":            framework.ARNAttributeComputedOnly(),
+			names.AttrARN:    framework.ARNAttributeComputedOnly(),
 			"current_version": schema.Int64Attribute{
 				Computed: true,
 			},
-			"client_token": schema.StringAttribute{
-				Optional: true,
-			},
 			"description": schema.StringAttribute{
 				Optional: true,
+				Validators: []validator.String{
+					stringvalidator.LengthAtMost(500),
+				},
 			},
 			"engine_type": schema.StringAttribute{
-				Required: true,
+				CustomType: fwtypes.StringEnumType[awstypes.EngineType](),
+				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-				Validators: []validator.String{
-					stringvalidator.OneOf(enum.Values[awstypes.EngineType]()...),
-				},
 			},
-			"id": framework.IDAttribute(),
+			names.AttrID: framework.IDAttribute(),
 			"kms_key_id": schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
@@ -93,6 +89,9 @@ func (r *resourceApplication) Schema(ctx context.Context, req resource.SchemaReq
 			},
 			"name": schema.StringAttribute{
 				Required: true,
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[A-Za-z0-9][A-Za-z0-9_\-]{1,59}$`), ""),
+				},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -108,21 +107,26 @@ func (r *resourceApplication) Schema(ctx context.Context, req resource.SchemaReq
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"definition": schema.SingleNestedBlock{
-				Attributes: map[string]schema.Attribute{
-					"content": schema.StringAttribute{
-						Optional: true,
-						Validators: []validator.String{
-							stringvalidator.ExactlyOneOf(
-								path.MatchRelative().AtParent().AtName("content"),
-								path.MatchRelative().AtParent().AtName("s3_location"),
-							),
+			"definition": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[definitionModel](ctx),
+				Validators: []validator.List{
+					listvalidator.IsRequired(),
+					listvalidator.SizeAtMost(1),
+				},
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"content": schema.StringAttribute{
+							Optional: true,
+							Validators: []validator.String{
+								stringvalidator.LengthBetween(1, 65000),
+								stringvalidator.ExactlyOneOf(
+									path.MatchRelative().AtParent().AtName("content"),
+									path.MatchRelative().AtParent().AtName("s3_location"),
+								),
+							},
 						},
-					},
-					"s3_location": schema.StringAttribute{
-						Optional: true,
-						PlanModifiers: []planmodifier.String{
-							stringplanmodifier.UseStateForUnknown(),
+						"s3_location": schema.StringAttribute{
+							Optional: true,
 						},
 					},
 				},
@@ -136,257 +140,361 @@ func (r *resourceApplication) Schema(ctx context.Context, req resource.SchemaReq
 	}
 }
 
-func (r *resourceApplication) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *applicationResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data applicationResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().M2Client(ctx)
 
-	var plan resourceApplicationData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+	name := data.Name.ValueString()
+	input := &m2.CreateApplicationInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	in := &m2.CreateApplicationInput{
-		Tags: getTagsIn(ctx),
+	// AutoFlEx doesn't yet handle union types.
+	if !data.Definition.IsNull() {
+		definitionData, diags := data.Definition.ToPtr(ctx)
+		response.Diagnostics.Append(diags...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		input.Definition = expandDefinition(definitionData)
 	}
 
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
+	// Additional fields.
+	input.ClientToken = aws.String(sdkid.UniqueId())
+	input.Tags = getTagsIn(ctx)
 
-	var definition applicationDefinition
-	resp.Diagnostics.Append(plan.Definition.As(ctx, &definition, basetypes.ObjectAsOptions{})...)
+	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*awstypes.AccessDeniedException](ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.CreateApplication(ctx, input)
+	}, "does not have proper Trust Policy for M2 service")
 
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	apiDefinition := expandApplicationDefinition(ctx, definition)
-	in.Definition = apiDefinition
-
-	out, err := conn.CreateApplication(ctx, in)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.M2, create.ErrActionCreating, ResNameApplication, plan.Name.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil || out.ApplicationId == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.M2, create.ErrActionCreating, ResNameApplication, plan.Name.String(), nil),
-			errors.New("empty output").Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("creating Mainframe Modernization Application (%s)", name), err.Error())
+
 		return
 	}
 
-	plan.ARN = flex.StringToFramework(ctx, out.ApplicationArn)
-	plan.ID = flex.StringToFramework(ctx, out.ApplicationId)
+	// Set values for unknowns.
+	data.ApplicationID = fwflex.StringToFramework(ctx, outputRaw.(*m2.CreateApplicationOutput).ApplicationId)
+	data.setID()
 
-	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
-	app, err := waitApplicationCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
+	app, err := waitApplicationCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.M2, create.ErrActionWaitingForCreation, ResNameApplication, plan.Name.String(), err),
-			err.Error(),
-		)
+		response.State.SetAttribute(ctx, path.Root(names.AttrID), data.ID) // Set 'id' so as to taint the resource.
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Mainframe Modernization Application (%s) create", data.ID.ValueString()), err.Error())
+
 		return
 	}
-	resp.Diagnostics.Append(plan.refreshFromOutput(ctx, app)...)
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+
+	response.Diagnostics.Append(fwflex.Flatten(ctx, app, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	// Additional fields.
+	data.CurrentVersion = fwflex.Int32ToFramework(ctx, app.LatestVersion.ApplicationVersion)
+
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceApplication) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().M2Client(ctx)
-
-	var state resourceApplicationData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *applicationResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data applicationResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := findApplicationByID(ctx, conn, state.ID.ValueString())
+	conn := r.Meta().M2Client(ctx)
+
+	if err := data.InitFromID(); err != nil {
+		response.Diagnostics.AddError("parsing resource ID", err.Error())
+
+		return
+	}
+
+	outputGA, err := findApplicationByID(ctx, conn, data.ID.ValueString())
+
 	if tfresource.NotFound(err) {
-		resp.State.RemoveResource(ctx)
-		return
-	}
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.M2, create.ErrActionSetting, ResNameApplication, state.ID.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
 		return
 	}
 
-	version, err := findApplicationVersion(ctx, conn, state.ID.ValueString(), *out.LatestVersion.ApplicationVersion)
-	if tfresource.NotFound(err) {
-		resp.State.RemoveResource(ctx)
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("reading Mainframe Modernization Application (%s)", data.ID.ValueString()), err.Error())
+
 		return
 	}
+
+	applicationVersion := aws.ToInt32(outputGA.LatestVersion.ApplicationVersion)
+	outputGAV, err := findApplicationVersionByTwoPartKey(ctx, conn, data.ID.ValueString(), applicationVersion)
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.M2, create.ErrActionSetting, ResNameApplication, state.ID.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("reading Mainframe Modernization Application (%s) version (%d)", data.ID.ValueString(), applicationVersion), err.Error())
+
 		return
 	}
-	// Tags are on GetApplicationOutput, but nil
-	tags, err := listTags(ctx, conn, *out.ApplicationArn)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.M2, create.ErrActionSetting, ResNameApplication, state.ID.String(), err),
-			err.Error(),
-		)
+
+	// Set attributes for import.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, outputGA, &data)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
-	setTagsOut(ctx, tags.Map())
+	// Additional fields.
+	data.CurrentVersion = fwflex.Int32ToFramework(ctx, outputGAV.ApplicationVersion)
+	data.Definition = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &definitionModel{
+		Content:    fwflex.StringToFramework(ctx, outputGAV.DefinitionContent),
+		S3Location: types.StringNull(),
+	})
 
-	resp.Diagnostics.Append(state.refreshFromOutput(ctx, out)...)
-	resp.Diagnostics.Append(state.refreshFromVersion(ctx, version)...)
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceApplication) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *applicationResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var old, new applicationResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().M2Client(ctx)
 
-	var plan, state resourceApplicationData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+	if !new.Definition.Equal(old.Definition) || !new.Description.Equal(old.Description) {
+		input := &m2.UpdateApplicationInput{
+			ApplicationId:             flex.StringFromFramework(ctx, new.ID),
+			CurrentApplicationVersion: flex.Int32FromFramework(ctx, old.CurrentVersion),
+		}
+
+		if !new.Definition.Equal(old.Definition) {
+			// AutoFlEx doesn't yet handle union types.
+			if !new.Definition.IsNull() {
+				definitionData, diags := new.Definition.ToPtr(ctx)
+				response.Diagnostics.Append(diags...)
+				if response.Diagnostics.HasError() {
+					return
+				}
+
+				input.Definition = expandDefinition(definitionData)
+			}
+		}
+
+		if !new.Description.Equal(old.Description) {
+			input.Description = flex.StringFromFramework(ctx, new.Description)
+		}
+
+		outputUA, err := conn.UpdateApplication(ctx, input)
+
+		if err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("updating Mainframe Modernization Application (%s)", new.ID.ValueString()), err.Error())
+
+			return
+		}
+
+		applicationVersion := aws.ToInt32(outputUA.ApplicationVersion)
+		if _, err := waitApplicationUpdated(ctx, conn, new.ID.ValueString(), applicationVersion, r.UpdateTimeout(ctx, new.Timeouts)); err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for Mainframe Modernization Application (%s) update", new.ID.ValueString()), err.Error())
+
+			return
+		}
+
+		new.CurrentVersion = types.Int64Value(int64(applicationVersion))
+	} else {
+		new.CurrentVersion = old.CurrentVersion
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
+}
+
+func (r *applicationResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	var data applicationResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	update := false
-
-	in := &m2.UpdateApplicationInput{
-		ApplicationId:             flex.StringFromFramework(ctx, state.ID),
-		CurrentApplicationVersion: flex.Int32FromFramework(ctx, state.CurrentVersion),
-	}
-
-	if !plan.Definition.Equal(state.Definition) {
-		var definition applicationDefinition
-		resp.Diagnostics.Append(plan.Definition.As(ctx, &definition, basetypes.ObjectAsOptions{})...)
-
-		if resp.Diagnostics.HasError() {
-			return
-		}
-
-		apiDefinition := expandApplicationDefinition(ctx, definition)
-		in.Definition = apiDefinition
-		update = true
-	}
-
-	if !plan.Description.Equal(state.Description) {
-		in.Description = flex.StringFromFramework(ctx, plan.Description)
-		update = true
-	}
-
-	if update {
-		out, err := conn.UpdateApplication(ctx, in)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.M2, create.ErrActionUpdating, ResNameApplication, plan.ID.String(), err),
-				err.Error(),
-			)
-			return
-		}
-		if out == nil || out.ApplicationVersion == nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.M2, create.ErrActionUpdating, ResNameApplication, plan.ID.String(), nil),
-				errors.New("empty output").Error(),
-			)
-			return
-		}
-
-		updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
-		version, err := waitApplicationUpdated(ctx, conn, plan.ID.ValueString(), *out.ApplicationVersion, updateTimeout)
-		if err != nil {
-			resp.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.M2, create.ErrActionWaitingForUpdate, ResNameApplication, plan.ID.String(), err),
-				err.Error(),
-			)
-			return
-		}
-		resp.Diagnostics.Append(plan.refreshFromVersion(ctx, version)...)
-		resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
-	}
-}
-
-func (r *resourceApplication) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().M2Client(ctx)
 
-	var state resourceApplicationData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+	_, err := conn.DeleteApplication(ctx, &m2.DeleteApplicationInput{
+		ApplicationId: aws.String(data.ID.ValueString()),
+	})
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return
 	}
 
-	in := &m2.DeleteApplicationInput{
-		ApplicationId: aws.String(state.ID.ValueString()),
-	}
-
-	_, err := conn.DeleteApplication(ctx, in)
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
-		}
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.M2, create.ErrActionDeleting, ResNameApplication, state.ID.String(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Mainframe Modernization Application (%s)", data.ID.ValueString()), err.Error())
+
 		return
 	}
 
-	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	_, err = waitApplicationDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.M2, create.ErrActionWaitingForDeletion, ResNameApplication, state.ID.String(), err),
-			err.Error(),
-		)
+	if _, err := waitApplicationDeleted(ctx, conn, data.ID.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Mainframe Modernization Application (%s) delete", data.ID.ValueString()), err.Error())
+
 		return
 	}
 }
 
-func (r *resourceApplication) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-}
-func (r *resourceApplication) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+func (r *applicationResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
 	r.SetTagsAll(ctx, request, response)
 }
 
-func (r *resourceApplicationData) refreshFromOutput(ctx context.Context, app *m2.GetApplicationOutput) diag.Diagnostics {
-	var diags diag.Diagnostics
+func startApplication(ctx context.Context, conn *m2.Client, id string, timeout time.Duration) (*m2.GetApplicationOutput, error) {
+	stopInput := &m2.StartApplicationInput{
+		ApplicationId: &id,
+	}
 
-	diags.Append(flex.Flatten(ctx, app, r)...)
-	r.ARN = flex.StringToFramework(ctx, app.ApplicationArn)
-	r.ID = flex.StringToFramework(ctx, app.ApplicationId)
-	r.CurrentVersion = flex.Int32ToFramework(ctx, app.LatestVersion.ApplicationVersion)
+	_, err := conn.StartApplication(ctx, stopInput)
+	if err != nil {
+		return nil, err
+	}
 
-	return diags
+	app, err := waitApplicationRunning(ctx, conn, id, timeout)
+	if err != nil {
+		return nil, err
+	}
+
+	return app, nil
 }
-func (r *resourceApplicationData) refreshFromVersion(ctx context.Context, version *m2.GetApplicationVersionOutput) diag.Diagnostics {
-	var diags diag.Diagnostics
-	definition, d := flattenApplicationDefinitionFromVersion(ctx, version)
-	r.Definition = definition
-	diags.Append(d...)
-	r.CurrentVersion = flex.Int32ToFramework(ctx, version.ApplicationVersion)
-	return diags
+
+func stopApplicationIfRunning(ctx context.Context, conn *m2.Client, id string, forceStop bool, timeout time.Duration) error {
+	app, err := findApplicationByID(ctx, conn, id)
+	if err != nil {
+		if tfresource.NotFound(err) {
+			return nil
+		}
+		return err
+	}
+
+	if app.Status != awstypes.ApplicationLifecycleRunning {
+		return nil
+	}
+
+	stopInput := &m2.StopApplicationInput{
+		ApplicationId: &id,
+		ForceStop:     forceStop,
+	}
+
+	_, err = conn.StopApplication(ctx, stopInput)
+	if err != nil {
+		return err
+	}
+
+	_, err = waitApplicationStopped(ctx, conn, id, timeout)
+	return err
+}
+
+func findApplicationByID(ctx context.Context, conn *m2.Client, id string) (*m2.GetApplicationOutput, error) {
+	input := &m2.GetApplicationInput{
+		ApplicationId: aws.String(id),
+	}
+
+	output, err := conn.GetApplication(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.ApplicationId == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func findApplicationVersionByTwoPartKey(ctx context.Context, conn *m2.Client, id string, version int32) (*m2.GetApplicationVersionOutput, error) {
+	input := &m2.GetApplicationVersionInput{
+		ApplicationId:      aws.String(id),
+		ApplicationVersion: aws.Int32(version),
+	}
+
+	output, err := conn.GetApplicationVersion(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.ApplicationVersion == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func statusApplication(ctx context.Context, conn *m2.Client, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findApplicationByID(ctx, conn, id)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status), nil
+	}
+}
+
+func statusApplicationVersion(ctx context.Context, conn *m2.Client, id string, version int32) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findApplicationVersionByTwoPartKey(ctx, conn, id, version)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status), nil
+	}
 }
 
 func waitApplicationCreated(ctx context.Context, conn *m2.Client, id string, timeout time.Duration) (*m2.GetApplicationOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.ApplicationLifecycleCreating),
-		Target:                    enum.Slice(awstypes.ApplicationLifecycleCreated, awstypes.ApplicationLifecycleAvailable),
-		Refresh:                   statusApplication(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
+		Pending: enum.Slice(awstypes.ApplicationLifecycleCreating),
+		Target:  enum.Slice(awstypes.ApplicationLifecycleCreated, awstypes.ApplicationLifecycleAvailable),
+		Refresh: statusApplication(ctx, conn, id),
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*m2.GetApplicationOutput); ok {
-		return out, err
+
+	if output, ok := outputRaw.(*m2.GetApplicationOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+
+		return output, err
 	}
 
 	return nil, err
@@ -394,17 +502,18 @@ func waitApplicationCreated(ctx context.Context, conn *m2.Client, id string, tim
 
 func waitApplicationUpdated(ctx context.Context, conn *m2.Client, id string, version int32, timeout time.Duration) (*m2.GetApplicationVersionOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.ApplicationVersionLifecycleCreating),
-		Target:                    enum.Slice(awstypes.ApplicationVersionLifecycleAvailable),
-		Refresh:                   statusApplicationVersion(ctx, conn, id, version),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
+		Pending: enum.Slice(awstypes.ApplicationVersionLifecycleCreating),
+		Target:  enum.Slice(awstypes.ApplicationVersionLifecycleAvailable),
+		Refresh: statusApplicationVersion(ctx, conn, id, version),
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*m2.GetApplicationVersionOutput); ok {
-		return out, err
+
+	if output, ok := outputRaw.(*m2.GetApplicationVersionOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+
+		return output, err
 	}
 
 	return nil, err
@@ -419,8 +528,11 @@ func waitApplicationDeleted(ctx context.Context, conn *m2.Client, id string, tim
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*m2.GetApplicationOutput); ok {
-		return out, err
+
+	if output, ok := outputRaw.(*m2.GetApplicationOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusReason)))
+
+		return output, err
 	}
 
 	return nil, err
@@ -476,183 +588,49 @@ func waitApplicationRunning(ctx context.Context, conn *m2.Client, id string, tim
 	return nil, err
 }
 
-func statusApplication(ctx context.Context, conn *m2.Client, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		out, err := findApplicationByID(ctx, conn, id)
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return out, string(out.Status), nil
-	}
+type applicationResourceModel struct {
+	ApplicationID  types.String                                     `tfsdk:"application_id"`
+	ApplicationARN types.String                                     `tfsdk:"arn"`
+	CurrentVersion types.Int64                                      `tfsdk:"current_version"`
+	Definition     fwtypes.ListNestedObjectValueOf[definitionModel] `tfsdk:"definition"`
+	Description    types.String                                     `tfsdk:"description"`
+	EngineType     fwtypes.StringEnum[awstypes.EngineType]          `tfsdk:"engine_type"`
+	ID             types.String                                     `tfsdk:"id"`
+	KmsKeyID       types.String                                     `tfsdk:"kms_key_id"`
+	Name           types.String                                     `tfsdk:"name"`
+	RoleARN        fwtypes.ARN                                      `tfsdk:"role_arn"`
+	Tags           types.Map                                        `tfsdk:"tags"`
+	TagsAll        types.Map                                        `tfsdk:"tags_all"`
+	Timeouts       timeouts.Value                                   `tfsdk:"timeouts"`
 }
 
-func statusApplicationVersion(ctx context.Context, conn *m2.Client, id string, version int32) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		out, err := findApplicationVersion(ctx, conn, id, version)
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
+func (model *applicationResourceModel) InitFromID() error {
+	model.ApplicationID = model.ID
 
-		if err != nil {
-			return nil, "", err
-		}
-
-		return out, string(out.Status), nil
-	}
+	return nil
 }
 
-func findApplicationByID(ctx context.Context, conn *m2.Client, id string) (*m2.GetApplicationOutput, error) {
-	in := &m2.GetApplicationInput{
-		ApplicationId: aws.String(id),
-	}
-
-	out, err := conn.GetApplication(ctx, in)
-	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
-
-		return nil, err
-	}
-
-	if out == nil || out.ApplicationId == nil {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-
-	return out, nil
+func (model *applicationResourceModel) setID() {
+	model.ID = model.ApplicationID
 }
 
-func findApplicationVersion(ctx context.Context, conn *m2.Client, id string, version int32) (*m2.GetApplicationVersionOutput, error) {
-	in := &m2.GetApplicationVersionInput{
-		ApplicationId:      aws.String(id),
-		ApplicationVersion: aws.Int32(version),
-	}
-	out, err := conn.GetApplicationVersion(ctx, in)
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
-		}
-	}
-	if err != nil {
-		return nil, err
-	}
-
-	if out == nil || out.ApplicationVersion == nil {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-
-	return out, nil
+type definitionModel struct {
+	Content    types.String `tfsdk:"content"`
+	S3Location types.String `tfsdk:"s3_location"`
 }
 
-func startApplication(ctx context.Context, conn *m2.Client, id string, timeout time.Duration) (*m2.GetApplicationOutput, error) {
-	stopInput := &m2.StartApplicationInput{
-		ApplicationId: &id,
-	}
-
-	_, err := conn.StartApplication(ctx, stopInput)
-	if err != nil {
-		return nil, err
-	}
-
-	app, err := waitApplicationRunning(ctx, conn, id, timeout)
-	if err != nil {
-		return nil, err
-	}
-
-	return app, nil
-}
-
-func stopApplicationIfRunning(ctx context.Context, conn *m2.Client, id string, forceStop bool, timeout time.Duration) error {
-	app, err := findApplicationByID(ctx, conn, id)
-	if err != nil {
-		if tfresource.NotFound(err) {
-			return nil
-		}
-		return err
-	}
-
-	if app.Status != awstypes.ApplicationLifecycleRunning {
-		return nil
-	}
-
-	stopInput := &m2.StopApplicationInput{
-		ApplicationId: &id,
-		ForceStop:     forceStop,
-	}
-
-	_, err = conn.StopApplication(ctx, stopInput)
-	if err != nil {
-		return err
-	}
-
-	_, err = waitApplicationStopped(ctx, conn, id, timeout)
-	return err
-}
-
-func expandApplicationDefinition(ctx context.Context, definition applicationDefinition) awstypes.Definition {
-	if !definition.S3Location.IsNull() {
-		return &awstypes.DefinitionMemberS3Location{
-			Value: *flex.StringFromFramework(ctx, definition.S3Location),
-		}
-	}
-
-	if !definition.Content.IsNull() {
+func expandDefinition(definitionData *definitionModel) awstypes.Definition {
+	if !definitionData.Content.IsNull() {
 		return &awstypes.DefinitionMemberContent{
-			Value: *flex.StringFromFramework(ctx, definition.Content),
+			Value: definitionData.Content.ValueString(),
+		}
+	}
+
+	if !definitionData.S3Location.IsNull() {
+		return &awstypes.DefinitionMemberS3Location{
+			Value: definitionData.S3Location.ValueString(),
 		}
 	}
 
 	return nil
 }
-
-func flattenApplicationDefinitionFromVersion(ctx context.Context, version *m2.GetApplicationVersionOutput) (types.Object, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	obj := map[string]attr.Value{
-		"content":     flex.StringToFramework(ctx, version.DefinitionContent),
-		"s3_location": types.StringNull(), // This value is never returned...
-	}
-
-	definitionValue, d := types.ObjectValue(applicationDefinitionAttrs, obj)
-	diags.Append(d...)
-
-	return definitionValue, diags
-}
-
-type resourceApplicationData struct {
-	ApplicationId  types.String   `tfsdk:"application_id"`
-	ARN            types.String   `tfsdk:"arn"`
-	ClientToken    types.String   `tfsdk:"client_token"`
-	CurrentVersion types.Int64    `tfsdk:"current_version"`
-	Definition     types.Object   `tfsdk:"definition"`
-	Description    types.String   `tfsdk:"description"`
-	ID             types.String   `tfsdk:"id"`
-	EngineType     types.String   `tfsdk:"engine_type"`
-	KmsKeyId       types.String   `tfsdk:"kms_key_id"`
-	Name           types.String   `tfsdk:"name"`
-	RoleArn        fwtypes.ARN    `tfsdk:"role_arn"`
-	Tags           types.Map      `tfsdk:"tags"`
-	TagsAll        types.Map      `tfsdk:"tags_all"`
-	Timeouts       timeouts.Value `tfsdk:"timeouts"`
-}
-
-type applicationDefinition struct {
-	Content    types.String `tfsdk:"content"`
-	S3Location types.String `tfsdk:"s3_location"`
-}
-
-var (
-	applicationDefinitionAttrs = map[string]attr.Type{
-		"content":     types.StringType,
-		"s3_location": types.StringType,
-	}
-)

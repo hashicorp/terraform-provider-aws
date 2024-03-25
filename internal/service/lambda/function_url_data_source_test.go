@@ -111,7 +111,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   handler       = "exports.example"
   role          = aws_iam_role.lambda.arn
-  runtime       = "nodejs14.x"
+  runtime       = "nodejs20.x"
 }
 
 resource "aws_lambda_function_url" "test" {

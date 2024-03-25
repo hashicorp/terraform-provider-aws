@@ -33,7 +33,7 @@ func TestAccXRayEncryptionConfig_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEncryptionConfigConfig_basic(),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEncryptionConfigExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "type", "NONE"),
 				),
@@ -45,7 +45,7 @@ func TestAccXRayEncryptionConfig_basic(t *testing.T) {
 			},
 			{
 				Config: testAccEncryptionConfigConfig_key(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEncryptionConfigExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "type", "KMS"),
 					resource.TestCheckResourceAttrPair(resourceName, "key_id", keyResourceName, "arn"),
@@ -53,7 +53,7 @@ func TestAccXRayEncryptionConfig_basic(t *testing.T) {
 			},
 			{
 				Config: testAccEncryptionConfigConfig_basic(),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckEncryptionConfigExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "type", "NONE"),
 				),

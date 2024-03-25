@@ -227,12 +227,12 @@ func TestAccRAMResourceShare_disappears(t *testing.T) {
 
 func testAccCheckResourceShareExists(ctx context.Context, n string, v *ram.ResourceShare) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn(ctx)
-
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RAMConn(ctx)
 
 		output, err := tfram.FindResourceShareOwnerSelfByARN(ctx, conn, rs.Primary.ID)
 

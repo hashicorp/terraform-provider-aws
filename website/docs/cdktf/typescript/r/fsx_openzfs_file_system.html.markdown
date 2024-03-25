@@ -58,6 +58,7 @@ This resource supports the following arguments:
 * `rootVolumeConfiguration` - (Optional) The configuration for the root volume of the file system. All other volumes are children or the root volume. See [Root Volume Configuration](#root-volume-configuration) below.
 * `routeTableIds` - (Optional) (Multi-AZ only) Specifies the route tables in which Amazon FSx creates the rules for routing traffic to the correct file server. You should specify all virtual private cloud (VPC) route tables associated with the subnets in which your clients are located. By default, Amazon FSx selects your VPC's default route table.
 * `securityGroupIds` - (Optional) A list of IDs for the security groups that apply to the specified network interfaces created for file system access. These security groups will apply to all network interfaces.
+* `skipFinalBackup` - (Optional) When enabled, will skip the default final backup taken when the file system is deleted. This configuration must be applied separately before attempting to delete the resource to have the desired behavior. Defaults to `false`.
 * `storageType` - (Optional) The filesystem storage type. Only `SSD` is supported.
 * `tags` - (Optional) A map of tags to assign to the file system. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `weeklyMaintenanceStartTime` - (Optional) The preferred start time (in `d:HH:MM` format) to perform weekly maintenance, in the UTC time zone.
@@ -177,4 +178,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-747caeeb6ae73c2beade6eba7cdec24bd727587f1c4cbe894ef193c84d502d2e -->
+<!-- cache-key: cdktf-0.20.1 input-af4899de9ee7dd3b7cff44d8d15d27240f39d0d61a29add1622c39d4e1c27352 -->

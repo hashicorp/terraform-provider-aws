@@ -8,6 +8,7 @@ import (
 	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -40,7 +41,7 @@ func (d *customModelDataSource) Schema(ctx context.Context, request datasource.S
 				Computed: true,
 			},
 			"creation_time": schema.StringAttribute{
-				CustomType: fwtypes.TimestampType,
+				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 			},
 			"hyperparameters": schema.MapAttribute{
@@ -187,7 +188,7 @@ func (d *customModelDataSource) Read(ctx context.Context, request datasource.Rea
 
 type customModelDataSourceModel struct {
 	BaseModelARN         types.String                                                          `tfsdk:"base_model_arn"`
-	CreationTime         fwtypes.Timestamp                                                     `tfsdk:"creation_time"`
+	CreationTime         timetypes.RFC3339                                                     `tfsdk:"creation_time"`
 	HyperParameters      fwtypes.MapValueOf[types.String]                                      `tfsdk:"hyperparameters"`
 	ID                   types.String                                                          `tfsdk:"id"`
 	JobARN               types.String                                                          `tfsdk:"job_arn"`

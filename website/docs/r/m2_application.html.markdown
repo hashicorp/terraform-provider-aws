@@ -53,13 +53,13 @@ EOF
 
 The following arguments are required:
 
-* `description` - (Required) Description of the application
-* `name` - (Required) Unique identifier of the application.
+* `description` - (Required) Description of the application.
 * `engine_type` - (Required) Engine type must be `microfocus | bluage`.
+* `name` - (Required) Unique identifier of the application.
 
 The following arguments are optional:
 
-* `description` - (Optional) Description of the application
+* `definition` - (Optional) The application definition for this application. You can specify either inline JSON or an S3 bucket location.
 * `kms_key_id` - (Optional) KMS Key to use for the Application.
 * `role_arn` - (Optional) ARN of role for application to use to access AWS resources.
 * `tags` - (Optional) A map of tags assigned to the WorkSpaces Connection Alias. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.

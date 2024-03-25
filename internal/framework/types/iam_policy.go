@@ -19,19 +19,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 )
 
+var (
+	_ xattr.TypeWithValidate                     = (*iamPolicyType)(nil)
+	_ basetypes.StringTypable                    = (*iamPolicyType)(nil)
+	_ basetypes.StringValuable                   = (*IAMPolicy)(nil)
+	_ basetypes.StringValuableWithSemanticEquals = (*IAMPolicy)(nil)
+)
+
 type iamPolicyType struct {
 	basetypes.StringType
 }
 
 var (
 	IAMPolicyType = iamPolicyType{}
-)
-
-var (
-	_ xattr.TypeWithValidate                     = (*iamPolicyType)(nil)
-	_ basetypes.StringTypable                    = (*iamPolicyType)(nil)
-	_ basetypes.StringValuable                   = (*IAMPolicy)(nil)
-	_ basetypes.StringValuableWithSemanticEquals = (*IAMPolicy)(nil)
 )
 
 func (t iamPolicyType) Equal(o attr.Type) bool {

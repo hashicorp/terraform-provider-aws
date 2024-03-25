@@ -119,6 +119,7 @@ class MyConvertedCode(TerraformStack):
   <li><code>backup</code></li>
   <li><code>batch</code></li>
   <li><code>bedrock</code></li>
+  <li><code>bedrockagent</code></li>
   <li><code>budgets</code></li>
   <li><code>ce</code> (or <code>costexplorer</code>)</li>
   <li><code>chime</code></li>
@@ -129,6 +130,7 @@ class MyConvertedCode(TerraformStack):
   <li><code>cloudcontrol</code> (or <code>cloudcontrolapi</code>)</li>
   <li><code>cloudformation</code></li>
   <li><code>cloudfront</code></li>
+  <li><code>cloudfrontkeyvaluestore</code></li>
   <li><code>cloudhsmv2</code> (or <code>cloudhsm</code>)</li>
   <li><code>cloudsearch</code></li>
   <li><code>cloudtrail</code></li>
@@ -150,6 +152,7 @@ class MyConvertedCode(TerraformStack):
   <li><code>connect</code></li>
   <li><code>connectcases</code></li>
   <li><code>controltower</code></li>
+  <li><code>costoptimizationhub</code></li>
   <li><code>cur</code> (or <code>costandusagereportservice</code>)</li>
   <li><code>customerprofiles</code></li>
   <li><code>dataexchange</code></li>
@@ -159,6 +162,7 @@ class MyConvertedCode(TerraformStack):
   <li><code>deploy</code> (or <code>codedeploy</code>)</li>
   <li><code>detective</code></li>
   <li><code>devicefarm</code></li>
+  <li><code>devopsguru</code></li>
   <li><code>directconnect</code></li>
   <li><code>dlm</code></li>
   <li><code>dms</code> (or <code>databasemigration</code> or <code>databasemigrationservice</code>)</li>
@@ -262,6 +266,7 @@ class MyConvertedCode(TerraformStack):
   <li><code>redshift</code></li>
   <li><code>redshiftdata</code> (or <code>redshiftdataapiservice</code>)</li>
   <li><code>redshiftserverless</code></li>
+  <li><code>rekognition</code></li>
   <li><code>resourceexplorer2</code></li>
   <li><code>resourcegroups</code></li>
   <li><code>resourcegroupstaggingapi</code> (or <code>resourcegroupstagging</code>)</li>
@@ -415,4 +420,4 @@ class MyConvertedCode(TerraformStack):
         )
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-87c0080be30af700eaee1b06aff7d221a7ac06c3e91a88868e87ef9546706e7a -->
+<!-- cache-key: cdktf-0.20.1 input-c07ce09718a0c466712ecaf61e2dbc9d141b981471b7621e8f49cae77bc74715 -->

@@ -1370,6 +1370,29 @@ func TestAccECSService_ServiceConnect_full(t *testing.T) {
 	})
 }
 
+func TestAccECSService_ServiceConnect_tls_with_empty_timeout(t *testing.T) {
+	ctx := acctest.Context(t)
+	var service ecs.Service
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_serviceConnect_tls_with_empty_timeout_block(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+					resource.TestCheckResourceAttr(resourceName, "service_connect_configuration.#", "1"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccECSService_ServiceConnect_ingressPortOverride(t *testing.T) {
 	ctx := acctest.Context(t)
 	var service ecs.Service
@@ -4369,6 +4392,184 @@ resource "aws_ecs_service" "test" {
       timeout {
         idle_timeout_seconds        = 120
         per_request_timeout_seconds = 60
+      }
+    }
+  }
+}
+
+resource "aws_acmpca_certificate_authority_certificate" "test" {
+  certificate_authority_arn = aws_acmpca_certificate_authority.test.arn
+
+  certificate       = aws_acmpca_certificate.test.certificate
+  certificate_chain = aws_acmpca_certificate.test.certificate_chain
+}
+
+resource "aws_acmpca_certificate" "test" {
+  certificate_authority_arn   = aws_acmpca_certificate_authority.test.arn
+  certificate_signing_request = aws_acmpca_certificate_authority.test.certificate_signing_request
+  signing_algorithm           = "SHA512WITHRSA"
+
+  template_arn = "arn:${data.aws_partition.current.partition}:acm-pca:::template/RootCACertificate/V1"
+
+  validity {
+    type  = "YEARS"
+    value = 1
+  }
+}
+
+resource "aws_acmpca_certificate_authority" "test" {
+  permanent_deletion_time_in_days = 7
+  type                            = "ROOT"
+  usage_mode                      = "SHORT_LIVED_CERTIFICATE"
+  certificate_authority_configuration {
+    key_algorithm     = "RSA_4096"
+    signing_algorithm = "SHA512WITHRSA"
+
+    subject {
+      common_name = %[1]q
+    }
+  }
+  tags = {
+    AmazonECSManaged = "true"
+  }
+}
+
+data "aws_partition" "current" {}
+data "aws_caller_identity" "current" {}
+`, rName)
+}
+
+func testAccServiceConfig_serviceConnect_tls_with_empty_timeout_block(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+  policy                  = data.aws_iam_policy_document.test.json
+}
+
+
+data "aws_iam_policy_document" "test" {
+  policy_id = "KMSPolicy"
+
+  statement {
+    sid    = "Root User Permissions"
+    effect = "Allow"
+    principals {
+      type = "AWS"
+      identifiers = [
+      "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"]
+    }
+    actions = [
+    "kms:*"]
+    resources = ["*"]
+  }
+
+  statement {
+    sid    = "EC2 kms permissions"
+    effect = "Allow"
+    principals {
+      type        = "AWS"
+      identifiers = [aws_iam_role.test.arn]
+    }
+    actions = [
+      "kms:Encrypt",
+      "kms:Decrypt",
+      "kms:GenerateDataKey",
+    "kms:GenerateDataKeyPair"]
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy  = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": "sts:AssumeRole",
+      "Principal": {
+        "Service": "ecs.amazonaws.com"
+      },
+      "Effect": "Allow",
+      "Sid": ""
+    }
+  ]
+}
+EOF
+  managed_policy_arns = ["arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonECSInfrastructureRolePolicyForServiceConnectTransportLayerSecurity"]
+}
+
+resource "aws_service_discovery_http_namespace" "test" {
+  name = %[1]q
+}
+
+resource "aws_ecs_cluster" "test" {
+  name = %[1]q
+}
+
+resource "aws_ecs_task_definition" "test" {
+  family       = %[1]q
+  network_mode = "bridge"
+
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 128,
+    "essential": true,
+    "image": "mongo:latest",
+    "memory": 128,
+    "name": "mongodb",
+    "portMappings": [
+    {
+      "hostPort": 0,
+      "appProtocol": "http",
+      "containerPort": 27017,
+      "name": "tf-test",
+      "protocol": "tcp"
+    }
+    ]
+  }
+]
+DEFINITION
+}
+
+resource "aws_ecs_service" "test" {
+  name            = %[1]q
+  cluster         = aws_ecs_cluster.test.id
+  task_definition = aws_ecs_task_definition.test.arn
+  desired_count   = 1
+
+  service_connect_configuration {
+    enabled   = true
+    namespace = aws_service_discovery_http_namespace.test.arn
+
+    log_configuration {
+      log_driver = "json-file"
+
+      options = {
+        key = "value"
+      }
+    }
+
+    service {
+      client_alias {
+        dns_name = "example.com"
+        port     = 8080
+      }
+
+      discovery_name        = "test"
+      ingress_port_override = 8443
+      port_name             = "tf-test"
+      tls {
+        issuer_cert_authority {
+          aws_pca_authority_arn = aws_acmpca_certificate_authority.test.arn
+        }
+        kms_key  = aws_kms_key.test.arn
+        role_arn = aws_iam_role.test.arn
+      }
+      timeout {
       }
     }
   }

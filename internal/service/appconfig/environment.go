@@ -475,5 +475,5 @@ func flattenMonitorData(ctx context.Context, apiObject awstypes.Monitor) *monito
 }
 
 func (m *monitorData) value(ctx context.Context) types.Object {
-	return fwtypes.NewObjectValueOf[monitorData](ctx, m).ObjectValue
+	return fwtypes.NewObjectValueOfMust[monitorData](ctx, m).ObjectValue
 }

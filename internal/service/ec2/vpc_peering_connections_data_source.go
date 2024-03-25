@@ -26,7 +26,7 @@ func DataSourceVPCPeeringConnections() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"filter": CustomFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"ids": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -43,10 +43,10 @@ func dataSourceVPCPeeringConnectionsRead(ctx context.Context, d *schema.Resource
 
 	input := &ec2.DescribeVpcPeeringConnectionsInput{}
 
-	input.Filters = append(input.Filters, BuildTagFilterList(
+	input.Filters = append(input.Filters, newTagFilterList(
 		Tags(tftags.New(ctx, d.Get("tags").(map[string]interface{}))),
 	)...)
-	input.Filters = append(input.Filters, BuildCustomFilterList(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 	if len(input.Filters) == 0 {

@@ -17,7 +17,7 @@ import (
 func StringFromFramework(ctx context.Context, v basetypes.StringValuable) *string {
 	var output *string
 
-	panicOnError(Expand(ctx, v, &output))
+	must(Expand(ctx, v, &output))
 
 	return output
 }
@@ -41,7 +41,7 @@ func StringValueToFramework[T ~string](ctx context.Context, v T) types.String {
 
 	var output types.String
 
-	panicOnError(Flatten(ctx, v, &output))
+	must(Flatten(ctx, v, &output))
 
 	return output
 }
@@ -57,7 +57,7 @@ func StringValueToFrameworkLegacy[T ~string](_ context.Context, v T) types.Strin
 func StringToFramework(ctx context.Context, v *string) types.String {
 	var output types.String
 
-	panicOnError(Flatten(ctx, v, &output))
+	must(Flatten(ctx, v, &output))
 
 	return output
 }
@@ -73,7 +73,7 @@ func StringToFrameworkLegacy(_ context.Context, v *string) types.String {
 func StringToFrameworkARN(ctx context.Context, v *string) fwtypes.ARN {
 	var output fwtypes.ARN
 
-	panicOnError(Flatten(ctx, v, &output))
+	must(Flatten(ctx, v, &output))
 
 	return output
 }

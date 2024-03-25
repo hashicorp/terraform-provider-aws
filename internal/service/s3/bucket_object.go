@@ -10,7 +10,6 @@ package s3
 import (
 	"bytes"
 	"context"
-	"encoding/base64"
 	"fmt"
 	"io"
 	"log"
@@ -32,13 +31,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/mitchellh/go-homedir"
 )
 
 // @SDKResource("aws_s3_bucket_object", name="Bucket Object")
-// @Tags
+// @Tags(identifierAttribute="arn", resourceType="BucketObject")
 func resourceBucketObject() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketObjectCreate,
@@ -61,6 +61,10 @@ func resourceBucketObject() *schema.Resource {
 				Default:          types.ObjectCannedACLPrivate,
 				Optional:         true,
 				ValidateDiagFunc: enum.Validate[types.ObjectCannedACL](),
+			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"bucket": {
 				Deprecated:   "Use the aws_s3_object resource instead",
@@ -220,6 +224,12 @@ func resourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading S3 Object (%s): %s", d.Id(), err)
 	}
 
+	arn, err := newObjectARN(meta.(*conns.AWSClient).Partition, bucket, key)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading S3 Object (%s): %s", d.Id(), err)
+	}
+	d.Set("arn", arn.String())
+
 	d.Set("bucket_key_enabled", output.BucketKeyEnabled)
 	d.Set("cache_control", output.CacheControl)
 	d.Set("content_disposition", output.ContentDisposition)
@@ -245,14 +255,6 @@ func resourceBucketObjectRead(ctx context.Context, d *schema.ResourceData, meta 
 	if err := resourceBucketObjectSetKMS(ctx, d, meta, output.SSEKMSKeyId); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
-
-	tags, err := objectListTags(ctx, conn, bucket, key)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for S3 Bucket (%s) Object (%s): %s", bucket, key, err)
-	}
-
-	setTagsOut(ctx, Tags(tags))
 
 	return diags
 }
@@ -325,14 +327,6 @@ func resourceBucketObjectUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := objectUpdateTags(ctx, conn, bucket, key, o, n); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
-		}
-	}
-
 	return append(diags, resourceBucketObjectRead(ctx, d, meta)...)
 }
 
@@ -380,8 +374,6 @@ func resourceBucketObjectUpload(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 	uploader := manager.NewUploader(conn)
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(ctx, d.Get("tags").(map[string]interface{})))
 
 	var body io.ReadSeeker
 
@@ -410,7 +402,7 @@ func resourceBucketObjectUpload(ctx context.Context, d *schema.ResourceData, met
 		content := v.(string)
 		// We can't do streaming decoding here (with base64.NewDecoder) because
 		// the AWS SDK requires an io.ReadSeeker but a base64 decoder can't seek.
-		contentRaw, err := base64.StdEncoding.DecodeString(content)
+		contentRaw, err := itypes.Base64Decode(content)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "decoding content_base64: %s", err)
 		}
@@ -482,6 +474,9 @@ func resourceBucketObjectUpload(ctx context.Context, d *schema.ResourceData, met
 		input.StorageClass = types.StorageClass(v.(string))
 	}
 
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := tftags.New(ctx, getContextTags(ctx))
+	tags = defaultTagsConfig.MergeTags(tags)
 	if len(tags) > 0 {
 		// The tag-set must be encoded as URL Query parameters.
 		input.Tagging = aws.String(tags.IgnoreAWS().URLEncode())

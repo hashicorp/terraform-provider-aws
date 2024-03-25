@@ -9,7 +9,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/shield"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/shield/types"
+	"github.com/aws/aws-sdk-go-v2/service/shield/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -24,12 +24,13 @@ import (
 
 // @SDKResource("aws_shield_protection", name="Protection")
 // @Tags(identifierAttribute="arn")
-func ResourceProtection() *schema.Resource {
+func resourceProtection() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProtectionCreate,
 		UpdateWithoutTimeout: resourceProtectionUpdate,
 		ReadWithoutTimeout:   resourceProtectionRead,
 		DeleteWithoutTimeout: resourceProtectionDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -53,6 +54,7 @@ func ResourceProtection() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
+
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
@@ -61,17 +63,21 @@ func resourceProtectionCreate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ShieldClient(ctx)
 
+	name := d.Get("name").(string)
 	input := &shield.CreateProtectionInput{
-		Name:        aws.String(d.Get("name").(string)),
+		Name:        aws.String(name),
 		ResourceArn: aws.String(d.Get("resource_arn").(string)),
 		Tags:        getTagsIn(ctx),
 	}
 
-	resp, err := conn.CreateProtection(ctx, input)
+	output, err := conn.CreateProtection(ctx, input)
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Shield Protection: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Shield Protection (%s): %s", name, err)
 	}
-	d.SetId(aws.ToString(resp.ProtectionId))
+
+	d.SetId(aws.ToString(output.ProtectionId))
+
 	return append(diags, resourceProtectionRead(ctx, d, meta)...)
 }
 
@@ -79,7 +85,7 @@ func resourceProtectionRead(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ShieldClient(ctx)
 
-	resp, err := findProtectionByID(ctx, conn, d.Id())
+	protection, err := findProtectionByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Shield Protection (%s) not found, removing from state", d.Id())
@@ -91,10 +97,9 @@ func resourceProtectionRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading Shield Protection (%s): %s", d.Id(), err)
 	}
 
-	arn := aws.ToString(resp.ProtectionArn)
-	d.Set("arn", arn)
-	d.Set("name", resp.Name)
-	d.Set("resource_arn", resp.ResourceArn)
+	d.Set("arn", protection.ProtectionArn)
+	d.Set("name", protection.Name)
+	d.Set("resource_arn", protection.ResourceArn)
 
 	return diags
 }
@@ -111,13 +116,12 @@ func resourceProtectionDelete(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ShieldClient(ctx)
 
-	input := &shield.DeleteProtectionInput{
+	log.Printf("[DEBUG] Deleting Shield Protection: %s", d.Id())
+	_, err := conn.DeleteProtection(ctx, &shield.DeleteProtectionInput{
 		ProtectionId: aws.String(d.Id()),
-	}
+	})
 
-	_, err := conn.DeleteProtection(ctx, input)
-
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -127,14 +131,26 @@ func resourceProtectionDelete(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func findProtectionByID(ctx context.Context, conn *shield.Client, id string) (*awstypes.Protection, error) {
+func findProtectionByID(ctx context.Context, conn *shield.Client, id string) (*types.Protection, error) {
 	input := &shield.DescribeProtectionInput{
 		ProtectionId: aws.String(id),
 	}
 
-	resp, err := conn.DescribeProtection(ctx, input)
+	return findProtection(ctx, conn, input)
+}
 
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+func findProtectionByResourceARN(ctx context.Context, conn *shield.Client, arn string) (*types.Protection, error) {
+	input := &shield.DescribeProtectionInput{
+		ResourceArn: aws.String(arn),
+	}
+
+	return findProtection(ctx, conn, input)
+}
+
+func findProtection(ctx context.Context, conn *shield.Client, input *shield.DescribeProtectionInput) (*types.Protection, error) {
+	output, err := conn.DescribeProtection(ctx, input)
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -145,9 +161,9 @@ func findProtectionByID(ctx context.Context, conn *shield.Client, id string) (*a
 		return nil, err
 	}
 
-	if resp.Protection == nil {
+	if output == nil || output.Protection == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return resp.Protection, nil
+	return output.Protection, nil
 }

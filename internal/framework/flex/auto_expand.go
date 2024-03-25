@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"reflect"
 
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
@@ -248,10 +249,16 @@ func (expander autoExpander) string(ctx context.Context, vFrom basetypes.StringV
 
 	case reflect.Struct:
 		//
-		// fwtypes.Timestamp --> time.Time
+		// timetypes.RFC3339 --> time.Time
 		//
-		if t, ok := vFrom.(fwtypes.Timestamp); ok {
-			vTo.Set(reflect.ValueOf(t.ValueTimestamp()))
+		if t, ok := vFrom.(timetypes.RFC3339); ok {
+			v, d := t.ValueRFC3339Time()
+			diags.Append(d...)
+			if diags.HasError() {
+				return diags
+			}
+
+			vTo.Set(reflect.ValueOf(v))
 			return diags
 		}
 
@@ -266,10 +273,16 @@ func (expander autoExpander) string(ctx context.Context, vFrom basetypes.StringV
 
 		case reflect.Struct:
 			//
-			// fwtypes.Timestamp --> *time.Time
+			// timetypes.RFC3339 --> *time.Time
 			//
-			if t, ok := vFrom.(fwtypes.Timestamp); ok {
-				vTo.Set(reflect.ValueOf(t.ValueTimestampPointer()))
+			if t, ok := vFrom.(timetypes.RFC3339); ok {
+				v, d := t.ValueRFC3339Time()
+				diags.Append(d...)
+				if diags.HasError() {
+					return diags
+				}
+
+				vTo.Set(reflect.ValueOf(&v))
 				return diags
 			}
 		}
@@ -603,10 +616,24 @@ func (expander autoExpander) nestedObjectCollection(ctx context.Context, vFrom f
 				diags.Append(expander.nestedObjectToSlice(ctx, vFrom, tTo, tElem, vTo)...)
 				return diags
 			}
+
+		case reflect.Interface:
+			//
+			// types.List(OfObject) -> []interface.
+			//
+			// Smithy union type handling not yet implemented. Silently skip.
+			return diags
 		}
+
+	case reflect.Interface:
+		//
+		// types.List(OfObject) -> interface.
+		//
+		// Smithy union type handling not yet implemented. Silently skip.
+		return diags
 	}
 
-	diags.AddError("Incompatible types", fmt.Sprintf("nestedObject[%s] cannot be expanded to %s", vFrom.Type(ctx).(attr.TypeWithElementType).ElementType(), vTo.Kind()))
+	diags.AddError("Incompatible types", fmt.Sprintf("nestedObjectCollection[%s] cannot be expanded to %s", vFrom.Type(ctx).(attr.TypeWithElementType).ElementType(), vTo.Kind()))
 	return diags
 }
 
