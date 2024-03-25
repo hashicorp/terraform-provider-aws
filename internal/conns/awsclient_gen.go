@@ -46,6 +46,7 @@ import (
 	configservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/configservice"
 	connectcases_sdkv2 "github.com/aws/aws-sdk-go-v2/service/connectcases"
 	controltower_sdkv2 "github.com/aws/aws-sdk-go-v2/service/controltower"
+	costandusagereportservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/costandusagereportservice"
 	costoptimizationhub_sdkv2 "github.com/aws/aws-sdk-go-v2/service/costoptimizationhub"
 	customerprofiles_sdkv2 "github.com/aws/aws-sdk-go-v2/service/customerprofiles"
 	dax_sdkv2 "github.com/aws/aws-sdk-go-v2/service/dax"
@@ -164,7 +165,6 @@ import (
 	cloudwatchrum_sdkv1 "github.com/aws/aws-sdk-go/service/cloudwatchrum"
 	cognitoidentityprovider_sdkv1 "github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	connect_sdkv1 "github.com/aws/aws-sdk-go/service/connect"
-	costandusagereportservice_sdkv1 "github.com/aws/aws-sdk-go/service/costandusagereportservice"
 	costexplorer_sdkv1 "github.com/aws/aws-sdk-go/service/costexplorer"
 	databasemigrationservice_sdkv1 "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	dataexchange_sdkv1 "github.com/aws/aws-sdk-go/service/dataexchange"
@@ -372,8 +372,8 @@ func (c *AWSClient) CEConn(ctx context.Context) *costexplorer_sdkv1.CostExplorer
 	return errs.Must(conn[*costexplorer_sdkv1.CostExplorer](ctx, c, names.CE, make(map[string]any)))
 }
 
-func (c *AWSClient) CURConn(ctx context.Context) *costandusagereportservice_sdkv1.CostandUsageReportService {
-	return errs.Must(conn[*costandusagereportservice_sdkv1.CostandUsageReportService](ctx, c, names.CUR, make(map[string]any)))
+func (c *AWSClient) CURClient(ctx context.Context) *costandusagereportservice_sdkv2.Client {
+	return errs.Must(client[*costandusagereportservice_sdkv2.Client](ctx, c, names.CUR, make(map[string]any)))
 }
 
 func (c *AWSClient) ChimeConn(ctx context.Context) *chime_sdkv1.Chime {
