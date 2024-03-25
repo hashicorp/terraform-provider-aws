@@ -5,9 +5,9 @@ package cur
 import (
 	"context"
 
-	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/costandusagereportservice"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
