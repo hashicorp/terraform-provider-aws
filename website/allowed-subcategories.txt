@@ -164,6 +164,7 @@ OpsWorks
 Organizations
 Outposts
 Outposts (EC2)
+Payment Cryptography Control Plane
 Pinpoint
 Polly
 Pricing Calculator

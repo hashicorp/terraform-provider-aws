@@ -810,6 +810,9 @@ service/outposts:
 service/panorama:
   - 'internal/service/panorama/**/*'
   - 'website/**/panorama_*'
+service/paymentcryptography:
+  - 'internal/service/paymentcryptography/**/*'
+  - 'website/**/paymentcryptography_*'
 service/pcaconnectorad:
   - 'internal/service/pcaconnectorad/**/*'
   - 'website/**/pcaconnectorad_*'
