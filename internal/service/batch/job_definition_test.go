@@ -405,47 +405,9 @@ func TestAccBatchJobDefinition_ContainerProperties_advanced(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-<<<<<<< HEAD
-			},
-		},
-	})
-}
-
-func TestAccBatchJobDefinition_updateForcesNewResource(t *testing.T) {
-	ctx := acctest.Context(t)
-	var before, after batch.JobDefinition
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_batch_job_definition.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobDefinitionDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccJobDefinitionConfig_containerPropertiesAdvanced(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckJobDefinitionExists(ctx, resourceName, &before),
-					testAccCheckJobDefinitionAttributes(&before, nil),
-				),
-			},
-			{
-				Config: testAccJobDefinitionConfig_containerPropertiesAdvancedUpdate(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckJobDefinitionExists(ctx, resourceName, &after),
-					testAccCheckJobDefinitionRecreated(t, &before, &after),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-=======
 				ImportStateVerifyIgnore: []string{
 					"deregister_on_new_revision",
 				},
->>>>>>> 1c264545ba (initial remove of ForceNew)
 			},
 			{
 				Config: testAccJobDefinitionConfig_containerPropertiesAdvancedUpdate(rName),
@@ -656,47 +618,9 @@ func TestAccBatchJobDefinition_NodeProperties_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-<<<<<<< HEAD
-			},
-		},
-	})
-}
-
-func TestAccBatchJobDefinition_NodePropertiesupdateForcesNewResource(t *testing.T) {
-	ctx := acctest.Context(t)
-	var before, after batch.JobDefinition
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_batch_job_definition.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobDefinitionDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccJobDefinitionConfig_nodePropertiesAdvanced(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckJobDefinitionExists(ctx, resourceName, &before),
-					testAccCheckJobDefinitionAttributes(&before, nil),
-				),
-			},
-			{
-				Config: testAccJobDefinitionConfig_nodePropertiesAdvancedUpdate(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckJobDefinitionExists(ctx, resourceName, &after),
-					testAccCheckJobDefinitionRecreated(t, &before, &after),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-=======
 				ImportStateVerifyIgnore: []string{
 					"deregister_on_new_revision",
 				},
->>>>>>> 1c264545ba (initial remove of ForceNew)
 			},
 		},
 	})
