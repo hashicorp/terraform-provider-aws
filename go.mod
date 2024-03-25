@@ -6,7 +6,7 @@ require (
 	github.com/ProtonMail/go-crypto v1.1.0-alpha.2
 	github.com/YakDriver/go-version v0.1.0
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.51.5
+	github.com/aws/aws-sdk-go v1.51.6
 	github.com/aws/aws-sdk-go-v2 v1.26.0
 	github.com/aws/aws-sdk-go-v2/config v1.27.9
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.0
@@ -72,7 +72,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.17.4
 	github.com/aws/aws-sdk-go-v2/service/evidently v1.19.3
 	github.com/aws/aws-sdk-go-v2/service/finspace v1.23.0
-	github.com/aws/aws-sdk-go-v2/service/firehose v1.28.3
+	github.com/aws/aws-sdk-go-v2/service/firehose v1.28.4
 	github.com/aws/aws-sdk-go-v2/service/fis v1.24.1
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.22.3
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.26.3
@@ -82,7 +82,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.12.3
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.12.3
 	github.com/aws/aws-sdk-go-v2/service/kafka v1.31.1
-	github.com/aws/aws-sdk-go-v2/service/kendra v1.49.3
+	github.com/aws/aws-sdk-go-v2/service/kendra v1.50.0
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.10.3
 	github.com/aws/aws-sdk-go-v2/service/kinesis v1.27.3
 	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.31.4
@@ -106,7 +106,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.5.3
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.11.3
 	github.com/aws/aws-sdk-go-v2/service/polly v1.39.5
-	github.com/aws/aws-sdk-go-v2/service/pricing v1.27.3
+	github.com/aws/aws-sdk-go-v2/service/pricing v1.28.0
 	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.4.3
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.21.3
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.16.3
@@ -118,13 +118,13 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.10.3
 	github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.21.3
 	github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.21.3
-	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.8.4
+	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.9.0
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.23.3
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.53.0
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.44.3
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.8.3
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.28.4
-	github.com/aws/aws-sdk-go-v2/service/securityhub v1.46.3
+	github.com/aws/aws-sdk-go-v2/service/securityhub v1.47.0
 	github.com/aws/aws-sdk-go-v2/service/securitylake v1.13.2
 	github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry v1.26.3
 	github.com/aws/aws-sdk-go-v2/service/servicequotas v1.21.3

@@ -1,5 +1,9 @@
 ## 5.43.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_vpc_ipam: Add `tier` argument ([#36504](https://github.com/hashicorp/terraform-provider-aws/issues/36504))
+
 BUG FIXES:
 
 * resource/aws_quicksight_dashboard: Fix failure when updating a dashboard takes a while ([#34227](https://github.com/hashicorp/terraform-provider-aws/issues/34227))
