@@ -191,6 +191,8 @@ require (
 	syreclabs.com/go/faker v1.2.3
 )
 
+require github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.23.3
+
 require (
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver/v3 v3.2.1 // indirect

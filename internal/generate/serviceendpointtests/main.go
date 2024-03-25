@@ -90,7 +90,7 @@ func main() {
 		}
 
 		switch packageName {
-		case "costoptimizationhub", "route53domains":
+		case "costoptimizationhub", "cur", "route53domains":
 			td.Region = "us-east-1"
 		}
 
