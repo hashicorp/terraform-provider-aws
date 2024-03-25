@@ -22,7 +22,7 @@ import (
 )
 
 // @SDKResource("aws_redshiftserverless_endpoint_access", name="Endpoint Access")
-func ResourceEndpointAccess() *schema.Resource {
+func resourceEndpointAccess() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEndpointAccessCreate,
 		ReadWithoutTimeout:   resourceEndpointAccessRead,

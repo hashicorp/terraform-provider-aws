@@ -28,7 +28,7 @@ import (
 
 // @SDKResource("aws_redshiftserverless_namespace", name="Namespace")
 // @Tags(identifierAttribute="arn")
-func ResourceNamespace() *schema.Resource {
+func resourceNamespace() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNamespaceCreate,
 		ReadWithoutTimeout:   resourceNamespaceRead,

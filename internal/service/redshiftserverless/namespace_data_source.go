@@ -12,8 +12,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// @SDKDataSource("aws_redshiftserverless_namespace")
-func DataSourceNamespace() *schema.Resource {
+// @SDKDataSource("aws_redshiftserverless_namespace", name="Namespace")
+func dataSourceNamespace() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceNamespaceRead,
 

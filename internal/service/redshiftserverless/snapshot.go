@@ -18,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_redshiftserverless_snapshot")
-func ResourceSnapshot() *schema.Resource {
+// @SDKResource("aws_redshiftserverless_snapshot", name="Snapshot")
+func resourceSnapshot() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSnapshotCreate,
 		ReadWithoutTimeout:   resourceSnapshotRead,
