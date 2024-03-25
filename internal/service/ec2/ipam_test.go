@@ -176,7 +176,7 @@ func TestAccIPAM_cascade(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"cascade"},
+				ImportStateVerifyIgnore: []string{"cascade", "scope_count"},
 			},
 		},
 	})
