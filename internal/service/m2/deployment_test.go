@@ -39,7 +39,7 @@ func TestAccM2Deployment_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckDeploymentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeploymentConfig_basic(rName, "bluage", 1, 1, "true"),
+				Config: testAccDeploymentConfig_basic(rName, "bluage", 1, 1, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
 					resource.TestCheckResourceAttr(resourceName, "application_version", "1"),
@@ -74,7 +74,7 @@ func TestAccM2Deployment_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckDeploymentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeploymentConfig_basic(rName, "bluage", 1, 1, "false"),
+				Config: testAccDeploymentConfig_basic(rName, "bluage", 1, 1, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfm2.ResourceDeployment, resourceName),
@@ -105,7 +105,7 @@ func TestAccM2Deployment_nostart(t *testing.T) {
 		CheckDestroy:             testAccCheckDeploymentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeploymentConfig_basic(rName, "bluage", 1, 1, "false"),
+				Config: testAccDeploymentConfig_basic(rName, "bluage", 1, 1, false),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
 					resource.TestCheckResourceAttr(resourceName, "application_version", "1"),
@@ -140,14 +140,14 @@ func TestAccM2Deployment_update(t *testing.T) {
 		CheckDestroy:             testAccCheckDeploymentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDeploymentConfig_basic(rName, "bluage", 1, 1, "true"),
+				Config: testAccDeploymentConfig_basic(rName, "bluage", 1, 1, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
 					resource.TestCheckResourceAttr(resourceName, "application_version", "1"),
 				),
 			},
 			{
-				Config: testAccDeploymentConfig_basic(rName, "bluage", 2, 2, "true"),
+				Config: testAccDeploymentConfig_basic(rName, "bluage", 2, 2, true),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
 					resource.TestCheckResourceAttr(resourceName, "application_version", "2"),
@@ -209,23 +209,17 @@ func testAccCheckDeploymentExists(ctx context.Context, n string, v *m2.GetDeploy
 	}
 }
 
-func testAccDeploymentConfig_basic(rName, engineType string, appVersion, deployVersion int, start string) string {
-	return acctest.ConfigCompose(testAccEnvironmentConfig_basic(rName, engineType),
-		testAccApplicationConfig_versioned(rName, engineType, appVersion, 2),
-		testAccDeploymentConfig_secretsManagerEndpoint(rName),
-		fmt.Sprintf(`
-resource "aws_m2_deployment" "test" {
-  environment_id      = aws_m2_environment.test.id
-  application_id      = aws_m2_application.test.id
-  application_version = %[2]d
-  start               = %[3]q
-  depends_on          = [aws_vpc_endpoint.secretsmanager]
-}
-`, rName, deployVersion, start))
+func testAccDeploymentConfig_basic(rName, engineType string, appVersion, deployVersion int, start bool) string {
+	return acctest.ConfigCompose(testAccEnvironmentConfig_base(rName), testAccApplicationConfig_versioned(rName, engineType, appVersion, 2), fmt.Sprintf(`
+resource "aws_m2_environment" "test" {
+  name          = %[1]q
+  engine_type   = %[2]q
+  instance_type = "M2.m5.large"
+
+  security_group_ids = [aws_security_group.test.id]
+  subnet_ids         = aws_subnet.test[*].id
 }
 
-func testAccDeploymentConfig_secretsManagerEndpoint(rName string) string {
-	return fmt.Sprintf(`
 data "aws_region" "current" {}
 
 resource "aws_vpc_endpoint" "secretsmanager" {
@@ -244,5 +238,13 @@ resource "aws_vpc_endpoint" "secretsmanager" {
     Name = %[1]q
   }
 }
-`, rName)
+
+resource "aws_m2_deployment" "test" {
+  environment_id      = aws_m2_environment.test.id
+  application_id      = aws_m2_application.test.id
+  application_version = %[3]d
+  start               = %[4]t
+  depends_on          = [aws_vpc_endpoint.secretsmanager]
+}
+`, rName, engineType, deployVersion, start))
 }
