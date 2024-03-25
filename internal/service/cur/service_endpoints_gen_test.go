@@ -73,7 +73,7 @@ const (
 )
 
 func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.Setenv
-	const region = "us-west-2" //lintignore:AWSAT003
+	const region = "us-east-1" //lintignore:AWSAT003
 
 	testcases := map[string]endpointTestCase{
 		"no config": {
