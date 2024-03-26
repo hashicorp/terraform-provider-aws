@@ -315,6 +315,20 @@ func TestAccCloudFrontFunction_KeyValueStoreAssociations(t *testing.T) {
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"publish"},
 			},
+			{
+				Config: testAccFunctionConfig_KeyValueStoreAssociationCodeUpdate(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttrPair(resourceName, "key_value_store_associations.0", "aws_cloudfront_key_value_store.test", "arn"),
+				),
+			},
+			{
+				Config: testAccFunctionConfig_KeyValueStoreAssociationUpdate(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFunctionExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttrPair(resourceName, "key_value_store_associations.0", "aws_cloudfront_key_value_store.test2", "arn"),
+				),
+			},
 		},
 	})
 }
@@ -616,6 +630,61 @@ resource "aws_cloudfront_function" "test" {
   runtime                      = "cloudfront-js-2.0"
   key_value_store_associations = [aws_cloudfront_key_value_store.test.arn]
   code                         = <<-EOT
+function handler(event) {
+	var response = {
+		statusCode: 302,
+		statusDescription: 'Found',
+		headers: {
+			'cloudfront-functions': { value: 'generated-by-CloudFront-Functions' },
+			'location': { value: 'https://aws.amazon.com/cloudfront/' }
+		}
+	};
+	return response;
+}
+EOT
+}
+`, rName))
+}
+
+func testAccFunctionConfig_KeyValueStoreAssociationCodeUpdate(rName string) string {
+	return acctest.ConfigCompose(
+		testAccKeyValueStoreConfig_basic(rName),
+		fmt.Sprintf(`
+resource "aws_cloudfront_function" "test" {
+  name                         = %[1]q
+  runtime                      = "cloudfront-js-2.0"
+  key_value_store_associations = [aws_cloudfront_key_value_store.test.arn]
+  code                         = <<-EOT
+// updated code
+function handler(event) {
+	var response = {
+		statusCode: 302,
+		statusDescription: 'Found',
+		headers: {
+			'cloudfront-functions': { value: 'generated-by-CloudFront-Functions' },
+			'location': { value: 'https://aws.amazon.com/cloudfront/' }
+		}
+	};
+	return response;
+}
+EOT
+}
+`, rName))
+}
+
+func testAccFunctionConfig_KeyValueStoreAssociationUpdate(rName string) string {
+	return acctest.ConfigCompose(
+		testAccKeyValueStoreConfig_basic(rName),
+		fmt.Sprintf(`
+resource "aws_cloudfront_key_value_store" "test2" {
+  name = "%[1]s2"
+}
+resource "aws_cloudfront_function" "test" {
+  name                         = %[1]q
+  runtime                      = "cloudfront-js-2.0"
+  key_value_store_associations = [aws_cloudfront_key_value_store.test2.arn]
+  code                         = <<-EOT
+// updated code
 function handler(event) {
 	var response = {
 		statusCode: 302,
