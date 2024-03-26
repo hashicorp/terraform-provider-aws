@@ -177,7 +177,6 @@ func (r *resourceKey) Update(ctx context.Context, req resource.UpdateRequest, re
 	}
 
 	if !plan.Value.Equal(state.Value) {
-
 		etag, err := findEtagByARN(ctx, conn, plan.KeyValueStoreARN.ValueString())
 
 		if err != nil {
