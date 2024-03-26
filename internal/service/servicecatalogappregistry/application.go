@@ -134,9 +134,7 @@ func (r *resourceApplication) Update(ctx context.Context, req resource.UpdateReq
 		return
 	}
 
-	if !plan.Name.Equal(state.Name) ||
-		!plan.Description.Equal(state.Description) {
-
+	if !plan.Description.Equal(state.Description) {
 		in := &servicecatalogappregistry.UpdateApplicationInput{}
 		resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
 		if resp.Diagnostics.HasError() {
