@@ -168,7 +168,7 @@ func ValidIAMPolicyJSON(v interface{}, k string) (ws []string, errors []error) {
 	value = strings.TrimSpace(value)
 	if len(value) < 1 {
 		errors = append(errors, fmt.Errorf("%q is an empty string, which is not a valid JSON value", k))
-		return
+		return //nolint:nakedret // Naked return due to legacy, non-idiomatic Go function, error handling
 	}
 
 	if first := value[:1]; first != "{" {
@@ -197,7 +197,7 @@ func ValidIAMPolicyJSON(v interface{}, k string) (ws []string, errors []error) {
 			// Generic error for if we didn't find something more specific to say.
 			errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: not a JSON object", k))
 		}
-		return
+		return //nolint:nakedret // Naked return due to legacy, non-idiomatic Go function, error handling
 	}
 
 	if _, err := structure.NormalizeJsonString(v); err != nil {
@@ -206,12 +206,12 @@ func ValidIAMPolicyJSON(v interface{}, k string) (ws []string, errors []error) {
 			errStr = fmt.Sprintf("%s, at byte offset %d", errStr, err.Offset)
 		}
 		errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: %s", k, errStr))
-		return
+		return //nolint:nakedret // Naked return due to legacy, non-idiomatic Go function, error handling
 	}
 
 	if err := basevalidation.JSONNoDuplicateKeys(value); err != nil {
 		errors = append(errors, fmt.Errorf("%q contains duplicate JSON keys: %s", k, err))
-		return
+		return //nolint:nakedret // Naked return due to legacy, non-idiomatic Go function, error handling
 	}
 
 	return //nolint:nakedret // Just a long function.
