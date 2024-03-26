@@ -41155,6 +41155,13 @@ var awsusgovPartition = partition{
 				},
 			},
 		},
+		"models-v2-lex": service{
+			Endpoints: serviceEndpoints{
+				endpointKey{
+					Region: "us-gov-west-1",
+				}: endpoint{},
+			},
+		},
 		"models.lex": service{
 			Defaults: endpointDefaults{
 				defaultKey{}: endpoint{
@@ -42042,6 +42049,13 @@ var awsusgovPartition = partition{
 
 					Deprecated: boxedTrue,
 				},
+			},
+		},
+		"runtime-v2-lex": service{
+			Endpoints: serviceEndpoints{
+				endpointKey{
+					Region: "us-gov-west-1",
+				}: endpoint{},
 			},
 		},
 		"runtime.lex": service{
