@@ -23,12 +23,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource(name="Application")
 func newResourceApplication(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceApplication{}
-
-	return r, nil
+	return &resourceApplication{}, nil
 }
 
 const (
@@ -67,12 +64,10 @@ func (r *resourceApplication) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	in := &servicecatalogappregistry.CreateApplicationInput{
-		Name: aws.String(plan.Name.ValueString()),
-	}
-
-	if !plan.Description.IsNull() {
-		in.Description = aws.String(plan.Description.ValueString())
+	in := &servicecatalogappregistry.CreateApplicationInput{}
+	resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
+	if resp.Diagnostics.HasError() {
+		return
 	}
 
 	out, err := conn.CreateApplication(ctx, in)
@@ -91,9 +86,7 @@ func (r *resourceApplication) Create(ctx context.Context, req resource.CreateReq
 		return
 	}
 
-	plan.ARN = flex.StringToFramework(ctx, out.Application.Arn)
-	plan.ID = flex.StringToFramework(ctx, out.Application.Id)
-
+	resp.Diagnostics.Append(flex.Flatten(ctx, out.Application, &plan)...)
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
@@ -119,11 +112,7 @@ func (r *resourceApplication) Read(ctx context.Context, req resource.ReadRequest
 		return
 	}
 
-	state.ARN = flex.StringToFramework(ctx, out.Arn)
-	state.ID = flex.StringToFramework(ctx, out.Id)
-	state.Name = flex.StringToFramework(ctx, out.Name)
-	state.Description = flex.StringToFramework(ctx, out.Description)
-
+	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
@@ -163,8 +152,7 @@ func (r *resourceApplication) Update(ctx context.Context, req resource.UpdateReq
 			return
 		}
 
-		plan.ARN = flex.StringToFramework(ctx, out.Application.Arn)
-		plan.ID = flex.StringToFramework(ctx, out.Application.Id)
+		resp.Diagnostics.Append(flex.Flatten(ctx, out.Application, &plan)...)
 	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
