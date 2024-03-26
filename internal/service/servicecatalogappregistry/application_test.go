@@ -79,6 +79,56 @@ func TestAccServiceCatalogAppRegistryApplication_disappears(t *testing.T) {
 	})
 }
 
+func TestAccServiceCatalogAppRegistryApplication_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rNameUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	description := "text1"
+	descriptionUpdated := "text2"
+	resourceName := "aws_servicecatalogappregistry_application.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.ServiceCatalogAppRegistryEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogAppRegistryServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccApplicationConfig_description(rName, description),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccApplicationConfig_description(rName, descriptionUpdated),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "description", descriptionUpdated),
+				),
+			},
+			{
+				Config: testAccApplicationConfig_description(rNameUpdated, description),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
+					resource.TestCheckResourceAttr(resourceName, "description", description),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckApplicationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogAppRegistryClient(ctx)
@@ -128,4 +178,13 @@ resource "aws_servicecatalogappregistry_application" "test" {
   name = %[1]q
 }
 `, name)
+}
+
+func testAccApplicationConfig_description(name, description string) string {
+	return fmt.Sprintf(`
+resource "aws_servicecatalogappregistry_application" "test" {
+  name        = %[1]q
+  description = %[2]q
+}
+`, name, description)
 }
