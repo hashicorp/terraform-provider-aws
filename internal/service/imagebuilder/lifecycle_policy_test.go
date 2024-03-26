@@ -99,6 +99,10 @@ func testAccLifecyclePolicyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
+data "aws_iam_policy" "EC2ImageBuilderLifecycleExecutionPolicy" {
+  arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/EC2ImageBuilderLifecycleExecutionPolicy"
+}
+
 resource "aws_iam_role" "test" {
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
@@ -106,17 +110,16 @@ resource "aws_iam_role" "test" {
       Action = "sts:AssumeRole"
       Effect = "Allow"
       Principal = {
-        Service = "ec2.${data.aws_partition.current.dns_suffix}"
+        Service = "imagebuilder.${data.aws_partition.current.dns_suffix}"
       }
-      Sid = ""
     }]
   })
   name = %[1]q
 }
 
-resource "aws_iam_instance_profile" "test" {
-  name = aws_iam_role.test.name
-  role = aws_iam_role.test.name
+resource "aws_iam_role_policy_attachment" "test" {
+  role       = "${aws_iam_role.test.name}"
+  policy_arn = "${data.aws_iam_policy.EC2ImageBuilderLifecycleExecutionPolicy.arn}"
 }
 
 resource "aws_imagebuilder_lifecycle_policy" "test" {
@@ -132,6 +135,7 @@ resource "aws_imagebuilder_lifecycle_policy" "test" {
       value = 6
     }
   }
+  resource_selection {}
 }
 `, rName)
 }

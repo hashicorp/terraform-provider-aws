@@ -229,6 +229,7 @@ func (r *resourceLifecyclePolicy) Schema(ctx context.Context, req resource.Schem
 			},
 			"resource_selection": schema.ListNestedBlock{
 				Validators: []validator.List{
+					listvalidator.IsRequired(),
 					listvalidator.SizeAtMost(1),
 				},
 				NestedObject: schema.NestedBlockObject{
