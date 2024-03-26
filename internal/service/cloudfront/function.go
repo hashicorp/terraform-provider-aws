@@ -73,8 +73,6 @@ func ResourceFunction() *schema.Resource {
 			"key_value_store_associations": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				// AWS docs state that only one key value store can be associated with a function at a time.
-				MaxItems: 1,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
 					ValidateFunc: verify.ValidARN,
