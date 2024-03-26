@@ -57,7 +57,6 @@ func ResourceJobDefinition() *schema.Resource {
 			"container_properties": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ForceNew:      true,
 				ConflictsWith: []string{"eks_properties", "node_properties"},
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
@@ -71,6 +70,12 @@ func ResourceJobDefinition() *schema.Resource {
 				ValidateFunc: validJobContainerProperties,
 			},
 
+			"deregister_on_new_revision": {
+				Type:     schema.TypeBool,
+				Default:  true,
+				Optional: true,
+			},
+
 			"name": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -81,7 +86,6 @@ func ResourceJobDefinition() *schema.Resource {
 			"node_properties": {
 				Type:          schema.TypeString,
 				Optional:      true,
-				ForceNew:      true,
 				ConflictsWith: []string{"container_properties", "eks_properties"},
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
@@ -323,14 +327,12 @@ func ResourceJobDefinition() *schema.Resource {
 			"parameters": {
 				Type:     schema.TypeMap,
 				Optional: true,
-				ForceNew: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 
 			"platform_capabilities": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				ForceNew: true,
 				Elem: &schema.Schema{
 					Type:         schema.TypeString,
 					ValidateFunc: validation.StringInSlice(batch.PlatformCapability_Values(), false),
@@ -340,21 +342,18 @@ func ResourceJobDefinition() *schema.Resource {
 			"propagate_tags": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				ForceNew: true,
 				Default:  false,
 			},
 
 			"retry_strategy": {
 				Type:     schema.TypeList,
 				Optional: true,
-				ForceNew: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"attempts": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							ForceNew:     true,
 							ValidateFunc: validation.IntBetween(1, 10),
 						},
 						"evaluate_on_exit": {
@@ -368,7 +367,6 @@ func ResourceJobDefinition() *schema.Resource {
 									"action": {
 										Type:     schema.TypeString,
 										Required: true,
-										ForceNew: true,
 										StateFunc: func(v interface{}) string {
 											return strings.ToLower(v.(string))
 										},
@@ -377,7 +375,6 @@ func ResourceJobDefinition() *schema.Resource {
 									"on_exit_code": {
 										Type:     schema.TypeString,
 										Optional: true,
-										ForceNew: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 512),
 											validation.StringMatch(regexache.MustCompile(`^[0-9]*\*?$`), "must contain only numbers, and can optionally end with an asterisk"),
@@ -386,7 +383,6 @@ func ResourceJobDefinition() *schema.Resource {
 									"on_reason": {
 										Type:     schema.TypeString,
 										Optional: true,
-										ForceNew: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 512),
 											validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z.:\s]*\*?$`), "must contain letters, numbers, periods, colons, and white space, and can optionally end with an asterisk"),
@@ -395,7 +391,6 @@ func ResourceJobDefinition() *schema.Resource {
 									"on_status_reason": {
 										Type:     schema.TypeString,
 										Optional: true,
-										ForceNew: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(1, 512),
 											validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z.:\s]*\*?$`), "must contain letters, numbers, periods, colons, and white space, and can optionally end with an asterisk"),
@@ -416,7 +411,6 @@ func ResourceJobDefinition() *schema.Resource {
 			"scheduling_priority": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				ForceNew: true,
 			},
 
 			names.AttrTags:    tftags.TagsSchema(),
@@ -425,14 +419,12 @@ func ResourceJobDefinition() *schema.Resource {
 			"timeout": {
 				Type:     schema.TypeList,
 				Optional: true,
-				ForceNew: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"attempt_duration_seconds": {
 							Type:         schema.TypeInt,
 							Optional:     true,
-							ForceNew:     true,
 							ValidateFunc: validation.IntAtLeast(60),
 						},
 					},
@@ -442,7 +434,6 @@ func ResourceJobDefinition() *schema.Resource {
 			"type": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice([]string{batch.JobDefinitionTypeContainer, batch.JobDefinitionTypeMultinode}, true),
 			},
 		},
@@ -624,8 +615,95 @@ func resourceJobDefinitionRead(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceJobDefinitionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).BatchConn(ctx)
 
-	// Tags only.
+	if d.HasChangesExcept("tags", "tags_all") {
+		name := d.Get("name").(string)
+		input := &batch.RegisterJobDefinitionInput{
+			JobDefinitionName: aws.String(name),
+			Type:              aws.String(d.Get("type").(string)),
+		}
+
+		if v, ok := d.GetOk("container_properties"); ok {
+			props, err := expandJobContainerProperties(v.(string))
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating Batch Job Definition (%s): %s", name, err)
+			}
+
+			if aws.StringValue(input.Type) == batch.JobDefinitionTypeContainer {
+				removeEmptyEnvironmentVariables(&diags, props.Environment, cty.GetAttrPath("container_properties"))
+				input.ContainerProperties = props
+			}
+		}
+
+		if v, ok := d.GetOk("eks_properties"); ok {
+			eksProps := v.([]interface{})[0].(map[string]interface{})
+			if podProps, ok := eksProps["pod_properties"].([]interface{}); ok && len(podProps) > 0 {
+				props := expandEKSPodProperties(podProps[0].(map[string]interface{}))
+				input.EksProperties = &batch.EksProperties{
+					PodProperties: props,
+				}
+			}
+		}
+
+		if v, ok := d.GetOk("node_properties"); ok {
+			props, err := expandJobNodeProperties(v.(string))
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating Batch Job Definition (%s): %s", name, err)
+			}
+
+			for _, node := range props.NodeRangeProperties {
+				removeEmptyEnvironmentVariables(&diags, node.Container.Environment, cty.GetAttrPath("node_properties"))
+			}
+			input.NodeProperties = props
+		}
+
+		if v, ok := d.GetOk("propagate_tags"); ok {
+			input.PropagateTags = aws.Bool(v.(bool))
+		}
+
+		if v, ok := d.GetOk("parameters"); ok {
+			input.Parameters = expandJobDefinitionParameters(v.(map[string]interface{}))
+		}
+
+		if v, ok := d.GetOk("platform_capabilities"); ok && v.(*schema.Set).Len() > 0 {
+			input.PlatformCapabilities = flex.ExpandStringSet(v.(*schema.Set))
+		}
+
+		if v, ok := d.GetOk("scheduling_priority"); ok {
+			input.SchedulingPriority = aws.Int64(int64(v.(int)))
+		}
+
+		if v, ok := d.GetOk("retry_strategy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.RetryStrategy = expandRetryStrategy(v.([]interface{})[0].(map[string]interface{}))
+		}
+
+		if v, ok := d.GetOk("timeout"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.Timeout = expandJobTimeout(v.([]interface{})[0].(map[string]interface{}))
+		}
+
+		jd, err := conn.RegisterJobDefinitionWithContext(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Batch Job Definition (%s): %s", name, err)
+		}
+
+		// arn contains revision which is used in the Read call
+		currentARN := d.Get("arn").(string)
+		d.SetId(aws.StringValue(jd.JobDefinitionArn))
+		d.Set("revision", jd.Revision)
+
+		if v := d.Get("deregister_on_new_revision"); v == true {
+			log.Printf("[DEBUG] Deleting Previous Batch Job Definition: %s", currentARN)
+			_, err := conn.DeregisterJobDefinitionWithContext(ctx, &batch.DeregisterJobDefinitionInput{
+				JobDefinition: aws.String(currentARN),
+			})
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "deleting Batch Job Definition (%s): %s", currentARN, err)
+			}
+		}
+	}
 
 	return append(diags, resourceJobDefinitionRead(ctx, d, meta)...)
 }
@@ -634,13 +712,23 @@ func resourceJobDefinitionDelete(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).BatchConn(ctx)
 
-	log.Printf("[DEBUG] Deleting Batch Job Definition: %s", d.Id())
-	_, err := conn.DeregisterJobDefinitionWithContext(ctx, &batch.DeregisterJobDefinitionInput{
-		JobDefinition: aws.String(d.Id()),
-	})
+	name := d.Get("name").(string)
+	jds, err := ListActiveJobDefinitionByName(ctx, conn, name)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Batch Job Definition (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Batch Job Definitions (%s): %s", name, err)
+	}
+
+	for i := range jds {
+		arn := aws.StringValue(jds[i].JobDefinitionArn)
+		log.Printf("[DEBUG] Deleting Batch Job Definition: %s", arn)
+		_, err := conn.DeregisterJobDefinitionWithContext(ctx, &batch.DeregisterJobDefinitionInput{
+			JobDefinition: aws.String(arn),
+		})
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "deleting Batch Job Definition (%s): %s", arn, err)
+		}
 	}
 
 	return diags
@@ -668,6 +756,21 @@ func FindJobDefinitionByARN(ctx context.Context, conn *batch.Batch, arn string) 
 	}
 
 	return output, nil
+}
+
+func ListActiveJobDefinitionByName(ctx context.Context, conn *batch.Batch, name string) ([]*batch.JobDefinition, error) {
+	input := &batch.DescribeJobDefinitionsInput{
+		JobDefinitionName: aws.String(name),
+		Status:            aws.String(jobDefinitionStatusActive),
+	}
+
+	output, err := conn.DescribeJobDefinitionsWithContext(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output.JobDefinitions, nil
 }
 
 func findJobDefinition(ctx context.Context, conn *batch.Batch, input *batch.DescribeJobDefinitionsInput) (*batch.JobDefinition, error) {
