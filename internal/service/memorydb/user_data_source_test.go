@@ -49,7 +49,7 @@ func TestAccMemoryDBUserDataSource_iam(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, memorydb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MemoryDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{

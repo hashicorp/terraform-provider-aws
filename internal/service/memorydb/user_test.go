@@ -62,7 +62,7 @@ func TestAccMemoryDBUser_iam_auth_mode(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, memorydb.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MemoryDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
