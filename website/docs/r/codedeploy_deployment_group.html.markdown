@@ -331,7 +331,7 @@ The `target_group` configuration block supports the following:
 
 The `test_traffic_route` configuration block supports the following:
 
-* `listener_arns` - (Required) List of Amazon Resource Names (ARNs) of the load balancer listeners.
+* `listener_arns` - (Required) List of Amazon Resource Names (ARNs) of the load balancer listeners. The list has a maximum size of one.
 
 ### on_premises_instance_tag_filter Argument Reference
 
