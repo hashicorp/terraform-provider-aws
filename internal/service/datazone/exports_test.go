@@ -5,6 +5,7 @@ package datazone
 
 // Exports for use in tests only.
 var (
-	ResourceDomain    = newResourceDomain
-	IsResourceMissing = isResourceMissing
+	ResourceDomain                            = newResourceDomain
+	ResourceEnvironmentBlueprintConfiguration = newResourceEnvironmentBlueprintConfiguration
+	IsResourceMissing                         = isResourceMissing
 )
