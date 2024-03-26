@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -133,7 +134,8 @@ func (r *resourceResourcePolicy) Read(ctx context.Context, req resource.ReadRequ
 		})
 
 		// If a policy is initially created and then immediately read, it may not be available.
-		if errs.IsA[*awstypes.PolicyNotFoundException](err) || errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		if errs.IsA[*awstypes.PolicyNotFoundException](err) ||
+			errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return retry.RetryableError(err)
 		}
 
@@ -146,7 +148,9 @@ func (r *resourceResourcePolicy) Read(ctx context.Context, req resource.ReadRequ
 		return nil
 	})
 
-	if errs.IsA[*awstypes.PolicyNotFoundException](err) || errs.IsA[*awstypes.ResourceNotFoundException](err) {
+	if tfresource.TimedOut(err) ||
+		errs.IsA[*awstypes.PolicyNotFoundException](err) ||
+		errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		resp.State.RemoveResource(ctx)
 		return
 	}

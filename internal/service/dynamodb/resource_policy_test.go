@@ -163,7 +163,8 @@ func testAccCheckResourcePolicyExists(ctx context.Context, name string, resource
 			})
 
 			// If a policy is initially created and then immediately read, it may not be available.
-			if errs.IsA[*awstypes.PolicyNotFoundException](err) || errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			if errs.IsA[*awstypes.PolicyNotFoundException](err) ||
+				errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				return retry.RetryableError(err)
 			}
 
