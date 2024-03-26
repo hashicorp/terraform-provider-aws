@@ -455,6 +455,42 @@ func TestAccDLMLifecyclePolicy_crossRegionCopyRule(t *testing.T) {
 	})
 }
 
+func TestAccDLMLifecyclePolicy_crossRegionCopyRuleImageManagement(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_dlm_lifecycle_policy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, dlm.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLifecyclePolicyConfig_crossRegionCopyRuleImageManagement(rName),
+				Check: resource.ComposeTestCheckFunc(
+					checkLifecyclePolicyExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.policy_type", "IMAGE_MANAGEMENT"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.0.encrypted", "false"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.0.retain_rule.0.interval", "15"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.0.retain_rule.0.interval_unit", "DAYS"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.schedule.0.cross_region_copy_rule.0.target_region", acctest.AlternateRegion()),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccDLMLifecyclePolicy_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1066,6 +1102,47 @@ resource "aws_dlm_lifecycle_policy" "test" {
         retain_rule {
           interval      = 15
           interval_unit = "MONTHS"
+        }
+      }
+    }
+
+    target_tags = {
+      Name = %[1]q
+    }
+  }
+}
+`, rName, acctest.AlternateRegion()))
+}
+
+func testAccLifecyclePolicyConfig_crossRegionCopyRuleImageManagement(rName string) string {
+	return acctest.ConfigCompose(
+		lifecyclePolicyBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_dlm_lifecycle_policy" "test" {
+  description        = %[1]q
+  execution_role_arn = aws_iam_role.test.arn
+
+  policy_details {
+	policy_type = "IMAGE_MANAGEMENT"
+    resource_types = ["INSTANCE"]
+
+    schedule {
+      name = %[1]q
+
+      create_rule {
+        interval = 12
+      }
+
+      retain_rule {
+        count = 10
+      }
+
+      cross_region_copy_rule {
+        target_region    = %[2]q
+        encrypted 		 = false
+        retain_rule {
+          interval      = 15
+          interval_unit = "DAYS"
         }
       }
     }
