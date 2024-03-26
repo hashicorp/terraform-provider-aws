@@ -35,7 +35,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:    "EBS Fast Snapshot Restore",
 		},
 		{
-			Factory: newResourceEC2InstanceMetadataDefaults,
+			Factory: newResourceInstanceMetadataDefaults,
 			Name:    "Instance Metadata Defaults",
 		},
 		{

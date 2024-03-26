@@ -23,7 +23,7 @@ import (
 )
 
 // @FrameworkResource(name="Instance Metadata Defaults")
-func newResourceEC2InstanceMetadataDefaults(_ context.Context) (resource.ResourceWithConfigure, error) {
+func newResourceInstanceMetadataDefaults(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceEC2InstanceMetadataDefaults{}
 
 	r.SetDefaultCreateTimeout(10 * time.Minute)
@@ -34,7 +34,7 @@ func newResourceEC2InstanceMetadataDefaults(_ context.Context) (resource.Resourc
 }
 
 const (
-	ResNameEC2InstanceMetadataDefaults = "EC2 Instance Metadata Defaults"
+	ResNameInstanceMetadataDefaults = "EC2 Instance Metadata Defaults"
 )
 
 type resourceEC2InstanceMetadataDefaults struct {
@@ -117,14 +117,14 @@ func (r *resourceEC2InstanceMetadataDefaults) Create(ctx context.Context, req re
 	out, err := conn.ModifyInstanceMetadataDefaults(ctx, in)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionCreating, ResNameEC2InstanceMetadataDefaults, meta.Region, err),
+			create.ProblemStandardMessage(names.EC2, create.ErrActionCreating, ResNameInstanceMetadataDefaults, meta.Region, err),
 			err.Error(),
 		)
 		return
 	}
 	if out == nil || out.Return == nil || *out.Return == false {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionCreating, ResNameEC2InstanceMetadataDefaults, meta.Region, nil),
+			create.ProblemStandardMessage(names.EC2, create.ErrActionCreating, ResNameInstanceMetadataDefaults, meta.Region, nil),
 			errors.New("empty output").Error(),
 		)
 		return
@@ -147,7 +147,7 @@ func (r *resourceEC2InstanceMetadataDefaults) Read(ctx context.Context, req reso
 
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionSetting, ResNameEC2InstanceMetadataDefaults, meta.Region, err),
+			create.ProblemStandardMessage(names.EC2, create.ErrActionSetting, ResNameInstanceMetadataDefaults, meta.Region, err),
 			err.Error(),
 		)
 		return
@@ -206,14 +206,14 @@ func (r *resourceEC2InstanceMetadataDefaults) Update(ctx context.Context, req re
 	out, err := conn.ModifyInstanceMetadataDefaults(ctx, in)
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionCreating, ResNameEC2InstanceMetadataDefaults, meta.Region, err),
+			create.ProblemStandardMessage(names.EC2, create.ErrActionCreating, ResNameInstanceMetadataDefaults, meta.Region, err),
 			err.Error(),
 		)
 		return
 	}
 	if out == nil || aws.ToBool(out.Return) == false {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionCreating, ResNameEC2InstanceMetadataDefaults, meta.Region, nil),
+			create.ProblemStandardMessage(names.EC2, create.ErrActionCreating, ResNameInstanceMetadataDefaults, meta.Region, nil),
 			errors.New("empty output").Error(),
 		)
 		return
@@ -239,14 +239,14 @@ func (r *resourceEC2InstanceMetadataDefaults) Delete(ctx context.Context, req re
 
 	if err != nil {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionDeleting, ResNameEC2InstanceMetadataDefaults, meta.Region, err),
+			create.ProblemStandardMessage(names.EC2, create.ErrActionDeleting, ResNameInstanceMetadataDefaults, meta.Region, err),
 			err.Error(),
 		)
 		return
 	}
-	if out == nil || aws.ToBool(out.Return) == false {
+	if out == nil || out.Return == nil || *out.Return == false {
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionCreating, ResNameEC2InstanceMetadataDefaults, meta.Region, nil),
+			create.ProblemStandardMessage(names.EC2, create.ErrActionCreating, ResNameInstanceMetadataDefaults, meta.Region, nil),
 			errors.New("empty output").Error(),
 		)
 		return

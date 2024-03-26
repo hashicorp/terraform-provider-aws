@@ -130,18 +130,18 @@ func testAccCheckInstanceMetadataDefaultsExists(ctx context.Context, name string
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameEC2InstanceMetadataDefaults, name, errors.New("not found"))
+			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameInstanceMetadataDefaults, name, errors.New("not found"))
 		}
 
 		if rs.Primary.ID == "" {
-			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameEC2InstanceMetadataDefaults, name, errors.New("not set"))
+			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameInstanceMetadataDefaults, name, errors.New("not set"))
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 		resp, err := conn.GetInstanceMetadataDefaults(ctx, &ec2.GetInstanceMetadataDefaultsInput{})
 
 		if err != nil {
-			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameEC2InstanceMetadataDefaults, rs.Primary.ID, err)
+			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameInstanceMetadataDefaults, rs.Primary.ID, err)
 		}
 
 		// check assertions
