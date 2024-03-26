@@ -178,7 +178,7 @@ guardduty,guardduty,guardduty,guardduty,,guardduty,,,GuardDuty,GuardDuty,,1,,,aw
 health,health,health,health,,health,,,Health,Health,,1,,,aws_health_,,health_,Health,AWS,,x,,,,,Health,,,
 healthlake,healthlake,healthlake,healthlake,,healthlake,,,HealthLake,HealthLake,,,2,,aws_healthlake_,,healthlake_,HealthLake,Amazon,,,,,,,HealthLake,ListFHIRDatastores,,
 honeycode,honeycode,honeycode,honeycode,,honeycode,,,Honeycode,Honeycode,,1,,,aws_honeycode_,,honeycode_,Honeycode,Amazon,,x,,,,,Honeycode,,,
-iam,iam,iam,iam,,iam,,,IAM,IAM,,1,,,aws_iam_,,iam_,IAM (Identity & Access Management),AWS,,,,,AWS_IAM_ENDPOINT,TF_AWS_IAM_ENDPOINT,IAM,ListRoles,,
+iam,iam,iam,iam,,iam,,,IAM,IAM,,1,2,,aws_iam_,,iam_,IAM (Identity & Access Management),AWS,,,,,AWS_IAM_ENDPOINT,TF_AWS_IAM_ENDPOINT,IAM,ListRoles,,
 inspector,inspector,inspector,inspector,,inspector,,,Inspector,Inspector,,1,,,aws_inspector_,,inspector_,Inspector Classic,Amazon,,,,,,,Inspector,ListRulesPackages,,
 inspector2,inspector2,inspector2,inspector2,,inspector2,,inspectorv2,Inspector2,Inspector2,,,2,,aws_inspector2_,,inspector2_,Inspector,Amazon,,,,,,,Inspector2,ListAccountPermissions,,
 iot1click-devices,iot1clickdevices,iot1clickdevicesservice,iot1clickdevicesservice,,iot1clickdevices,,iot1clickdevicesservice,IoT1ClickDevices,IoT1ClickDevicesService,,1,,,aws_iot1clickdevices_,,iot1clickdevices_,IoT 1-Click Devices,AWS,,x,,,,,IoT 1Click Devices Service,,,
