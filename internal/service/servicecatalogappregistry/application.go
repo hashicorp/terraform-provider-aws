@@ -13,6 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -50,6 +52,12 @@ func (r *resourceApplication) Schema(ctx context.Context, req resource.SchemaReq
 			"id": framework.IDAttribute(),
 			"name": schema.StringAttribute{
 				Required: true,
+				// Name cannot be updated despite being present in the update API struct.
+				//
+				// ValidationException: Application name update feature has been deprecated.
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 		},
 	}
@@ -128,13 +136,13 @@ func (r *resourceApplication) Update(ctx context.Context, req resource.UpdateReq
 
 	if !plan.Name.Equal(state.Name) ||
 		!plan.Description.Equal(state.Description) {
-		in := &servicecatalogappregistry.UpdateApplicationInput{
-			Application: aws.String(plan.ID.ValueString()),
-		}
 
-		if !plan.Description.IsNull() {
-			in.Description = aws.String(plan.Description.ValueString())
+		in := &servicecatalogappregistry.UpdateApplicationInput{}
+		resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
+		if resp.Diagnostics.HasError() {
+			return
 		}
+		in.Application = aws.String(plan.ID.ValueString()) // Set manually, AWS naming is inconsistent
 
 		out, err := conn.UpdateApplication(ctx, in)
 		if err != nil {
