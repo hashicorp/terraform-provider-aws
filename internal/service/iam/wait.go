@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
@@ -49,7 +52,7 @@ func waitRoleARNIsNotUniqueID(ctx context.Context, conn *iam.IAM, id string, rol
 
 func statusRoleCreate(ctx context.Context, conn *iam.IAM, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		role, err := FindRoleByName(ctx, conn, id)
+		role, err := findRoleByName(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, RoleStatusNotFound, nil

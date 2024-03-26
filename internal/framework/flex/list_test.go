@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package flex_test
 
 import (
@@ -190,20 +193,23 @@ func TestFlattenFrameworkStringListLegacy(t *testing.T) {
 func TestFlattenFrameworkStringValueList(t *testing.T) {
 	t.Parallel()
 
+	// AWS enums use custom types with an underlying string type
+	type custom string
+
 	type testCase struct {
-		input    []string
+		input    []custom
 		expected types.List
 	}
 	tests := map[string]testCase{
 		"two elements": {
-			input: []string{"GET", "HEAD"},
+			input: []custom{"GET", "HEAD"},
 			expected: types.ListValueMust(types.StringType, []attr.Value{
 				types.StringValue("GET"),
 				types.StringValue("HEAD"),
 			}),
 		},
 		"zero elements": {
-			input:    []string{},
+			input:    []custom{},
 			expected: types.ListNull(types.StringType),
 		},
 		"nil array": {
@@ -229,20 +235,23 @@ func TestFlattenFrameworkStringValueList(t *testing.T) {
 func TestFlattenFrameworkStringValueListLegacy(t *testing.T) {
 	t.Parallel()
 
+	// AWS enums use custom types with an underlying string type
+	type custom string
+
 	type testCase struct {
-		input    []string
+		input    []custom
 		expected types.List
 	}
 	tests := map[string]testCase{
 		"two elements": {
-			input: []string{"GET", "HEAD"},
+			input: []custom{"GET", "HEAD"},
 			expected: types.ListValueMust(types.StringType, []attr.Value{
 				types.StringValue("GET"),
 				types.StringValue("HEAD"),
 			}),
 		},
 		"zero elements": {
-			input:    []string{},
+			input:    []custom{},
 			expected: types.ListValueMust(types.StringType, []attr.Value{}),
 		},
 		"nil array": {

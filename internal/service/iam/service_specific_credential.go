@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
@@ -17,8 +20,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_iam_service_specific_credential")
-func ResourceServiceSpecificCredential() *schema.Resource {
+// @SDKResource("aws_iam_service_specific_credential", name="Service Specific Credential")
+func resourceServiceSpecificCredential() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServiceSpecificCredentialCreate,
 		ReadWithoutTimeout:   resourceServiceSpecificCredentialRead,

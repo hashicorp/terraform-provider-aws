@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshiftserverless
 
 import (
@@ -10,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindNamespaceByName(ctx context.Context, conn *redshiftserverless.RedshiftServerless, name string) (*redshiftserverless.Namespace, error) {
+func findNamespaceByName(ctx context.Context, conn *redshiftserverless.RedshiftServerless, name string) (*redshiftserverless.Namespace, error) {
 	input := &redshiftserverless.GetNamespaceInput{
 		NamespaceName: aws.String(name),
 	}
@@ -35,7 +38,7 @@ func FindNamespaceByName(ctx context.Context, conn *redshiftserverless.RedshiftS
 	return output.Namespace, nil
 }
 
-func FindEndpointAccessByName(ctx context.Context, conn *redshiftserverless.RedshiftServerless, name string) (*redshiftserverless.EndpointAccess, error) {
+func findEndpointAccessByName(ctx context.Context, conn *redshiftserverless.RedshiftServerless, name string) (*redshiftserverless.EndpointAccess, error) {
 	input := &redshiftserverless.GetEndpointAccessInput{
 		EndpointName: aws.String(name),
 	}
@@ -60,7 +63,7 @@ func FindEndpointAccessByName(ctx context.Context, conn *redshiftserverless.Reds
 	return output.Endpoint, nil
 }
 
-func FindUsageLimitByName(ctx context.Context, conn *redshiftserverless.RedshiftServerless, id string) (*redshiftserverless.UsageLimit, error) {
+func findUsageLimitByName(ctx context.Context, conn *redshiftserverless.RedshiftServerless, id string) (*redshiftserverless.UsageLimit, error) {
 	input := &redshiftserverless.GetUsageLimitInput{
 		UsageLimitId: aws.String(id),
 	}
@@ -85,7 +88,7 @@ func FindUsageLimitByName(ctx context.Context, conn *redshiftserverless.Redshift
 	return output.UsageLimit, nil
 }
 
-func FindSnapshotByName(ctx context.Context, conn *redshiftserverless.RedshiftServerless, name string) (*redshiftserverless.Snapshot, error) {
+func findSnapshotByName(ctx context.Context, conn *redshiftserverless.RedshiftServerless, name string) (*redshiftserverless.Snapshot, error) {
 	input := &redshiftserverless.GetSnapshotInput{
 		SnapshotName: aws.String(name),
 	}
@@ -110,7 +113,7 @@ func FindSnapshotByName(ctx context.Context, conn *redshiftserverless.RedshiftSe
 	return output.Snapshot, nil
 }
 
-func FindResourcePolicyByARN(ctx context.Context, conn *redshiftserverless.RedshiftServerless, arn string) (*redshiftserverless.ResourcePolicy, error) {
+func findResourcePolicyByARN(ctx context.Context, conn *redshiftserverless.RedshiftServerless, arn string) (*redshiftserverless.ResourcePolicy, error) {
 	input := &redshiftserverless.GetResourcePolicyInput{
 		ResourceArn: aws.String(arn),
 	}

@@ -1,9 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package vpclattice
 
 import (
 	"context"
-	"errors"
 	"log"
+	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/vpclattice"
@@ -14,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -22,7 +26,7 @@ import (
 
 // @SDKResource("aws_vpclattice_access_log_subscription", name="Access Log Subscription")
 // @Tags(identifierAttribute="arn")
-func ResourceAccessLogSubscription() *schema.Resource {
+func resourceAccessLogSubscription() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccessLogSubscriptionCreate,
 		ReadWithoutTimeout:   resourceAccessLogSubscriptionRead,
@@ -39,19 +43,21 @@ func ResourceAccessLogSubscription() *schema.Resource {
 				Computed: true,
 			},
 			"destination_arn": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ForceNew:     true,
-				ValidateFunc: verify.ValidARN,
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				ValidateFunc:     verify.ValidARN,
+				DiffSuppressFunc: suppressEquivalentCloudWatchLogsLogGroupARN,
 			},
 			"resource_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"resource_identifier": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Type:             schema.TypeString,
+				Required:         true,
+				ForceNew:         true,
+				DiffSuppressFunc: suppressEquivalentIDOrARN,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -122,12 +128,11 @@ func resourceAccessLogSubscriptionDelete(ctx context.Context, d *schema.Resource
 		AccessLogSubscriptionIdentifier: aws.String(d.Id()),
 	})
 
-	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return nil
-		}
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil
+	}
 
+	if err != nil {
 		return create.DiagError(names.VPCLattice, create.ErrActionDeleting, ResNameAccessLogSubscription, d.Id(), err)
 	}
 
@@ -139,15 +144,15 @@ func findAccessLogSubscriptionByID(ctx context.Context, conn *vpclattice.Client,
 		AccessLogSubscriptionIdentifier: aws.String(id),
 	}
 	out, err := conn.GetAccessLogSubscription(ctx, in)
-	if err != nil {
-		var nfe *types.ResourceNotFoundException
-		if errors.As(err, &nfe) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
 
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
@@ -156,4 +161,10 @@ func findAccessLogSubscriptionByID(ctx context.Context, conn *vpclattice.Client,
 	}
 
 	return out, nil
+}
+
+// suppressEquivalentCloudWatchLogsLogGroupARN provides custom difference suppression
+// for strings that represent equal CloudWatch Logs log group ARNs.
+func suppressEquivalentCloudWatchLogsLogGroupARN(_, old, new string, _ *schema.ResourceData) bool {
+	return strings.TrimSuffix(old, ":*") == strings.TrimSuffix(new, ":*")
 }

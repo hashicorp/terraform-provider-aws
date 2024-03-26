@@ -1,15 +1,18 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package efs_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/efs"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEFSFileSystemDataSource_id(t *testing.T) {
@@ -19,13 +22,12 @@ func TestAccEFSFileSystemDataSource_id(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFileSystemDataSourceConfig_id,
 				Check: resource.ComposeTestCheckFunc(
-					testAccFileSystemCheckDataSource(dataSourceName, resourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "performance_mode", resourceName, "performance_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "creation_token", resourceName, "creation_token"),
@@ -33,10 +35,12 @@ func TestAccEFSFileSystemDataSource_id(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "kms_key_id", resourceName, "kms_key_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags", resourceName, "tags"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "dns_name", resourceName, "dns_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "provisioned_throughput_in_mibps", resourceName, "provisioned_throughput_in_mibps"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "throughput_mode", resourceName, "throughput_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "lifecycle_policy", resourceName, "lifecycle_policy"),
-					resource.TestMatchResourceAttr(dataSourceName, "size_in_bytes", regexp.MustCompile(`^\d+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, "size_in_bytes", regexache.MustCompile(`^\d+$`)),
+					resource.TestCheckResourceAttrPair(dataSourceName, "protection", resourceName, "protection"),
 				),
 			},
 		},
@@ -50,13 +54,12 @@ func TestAccEFSFileSystemDataSource_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFileSystemDataSourceConfig_tags,
 				Check: resource.ComposeTestCheckFunc(
-					testAccFileSystemCheckDataSource(dataSourceName, resourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "performance_mode", resourceName, "performance_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "creation_token", resourceName, "creation_token"),
@@ -64,10 +67,12 @@ func TestAccEFSFileSystemDataSource_tags(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "kms_key_id", resourceName, "kms_key_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "tags", resourceName, "tags"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "dns_name", resourceName, "dns_name"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "provisioned_throughput_in_mibps", resourceName, "provisioned_throughput_in_mibps"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "throughput_mode", resourceName, "throughput_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "lifecycle_policy", resourceName, "lifecycle_policy"),
-					resource.TestMatchResourceAttr(dataSourceName, "size_in_bytes", regexp.MustCompile(`^\d+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, "size_in_bytes", regexache.MustCompile(`^\d+$`)),
+					resource.TestCheckResourceAttrPair(dataSourceName, "protection", resourceName, "protection"),
 				),
 			},
 		},
@@ -81,13 +86,12 @@ func TestAccEFSFileSystemDataSource_name(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFileSystemDataSourceConfig_name,
 				Check: resource.ComposeTestCheckFunc(
-					testAccFileSystemCheckDataSource(dataSourceName, resourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "performance_mode", resourceName, "performance_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "creation_token", resourceName, "creation_token"),
@@ -98,7 +102,8 @@ func TestAccEFSFileSystemDataSource_name(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "provisioned_throughput_in_mibps", resourceName, "provisioned_throughput_in_mibps"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "throughput_mode", resourceName, "throughput_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "lifecycle_policy", resourceName, "lifecycle_policy"),
-					resource.TestMatchResourceAttr(dataSourceName, "size_in_bytes", regexp.MustCompile(`^\d+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, "size_in_bytes", regexache.MustCompile(`^\d+$`)),
+					resource.TestCheckResourceAttrPair(dataSourceName, "protection", resourceName, "protection"),
 				),
 			},
 		},
@@ -112,13 +117,12 @@ func TestAccEFSFileSystemDataSource_availabilityZone(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccFileSystemDataSourceConfig_availabilityZone,
 				Check: resource.ComposeTestCheckFunc(
-					testAccFileSystemCheckDataSource(dataSourceName, resourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "availability_zone_id", resourceName, "availability_zone_id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "availability_zone_name", resourceName, "availability_zone_name"),
 				),
@@ -135,7 +139,7 @@ func TestAccEFSFileSystemDataSource_nonExistent_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -146,44 +150,10 @@ func TestAccEFSFileSystemDataSource_nonExistent_tags(t *testing.T) {
 			},
 			{
 				Config:      testAccFileSystemDataSourceConfig_tagsNonExistent(rName),
-				ExpectError: regexp.MustCompile(`Search returned 0 results`),
+				ExpectError: regexache.MustCompile(`no matching EFS file system found`),
 			},
 		},
 	})
-}
-
-func testAccFileSystemCheckDataSource(dName, rName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[dName]
-		if !ok {
-			return fmt.Errorf("root module has no resource called %s", dName)
-		}
-
-		efsRs, ok := s.RootModule().Resources[rName]
-		if !ok {
-			return fmt.Errorf("can't find aws_efs_file_system.test in state")
-		}
-
-		attr := rs.Primary.Attributes
-
-		if attr["creation_token"] != efsRs.Primary.Attributes["creation_token"] {
-			return fmt.Errorf(
-				"creation_token is %s; want %s",
-				attr["creation_token"],
-				efsRs.Primary.Attributes["creation_token"],
-			)
-		}
-
-		if attr["id"] != efsRs.Primary.Attributes["id"] {
-			return fmt.Errorf(
-				"file_system_id is %s; want %s",
-				attr["id"],
-				efsRs.Primary.Attributes["id"],
-			)
-		}
-
-		return nil
-	}
 }
 
 func testAccFileSystemConfig_dataSourceBasic(rName string) string {

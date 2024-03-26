@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package emr_test
 
 import (
@@ -26,7 +29,7 @@ func TestAccEMRBlockPublicAccessConfiguration_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, emr.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBlockPublicAccessConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -72,7 +75,7 @@ func TestAccEMRBlockPublicAccessConfiguration_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, emr.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBlockPublicAccessConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -104,7 +107,7 @@ func TestAccEMRBlockPublicAccessConfiguration_default(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, emr.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBlockPublicAccessConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -138,7 +141,7 @@ func TestAccEMRBlockPublicAccessConfiguration_enabledMultiRange(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, emr.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, emr.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBlockPublicAccessConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{

@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appconfig
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/appconfig"
@@ -25,7 +28,7 @@ func DataSourceConfigurationProfile() *schema.Resource {
 			"application_id": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`[a-z\d]{4,7}`), ""),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[a-z\d]{4,7}`), ""),
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -34,13 +37,17 @@ func DataSourceConfigurationProfile() *schema.Resource {
 			"configuration_profile_id": {
 				Type:         schema.TypeString,
 				Required:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`[a-z\d]{4,7}`), ""),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[a-z\d]{4,7}`), ""),
 			},
 			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
 			"location_uri": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"kms_key_identifier": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -82,6 +89,8 @@ const (
 )
 
 func dataSourceConfigurationProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
 
 	appId := d.Get("application_id").(string)
@@ -90,7 +99,7 @@ func dataSourceConfigurationProfileRead(ctx context.Context, d *schema.ResourceD
 
 	out, err := findConfigurationProfileByApplicationAndProfile(ctx, conn, appId, profileId)
 	if err != nil {
-		return create.DiagError(names.AppConfig, create.ErrActionReading, DSNameConfigurationProfile, ID, err)
+		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionReading, DSNameConfigurationProfile, ID, err)
 	}
 
 	d.SetId(ID)
@@ -108,18 +117,19 @@ func dataSourceConfigurationProfileRead(ctx context.Context, d *schema.ResourceD
 	d.Set("arn", arn)
 	d.Set("configuration_profile_id", profileId)
 	d.Set("description", out.Description)
+	d.Set("kms_key_identifier", out.KmsKeyIdentifier)
 	d.Set("location_uri", out.LocationUri)
 	d.Set("name", out.Name)
 	d.Set("retrieval_role_arn", out.RetrievalRoleArn)
 	d.Set("type", out.Type)
 
 	if err := d.Set("validator", flattenValidators(out.Validators)); err != nil {
-		return create.DiagError(names.AppConfig, create.ErrActionSetting, DSNameConfigurationProfile, ID, err)
+		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionSetting, DSNameConfigurationProfile, ID, err)
 	}
 
 	tags, err := listTags(ctx, conn, arn)
 	if err != nil {
-		return create.DiagError(names.AppConfig, create.ErrActionReading, DSNameConfigurationProfile, ID, err)
+		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionReading, DSNameConfigurationProfile, ID, err)
 	}
 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
@@ -127,10 +137,10 @@ func dataSourceConfigurationProfileRead(ctx context.Context, d *schema.ResourceD
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.Map()); err != nil {
-		return create.DiagError(names.AppConfig, create.ErrActionSetting, DSNameConfigurationProfile, ID, err)
+		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionSetting, DSNameConfigurationProfile, ID, err)
 	}
 
-	return nil
+	return diags
 }
 
 func findConfigurationProfileByApplicationAndProfile(ctx context.Context, conn *appconfig.AppConfig, appId string, cpId string) (*appconfig.GetConfigurationProfileOutput, error) {

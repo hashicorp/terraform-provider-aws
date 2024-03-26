@@ -1,14 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package identitystore_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/identitystore"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccIdentityStoreUserDataSource_basic(t *testing.T) {
@@ -21,9 +23,9 @@ func TestAccIdentityStoreUserDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckSSOAdminInstances(ctx, t)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -53,6 +55,33 @@ func TestAccIdentityStoreUserDataSource_basic(t *testing.T) {
 	})
 }
 
+func TestAccIdentityStoreUserDataSource_filterUserName(t *testing.T) {
+	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_identitystore_user.test"
+	resourceName := "aws_identitystore_user.test"
+	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	email := acctest.RandomEmailAddress(acctest.RandomDomainName())
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserDataSourceConfig_filterUserName(name, email),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "user_id", resourceName, "user_id"),
+					resource.TestCheckResourceAttr(dataSourceName, "user_name", name),
+				),
+			},
+		},
+	})
+}
+
 func TestAccIdentityStoreUserDataSource_uniqueAttributeUserName(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_identitystore_user.test"
@@ -63,9 +92,9 @@ func TestAccIdentityStoreUserDataSource_uniqueAttributeUserName(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckSSOAdminInstances(ctx, t)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -90,9 +119,9 @@ func TestAccIdentityStoreUserDataSource_email(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckSSOAdminInstances(ctx, t)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -107,52 +136,28 @@ func TestAccIdentityStoreUserDataSource_email(t *testing.T) {
 	})
 }
 
-func TestAccIdentityStoreUserDataSource_nonExistent(t *testing.T) {
+func TestAccIdentityStoreUserDataSource_userID(t *testing.T) {
 	ctx := acctest.Context(t)
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSSOAdminInstances(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccUserDataSourceConfig_nonExistent,
-				ExpectError: regexp.MustCompile(`no Identity Store User found matching criteria`),
-			},
-		},
-	})
-}
-
-func TestAccIdentityStoreUserDataSource_externalIDConflictsWithUniqueAttribute(t *testing.T) {
-	ctx := acctest.Context(t)
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSSOAdminInstances(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config:      testAccUserDataSourceConfig_externalIDConflictsWithUniqueAttribute,
-				ExpectError: regexp.MustCompile(`Invalid combination of arguments`),
-			},
-		},
-	})
-}
-
-func TestAccIdentityStoreUserDataSource_userIDConflictsWithExternalID(t *testing.T) {
-	ctx := acctest.Context(t)
+	dataSourceName := "data.aws_identitystore_user.test"
+	resourceName := "aws_identitystore_user.test"
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	email := acctest.RandomEmailAddress(acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSSOAdminInstances(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, identitystore.EndpointsID),
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckUserDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccUserDataSourceConfig_userIDConflictsWithUniqueAttribute(name, email),
-				ExpectError: regexp.MustCompile(`Invalid combination of arguments`),
+				Config: testAccUserDataSourceConfig_id(name, email),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "user_id", resourceName, "user_id"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "user_name", resourceName, "user_name"),
+				),
 			},
 		},
 	})
@@ -238,10 +243,21 @@ data "aws_identitystore_user" "test" {
 `, name, email)
 }
 
+func testAccUserDataSourceConfig_filterUserName(name, email string) string {
+	return acctest.ConfigCompose(testAccUserDataSourceConfig_base(name, email), `
+data "aws_identitystore_user" "test" {
+  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+
+  filter {
+    attribute_path  = "UserName"
+    attribute_value = aws_identitystore_user.test.user_name
+  }
+}
+`)
+}
+
 func testAccUserDataSourceConfig_uniqueAttributeUserName(name, email string) string {
-	return acctest.ConfigCompose(
-		testAccUserDataSourceConfig_base(name, email),
-		`
+	return acctest.ConfigCompose(testAccUserDataSourceConfig_base(name, email), `
 data "aws_identitystore_user" "test" {
   identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
 
@@ -252,14 +268,11 @@ data "aws_identitystore_user" "test" {
     }
   }
 }
-`,
-	)
+`)
 }
 
 func testAccUserDataSourceConfig_email(name, email string) string {
-	return acctest.ConfigCompose(
-		testAccUserDataSourceConfig_base(name, email),
-		`
+	return acctest.ConfigCompose(testAccUserDataSourceConfig_base(name, email), `
 data "aws_identitystore_user" "test" {
   identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
 
@@ -270,57 +283,17 @@ data "aws_identitystore_user" "test" {
     }
   }
 }
-`,
-	)
+`)
 }
 
-const testAccUserDataSourceConfig_nonExistent = `
-data "aws_ssoadmin_instances" "test" {}
-
-data "aws_identitystore_user" "test" {
-  alternate_identifier {
-    unique_attribute {
-      attribute_path  = "UserName"
-      attribute_value = "does-not-exist"
-    }
-  }
-
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
-}
-`
-
-const testAccUserDataSourceConfig_externalIDConflictsWithUniqueAttribute = `
-data "aws_ssoadmin_instances" "test" {}
-
-data "aws_identitystore_user" "test" {
-  alternate_identifier {
-    external_id {
-      id     = "test"
-      issuer = "test"
-    }
-
-    unique_attribute {
-      attribute_path  = "UserName"
-      attribute_value = "does-not-exist"
-    }
-  }
-
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
-}
-`
-
-func testAccUserDataSourceConfig_userIDConflictsWithUniqueAttribute(name, email string) string {
-	return acctest.ConfigCompose(
-		testAccUserDataSourceConfig_base(name, email),
-		`
+func testAccUserDataSourceConfig_id(name, email string) string {
+	return acctest.ConfigCompose(testAccUserDataSourceConfig_base(name, email), `
 data "aws_identitystore_user" "test" {
   identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
 
-  alternate_identifier {
-    unique_attribute {
-      attribute_path  = "UserName"
-      attribute_value = aws_identitystore_user.test.user_name
-    }
+  filter {
+    attribute_path  = "UserName"
+    attribute_value = aws_identitystore_user.test.user_name
   }
 
   user_id = aws_identitystore_user.test.user_id

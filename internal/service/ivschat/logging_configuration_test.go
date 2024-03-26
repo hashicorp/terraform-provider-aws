@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ivschat_test
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ivschat"
 	"github.com/aws/aws-sdk-go-v2/service/ivschat/types"
@@ -31,7 +34,7 @@ func TestAccIVSChatLoggingConfiguration_basic_cloudwatch(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IVSChatEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoggingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -42,7 +45,7 @@ func TestAccIVSChatLoggingConfiguration_basic_cloudwatch(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "destination_configuration.0.cloudwatch_logs.0.log_group_name", "aws_cloudwatch_log_group.test", "name"),
 					resource.TestCheckResourceAttr(resourceName, "state", "ACTIVE"),
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ivschat", regexp.MustCompile(`logging-configuration/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ivschat", regexache.MustCompile(`logging-configuration/.+`)),
 				),
 			},
 			{
@@ -70,7 +73,7 @@ func TestAccIVSChatLoggingConfiguration_basic_firehose(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IVSChatEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoggingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -81,7 +84,7 @@ func TestAccIVSChatLoggingConfiguration_basic_firehose(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "destination_configuration.0.firehose.0.delivery_stream_name", "aws_kinesis_firehose_delivery_stream.test", "name"),
 					resource.TestCheckResourceAttr(resourceName, "state", "ACTIVE"),
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ivschat", regexp.MustCompile(`logging-configuration/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ivschat", regexache.MustCompile(`logging-configuration/.+`)),
 				),
 			},
 			{
@@ -105,7 +108,7 @@ func TestAccIVSChatLoggingConfiguration_basic_s3(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IVSChatEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoggingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -116,7 +119,7 @@ func TestAccIVSChatLoggingConfiguration_basic_s3(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "destination_configuration.0.s3.0.bucket_name", "aws_s3_bucket.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "state", "ACTIVE"),
 					resource.TestCheckResourceAttrSet(resourceName, "id"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ivschat", regexp.MustCompile(`logging-configuration/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "ivschat", regexache.MustCompile(`logging-configuration/.+`)),
 				),
 			},
 			{
@@ -140,7 +143,7 @@ func TestAccIVSChatLoggingConfiguration_update_s3(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IVSChatEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoggingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -179,7 +182,7 @@ func TestAccIVSChatLoggingConfiguration_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IVSChatEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoggingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -227,29 +230,29 @@ func TestAccIVSChatLoggingConfiguration_failure_invalidDestination(t *testing.T)
 			acctest.PreCheckPartitionHasService(t, names.IVSChatEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoggingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccLoggingConfigurationConfig_failure_cloudwatch_s3(),
-				ExpectError: regexp.MustCompile(`Invalid combination of arguments`),
+				ExpectError: regexache.MustCompile(`Invalid combination of arguments`),
 			},
 			{
 				Config:      testAccLoggingConfigurationConfig_failure_firehose_s3(),
-				ExpectError: regexp.MustCompile(`Invalid combination of arguments`),
+				ExpectError: regexache.MustCompile(`Invalid combination of arguments`),
 			},
 			{
 				Config:      testAccLoggingConfigurationConfig_failure_cloudwatch_firehose(),
-				ExpectError: regexp.MustCompile(`Invalid combination of arguments`),
+				ExpectError: regexache.MustCompile(`Invalid combination of arguments`),
 			},
 			{
 				Config:      testAccLoggingConfigurationConfig_failure_cloudwatch_firehose_s3(),
-				ExpectError: regexp.MustCompile(`Invalid combination of arguments`),
+				ExpectError: regexache.MustCompile(`Invalid combination of arguments`),
 			},
 			{
 				Config:      testAccLoggingConfigurationConfig_failure_noDestination(),
-				ExpectError: regexp.MustCompile(`Invalid combination of arguments`),
+				ExpectError: regexache.MustCompile(`Invalid combination of arguments`),
 			},
 		},
 	})
@@ -271,7 +274,7 @@ func TestAccIVSChatLoggingConfiguration_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.IVSChatEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IVSChatServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLoggingConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -399,11 +402,6 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
 
 resource "aws_s3_bucket" "test" {
   bucket_prefix = %[1]q
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_iam_role" "test" {

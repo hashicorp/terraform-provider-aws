@@ -22,9 +22,9 @@ data "aws_dx_connection" "example" {
 
 * `name` - (Required) Name of the connection to retrieve.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the connection.
 * `aws_device` - Direct Connect endpoint on which the physical connection terminates.

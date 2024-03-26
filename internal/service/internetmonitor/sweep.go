@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package internetmonitor
 
@@ -7,14 +7,14 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/internetmonitor"
-	"github.com/hashicorp/go-multierror"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/internetmonitor"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_internetmonitor_monitor", &resource.Sweeper{
 		Name: "aws_internetmonitor_monitor",
 		F:    sweepMonitors,
@@ -24,45 +24,40 @@ func init() {
 func sweepMonitors(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-
-	conn := client.InternetMonitorConn(ctx)
+	input := &internetmonitor.ListMonitorsInput{}
+	conn := client.InternetMonitorClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
 
-	err = conn.ListMonitorsPagesWithContext(ctx, &internetmonitor.ListMonitorsInput{}, func(resp *internetmonitor.ListMonitorsOutput, lastPage bool) bool {
-		if len(resp.Monitors) == 0 {
-			log.Print("[DEBUG] No InternetMonitor Monitors to sweep")
-			return !lastPage
+	pages := internetmonitor.NewListMonitorsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Internet Monitor Monitor sweep for %s: %s", region, err)
+			return nil
 		}
 
-		for _, c := range resp.Monitors {
-			r := ResourceMonitor()
+		if err != nil {
+			return fmt.Errorf("error listing Internet Monitor Monitors (%s): %w", region, err)
+		}
+
+		for _, v := range page.Monitors {
+			r := resourceMonitor()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(c.MonitorName))
+			d.SetId(aws.ToString(v.MonitorName))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
+	}
 
-		return !lastPage
-	})
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error describing InternetMonitor Monitors: %w", err))
-		// in case work can be done, don't jump out yet
+		return fmt.Errorf("error sweeping Internet Monitor Monitors (%s): %w", region, err)
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping InternetMonitor Monitors for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping InternetMonitor Monitor sweep for %s: %s", region, err)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
+	return nil
 }

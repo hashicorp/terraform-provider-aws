@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package datasync
 
 import (
@@ -10,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/datasync"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -23,7 +27,7 @@ import (
 
 // @SDKResource("aws_datasync_location_object_storage", name="Location Object Storage")
 // @Tags(identifierAttribute="id")
-func ResourceLocationObjectStorage() *schema.Resource {
+func resourceLocationObjectStorage() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationObjectStorageCreate,
 		ReadWithoutTimeout:   resourceLocationObjectStorageRead,
@@ -35,10 +39,6 @@ func ResourceLocationObjectStorage() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"access_key": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -51,6 +51,10 @@ func ResourceLocationObjectStorage() *schema.Resource {
 					Type:         schema.TypeString,
 					ValidateFunc: verify.ValidARN,
 				},
+			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"bucket_name": {
 				Type:         schema.TypeString,
@@ -110,22 +114,14 @@ func resourceLocationObjectStorageCreate(ctx context.Context, d *schema.Resource
 
 	input := &datasync.CreateLocationObjectStorageInput{
 		AgentArns:      flex.ExpandStringSet(d.Get("agent_arns").(*schema.Set)),
-		Subdirectory:   aws.String(d.Get("subdirectory").(string)),
 		BucketName:     aws.String(d.Get("bucket_name").(string)),
 		ServerHostname: aws.String(d.Get("server_hostname").(string)),
+		Subdirectory:   aws.String(d.Get("subdirectory").(string)),
 		Tags:           getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("access_key"); ok {
 		input.AccessKey = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("server_protocol"); ok {
-		input.ServerProtocol = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("server_port"); ok {
-		input.ServerPort = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("secret_key"); ok {
@@ -134,6 +130,14 @@ func resourceLocationObjectStorageCreate(ctx context.Context, d *schema.Resource
 
 	if v, ok := d.GetOk("server_certificate"); ok {
 		input.ServerCertificate = []byte(v.(string))
+	}
+
+	if v, ok := d.GetOk("server_port"); ok {
+		input.ServerPort = aws.Int64(int64(v.(int)))
+	}
+
+	if v, ok := d.GetOk("server_protocol"); ok {
+		input.ServerProtocol = aws.String(v.(string))
 	}
 
 	output, err := conn.CreateLocationObjectStorageWithContext(ctx, input)
@@ -151,7 +155,7 @@ func resourceLocationObjectStorageRead(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
-	output, err := FindLocationObjectStorageByARN(ctx, conn, d.Id())
+	output, err := findLocationObjectStorageByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DataSync Location Object Storage (%s) not found, removing from state", d.Id())
@@ -165,7 +169,6 @@ func resourceLocationObjectStorageRead(ctx context.Context, d *schema.ResourceDa
 
 	uri := aws.StringValue(output.LocationUri)
 	hostname, bucketName, subdirectory, err := decodeObjectStorageURI(uri)
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -231,12 +234,10 @@ func resourceLocationObjectStorageDelete(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
-	input := &datasync.DeleteLocationInput{
-		LocationArn: aws.String(d.Id()),
-	}
-
 	log.Printf("[DEBUG] Deleting DataSync Location Object Storage: %s", d.Id())
-	_, err := conn.DeleteLocationWithContext(ctx, input)
+	_, err := conn.DeleteLocationWithContext(ctx, &datasync.DeleteLocationInput{
+		LocationArn: aws.String(d.Id()),
+	})
 
 	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
 		return diags
@@ -247,6 +248,31 @@ func resourceLocationObjectStorageDelete(ctx context.Context, d *schema.Resource
 	}
 
 	return diags
+}
+
+func findLocationObjectStorageByARN(ctx context.Context, conn *datasync.DataSync, arn string) (*datasync.DescribeLocationObjectStorageOutput, error) {
+	input := &datasync.DescribeLocationObjectStorageInput{
+		LocationArn: aws.String(arn),
+	}
+
+	output, err := conn.DescribeLocationObjectStorageWithContext(ctx, input)
+
+	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
 
 func decodeObjectStorageURI(uri string) (string, string, string, error) {

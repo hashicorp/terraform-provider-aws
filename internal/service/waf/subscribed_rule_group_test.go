@@ -1,14 +1,18 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package waf_test
 
 import (
 	"fmt"
 	"os"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccWAFSubscribedRuleGroupDataSource_basic(t *testing.T) {
@@ -29,13 +33,13 @@ func TestAccWAFSubscribedRuleGroupDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, waf.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, waf.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.WAFServiceID),
 		CheckDestroy:             nil,
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccSubscribedRuleGroupDataSourceConfig_nonexistent,
-				ExpectError: regexp.MustCompile(`no matches found`),
+				ExpectError: regexache.MustCompile(`no matches found`),
 			},
 			{
 				Config: testAccSubscribedRuleGroupDataSourceConfig_name(ruleGroupName),
@@ -60,7 +64,7 @@ func TestAccWAFSubscribedRuleGroupDataSource_basic(t *testing.T) {
 			},
 			{
 				Config:      testAccSubscribedRuleGroupDataSourceConfig_nameAndMismatchingMetricName(ruleGroupName),
-				ExpectError: regexp.MustCompile(`no matches found`),
+				ExpectError: regexache.MustCompile(`no matches found`),
 			},
 		},
 	})

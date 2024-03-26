@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -20,8 +23,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_network_acl_rule")
-func ResourceNetworkACLRule() *schema.Resource {
+// @SDKResource("aws_network_acl_rule", name="Network ACL Rule")
+func resourceNetworkACLRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNetworkACLRuleCreate,
 		ReadWithoutTimeout:   resourceNetworkACLRuleRead,
@@ -123,14 +126,23 @@ func resourceNetworkACLRuleCreate(ctx context.Context, d *schema.ResourceData, m
 
 	protocol := d.Get("protocol").(string)
 	protocolNumber, err := networkACLProtocolNumber(protocol)
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Network ACL Rule: %s", err)
 	}
 
-	egress := d.Get("egress").(bool)
-	naclID := d.Get("network_acl_id").(string)
-	ruleNumber := d.Get("rule_number").(int)
+	naclID, egress, ruleNumber := d.Get("network_acl_id").(string), d.Get("egress").(bool), d.Get("rule_number").(int)
+
+	// CreateNetworkAclEntry succeeds if there is an existing rule with identical attributes.
+	_, err = FindNetworkACLEntryByThreePartKey(ctx, conn, naclID, egress, ruleNumber)
+
+	switch {
+	case err == nil:
+		return sdkdiag.AppendFromErr(diags, networkACLEntryAlreadyExistsError(naclID, egress, ruleNumber))
+	case tfresource.NotFound(err):
+		break
+	default:
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Network ACL Rule: %s", err)
+	}
 
 	input := &ec2.CreateNetworkAclEntryInput{
 		Egress:       aws.Bool(egress),
@@ -181,7 +193,7 @@ func resourceNetworkACLRuleRead(ctx context.Context, d *schema.ResourceData, met
 	naclID := d.Get("network_acl_id").(string)
 	ruleNumber := d.Get("rule_number").(int)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
 		return FindNetworkACLEntryByThreePartKey(ctx, conn, naclID, egress, ruleNumber)
 	}, d.IsNewResource())
 
@@ -239,7 +251,7 @@ func resourceNetworkACLRuleDelete(ctx context.Context, d *schema.ResourceData, m
 		RuleNumber:   aws.Int64(int64(d.Get("rule_number").(int))),
 	})
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidNetworkACLEntryNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidNetworkACLIDNotFound, errCodeInvalidNetworkACLEntryNotFound) {
 		return diags
 	}
 

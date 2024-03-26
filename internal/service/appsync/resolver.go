@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appsync
 
 import (
@@ -20,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_appsync_resolver")
+// @SDKResource("aws_appsync_resolver", name="Resolver)
 func ResourceResolver() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResolverCreate,
@@ -180,11 +183,12 @@ func resourceResolverCreate(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
+	apiID, typeName, fieldName := d.Get("api_id").(string), d.Get("type").(string), d.Get("field").(string)
 	input := &appsync.CreateResolverInput{
-		ApiId:     aws.String(d.Get("api_id").(string)),
-		TypeName:  aws.String(d.Get("type").(string)),
-		FieldName: aws.String(d.Get("field").(string)),
+		ApiId:     aws.String(apiID),
+		FieldName: aws.String(fieldName),
 		Kind:      aws.String(d.Get("kind").(string)),
+		TypeName:  aws.String(typeName),
 	}
 
 	if v, ok := d.GetOk("code"); ok {
@@ -223,7 +227,7 @@ func resourceResolverCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.Runtime = expandRuntime(v.([]interface{}))
 	}
 
-	mutexKey := fmt.Sprintf("appsync-schema-%s", d.Get("api_id").(string))
+	mutexKey := "appsync-schema-" + apiID
 	conns.GlobalMutexKV.Lock(mutexKey)
 	defer conns.GlobalMutexKV.Unlock(mutexKey)
 
@@ -235,7 +239,7 @@ func resourceResolverCreate(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "creating AppSync Resolver: %s", err)
 	}
 
-	d.SetId(d.Get("api_id").(string) + "-" + d.Get("type").(string) + "-" + d.Get("field").(string))
+	d.SetId(apiID + "-" + typeName + "-" + fieldName)
 
 	return append(diags, resourceResolverRead(ctx, d, meta)...)
 }
@@ -245,9 +249,8 @@ func resourceResolverRead(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
 	apiID, typeName, fieldName, err := DecodeResolverID(d.Id())
-
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading AppSync Resolver (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := &appsync.GetResolverInput{
@@ -303,11 +306,16 @@ func resourceResolverUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
+	apiID, typeName, fieldName, err := DecodeResolverID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
 	input := &appsync.UpdateResolverInput{
-		ApiId:     aws.String(d.Get("api_id").(string)),
-		FieldName: aws.String(d.Get("field").(string)),
-		TypeName:  aws.String(d.Get("type").(string)),
+		ApiId:     aws.String(apiID),
+		FieldName: aws.String(fieldName),
 		Kind:      aws.String(d.Get("kind").(string)),
+		TypeName:  aws.String(typeName),
 	}
 
 	if v, ok := d.GetOk("code"); ok {
@@ -349,11 +357,11 @@ func resourceResolverUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		input.Runtime = expandRuntime(v.([]interface{}))
 	}
 
-	mutexKey := fmt.Sprintf("appsync-schema-%s", d.Get("api_id").(string))
+	mutexKey := "appsync-schema-" + apiID
 	conns.GlobalMutexKV.Lock(mutexKey)
 	defer conns.GlobalMutexKV.Unlock(mutexKey)
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
 		return conn.UpdateResolverWithContext(ctx, input)
 	}, appsync.ErrCodeConcurrentModificationException)
 
@@ -369,24 +377,27 @@ func resourceResolverDelete(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
 
 	apiID, typeName, fieldName, err := DecodeResolverID(d.Id())
-
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting AppSync Resolver (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := &appsync.DeleteResolverInput{
 		ApiId:     aws.String(apiID),
-		TypeName:  aws.String(typeName),
 		FieldName: aws.String(fieldName),
+		TypeName:  aws.String(typeName),
 	}
 
-	mutexKey := fmt.Sprintf("appsync-schema-%s", d.Get("api_id").(string))
+	mutexKey := "appsync-schema-" + apiID
 	conns.GlobalMutexKV.Lock(mutexKey)
 	defer conns.GlobalMutexKV.Unlock(mutexKey)
 
 	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
 		return conn.DeleteResolverWithContext(ctx, input)
 	}, appsync.ErrCodeConcurrentModificationException)
+
+	if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) {
+		return diags
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting AppSync Resolver (%s): %s", d.Id(), err)

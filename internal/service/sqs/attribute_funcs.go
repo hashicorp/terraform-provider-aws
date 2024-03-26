@@ -1,45 +1,51 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sqs
 
 import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sqs"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sqs"
+	"github.com/aws/aws-sdk-go-v2/service/sqs/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 type queueAttributeHandler struct {
-	AttributeName string
+	AttributeName types.QueueAttributeName
 	SchemaKey     string
 	ToSet         func(string, string) (string, error)
 }
 
 func (h *queueAttributeHandler) Upsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SQSConn(ctx)
+	conn := meta.(*conns.AWSClient).SQSClient(ctx)
 
 	attrValue, err := structure.NormalizeJsonString(d.Get(h.SchemaKey).(string))
 	if err != nil {
 		return diag.Errorf("%s (%s) is invalid JSON: %s", h.SchemaKey, d.Get(h.SchemaKey).(string), err)
 	}
 
-	attributes := map[string]string{
+	attributes := map[types.QueueAttributeName]string{
 		h.AttributeName: attrValue,
 	}
 	url := d.Get("queue_url").(string)
 	input := &sqs.SetQueueAttributesInput{
-		Attributes: aws.StringMap(attributes),
+		Attributes: flex.ExpandStringyValueMap(attributes),
 		QueueUrl:   aws.String(url),
 	}
 
-	log.Printf("[DEBUG] Setting SQS Queue attributes: %s", input)
-	_, err = conn.SetQueueAttributesWithContext(ctx, input)
+	_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.SetQueueAttributes(ctx, input)
+	}, errCodeInvalidAttributeValue, "Invalid value for the parameter Policy")
 
 	if err != nil {
 		return diag.Errorf("setting SQS Queue (%s) attribute (%s): %s", url, h.AttributeName, err)
@@ -55,10 +61,10 @@ func (h *queueAttributeHandler) Upsert(ctx context.Context, d *schema.ResourceDa
 }
 
 func (h *queueAttributeHandler) Read(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SQSConn(ctx)
+	conn := meta.(*conns.AWSClient).SQSClient(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNotFound(ctx, queueAttributeReadTimeout, func() (interface{}, error) {
-		return FindQueueAttributeByURL(ctx, conn, d.Id(), h.AttributeName)
+		return findQueueAttributeByTwoPartKey(ctx, conn, d.Id(), h.AttributeName)
 	})
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -71,7 +77,7 @@ func (h *queueAttributeHandler) Read(ctx context.Context, d *schema.ResourceData
 		return diag.Errorf("reading SQS Queue (%s) attribute (%s): %s", d.Id(), h.AttributeName, err)
 	}
 
-	newValue, err := h.ToSet(d.Get(h.SchemaKey).(string), outputRaw.(string))
+	newValue, err := h.ToSet(d.Get(h.SchemaKey).(string), aws.ToString(outputRaw.(*string)))
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -90,18 +96,18 @@ func (h *queueAttributeHandler) Read(ctx context.Context, d *schema.ResourceData
 }
 
 func (h *queueAttributeHandler) Delete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).SQSConn(ctx)
+	conn := meta.(*conns.AWSClient).SQSClient(ctx)
 
 	log.Printf("[DEBUG] Deleting SQS Queue (%s) attribute: %s", d.Id(), h.AttributeName)
-	attributes := map[string]string{
+	attributes := map[types.QueueAttributeName]string{
 		h.AttributeName: "",
 	}
-	_, err := conn.SetQueueAttributesWithContext(ctx, &sqs.SetQueueAttributesInput{
-		Attributes: aws.StringMap(attributes),
+	_, err := conn.SetQueueAttributes(ctx, &sqs.SetQueueAttributesInput{
+		Attributes: flex.ExpandStringyValueMap(attributes),
 		QueueUrl:   aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, sqs.ErrCodeQueueDoesNotExist) {
+	if tfawserr.ErrCodeEquals(err, errCodeQueueDoesNotExist) {
 		return nil
 	}
 

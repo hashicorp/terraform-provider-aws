@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshiftserverless
 
 import (
 	"context"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/redshiftserverless"
@@ -25,7 +28,7 @@ import (
 
 // @SDKResource("aws_redshiftserverless_namespace", name="Namespace")
 // @Tags(identifierAttribute="arn")
-func ResourceNamespace() *schema.Resource {
+func resourceNamespace() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNamespaceCreate,
 		ReadWithoutTimeout:   resourceNamespaceRead,
@@ -37,10 +40,21 @@ func ResourceNamespace() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"admin_password_secret_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"admin_password_secret_kms_key_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: verify.ValidKMSKeyID,
+			},
 			"admin_user_password": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Sensitive: true,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Sensitive:     true,
+				ConflictsWith: []string{"manage_admin_password"},
 			},
 			"admin_username": {
 				Type:      schema.TypeString,
@@ -86,6 +100,11 @@ func ResourceNamespace() *schema.Resource {
 					ValidateFunc: validation.StringInSlice(redshiftserverless.LogExport_Values(), false),
 				},
 			},
+			"manage_admin_password": {
+				Type:          schema.TypeBool,
+				Optional:      true,
+				ConflictsWith: []string{"admin_user_password"},
+			},
 			"namespace_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -111,6 +130,10 @@ func resourceNamespaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 	input := &redshiftserverless.CreateNamespaceInput{
 		NamespaceName: aws.String(name),
 		Tags:          getTagsIn(ctx),
+	}
+
+	if v, ok := d.GetOk("admin_password_secret_kms_key_id"); ok {
+		input.AdminPasswordSecretKmsKeyId = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("admin_user_password"); ok {
@@ -141,6 +164,10 @@ func resourceNamespaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.LogExports = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
+	if v, ok := d.GetOk("manage_admin_password"); ok {
+		input.ManageAdminPassword = aws.Bool(v.(bool))
+	}
+
 	output, err := conn.CreateNamespaceWithContext(ctx, input)
 
 	if err != nil {
@@ -156,7 +183,7 @@ func resourceNamespaceRead(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
 
-	output, err := FindNamespaceByName(ctx, conn, d.Id())
+	output, err := findNamespaceByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift Serverless Namespace (%s) not found, removing from state", d.Id())
@@ -169,6 +196,8 @@ func resourceNamespaceRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	arn := aws.StringValue(output.NamespaceArn)
+	d.Set("admin_password_secret_arn", output.AdminPasswordSecretArn)
+	d.Set("admin_password_secret_kms_key_id", output.AdminPasswordSecretKmsKeyId)
 	d.Set("admin_username", output.AdminUsername)
 	d.Set("arn", arn)
 	d.Set("db_name", output.DbName)
@@ -191,6 +220,10 @@ func resourceNamespaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			NamespaceName: aws.String(d.Id()),
 		}
 
+		if d.HasChanges("admin_password_secret_kms_key_id") {
+			input.AdminPasswordSecretKmsKeyId = aws.String(d.Get("admin_password_secret_kms_key_id").(string))
+		}
+
 		if d.HasChanges("admin_username", "admin_user_password") {
 			input.AdminUsername = aws.String(d.Get("admin_username").(string))
 			input.AdminUserPassword = aws.String(d.Get("admin_user_password").(string))
@@ -210,6 +243,10 @@ func resourceNamespaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 		if d.HasChange("log_exports") {
 			input.LogExports = flex.ExpandStringSet(d.Get("log_exports").(*schema.Set))
+		}
+
+		if d.HasChange("manage_admin_password") {
+			input.ManageAdminPassword = aws.Bool(d.Get("manage_admin_password").(bool))
 		}
 
 		_, err := conn.UpdateNamespaceWithContext(ctx, input)
@@ -256,7 +293,7 @@ func resourceNamespaceDelete(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 var (
-	reIAMRole = regexp.MustCompile(`^\s*IamRole\((.*)\)\s*$`)
+	reIAMRole = regexache.MustCompile(`^\s*IamRole\((.*)\)\s*$`)
 )
 
 func flattenNamespaceIAMRoles(iamRoles []*string) []string {

@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 variable "subnet_1_cidr" {
   default     = "10.0.1.0/24"
   description = "Your AZ"

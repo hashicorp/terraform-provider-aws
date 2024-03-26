@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
@@ -18,8 +21,8 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_iam_signing_certificate")
-func ResourceSigningCertificate() *schema.Resource {
+// @SDKResource("aws_iam_signing_certificate", name="Signing Certificate")
+func resourceSigningCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSigningCertificateCreate,
 		ReadWithoutTimeout:   resourceSigningCertificateRead,

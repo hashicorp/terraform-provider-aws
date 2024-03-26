@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <project>
     <modelVersion>4.0.0</modelVersion>
-    <name>AWS TeamCity Config DSL Script</name>
-    <groupId>TeamCity-Config-DSL-Script</groupId>
-    <artifactId>TeamCity-Config-DSL-Script</artifactId>
+    <name>Terraform-Provider-AWS Config DSL Script</name>
+    <groupId>TerraformProviderAWS</groupId>
+    <artifactId>TerraformProviderAWS</artifactId>
     <version>1.0-SNAPSHOT</version>
 
     <parent>
@@ -22,7 +22,7 @@
         </repository>
         <repository>
             <id>teamcity-server</id>
-            <url>https://ci-oss.hashicorp.engineering/app/dsl-plugins-repository</url>
+            <url>https://teamcity.jetbrains.com/app/dsl-plugins-repository</url>
             <snapshots>
                 <enabled>true</enabled>
             </snapshots>
@@ -70,10 +70,12 @@
                     <format>kotlin</format>
                     <dstDir>target/generated-configs</dstDir>
                     <!-- For testing -->
-                    <!--<contextParameters>
+                    <!--
+                    <contextParameters>
                         <run_nightly_build>true</run_nightly_build>
                         <trigger_time>02:05 America/Vancouver</trigger_time>
-                    </contextParameters>-->
+                    </contextParameters>
+                    -->
                 </configuration>
             </plugin>
         </plugins>
@@ -82,13 +84,13 @@
     <dependencies>
         <dependency>
             <groupId>org.jetbrains.teamcity</groupId>
-            <artifactId>configs-dsl-kotlin</artifactId>
+            <artifactId>configs-dsl-kotlin-latest</artifactId>
             <version>${teamcity.dsl.version}</version>
             <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>org.jetbrains.teamcity</groupId>
-            <artifactId>configs-dsl-kotlin-plugins</artifactId>
+            <artifactId>configs-dsl-kotlin-plugins-latest</artifactId>
             <version>1.0-SNAPSHOT</version>
             <type>pom</type>
             <scope>compile</scope>

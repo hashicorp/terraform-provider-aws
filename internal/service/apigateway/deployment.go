@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigateway
 
 import (
@@ -131,7 +134,7 @@ func resourceDeploymentRead(ctx context.Context, d *schema.ResourceData, meta in
 		Resource:  fmt.Sprintf("%s/%s", restAPIID, stageName),
 	}.String()
 	d.Set("execution_arn", executionARN)
-	d.Set("invoke_url", meta.(*conns.AWSClient).APIGatewayInvokeURL(restAPIID, stageName))
+	d.Set("invoke_url", meta.(*conns.AWSClient).APIGatewayInvokeURL(ctx, restAPIID, stageName))
 
 	return diags
 }

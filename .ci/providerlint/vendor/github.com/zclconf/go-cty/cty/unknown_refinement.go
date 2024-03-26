@@ -44,7 +44,17 @@ func (v Value) Refine() *RefinementBuilder {
 	var wip unknownValRefinement
 	switch {
 	case ty == DynamicPseudoType && !v.IsKnown():
-		panic("cannot refine an unknown value of an unknown type")
+		// This case specifically matches DynamicVal, which is constrained
+		// by backward compatibility to be a singleton and so we cannot allow
+		// any refinements to it.
+		// To preserve the typical assumption that DynamicVal is a safe
+		// placeholder to use when no value is known at all, we silently
+		// ignore all attempts to refine this particular value and just
+		// always echo back a totally-unrefined DynamicVal.
+		return &RefinementBuilder{
+			orig:  DynamicVal,
+			marks: marks,
+		}
 	case ty == String:
 		wip = &refinementString{}
 	case ty == Number:
@@ -136,10 +146,27 @@ type RefinementBuilder struct {
 	wip   unknownValRefinement
 }
 
-func (b *RefinementBuilder) assertRefineable() {
+// refineable is an internal detail to help with two special situations
+// related to refinements:
+//   - If the refinement is to a value of a type that doesn't support any
+//     refinements at all, this function will immediately panic with a
+//     message reporting that, because it's a caller bug to try to refine
+//     a value in a way that's inappropriate for its known type.
+//   - If the refinement is to an unknown value of an unknown type
+//     (i.e. cty.DynamicVal) then it returns false, indicating that the
+//     caller should just silently ignore whatever refinement was requested.
+//   - In all other cases this function returns true, which means the direct
+//     caller should attempt to apply the requested refinement, and then
+//     panic itself if the requested refinement doesn't make sense for the
+//     specific value being refined.
+func (b *RefinementBuilder) refineable() bool {
+	if b.orig == DynamicVal {
+		return false
+	}
 	if b.wip == nil {
 		panic(fmt.Sprintf("cannot refine a %#v value", b.orig.Type()))
 	}
+	return true
 }
 
 // NotNull constrains the value as definitely not being null.
@@ -157,7 +184,9 @@ func (b *RefinementBuilder) assertRefineable() {
 // -- a value whose type is `cty.DynamicPseudoType` -- as being non-null.
 // An unknown value of an unknown type is always completely unconstrained.
 func (b *RefinementBuilder) NotNull() *RefinementBuilder {
-	b.assertRefineable()
+	if !b.refineable() {
+		return b
+	}
 
 	if b.orig.IsKnown() && b.orig.IsNull() {
 		panic("refining null value as non-null")
@@ -181,7 +210,9 @@ func (b *RefinementBuilder) NotNull() *RefinementBuilder {
 // value for each type constraint -- but this is here for symmetry with the
 // fact that a [ValueRange] can also represent that a value is definitely null.
 func (b *RefinementBuilder) Null() *RefinementBuilder {
-	b.assertRefineable()
+	if !b.refineable() {
+		return b
+	}
 
 	if b.orig.IsKnown() && !b.orig.IsNull() {
 		panic("refining non-null value as null")
@@ -209,7 +240,9 @@ func (b *RefinementBuilder) NumberRangeInclusive(min, max Value) *RefinementBuil
 // NumberRangeLowerBound constraints the lower bound of a number value, or
 // panics if this builder is not refining a number value.
 func (b *RefinementBuilder) NumberRangeLowerBound(min Value, inclusive bool) *RefinementBuilder {
-	b.assertRefineable()
+	if !b.refineable() {
+		return b
+	}
 
 	wip, ok := b.wip.(*refinementNumber)
 	if !ok {
@@ -258,7 +291,9 @@ func (b *RefinementBuilder) NumberRangeLowerBound(min Value, inclusive bool) *Re
 // NumberRangeUpperBound constraints the upper bound of a number value, or
 // panics if this builder is not refining a number value.
 func (b *RefinementBuilder) NumberRangeUpperBound(max Value, inclusive bool) *RefinementBuilder {
-	b.assertRefineable()
+	if !b.refineable() {
+		return b
+	}
 
 	wip, ok := b.wip.(*refinementNumber)
 	if !ok {
@@ -308,7 +343,9 @@ func (b *RefinementBuilder) NumberRangeUpperBound(max Value, inclusive bool) *Re
 // collection value, or panics if this builder is not refining a collection
 // value.
 func (b *RefinementBuilder) CollectionLengthLowerBound(min int) *RefinementBuilder {
-	b.assertRefineable()
+	if !b.refineable() {
+		return b
+	}
 
 	wip, ok := b.wip.(*refinementCollection)
 	if !ok {
@@ -340,7 +377,9 @@ func (b *RefinementBuilder) CollectionLengthLowerBound(min int) *RefinementBuild
 // The upper bound must be a known, non-null number or this function will
 // panic.
 func (b *RefinementBuilder) CollectionLengthUpperBound(max int) *RefinementBuilder {
-	b.assertRefineable()
+	if !b.refineable() {
+		return b
+	}
 
 	wip, ok := b.wip.(*refinementCollection)
 	if !ok {
@@ -419,7 +458,9 @@ func (b *RefinementBuilder) StringPrefix(prefix string) *RefinementBuilder {
 // Use [RefinementBuilder.StringPrefix] instead if an application cannot fully
 // control the final result to avoid violating this rule.
 func (b *RefinementBuilder) StringPrefixFull(prefix string) *RefinementBuilder {
-	b.assertRefineable()
+	if !b.refineable() {
+		return b
+	}
 
 	wip, ok := b.wip.(*refinementString)
 	if !ok {
@@ -487,7 +528,7 @@ func (b *RefinementBuilder) NewValue() (ret Value) {
 		ret = ret.WithMarks(b.marks)
 	}()
 
-	if b.orig.IsKnown() {
+	if b.orig.IsKnown() || b.orig == DynamicVal {
 		return b.orig
 	}
 

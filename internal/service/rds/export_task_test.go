@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds_test
 
 import (
@@ -31,7 +34,7 @@ func TestAccRDSExportTask_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, rdsv1.EndpointsID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, rdsv1.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckExportTaskDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -68,7 +71,7 @@ func TestAccRDSExportTask_optional(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, rdsv1.EndpointsID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, rdsv1.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckExportTaskDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -172,11 +175,6 @@ resource "aws_s3_bucket" "test" {
   force_destroy = true
 }
 
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
-}
-
 resource "aws_iam_role" "test" {
   name = %[1]q
 
@@ -240,16 +238,14 @@ resource "aws_kms_key" "test" {
 }
 
 resource "aws_db_instance" "test" {
-  identifier           = %[1]q
-  allocated_storage    = 10
-  db_name              = "test"
-  engine               = "mysql"
-  engine_version       = "5.7"
-  instance_class       = "db.t3.micro"
-  username             = "foo"
-  password             = "foobarbaz"
-  parameter_group_name = "default.mysql5.7"
-  skip_final_snapshot  = true
+  identifier          = %[1]q
+  allocated_storage   = 10
+  db_name             = "test"
+  engine              = "mysql"
+  instance_class      = "db.t3.micro"
+  username            = "foo"
+  password            = "foobarbaz"
+  skip_final_snapshot = true
 }
 
 resource "aws_db_snapshot" "test" {

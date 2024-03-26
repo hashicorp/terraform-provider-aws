@@ -1,13 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticache
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -20,10 +23,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -64,6 +67,12 @@ func ResourceReplicationGroup() *schema.Resource {
 				Sensitive:     true,
 				ValidateFunc:  validReplicationGroupAuthToken,
 				ConflictsWith: []string{"user_group_ids"},
+			},
+			"auth_token_update_strategy": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(elasticache.AuthTokenUpdateStrategyType_Values(), true),
+				Default:      elasticache.AuthTokenUpdateStrategyTypeRotate,
 			},
 			"auto_minor_version_upgrade": {
 				Type:         nullable.TypeNullableBool,
@@ -131,6 +140,12 @@ func ResourceReplicationGroup() *schema.Resource {
 					"snapshot_name",
 				},
 			},
+			"ip_discovery": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(elasticache.IpDiscovery_Values(), false),
+			},
 			"log_delivery_configuration": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -179,6 +194,13 @@ func ResourceReplicationGroup() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
+			},
+			"network_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(elasticache.NetworkType_Values(), false),
 			},
 			"node_type": {
 				Type:     schema.TypeString,
@@ -326,12 +348,24 @@ func ResourceReplicationGroup() *schema.Resource {
 			},
 		},
 
-		SchemaVersion: 1,
+		SchemaVersion: 2,
 		// SchemaVersion: 1 did not include any state changes via MigrateState.
 		// Perform a no-operation state upgrade for Terraform 0.12 compatibility.
 		// Future state migrations should be performed with StateUpgraders.
 		MigrateState: func(v int, inst *terraform.InstanceState, meta interface{}) (*terraform.InstanceState, error) {
 			return inst, nil
+		},
+
+		StateUpgraders: []schema.StateUpgrader{
+			// v5.27.0 introduced the auth_token_update_strategy argument with a default
+			// value required to preserve backward compatibility. In order to prevent
+			// differences and attempted modifications on upgrade, the default value
+			// must be written to state via a state upgrader.
+			{
+				Type:    resourceReplicationGroupConfigV1().CoreConfigSchema().ImpliedType(),
+				Upgrade: replicationGroupStateUpgradeV1,
+				Version: 1,
+			},
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -400,6 +434,14 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 
 	if v, ok := d.GetOk("parameter_group_name"); ok {
 		input.CacheParameterGroupName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("ip_discovery"); ok {
+		input.IpDiscovery = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("network_type"); ok {
+		input.NetworkType = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("port"); ok {
@@ -594,6 +636,9 @@ func resourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("arn", rgp.ARN)
 	d.Set("data_tiering_enabled", aws.StringValue(rgp.DataTiering) == elasticache.DataTieringStatusEnabled)
 
+	d.Set("ip_discovery", rgp.IpDiscovery)
+	d.Set("network_type", rgp.NetworkType)
+
 	d.Set("log_delivery_configuration", flattenLogDeliveryConfigurations(rgp.LogDeliveryConfigurations))
 	d.Set("snapshot_window", rgp.SnapshotWindow)
 	d.Set("snapshot_retention_limit", rgp.SnapshotRetentionLimit)
@@ -688,6 +733,16 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 
 		if d.HasChange("description") {
 			input.ReplicationGroupDescription = aws.String(d.Get("description").(string))
+			requestUpdate = true
+		}
+
+		if d.HasChange("ip_discovery") {
+			input.IpDiscovery = aws.String(d.Get("ip_discovery").(string))
+			requestUpdate = true
+		}
+
+		if d.HasChange("network_type") {
+			input.IpDiscovery = aws.String(d.Get("network_type").(string))
 			requestUpdate = true
 		}
 
@@ -807,7 +862,13 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 		}
 
 		if requestUpdate {
-			_, err := conn.ModifyReplicationGroupWithContext(ctx, input)
+			// tagging may cause this resource to not yet be available, so wait for it to be available
+			_, err := WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Replication Group (%s) to update: %s", d.Id(), err)
+			}
+
+			_, err = conn.ModifyReplicationGroupWithContext(ctx, input)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating ElastiCache Replication Group (%s): %s", d.Id(), err)
 			}
@@ -818,15 +879,21 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 			}
 		}
 
-		if d.HasChange("auth_token") {
+		if d.HasChanges("auth_token", "auth_token_update_strategy") {
 			params := &elasticache.ModifyReplicationGroupInput{
 				ApplyImmediately:        aws.Bool(true),
 				ReplicationGroupId:      aws.String(d.Id()),
-				AuthTokenUpdateStrategy: aws.String("ROTATE"),
+				AuthTokenUpdateStrategy: aws.String(d.Get("auth_token_update_strategy").(string)),
 				AuthToken:               aws.String(d.Get("auth_token").(string)),
 			}
 
-			_, err := conn.ModifyReplicationGroupWithContext(ctx, params)
+			// tagging may cause this resource to not yet be available, so wait for it to be available
+			_, err := WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Replication Group (%s) to update: %s", d.Id(), err)
+			}
+
+			_, err = conn.ModifyReplicationGroupWithContext(ctx, params)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "changing auth_token for ElastiCache Replication Group (%s): %s", d.Id(), err)
 			}
@@ -1104,8 +1171,8 @@ func decreaseReplicationGroupNumCacheClusters(ctx context.Context, conn *elastic
 
 var validateReplicationGroupID schema.SchemaValidateFunc = validation.All(
 	validation.StringLenBetween(1, 40),
-	validation.StringMatch(regexp.MustCompile(`^[0-9a-zA-Z-]+$`), "must contain only alphanumeric characters and hyphens"),
-	validation.StringMatch(regexp.MustCompile(`^[a-zA-Z]`), "must begin with a letter"),
-	validation.StringDoesNotMatch(regexp.MustCompile(`--`), "cannot contain two consecutive hyphens"),
-	validation.StringDoesNotMatch(regexp.MustCompile(`-$`), "cannot end with a hyphen"),
+	validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "must contain only alphanumeric characters and hyphens"),
+	validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with a letter"),
+	validation.StringDoesNotMatch(regexache.MustCompile(`--`), "cannot contain two consecutive hyphens"),
+	validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end with a hyphen"),
 )

@@ -1,14 +1,17 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package servicediscovery
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -280,7 +283,7 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
 
 	if d.Get("force_destroy").(bool) {
-		var deletionErrs *multierror.Error
+		var errs []error
 		input := &servicediscovery.ListInstancesInput{
 			ServiceId: aws.String(d.Id()),
 		}
@@ -294,8 +297,7 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta int
 				err := deregisterInstance(ctx, conn, d.Id(), aws.StringValue(instance.Id))
 
 				if err != nil {
-					log.Printf("[ERROR] %s", err)
-					deletionErrs = multierror.Append(deletionErrs, err)
+					errs = append(errs, err)
 
 					continue
 				}
@@ -305,10 +307,10 @@ func resourceServiceDelete(ctx context.Context, d *schema.ResourceData, meta int
 		})
 
 		if err != nil {
-			deletionErrs = multierror.Append(deletionErrs, fmt.Errorf("listing Service Discovery Instances: %w", err))
+			errs = append(errs, fmt.Errorf("listing Service Discovery Instances: %w", err))
 		}
 
-		err = deletionErrs.ErrorOrNil()
+		err = errors.Join(errs...)
 
 		if err != nil {
 			return diag.FromErr(err)

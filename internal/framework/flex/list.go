@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package flex
 
 import (
@@ -6,52 +9,39 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 )
 
-func ExpandFrameworkStringList(ctx context.Context, list types.List) []*string {
-	if list.IsNull() || list.IsUnknown() {
-		return nil
-	}
+func ExpandFrameworkStringList(ctx context.Context, v basetypes.ListValuable) []*string {
+	var output []*string
 
-	var vl []*string
+	must(Expand(ctx, v, &output))
 
-	if list.ElementsAs(ctx, &vl, false).HasError() {
-		return nil
-	}
-
-	return vl
+	return output
 }
 
-func ExpandFrameworkStringValueList(ctx context.Context, list types.List) []string {
-	if list.IsNull() || list.IsUnknown() {
-		return nil
-	}
+func ExpandFrameworkStringValueList(ctx context.Context, v basetypes.ListValuable) []string {
+	var output []string
 
-	var vl []string
+	must(Expand(ctx, v, &output))
 
-	if list.ElementsAs(ctx, &vl, false).HasError() {
-		return nil
-	}
-
-	return vl
+	return output
 }
 
 // FlattenFrameworkStringList converts a slice of string pointers to a framework List value.
 //
 // A nil slice is converted to a null List.
 // An empty slice is converted to a null List.
-func FlattenFrameworkStringList(_ context.Context, vs []*string) types.List {
-	if len(vs) == 0 {
+func FlattenFrameworkStringList(ctx context.Context, v []*string) types.List {
+	if len(v) == 0 {
 		return types.ListNull(types.StringType)
 	}
 
-	elems := make([]attr.Value, len(vs))
+	var output types.List
 
-	for i, v := range vs {
-		elems[i] = types.StringValue(aws.ToString(v))
-	}
+	must(Flatten(ctx, v, &output))
 
-	return types.ListValueMust(types.StringType, elems)
+	return output
 }
 
 // FlattenFrameworkStringListLegacy is the Plugin Framework variant of FlattenStringList.
@@ -70,27 +60,25 @@ func FlattenFrameworkStringListLegacy(_ context.Context, vs []*string) types.Lis
 //
 // A nil slice is converted to a null List.
 // An empty slice is converted to a null List.
-func FlattenFrameworkStringValueList(_ context.Context, vs []string) types.List {
-	if len(vs) == 0 {
+func FlattenFrameworkStringValueList[T ~string](ctx context.Context, v []T) types.List {
+	if len(v) == 0 {
 		return types.ListNull(types.StringType)
 	}
 
-	elems := make([]attr.Value, len(vs))
+	var output types.List
 
-	for i, v := range vs {
-		elems[i] = types.StringValue(v)
-	}
+	must(Flatten(ctx, v, &output))
 
-	return types.ListValueMust(types.StringType, elems)
+	return output
 }
 
 // FlattenFrameworkStringValueListLegacy is the Plugin Framework variant of FlattenStringValueList.
 // A nil slice is converted to an empty (non-null) List.
-func FlattenFrameworkStringValueListLegacy(_ context.Context, vs []string) types.List {
+func FlattenFrameworkStringValueListLegacy[T ~string](_ context.Context, vs []T) types.List {
 	elems := make([]attr.Value, len(vs))
 
 	for i, v := range vs {
-		elems[i] = types.StringValue(v)
+		elems[i] = types.StringValue(string(v))
 	}
 
 	return types.ListValueMust(types.StringType, elems)

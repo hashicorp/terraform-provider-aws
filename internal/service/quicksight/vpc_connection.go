@@ -1,13 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package quicksight
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -78,7 +81,7 @@ func (r *resourceVPCConnection) Schema(ctx context.Context, req resource.SchemaR
 				Validators: []validator.String{
 					stringvalidator.All(
 						stringvalidator.LengthAtMost(1000),
-						stringvalidator.RegexMatches(regexp.MustCompile(vpcConnectionIdRegex), "VPC Connection ID must match regex: "+vpcConnectionIdRegex),
+						stringvalidator.RegexMatches(regexache.MustCompile(vpcConnectionIdRegex), "VPC Connection ID must match regex: "+vpcConnectionIdRegex),
 					),
 				},
 			},
@@ -102,7 +105,7 @@ func (r *resourceVPCConnection) Schema(ctx context.Context, req resource.SchemaR
 					setvalidator.ValueStringsAre(
 						stringvalidator.All(
 							stringvalidator.LengthAtMost(255),
-							stringvalidator.RegexMatches(regexp.MustCompile(securityGroupIdRegex), "Security group ID must match regex: "+securityGroupIdRegex),
+							stringvalidator.RegexMatches(regexache.MustCompile(securityGroupIdRegex), "Security group ID must match regex: "+securityGroupIdRegex),
 						),
 					),
 				},
@@ -115,7 +118,7 @@ func (r *resourceVPCConnection) Schema(ctx context.Context, req resource.SchemaR
 					setvalidator.ValueStringsAre(
 						stringvalidator.All(
 							stringvalidator.LengthAtMost(255),
-							stringvalidator.RegexMatches(regexp.MustCompile(subnetIdRegex), "Subnet ID must match regex: "+subnetIdRegex),
+							stringvalidator.RegexMatches(regexache.MustCompile(subnetIdRegex), "Subnet ID must match regex: "+subnetIdRegex),
 						),
 					),
 				},

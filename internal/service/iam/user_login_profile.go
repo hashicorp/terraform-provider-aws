@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
@@ -20,12 +23,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_iam_user_login_profile")
-func ResourceUserLoginProfile() *schema.Resource {
+// @SDKResource("aws_iam_user_login_profile", name="User Login Profile")
+func resourceUserLoginProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserLoginProfileCreate,
 		ReadWithoutTimeout:   resourceUserLoginProfileRead,
 		DeleteWithoutTimeout: resourceUserLoginProfileDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				d.Set("encrypted_password", "")

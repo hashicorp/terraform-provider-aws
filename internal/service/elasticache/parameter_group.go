@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticache
 
 import (
@@ -16,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -31,22 +35,15 @@ func ResourceParameterGroup() *schema.Resource {
 		ReadWithoutTimeout:   resourceParameterGroupRead,
 		UpdateWithoutTimeout: resourceParameterGroupUpdate,
 		DeleteWithoutTimeout: resourceParameterGroupDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		Schema: map[string]*schema.Schema{
-			"name": {
+			"arn": {
 				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-				StateFunc: func(val interface{}) string {
-					return strings.ToLower(val.(string))
-				},
-			},
-			"family": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
+				Computed: true,
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -54,9 +51,18 @@ func ResourceParameterGroup() *schema.Resource {
 				ForceNew: true,
 				Default:  "Managed by Terraform",
 			},
-			"arn": {
+			"family": {
 				Type:     schema.TypeString,
-				Computed: true,
+				Required: true,
+				ForceNew: true,
+			},
+			"name": {
+				Type:     schema.TypeString,
+				ForceNew: true,
+				Required: true,
+				StateFunc: func(val interface{}) string {
+					return strings.ToLower(val.(string))
+				},
 			},
 			"parameter": {
 				Type:     schema.TypeSet,
@@ -78,6 +84,7 @@ func ResourceParameterGroup() *schema.Resource {
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
+
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
@@ -86,29 +93,29 @@ func resourceParameterGroupCreate(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
-	input := elasticache.CreateCacheParameterGroupInput{
-		CacheParameterGroupName:   aws.String(d.Get("name").(string)),
+	name := d.Get("name").(string)
+	input := &elasticache.CreateCacheParameterGroupInput{
+		CacheParameterGroupName:   aws.String(name),
 		CacheParameterGroupFamily: aws.String(d.Get("family").(string)),
 		Description:               aws.String(d.Get("description").(string)),
 		Tags:                      getTagsIn(ctx),
 	}
 
-	resp, err := conn.CreateCacheParameterGroupWithContext(ctx, &input)
+	output, err := conn.CreateCacheParameterGroupWithContext(ctx, input)
 
-	if input.Tags != nil && verify.ErrorISOUnsupported(conn.PartitionID, err) {
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
 		log.Printf("[WARN] failed creating ElastiCache Parameter Group with tags: %s. Trying create without tags.", err)
 
 		input.Tags = nil
-		resp, err = conn.CreateCacheParameterGroupWithContext(ctx, &input)
+		output, err = conn.CreateCacheParameterGroupWithContext(ctx, input)
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating ElastiCache Parameter Group: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating ElastiCache Parameter Group (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(resp.CacheParameterGroup.CacheParameterGroupName))
-	d.Set("arn", resp.CacheParameterGroup.ARN)
-	log.Printf("[INFO] ElastiCache Parameter Group ID: %s", d.Id())
+	d.SetId(aws.StringValue(output.CacheParameterGroup.CacheParameterGroupName))
+	d.Set("arn", output.CacheParameterGroup.ARN)
 
 	return append(diags, resourceParameterGroupUpdate(ctx, d, meta)...)
 }
@@ -118,27 +125,35 @@ func resourceParameterGroupRead(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).ElastiCacheConn(ctx)
 
 	parameterGroup, err := FindParameterGroupByName(ctx, conn, d.Id())
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "unable to find ElastiCache Parameter Group (%s): %s", d.Id(), err)
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] ElastiCache Parameter Group (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
 	}
 
-	d.Set("name", parameterGroup.CacheParameterGroupName)
-	d.Set("family", parameterGroup.CacheParameterGroupFamily)
-	d.Set("description", parameterGroup.Description)
-	d.Set("arn", parameterGroup.ARN)
-
-	// Only include user customized parameters as there's hundreds of system/default ones
-	describeParametersOpts := elasticache.DescribeCacheParametersInput{
-		CacheParameterGroupName: aws.String(d.Id()),
-		Source:                  aws.String("user"),
-	}
-
-	describeParametersResp, err := conn.DescribeCacheParametersWithContext(ctx, &describeParametersOpts)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ElastiCache Parameter Group (%s): %s", d.Id(), err)
 	}
 
-	d.Set("parameter", FlattenParameters(describeParametersResp.Parameters))
+	d.Set("arn", parameterGroup.ARN)
+	d.Set("description", parameterGroup.Description)
+	d.Set("family", parameterGroup.CacheParameterGroupFamily)
+	d.Set("name", parameterGroup.CacheParameterGroupName)
+
+	// Only include user customized parameters as there's hundreds of system/default ones.
+	input := &elasticache.DescribeCacheParametersInput{
+		CacheParameterGroupName: aws.String(d.Id()),
+		Source:                  aws.String("user"),
+	}
+
+	output, err := conn.DescribeCacheParametersWithContext(ctx, input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading ElastiCache Parameter Group (%s) parameters: %s", d.Id(), err)
+	}
+
+	d.Set("parameter", FlattenParameters(output.Parameters))
 
 	return diags
 }
@@ -392,20 +407,6 @@ func FlattenParameters(list []*elasticache.Parameter) []map[string]interface{} {
 		}
 	}
 	return result
-}
-
-// Takes the result of flatmap.Expand for an array of parameters and
-// returns Parameter API compatible objects
-func ExpandParameters(configured []interface{}) []*elasticache.ParameterNameValue {
-	parameters := make([]*elasticache.ParameterNameValue, len(configured))
-
-	// Loop over our configured parameters and create
-	// an array of aws-sdk-go compatible objects
-	for i, pRaw := range configured {
-		parameters[i] = expandParameter(pRaw.(map[string]interface{}))
-	}
-
-	return parameters
 }
 
 func expandParameter(param map[string]interface{}) *elasticache.ParameterNameValue {

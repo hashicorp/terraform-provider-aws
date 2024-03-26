@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -37,7 +40,7 @@ func (d *dataSourceSecurityGroupRules) Schema(ctx context.Context, req datasourc
 			"tags": tftags.TagsAttribute(),
 		},
 		Blocks: map[string]schema.Block{
-			"filter": CustomFiltersBlock(),
+			"filter": customFiltersBlock(),
 		},
 	}
 }
@@ -54,7 +57,7 @@ func (d *dataSourceSecurityGroupRules) Read(ctx context.Context, request datasou
 	conn := d.Meta().EC2Conn(ctx)
 
 	input := &ec2.DescribeSecurityGroupRulesInput{
-		Filters: append(BuildCustomFilters(ctx, data.Filters), BuildTagFilterList(Tags(tftags.New(ctx, data.Tags)))...),
+		Filters: append(newCustomFilterListFramework(ctx, data.Filters), newTagFilterList(Tags(tftags.New(ctx, data.Tags)))...),
 	}
 
 	if len(input.Filters) == 0 {

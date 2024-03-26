@@ -5,6 +5,7 @@ package meta
 import (
 	"context"
 
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
@@ -32,6 +33,7 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 		},
 		{
 			Factory: newDataSourceRegions,
+			Name:    "Regions",
 		},
 		{
 			Factory: newDataSourceService,
@@ -55,4 +57,6 @@ func (p *servicePackage) ServicePackageName() string {
 	return "meta"
 }
 
-var ServicePackage = &servicePackage{}
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}

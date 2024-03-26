@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
@@ -11,19 +14,18 @@ import (
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_iam_user_policy")
-func ResourceUserPolicy() *schema.Resource {
+// @SDKResource("aws_iam_user_policy", name="User Policy")
+func resourceUserPolicy() *schema.Resource {
 	return &schema.Resource{
-		// PutUserPolicy API is idempotent, so these can be the same.
 		CreateWithoutTimeout: resourceUserPolicyPut,
 		ReadWithoutTimeout:   resourceUserPolicyRead,
 		UpdateWithoutTimeout: resourceUserPolicyPut,
@@ -34,17 +36,6 @@ func ResourceUserPolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"policy": {
-				Type:                  schema.TypeString,
-				Required:              true,
-				ValidateFunc:          verify.ValidIAMPolicyJSON,
-				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
-				DiffSuppressOnRefresh: true,
-				StateFunc: func(v interface{}) string {
-					json, _ := verify.LegacyPolicyNormalize(v)
-					return json
-				},
-			},
 			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -55,8 +46,20 @@ func ResourceUserPolicy() *schema.Resource {
 			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
+			},
+			"policy": {
+				Type:                  schema.TypeString,
+				Required:              true,
+				ValidateFunc:          verify.ValidIAMPolicyJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
+				DiffSuppressOnRefresh: true,
+				StateFunc: func(v interface{}) string {
+					json, _ := verify.LegacyPolicyNormalize(v)
+					return json
+				},
 			},
 			"user": {
 				Type:     schema.TypeString,
@@ -71,77 +74,53 @@ func resourceUserPolicyPut(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
-	p, err := verify.LegacyPolicyNormalize(d.Get("policy").(string))
+	policyDoc, err := verify.LegacyPolicyNormalize(d.Get("policy").(string))
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", p, err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	request := &iam.PutUserPolicyInput{
-		UserName:       aws.String(d.Get("user").(string)),
-		PolicyDocument: aws.String(p),
+	userName := d.Get("user").(string)
+	policyName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	input := &iam.PutUserPolicyInput{
+		PolicyDocument: aws.String(policyDoc),
+		PolicyName:     aws.String(policyName),
+		UserName:       aws.String(userName),
 	}
 
-	var policyName string
-	if !d.IsNewResource() {
-		_, policyName, err = UserPolicyParseID(d.Id())
+	_, err = conn.PutUserPolicyWithContext(ctx, input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "putting IAM User (%s) Policy (%s): %s", userName, policyName, err)
+	}
+
+	if d.IsNewResource() {
+		d.SetId(fmt.Sprintf("%s:%s", userName, policyName))
+
+		_, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+			return FindUserPolicyByTwoPartKey(ctx, conn, userName, policyName)
+		})
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "putting IAM User Policy %s: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for IAM User Policy (%s) create: %s", d.Id(), err)
 		}
-	} else if v, ok := d.GetOk("name"); ok {
-		policyName = v.(string)
-	} else if v, ok := d.GetOk("name_prefix"); ok {
-		policyName = id.PrefixedUniqueId(v.(string))
-	} else {
-		policyName = id.UniqueId()
-	}
-	request.PolicyName = aws.String(policyName)
-
-	if _, err := conn.PutUserPolicyWithContext(ctx, request); err != nil {
-		return sdkdiag.AppendErrorf(diags, "putting IAM User Policy %s: %s", aws.StringValue(request.PolicyName), err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s", aws.StringValue(request.UserName), aws.StringValue(request.PolicyName)))
-	return diags
+	return append(diags, resourceUserPolicyRead(ctx, d, meta)...)
 }
 
 func resourceUserPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
-	user, name, err := UserPolicyParseID(d.Id())
+	userName, policyName, err := UserPolicyParseID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading IAM User Policy (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	request := &iam.GetUserPolicyInput{
-		PolicyName: aws.String(name),
-		UserName:   aws.String(user),
-	}
+	policyDocument, err := FindUserPolicyByTwoPartKey(ctx, conn, userName, policyName)
 
-	var getResp *iam.GetUserPolicyOutput
-
-	err = retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
-		var err error
-
-		getResp, err = conn.GetUserPolicyWithContext(ctx, request)
-
-		if d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-			return retry.RetryableError(err)
-		}
-
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		getResp, err = conn.GetUserPolicyWithContext(ctx, request)
-	}
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-		log.Printf("[WARN] IAM User Policy (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] IAM User Policy %s not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
@@ -150,24 +129,20 @@ func resourceUserPolicyRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading IAM User Policy (%s): %s", d.Id(), err)
 	}
 
-	if getResp == nil || getResp.PolicyDocument == nil {
-		return sdkdiag.AppendErrorf(diags, "reading IAM User Policy (%s): empty response", d.Id())
-	}
-
-	policy, err := url.QueryUnescape(*getResp.PolicyDocument)
+	policy, err := url.QueryUnescape(policyDocument)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading IAM User Policy (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	policyToSet, err := verify.LegacyPolicyToSet(d.Get("policy").(string), policy)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading IAM User Policy (%s): setting policy: %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
+	d.Set("name", policyName)
+	d.Set("name_prefix", create.NamePrefixFromName(policyName))
 	d.Set("policy", policyToSet)
-
-	d.Set("name", name)
-	d.Set("user", user)
+	d.Set("user", userName)
 
 	return diags
 }
@@ -176,23 +151,52 @@ func resourceUserPolicyDelete(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
-	user, name, err := UserPolicyParseID(d.Id())
+	userName, policyName, err := UserPolicyParseID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting IAM User Policy %s: %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	request := &iam.DeleteUserPolicyInput{
-		PolicyName: aws.String(name),
-		UserName:   aws.String(user),
+	log.Printf("[INFO] Deleting IAM User Policy: %s", d.Id())
+	_, err = conn.DeleteUserPolicyWithContext(ctx, &iam.DeleteUserPolicyInput{
+		PolicyName: aws.String(policyName),
+		UserName:   aws.String(userName),
+	})
+
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+		return diags
 	}
 
-	if _, err := conn.DeleteUserPolicyWithContext(ctx, request); err != nil {
-		if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-			return diags
-		}
-		return sdkdiag.AppendErrorf(diags, "deleting IAM User Policy %s: %s", d.Id(), err)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting IAM User Policy (%s): %s", d.Id(), err)
 	}
+
 	return diags
+}
+
+func FindUserPolicyByTwoPartKey(ctx context.Context, conn *iam.IAM, userName, policyName string) (string, error) {
+	input := &iam.GetUserPolicyInput{
+		PolicyName: aws.String(policyName),
+		UserName:   aws.String(userName),
+	}
+
+	output, err := conn.GetUserPolicyWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+		return "", &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return "", err
+	}
+
+	if output == nil || output.PolicyDocument == nil {
+		return "", tfresource.NewEmptyResultError(input)
+	}
+
+	return aws.StringValue(output.PolicyDocument), nil
 }
 
 func UserPolicyParseID(id string) (userName, policyName string, err error) {

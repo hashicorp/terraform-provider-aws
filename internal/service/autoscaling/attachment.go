@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package autoscaling
 
 import (
@@ -62,7 +65,7 @@ func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta 
 				return conn.AttachLoadBalancersWithContext(ctx, input)
 			},
 			// ValidationError: Trying to update too many Load Balancers/Target Groups at once. The limit is 10
-			ErrCodeValidationError, "update too many")
+			errCodeValidationError, "update too many")
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "attaching Auto Scaling Group (%s) load balancer (%s): %s", asgName, lbName, err)
@@ -77,7 +80,7 @@ func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta 
 			func() (interface{}, error) {
 				return conn.AttachLoadBalancerTargetGroupsWithContext(ctx, input)
 			},
-			ErrCodeValidationError, "update too many")
+			errCodeValidationError, "update too many")
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "attaching Auto Scaling Group (%s) target group (%s): %s", asgName, d.Get("lb_target_group_arn").(string), err)
@@ -132,7 +135,7 @@ func resourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta 
 			func() (interface{}, error) {
 				return conn.DetachLoadBalancersWithContext(ctx, input)
 			},
-			ErrCodeValidationError, "update too many")
+			errCodeValidationError, "update too many")
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "detaching Auto Scaling Group (%s) load balancer (%s): %s", asgName, lbName, err)
@@ -147,7 +150,7 @@ func resourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta 
 			func() (interface{}, error) {
 				return conn.DetachLoadBalancerTargetGroupsWithContext(ctx, input)
 			},
-			ErrCodeValidationError, "update too many")
+			errCodeValidationError, "update too many")
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "detaching Auto Scaling Group (%s) target group (%s): %s", asgName, d.Get("lb_target_group_arn").(string), err)

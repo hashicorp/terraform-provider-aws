@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package logs_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -66,7 +69,7 @@ func TestAccLogsDataProtectionPolicyDocumentDataSource_errorOnBadOrderOfStatemen
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataProtectionPolicyDocumentDataSourceConfig_errorOnBadOrderOfStatements,
-				ExpectError: regexp.MustCompile(`the first policy statement must contain only the audit operation`),
+				ExpectError: regexache.MustCompile(`the first policy statement must contain only the audit operation`),
 			},
 		},
 	})
@@ -82,7 +85,7 @@ func TestAccLogsDataProtectionPolicyDocumentDataSource_errorOnNoOperation(t *tes
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccDataProtectionPolicyDocumentDataSourceConfig_errorOnNoOperation,
-				ExpectError: regexp.MustCompile(`the second policy statement must contain only the deidentify operation`),
+				ExpectError: regexache.MustCompile(`the second policy statement must contain only the deidentify operation`),
 			},
 		},
 	})

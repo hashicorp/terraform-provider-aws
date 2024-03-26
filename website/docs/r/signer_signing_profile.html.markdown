@@ -41,9 +41,9 @@ resource "aws_signer_signing_profile" "prod_sp" {
 * `signature_validity_period` - (Optional) The validity period for a signing job.
 * `tags` - (Optional) A list of tags associated with the signing profile. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) for the signing profile.
 * `name` - The name of the target signing profile.
@@ -56,8 +56,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Signer signing profiles can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Signer signing profiles using the `name`. For example:
 
+```terraform
+import {
+  to = aws_signer_signing_profile.test_signer_signing_profile
+  id = "test_sp_DdW3Mk1foYL88fajut4mTVFGpuwfd4ACO6ANL0D1uIj7lrn8adK"
+}
 ```
-$ terraform import aws_signer_signing_profile.test_signer_signing_profile test_sp_DdW3Mk1foYL88fajut4mTVFGpuwfd4ACO6ANL0D1uIj7lrn8adK
+
+Using `terraform import`, import Signer signing profiles using the `name`. For example:
+
+```console
+% terraform import aws_signer_signing_profile.test_signer_signing_profile test_sp_DdW3Mk1foYL88fajut4mTVFGpuwfd4ACO6ANL0D1uIj7lrn8adK
 ```

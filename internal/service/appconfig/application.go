@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appconfig
 
 import (
@@ -152,11 +155,10 @@ func resourceApplicationDelete(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
 
-	input := &appconfig.DeleteApplicationInput{
+	log.Printf("[INFO] Deleting AppConfig Application: %s", d.Id())
+	_, err := conn.DeleteApplicationWithContext(ctx, &appconfig.DeleteApplicationInput{
 		ApplicationId: aws.String(d.Id()),
-	}
-
-	_, err := conn.DeleteApplicationWithContext(ctx, input)
+	})
 
 	if tfawserr.ErrCodeEquals(err, appconfig.ErrCodeResourceNotFoundException) {
 		return diags

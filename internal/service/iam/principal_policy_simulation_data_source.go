@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
@@ -14,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKDataSource("aws_iam_principal_policy_simulation")
-func DataSourcePrincipalPolicySimulation() *schema.Resource {
+// @SDKDataSource("aws_iam_principal_policy_simulation", name="Principal Policy Simulation")
+func dataSourcePrincipalPolicySimulation() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePrincipalPolicySimulationRead,
 

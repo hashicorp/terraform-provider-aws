@@ -1,9 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ce
 
 import (
 	"context"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/costexplorer"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -12,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -59,7 +63,7 @@ func ResourceAnomalySubscription() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 1024),
-					validation.StringMatch(regexp.MustCompile(`[\\S\\s]*`), "Must be a valid Anomaly Subscription Name matching expression: [\\S\\s]*")),
+					validation.StringMatch(regexache.MustCompile(`[\\S\\s]*`), "Must be a valid Anomaly Subscription Name matching expression: [\\S\\s]*")),
 			},
 			"subscriber": {
 				Type:     schema.TypeSet,
@@ -94,6 +98,8 @@ func ResourceAnomalySubscription() *schema.Resource {
 }
 
 func resourceAnomalySubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).CEConn(ctx)
 
 	input := &costexplorer.CreateAnomalySubscriptionInput{
@@ -117,19 +123,21 @@ func resourceAnomalySubscriptionCreate(ctx context.Context, d *schema.ResourceDa
 	resp, err := conn.CreateAnomalySubscriptionWithContext(ctx, input)
 
 	if err != nil {
-		return create.DiagError(names.CE, create.ErrActionCreating, ResNameAnomalySubscription, d.Id(), err)
+		return create.AppendDiagError(diags, names.CE, create.ErrActionCreating, ResNameAnomalySubscription, d.Id(), err)
 	}
 
 	if resp == nil || resp.SubscriptionArn == nil {
-		return diag.Errorf("creating Cost Explorer Anomaly Subscription resource (%s): empty output", d.Get("name").(string))
+		return sdkdiag.AppendErrorf(diags, "creating Cost Explorer Anomaly Subscription resource (%s): empty output", d.Get("name").(string))
 	}
 
 	d.SetId(aws.StringValue(resp.SubscriptionArn))
 
-	return resourceAnomalySubscriptionRead(ctx, d, meta)
+	return append(diags, resourceAnomalySubscriptionRead(ctx, d, meta)...)
 }
 
 func resourceAnomalySubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).CEConn(ctx)
 
 	subscription, err := FindAnomalySubscriptionByARN(ctx, conn, d.Id())
@@ -137,11 +145,11 @@ func resourceAnomalySubscriptionRead(ctx context.Context, d *schema.ResourceData
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		create.LogNotFoundRemoveState(names.CE, create.ErrActionReading, ResNameAnomalySubscription, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.CE, create.ErrActionReading, ResNameAnomalySubscription, d.Id(), err)
+		return create.AppendDiagError(diags, names.CE, create.ErrActionReading, ResNameAnomalySubscription, d.Id(), err)
 	}
 
 	d.Set("account_id", subscription.AccountId)
@@ -152,13 +160,15 @@ func resourceAnomalySubscriptionRead(ctx context.Context, d *schema.ResourceData
 	d.Set("name", subscription.SubscriptionName)
 
 	if err = d.Set("threshold_expression", []interface{}{flattenCostCategoryRuleExpression(subscription.ThresholdExpression)}); err != nil {
-		return create.DiagError(names.CE, "setting threshold_expression", ResNameAnomalySubscription, d.Id(), err)
+		return create.AppendDiagError(diags, names.CE, "setting threshold_expression", ResNameAnomalySubscription, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceAnomalySubscriptionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).CEConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_All") {
@@ -185,27 +195,29 @@ func resourceAnomalySubscriptionUpdate(ctx context.Context, d *schema.ResourceDa
 		_, err := conn.UpdateAnomalySubscriptionWithContext(ctx, input)
 
 		if err != nil {
-			return create.DiagError(names.CE, create.ErrActionUpdating, ResNameAnomalySubscription, d.Id(), err)
+			return create.AppendDiagError(diags, names.CE, create.ErrActionUpdating, ResNameAnomalySubscription, d.Id(), err)
 		}
 	}
 
-	return resourceAnomalySubscriptionRead(ctx, d, meta)
+	return append(diags, resourceAnomalySubscriptionRead(ctx, d, meta)...)
 }
 
 func resourceAnomalySubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).CEConn(ctx)
 
 	_, err := conn.DeleteAnomalySubscriptionWithContext(ctx, &costexplorer.DeleteAnomalySubscriptionInput{SubscriptionArn: aws.String(d.Id())})
 
 	if err != nil && tfawserr.ErrCodeEquals(err, costexplorer.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.CE, create.ErrActionDeleting, ResNameAnomalySubscription, d.Id(), err)
+		return create.AppendDiagError(diags, names.CE, create.ErrActionDeleting, ResNameAnomalySubscription, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandAnomalySubscriptionMonitorARNList(rawMonitorArnList []interface{}) []string {

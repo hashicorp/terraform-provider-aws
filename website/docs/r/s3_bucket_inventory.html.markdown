@@ -10,6 +10,8 @@ description: |-
 
 Provides a S3 bucket [inventory configuration](https://docs.aws.amazon.com/AmazonS3/latest/dev/storage-inventory.html) resource.
 
+-> This resource cannot be used with S3 directory buckets.
+
 ## Example Usage
 
 ### Add inventory configuration
@@ -79,7 +81,7 @@ resource "aws_s3_bucket_inventory" "test-prefix" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `bucket` - (Required) Name of the source bucket that inventory lists the objects for.
 * `name` - (Required) Unique identifier of the inventory configuration for the bucket.
@@ -119,14 +121,23 @@ The `sse_kms` configuration supports the following:
 
 * `key_id` - (Required) ARN of the KMS customer master key (CMK) used to encrypt the inventory file.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-S3 bucket inventory configurations can be imported using `bucket:inventory`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 bucket inventory configurations using `bucket:inventory`. For example:
 
-```sh
-$ terraform import aws_s3_bucket_inventory.my-bucket-entire-bucket my-bucket:EntireBucket
+```terraform
+import {
+  to = aws_s3_bucket_inventory.my-bucket-entire-bucket
+  id = "my-bucket:EntireBucket"
+}
+```
+
+Using `terraform import`, import S3 bucket inventory configurations using `bucket:inventory`. For example:
+
+```console
+% terraform import aws_s3_bucket_inventory.my-bucket-entire-bucket my-bucket:EntireBucket
 ```

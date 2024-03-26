@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package fwprovider
 
 import (
@@ -9,14 +12,27 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	fwtypes "github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
+
+// A data source interceptor is functionality invoked during the data source's CRUD request lifecycle.
+// If a Before interceptor returns Diagnostics indicating an error occurred then
+// no further interceptors in the chain are run and neither is the schema's method.
+// In other cases all interceptors in the chain are run.
+type dataSourceInterceptor interface {
+	// read is invoke for a Read call.
+	read(context.Context, datasource.ReadRequest, *datasource.ReadResponse, *conns.AWSClient, when, diag.Diagnostics) (context.Context, diag.Diagnostics)
+}
+
+type dataSourceInterceptors []dataSourceInterceptor
 
 type resourceCRUDRequest interface {
 	resource.CreateRequest | resource.ReadRequest | resource.UpdateRequest | resource.DeleteRequest
@@ -130,13 +146,15 @@ type wrappedDataSource struct {
 	// bootstrapContext is run on all wrapped methods before any interceptors.
 	bootstrapContext contextFunc
 	inner            datasource.DataSourceWithConfigure
+	interceptors     dataSourceInterceptors
 	meta             *conns.AWSClient
 }
 
-func newWrappedDataSource(bootstrapContext contextFunc, inner datasource.DataSourceWithConfigure) datasource.DataSourceWithConfigure {
+func newWrappedDataSource(bootstrapContext contextFunc, inner datasource.DataSourceWithConfigure, interceptors dataSourceInterceptors) datasource.DataSourceWithConfigure {
 	return &wrappedDataSource{
 		bootstrapContext: bootstrapContext,
 		inner:            inner,
+		interceptors:     interceptors,
 	}
 }
 
@@ -152,12 +170,26 @@ func (w *wrappedDataSource) Schema(ctx context.Context, request datasource.Schem
 
 func (w *wrappedDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
 	ctx = w.bootstrapContext(ctx, w.meta)
+	// TODO Run interceptors.
 	w.inner.Read(ctx, request, response)
 }
 
 func (w *wrappedDataSource) Configure(ctx context.Context, request datasource.ConfigureRequest, response *datasource.ConfigureResponse) {
+	if v, ok := request.ProviderData.(*conns.AWSClient); ok {
+		w.meta = v
+	}
 	ctx = w.bootstrapContext(ctx, w.meta)
 	w.inner.Configure(ctx, request, response)
+}
+
+// tagsDataSourceInterceptor implements transparent tagging for data sources.
+type tagsDataSourceInterceptor struct {
+	tags *types.ServicePackageResourceTags
+}
+
+func (r tagsDataSourceInterceptor) read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse, meta *conns.AWSClient, when when, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+	// TODO
+	return ctx, diags
 }
 
 // wrappedResource represents an interceptor dispatcher for a Plugin Framework resource.
@@ -284,12 +316,12 @@ func (w *wrappedResource) UpgradeState(ctx context.Context) map[int64]resource.S
 	return nil
 }
 
-// tagsInterceptor implements transparent tagging.
-type tagsInterceptor struct {
+// tagsResourceInterceptor implements transparent tagging for resources.
+type tagsResourceInterceptor struct {
 	tags *types.ServicePackageResourceTags
 }
 
-func (r tagsInterceptor) create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse, meta *conns.AWSClient, when when, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+func (r tagsResourceInterceptor) create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse, meta *conns.AWSClient, when when, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
 	if r.tags == nil {
 		return ctx, diags
 	}
@@ -318,7 +350,7 @@ func (r tagsInterceptor) create(ctx context.Context, request resource.CreateRequ
 		// Remove system tags.
 		tags = tags.IgnoreSystem(inContext.ServicePackageName)
 
-		tagsInContext.TagsIn = types.Some(tags)
+		tagsInContext.TagsIn = option.Some(tags)
 	case After:
 		// Set values for unknowns.
 		// Remove any provider configured ignore_tags and system tags from those passed to the service API.
@@ -334,7 +366,7 @@ func (r tagsInterceptor) create(ctx context.Context, request resource.CreateRequ
 	return ctx, diags
 }
 
-func (r tagsInterceptor) read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse, meta *conns.AWSClient, when when, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+func (r tagsResourceInterceptor) read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse, meta *conns.AWSClient, when when, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
 	if r.tags == nil {
 		return ctx, diags
 	}
@@ -396,6 +428,11 @@ func (r tagsInterceptor) read(ctx context.Context, request resource.ReadRequest,
 						ListTags(context.Context, any, string, string) error
 					}); ok && r.tags.ResourceType != "" {
 						err = v.ListTags(ctx, meta, identifier, r.tags.ResourceType) // Sets tags in Context
+					} else {
+						tflog.Warn(ctx, "No ListTags method found", map[string]interface{}{
+							"ServicePackage": sp.ServicePackageName(),
+							"ResourceType":   r.tags.ResourceType,
+						})
 					}
 
 					// ISO partitions may not support tagging, giving error.
@@ -439,7 +476,7 @@ func (r tagsInterceptor) read(ctx context.Context, request resource.ReadRequest,
 	return ctx, diags
 }
 
-func (r tagsInterceptor) update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse, meta *conns.AWSClient, when when, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+func (r tagsResourceInterceptor) update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse, meta *conns.AWSClient, when when, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
 	if r.tags == nil {
 		return ctx, diags
 	}
@@ -483,7 +520,7 @@ func (r tagsInterceptor) update(ctx context.Context, request resource.UpdateRequ
 		// Remove system tags.
 		tags = tags.IgnoreSystem(inContext.ServicePackageName)
 
-		tagsInContext.TagsIn = types.Some(tags)
+		tagsInContext.TagsIn = option.Some(tags)
 
 		var oldTagsAll, newTagsAll fwtypes.Map
 
@@ -523,6 +560,11 @@ func (r tagsInterceptor) update(ctx context.Context, request resource.UpdateRequ
 						UpdateTags(context.Context, any, string, string, any, any) error
 					}); ok && r.tags.ResourceType != "" {
 						err = v.UpdateTags(ctx, meta, identifier, r.tags.ResourceType, oldTagsAll, newTagsAll)
+					} else {
+						tflog.Warn(ctx, "No UpdateTags method found", map[string]interface{}{
+							"ServicePackage": sp.ServicePackageName(),
+							"ResourceType":   r.tags.ResourceType,
+						})
 					}
 
 					// ISO partitions may not support tagging, giving error.
@@ -544,6 +586,6 @@ func (r tagsInterceptor) update(ctx context.Context, request resource.UpdateRequ
 	return ctx, diags
 }
 
-func (r tagsInterceptor) delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse, meta *conns.AWSClient, when when, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
+func (r tagsResourceInterceptor) delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse, meta *conns.AWSClient, when when, diags diag.Diagnostics) (context.Context, diag.Diagnostics) {
 	return ctx, diags
 }

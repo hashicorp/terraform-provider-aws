@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
 	"encoding/json"
 	"fmt"
-	"regexp"
 	"sort"
 	"strconv"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/jmespath/go-jmespath"
 )
@@ -174,17 +177,27 @@ func (cs IAMPolicyStatementConditionSet) MarshalJSON() ([]byte, error) {
 		if _, ok := raw[c.Test]; !ok {
 			raw[c.Test] = map[string]interface{}{}
 		}
+		if _, ok := raw[c.Test][c.Variable]; !ok {
+			raw[c.Test][c.Variable] = []string{}
+		}
 		switch i := c.Values.(type) {
 		case []string:
-			if _, ok := raw[c.Test][c.Variable]; !ok {
-				raw[c.Test][c.Variable] = make([]string, 0, len(i))
-			}
 			// order matters with values so not sorting here
 			raw[c.Test][c.Variable] = append(raw[c.Test][c.Variable].([]string), i...)
 		case string:
-			raw[c.Test][c.Variable] = i
+			raw[c.Test][c.Variable] = append(raw[c.Test][c.Variable].([]string), i)
 		default:
 			return nil, fmt.Errorf("Unsupported data type for IAMPolicyStatementConditionSet: %s", i)
+		}
+	}
+
+	// flatten entries with a single item to match AWS IAM syntax
+	for k1 := range raw {
+		for k2 := range raw[k1] {
+			items := raw[k1][k2].([]string)
+			if len(items) == 1 {
+				raw[k1][k2] = items[0]
+			}
 		}
 	}
 
@@ -280,7 +293,7 @@ func isValidPolicyAWSPrincipal(principal string) bool { // nosemgrep:ci.aws-in-f
 	if arn.IsARN(principal) {
 		return true
 	}
-	if regexp.MustCompile(`^\d{12}$`).MatchString(principal) {
+	if regexache.MustCompile(`^\d{12}$`).MatchString(principal) {
 		return true
 	}
 	return false

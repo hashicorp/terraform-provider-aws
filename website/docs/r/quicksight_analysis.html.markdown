@@ -138,9 +138,9 @@ The following arguments are optional:
 * `parameters_declarations` - (Optional) A list of parameter declarations for an analysis. Parameters are named variables that can transfer a value for use by an action or an object. See [AWS API Documentation for complete description](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ParameterDeclaration.html). For more information, see [Parameters in Amazon QuickSight](https://docs.aws.amazon.com/quicksight/latest/user/parameters-in-quicksight.html) in the Amazon QuickSight User Guide.
 * `sheets` - (Optional) A list of sheet definitions for an analysis. See [AWS API Documentation for complete description](https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SheetDefinition.html).
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the analysis.
 * `created_time` - The time that the analysis was created.
@@ -159,8 +159,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-A QuickSight Analysis can be imported using the AWS account ID and analysis ID separated by a comma (`,`) e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a QuickSight Analysis using the AWS account ID and analysis ID separated by a comma (`,`). For example:
 
+```terraform
+import {
+  to = aws_quicksight_analysis.example
+  id = "123456789012,example-id"
+}
 ```
-$ terraform import aws_quicksight_analysis.example 123456789012,example-id
+
+Using `terraform import`, import a QuickSight Analysis using the AWS account ID and analysis ID separated by a comma (`,`). For example:
+
+```console
+% terraform import aws_quicksight_analysis.example 123456789012,example-id
 ```

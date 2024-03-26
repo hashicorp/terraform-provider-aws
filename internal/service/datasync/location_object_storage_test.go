@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package datasync_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/datasync"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -14,28 +17,29 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdatasync "github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDataSyncLocationObjectStorage_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var locationObjectStorage datasync.DescribeLocationObjectStorageOutput
+	var v datasync.DescribeLocationObjectStorageOutput
 	resourceName := "aws_datasync_location_object_storage.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domain := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLocationObjectStorageDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationObjectStorageConfig_basic(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLocationObjectStorageExists(ctx, resourceName, &locationObjectStorage),
+					testAccCheckLocationObjectStorageExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "access_key", ""),
 					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "1"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexp.MustCompile(`location/loc-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexache.MustCompile(`location/loc-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "bucket_name", rName),
 					resource.TestCheckNoResourceAttr(resourceName, "secret_key"),
 					resource.TestCheckResourceAttr(resourceName, "server_certificate", ""),
@@ -58,21 +62,21 @@ func TestAccDataSyncLocationObjectStorage_basic(t *testing.T) {
 
 func TestAccDataSyncLocationObjectStorage_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var locationObjectStorage datasync.DescribeLocationObjectStorageOutput
+	var v datasync.DescribeLocationObjectStorageOutput
 	resourceName := "aws_datasync_location_object_storage.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domain := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLocationObjectStorageDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationObjectStorageConfig_basic(rName, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationObjectStorageExists(ctx, resourceName, &locationObjectStorage),
+					testAccCheckLocationObjectStorageExists(ctx, resourceName, &v),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdatasync.ResourceLocationObjectStorage(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -83,21 +87,21 @@ func TestAccDataSyncLocationObjectStorage_disappears(t *testing.T) {
 
 func TestAccDataSyncLocationObjectStorage_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var locationObjectStorage datasync.DescribeLocationObjectStorageOutput
+	var v datasync.DescribeLocationObjectStorageOutput
 	resourceName := "aws_datasync_location_object_storage.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domain := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLocationObjectStorageDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationObjectStorageConfig_tags1(rName, domain, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationObjectStorageExists(ctx, resourceName, &locationObjectStorage),
+					testAccCheckLocationObjectStorageExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -110,7 +114,7 @@ func TestAccDataSyncLocationObjectStorage_tags(t *testing.T) {
 			{
 				Config: testAccLocationObjectStorageConfig_tags2(rName, domain, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationObjectStorageExists(ctx, resourceName, &locationObjectStorage),
+					testAccCheckLocationObjectStorageExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -119,7 +123,7 @@ func TestAccDataSyncLocationObjectStorage_tags(t *testing.T) {
 			{
 				Config: testAccLocationObjectStorageConfig_tags1(rName, domain, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLocationObjectStorageExists(ctx, resourceName, &locationObjectStorage),
+					testAccCheckLocationObjectStorageExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -130,7 +134,7 @@ func TestAccDataSyncLocationObjectStorage_tags(t *testing.T) {
 
 func TestAccDataSyncLocationObjectStorage_serverCertificate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var locationObjectStorage datasync.DescribeLocationObjectStorageOutput
+	var v datasync.DescribeLocationObjectStorageOutput
 	resourceName := "aws_datasync_location_object_storage.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domain := acctest.RandomDomainName()
@@ -139,14 +143,14 @@ func TestAccDataSyncLocationObjectStorage_serverCertificate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLocationObjectStorageDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLocationObjectStorageConfig_serverCertificate(rName, domain, caCertificate),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckLocationObjectStorageExists(ctx, resourceName, &locationObjectStorage),
+					testAccCheckLocationObjectStorageExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "bucket_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "server_certificate", caCertificate),
 					resource.TestCheckResourceAttr(resourceName, "server_hostname", domain),
@@ -213,74 +217,7 @@ func testAccCheckLocationObjectStorageExists(ctx context.Context, n string, v *d
 }
 
 func testAccLocationObjectStorageConfig_base(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigVPCWithSubnets(rName, 1),
-		// Reference: https://docs.aws.amazon.com/datasync/latest/userguide/agent-requirements.html
-		acctest.AvailableEC2InstanceTypeForAvailabilityZone("aws_subnet.test[0].availability_zone", "m5.2xlarge", "m5.4xlarge"),
-		fmt.Sprintf(`
-# Reference: https://docs.aws.amazon.com/datasync/latest/userguide/deploy-agents.html
-data "aws_ssm_parameter" "aws_service_datasync_ami" {
-  name = "/aws/service/datasync/ami"
-}
-
-resource "aws_internet_gateway" "test" {
-  vpc_id = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_default_route_table" "test" {
-  default_route_table_id = aws_vpc.test.default_route_table_id
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.test.id
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_security_group" "test" {
-  name   = %[1]q
-  vpc_id = aws_vpc.test.id
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_instance" "test" {
-  depends_on = [aws_default_route_table.test]
-
-  ami                         = data.aws_ssm_parameter.aws_service_datasync_ami.value
-  associate_public_ip_address = true
-  instance_type               = data.aws_ec2_instance_type_offering.available.instance_type
-  vpc_security_group_ids      = [aws_security_group.test.id]
-  subnet_id                   = aws_subnet.test[0].id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+	return acctest.ConfigCompose(testAccAgentAgentConfig_base(rName), fmt.Sprintf(`
 resource "aws_datasync_agent" "test" {
   ip_address = aws_instance.test.public_ip
   name       = %[1]q

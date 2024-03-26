@@ -37,7 +37,7 @@ resource "aws_iam_policy" "policy" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `description` - (Optional, Forces new resource) Description of the IAM policy.
 * `name` - (Optional, Forces new resource) The name of the policy. If omitted, Terraform will assign a random, unique name.
@@ -47,9 +47,9 @@ The following arguments are supported:
 * `policy` - (Required) The policy document. This is a JSON formatted string. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy)
 * `tags` - (Optional) Map of resource tags for the IAM Policy. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ARN assigned by AWS to this policy.
 * `arn` - The ARN assigned by AWS to this policy.
@@ -62,8 +62,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-IAM Policies can be imported using the `arn`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IAM Policies using the `arn`. For example:
 
+```terraform
+import {
+  to = aws_iam_policy.administrator
+  id = "arn:aws:iam::123456789012:policy/UsersManageOwnCredentials"
+}
 ```
-$ terraform import aws_iam_policy.administrator arn:aws:iam::123456789012:policy/UsersManageOwnCredentials
+
+Using `terraform import`, import IAM Policies using the `arn`. For example:
+
+```console
+% terraform import aws_iam_policy.administrator arn:aws:iam::123456789012:policy/UsersManageOwnCredentials
 ```

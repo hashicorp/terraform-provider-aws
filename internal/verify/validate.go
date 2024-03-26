@@ -1,28 +1,35 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package verify
 
 import (
 	"encoding/json"
 	"fmt"
 	"net"
-	"regexp"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws/arn"
+	basevalidation "github.com/hashicorp/aws-sdk-go-base/v2/validation"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/timestamp"
 )
 
-var accountIDRegexp = regexp.MustCompile(`^(aws|aws-managed|third-party|\d{12}|cw.{10})$`)
-var partitionRegexp = regexp.MustCompile(`^aws(-[a-z]+)*$`)
-var regionRegexp = regexp.MustCompile(`^[a-z]{2}(-[a-z]+)+-\d$`)
+var accountIDRegexp = regexache.MustCompile(`^(aws|aws-managed|third-party|\d{12}|cw.{10})$`)
+var partitionRegexp = regexache.MustCompile(`^aws(-[a-z]+)*$`)
+var regionRegexp = regexache.MustCompile(`^[a-z]{2}(-[a-z]+)+-\d$`)
+
+// validates all listed in https://gist.github.com/shortjared/4c1e3fe52bdfa47522cfe5b41e5d6f22
+var servicePrincipalRegexp = regexache.MustCompile(`^([0-9a-z-]+\.){1,4}(amazonaws|amazon)\.com$`)
 
 func Valid4ByteASN(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
@@ -123,11 +130,21 @@ func ValidARNCheck(f ...ARNCheckFunc) schema.SchemaValidateFunc {
 func ValidAccountID(v interface{}, k string) (ws []string, errors []error) {
 	value := v.(string)
 
-	// http://docs.aws.amazon.com/lambda/latest/dg/API_AddPermission.html
-	pattern := `^\d{12}$`
-	if !regexp.MustCompile(pattern).MatchString(value) {
+	if !itypes.IsAWSAccountID(value) {
 		errors = append(errors, fmt.Errorf(
 			"%q doesn't look like AWS Account ID (exactly 12 digits): %q",
+			k, value))
+	}
+
+	return
+}
+
+func ValidBase64String(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	if !itypes.IsBase64Encoded(value) {
+		errors = append(errors, fmt.Errorf(
+			"%q (%q) must be base64-encoded",
 			k, value))
 	}
 
@@ -137,7 +154,7 @@ func ValidAccountID(v interface{}, k string) (ws []string, errors []error) {
 // ValidCIDRNetworkAddress ensures that the string value is a valid CIDR that
 // represents a network address - it adds an error otherwise
 func ValidCIDRNetworkAddress(v interface{}, k string) (ws []string, errors []error) {
-	if err := types.ValidateCIDRBlock(v.(string)); err != nil {
+	if err := itypes.ValidateCIDRBlock(v.(string)); err != nil {
 		errors = append(errors, err)
 		return
 	}
@@ -182,6 +199,8 @@ func ValidIAMPolicyJSON(v interface{}, k string) (ws []string, errors []error) {
 			errStr = fmt.Sprintf("%s, at byte offset %d", errStr, err.Offset)
 		}
 		errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: %s", k, errStr))
+	} else if err := basevalidation.JSONNoDuplicateKeys(value); err != nil {
+		errors = append(errors, fmt.Errorf("%q contains duplicate JSON keys: %s", k, err))
 	}
 
 	return //nolint:nakedret // Just a long function.
@@ -202,7 +221,7 @@ func ValidateIPv4CIDRBlock(cidr string) error {
 		return fmt.Errorf("%q is not a valid IPv4 CIDR block", cidr)
 	}
 
-	if !types.CIDRBlocksEqual(cidr, ipnet.String()) {
+	if !itypes.CIDRBlocksEqual(cidr, ipnet.String()) {
 		return fmt.Errorf("%q is not a valid IPv4 CIDR block; did you mean %q?", cidr, ipnet)
 	}
 
@@ -224,7 +243,7 @@ func ValidateIPv6CIDRBlock(cidr string) error {
 		return fmt.Errorf("%q is not a valid IPv6 CIDR block", cidr)
 	}
 
-	if !types.CIDRBlocksEqual(cidr, ipnet.String()) {
+	if !itypes.CIDRBlocksEqual(cidr, ipnet.String()) {
 		return fmt.Errorf("%q is not a valid IPv6 CIDR block; did you mean %q?", cidr, ipnet)
 	}
 
@@ -284,7 +303,7 @@ func ValidLaunchTemplateID(v interface{}, k string) (ws []string, errors []error
 		errors = append(errors, fmt.Errorf("%q cannot be shorter than 1 character", k))
 	} else if len(value) > 255 {
 		errors = append(errors, fmt.Errorf("%q cannot be longer than 255 characters", k))
-	} else if !regexp.MustCompile(`^lt\-[a-z0-9]+$`).MatchString(value) {
+	} else if !regexache.MustCompile(`^lt\-[0-9a-z]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"%q must begin with 'lt-' and be comprised of only alphanumeric characters: %v", k, value))
 	}
@@ -299,7 +318,7 @@ func ValidLaunchTemplateName(v interface{}, k string) (ws []string, errors []err
 		errors = append(errors, fmt.Errorf("%q cannot be longer than 99 characters, name is limited to 125", k))
 	} else if !strings.HasSuffix(k, "prefix") && len(value) > 125 {
 		errors = append(errors, fmt.Errorf("%q cannot be longer than 125 characters", k))
-	} else if !regexp.MustCompile(`^[0-9a-zA-Z()./_\-]+$`).MatchString(value) {
+	} else if !regexache.MustCompile(`^[0-9A-Za-z()./_\-]+$`).MatchString(value) {
 		errors = append(errors, fmt.Errorf("%q can only alphanumeric characters and ()./_- symbols", k))
 	}
 	return
@@ -417,7 +436,7 @@ func ValidUTCTimestamp(v interface{}, k string) (ws []string, errors []error) {
 
 var ValidStringDateOrPositiveInt = validation.Any(
 	validation.IsRFC3339Time,
-	validation.StringMatch(regexp.MustCompile(`^\d+$`), "must be a positive integer value"),
+	validation.StringMatch(regexache.MustCompile(`^\d+$`), "must be a positive integer value"),
 )
 
 func ValidDuration(v interface{}, k string) (ws []string, errors []error) {
@@ -451,28 +470,69 @@ func FloatGreaterThan(threshold float64) schema.SchemaValidateFunc {
 	}
 }
 
-// https://github.com/hashicorp/terraform-plugin-sdk/issues/780.
-func ValidAllDiag(validators ...schema.SchemaValidateDiagFunc) schema.SchemaValidateDiagFunc {
-	return func(i any, path cty.Path) diag.Diagnostics {
-		var results diag.Diagnostics
-		for _, validator := range validators {
-			results = append(results, validator(i, path)...)
+func StringHasPrefix(prefix string) schema.SchemaValidateFunc {
+	return func(v interface{}, k string) (warnings []string, errors []error) {
+		s, ok := v.(string)
+		if !ok {
+			errors = append(errors, fmt.Errorf("expected type of %s to be string", k))
+			return
 		}
-		return results
+
+		if !strings.HasPrefix(s, prefix) {
+			errors = append(errors, fmt.Errorf("expected %s to have prefix %s, got %s", k, prefix, s))
+			return
+		}
+
+		return warnings, errors
 	}
 }
 
-// https://github.com/hashicorp/terraform-plugin-sdk/issues/780.
-func ValidAnyDiag(validators ...schema.SchemaValidateDiagFunc) schema.SchemaValidateDiagFunc {
-	return func(i any, path cty.Path) diag.Diagnostics {
-		var results diag.Diagnostics
-		for _, validator := range validators {
-			diags := validator(i, path)
-			if len(diags) == 0 {
-				return diag.Diagnostics{}
+func ValidServicePrincipal(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+
+	if value == "" {
+		return ws, errors
+	}
+
+	if !IsServicePrincipal(value) {
+		errors = append(errors, fmt.Errorf("%q (%s) is an invalid Service Principal: invalid prefix value (expecting to match regular expression: %s)", k, value, servicePrincipalRegexp))
+	}
+
+	return ws, errors
+}
+
+func IsServicePrincipal(value string) (valid bool) {
+	return servicePrincipalRegexp.MatchString(value)
+}
+
+func MapKeysAre(keyValidators ...schema.SchemaValidateDiagFunc) schema.SchemaValidateDiagFunc {
+	return func(v interface{}, path cty.Path) diag.Diagnostics {
+		var diags diag.Diagnostics
+
+		for k := range v.(map[string]interface{}) {
+			for _, keyValidator := range keyValidators {
+				diags = append(diags, keyValidator(k, path.IndexString(k))...)
 			}
-			results = append(results, diags...)
 		}
-		return results
+
+		return diags
+	}
+}
+
+func MapLenBetween(min, max int) schema.SchemaValidateDiagFunc {
+	return func(v interface{}, path cty.Path) diag.Diagnostics {
+		var diags diag.Diagnostics
+		m := v.(map[string]interface{})
+
+		if l := len(m); l < min || l > max {
+			diags = append(diags, diag.Diagnostic{
+				Severity:      diag.Error,
+				Summary:       "Bad map length",
+				Detail:        fmt.Sprintf("Map must contain at least %d elements and at most %d elements: length=%d", min, max, l),
+				AttributePath: path,
+			})
+		}
+
+		return diags
 	}
 }

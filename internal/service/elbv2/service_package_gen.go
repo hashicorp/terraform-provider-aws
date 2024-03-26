@@ -5,9 +5,12 @@ package elbv2
 import (
 	"context"
 
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	elasticloadbalancingv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	elbv2_sdkv1 "github.com/aws/aws-sdk-go/service/elbv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -51,6 +54,11 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceTargetGroup,
 			TypeName: "aws_lb_target_group",
+		},
+		{
+			Factory:  DataSourceTrustStore,
+			TypeName: "aws_lb_trust_store",
+			Name:     "Trust Store",
 		},
 		{
 			Factory:  DataSourceLoadBalancers,
@@ -141,6 +149,19 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  ResourceTargetGroupAttachment,
 			TypeName: "aws_lb_target_group_attachment",
 		},
+		{
+			Factory:  ResourceTrustStore,
+			TypeName: "aws_lb_trust_store",
+			Name:     "Trust Store",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
+		},
+		{
+			Factory:  ResourceTrustStoreRevocation,
+			TypeName: "aws_lb_trust_store_revocation",
+			Name:     "Trust Store Revocation",
+		},
 	}
 }
 
@@ -155,4 +176,17 @@ func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*e
 	return elbv2_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
 }
 
-var ServicePackage = &servicePackage{}
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*elasticloadbalancingv2_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+
+	return elasticloadbalancingv2_sdkv2.NewFromConfig(cfg, func(o *elasticloadbalancingv2_sdkv2.Options) {
+		if endpoint := config["endpoint"].(string); endpoint != "" {
+			o.BaseEndpoint = aws_sdkv2.String(endpoint)
+		}
+	}), nil
+}
+
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}

@@ -10,6 +10,8 @@ description: |-
 
 Provides a resource to create an AWS Firewall Manager policy. You need to be using AWS organizations and have enabled the Firewall Manager administrator account.
 
+~> **NOTE:** Due to limitations with testing, we provide it as best effort. If you find it useful, and have the ability to help test or notice issues, consider reaching out to us on [GitHub](https://github.com/hashicorp/terraform-provider-aws).
+
 ## Example Usage
 
 ```terraform
@@ -50,7 +52,7 @@ resource "aws_wafregional_rule_group" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required, Forces new resource) The friendly name of the AWS Firewall Manager Policy.
 * `delete_all_policy_resources` - (Optional) If true, the request will also perform a clean-up process. Defaults to `true`. More information can be found here [AWS Firewall Manager delete policy](https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_DeletePolicy.html)
@@ -82,21 +84,44 @@ You can specify inclusions or exclusions, but not both. If you specify an `inclu
 
 ## `security_service_policy_data` Configuration Block
 
-* `managed_service_data` (Optional) Details about the service that are specific to the service type, in JSON format. For service type `SHIELD_ADVANCED`, this is an empty string. Examples depending on `type` can be found in the [AWS Firewall Manager SecurityServicePolicyData API Reference](https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_SecurityServicePolicyData.html).
+* `managed_service_data` - (Optional) Details about the service that are specific to the service type, in JSON format. For service type `SHIELD_ADVANCED`, this is an empty string. Examples depending on `type` can be found in the [AWS Firewall Manager SecurityServicePolicyData API Reference](https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_SecurityServicePolicyData.html).
+* `policy_option` - (Optional) Contains the Network Firewall firewall policy options to configure a centralized deployment model. Documented below.
 * `type` - (Required, Forces new resource) The service that the policy is using to protect the resources. For the current list of supported types, please refer to the [AWS Firewall Manager SecurityServicePolicyData API Type Reference](https://docs.aws.amazon.com/fms/2018-01-01/APIReference/API_SecurityServicePolicyData.html#fms-Type-SecurityServicePolicyData-Type).
 
-## Attributes Reference
+## `policy_option` Configuration Block
 
-In addition to all arguments above, the following attributes are exported:
+* `network_firewall_policy` - (Optional) Defines the deployment model to use for the firewall policy. Documented below.
+* `thirdparty_firewall_policy` - (Optional) Defines the policy options for a third-party firewall policy. Documented below.
 
-* `id` - The AWS account ID of the AWS Firewall Manager administrator account.
+## `network_firewall_policy` Configuration Block
+
+* `firewall_deployment_model` - (Optional) Defines the deployment model to use for the firewall policy. To use a distributed model, remove the `policy_option` section. Valid values are `CENTRALIZED` and `DISTRIBUTED`.
+
+## `thirdparty_firewall_policy` Configuration Block
+
+* `firewall_deployment_model` - (Optional) Defines the deployment model to use for the third-party firewall policy. Valid values are `CENTRALIZED` and `DISTRIBUTED`.
+
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
+
+* `id` - The ID of the AWS Firewall Manager policy.
 * `policy_update_token` - A unique identifier for each update to the policy.
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-Firewall Manager policies can be imported using the policy ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Firewall Manager policies using the policy ID. For example:
 
+```terraform
+import {
+  to = aws_fms_policy.example
+  id = "5be49585-a7e3-4c49-dde1-a179fe4a619a"
+}
 ```
-$ terraform import aws_fms_policy.example 5be49585-a7e3-4c49-dde1-a179fe4a619a
+
+Using `terraform import`, import Firewall Manager policies using the policy ID. For example:
+
+```console
+% terraform import aws_fms_policy.example 5be49585-a7e3-4c49-dde1-a179fe4a619a
 ```

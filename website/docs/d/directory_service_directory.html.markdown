@@ -22,7 +22,9 @@ data "aws_directory_service_directory" "example" {
 
 * `directory_id` - (Required) ID of the directory.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `type` - Directory type (`SimpleAD`, `ADConnector` or `MicrosoftAD`).
 * `edition` - (for `MicrosoftAD`) Microsoft AD edition (`Standard` or `Enterprise`).

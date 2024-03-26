@@ -47,19 +47,28 @@ resource "aws_sqs_queue_policy" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `queue_url` - (Required) The URL of the SQS Queue to which to attach the policy
 * `policy` - (Required) The JSON policy for the SQS queue. For more information about building AWS IAM policy documents with Terraform, see the [AWS IAM Policy Document Guide](https://learn.hashicorp.com/terraform/aws/iam-policy).
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-SQS Queue Policies can be imported using the queue URL, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SQS Queue Policies using the queue URL. For example:
 
+```terraform
+import {
+  to = aws_sqs_queue_policy.test
+  id = "https://queue.amazonaws.com/0123456789012/myqueue"
+}
 ```
-$ terraform import aws_sqs_queue_policy.test https://queue.amazonaws.com/0123456789012/myqueue
+
+Using `terraform import`, import SQS Queue Policies using the queue URL. For example:
+
+```console
+% terraform import aws_sqs_queue_policy.test https://queue.amazonaws.com/0123456789012/myqueue
 ```

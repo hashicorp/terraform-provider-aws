@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ivs
 
 import (
 	"context"
 	"errors"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ivs"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -64,7 +67,7 @@ func ResourceChannel() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-_]{0,128}$`), "must contain only alphanumeric characters, hyphen, or underscore and at most 128 characters"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]{0,128}$`), "must contain only alphanumeric characters, hyphen, or underscore and at most 128 characters"),
 			},
 			"playback_url": {
 				Type:     schema.TypeString,
@@ -95,6 +98,8 @@ const (
 )
 
 func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).IVSConn(ctx)
 
 	in := &ivs.CreateChannelInput{
@@ -123,23 +128,25 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	out, err := conn.CreateChannelWithContext(ctx, in)
 	if err != nil {
-		return create.DiagError(names.IVS, create.ErrActionCreating, ResNameChannel, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.IVS, create.ErrActionCreating, ResNameChannel, d.Get("name").(string), err)
 	}
 
 	if out == nil || out.Channel == nil {
-		return create.DiagError(names.IVS, create.ErrActionCreating, ResNameChannel, d.Get("name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.IVS, create.ErrActionCreating, ResNameChannel, d.Get("name").(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.StringValue(out.Channel.Arn))
 
 	if _, err := waitChannelCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.DiagError(names.IVS, create.ErrActionWaitingForCreation, ResNameChannel, d.Id(), err)
+		return create.AppendDiagError(diags, names.IVS, create.ErrActionWaitingForCreation, ResNameChannel, d.Id(), err)
 	}
 
-	return resourceChannelRead(ctx, d, meta)
+	return append(diags, resourceChannelRead(ctx, d, meta)...)
 }
 
 func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).IVSConn(ctx)
 
 	out, err := FindChannelByID(ctx, conn, d.Id())
@@ -147,11 +154,11 @@ func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IVS Channel (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.IVS, create.ErrActionReading, ResNameChannel, d.Id(), err)
+		return create.AppendDiagError(diags, names.IVS, create.ErrActionReading, ResNameChannel, d.Id(), err)
 	}
 
 	d.Set("arn", out.Arn)
@@ -163,10 +170,12 @@ func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("recording_configuration_arn", out.RecordingConfigurationArn)
 	d.Set("type", out.Type)
 
-	return nil
+	return diags
 }
 
 func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).IVSConn(ctx)
 
 	update := false
@@ -202,24 +211,26 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if !update {
-		return nil
+		return diags
 	}
 
 	log.Printf("[DEBUG] Updating IVS Channel (%s): %#v", d.Id(), in)
 
 	out, err := conn.UpdateChannelWithContext(ctx, in)
 	if err != nil {
-		return create.DiagError(names.IVS, create.ErrActionUpdating, ResNameChannel, d.Id(), err)
+		return create.AppendDiagError(diags, names.IVS, create.ErrActionUpdating, ResNameChannel, d.Id(), err)
 	}
 
 	if _, err := waitChannelUpdated(ctx, conn, *out.Channel.Arn, d.Timeout(schema.TimeoutUpdate), in); err != nil {
-		return create.DiagError(names.IVS, create.ErrActionWaitingForUpdate, ResNameChannel, d.Id(), err)
+		return create.AppendDiagError(diags, names.IVS, create.ErrActionWaitingForUpdate, ResNameChannel, d.Id(), err)
 	}
 
-	return resourceChannelRead(ctx, d, meta)
+	return append(diags, resourceChannelRead(ctx, d, meta)...)
 }
 
 func resourceChannelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).IVSConn(ctx)
 
 	log.Printf("[INFO] Deleting IVS Channel %s", d.Id())
@@ -230,15 +241,15 @@ func resourceChannelDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, ivs.ErrCodeResourceNotFoundException) {
-			return nil
+			return diags
 		}
 
-		return create.DiagError(names.IVS, create.ErrActionDeleting, ResNameChannel, d.Id(), err)
+		return create.AppendDiagError(diags, names.IVS, create.ErrActionDeleting, ResNameChannel, d.Id(), err)
 	}
 
 	if _, err := waitChannelDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return create.DiagError(names.IVS, create.ErrActionWaitingForDeletion, ResNameChannel, d.Id(), err)
+		return create.AppendDiagError(diags, names.IVS, create.ErrActionWaitingForDeletion, ResNameChannel, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

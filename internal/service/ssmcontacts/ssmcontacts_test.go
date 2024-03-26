@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssmcontacts_test
 
 import (
@@ -47,6 +50,20 @@ func TestAccSSMContacts_serial(t *testing.T) {
 		"Plan Data Source Tests": {
 			"basic":             testPlanDataSource_basic,
 			"channelTargetInfo": testPlanDataSource_channelTargetInfo,
+		},
+		"RotationResource": {
+			"basic":      testRotation_basic,
+			"disappears": testRotation_disappears,
+			"update":     testRotation_updateRequiredFields,
+			"startTime":  testRotation_startTime,
+			"contactIds": testRotation_contactIds,
+			"recurrence": testRotation_recurrence,
+			"tags":       testRotation_tags,
+		},
+		"RotationDataSource": {
+			"basic":           testRotationDataSource_basic,
+			"dailySettings":   testRotationDataSource_dailySettings,
+			"monthlySettings": testRotationDataSource_monthlySettings,
 		},
 	}
 

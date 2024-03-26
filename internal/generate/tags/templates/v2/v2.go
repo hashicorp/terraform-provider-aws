@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package v2
 
 import (
@@ -27,3 +30,6 @@ var ServiceTagsSliceBody string
 
 //go:embed update_tags_body.tmpl
 var UpdateTagsBody string
+
+//go:embed wait_tags_propagated_body.tmpl
+var WaitTagsPropagatedBody string

@@ -1,26 +1,32 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
 	"context"
 	"crypto/hmac"
 	"crypto/sha256"
-	"encoding/base64"
 	"fmt"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
-// @SDKResource("aws_iam_access_key")
-func ResourceAccessKey() *schema.Resource {
+// @SDKResource("aws_iam_access_key", name="Access Key")
+func resourceAccessKey() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccessKeyCreate,
 		ReadWithoutTimeout:   resourceAccessKeyRead,
@@ -122,7 +128,7 @@ func resourceAccessKeyCreate(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "CreateAccessKey response did not contain a Secret Access Key as expected")
 	}
 
-	sesSMTPPasswordV4, err := SessmTPPasswordFromSecretKeySigV4(createResp.AccessKey.SecretAccessKey, meta.(*conns.AWSClient).Region)
+	sesSMTPPasswordV4, err := sesSMTPPasswordFromSecretKeySigV4(createResp.AccessKey.SecretAccessKey, meta.(*conns.AWSClient).Region)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "getting SES SigV4 SMTP Password from Secret Access Key: %s", err)
 	}
@@ -184,8 +190,8 @@ func resourceAccessKeyRead(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	username := d.Get("user").(string)
+	key, err := findAccessKeyByTwoPartKey(ctx, conn, username, d.Id())
 
-	key, err := FindAccessKey(ctx, conn, username, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IAM Access Key (%s) for User (%s) not found, removing from state", d.Id(), username)
 		d.SetId("")
@@ -239,14 +245,20 @@ func resourceAccessKeyDelete(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
-	request := &iam.DeleteAccessKeyInput{
+	log.Printf("[DEBUG] Deleting IAM Access Key: %s", d.Id())
+	_, err := conn.DeleteAccessKeyWithContext(ctx, &iam.DeleteAccessKeyInput{
 		AccessKeyId: aws.String(d.Id()),
 		UserName:    aws.String(d.Get("user").(string)),
+	})
+
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+		return diags
 	}
 
-	if _, err := conn.DeleteAccessKeyWithContext(ctx, request); err != nil {
+	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting IAM Access Key (%s): %s", d.Id(), err)
 	}
+
 	return diags
 }
 
@@ -261,6 +273,61 @@ func resourceAccessKeyStatusUpdate(ctx context.Context, conn *iam.IAM, d *schema
 	return err
 }
 
+func findAccessKeyByTwoPartKey(ctx context.Context, conn *iam.IAM, username, id string) (*iam.AccessKeyMetadata, error) {
+	input := &iam.ListAccessKeysInput{
+		UserName: aws.String(username),
+	}
+
+	return findAccessKey(ctx, conn, input, func(v *iam.AccessKeyMetadata) bool {
+		return aws.StringValue(v.AccessKeyId) == id
+	})
+}
+
+func findAccessKeysByUser(ctx context.Context, conn *iam.IAM, username string) ([]*iam.AccessKeyMetadata, error) {
+	input := &iam.ListAccessKeysInput{
+		UserName: aws.String(username),
+	}
+
+	return findAccessKeys(ctx, conn, input, tfslices.PredicateTrue[*iam.AccessKeyMetadata]())
+}
+
+func findAccessKey(ctx context.Context, conn *iam.IAM, input *iam.ListAccessKeysInput, filter tfslices.Predicate[*iam.AccessKeyMetadata]) (*iam.AccessKeyMetadata, error) {
+	output, err := findAccessKeys(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findAccessKeys(ctx context.Context, conn *iam.IAM, input *iam.ListAccessKeysInput, filter tfslices.Predicate[*iam.AccessKeyMetadata]) ([]*iam.AccessKeyMetadata, error) {
+	var output []*iam.AccessKeyMetadata
+
+	err := conn.ListAccessKeysPagesWithContext(ctx, input, func(page *iam.ListAccessKeysOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.AccessKeyMetadata {
+			if v != nil && filter(v) {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	return output, err
+}
+
 func hmacSignature(key []byte, value []byte) ([]byte, error) {
 	h := hmac.New(sha256.New, key)
 	if _, err := h.Write(value); err != nil {
@@ -269,7 +336,7 @@ func hmacSignature(key []byte, value []byte) ([]byte, error) {
 	return h.Sum(nil), nil
 }
 
-func SessmTPPasswordFromSecretKeySigV4(key *string, region string) (string, error) {
+func sesSMTPPasswordFromSecretKeySigV4(key *string, region string) (string, error) {
 	if key == nil {
 		return "", nil
 	}
@@ -279,7 +346,7 @@ func SessmTPPasswordFromSecretKeySigV4(key *string, region string) (string, erro
 	terminal := []byte("aws4_request")
 	message := []byte("SendRawEmail")
 
-	rawSig, err := hmacSignature([]byte("AWS4"+*key), date)
+	rawSig, err := hmacSignature([]byte("AWS4"+aws.StringValue(key)), date)
 	if err != nil {
 		return "", err
 	}
@@ -300,5 +367,5 @@ func SessmTPPasswordFromSecretKeySigV4(key *string, region string) (string, erro
 	versionedSig := make([]byte, 0, len(rawSig)+1)
 	versionedSig = append(versionedSig, version)
 	versionedSig = append(versionedSig, rawSig...)
-	return base64.StdEncoding.EncodeToString(versionedSig), nil
+	return itypes.Base64Encode(versionedSig), nil
 }

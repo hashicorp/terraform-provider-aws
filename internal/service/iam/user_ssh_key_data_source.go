@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
@@ -12,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// @SDKDataSource("aws_iam_user_ssh_key")
-func DataSourceUserSSHKey() *schema.Resource {
+// @SDKDataSource("aws_iam_user_ssh_key", name="User SSH Key")
+func dataSourceUserSSHKey() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceUserSSHKeyRead,
 		Schema: map[string]*schema.Schema{

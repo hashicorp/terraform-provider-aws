@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package medialive
 
 import (
@@ -403,7 +406,7 @@ func (mps multiplexProgramSettingsObject) expand(ctx context.Context) (*mltypes.
 	data := mps[0]
 
 	l := &mltypes.MultiplexProgramSettings{
-		ProgramNumber:            int32(data.ProgramNumber.ValueInt64()),
+		ProgramNumber:            flex.Int32FromFramework(ctx, data.ProgramNumber),
 		PreferredChannelPipeline: mltypes.PreferredChannelPipeline(data.PreferredChannelPipeline.ValueString()),
 	}
 
@@ -455,27 +458,27 @@ func (sd serviceDescriptorObject) expand(ctx context.Context) *mltypes.Multiplex
 
 type videoSettingsObject []videoSettings
 
-func (vs videoSettingsObject) expand(_ context.Context) *mltypes.MultiplexVideoSettings {
+func (vs videoSettingsObject) expand(ctx context.Context) *mltypes.MultiplexVideoSettings {
 	if len(vs) == 0 {
 		return nil
 	}
 
 	return &mltypes.MultiplexVideoSettings{
-		ConstantBitrate: int32(vs[0].ConstantBitrate.ValueInt64()),
+		ConstantBitrate: flex.Int32FromFramework(ctx, vs[0].ConstantBitrate),
 	}
 }
 
 type statmuxSettingsObject []statmuxSettings
 
-func (sms statmuxSettingsObject) expand(_ context.Context) *mltypes.MultiplexStatmuxVideoSettings {
+func (sms statmuxSettingsObject) expand(ctx context.Context) *mltypes.MultiplexStatmuxVideoSettings {
 	if len(sms) == 0 {
 		return nil
 	}
 
 	return &mltypes.MultiplexStatmuxVideoSettings{
-		MaximumBitrate: int32(sms[0].MaximumBitrate.ValueInt64()),
-		MinimumBitrate: int32(sms[0].MinimumBitrate.ValueInt64()),
-		Priority:       int32(sms[0].Priority.ValueInt64()),
+		MaximumBitrate: flex.Int32FromFramework(ctx, sms[0].MaximumBitrate),
+		MinimumBitrate: flex.Int32FromFramework(ctx, sms[0].MinimumBitrate),
+		Priority:       flex.Int32FromFramework(ctx, sms[0].Priority),
 	}
 }
 
@@ -512,7 +515,7 @@ func flattenMultiplexProgramSettings(ctx context.Context, mps *mltypes.Multiplex
 	}
 
 	attrs := map[string]attr.Value{}
-	attrs["program_number"] = types.Int64Value(int64(mps.ProgramNumber))
+	attrs["program_number"] = flex.Int32ToFramework(ctx, mps.ProgramNumber)
 	attrs["preferred_channel_pipeline"] = flex.StringValueToFrameworkLegacy(ctx, mps.PreferredChannelPipeline)
 	attrs["service_descriptor"] = flattenServiceDescriptor(ctx, mps.ServiceDescriptor)
 	attrs["video_settings"] = flattenVideoSettings(ctx, mps.VideoSettings)
@@ -538,7 +541,7 @@ func flattenServiceDescriptor(ctx context.Context, sd *mltypes.MultiplexProgramS
 	return types.ListValueMust(elemType, []attr.Value{vals})
 }
 
-func flattenStatMuxSettings(_ context.Context, mps *mltypes.MultiplexStatmuxVideoSettings) types.List {
+func flattenStatMuxSettings(ctx context.Context, mps *mltypes.MultiplexStatmuxVideoSettings) types.List {
 	elemType := types.ObjectType{AttrTypes: statmuxAttrs}
 
 	if mps == nil {
@@ -546,9 +549,9 @@ func flattenStatMuxSettings(_ context.Context, mps *mltypes.MultiplexStatmuxVide
 	}
 
 	attrs := map[string]attr.Value{}
-	attrs["minimum_bitrate"] = types.Int64Value(int64(mps.MinimumBitrate))
-	attrs["maximum_bitrate"] = types.Int64Value(int64(mps.MaximumBitrate))
-	attrs["priority"] = types.Int64Value(int64(mps.Priority))
+	attrs["minimum_bitrate"] = flex.Int32ToFramework(ctx, mps.MinimumBitrate)
+	attrs["maximum_bitrate"] = flex.Int32ToFramework(ctx, mps.MaximumBitrate)
+	attrs["priority"] = flex.Int32ToFramework(ctx, mps.Priority)
 
 	vals := types.ObjectValueMust(statmuxAttrs, attrs)
 
@@ -563,7 +566,7 @@ func flattenVideoSettings(ctx context.Context, mps *mltypes.MultiplexVideoSettin
 	}
 
 	attrs := map[string]attr.Value{}
-	attrs["constant_bitrate"] = types.Int64Value(int64(mps.ConstantBitrate))
+	attrs["constant_bitrate"] = flex.Int32ToFramework(ctx, mps.ConstantBitrate)
 	attrs["statmux_settings"] = flattenStatMuxSettings(ctx, mps.StatmuxSettings)
 
 	vals := types.ObjectValueMust(videoSettingsAttrs, attrs)

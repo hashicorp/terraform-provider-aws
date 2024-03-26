@@ -1,19 +1,23 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticache
 
 import (
 	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
-// @SDKDataSource("aws_elasticache_subnet_group")
-func DataSourceSubnetGroup() *schema.Resource {
+// @SDKDataSource("aws_elasticache_subnet_group", name="Subnet Group")
+func dataSourceSubnetGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSubnetGroupRead,
 
@@ -36,6 +40,10 @@ func DataSourceSubnetGroup() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"tags": tftags.TagsSchema(),
+			"vpc_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -47,23 +55,20 @@ func dataSourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta
 
 	name := d.Get("name").(string)
 
-	group, err := FindCacheSubnetGroupByName(ctx, conn, name)
+	group, err := findCacheSubnetGroupByName(ctx, conn, name)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ElastiCache Subnet Group (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(group.CacheSubnetGroupName))
-
-	var subnetIds []*string
-	for _, subnet := range group.Subnets {
-		subnetIds = append(subnetIds, subnet.SubnetIdentifier)
-	}
-
 	d.Set("arn", group.ARN)
 	d.Set("description", group.CacheSubnetGroupDescription)
-	d.Set("subnet_ids", flex.FlattenStringSet(subnetIds))
 	d.Set("name", group.CacheSubnetGroupName)
+	d.Set("subnet_ids", tfslices.ApplyToAll(group.Subnets, func(v *elasticache.Subnet) string {
+		return aws.StringValue(v.SubnetIdentifier)
+	}))
+	d.Set("vpc_id", group.VpcId)
 
 	tags, err := listTags(ctx, conn, d.Get("arn").(string))
 

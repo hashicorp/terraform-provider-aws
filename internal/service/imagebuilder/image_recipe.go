@@ -1,8 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package imagebuilder
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"strconv"
 
@@ -15,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -217,15 +219,7 @@ func ResourceImageRecipe() *schema.Resource {
 				Computed: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 21847),
-					func(v interface{}, name string) (warns []string, errs []error) {
-						s := v.(string)
-						if !verify.IsBase64Encoded([]byte(s)) {
-							errs = append(errs, fmt.Errorf(
-								"%s: must be base64-encoded", name,
-							))
-						}
-						return
-					},
+					verify.ValidBase64String,
 				),
 			},
 			"version": {

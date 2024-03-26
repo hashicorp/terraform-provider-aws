@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package tfresource
 
 import (
@@ -5,6 +8,7 @@ import (
 	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 )
 
 type EmptyResultError struct {
@@ -24,7 +28,7 @@ func (e *EmptyResultError) Error() string {
 }
 
 func (e *EmptyResultError) Is(err error) bool {
-	_, ok := err.(*EmptyResultError) //nolint:errorlint // Explicitly does *not* match down the error tree
+	_, ok := err.(*EmptyResultError)
 	return ok
 }
 
@@ -61,7 +65,7 @@ func (e *TooManyResultsError) Error() string {
 }
 
 func (e *TooManyResultsError) Is(err error) bool {
-	_, ok := err.(*TooManyResultsError) //nolint:errorlint // Explicitly does *not* match down the error tree
+	_, ok := err.(*TooManyResultsError)
 	return ok
 }
 
@@ -92,6 +96,8 @@ func SingularDataSourceFindError(resourceType string, err error) error {
 	return fmt.Errorf("reading %s: %w", resourceType, err)
 }
 
+// AssertSinglePtrResult returns the single non-nil pointer value in the specified slice.
+// Returns a `NotFound` error otherwise.
 func AssertSinglePtrResult[T any](a []*T) (*T, error) {
 	if l := len(a); l == 0 {
 		return nil, NewEmptyResultError(nil)
@@ -103,11 +109,35 @@ func AssertSinglePtrResult[T any](a []*T) (*T, error) {
 	return a[0], nil
 }
 
+// AssertMaybeSinglePtrResult returns the single non-nil pointer value in the specified slice, or `None` if the slice is empty.
+// Returns a `NotFound` error otherwise.
+func AssertMaybeSinglePtrResult[T any](a []*T) (option.Option[*T], error) {
+	if l := len(a); l == 0 {
+		return option.None[*T](), nil
+	} else if l > 1 {
+		return nil, NewTooManyResultsError(l, nil)
+	} else if a[0] == nil {
+		return nil, NewEmptyResultError(nil)
+	}
+	return option.Some(a[0]), nil
+}
+
+// AssertSingleValueResult returns a pointer to the single value in the specified slice of values.
+// Returns a `NotFound` error otherwise.
 func AssertSingleValueResult[T any](a []T) (*T, error) {
 	if l := len(a); l == 0 {
 		return nil, NewEmptyResultError(nil)
 	} else if l > 1 {
 		return nil, NewTooManyResultsError(l, nil)
+	}
+	return &a[0], nil
+}
+
+// AssertFirstValueResult returns a pointer to the first value in the specified slice of values.
+// Returns a `NotFound` error otherwise.
+func AssertFirstValueResult[T any](a []T) (*T, error) {
+	if l := len(a); l == 0 {
+		return nil, NewEmptyResultError(nil)
 	}
 	return &a[0], nil
 }

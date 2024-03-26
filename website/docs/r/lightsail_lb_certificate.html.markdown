@@ -31,7 +31,7 @@ resource "aws_lightsail_lb_certificate" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `domain_name` - (Required) The domain name (e.g., example.com) for your SSL/TLS certificate.
 * `lb_name` - (Required) The load balancer name where you want to create the SSL/TLS certificate.
@@ -39,9 +39,9 @@ The following arguments are supported:
 * `name` - (Required) The SSL/TLS certificate name.
 * `subject_alternative_names` - (Optional) Set of domains that should be SANs in the issued certificate. `domain_name` attribute is automatically added as a Subject Alternative Name.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - A combination of attributes to create a unique id: `lb_name`,`name`
 * `arn` - The ARN of the lightsail certificate.
@@ -50,8 +50,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_lightsail_lb_certificate` can be imported by using the id attribute, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_lightsail_lb_certificate` using the id attribute. For example:
 
+```terraform
+import {
+  to = aws_lightsail_lb_certificate.test
+  id = "example-load-balancer,example-load-balancer-certificate"
+}
 ```
-$ terraform import aws_lightsail_lb_certificate.test example-load-balancer,example-load-balancer-certificate
+
+Using `terraform import`, import `aws_lightsail_lb_certificate` using the id attribute. For example:
+
+```console
+% terraform import aws_lightsail_lb_certificate.test example-load-balancer,example-load-balancer-certificate
 ```

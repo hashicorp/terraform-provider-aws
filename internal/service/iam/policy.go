@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
@@ -31,8 +34,9 @@ const (
 )
 
 // @SDKResource("aws_iam_policy", name="Policy")
-// @Tags
-func ResourcePolicy() *schema.Resource {
+// @Tags(identifierAttribute="id", resourceType="Policy")
+// @Testing(existsType="github.com/aws/aws-sdk-go/service/iam.Policy")
+func resourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePolicyCreate,
 		ReadWithoutTimeout:   resourcePolicyRead,
@@ -159,7 +163,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
 		iamPolicy := &policyWithVersion{}
 
-		if v, err := FindPolicyByARN(ctx, conn, d.Id()); err == nil {
+		if v, err := findPolicyByARN(ctx, conn, d.Id()); err == nil {
 			iamPolicy.policy = v
 		} else {
 			return nil, err
@@ -239,21 +243,6 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		err := policyUpdateTags(ctx, conn, d.Id(), o, n)
-
-		// Some partitions (e.g. ISO) may not support tagging.
-		if errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
-			return append(diags, resourcePolicyRead(ctx, d, meta)...)
-		}
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags for IAM Policy (%s): %s", d.Id(), err)
-		}
-	}
-
 	return append(diags, resourcePolicyRead(ctx, d, meta)...)
 }
 
@@ -263,6 +252,10 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta inte
 
 	// Delete non-default policy versions.
 	versions, err := findPolicyVersionsByARN(ctx, conn, d.Id())
+
+	if tfresource.NotFound(err) {
+		return diags
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading IAM Policy (%s) versions: %s", d.Id(), err)
@@ -345,7 +338,7 @@ func policyDeleteVersion(ctx context.Context, conn *iam.IAM, arn, versionID stri
 	return nil
 }
 
-func FindPolicyByARN(ctx context.Context, conn *iam.IAM, arn string) (*iam.Policy, error) {
+func findPolicyByARN(ctx context.Context, conn *iam.IAM, arn string) (*iam.Policy, error) {
 	input := &iam.GetPolicyInput{
 		PolicyArn: aws.String(arn),
 	}
@@ -473,4 +466,15 @@ func findPolicyVersionsByARN(ctx context.Context, conn *iam.IAM, arn string) ([]
 	}
 
 	return output, nil
+}
+
+func policyTags(ctx context.Context, conn *iam.IAM, identifier string) ([]*iam.Tag, error) {
+	output, err := conn.ListPolicyTagsWithContext(ctx, &iam.ListPolicyTagsInput{
+		PolicyArn: aws.String(identifier),
+	})
+	if err != nil {
+		return nil, err
+	}
+
+	return output.Tags, nil
 }

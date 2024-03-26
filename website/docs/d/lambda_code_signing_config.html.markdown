@@ -22,13 +22,13 @@ data "aws_lambda_code_signing_config" "existing_csc" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `arn` - (Required) ARN of the code signing configuration.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `allowed_publishers` - List of allowed publishers as signing profiles for this code signing configuration.
 * `config_id` - Unique identifier for the code signing configuration.

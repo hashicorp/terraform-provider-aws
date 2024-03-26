@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package accessanalyzer_test
 
 import (
@@ -16,6 +19,7 @@ func TestAccAccessAnalyzer_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Analyzer": {
 			"basic":             testAccAnalyzer_basic,
+			"configuration":     testAccAnalyzer_configuration,
 			"disappears":        testAccAnalyzer_disappears,
 			"tags":              testAccAnalyzer_tags,
 			"Type_Organization": testAccAnalyzer_Type_Organization,

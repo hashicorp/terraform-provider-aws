@@ -1,8 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lightsail
 
 import (
 	"context"
-	"encoding/base64"
 	"fmt"
 	"log"
 	"strings"
@@ -11,25 +13,47 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/vault/helper/pgpkeys"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
 	ResKeyPair = "KeyPair"
 )
 
-// @SDKResource("aws_lightsail_key_pair")
+// @SDKResource("aws_lightsail_key_pair", name=KeyPair)
+// @Tags(identifierAttribute="id")
 func ResourceKeyPair() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceKeyPairCreate,
 		ReadWithoutTimeout:   resourceKeyPairRead,
+		UpdateWithoutTimeout: resourceKeyPairUpdate,
 		DeleteWithoutTimeout: resourceKeyPairDelete,
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"encrypted_fingerprint": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"encrypted_private_key": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"fingerprint": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -40,25 +64,16 @@ func ResourceKeyPair() *schema.Resource {
 			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
 			},
-
-			// optional fields
 			"pgp_key": {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
 			},
-
-			// additional info returned from the API
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			// fields returned from CreateKey
-			"fingerprint": {
+			"private_key": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -68,21 +83,11 @@ func ResourceKeyPair() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 			},
-			"private_key": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			// encrypted fields if pgp_key is given
-			"encrypted_fingerprint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"encrypted_private_key": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
+
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -90,15 +95,7 @@ func resourceKeyPairCreate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
-	var kName string
-	if v, ok := d.GetOk("name"); ok {
-		kName = v.(string)
-	} else if v, ok := d.GetOk("name_prefix"); ok {
-		kName = id.PrefixedUniqueId(v.(string))
-	} else {
-		kName = id.UniqueId()
-	}
-
+	kName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
 	var pubKey string
 	var op *types.Operation
 	if pubKeyInterface, ok := d.GetOk("public_key"); ok {
@@ -109,6 +106,7 @@ func resourceKeyPairCreate(ctx context.Context, d *schema.ResourceData, meta int
 		// creating new key
 		resp, err := conn.CreateKeyPair(ctx, &lightsail.CreateKeyPairInput{
 			KeyPairName: aws.String(kName),
+			Tags:        getTagsIn(ctx),
 		})
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating Lightsail Key Pair (%s): %s", kName, err)
@@ -157,6 +155,10 @@ func resourceKeyPairCreate(ctx context.Context, d *schema.ResourceData, meta int
 		d.SetId(kName)
 
 		op = resp.Operation
+
+		if err := createTags(ctx, conn, kName, getTagsIn(ctx)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "creating Lightsail Key Pair (%s): %s", kName, err)
+		}
 	}
 
 	diag := expandOperations(ctx, conn, []types.Operation{*op}, "CreateKeyPair", ResKeyPair, kName)
@@ -186,10 +188,18 @@ func resourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	d.Set("arn", resp.KeyPair.Arn)
-	d.Set("name", resp.KeyPair.Name)
 	d.Set("fingerprint", resp.KeyPair.Fingerprint)
+	d.Set("name", resp.KeyPair.Name)
+	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(resp.KeyPair.Name)))
+
+	setTagsOut(ctx, resp.KeyPair.Tags)
 
 	return diags
+}
+
+func resourceKeyPairUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	// Tags only.
+	return resourceKeyPairRead(ctx, d, meta)
 }
 
 func resourceKeyPairDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -239,5 +249,5 @@ func encryptValue(encryptionKey, value, description string) (string, string, err
 		return "", "", fmt.Errorf("encrypting %s: %w", description, err)
 	}
 
-	return fingerprints[0], base64.StdEncoding.EncodeToString(encryptedValue[0]), nil
+	return fingerprints[0], itypes.Base64Encode(encryptedValue[0]), nil
 }

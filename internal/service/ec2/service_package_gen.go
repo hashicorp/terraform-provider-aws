@@ -10,6 +10,7 @@ import (
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	ec2_sdkv1 "github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -29,6 +30,17 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory: newResourceEBSFastSnapshotRestore,
+			Name:    "EBS Fast Snapshot Restore",
+		},
+		{
+			Factory: newResourceInstanceConnectEndpoint,
+			Name:    "Instance Connect Endpoint",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
+		},
 		{
 			Factory: newResourceSecurityGroupEgressRule,
 			Name:    "Security Group Egress Rule",
@@ -65,8 +77,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_availability_zones",
 		},
 		{
-			Factory:  DataSourceCustomerGateway,
+			Factory:  dataSourceCustomerGateway,
 			TypeName: "aws_customer_gateway",
+			Name:     "Customer Gateway",
 		},
 		{
 			Factory:  DataSourceEBSDefaultKMSKey,
@@ -213,8 +226,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_ec2_transit_gateway_multicast_domain",
 		},
 		{
-			Factory:  DataSourceTransitGatewayPeeringAttachment,
+			Factory:  dataSourceTransitGatewayPeeringAttachment,
 			TypeName: "aws_ec2_transit_gateway_peering_attachment",
+			Name:     "Transit Gateway Peering Attachment",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  DataSourceTransitGatewayRouteTable,
@@ -227,6 +242,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceTransitGatewayRouteTablePropagations,
 			TypeName: "aws_ec2_transit_gateway_route_table_propagations",
+		},
+		{
+			Factory:  DataSourceTransitGatewayRouteTableRoutes,
+			TypeName: "aws_ec2_transit_gateway_route_table_routes",
 		},
 		{
 			Factory:  DataSourceTransitGatewayRouteTables,
@@ -327,6 +346,8 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceVPC,
 			TypeName: "aws_vpc",
+			Name:     "VPC",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  DataSourceVPCDHCPOptions,
@@ -369,8 +390,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_vpcs",
 		},
 		{
-			Factory:  DataSourceVPNGateway,
+			Factory:  dataSourceVPNGateway,
 			TypeName: "aws_vpn_gateway",
+			Name:     "VPN Gateway",
 		},
 	}
 }
@@ -406,7 +428,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_ami_launch_permission",
 		},
 		{
-			Factory:  ResourceCustomerGateway,
+			Factory:  resourceCustomerGateway,
 			TypeName: "aws_customer_gateway",
 			Name:     "Customer Gateway",
 			Tags: &types.ServicePackageResourceTags{
@@ -414,7 +436,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceDefaultNetworkACL,
+			Factory:  resourceDefaultNetworkACL,
 			TypeName: "aws_default_network_acl",
 			Name:     "Network ACL",
 			Tags: &types.ServicePackageResourceTags{
@@ -422,7 +444,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceDefaultRouteTable,
+			Factory:  resourceDefaultRouteTable,
 			TypeName: "aws_default_route_table",
 			Name:     "Route Table",
 			Tags: &types.ServicePackageResourceTags{
@@ -524,6 +546,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceClientVPNAuthorizationRule,
 			TypeName: "aws_ec2_client_vpn_authorization_rule",
+			Name:     "Client VPN Authorization Rule",
 		},
 		{
 			Factory:  ResourceClientVPNEndpoint,
@@ -536,10 +559,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceClientVPNNetworkAssociation,
 			TypeName: "aws_ec2_client_vpn_network_association",
+			Name:     "Client VPN Network Association",
 		},
 		{
 			Factory:  ResourceClientVPNRoute,
 			TypeName: "aws_ec2_client_vpn_route",
+			Name:     "Client VPN Route",
 		},
 		{
 			Factory:  ResourceFleet,
@@ -556,6 +581,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "id",
 			},
+		},
+		{
+			Factory:  ResourceImageBlockPublicAccess,
+			TypeName: "aws_ec2_image_block_public_access",
+			Name:     "Image Block Public Access",
 		},
 		{
 			Factory:  ResourceInstanceState,
@@ -610,8 +640,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_ec2_subnet_cidr_reservation",
 		},
 		{
-			Factory:  ResourceTag,
+			Factory:  resourceTag,
 			TypeName: "aws_ec2_tag",
+			Name:     "EC2 Resource Tag",
 		},
 		{
 			Factory:  ResourceTrafficMirrorFilter,
@@ -624,6 +655,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceTrafficMirrorFilterRule,
 			TypeName: "aws_ec2_traffic_mirror_filter_rule",
+			Name:     "Traffic Mirror Filter Rule",
 		},
 		{
 			Factory:  ResourceTrafficMirrorSession,
@@ -686,7 +718,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_ec2_transit_gateway_multicast_group_source",
 		},
 		{
-			Factory:  ResourceTransitGatewayPeeringAttachment,
+			Factory:  resourceTransitGatewayPeeringAttachment,
 			TypeName: "aws_ec2_transit_gateway_peering_attachment",
 			Name:     "Transit Gateway Peering Attachment",
 			Tags: &types.ServicePackageResourceTags{
@@ -830,7 +862,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceNetworkACL,
+			Factory:  resourceNetworkACL,
 			TypeName: "aws_network_acl",
 			Name:     "Network ACL",
 			Tags: &types.ServicePackageResourceTags{
@@ -842,8 +874,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_network_acl_association",
 		},
 		{
-			Factory:  ResourceNetworkACLRule,
+			Factory:  resourceNetworkACLRule,
 			TypeName: "aws_network_acl_rule",
+			Name:     "Network ACL Rule",
 		},
 		{
 			Factory:  ResourceNetworkInterface,
@@ -870,11 +903,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceRoute,
+			Factory:  resourceRoute,
 			TypeName: "aws_route",
+			Name:     "Route",
 		},
 		{
-			Factory:  ResourceRouteTable,
+			Factory:  resourceRouteTable,
 			TypeName: "aws_route_table",
 			Name:     "Route Table",
 			Tags: &types.ServicePackageResourceTags{
@@ -930,6 +964,48 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
+			Factory:  ResourceVerifiedAccessEndpoint,
+			TypeName: "aws_verifiedaccess_endpoint",
+			Name:     "Verified Access Endpoint",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
+		},
+		{
+			Factory:  ResourceVerifiedAccessGroup,
+			TypeName: "aws_verifiedaccess_group",
+			Name:     "Verified Access Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
+		},
+		{
+			Factory:  ResourceVerifiedAccessInstance,
+			TypeName: "aws_verifiedaccess_instance",
+			Name:     "Verified Access Instance",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
+		},
+		{
+			Factory:  ResourceVerifiedAccessInstanceLoggingConfiguration,
+			TypeName: "aws_verifiedaccess_instance_logging_configuration",
+			Name:     "Verified Access Instance Logging Configuration",
+		},
+		{
+			Factory:  ResourceVerifiedAccessInstanceTrustProviderAttachment,
+			TypeName: "aws_verifiedaccess_instance_trust_provider_attachment",
+			Name:     "Verified Access Instance Trust Provider Attachment",
+		},
+		{
+			Factory:  ResourceVerifiedAccessTrustProvider,
+			TypeName: "aws_verifiedaccess_trust_provider",
+			Name:     "Verified Access Trust Provider",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
+		},
+		{
 			Factory:  ResourceVolumeAttachment,
 			TypeName: "aws_volume_attachment",
 		},
@@ -968,6 +1044,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceVPCEndpointConnectionNotification,
 			TypeName: "aws_vpc_endpoint_connection_notification",
+			Name:     "VPC Endpoint Connection Notification",
 		},
 		{
 			Factory:  ResourceVPCEndpointPolicy,
@@ -1086,7 +1163,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_vpc_peering_connection_options",
 		},
 		{
-			Factory:  ResourceVPNConnection,
+			Factory:  resourceVPNConnection,
 			TypeName: "aws_vpn_connection",
 			Name:     "VPN Connection",
 			Tags: &types.ServicePackageResourceTags{
@@ -1094,11 +1171,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceVPNConnectionRoute,
+			Factory:  resourceVPNConnectionRoute,
 			TypeName: "aws_vpn_connection_route",
+			Name:     "VPN Connection Route",
 		},
 		{
-			Factory:  ResourceVPNGateway,
+			Factory:  resourceVPNGateway,
 			TypeName: "aws_vpn_gateway",
 			Name:     "VPN Gateway",
 			Tags: &types.ServicePackageResourceTags{
@@ -1106,12 +1184,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceVPNGatewayAttachment,
+			Factory:  resourceVPNGatewayAttachment,
 			TypeName: "aws_vpn_gateway_attachment",
+			Name:     "VPN Gateway Attachment",
 		},
 		{
-			Factory:  ResourceVPNGatewayRoutePropagation,
+			Factory:  resourceVPNGatewayRoutePropagation,
 			TypeName: "aws_vpn_gateway_route_propagation",
+			Name:     "VPN Gateway Route Propagation",
 		},
 	}
 }
@@ -1133,9 +1213,11 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 
 	return ec2_sdkv2.NewFromConfig(cfg, func(o *ec2_sdkv2.Options) {
 		if endpoint := config["endpoint"].(string); endpoint != "" {
-			o.EndpointResolver = ec2_sdkv2.EndpointResolverFromURL(endpoint)
+			o.BaseEndpoint = aws_sdkv2.String(endpoint)
 		}
 	}), nil
 }
 
-var ServicePackage = &servicePackage{}
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}

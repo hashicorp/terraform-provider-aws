@@ -1,0 +1,4 @@
+
+```release-note:bug
+resource/aws_datasync_location_fsx_ontap_file_system: Correct handling of `protocol.smb.domain`, `protocol.smb.user` and `protocol.smb.password`
+```

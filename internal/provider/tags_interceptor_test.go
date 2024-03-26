@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package provider
 
 import (
@@ -10,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 )
 
 type mockService struct{}
@@ -39,7 +43,7 @@ func (t *mockService) ListTags(ctx context.Context, meta any, identifier string)
 		"tag1": "value1",
 	})
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = types.Some(tags)
+		inContext.TagsOut = option.Some(tags)
 	}
 
 	return errors.New("test error")
@@ -49,7 +53,7 @@ func (t *mockService) UpdateTags(context.Context, any, string, string, any) erro
 	return nil
 }
 
-func TestTagsInterceptor(t *testing.T) {
+func TestTagsResourceInterceptor(t *testing.T) {
 	t.Parallel()
 
 	var interceptors interceptorItems
@@ -58,7 +62,7 @@ func TestTagsInterceptor(t *testing.T) {
 		IdentifierAttribute: "id",
 	}
 
-	tags := tagsInterceptor{
+	tags := tagsResourceInterceptor{
 		tags:       sp,
 		updateFunc: tagsUpdateFunc,
 		readFunc:   tagsReadFunc,

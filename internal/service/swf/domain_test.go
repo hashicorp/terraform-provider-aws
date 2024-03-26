@@ -1,13 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package swf_test
 
 import (
 	"context"
 	"fmt"
 	"os"
-	"regexp"
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -38,7 +41,7 @@ func TestAccSWFDomain_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDomainTestingEnabled(t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SWFEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SWFServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -46,7 +49,7 @@ func TestAccSWFDomain_basic(t *testing.T) {
 				Config: testAccDomainConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "swf", regexp.MustCompile(`/domain/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "swf", regexache.MustCompile(`/domain/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "description", ""),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "name_prefix", ""),
@@ -73,7 +76,7 @@ func TestAccSWFDomain_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDomainTestingEnabled(t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SWFEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SWFServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -98,7 +101,7 @@ func TestAccSWFDomain_nameGenerated(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDomainTestingEnabled(t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SWFEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SWFServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -128,7 +131,7 @@ func TestAccSWFDomain_namePrefix(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDomainTestingEnabled(t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SWFEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SWFServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -159,7 +162,7 @@ func TestAccSWFDomain_tags(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDomainTestingEnabled(t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SWFEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SWFServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -207,7 +210,7 @@ func TestAccSWFDomain_description(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDomainTestingEnabled(t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SWFEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SWFServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{

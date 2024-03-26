@@ -1,26 +1,29 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudformation
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
-	multierror "github.com/hashicorp/go-multierror"
 )
 
 const (
-	ErrCodeValidationError = "ValidationError"
+	errCodeValidationError = "ValidationError"
 )
 
-func StackSetOperationError(apiObjects []*cloudformation.StackSetOperationResultSummary) error {
-	var errors *multierror.Error
+func stackSetOperationError(apiObjects []*cloudformation.StackSetOperationResultSummary) error {
+	var errs []error
 
 	for _, apiObject := range apiObjects {
 		if apiObject == nil {
 			continue
 		}
 
-		errors = multierror.Append(errors, fmt.Errorf("Account (%s) Region (%s) Status (%s) Status Reason: %s",
+		errs = append(errs, fmt.Errorf("Account (%s), Region (%s), %s: %s",
 			aws.StringValue(apiObject.Account),
 			aws.StringValue(apiObject.Region),
 			aws.StringValue(apiObject.Status),
@@ -28,5 +31,5 @@ func StackSetOperationError(apiObjects []*cloudformation.StackSetOperationResult
 		))
 	}
 
-	return errors.ErrorOrNil()
+	return errors.Join(errs...)
 }

@@ -20,14 +20,14 @@ jobs:
   markdown-link-check-a-h-markdown:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
-      - uses: YakDriver/md-check-links@9044b7162323b91150cef35355e1a3514564aa82
+      - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+      - uses: YakDriver/md-check-links@7450f426b758f0bf97f99ceb1aadcf57640a9ede # v2.0.6
         name: markdown-link-check website/docs/**/[a-h].markdown
         with:
           use-quiet-mode: "yes"
           use-verbose-mode: "yes"
           config-file: ".ci/.markdownlinkcheck.json"
-          folder-path: "website/docs"
+          folder-path: "website/docs/r, website/docs/d"
           file-prefix: "[a-h]"
           file-extension: ".markdown"
           base-branch: "main"
@@ -36,14 +36,14 @@ jobs:
   markdown-link-check-i-z-markdown:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
-      - uses: YakDriver/md-check-links@9044b7162323b91150cef35355e1a3514564aa82
+      - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+      - uses: YakDriver/md-check-links@7450f426b758f0bf97f99ceb1aadcf57640a9ede # v2.0.6
         name: markdown-link-check website/docs/**/[i-z].markdown
         with:
           use-quiet-mode: "yes"
           use-verbose-mode: "yes"
           config-file: ".ci/.markdownlinkcheck.json"
-          folder-path: "website/docs"
+          folder-path: "website/docs/r, website/docs/d"
           file-prefix: "[i-z]"
           file-extension: ".markdown"
           base-branch: "main"
@@ -52,34 +52,39 @@ jobs:
   markdown-link-check-md:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
-      - uses: YakDriver/md-check-links@9044b7162323b91150cef35355e1a3514564aa82
+      - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+      - uses: YakDriver/md-check-links@7450f426b758f0bf97f99ceb1aadcf57640a9ede # v2.0.6
         name: markdown-link-check website/docs/**/*.md
         with:
           use-quiet-mode: "yes"
           use-verbose-mode: "yes"
           config-file: ".ci/.markdownlinkcheck.json"
           folder-path: "website/docs"
+          # Don't check CDKTF translated guides, e.g. website/docs/cdktf/typescript/guides/version-4-upgrade.html.md.
+          max-depth: 2
           file-extension: ".md"
-          base-branch: "main"
-          check-modified-files-only: "yes"
+          # Checking only modified files in the PR does not respect 'mex-depth'.
+          # base-branch: "main"
+          # check-modified-files-only: "yes"
 
   markdown-lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
-      - uses: avto-dev/markdown-lint@04d43ee9191307b50935a753da3b775ab695eceb
+      - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+      - uses: avto-dev/markdown-lint@04d43ee9191307b50935a753da3b775ab695eceb # v1.5.0
         with:
           args: "website/docs"
+          # Ignore CDKTF translated guides.
+          ignore: "website/docs/cdktf/*/guides/*"
 
   misspell:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
-      - uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753
+      - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+      - uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
         with:
           go-version-file: .ci/tools/go.mod
-      - uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8
+      - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
         continue-on-error: true
         timeout-minutes: 2
         with:
@@ -91,11 +96,11 @@ jobs:
   terrafmt:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
-      - uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753
+      - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+      - uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
         with:
           go-version-file: .ci/tools/go.mod
-      - uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8
+      - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
         continue-on-error: true
         timeout-minutes: 2
         with:
@@ -105,15 +110,15 @@ jobs:
       - run: terrafmt diff ./website --check --pattern '*.markdown'
 
   tflint:
-    runs-on: ubuntu-latest
+    runs-on: [custom, linux, xl]
     steps:
-      - uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
+      - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
         with:
           fetch-depth: 0
-      - uses: actions/setup-go@fac708d6674e30b6ba41289acaab6d4b75aa0753
+      - uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
         with:
           go-version-file: .ci/tools/go.mod
-      - uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8
+      - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
         continue-on-error: true
         timeout-minutes: 2
         with:
@@ -123,7 +128,7 @@ jobs:
       - run: cd .ci/tools && go install github.com/katbyte/terrafmt
       - run: cd .ci/tools && go install github.com/terraform-linters/tflint
 
-      - uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8
+      - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
         name: Cache plugin dir
         with:
           path: ~/.tflint.d/plugins
@@ -140,10 +145,6 @@ jobs:
           # being carried over from test cases.
           shared_rules=(
               "--enable-rule=terraform_comment_syntax"
-              "--disable-rule=aws_appsync_function_invalid_request_mapping_template"
-              "--disable-rule=aws_appsync_function_invalid_response_mapping_template"
-              "--disable-rule=aws_appsync_resolver_invalid_request_template"
-              "--disable-rule=aws_appsync_resolver_invalid_response_template"
               "--disable-rule=aws_cloudwatch_event_target_invalid_arn"
               "--disable-rule=aws_db_instance_default_parameter_group"
               "--disable-rule=aws_elasticache_cluster_default_parameter_group"

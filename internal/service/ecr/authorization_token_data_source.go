@@ -1,8 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecr
 
 import (
 	"context"
-	"encoding/base64"
 	"log"
 	"strings"
 	"time"
@@ -13,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 // @SDKDataSource("aws_ecr_authorization_token")
@@ -68,7 +71,7 @@ func dataSourceAuthorizationTokenRead(ctx context.Context, d *schema.ResourceDat
 	authorizationToken := aws.StringValue(authorizationData.AuthorizationToken)
 	expiresAt := aws.TimeValue(authorizationData.ExpiresAt).Format(time.RFC3339)
 	proxyEndpoint := aws.StringValue(authorizationData.ProxyEndpoint)
-	authBytes, err := base64.URLEncoding.DecodeString(authorizationToken)
+	authBytes, err := itypes.Base64Decode(authorizationToken)
 	if err != nil {
 		d.SetId("")
 		return sdkdiag.AppendErrorf(diags, "decoding ECR authorization token: %s", err)

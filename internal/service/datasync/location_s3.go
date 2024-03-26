@@ -1,11 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package datasync
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/datasync"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -23,21 +28,18 @@ import (
 
 // @SDKResource("aws_datasync_location_s3", name="Location S3")
 // @Tags(identifierAttribute="id")
-func ResourceLocationS3() *schema.Resource {
+func resourceLocationS3() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationS3Create,
 		ReadWithoutTimeout:   resourceLocationS3Read,
 		UpdateWithoutTimeout: resourceLocationS3Update,
 		DeleteWithoutTimeout: resourceLocationS3Delete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"agent_arns": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -46,6 +48,10 @@ func ResourceLocationS3() *schema.Resource {
 					Type:         schema.TypeString,
 					ValidateFunc: verify.ValidARN,
 				},
+			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"s3_bucket_arn": {
 				Type:         schema.TypeString,
@@ -122,41 +128,31 @@ func resourceLocationS3Create(ctx context.Context, d *schema.ResourceData, meta 
 		input.S3StorageClass = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating DataSync Location S3: %s", input)
+	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout,
+		func() (interface{}, error) {
+			return conn.CreateLocationS3WithContext(ctx, input)
+		},
+		func(err error) (bool, error) {
+			// Retry for IAM eventual consistency on error:
+			// InvalidRequestException: Unable to assume role. Reason: Access denied when calling sts:AssumeRole
+			if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "Unable to assume role") {
+				return true, err
+			}
 
-	var output *datasync.CreateLocationS3Output
-	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
-		var err error
-		output, err = conn.CreateLocationS3WithContext(ctx, input)
+			// Retry for IAM eventual consistency on error:
+			// InvalidRequestException: DataSync location access test failed: could not perform s3:ListObjectsV2 on bucket
+			if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "access test failed") {
+				return true, err
+			}
 
-		// Retry for IAM eventual consistency on error:
-		// InvalidRequestException: Unable to assume role. Reason: Access denied when calling sts:AssumeRole
-		if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "Unable to assume role") {
-			return retry.RetryableError(err)
-		}
-
-		// Retry for IAM eventual consistency on error:
-		// InvalidRequestException: DataSync location access test failed: could not perform s3:ListObjectsV2 on bucket
-		if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "access test failed") {
-			return retry.RetryableError(err)
-		}
-
-		if err != nil {
-			return retry.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		output, err = conn.CreateLocationS3WithContext(ctx, input)
-	}
+			return false, err
+		})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating DataSync Location S3: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.LocationArn))
+	d.SetId(aws.StringValue(outputRaw.(*datasync.CreateLocationS3Output).LocationArn))
 
 	return append(diags, resourceLocationS3Read(ctx, d, meta)...)
 }
@@ -165,15 +161,10 @@ func resourceLocationS3Read(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
-	input := &datasync.DescribeLocationS3Input{
-		LocationArn: aws.String(d.Id()),
-	}
+	output, err := findLocationS3ByARN(ctx, conn, d.Id())
 
-	log.Printf("[DEBUG] Reading DataSync Location S3: %s", input)
-	output, err := conn.DescribeLocationS3WithContext(ctx, input)
-
-	if tfawserr.ErrMessageContains(err, "InvalidRequestException", "not found") {
-		log.Printf("[WARN] DataSync Location S3 %q not found - removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] DataSync Location S3 (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
@@ -182,20 +173,30 @@ func resourceLocationS3Read(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading DataSync Location S3 (%s): %s", d.Id(), err)
 	}
 
-	subdirectory, err := subdirectoryFromLocationURI(aws.StringValue(output.LocationUri))
-
+	uri := aws.StringValue(output.LocationUri)
+	s3BucketName, err := globalIDFromLocationURI(aws.StringValue(output.LocationUri))
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading DataSync Location S3 (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+	subdirectory, err := subdirectoryFromLocationURI(aws.StringValue(output.LocationUri))
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+	locationARN, err := arn.Parse(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	d.Set("agent_arns", flex.FlattenStringSet(output.AgentArns))
+	d.Set("agent_arns", aws.StringValueSlice(output.AgentArns))
 	d.Set("arn", output.LocationArn)
+	s3BucketArn := fmt.Sprintf("arn:%s:s3:::%s", locationARN.Partition, s3BucketName)
+	d.Set("s3_bucket_arn", s3BucketArn)
 	if err := d.Set("s3_config", flattenS3Config(output.S3Config)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting s3_config: %s", err)
 	}
 	d.Set("s3_storage_class", output.S3StorageClass)
 	d.Set("subdirectory", subdirectory)
-	d.Set("uri", output.LocationUri)
+	d.Set("uri", uri)
 
 	return diags
 }
@@ -212,14 +213,12 @@ func resourceLocationS3Delete(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
-	input := &datasync.DeleteLocationInput{
+	log.Printf("[DEBUG] Deleting DataSync Location S3: %s", d.Id())
+	_, err := conn.DeleteLocationWithContext(ctx, &datasync.DeleteLocationInput{
 		LocationArn: aws.String(d.Id()),
-	}
+	})
 
-	log.Printf("[DEBUG] Deleting DataSync Location S3: %s", input)
-	_, err := conn.DeleteLocationWithContext(ctx, input)
-
-	if tfawserr.ErrMessageContains(err, "InvalidRequestException", "not found") {
+	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
 		return diags
 	}
 
@@ -228,6 +227,31 @@ func resourceLocationS3Delete(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	return diags
+}
+
+func findLocationS3ByARN(ctx context.Context, conn *datasync.DataSync, arn string) (*datasync.DescribeLocationS3Output, error) {
+	input := &datasync.DescribeLocationS3Input{
+		LocationArn: aws.String(arn),
+	}
+
+	output, err := conn.DescribeLocationS3WithContext(ctx, input)
+
+	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
 
 func flattenS3Config(s3Config *datasync.S3Config) []interface{} {

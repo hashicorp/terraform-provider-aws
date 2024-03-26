@@ -1,15 +1,19 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	multierror "github.com/hashicorp/go-multierror"
 )
 
 const (
+	errCodeAnalysisExistsForNetworkInsightsPath              = "AnalysisExistsForNetworkInsightsPath"
 	errCodeAuthFailure                                       = "AuthFailure"
 	errCodeClientInvalidHostIDNotFound                       = "Client.InvalidHostID.NotFound"
 	errCodeConcurrentMutationLimitExceeded                   = "ConcurrentMutationLimitExceeded"
@@ -41,6 +45,7 @@ const (
 	errCodeInvalidGroupInUse                                 = "InvalidGroup.InUse"
 	errCodeInvalidGroupNotFound                              = "InvalidGroup.NotFound"
 	errCodeInvalidHostIDNotFound                             = "InvalidHostID.NotFound"
+	errCodeInvalidInstanceConnectEndpointIdNotFound          = "InvalidInstanceConnectEndpointId.NotFound"
 	errCodeInvalidInstanceID                                 = "InvalidInstanceID"
 	errCodeInvalidInstanceIDNotFound                         = "InvalidInstanceID.NotFound"
 	errCodeInvalidInternetGatewayIDNotFound                  = "InvalidInternetGatewayID.NotFound"
@@ -87,6 +92,7 @@ const (
 	errCodeInvalidSubnetIDNotFound                           = "InvalidSubnetID.NotFound"
 	errCodeInvalidSubnetIdNotFound                           = "InvalidSubnetId.NotFound"
 	errCodeInvalidTrafficMirrorFilterIdNotFound              = "InvalidTrafficMirrorFilterId.NotFound"
+	errCodeInvalidTrafficMirrorFilterRuleIdNotFound          = "InvalidTrafficMirrorFilterRuleId.NotFound"
 	errCodeInvalidTrafficMirrorSessionIdNotFound             = "InvalidTrafficMirrorSessionId.NotFound"
 	errCodeInvalidTrafficMirrorTargetIdNotFound              = "InvalidTrafficMirrorTargetId.NotFound"
 	errCodeInvalidTransitGatewayAttachmentIDNotFound         = "InvalidTransitGatewayAttachmentID.NotFound"
@@ -94,6 +100,10 @@ const (
 	errCodeInvalidTransitGatewayPolicyTableIdNotFound        = "InvalidTransitGatewayPolicyTableId.NotFound"
 	errCodeInvalidTransitGatewayIDNotFound                   = "InvalidTransitGatewayID.NotFound"
 	errCodeInvalidTransitGatewayMulticastDomainIdNotFound    = "InvalidTransitGatewayMulticastDomainId.NotFound"
+	errCodeInvalidVerifiedAccessEndpointIdNotFound           = "InvalidVerifiedAccessEndpointId.NotFound"
+	errCodeInvalidVerifiedAccessGroupIdNotFound              = "InvalidVerifiedAccessGroupId.NotFound"
+	errCodeInvalidVerifiedAccessInstanceIdNotFound           = "InvalidVerifiedAccessInstanceId.NotFound"
+	errCodeInvalidVerifiedAccessTrustProviderIdNotFound      = "InvalidVerifiedAccessTrustProviderId.NotFound"
 	errCodeInvalidVolumeNotFound                             = "InvalidVolume.NotFound"
 	errCodeInvalidVPCCIDRBlockAssociationIDNotFound          = "InvalidVpcCidrBlockAssociationID.NotFound"
 	errCodeInvalidVPCEndpointIdNotFound                      = "InvalidVpcEndpointId.NotFound"
@@ -105,9 +115,11 @@ const (
 	errCodeInvalidVPNGatewayAttachmentNotFound               = "InvalidVpnGatewayAttachment.NotFound"
 	errCodeInvalidVPNGatewayIDNotFound                       = "InvalidVpnGatewayID.NotFound"
 	errCodeNatGatewayNotFound                                = "NatGatewayNotFound"
+	errCodeNetworkACLEntryAlreadyExists                      = "NetworkAclEntryAlreadyExists"
 	errCodeOperationNotPermitted                             = "OperationNotPermitted"
 	errCodePrefixListVersionMismatch                         = "PrefixListVersionMismatch"
 	errCodeResourceNotReady                                  = "ResourceNotReady"
+	errCodeRouteAlreadyExists                                = "RouteAlreadyExists"
 	errCodeSnapshotCreationPerVolumeRateExceeded             = "SnapshotCreationPerVolumeRateExceeded"
 	errCodeUnsupportedOperation                              = "UnsupportedOperation"
 	errCodeVolumeInUse                                       = "VolumeInUse"
@@ -124,18 +136,18 @@ func CancelSpotFleetRequestError(apiObject *ec2.CancelSpotFleetRequestsErrorItem
 }
 
 func CancelSpotFleetRequestsError(apiObjects []*ec2.CancelSpotFleetRequestsErrorItem) error {
-	var errors *multierror.Error
+	var errs []error
 
 	for _, apiObject := range apiObjects {
 		if err := CancelSpotFleetRequestError(apiObject); err != nil {
-			errors = multierror.Append(errors, fmt.Errorf("%s: %w", aws.StringValue(apiObject.SpotFleetRequestId), err))
+			errs = append(errs, fmt.Errorf("%s: %w", aws.StringValue(apiObject.SpotFleetRequestId), err))
 		}
 	}
 
-	return errors.ErrorOrNil()
+	return errors.Join(errs...)
 }
 
-func DeleteFleetError(apiObject *ec2.DeleteFleetErrorItem) error {
+func deleteFleetError(apiObject *ec2.DeleteFleetErrorItem) error {
 	if apiObject == nil || apiObject.Error == nil {
 		return nil
 	}
@@ -143,16 +155,16 @@ func DeleteFleetError(apiObject *ec2.DeleteFleetErrorItem) error {
 	return awserr.New(aws.StringValue(apiObject.Error.Code), aws.StringValue(apiObject.Error.Message), nil)
 }
 
-func DeleteFleetsError(apiObjects []*ec2.DeleteFleetErrorItem) error {
-	var errors *multierror.Error
+func deleteFleetsError(apiObjects []*ec2.DeleteFleetErrorItem) error {
+	var errs []error
 
 	for _, apiObject := range apiObjects {
-		if err := DeleteFleetError(apiObject); err != nil {
-			errors = multierror.Append(errors, fmt.Errorf("%s: %w", aws.StringValue(apiObject.FleetId), err))
+		if err := deleteFleetError(apiObject); err != nil {
+			errs = append(errs, fmt.Errorf("%s: %w", aws.StringValue(apiObject.FleetId), err))
 		}
 	}
 
-	return errors.ErrorOrNil()
+	return errors.Join(errs...)
 }
 
 func UnsuccessfulItemError(apiObject *ec2.UnsuccessfulItemError) error {
@@ -164,19 +176,25 @@ func UnsuccessfulItemError(apiObject *ec2.UnsuccessfulItemError) error {
 }
 
 func UnsuccessfulItemsError(apiObjects []*ec2.UnsuccessfulItem) error {
-	var errors *multierror.Error
+	var errs []error
 
 	for _, apiObject := range apiObjects {
 		if apiObject == nil {
 			continue
 		}
 
-		err := UnsuccessfulItemError(apiObject.Error)
-
-		if err != nil {
-			errors = multierror.Append(errors, fmt.Errorf("%s: %w", aws.StringValue(apiObject.ResourceId), err))
+		if err := UnsuccessfulItemError(apiObject.Error); err != nil {
+			errs = append(errs, fmt.Errorf("%s: %w", aws.StringValue(apiObject.ResourceId), err))
 		}
 	}
 
-	return errors.ErrorOrNil()
+	return errors.Join(errs...)
+}
+
+func networkACLEntryAlreadyExistsError(naclID string, egress bool, ruleNumber int) error {
+	return awserr.New(errCodeNetworkACLEntryAlreadyExists, fmt.Sprintf("EC2 Network ACL (%s) Rule (egress: %t)(%d) already exists", naclID, egress, ruleNumber), nil)
+}
+
+func routeAlreadyExistsError(routeTableID, destination string) error {
+	return awserr.New(errCodeRouteAlreadyExists, fmt.Sprintf("Route in Route Table (%s) with destination (%s) already exists", routeTableID, destination), nil)
 }

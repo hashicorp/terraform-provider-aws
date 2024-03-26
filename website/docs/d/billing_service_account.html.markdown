@@ -60,7 +60,9 @@ resource "aws_s3_bucket_policy" "allow_billing_logging" {
 }
 ```
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the AWS billing service account.
 * `arn` - ARN of the AWS billing service account.

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package acctest
 
 import (
@@ -14,6 +17,13 @@ import (
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
+	accounttypes "github.com/aws/aws-sdk-go-v2/service/account/types"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/aws/aws-sdk-go-v2/service/inspector2"
+	inspector2types "github.com/aws/aws-sdk-go-v2/service/inspector2/types"
+	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
+	ssoadmintypes "github.com/aws/aws-sdk-go-v2/service/ssoadmin/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
@@ -22,7 +32,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/outposts"
-	"github.com/aws/aws-sdk-go/service/ssoadmin"
+	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -35,13 +45,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/envvar"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
+	tfaccount "github.com/hashicorp/terraform-provider-aws/internal/service/account"
 	tfacmpca "github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
 	tfsts "github.com/hashicorp/terraform-provider-aws/internal/service/sts"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/jmespath/go-jmespath"
 	"github.com/mitchellh/mapstructure"
 )
@@ -76,6 +91,8 @@ const accountIDRegexp = `(aws|aws-managed|\d{12})`
 //
 // Reference: https://github.com/dominikh/go-tools/issues/633#issuecomment-606560616
 func Skip(t *testing.T, message string) {
+	t.Helper()
+
 	t.Skip(message)
 }
 
@@ -94,6 +111,8 @@ var (
 //
 // PreCheck(t) must be called before using this provider instance.
 var Provider *schema.Provider
+
+type ProviderFunc func() *schema.Provider
 
 // testAccProviderConfigure ensures Provider is only configured once
 //
@@ -131,6 +150,8 @@ func protoV5ProviderFactoriesInit(ctx context.Context, providerNames ...string) 
 }
 
 func protoV5ProviderFactoriesNamedInit(ctx context.Context, t *testing.T, providers map[string]*schema.Provider, providerNames ...string) map[string]func() (tfprotov5.ProviderServer, error) {
+	t.Helper()
+
 	factories := make(map[string]func() (tfprotov5.ProviderServer, error), len(providerNames))
 
 	for _, name := range providerNames {
@@ -151,6 +172,8 @@ func protoV5ProviderFactoriesNamedInit(ctx context.Context, t *testing.T, provid
 }
 
 func protoV5ProviderFactoriesPlusProvidersInit(ctx context.Context, t *testing.T, providers *[]*schema.Provider, providerNames ...string) map[string]func() (tfprotov5.ProviderServer, error) {
+	t.Helper()
+
 	factories := make(map[string]func() (tfprotov5.ProviderServer, error), len(providerNames))
 
 	for _, name := range providerNames {
@@ -179,18 +202,22 @@ func protoV5ProviderFactoriesPlusProvidersInit(ctx context.Context, t *testing.T
 //
 // For cross-account testing: Typically paired with PreCheckAlternateAccount and ConfigAlternateAccountProvider.
 func ProtoV5FactoriesPlusProvidersAlternate(ctx context.Context, t *testing.T, providers *[]*schema.Provider) map[string]func() (tfprotov5.ProviderServer, error) {
+	t.Helper()
 	return protoV5ProviderFactoriesPlusProvidersInit(ctx, t, providers, ProviderName, ProviderNameAlternate)
 }
 
 func ProtoV5FactoriesNamedAlternate(ctx context.Context, t *testing.T, providers map[string]*schema.Provider) map[string]func() (tfprotov5.ProviderServer, error) {
+	t.Helper()
 	return ProtoV5FactoriesNamed(ctx, t, providers, ProviderName, ProviderNameAlternate)
 }
 
 func ProtoV5FactoriesNamed(ctx context.Context, t *testing.T, providers map[string]*schema.Provider, providerNames ...string) map[string]func() (tfprotov5.ProviderServer, error) {
+	t.Helper()
 	return protoV5ProviderFactoriesNamedInit(ctx, t, providers, providerNames...)
 }
 
 func ProtoV5FactoriesAlternate(ctx context.Context, t *testing.T) map[string]func() (tfprotov5.ProviderServer, error) {
+	t.Helper()
 	return protoV5ProviderFactoriesInit(ctx, ProviderName, ProviderNameAlternate)
 }
 
@@ -199,6 +226,7 @@ func ProtoV5FactoriesAlternate(ctx context.Context, t *testing.T) map[string]fun
 // Usage typically paired with PreCheckMultipleRegion, PreCheckAlternateAccount,
 // and ConfigAlternateAccountAndAlternateRegionProvider.
 func ProtoV5FactoriesAlternateAccountAndAlternateRegion(ctx context.Context, t *testing.T) map[string]func() (tfprotov5.ProviderServer, error) {
+	t.Helper()
 	return protoV5ProviderFactoriesInit(
 		ctx,
 		ProviderName,
@@ -212,6 +240,7 @@ func ProtoV5FactoriesAlternateAccountAndAlternateRegion(ctx context.Context, t *
 //
 // Usage typically paired with PreCheckMultipleRegion and ConfigMultipleRegionProvider.
 func ProtoV5FactoriesMultipleRegions(ctx context.Context, t *testing.T, n int) map[string]func() (tfprotov5.ProviderServer, error) {
+	t.Helper()
 	switch n {
 	case 2:
 		return protoV5ProviderFactoriesInit(ctx, ProviderName, ProviderNameAlternate)
@@ -233,6 +262,8 @@ func ProtoV5FactoriesMultipleRegions(ctx context.Context, t *testing.T, n int) m
 // These verifications and configuration are preferred at this level to prevent
 // provider developers from experiencing less clear errors for every test.
 func PreCheck(ctx context.Context, t *testing.T) {
+	t.Helper()
+
 	// Since we are outside the scope of the Terraform configuration we must
 	// call Configure() to properly initialize the provider configuration.
 	testAccProviderConfigure.Do(func() {
@@ -260,16 +291,16 @@ func PreCheck(ctx context.Context, t *testing.T) {
 }
 
 // ProviderAccountID returns the account ID of an AWS provider
-func ProviderAccountID(provo *schema.Provider) string {
-	if provo == nil {
+func ProviderAccountID(provider *schema.Provider) string {
+	if provider == nil {
 		log.Print("[DEBUG] Unable to read account ID from test provider: empty provider")
 		return ""
 	}
-	if provo.Meta() == nil {
+	if provider.Meta() == nil {
 		log.Print("[DEBUG] Unable to read account ID from test provider: unconfigured provider")
 		return ""
 	}
-	client, ok := provo.Meta().(*conns.AWSClient)
+	client, ok := provider.Meta().(*conns.AWSClient)
 	if !ok {
 		log.Print("[DEBUG] Unable to read account ID from test provider: non-AWS or unconfigured AWS provider")
 		return ""
@@ -278,13 +309,15 @@ func ProviderAccountID(provo *schema.Provider) string {
 }
 
 // CheckDestroyNoop is a TestCheckFunc to be used as a TestCase's CheckDestroy when no such check can be made.
-func CheckDestroyNoop(_ *terraform.State) error {
+func CheckDestroyNoop(*terraform.State) error {
 	return nil
 }
 
 // CheckSleep returns a TestCheckFunc that pauses the current goroutine for at least the duration d.
 func CheckSleep(t *testing.T, d time.Duration) resource.TestCheckFunc {
-	return func(_ *terraform.State) error {
+	t.Helper()
+
+	return func(*terraform.State) error {
 		time.Sleep(d)
 
 		return nil
@@ -357,7 +390,7 @@ func CheckResourceAttrNameFromPrefix(resourceName string, attributeName string, 
 
 // Regexp for "<start-of-string>terraform-<26 lowercase hex digits><additional suffix><end-of-string>".
 func resourceUniqueIDPrefixPlusAdditionalSuffixRegexp(prefix, suffix string) *regexp.Regexp {
-	return regexp.MustCompile(fmt.Sprintf("^%s[[:xdigit:]]{%d}%s$", prefix, id.UniqueIDSuffixLength, suffix))
+	return regexache.MustCompile(fmt.Sprintf("^%s[[:xdigit:]]{%d}%s$", prefix, id.UniqueIDSuffixLength, suffix))
 }
 
 // CheckResourceAttrNameWithSuffixFromPrefix verifies that the state attribute value matches name with suffix generated from given prefix
@@ -373,6 +406,13 @@ func CheckResourceAttrNameGenerated(resourceName string, attributeName string) r
 	return CheckResourceAttrNameWithSuffixGenerated(resourceName, attributeName, "")
 }
 
+// CheckResourceAttrNameGeneratedWithPrefix verifies that the state attribute value matches name automatically generated with prefix
+func CheckResourceAttrNameGeneratedWithPrefix(resourceName string, attributeName string, prefix string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		return resource.TestMatchResourceAttr(resourceName, attributeName, resourceUniqueIDPrefixPlusAdditionalSuffixRegexp(prefix, ""))(s)
+	}
+}
+
 // CheckResourceAttrNameWithSuffixGenerated verifies that the state attribute value matches name with suffix automatically generated without prefix
 func CheckResourceAttrNameWithSuffixGenerated(resourceName string, attributeName string, suffix string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
@@ -383,7 +423,7 @@ func CheckResourceAttrNameWithSuffixGenerated(resourceName string, attributeName
 // MatchResourceAttrAccountID ensures the Terraform state regexp matches an account ID
 func MatchResourceAttrAccountID(resourceName, attributeName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		return resource.TestMatchResourceAttr(resourceName, attributeName, regexp.MustCompile(`^\d{12}$`))(s)
+		return resource.TestMatchResourceAttr(resourceName, attributeName, regexache.MustCompile(`^\d{12}$`))(s)
 	}
 }
 
@@ -394,6 +434,27 @@ func MatchResourceAttrRegionalARN(resourceName, attributeName, arnService string
 			AccountID: AccountID(),
 			Partition: Partition(),
 			Region:    Region(),
+			Resource:  arnResourceRegexp.String(),
+			Service:   arnService,
+		}.String()
+
+		attributeMatch, err := regexp.Compile(arnRegexp)
+
+		if err != nil {
+			return fmt.Errorf("unable to compile ARN regexp (%s): %w", arnRegexp, err)
+		}
+
+		return resource.TestMatchResourceAttr(resourceName, attributeName, attributeMatch)(s)
+	}
+}
+
+// MatchResourceAttrRegionalARNRegion ensures the Terraform state regexp matches a formatted ARN with the specified region
+func MatchResourceAttrRegionalARNRegion(resourceName, attributeName, arnService, region string, arnResourceRegexp *regexp.Regexp) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		arnRegexp := arn.ARN{
+			AccountID: AccountID(),
+			Partition: Partition(),
+			Region:    region,
 			Resource:  arnResourceRegexp.String(),
 			Service:   arnService,
 		}.String()
@@ -580,7 +641,7 @@ func MatchResourceAttrGlobalARNNoAccount(resourceName, attributeName, arnService
 // CheckResourceAttrRFC3339 ensures the Terraform state matches a RFC3339 value
 // This TestCheckFunc will likely be moved to the Terraform Plugin SDK in the future.
 func CheckResourceAttrRFC3339(resourceName, attributeName string) resource.TestCheckFunc {
-	return resource.TestMatchResourceAttr(resourceName, attributeName, regexp.MustCompile(RFC3339RegexPattern))
+	return resource.TestMatchResourceAttr(resourceName, attributeName, regexache.MustCompile(RFC3339RegexPattern))
 }
 
 // CheckResourceAttrEquivalentJSON is a TestCheckFunc that compares a JSON value with an expected value. Both JSON
@@ -643,6 +704,8 @@ func CheckResourceAttrJMES(name, key, jmesPath, value string) resource.TestCheck
 			v = x
 		case float64:
 			v = strconv.FormatFloat(x, 'f', -1, 64)
+		case bool:
+			v = fmt.Sprint(x)
 		default:
 			return fmt.Errorf(`%[1]s: Attribute %[2]q, JMESPath %[3]q got "%#[4]v" (%[4]T)`, name, key, jmesPath, result)
 		}
@@ -689,6 +752,8 @@ func CheckResourceAttrJMESPair(nameFirst, keyFirst, jmesPath, nameSecond, keySec
 			value = x
 		case float64:
 			value = strconv.FormatFloat(x, 'f', -1, 64)
+		case bool:
+			value = fmt.Sprint(x)
 		default:
 			return fmt.Errorf(`%[1]s: Attribute %[2]q, JMESPath %[3]q got "%#[4]v" (%[4]T)`, nameFirst, keyFirst, jmesPath, result)
 		}
@@ -704,6 +769,36 @@ func CheckResourceAttrJMESPair(nameFirst, keyFirst, jmesPath, nameSecond, keySec
 
 		return nil
 	}
+}
+
+// CheckResourceAttrContains ensures the Terraform state value contains the specified substr.
+func CheckResourceAttrContains(name, key, substr string) resource.TestCheckFunc {
+	return resource.TestCheckResourceAttrWith(name, key, func(value string) error {
+		if strings.Contains(value, substr) {
+			return nil
+		}
+		return fmt.Errorf("%s: Attribute '%s' expected contains %#v, got %#v", name, key, substr, value)
+	})
+}
+
+// CheckResourceAttrHasPrefix ensures the Terraform state value has the specified prefix.
+func CheckResourceAttrHasPrefix(name, key, prefix string) resource.TestCheckFunc {
+	return resource.TestCheckResourceAttrWith(name, key, func(value string) error {
+		if strings.HasPrefix(value, prefix) {
+			return nil
+		}
+		return fmt.Errorf("%s: Attribute '%s' expected prefix %#v, got %#v", name, key, prefix, value)
+	})
+}
+
+// CheckResourceAttrHasSuffix ensures the Terraform state value has the specified suffix.
+func CheckResourceAttrHasSuffix(name, key, suffix string) resource.TestCheckFunc {
+	return resource.TestCheckResourceAttrWith(name, key, func(value string) error {
+		if strings.HasSuffix(value, suffix) {
+			return nil
+		}
+		return fmt.Errorf("%s: Attribute '%s' expected suffix %#v, got %#v", name, key, suffix, value)
+	})
 }
 
 // Copied and inlined from the SDK testing code
@@ -755,7 +850,7 @@ func PartitionDNSSuffix() string {
 
 func PartitionReverseDNSPrefix() string {
 	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), Region()); ok {
-		return conns.ReverseDNS(partition.DNSSuffix())
+		return names.ReverseDNS(partition.DNSSuffix())
 	}
 
 	return "com.amazonaws"
@@ -776,6 +871,8 @@ func thirdRegionPartition() string {
 }
 
 func PreCheckAlternateAccount(t *testing.T) {
+	t.Helper()
+
 	envvar.SkipIfAllEmpty(t, []string{envvar.AlternateProfile, envvar.AlternateAccessKeyId}, "credentials for running acceptance testing in alternate AWS account")
 
 	if os.Getenv(envvar.AlternateAccessKeyId) != "" {
@@ -784,6 +881,8 @@ func PreCheckAlternateAccount(t *testing.T) {
 }
 
 func PreCheckThirdAccount(t *testing.T) {
+	t.Helper()
+
 	envvar.SkipIfAllEmpty(t, []string{envvar.ThirdProfile, envvar.ThirdAccessKeyId}, "credentials for running acceptance testing in third AWS account")
 
 	if os.Getenv(envvar.ThirdAccessKeyId) != "" {
@@ -792,6 +891,8 @@ func PreCheckThirdAccount(t *testing.T) {
 }
 
 func PreCheckPartitionHasService(t *testing.T, serviceID string) {
+	t.Helper()
+
 	if partition, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), Region()); ok {
 		if _, ok := partition.Services()[serviceID]; !ok {
 			t.Skipf("skipping tests; partition %s does not support %s service", partition.ID(), serviceID)
@@ -800,6 +901,8 @@ func PreCheckPartitionHasService(t *testing.T, serviceID string) {
 }
 
 func PreCheckMultipleRegion(t *testing.T, regions int) {
+	t.Helper()
+
 	if Region() == AlternateRegion() {
 		t.Fatalf("%s and %s must be set to different values for acceptance tests", envvar.DefaultRegion, envvar.AlternateRegion)
 	}
@@ -835,6 +938,8 @@ func PreCheckMultipleRegion(t *testing.T, regions int) {
 
 // PreCheckRegion checks that the test region is one of the specified AWS Regions.
 func PreCheckRegion(t *testing.T, regions ...string) {
+	t.Helper()
+
 	curr := Region()
 	var regionOK bool
 
@@ -852,6 +957,8 @@ func PreCheckRegion(t *testing.T, regions ...string) {
 
 // PreCheckRegionNot checks that the test region is not one of the specified AWS Regions.
 func PreCheckRegionNot(t *testing.T, regions ...string) {
+	t.Helper()
+
 	curr := Region()
 
 	for _, region := range regions {
@@ -863,6 +970,8 @@ func PreCheckRegionNot(t *testing.T, regions ...string) {
 
 // PreCheckAlternateRegionIs checks that the alternate test region is the specified AWS Region.
 func PreCheckAlternateRegionIs(t *testing.T, region string) {
+	t.Helper()
+
 	if curr := AlternateRegion(); curr != region {
 		t.Skipf("skipping tests; %s (%s) does not equal %s", envvar.AlternateRegion, curr, region)
 	}
@@ -870,6 +979,8 @@ func PreCheckAlternateRegionIs(t *testing.T, region string) {
 
 // PreCheckPartition checks that the test partition is the specified partition.
 func PreCheckPartition(t *testing.T, partition string) {
+	t.Helper()
+
 	if curr := Partition(); curr != partition {
 		t.Skipf("skipping tests; current partition (%s) does not equal %s", curr, partition)
 	}
@@ -877,6 +988,8 @@ func PreCheckPartition(t *testing.T, partition string) {
 
 // PreCheckPartitionNot checks that the test partition is not one of the specified partitions.
 func PreCheckPartitionNot(t *testing.T, partitions ...string) {
+	t.Helper()
+
 	for _, partition := range partitions {
 		if curr := Partition(); curr == partition {
 			t.Skipf("skipping tests; current partition (%s) not supported", curr)
@@ -884,7 +997,25 @@ func PreCheckPartitionNot(t *testing.T, partitions ...string) {
 	}
 }
 
+func PreCheckInspector2(ctx context.Context, t *testing.T) {
+	t.Helper()
+
+	conn := Provider.Meta().(*conns.AWSClient).Inspector2Client(ctx)
+
+	_, err := conn.ListDelegatedAdminAccounts(ctx, &inspector2.ListDelegatedAdminAccountsInput{})
+
+	if errs.IsA[*inspector2types.AccessDeniedException](err) {
+		t.Skipf("Amazon Inspector not available: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("listing Inspector2 delegated administrators: %s", err)
+	}
+}
+
 func PreCheckOrganizationsAccount(ctx context.Context, t *testing.T) {
+	t.Helper()
+
 	_, err := tforganizations.FindOrganization(ctx, Provider.Meta().(*conns.AWSClient).OrganizationsConn(ctx))
 
 	if tfresource.NotFound(err) {
@@ -899,6 +1030,8 @@ func PreCheckOrganizationsAccount(ctx context.Context, t *testing.T) {
 }
 
 func PreCheckOrganizationsEnabled(ctx context.Context, t *testing.T) {
+	t.Helper()
+
 	_, err := tforganizations.FindOrganization(ctx, Provider.Meta().(*conns.AWSClient).OrganizationsConn(ctx))
 
 	if tfresource.NotFound(err) {
@@ -911,13 +1044,21 @@ func PreCheckOrganizationsEnabled(ctx context.Context, t *testing.T) {
 }
 
 func PreCheckOrganizationManagementAccount(ctx context.Context, t *testing.T) {
-	organization, err := tforganizations.FindOrganization(ctx, Provider.Meta().(*conns.AWSClient).OrganizationsConn(ctx))
+	t.Helper()
+	PreCheckOrganizationManagementAccountWithProvider(ctx, t, func() *schema.Provider { return Provider })
+}
+
+func PreCheckOrganizationManagementAccountWithProvider(ctx context.Context, t *testing.T, providerF ProviderFunc) {
+	t.Helper()
+
+	awsClient := providerF().Meta().(*conns.AWSClient)
+	organization, err := tforganizations.FindOrganization(ctx, awsClient.OrganizationsConn(ctx))
 
 	if err != nil {
 		t.Fatalf("describing AWS Organization: %s", err)
 	}
 
-	callerIdentity, err := tfsts.FindCallerIdentity(ctx, Provider.Meta().(*conns.AWSClient).STSConn(ctx))
+	callerIdentity, err := tfsts.FindCallerIdentity(ctx, awsClient.STSClient(ctx))
 
 	if err != nil {
 		t.Fatalf("getting current identity: %s", err)
@@ -929,13 +1070,21 @@ func PreCheckOrganizationManagementAccount(ctx context.Context, t *testing.T) {
 }
 
 func PreCheckOrganizationMemberAccount(ctx context.Context, t *testing.T) {
-	organization, err := tforganizations.FindOrganization(ctx, Provider.Meta().(*conns.AWSClient).OrganizationsConn(ctx))
+	t.Helper()
+	PreCheckOrganizationMemberAccountWithProvider(ctx, t, func() *schema.Provider { return Provider })
+}
+
+func PreCheckOrganizationMemberAccountWithProvider(ctx context.Context, t *testing.T, providerF ProviderFunc) {
+	t.Helper()
+
+	awsClient := providerF().Meta().(*conns.AWSClient)
+	organization, err := tforganizations.FindOrganization(ctx, awsClient.OrganizationsConn(ctx))
 
 	if err != nil {
 		t.Fatalf("describing AWS Organization: %s", err)
 	}
 
-	callerIdentity, err := tfsts.FindCallerIdentity(ctx, Provider.Meta().(*conns.AWSClient).STSConn(ctx))
+	callerIdentity, err := tfsts.FindCallerIdentity(ctx, awsClient.STSClient(ctx))
 
 	if err != nil {
 		t.Fatalf("getting current identity: %s", err)
@@ -946,44 +1095,54 @@ func PreCheckOrganizationMemberAccount(ctx context.Context, t *testing.T) {
 	}
 }
 
-func PreCheckSSOAdminInstances(ctx context.Context, t *testing.T) {
-	conn := Provider.Meta().(*conns.AWSClient).SSOAdminConn(ctx)
-	input := &ssoadmin.ListInstancesInput{}
-	var instances []*ssoadmin.InstanceMetadata
+func PreCheckRegionOptIn(ctx context.Context, t *testing.T, region string) {
+	t.Helper()
 
-	err := conn.ListInstancesPagesWithContext(ctx, input, func(page *ssoadmin.ListInstancesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	output, err := tfaccount.FindRegionOptStatus(ctx, Provider.Meta().(*conns.AWSClient).AccountClient(ctx), "", region)
+
+	if err != nil {
+		t.Fatalf("reading Region (%s) opt-in status: %s", region, err)
+	}
+
+	if status := output.RegionOptStatus; status != accounttypes.RegionOptStatusEnabled && status != accounttypes.RegionOptStatusEnabledByDefault {
+		t.Skipf("Region (%s) opt-in status: %s", region, status)
+	}
+}
+
+func PreCheckSSOAdminInstances(ctx context.Context, t *testing.T) {
+	t.Helper()
+
+	conn := Provider.Meta().(*conns.AWSClient).SSOAdminClient(ctx)
+	input := &ssoadmin.ListInstancesInput{}
+	var instances []ssoadmintypes.InstanceMetadata
+
+	paginator := ssoadmin.NewListInstancesPaginator(conn, input)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+		if PreCheckSkipError(err) {
+			t.Skipf("skipping tests: %s", err)
+		}
+		if err != nil {
+			t.Fatalf("listing SSO Instances: %s", err)
 		}
 
-		instances = append(instances, page.Instances...)
-
-		return !lastPage
-	})
-
-	if PreCheckSkipError(err) {
-		t.Skipf("skipping tests: %s", err)
+		if page != nil {
+			instances = append(instances, page.Instances...)
+		}
 	}
 
 	if len(instances) == 0 {
 		t.Skip("skipping tests; no SSO Instances found.")
 	}
-
-	if err != nil {
-		t.Fatalf("listing SSO Instances: %s", err)
-	}
 }
 
 func PreCheckHasIAMRole(ctx context.Context, t *testing.T, roleName string) {
-	conn := Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
-	input := &iam.GetRoleInput{
-		RoleName: aws.String(roleName),
-	}
+	t.Helper()
 
-	_, err := conn.GetRoleWithContext(ctx, input)
+	_, err := tfiam.FindRoleByName(ctx, Provider.Meta().(*conns.AWSClient).IAMConn(ctx), roleName)
 
-	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-		t.Skipf("skipping acceptance test: required IAM role \"%s\" is not present", roleName)
+	if tfresource.NotFound(err) {
+		t.Skipf("skipping acceptance test: required IAM role %q not found", roleName)
 	}
 
 	if PreCheckSkipError(err) {
@@ -996,7 +1155,14 @@ func PreCheckHasIAMRole(ctx context.Context, t *testing.T, roleName string) {
 }
 
 func PreCheckIAMServiceLinkedRole(ctx context.Context, t *testing.T, pathPrefix string) {
-	conn := Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+	t.Helper()
+	PreCheckIAMServiceLinkedRoleWithProvider(ctx, t, func() *schema.Provider { return Provider }, pathPrefix)
+}
+
+func PreCheckIAMServiceLinkedRoleWithProvider(ctx context.Context, t *testing.T, providerF ProviderFunc, pathPrefix string) {
+	t.Helper()
+
+	conn := providerF().Meta().(*conns.AWSClient).IAMConn(ctx)
 	input := &iam.ListRolesInput{
 		PathPrefix: aws.String(pathPrefix),
 	}
@@ -1025,6 +1191,8 @@ func PreCheckIAMServiceLinkedRole(ctx context.Context, t *testing.T, pathPrefix 
 }
 
 func PreCheckDirectoryService(ctx context.Context, t *testing.T) {
+	t.Helper()
+
 	conn := Provider.Meta().(*conns.AWSClient).DSConn(ctx)
 	input := &directoryservice.DescribeDirectoriesInput{}
 
@@ -1043,6 +1211,8 @@ func PreCheckDirectoryService(ctx context.Context, t *testing.T) {
 // and we do not have a good read-only way to determine this situation. Here we
 // opt to perform a creation that will fail so we can determine Simple AD support.
 func PreCheckDirectoryServiceSimpleDirectory(ctx context.Context, t *testing.T) {
+	t.Helper()
+
 	conn := Provider.Meta().(*conns.AWSClient).DSConn(ctx)
 	input := &directoryservice.CreateDirectoryInput{
 		Name:     aws.String("corp.example.com"),
@@ -1062,6 +1232,8 @@ func PreCheckDirectoryServiceSimpleDirectory(ctx context.Context, t *testing.T) 
 }
 
 func PreCheckOutpostsOutposts(ctx context.Context, t *testing.T) {
+	t.Helper()
+
 	conn := Provider.Meta().(*conns.AWSClient).OutpostsConn(ctx)
 	input := &outposts.ListOutpostsInput{}
 
@@ -1081,6 +1253,32 @@ func PreCheckOutpostsOutposts(ctx context.Context, t *testing.T) {
 	}
 }
 
+func PreCheckWAFV2CloudFrontScope(ctx context.Context, t *testing.T) {
+	t.Helper()
+
+	switch Partition() {
+	case endpoints.AwsPartitionID:
+		PreCheckRegion(t, endpoints.UsEast1RegionID)
+	case endpoints.AwsCnPartitionID:
+		PreCheckRegion(t, endpoints.CnNorthwest1RegionID)
+	}
+
+	conn := Provider.Meta().(*conns.AWSClient).WAFV2Conn(ctx)
+	input := &wafv2.ListWebACLsInput{
+		Scope: aws.String(wafv2.ScopeCloudfront),
+	}
+
+	_, err := conn.ListWebACLsWithContext(ctx, input)
+
+	if PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
+}
+
 func ConfigAlternateAccountProvider() string {
 	//lintignore:AT004
 	return ConfigNamedAccountProvider(
@@ -1092,6 +1290,8 @@ func ConfigAlternateAccountProvider() string {
 }
 
 func ConfigMultipleAccountProvider(t *testing.T, accounts int) string {
+	t.Helper()
+
 	var config strings.Builder
 
 	if accounts > 3 {
@@ -1171,11 +1371,11 @@ func ConfigDefaultAndIgnoreTagsKeyPrefixes1(key1, value1, keyPrefix1 string) str
 provider "aws" {
   default_tags {
     tags = {
-      %q = %q
+      %[1]q = %[2]q
     }
   }
   ignore_tags {
-    key_prefixes = [%q]
+    key_prefixes = [%[3]q]
   }
 }
 `, key1, value1, keyPrefix1)
@@ -1187,7 +1387,7 @@ func ConfigDefaultAndIgnoreTagsKeys1(key1, value1 string) string {
 provider "aws" {
   default_tags {
     tags = {
-      %[1]q = %q
+      %[1]q = %[2]q
     }
   }
   ignore_tags {
@@ -1243,7 +1443,7 @@ provider %[1]q {
 `, providerName, os.Getenv(envvar.AlternateAccessKeyId), os.Getenv(envvar.AlternateProfile), AlternateRegion(), os.Getenv(envvar.AlternateSecretAccessKey))
 }
 
-func RegionProviderFunc(region string, providers *[]*schema.Provider) func() *schema.Provider {
+func RegionProviderFunc(region string, providers *[]*schema.Provider) ProviderFunc {
 	return func() *schema.Provider {
 		if region == "" {
 			log.Println("[DEBUG] No region given")
@@ -1282,7 +1482,7 @@ func RegionProviderFunc(region string, providers *[]*schema.Provider) func() *sc
 	}
 }
 
-func NamedProviderFunc(name string, providers map[string]*schema.Provider) func() *schema.Provider {
+func NamedProviderFunc(name string, providers map[string]*schema.Provider) ProviderFunc {
 	return func() *schema.Provider {
 		return NamedProvider(name, providers)
 	}
@@ -1324,7 +1524,7 @@ func DeleteResource(ctx context.Context, resource *schema.Resource, d *schema.Re
 	return resource.Delete(d, meta) // nosemgrep:ci.semgrep.migrate.direct-CRUD-calls
 }
 
-func CheckResourceDisappears(ctx context.Context, provo *schema.Provider, resource *schema.Resource, n string) resource.TestCheckFunc {
+func CheckResourceDisappears(ctx context.Context, provider *schema.Provider, resource *schema.Resource, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -1341,7 +1541,7 @@ func CheckResourceDisappears(ctx context.Context, provo *schema.Provider, resour
 			return err
 		}
 
-		return DeleteResource(ctx, resource, resource.Data(&state), provo.Meta())
+		return DeleteResource(ctx, resource, resource.Data(&state), provider.Meta())
 	}
 }
 
@@ -1381,16 +1581,38 @@ func CheckWithNamedProviders(f TestCheckWithProviderFunc, providers map[string]*
 	}
 }
 
-// ErrorCheckSkipMessagesContaining skips tests based on error messages that indicate unsupported features
-func ErrorCheckSkipMessagesContaining(t *testing.T, messages ...string) resource.ErrorCheckFunc {
+// ErrorCheckSkipMessagesContaining skips tests based on error messages that contain one of the specified needles.
+func ErrorCheckSkipMessagesContaining(t *testing.T, needles ...string) resource.ErrorCheckFunc {
+	t.Helper()
+
 	return func(err error) error {
 		if err == nil {
 			return nil
 		}
 
-		for _, message := range messages {
+		for _, needle := range needles {
 			errorMessage := err.Error()
-			if strings.Contains(errorMessage, message) {
+			if strings.Contains(errorMessage, needle) {
+				t.Skipf("skipping test for %s/%s: %s", Partition(), Region(), errorMessage)
+			}
+		}
+
+		return err
+	}
+}
+
+// ErrorCheckSkipMessagesMatches skips tests based on error messages that match one of the specified regular expressions.
+func ErrorCheckSkipMessagesMatches(t *testing.T, rs ...*regexp.Regexp) resource.ErrorCheckFunc {
+	t.Helper()
+
+	return func(err error) error {
+		if err == nil {
+			return nil
+		}
+
+		for _, r := range rs {
+			errorMessage := err.Error()
+			if r.MatchString(errorMessage) {
 				t.Skipf("skipping test for %s/%s: %s", Partition(), Region(), errorMessage)
 			}
 		}
@@ -1403,27 +1625,29 @@ type ServiceErrorCheckFunc func(*testing.T) resource.ErrorCheckFunc
 
 var serviceErrorCheckFuncs map[string]ServiceErrorCheckFunc
 
-func RegisterServiceErrorCheckFunc(endpointID string, f ServiceErrorCheckFunc) {
+func RegisterServiceErrorCheckFunc(serviceID string, f ServiceErrorCheckFunc) {
 	if serviceErrorCheckFuncs == nil {
 		serviceErrorCheckFuncs = make(map[string]ServiceErrorCheckFunc)
 	}
 
-	if _, ok := serviceErrorCheckFuncs[endpointID]; ok {
+	if _, ok := serviceErrorCheckFuncs[serviceID]; ok {
 		// already registered
-		panic(fmt.Sprintf("Cannot re-register a service! ServiceErrorCheckFunc exists for %s", endpointID)) //lintignore:R009
+		panic(fmt.Sprintf("Cannot re-register a service! ServiceErrorCheckFunc exists for %s", serviceID)) //lintignore:R009
 	}
 
-	serviceErrorCheckFuncs[endpointID] = f
+	serviceErrorCheckFuncs[serviceID] = f
 }
 
-func ErrorCheck(t *testing.T, endpointIDs ...string) resource.ErrorCheckFunc {
+func ErrorCheck(t *testing.T, serviceIDs ...string) resource.ErrorCheckFunc {
+	t.Helper()
+
 	return func(err error) error {
 		if err == nil {
 			return nil
 		}
 
-		for _, endpointID := range endpointIDs {
-			if f, ok := serviceErrorCheckFuncs[endpointID]; ok {
+		for _, serviceID := range serviceIDs {
+			if f, ok := serviceErrorCheckFuncs[serviceID]; ok {
 				ef := f(t)
 				err = ef(err)
 			}
@@ -1501,6 +1725,10 @@ func PreCheckSkipError(err error) bool {
 	if tfawserr.ErrMessageContains(err, "InvalidAction", "Unavailable Operation") {
 		return true
 	}
+	// ignore when not authorized to call API from account
+	if tfawserr.ErrCodeEquals(err, "ForbiddenException") {
+		return true
+	}
 	return false
 }
 
@@ -1525,7 +1753,7 @@ func ConfigDefaultTags_Tags1(tag1, value1 string) string {
 provider "aws" {
   default_tags {
     tags = {
-      %q = %q
+      %[1]q = %[2]q
     }
   }
 
@@ -1544,8 +1772,8 @@ func ConfigDefaultTags_Tags2(tag1, value1, tag2, value2 string) string {
 provider "aws" {
   default_tags {
     tags = {
-      %q = %q
-      %q = %q
+      %[1]q = %[2]q
+      %[3]q = %[4]q
     }
   }
 
@@ -1557,6 +1785,8 @@ provider "aws" {
 }
 
 func PreCheckAssumeRoleARN(t *testing.T) {
+	t.Helper()
+
 	envvar.SkipIfEmpty(t, envvar.AccAssumeRoleARN, "Amazon Resource Name (ARN) of existing IAM Role to assume for testing restricted permissions")
 }
 
@@ -1565,8 +1795,8 @@ func ConfigAssumeRolePolicy(policy string) string {
 	return fmt.Sprintf(`
 provider "aws" {
   assume_role {
-    role_arn = %q
-    policy   = %q
+    role_arn = %[1]q
+    policy   = %[2]q
   }
 }
 `, os.Getenv(envvar.AccAssumeRoleARN), policy)
@@ -1668,6 +1898,8 @@ const (
 )
 
 func ACMCertificateDomainFromEnv(t *testing.T) string {
+	t.Helper()
+
 	rootDomain := os.Getenv("ACM_CERTIFICATE_ROOT_DOMAIN")
 
 	if rootDomain == "" {
@@ -1875,6 +2107,8 @@ func CheckACMPCACertificateAuthorityExists(ctx context.Context, n string, certif
 
 // PreCheckAPIGatewayTypeEDGE checks if endpoint config type EDGE can be used in a test and skips test if not (i.e., not in standard partition).
 func PreCheckAPIGatewayTypeEDGE(t *testing.T) {
+	t.Helper()
+
 	if Partition() != endpoints.AwsPartitionID {
 		t.Skipf("skipping test; Endpoint Configuration type EDGE is not supported in this partition (%s)", Partition())
 	}
@@ -1966,28 +2200,6 @@ data "aws_ec2_instance_type_offering" "%[1]s" {
 `, name, strings.Join(preferredInstanceTypes, "\", \""))
 }
 
-// ConfigLatestAmazonLinuxHVMEBSAMI returns the configuration for a data source that
-// describes the latest Amazon Linux AMI using HVM virtualization and an EBS root device.
-// The data source is named 'amzn-ami-minimal-hvm-ebs'.
-func ConfigLatestAmazonLinuxHVMEBSAMI() string {
-	return `
-data "aws_ami" "amzn-ami-minimal-hvm-ebs" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-minimal-hvm-*"]
-  }
-
-  filter {
-    name   = "root-device-type"
-    values = ["ebs"]
-  }
-}
-`
-}
-
 func configLatestAmazonLinux2HVMEBSAMI(architecture string) string {
 	return fmt.Sprintf(`
 data "aws_ami" "amzn2-ami-minimal-hvm-ebs-%[1]s" {
@@ -2031,7 +2243,7 @@ func ConfigLambdaBase(policyName, roleName, sgName string) string {
 data "aws_partition" "current" {}
 
 resource "aws_iam_role_policy" "iam_policy_for_lambda" {
-  name = "%s"
+  name = %[1]q
   role = aws_iam_role.iam_for_lambda.id
 
   policy = <<EOF
@@ -2052,7 +2264,9 @@ resource "aws_iam_role_policy" "iam_policy_for_lambda" {
       "Action": [
         "ec2:CreateNetworkInterface",
         "ec2:DescribeNetworkInterfaces",
-        "ec2:DeleteNetworkInterface"
+        "ec2:DeleteNetworkInterface",
+        "ec2:AssignPrivateIpAddresses",
+        "ec2:UnassignPrivateIpAddresses"
       ],
       "Resource": [
         "*"
@@ -2082,7 +2296,7 @@ EOF
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
-  name = "%s"
+  name = %[2]q
 
   assume_role_policy = <<EOF
 {
@@ -2102,37 +2316,42 @@ EOF
 }
 
 resource "aws_vpc" "vpc_for_lambda" {
-  cidr_block = "10.0.0.0/16"
+  cidr_block                       = "10.0.0.0/16"
+  assign_generated_ipv6_cidr_block = true
 
   tags = {
-    Name = "terraform-testacc-lambda-function"
+    Name = %[3]q
   }
 }
 
 resource "aws_subnet" "subnet_for_lambda" {
-  vpc_id            = aws_vpc.vpc_for_lambda.id
-  cidr_block        = "10.0.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
+  vpc_id                          = aws_vpc.vpc_for_lambda.id
+  cidr_block                      = cidrsubnet(aws_vpc.vpc_for_lambda.cidr_block, 8, 1)
+  availability_zone               = data.aws_availability_zones.available.names[1]
+  ipv6_cidr_block                 = cidrsubnet(aws_vpc.vpc_for_lambda.ipv6_cidr_block, 8, 1)
+  assign_ipv6_address_on_creation = true
 
   tags = {
-    Name = "tf-acc-lambda-function-1"
+    Name = %[3]q
   }
 }
 
 # This is defined here, rather than only in test cases where it's needed is to
 # prevent a timeout issue when fully removing Lambda Filesystems
 resource "aws_subnet" "subnet_for_lambda_az2" {
-  vpc_id            = aws_vpc.vpc_for_lambda.id
-  cidr_block        = "10.0.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
+  vpc_id                          = aws_vpc.vpc_for_lambda.id
+  cidr_block                      = cidrsubnet(aws_vpc.vpc_for_lambda.cidr_block, 8, 2)
+  availability_zone               = data.aws_availability_zones.available.names[1]
+  ipv6_cidr_block                 = cidrsubnet(aws_vpc.vpc_for_lambda.ipv6_cidr_block, 8, 2)
+  assign_ipv6_address_on_creation = true
 
   tags = {
-    Name = "tf-acc-lambda-function-2"
+    Name = %[3]q
   }
 }
 
 resource "aws_security_group" "sg_for_lambda" {
-  name        = "%s"
+  name        = %[3]q
   description = "Allow all inbound traffic for lambda test"
   vpc_id      = aws_vpc.vpc_for_lambda.id
 
@@ -2148,6 +2367,10 @@ resource "aws_security_group" "sg_for_lambda" {
     to_port     = 0
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = %[3]q
   }
 }
 `, policyName, roleName, sgName))
@@ -2237,6 +2460,31 @@ func CheckVPCExists(ctx context.Context, n string, v *ec2.Vpc) resource.TestChec
 	}
 }
 
+func CheckVPCExistsV2(ctx context.Context, n string, v *ec2types.Vpc) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("no VPC ID is set")
+		}
+
+		conn := Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+
+		output, err := tfec2.FindVPCByIDV2(ctx, conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
+	}
+}
+
 func CheckCallerIdentityAccountID(n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -2313,8 +2561,20 @@ func CheckResourceAttrIsJSONString(n, key string) resource.TestCheckFunc {
 	})
 }
 
+// SkipIfEnvVarNotSet skips the current test if the specified environment variable is not set.
+// The variable's value is returned.
+func SkipIfEnvVarNotSet(t *testing.T, key string) string {
+	t.Helper()
+
+	v := os.Getenv(key)
+	if v == "" {
+		t.Skipf("Environment variable %s is not set, skipping test", key)
+	}
+	return v
+}
+
 // RunSerialTests1Level runs test cases in parallel, optionally sleeping between each.
-func RunSerialTests1Level(t *testing.T, testCases map[string]func(t *testing.T), d time.Duration) {
+func RunSerialTests1Level(t *testing.T, testCases map[string]func(*testing.T), d time.Duration) {
 	t.Helper()
 
 	for name, tc := range testCases {
@@ -2327,7 +2587,7 @@ func RunSerialTests1Level(t *testing.T, testCases map[string]func(t *testing.T),
 }
 
 // RunSerialTests2Levels runs test cases in parallel, optionally sleeping between each.
-func RunSerialTests2Levels(t *testing.T, testCases map[string]map[string]func(t *testing.T), d time.Duration) {
+func RunSerialTests2Levels(t *testing.T, testCases map[string]map[string]func(*testing.T), d time.Duration) {
 	t.Helper()
 
 	for group, m := range testCases {
@@ -2335,6 +2595,26 @@ func RunSerialTests2Levels(t *testing.T, testCases map[string]map[string]func(t 
 		t.Run(group, func(t *testing.T) {
 			RunSerialTests1Level(t, m, d)
 		})
+	}
+}
+
+// RunLimitedConcurrencyTests2Levels runs test cases with concurrency limited via `semaphore`.
+func RunLimitedConcurrencyTests2Levels(t *testing.T, semaphore tfsync.Semaphore, testCases map[string]map[string]func(*testing.T, tfsync.Semaphore)) {
+	t.Helper()
+
+	for group, m := range testCases {
+		m := m
+		for name, tc := range m {
+			tc := tc
+			t.Run(fmt.Sprintf("%s_%s", group, name), func(t *testing.T) {
+				t.Cleanup(func() {
+					if os.Getenv(resource.EnvTfAcc) != "" {
+						semaphore.Notify()
+					}
+				})
+				tc(t, semaphore)
+			})
+		}
 	}
 }
 
@@ -2369,11 +2649,11 @@ func testNoMatchResourceAttr(is *terraform.InstanceState, name string, key strin
 }
 
 // checkIfIndexesIntoTypeSet is copied from
-// github.com/hashicorp/terraform-plugin-testing/helper/resource
+// https://github.com/hashicorp/terraform-plugin-testing/blob/dee4bfbbfd4911cf69a6c9917a37ecd8faa41ae9/helper/resource/testing.go#L1689
 func checkIfIndexesIntoTypeSet(key string, f resource.TestCheckFunc) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		err := f(s)
-		if err != nil && s.IsBinaryDrivenTest && indexesIntoTypeSet(key) {
+		if err != nil && indexesIntoTypeSet(key) {
 			return fmt.Errorf("Error in test check: %s\nTest check address %q likely indexes into TypeSet\nThis is currently not possible in the SDK", err, key)
 		}
 		return err
@@ -2381,7 +2661,7 @@ func checkIfIndexesIntoTypeSet(key string, f resource.TestCheckFunc) resource.Te
 }
 
 // indexesIntoTypeSet is copied from
-// github.com/hashicorp/terraform-plugin-testing/helper/resource
+// https://github.com/hashicorp/terraform-plugin-testing/blob/dee4bfbbfd4911cf69a6c9917a37ecd8faa41ae9/helper/resource/testing.go#L1680
 func indexesIntoTypeSet(key string) bool {
 	for _, part := range strings.Split(key, ".") {
 		if i, err := strconv.Atoi(part); err == nil && i > 100 {
@@ -2392,14 +2672,14 @@ func indexesIntoTypeSet(key string) bool {
 }
 
 // primaryInstanceState is copied from
-// github.com/hashicorp/terraform-plugin-testing/helper/resource
+// https://github.com/hashicorp/terraform-plugin-testing/blob/dee4bfbbfd4911cf69a6c9917a37ecd8faa41ae9/helper/resource/testing.go#L1672
 func primaryInstanceState(s *terraform.State, name string) (*terraform.InstanceState, error) {
 	ms := s.RootModule()
 	return modulePrimaryInstanceState(ms, name)
 }
 
 // modulePrimaryInstanceState is copied from
-// github.com/hashicorp/terraform-plugin-testing/helper/resource
+// https://github.com/hashicorp/terraform-plugin-testing/blob/dee4bfbbfd4911cf69a6c9917a37ecd8faa41ae9/helper/resource/testing.go#L1645
 func modulePrimaryInstanceState(ms *terraform.ModuleState, name string) (*terraform.InstanceState, error) {
 	rs, ok := ms.Resources[name]
 	if !ok {
@@ -2415,9 +2695,9 @@ func modulePrimaryInstanceState(ms *terraform.ModuleState, name string) (*terraf
 }
 
 func ExpectErrorAttrAtLeastOneOf(attrs ...string) *regexp.Regexp {
-	return regexp.MustCompile(fmt.Sprintf("one of\\s+`%s`\\s+must be specified", strings.Join(attrs, ",")))
+	return regexache.MustCompile(fmt.Sprintf("one of\\s+`%s`\\s+must be specified", strings.Join(attrs, ",")))
 }
 
 func ExpectErrorAttrMinItems(attr string, expected, actual int) *regexp.Regexp {
-	return regexp.MustCompile(fmt.Sprintf(`Attribute %s requires %d\s+item minimum, but config has only %d declared`, attr, expected, actual))
+	return regexache.MustCompile(fmt.Sprintf(`Attribute %s requires %d\s+item minimum, but config has only %d declared`, attr, expected, actual))
 }

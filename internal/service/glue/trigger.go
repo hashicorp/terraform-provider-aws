@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package glue
 
 import (
@@ -36,6 +39,7 @@ func ResourceTrigger() *schema.Resource {
 		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
+			Update: schema.DefaultTimeout(5 * time.Minute),
 			Delete: schema.DefaultTimeout(5 * time.Minute),
 		},
 
@@ -255,11 +259,17 @@ func resourceTriggerCreate(ctx context.Context, d *schema.ResourceData, meta int
 	if v, ok := d.GetOk("start_on_creation"); ok {
 		input.StartOnCreation = aws.Bool(v.(bool))
 	}
+
 	log.Printf("[DEBUG] Creating Glue Trigger: %s", input)
 	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		_, err := conn.CreateTriggerWithContext(ctx, input)
 		if err != nil {
+			// Retry IAM propagation errors
 			if tfawserr.ErrMessageContains(err, glue.ErrCodeInvalidInputException, "Service is unable to assume provided role") {
+				return retry.RetryableError(err)
+			}
+			// Retry concurrent workflow modification errors
+			if tfawserr.ErrMessageContains(err, glue.ErrCodeConcurrentModificationException, "was modified while adding trigger") {
 				return retry.RetryableError(err)
 			}
 
@@ -277,7 +287,7 @@ func resourceTriggerCreate(ctx context.Context, d *schema.ResourceData, meta int
 	d.SetId(name)
 
 	log.Printf("[DEBUG] Waiting for Glue Trigger (%s) to create", d.Id())
-	if _, err := waitTriggerCreated(ctx, conn, d.Id()); err != nil {
+	if _, err := waitTriggerCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			return diags
 		}
@@ -398,7 +408,7 @@ func resourceTriggerUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			return sdkdiag.AppendErrorf(diags, "updating Glue Trigger (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitTriggerCreated(ctx, conn, d.Id()); err != nil {
+		if _, err := waitTriggerCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for Glue Trigger (%s) to be Update: %s", d.Id(), err)
 		}
 	}
@@ -444,7 +454,7 @@ func resourceTriggerDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	log.Printf("[DEBUG] Waiting for Glue Trigger (%s) to delete", d.Id())
-	if _, err := waitTriggerDeleted(ctx, conn, d.Id()); err != nil {
+	if _, err := waitTriggerDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
 			return diags
 		}

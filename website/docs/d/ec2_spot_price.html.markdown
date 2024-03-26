@@ -26,7 +26,7 @@ data "aws_ec2_spot_price" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `instance_type` - (Optional) Type of instance for which to query Spot Price information.
 * `availability_zone` - (Optional) Availability zone in which to query Spot price information.
@@ -39,7 +39,7 @@ The following arguments are supported:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - AWS Region.
 * `spot_price` - Most recent Spot Price value for the given instance type and AZ.

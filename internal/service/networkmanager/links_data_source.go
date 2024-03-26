@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkmanager
 
 import (
@@ -8,6 +11,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -44,6 +48,8 @@ func DataSourceLinks() *schema.Resource {
 }
 
 func dataSourceLinksRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 	tagsToMatch := tftags.New(ctx, d.Get("tags").(map[string]interface{})).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
@@ -67,7 +73,7 @@ func dataSourceLinksRead(ctx context.Context, d *schema.ResourceData, meta inter
 	output, err := FindLinks(ctx, conn, input)
 
 	if err != nil {
-		return diag.Errorf("listing Network Manager Links: %s", err)
+		return sdkdiag.AppendErrorf(diags, "listing Network Manager Links: %s", err)
 	}
 
 	var linkIDs []string
@@ -85,5 +91,5 @@ func dataSourceLinksRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.SetId(meta.(*conns.AWSClient).Region)
 	d.Set("ids", linkIDs)
 
-	return nil
+	return diags
 }

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cognitoidp
 
 import (
@@ -11,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// @SDKDataSource("aws_cognito_user_pool_clients")
-func DataSourceUserPoolClients() *schema.Resource {
+// @SDKDataSource("aws_cognito_user_pool_clients", name="User Pool Clients")
+func dataSourceUserPoolClients() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceuserPoolClientsRead,
 		Schema: map[string]*schema.Schema{

@@ -53,7 +53,7 @@ resource "aws_iam_role_policy_attachment" "example-AmazonEKSFargatePodExecutionR
 
 The following arguments are required:
 
-* `cluster_name` – (Required) Name of the EKS Cluster. Must be between 1-100 characters in length. Must begin with an alphanumeric character, and must only contain alphanumeric characters, dashes and underscores (`^[0-9A-Za-z][A-Za-z0-9\-_]+$`).
+* `cluster_name` – (Required) Name of the EKS Cluster.
 * `fargate_profile_name` – (Required) Name of the EKS Fargate Profile.
 * `pod_execution_role_arn` – (Required) Amazon Resource Name (ARN) of the IAM Role that provides permissions for the EKS Fargate Profile.
 * `selector` - (Required) Configuration block(s) for selecting Kubernetes Pods to execute with this EKS Fargate Profile. Detailed below.
@@ -73,9 +73,9 @@ The following arguments are optional:
 
 * `labels` - (Optional) Key-value map of Kubernetes labels for selection.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the EKS Fargate Profile.
 * `id` - EKS Cluster name and EKS Fargate Profile name separated by a colon (`:`).
@@ -91,8 +91,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-EKS Fargate Profiles can be imported using the `cluster_name` and `fargate_profile_name` separated by a colon (`:`), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EKS Fargate Profiles using the `cluster_name` and `fargate_profile_name` separated by a colon (`:`). For example:
 
+```terraform
+import {
+  to = aws_eks_fargate_profile.my_fargate_profile
+  id = "my_cluster:my_fargate_profile"
+}
 ```
-$ terraform import aws_eks_fargate_profile.my_fargate_profile my_cluster:my_fargate_profile
+
+Using `terraform import`, import EKS Fargate Profiles using the `cluster_name` and `fargate_profile_name` separated by a colon (`:`). For example:
+
+```console
+% terraform import aws_eks_fargate_profile.my_fargate_profile my_cluster:my_fargate_profile
 ```

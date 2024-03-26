@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cognitoidp
 
 import (
@@ -23,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -30,30 +34,29 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	fwstringplanmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/stringplanmodifier"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource
-func newResourceUserPoolClient(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceUserPoolClient{}
+// @FrameworkResource(name="User Pool Client")
+func newUserPoolClientResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &userPoolClientResource{}
 	r.SetMigratedFromPluginSDK(true)
 
 	return r, nil
 }
 
-type resourceUserPoolClient struct {
+type userPoolClientResource struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourceUserPoolClient) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+func (r *userPoolClientResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
 	response.TypeName = "aws_cognito_user_pool_client"
 }
 
 // Schema returns the schema for this resource.
-func (r *resourceUserPoolClient) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *userPoolClientResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	s := schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"access_token_validity": schema.Int64Attribute{
@@ -300,9 +303,7 @@ func (r *resourceUserPoolClient) Schema(ctx context.Context, request resource.Sc
 						"access_token": schema.StringAttribute{
 							Optional: true,
 							Computed: true,
-							PlanModifiers: []planmodifier.String{
-								fwstringplanmodifier.DefaultValue(cognitoidentityprovider.TimeUnitsTypeHours),
-							},
+							Default:  stringdefault.StaticString(cognitoidentityprovider.TimeUnitsTypeHours),
 							Validators: []validator.String{
 								stringvalidator.OneOf(cognitoidentityprovider.TimeUnitsType_Values()...),
 							},
@@ -310,9 +311,7 @@ func (r *resourceUserPoolClient) Schema(ctx context.Context, request resource.Sc
 						"id_token": schema.StringAttribute{
 							Optional: true,
 							Computed: true,
-							PlanModifiers: []planmodifier.String{
-								fwstringplanmodifier.DefaultValue(cognitoidentityprovider.TimeUnitsTypeHours),
-							},
+							Default:  stringdefault.StaticString(cognitoidentityprovider.TimeUnitsTypeHours),
 							Validators: []validator.String{
 								stringvalidator.OneOf(cognitoidentityprovider.TimeUnitsType_Values()...),
 							},
@@ -320,9 +319,7 @@ func (r *resourceUserPoolClient) Schema(ctx context.Context, request resource.Sc
 						"refresh_token": schema.StringAttribute{
 							Optional: true,
 							Computed: true,
-							PlanModifiers: []planmodifier.String{
-								fwstringplanmodifier.DefaultValue(cognitoidentityprovider.TimeUnitsTypeDays),
-							},
+							Default:  stringdefault.StaticString(cognitoidentityprovider.TimeUnitsTypeDays),
 							Validators: []validator.String{
 								stringvalidator.OneOf(cognitoidentityprovider.TimeUnitsType_Values()...),
 							},
@@ -336,7 +333,7 @@ func (r *resourceUserPoolClient) Schema(ctx context.Context, request resource.Sc
 	response.Schema = s
 }
 
-func (r *resourceUserPoolClient) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+func (r *userPoolClientResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	conn := r.Meta().CognitoIDPConn(ctx)
 
 	var config resourceUserPoolClientData
@@ -371,7 +368,7 @@ func (r *resourceUserPoolClient) Create(ctx context.Context, request resource.Cr
 	config.AllowedOauthFlows = flex.FlattenFrameworkStringSetLegacy(ctx, poolClient.AllowedOAuthFlows)
 	config.AllowedOauthFlowsUserPoolClient = flex.BoolToFramework(ctx, poolClient.AllowedOAuthFlowsUserPoolClient)
 	config.AllowedOauthScopes = flex.FlattenFrameworkStringSetLegacy(ctx, poolClient.AllowedOAuthScopes)
-	config.AnalyticsConfiguration = flattenAnaylticsConfiguration(ctx, poolClient.AnalyticsConfiguration, &response.Diagnostics)
+	config.AnalyticsConfiguration = flattenAnaylticsConfiguration(ctx, poolClient.AnalyticsConfiguration)
 	config.AuthSessionValidity = flex.Int64ToFramework(ctx, poolClient.AuthSessionValidity)
 	config.CallbackUrls = flex.FlattenFrameworkStringSetLegacy(ctx, poolClient.CallbackURLs)
 	config.ClientSecret = flex.StringToFrameworkLegacy(ctx, poolClient.ClientSecret)
@@ -398,7 +395,7 @@ func (r *resourceUserPoolClient) Create(ctx context.Context, request resource.Cr
 	response.Diagnostics.Append(response.State.Set(ctx, &config)...)
 }
 
-func (r *resourceUserPoolClient) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+func (r *userPoolClientResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var state resourceUserPoolClientData
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 	if response.Diagnostics.HasError() {
@@ -422,7 +419,7 @@ func (r *resourceUserPoolClient) Read(ctx context.Context, request resource.Read
 	state.AllowedOauthFlows = flex.FlattenFrameworkStringSetLegacy(ctx, poolClient.AllowedOAuthFlows)
 	state.AllowedOauthFlowsUserPoolClient = flex.BoolToFramework(ctx, poolClient.AllowedOAuthFlowsUserPoolClient)
 	state.AllowedOauthScopes = flex.FlattenFrameworkStringSetLegacy(ctx, poolClient.AllowedOAuthScopes)
-	state.AnalyticsConfiguration = flattenAnaylticsConfiguration(ctx, poolClient.AnalyticsConfiguration, &response.Diagnostics)
+	state.AnalyticsConfiguration = flattenAnaylticsConfiguration(ctx, poolClient.AnalyticsConfiguration)
 	state.AuthSessionValidity = flex.Int64ToFramework(ctx, poolClient.AuthSessionValidity)
 	state.CallbackUrls = flex.FlattenFrameworkStringSetLegacy(ctx, poolClient.CallbackURLs)
 	state.ClientSecret = flex.StringToFrameworkLegacy(ctx, poolClient.ClientSecret)
@@ -439,8 +436,7 @@ func (r *resourceUserPoolClient) Read(ctx context.Context, request resource.Read
 	state.RefreshTokenValidity = flex.Int64ToFramework(ctx, poolClient.RefreshTokenValidity)
 	state.SupportedIdentityProviders = flex.FlattenFrameworkStringSetLegacy(ctx, poolClient.SupportedIdentityProviders)
 	if state.TokenValidityUnits.IsNull() && isDefaultTokenValidityUnits(poolClient.TokenValidityUnits) {
-		attributeTypes := framework.AttributeTypesMust[tokenValidityUnits](ctx)
-		elemType := types.ObjectType{AttrTypes: attributeTypes}
+		elemType := fwtypes.NewObjectTypeOf[tokenValidityUnits](ctx).ObjectType
 		state.TokenValidityUnits = types.ListNull(elemType)
 	} else {
 		state.TokenValidityUnits = flattenTokenValidityUnits(ctx, poolClient.TokenValidityUnits)
@@ -455,7 +451,7 @@ func (r *resourceUserPoolClient) Read(ctx context.Context, request resource.Read
 	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
 }
 
-func (r *resourceUserPoolClient) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+func (r *userPoolClientResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	var config resourceUserPoolClientData
 	response.Diagnostics.Append(request.Config.Get(ctx, &config)...)
 	if response.Diagnostics.HasError() {
@@ -504,7 +500,7 @@ func (r *resourceUserPoolClient) Update(ctx context.Context, request resource.Up
 	config.AllowedOauthFlows = flex.FlattenFrameworkStringSetLegacy(ctx, poolClient.AllowedOAuthFlows)
 	config.AllowedOauthFlowsUserPoolClient = flex.BoolToFramework(ctx, poolClient.AllowedOAuthFlowsUserPoolClient)
 	config.AllowedOauthScopes = flex.FlattenFrameworkStringSetLegacy(ctx, poolClient.AllowedOAuthScopes)
-	config.AnalyticsConfiguration = flattenAnaylticsConfiguration(ctx, poolClient.AnalyticsConfiguration, &response.Diagnostics)
+	config.AnalyticsConfiguration = flattenAnaylticsConfiguration(ctx, poolClient.AnalyticsConfiguration)
 	config.AuthSessionValidity = flex.Int64ToFramework(ctx, poolClient.AuthSessionValidity)
 	config.CallbackUrls = flex.FlattenFrameworkStringSetLegacy(ctx, poolClient.CallbackURLs)
 	config.ClientSecret = flex.StringToFrameworkLegacy(ctx, poolClient.ClientSecret)
@@ -521,8 +517,7 @@ func (r *resourceUserPoolClient) Update(ctx context.Context, request resource.Up
 	config.RefreshTokenValidity = flex.Int64ToFramework(ctx, poolClient.RefreshTokenValidity)
 	config.SupportedIdentityProviders = flex.FlattenFrameworkStringSetLegacy(ctx, poolClient.SupportedIdentityProviders)
 	if !state.TokenValidityUnits.IsNull() && plan.TokenValidityUnits.IsNull() && isDefaultTokenValidityUnits(poolClient.TokenValidityUnits) {
-		attributeTypes := framework.AttributeTypesMust[tokenValidityUnits](ctx)
-		elemType := types.ObjectType{AttrTypes: attributeTypes}
+		elemType := fwtypes.NewObjectTypeOf[tokenValidityUnits](ctx).ObjectType
 		config.TokenValidityUnits = types.ListNull(elemType)
 	} else {
 		config.TokenValidityUnits = flattenTokenValidityUnits(ctx, poolClient.TokenValidityUnits)
@@ -537,7 +532,7 @@ func (r *resourceUserPoolClient) Update(ctx context.Context, request resource.Up
 	response.Diagnostics.Append(response.State.Set(ctx, &config)...)
 }
 
-func (r *resourceUserPoolClient) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+func (r *userPoolClientResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var state resourceUserPoolClientData
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 	if response.Diagnostics.HasError() {
@@ -567,7 +562,7 @@ func (r *resourceUserPoolClient) Delete(ctx context.Context, request resource.De
 	}
 }
 
-func (r *resourceUserPoolClient) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+func (r *userPoolClientResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
 	parts := strings.Split(request.ID, "/")
 	if len(parts) != 2 {
 		response.Diagnostics.AddError("Resource Import Invalid ID", fmt.Sprintf("wrong format of import ID (%s), use: 'user-pool-id/client-id'", request.ID))
@@ -579,7 +574,7 @@ func (r *resourceUserPoolClient) ImportState(ctx context.Context, request resour
 	response.Diagnostics.Append(response.State.SetAttribute(ctx, path.Root("user_pool_id"), userPoolId)...)
 }
 
-func (r *resourceUserPoolClient) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
+func (r *userPoolClientResource) ConfigValidators(ctx context.Context) []resource.ConfigValidator {
 	return []resource.ConfigValidator{
 		resourceUserPoolClientAccessTokenValidityValidator{
 			resourceUserPoolClientValidityValidator{
@@ -709,10 +704,10 @@ func (ac *analyticsConfiguration) expand(ctx context.Context) *cognitoidentitypr
 		return nil
 	}
 	result := &cognitoidentityprovider.AnalyticsConfigurationType{
-		ApplicationArn: flex.ARNStringFromFramework(ctx, ac.ApplicationARN),
+		ApplicationArn: flex.StringFromFramework(ctx, ac.ApplicationARN),
 		ApplicationId:  flex.StringFromFramework(ctx, ac.ApplicationID),
 		ExternalId:     flex.StringFromFramework(ctx, ac.ExternalID),
-		RoleArn:        flex.ARNStringFromFramework(ctx, ac.RoleARN),
+		RoleArn:        flex.StringFromFramework(ctx, ac.RoleARN),
 		UserDataShared: flex.BoolFromFramework(ctx, ac.UserDataShared),
 	}
 
@@ -732,8 +727,8 @@ func expandAnaylticsConfiguration(ctx context.Context, list types.List, diags *d
 	return nil
 }
 
-func flattenAnaylticsConfiguration(ctx context.Context, ac *cognitoidentityprovider.AnalyticsConfigurationType, diags *diag.Diagnostics) types.List {
-	attributeTypes := framework.AttributeTypesMust[analyticsConfiguration](ctx)
+func flattenAnaylticsConfiguration(ctx context.Context, ac *cognitoidentityprovider.AnalyticsConfigurationType) types.List {
+	attributeTypes := fwtypes.AttributeTypesMust[analyticsConfiguration](ctx)
 	elemType := types.ObjectType{AttrTypes: attributeTypes}
 
 	if ac == nil {
@@ -741,10 +736,10 @@ func flattenAnaylticsConfiguration(ctx context.Context, ac *cognitoidentityprovi
 	}
 
 	attrs := map[string]attr.Value{}
-	attrs["application_arn"] = flex.StringToFrameworkARN(ctx, ac.ApplicationArn, diags)
+	attrs["application_arn"] = flex.StringToFrameworkARN(ctx, ac.ApplicationArn)
 	attrs["application_id"] = flex.StringToFramework(ctx, ac.ApplicationId)
 	attrs["external_id"] = flex.StringToFramework(ctx, ac.ExternalId)
-	attrs["role_arn"] = flex.StringToFrameworkARN(ctx, ac.RoleArn, diags)
+	attrs["role_arn"] = flex.StringToFrameworkARN(ctx, ac.RoleArn)
 	attrs["user_data_shared"] = flex.BoolToFramework(ctx, ac.UserDataShared)
 
 	val := types.ObjectValueMust(attributeTypes, attrs)
@@ -799,7 +794,7 @@ func expandTokenValidityUnits(ctx context.Context, list types.List, diags *diag.
 }
 
 func flattenTokenValidityUnits(ctx context.Context, tvu *cognitoidentityprovider.TokenValidityUnitsType) types.List {
-	attributeTypes := framework.AttributeTypesMust[tokenValidityUnits](ctx)
+	attributeTypes := fwtypes.AttributeTypesMust[tokenValidityUnits](ctx)
 	elemType := types.ObjectType{AttrTypes: attributeTypes}
 
 	if tvu == nil || (tvu.AccessToken == nil && tvu.IdToken == nil && tvu.RefreshToken == nil) {

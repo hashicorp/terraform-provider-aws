@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package oam_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -27,13 +30,13 @@ func TestAccObservabilityAccessManagerLinkDataSource_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.ObservabilityAccessManagerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAccessManagerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ObservabilityAccessManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccLinkDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "oam", regexp.MustCompile(`link/+.`)),
+					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "oam", regexache.MustCompile(`link/+.`)),
 					resource.TestCheckResourceAttrSet(dataSourceName, "label"),
 					resource.TestCheckResourceAttr(dataSourceName, "label_template", "$AccountName"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "link_id"),

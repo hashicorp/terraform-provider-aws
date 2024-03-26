@@ -85,9 +85,45 @@ resource "aws_transfer_server" "example" {
 }
 ```
 
+### Using Structured Logging Destinations
+
+```terraform
+resource "aws_cloudwatch_log_group" "transfer" {
+  name_prefix = "transfer_test_"
+}
+
+data "aws_iam_policy_document" "transfer_assume_role" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["transfer.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
+  }
+}
+
+resource "aws_iam_role" "iam_for_transfer" {
+  name_prefix         = "iam_for_transfer_"
+  assume_role_policy  = data.aws_iam_policy_document.transfer_assume_role.json
+  managed_policy_arns = ["arn:aws:iam::aws:policy/service-role/AWSTransferLoggingAccess"]
+}
+
+resource "aws_transfer_server" "transfer" {
+  endpoint_type = "PUBLIC"
+  logging_role  = aws_iam_role.iam_for_transfer.arn
+  protocols     = ["SFTP"]
+  structured_log_destinations = [
+    "${aws_cloudwatch_log_group.transfer.arn}:*"
+  ]
+}
+```
+
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `certificate` - (Optional) The Amazon Resource Name (ARN) of the AWS Certificate Manager (ACM) certificate. This is required when `protocols` is set to `FTPS`
 * `domain` - (Optional) The domain of the storage system that is used for file transfers. Valid values are: `S3` and `EFS`. The default value is `S3`.
@@ -109,7 +145,18 @@ The following arguments are supported:
 * `post_authentication_login_banner`- (Optional) Specify a string to display when users connect to a server. This string is displayed after the user authenticates. The SFTP protocol does not support post-authentication display banners.
 * `pre_authentication_login_banner`- (Optional) Specify a string to display when users connect to a server. This string is displayed before the user authenticates.
 * `protocol_details`- (Optional) The protocol settings that are configured for your server.
-* `security_policy_name` - (Optional) Specifies the name of the security policy that is attached to the server. Possible values are `TransferSecurityPolicy-2018-11`, `TransferSecurityPolicy-2020-06`, `TransferSecurityPolicy-FIPS-2020-06`, `TransferSecurityPolicy-2022-03` and `TransferSecurityPolicy-2023-05`. Default value is: `TransferSecurityPolicy-2018-11`.
+* `security_policy_name` - (Optional) Specifies the name of the security policy that is attached to the server. Default value is: `TransferSecurityPolicy-2018-11`. The available values are:
+    * `TransferSecurityPolicy-2024-01`
+    * `TransferSecurityPolicy-2023-05`
+    * `TransferSecurityPolicy-2022-03`
+    * `TransferSecurityPolicy-2020-06`
+    * `TransferSecurityPolicy-2018-11`
+    * `TransferSecurityPolicy-FIPS-2024-01`
+    * `TransferSecurityPolicy-FIPS-2023-05`
+    * `TransferSecurityPolicy-FIPS-2020-06`
+    * `TransferSecurityPolicy-PQ-SSH-Experimental-2023-04`
+    * `TransferSecurityPolicy-PQ-SSH-FIPS-Experimental-2023-04`
+* `structured_log_destinations` - (Optional) A set of ARNs of destinations that will receive structured logs from the transfer server such as CloudWatch Log Group ARNs. If provided this enables the transfer server to emit structured logs to the specified locations.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `workflow_details` - (Optional) Specifies the workflow details. See Workflow Details below.
 
@@ -138,9 +185,9 @@ The following arguments are supported:
 * `execution_role` - (Required) Includes the necessary permissions for S3, EFS, and Lambda operations that Transfer can assume, so that all workflow steps can operate on the required resources.
 * `workflow_id` - (Required)  A unique identifier for the workflow.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of Transfer Server
 * `id`  - The Server ID of the Transfer Server (e.g., `s-12345678`)
@@ -150,10 +197,19 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Transfer Servers can be imported using the `server id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Transfer Servers using the server `id`. For example:
 
+```terraform
+import {
+  to = aws_transfer_server.example
+  id = "s-12345678"
+}
 ```
-$ terraform import aws_transfer_server.example s-12345678
+
+Using `terraform import`, import Transfer Servers using the server `id`. For example:
+
+```console
+% terraform import aws_transfer_server.example s-12345678
 ```
 
 Certain resource arguments, such as `host_key`, cannot be read via the API and imported into Terraform. Terraform will display a difference for these arguments the first run after import if declared in the Terraform configuration for an imported resource.

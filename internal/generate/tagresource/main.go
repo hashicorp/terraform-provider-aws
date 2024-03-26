@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build generate
 // +build generate
 
@@ -28,20 +31,20 @@ func usage() {
 }
 
 type TemplateData struct {
-	AWSService           string
 	AWSServiceUpper      string
 	ProviderResourceName string
 	ServicePackage       string
 
-	CreateTagsFunc string
 	GetTagFunc     string
 	IDAttribName   string
-
 	UpdateTagsFunc string
-	WithContext    bool
 }
 
 func main() {
+	const (
+		resourceFilename     = `tag_gen.go`
+		resourceTestFilename = `tag_gen_test.go`
+	)
 	g := common.NewGenerator()
 
 	log.SetFlags(0)
@@ -49,24 +52,15 @@ func main() {
 	flag.Parse()
 
 	servicePackage := os.Getenv("GOPACKAGE")
-	awsService, err := names.AWSGoV1Package(servicePackage)
-
-	if err != nil {
-		g.Fatalf("encountered: %s", err)
-	}
-
 	u, err := names.ProviderNameUpper(servicePackage)
-
 	if err != nil {
 		g.Fatalf("encountered: %s", err)
 	}
 
-	providerResName := fmt.Sprintf("aws_%s_tag", servicePackage)
-
+	resourceName := fmt.Sprintf("aws_%s_tag", servicePackage)
 	templateData := TemplateData{
-		AWSService:           awsService,
 		AWSServiceUpper:      u,
-		ProviderResourceName: providerResName,
+		ProviderResourceName: resourceName,
 		ServicePackage:       servicePackage,
 
 		GetTagFunc:     *getTagFunc,
@@ -74,11 +68,7 @@ func main() {
 		UpdateTagsFunc: *updateTagsFunc,
 	}
 
-	const (
-		resourceFilename     = "tag_gen.go"
-		resourceTestFilename = "tag_gen_test.go"
-	)
-
+	g.Infof("Generating internal/service/%s/%s", servicePackage, resourceFilename)
 	d := g.NewGoFileDestination(resourceFilename)
 
 	if err := d.WriteTemplate("taggen", resourceTemplateBody, templateData); err != nil {
@@ -89,6 +79,7 @@ func main() {
 		g.Fatalf("generating file (%s): %s", resourceFilename, err)
 	}
 
+	g.Infof("Generating internal/service/%s/%s", servicePackage, resourceTestFilename)
 	d = g.NewGoFileDestination(resourceTestFilename)
 
 	if err := d.WriteTemplate("taggen", resourceTestTemplateBody, templateData); err != nil {

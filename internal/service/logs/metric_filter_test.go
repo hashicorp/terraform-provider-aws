@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package logs_test
 
 import (
@@ -5,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -13,18 +16,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tflogs "github.com/hashicorp/terraform-provider-aws/internal/service/logs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccLogsMetricFilter_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var mf cloudwatchlogs.MetricFilter
+	var mf types.MetricFilter
 	resourceName := "aws_cloudwatch_log_metric_filter.test"
 	logGroupResourceName := "aws_cloudwatch_log_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMetricFilterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -56,13 +60,13 @@ func TestAccLogsMetricFilter_basic(t *testing.T) {
 
 func TestAccLogsMetricFilter_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var mf cloudwatchlogs.MetricFilter
+	var mf types.MetricFilter
 	resourceName := "aws_cloudwatch_log_metric_filter.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMetricFilterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -80,14 +84,14 @@ func TestAccLogsMetricFilter_disappears(t *testing.T) {
 
 func TestAccLogsMetricFilter_Disappears_logGroup(t *testing.T) {
 	ctx := acctest.Context(t)
-	var mf cloudwatchlogs.MetricFilter
+	var mf types.MetricFilter
 	resourceName := "aws_cloudwatch_log_metric_filter.test"
 	logGroupResourceName := "aws_cloudwatch_log_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMetricFilterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -110,7 +114,7 @@ func TestAccLogsMetricFilter_many(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMetricFilterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -124,14 +128,14 @@ func TestAccLogsMetricFilter_many(t *testing.T) {
 
 func TestAccLogsMetricFilter_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var mf cloudwatchlogs.MetricFilter
+	var mf types.MetricFilter
 	resourceName := "aws_cloudwatch_log_metric_filter.test"
 	logGroupResourceName := "aws_cloudwatch_log_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudwatchlogs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LogsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMetricFilterDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -191,18 +195,14 @@ func testAccMetricFilterImportStateIdFunc(resourceName string) resource.ImportSt
 	}
 }
 
-func testAccCheckMetricFilterExists(ctx context.Context, n string, v *cloudwatchlogs.MetricFilter) resource.TestCheckFunc {
+func testAccCheckMetricFilterExists(ctx context.Context, n string, v *types.MetricFilter) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No CloudWatch Logs Metric Filter ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
 
 		output, err := tflogs.FindMetricFilterByTwoPartKey(ctx, conn, rs.Primary.Attributes["log_group_name"], rs.Primary.ID)
 
@@ -218,7 +218,7 @@ func testAccCheckMetricFilterExists(ctx context.Context, n string, v *cloudwatch
 
 func testAccCheckMetricFilterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LogsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudwatch_log_metric_filter" {
@@ -246,7 +246,7 @@ func testAccCheckMetricFilterManyExists(ctx context.Context, basename string, n 
 	return func(s *terraform.State) error {
 		for i := 0; i < n; i++ {
 			n := fmt.Sprintf("%s.%d", basename, i)
-			var v cloudwatchlogs.MetricFilter
+			var v types.MetricFilter
 
 			err := testAccCheckMetricFilterExists(ctx, n, &v)(s)
 

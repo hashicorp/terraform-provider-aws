@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package emr
 
 import (
@@ -9,6 +12,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"slices"
 	"strings"
 	"time"
 
@@ -29,7 +33,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"golang.org/x/exp/slices"
 )
 
 // @SDKResource("aws_emr_cluster", name="Cluster")
@@ -1737,7 +1740,7 @@ func expandBootstrapActions(bootstrapActions []interface{}) []*emr.BootstrapActi
 			Name: aws.String(actionName),
 			ScriptBootstrapAction: &emr.ScriptBootstrapActionConfig{
 				Path: aws.String(actionPath),
-				Args: flex.ExpandStringList(actionArgs),
+				Args: flex.ExpandStringListEmpty(actionArgs),
 			},
 		}
 		actionsOut = append(actionsOut, action)
@@ -2079,9 +2082,9 @@ func flattenOnDemandSpecification(onDemandSpecification *emr.OnDemandProvisionin
 		return []interface{}{}
 	}
 	m := map[string]interface{}{
-		// The return value from api is wrong. it return "LOWEST_PRICE" instead of "lowest-price"
-		// "allocation_strategy": aws.StringValue(onDemandSpecification.AllocationStrategy),
-		"allocation_strategy": emr.OnDemandProvisioningAllocationStrategyLowestPrice,
+		// The return value from api is wrong. it return the value with uppercase letters and '_' vs. '-'
+		// The value needs to be normalized to avoid perpetual difference in the Terraform plan
+		"allocation_strategy": strings.Replace(strings.ToLower(aws.StringValue(onDemandSpecification.AllocationStrategy)), "_", "-", -1),
 	}
 	return []interface{}{m}
 }
@@ -2098,9 +2101,9 @@ func flattenSpotSpecification(spotSpecification *emr.SpotProvisioningSpecificati
 		m["block_duration_minutes"] = aws.Int64Value(spotSpecification.BlockDurationMinutes)
 	}
 	if spotSpecification.AllocationStrategy != nil {
-		// The return value from api is wrong. It return "CAPACITY_OPTIMIZED" instead of "capacity-optimized"
-		// m["allocation_strategy"] = aws.StringValue(spotSpecification.AllocationStrategy)
-		m["allocation_strategy"] = emr.SpotProvisioningAllocationStrategyCapacityOptimized
+		// The return value from api is wrong. it return the value with uppercase letters and '_' vs. '-'
+		// The value needs to be normalized to avoid perpetual difference in the Terraform plan
+		m["allocation_strategy"] = strings.Replace(strings.ToLower(aws.StringValue(spotSpecification.AllocationStrategy)), "_", "-", -1)
 	}
 
 	return []interface{}{m}

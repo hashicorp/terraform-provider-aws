@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iot
 
 import (
@@ -11,9 +14,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_iot_role_alias")
+// @Tags(identifierAttribute="arn")
 func ResourceRoleAlias() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRoleAliasCreate,
@@ -43,7 +50,11 @@ func ResourceRoleAlias() *schema.Resource {
 				Default:      3600,
 				ValidateFunc: validation.IntBetween(900, 43200),
 			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
+
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -59,6 +70,7 @@ func resourceRoleAliasCreate(ctx context.Context, d *schema.ResourceData, meta i
 		RoleAlias:                 aws.String(roleAlias),
 		RoleArn:                   aws.String(roleArn),
 		CredentialDurationSeconds: aws.Int64(int64(credentialDuration)),
+		Tags:                      getTagsIn(ctx),
 	})
 
 	if err != nil {

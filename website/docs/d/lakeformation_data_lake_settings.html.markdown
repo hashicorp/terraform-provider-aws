@@ -24,11 +24,12 @@ The following arguments are optional:
 
 * `catalog_id` – (Optional) Identifier for the Data Catalog. By default, the account ID.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to arguments above, the following attributes are exported.
+This data source exports the following attributes in addition to the arguments above:
 
 * `admins` – List of ARNs of AWS Lake Formation principals (IAM users or roles).
+* `read_only_admins` – List of ARNs of AWS Lake Formation principals (IAM users or roles) with only view access to the resources.
 * `create_database_default_permissions` - Up to three configuration blocks of principal permissions for default create database permissions. Detailed below.
 * `create_table_default_permissions` - Up to three configuration blocks of principal permissions for default create table permissions. Detailed below.
 * `trusted_resource_owners` – List of the resource-owning account IDs that the caller's account can use to share their user access details (user ARNs).

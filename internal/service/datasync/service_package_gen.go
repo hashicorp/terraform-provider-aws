@@ -8,6 +8,7 @@ import (
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	datasync_sdkv1 "github.com/aws/aws-sdk-go/service/datasync"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -37,7 +38,15 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceLocationEFS,
+			Factory:  resourceLocationAzureBlob,
+			TypeName: "aws_datasync_location_azure_blob",
+			Name:     "Location Microsoft Azure Blob Storage",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
+		},
+		{
+			Factory:  resourceLocationEFS,
 			TypeName: "aws_datasync_location_efs",
 			Name:     "Location EFS",
 			Tags: &types.ServicePackageResourceTags{
@@ -45,31 +54,39 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceLocationFSxLustreFileSystem,
+			Factory:  resourceLocationFSxLustreFileSystem,
 			TypeName: "aws_datasync_location_fsx_lustre_file_system",
-			Name:     "Location FSx Lustre File System",
+			Name:     "Location FSx for Lustre File System",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "id",
 			},
 		},
 		{
-			Factory:  ResourceLocationFSxOpenZFSFileSystem,
+			Factory:  resourceLocationFSxONTAPFileSystem,
+			TypeName: "aws_datasync_location_fsx_ontap_file_system",
+			Name:     "Location FSx for NetApp ONTAP File System",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
+		},
+		{
+			Factory:  resourceLocationFSxOpenZFSFileSystem,
 			TypeName: "aws_datasync_location_fsx_openzfs_file_system",
-			Name:     "Location OpenZFS File System",
+			Name:     "Location FSx for OpenZFS File System",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "id",
 			},
 		},
 		{
-			Factory:  ResourceLocationFSxWindowsFileSystem,
+			Factory:  resourceLocationFSxWindowsFileSystem,
 			TypeName: "aws_datasync_location_fsx_windows_file_system",
-			Name:     "Location FSx Windows File System",
+			Name:     "Location FSx for Windows File Server File System",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "id",
 			},
 		},
 		{
-			Factory:  ResourceLocationHDFS,
+			Factory:  resourceLocationHDFS,
 			TypeName: "aws_datasync_location_hdfs",
 			Name:     "Location HDFS",
 			Tags: &types.ServicePackageResourceTags{
@@ -77,7 +94,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceLocationNFS,
+			Factory:  resourceLocationNFS,
 			TypeName: "aws_datasync_location_nfs",
 			Name:     "Location NFS",
 			Tags: &types.ServicePackageResourceTags{
@@ -85,7 +102,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceLocationObjectStorage,
+			Factory:  resourceLocationObjectStorage,
 			TypeName: "aws_datasync_location_object_storage",
 			Name:     "Location Object Storage",
 			Tags: &types.ServicePackageResourceTags{
@@ -93,7 +110,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceLocationS3,
+			Factory:  resourceLocationS3,
 			TypeName: "aws_datasync_location_s3",
 			Name:     "Location S3",
 			Tags: &types.ServicePackageResourceTags{
@@ -101,7 +118,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceLocationSMB,
+			Factory:  resourceLocationSMB,
 			TypeName: "aws_datasync_location_smb",
 			Name:     "Location SMB",
 			Tags: &types.ServicePackageResourceTags{
@@ -109,7 +126,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceTask,
+			Factory:  resourceTask,
 			TypeName: "aws_datasync_task",
 			Name:     "Task",
 			Tags: &types.ServicePackageResourceTags{
@@ -130,4 +147,6 @@ func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*d
 	return datasync_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
 }
 
-var ServicePackage = &servicePackage{}
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}

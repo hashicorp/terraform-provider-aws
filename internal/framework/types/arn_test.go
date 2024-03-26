@@ -1,10 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package types_test
 
 import (
 	"context"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -29,14 +31,8 @@ func TestARNTypeValueFromTerraform(t *testing.T) {
 			expected: fwtypes.ARNUnknown(),
 		},
 		"valid ARN": {
-			val: tftypes.NewValue(tftypes.String, "arn:aws:rds:us-east-1:123456789012:db:test"), // lintignore:AWSAT003,AWSAT005
-			expected: fwtypes.ARNValue(arn.ARN{
-				Partition: "aws",
-				Service:   "rds",
-				Region:    "us-east-1", // lintignore:AWSAT003
-				AccountID: "123456789012",
-				Resource:  "db:test",
-			}),
+			val:      tftypes.NewValue(tftypes.String, "arn:aws:rds:us-east-1:123456789012:db:test"), // lintignore:AWSAT003,AWSAT005
+			expected: fwtypes.ARNValueMust("arn:aws:rds:us-east-1:123456789012:db:test"),             // lintignore:AWSAT003,AWSAT005
 		},
 		"invalid ARN": {
 			val:      tftypes.NewValue(tftypes.String, "not ok"),

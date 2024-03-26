@@ -21,23 +21,32 @@ resource "aws_rum_metrics_destination" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `app_monitor_name` - (Required) The name of the CloudWatch RUM app monitor that will send the metrics.
 * `destination` - (Required)  Defines the destination to send the metrics to. Valid values are `CloudWatch` and `Evidently`. If you specify `Evidently`, you must also specify the ARN of the CloudWatchEvidently experiment that is to be the destination and an IAM role that has permission to write to the experiment.
 * `destination_arn` - (Optional) Use this parameter only if Destination is Evidently. This parameter specifies the ARN of the Evidently experiment that will receive the extended metrics.
 * `iam_role_arn` - (Optional) This parameter is required if Destination is Evidently. If Destination is CloudWatch, do not use this parameter.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the CloudWatch RUM app monitor that will send the metrics.
 
 ## Import
 
-Cloudwatch RUM Metrics Destination can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cloudwatch RUM Metrics Destination using the `id`. For example:
 
+```terraform
+import {
+  to = aws_rum_metrics_destination.example
+  id = "example"
+}
 ```
-$ terraform import aws_rum_metrics_destination.example example
+
+Using `terraform import`, import Cloudwatch RUM Metrics Destination using the `id`. For example:
+
+```console
+% terraform import aws_rum_metrics_destination.example example
 ```

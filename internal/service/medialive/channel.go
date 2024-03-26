@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package medialive
 
 import (
@@ -18,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -44,177 +48,179 @@ func ResourceChannel() *schema.Resource {
 			Delete: schema.DefaultTimeout(15 * time.Minute),
 		},
 
-		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"cdi_input_specification": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"resolution": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.CdiInputResolution](),
-						},
-					},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"arn": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"channel_class": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[types.ChannelClass](),
-			},
-			"channel_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"destinations": {
-				Type:     schema.TypeSet,
-				Required: true,
-				MinItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"id": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"media_package_settings": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"channel_id": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-								},
-							},
-						},
-						"multiplex_settings": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"multiplex_id": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"program_name": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-								},
-							},
-						},
-						"settings": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"password_param": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"stream_name": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"url": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-									"username": {
-										Type:     schema.TypeString,
-										Optional: true,
-									},
-								},
+				"cdi_input_specification": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"resolution": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[types.CdiInputResolution](),
 							},
 						},
 					},
 				},
-			},
-			"encoder_settings": func() *schema.Schema {
-				return channelEncoderSettingsSchema()
-			}(),
-			"input_attachments": {
-				Type:     schema.TypeSet,
-				Required: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"automatic_input_failover_settings": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"secondary_input_id": {
-										Type:     schema.TypeString,
-										Required: true,
+				"channel_class": {
+					Type:             schema.TypeString,
+					Required:         true,
+					ForceNew:         true,
+					ValidateDiagFunc: enum.Validate[types.ChannelClass](),
+				},
+				"channel_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"destinations": {
+					Type:     schema.TypeSet,
+					Required: true,
+					MinItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"id": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"media_package_settings": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"channel_id": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
 									},
-									"error_clear_time_msec": {
-										Type:     schema.TypeInt,
-										Optional: true,
+								},
+							},
+							"multiplex_settings": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"multiplex_id": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"program_name": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
 									},
-									"failover_condition": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"failover_condition_settings": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"audio_silence_settings": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"audio_selector_name": {
-																			Type:     schema.TypeString,
-																			Required: true,
-																		},
-																		"audio_silence_threshold_msec": {
-																			Type:     schema.TypeInt,
-																			Optional: true,
+								},
+							},
+							"settings": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"password_param": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"stream_name": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"url": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+										"username": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+				"encoder_settings": func() *schema.Schema {
+					return channelEncoderSettingsSchema()
+				}(),
+				"input_attachments": {
+					Type:     schema.TypeSet,
+					Required: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"automatic_input_failover_settings": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"secondary_input_id": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+										"error_clear_time_msec": {
+											Type:     schema.TypeInt,
+											Optional: true,
+										},
+										"failover_condition": {
+											Type:     schema.TypeSet,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"failover_condition_settings": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"audio_silence_settings": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			"audio_selector_name": {
+																				Type:     schema.TypeString,
+																				Required: true,
+																			},
+																			"audio_silence_threshold_msec": {
+																				Type:     schema.TypeInt,
+																				Optional: true,
+																			},
 																		},
 																	},
 																},
-															},
-															"input_loss_settings": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"input_loss_threshold_msec": {
-																			Type:     schema.TypeInt,
-																			Optional: true,
+																"input_loss_settings": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			"input_loss_threshold_msec": {
+																				Type:     schema.TypeInt,
+																				Optional: true,
+																			},
 																		},
 																	},
 																},
-															},
-															"video_black_settings": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"black_detect_threshold": {
-																			Type:     schema.TypeFloat,
-																			Optional: true,
-																		},
-																		"video_black_threshold_msec": {
-																			Type:     schema.TypeInt,
-																			Optional: true,
+																"video_black_settings": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			"black_detect_threshold": {
+																				Type:     schema.TypeFloat,
+																				Optional: true,
+																			},
+																			"video_black_threshold_msec": {
+																				Type:     schema.TypeInt,
+																				Optional: true,
+																			},
 																		},
 																	},
 																},
@@ -224,107 +230,121 @@ func ResourceChannel() *schema.Resource {
 												},
 											},
 										},
-									},
-									"input_preference": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[types.InputPreference](),
+										"input_preference": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[types.InputPreference](),
+										},
 									},
 								},
 							},
-						},
-						"input_attachment_name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"input_id": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"input_settings": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"audio_selector": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"name": {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-												"selector_settings": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"audio_hls_rendition_selection": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"group_id": {
-																			Type:     schema.TypeString,
-																			Required: true,
-																		},
-																		"name": {
-																			Type:     schema.TypeString,
-																			Required: true,
-																		},
-																	},
-																},
-															},
-															"audio_language_selection": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"language_code": {
-																			Type:     schema.TypeString,
-																			Required: true,
-																		},
-																		"language_selection_policy": {
-																			Type:             schema.TypeString,
-																			Optional:         true,
-																			ValidateDiagFunc: enum.Validate[types.AudioLanguageSelectionPolicy](),
+							"input_attachment_name": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"input_id": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"input_settings": {
+								Type:     schema.TypeList,
+								Optional: true,
+								Computed: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"audio_selector": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"name": {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+													"selector_settings": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"audio_hls_rendition_selection": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			"group_id": {
+																				Type:     schema.TypeString,
+																				Required: true,
+																			},
+																			"name": {
+																				Type:     schema.TypeString,
+																				Required: true,
+																			},
 																		},
 																	},
 																},
-															},
-															"audio_pid_selection": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"pid": {
-																			Type:     schema.TypeInt,
-																			Required: true,
+																"audio_language_selection": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			"language_code": {
+																				Type:     schema.TypeString,
+																				Required: true,
+																			},
+																			"language_selection_policy": {
+																				Type:             schema.TypeString,
+																				Optional:         true,
+																				ValidateDiagFunc: enum.Validate[types.AudioLanguageSelectionPolicy](),
+																			},
 																		},
 																	},
 																},
-															},
-															"audio_track_selection": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"track": {
-																			Type:     schema.TypeSet,
-																			Required: true,
-																			Elem: &schema.Resource{
-																				Schema: map[string]*schema.Schema{
-																					"track": {
-																						Type:     schema.TypeInt,
-																						Required: true,
+																"audio_pid_selection": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			"pid": {
+																				Type:     schema.TypeInt,
+																				Required: true,
+																			},
+																		},
+																	},
+																},
+																"audio_track_selection": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			"dolby_e_decode": {
+																				Type:     schema.TypeList,
+																				Optional: true,
+																				MaxItems: 1,
+																				Elem: &schema.Resource{
+																					Schema: map[string]*schema.Schema{
+																						"program_selection": {
+																							Type:             schema.TypeString,
+																							Required:         true,
+																							ValidateDiagFunc: enum.Validate[types.DolbyEProgramSelection](),
+																						},
+																					},
+																				},
+																			},
+																			"tracks": {
+																				Type:     schema.TypeSet,
+																				Required: true,
+																				Elem: &schema.Resource{
+																					Schema: map[string]*schema.Schema{
+																						"track": {
+																							Type:     schema.TypeInt,
+																							Required: true,
+																						},
 																					},
 																				},
 																			},
@@ -337,154 +357,159 @@ func ResourceChannel() *schema.Resource {
 												},
 											},
 										},
-									},
-									"caption_selector": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"name": {
-													Type:     schema.TypeString,
-													Required: true,
-												},
-												"language_code": {
-													Type:     schema.TypeString,
-													Optional: true,
-												},
-												"selector_settings": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"ancillary_source_settings": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"source_ancillary_channel_number": {
-																			Type:     schema.TypeInt,
-																			Optional: true,
+										"caption_selector": {
+											Type:     schema.TypeList,
+											Optional: true,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"name": {
+														Type:     schema.TypeString,
+														Required: true,
+													},
+													"language_code": {
+														Type:     schema.TypeString,
+														Optional: true,
+													},
+													"selector_settings": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"ancillary_source_settings": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			"source_ancillary_channel_number": {
+																				Type:     schema.TypeInt,
+																				Optional: true,
+																			},
 																		},
 																	},
 																},
-															},
-															"dvb_tdt_settings": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"ocr_language": {
-																			Type:             schema.TypeString,
-																			Optional:         true,
-																			ValidateDiagFunc: enum.Validate[types.DvbSubOcrLanguage](),
-																		},
-																		"pid": {
-																			Type:     schema.TypeInt,
-																			Optional: true,
+																"arib_source_settings": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{}, // no exported elements in this list
+																	},
+																},
+																"dvb_sub_source_settings": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			"ocr_language": {
+																				Type:             schema.TypeString,
+																				Optional:         true,
+																				ValidateDiagFunc: enum.Validate[types.DvbSubOcrLanguage](),
+																			},
+																			"pid": {
+																				Type:         schema.TypeInt,
+																				Optional:     true,
+																				ValidateFunc: validation.IntAtLeast(1),
+																			},
 																		},
 																	},
 																},
-															},
-															"embedded_source_settings": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"convert_608_to_708": {
-																			Type:             schema.TypeString,
-																			Optional:         true,
-																			ValidateDiagFunc: enum.Validate[types.EmbeddedConvert608To708](),
-																		},
-																		"scte20_detection": {
-																			Type:             schema.TypeString,
-																			Optional:         true,
-																			ValidateDiagFunc: enum.Validate[types.EmbeddedScte20Detection](),
-																		},
-																		"source_608_channel_number": {
-																			Type:     schema.TypeInt,
-																			Optional: true,
-																		},
-																		"source_608_track_number": {
-																			Type:     schema.TypeInt,
-																			Optional: true,
+																"embedded_source_settings": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			"convert_608_to_708": {
+																				Type:             schema.TypeString,
+																				Optional:         true,
+																				ValidateDiagFunc: enum.Validate[types.EmbeddedConvert608To708](),
+																			},
+																			"scte20_detection": {
+																				Type:             schema.TypeString,
+																				Optional:         true,
+																				ValidateDiagFunc: enum.Validate[types.EmbeddedScte20Detection](),
+																			},
+																			"source_608_channel_number": {
+																				Type:     schema.TypeInt,
+																				Optional: true,
+																			},
 																		},
 																	},
 																},
-															},
-															"scte20_source_settings": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"convert_608_to_708": {
-																			Type:             schema.TypeString,
-																			Optional:         true,
-																			ValidateDiagFunc: enum.Validate[types.Scte20Convert608To708](),
-																		},
-																		"source_608_channel_number": {
-																			Type:     schema.TypeInt,
-																			Optional: true,
-																		},
-																	},
-																},
-															},
-															"scte27_source_settings": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"ocr_language": {
-																			Type:             schema.TypeString,
-																			Optional:         true,
-																			ValidateDiagFunc: enum.Validate[types.Scte27OcrLanguage](),
-																		},
-																		"pid": {
-																			Type:     schema.TypeInt,
-																			Optional: true,
+																"scte20_source_settings": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			"convert_608_to_708": {
+																				Type:             schema.TypeString,
+																				Optional:         true,
+																				ValidateDiagFunc: enum.Validate[types.Scte20Convert608To708](),
+																			},
+																			"source_608_channel_number": {
+																				Type:     schema.TypeInt,
+																				Optional: true,
+																			},
 																		},
 																	},
 																},
-															},
-															"teletext_source_settings": {
-																Type:     schema.TypeList,
-																Optional: true,
-																MaxItems: 1,
-																Elem: &schema.Resource{
-																	Schema: map[string]*schema.Schema{
-																		"output_rectangle": {
-																			Type:     schema.TypeList,
-																			Optional: true,
-																			MaxItems: 1,
-																			Elem: &schema.Resource{
-																				Schema: map[string]*schema.Schema{
-																					"height": {
-																						Type:     schema.TypeFloat,
-																						Required: true,
-																					},
-																					"left_offset": {
-																						Type:     schema.TypeFloat,
-																						Required: true,
-																					},
-																					"top_offset": {
-																						Type:     schema.TypeFloat,
-																						Required: true,
-																					},
-																					"width": {
-																						Type:     schema.TypeFloat,
-																						Required: true,
+																"scte27_source_settings": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			"ocr_language": {
+																				Type:             schema.TypeString,
+																				Optional:         true,
+																				ValidateDiagFunc: enum.Validate[types.Scte27OcrLanguage](),
+																			},
+																			"pid": {
+																				Type:     schema.TypeInt,
+																				Optional: true,
+																			},
+																		},
+																	},
+																},
+																"teletext_source_settings": {
+																	Type:     schema.TypeList,
+																	Optional: true,
+																	MaxItems: 1,
+																	Elem: &schema.Resource{
+																		Schema: map[string]*schema.Schema{
+																			"output_rectangle": {
+																				Type:     schema.TypeList,
+																				Optional: true,
+																				MaxItems: 1,
+																				Elem: &schema.Resource{
+																					Schema: map[string]*schema.Schema{
+																						"height": {
+																							Type:     schema.TypeFloat,
+																							Required: true,
+																						},
+																						"left_offset": {
+																							Type:     schema.TypeFloat,
+																							Required: true,
+																						},
+																						"top_offset": {
+																							Type:     schema.TypeFloat,
+																							Required: true,
+																						},
+																						"width": {
+																							Type:     schema.TypeFloat,
+																							Required: true,
+																						},
 																					},
 																				},
 																			},
-																		},
-																		"page_number": {
-																			Type:     schema.TypeString,
-																			Optional: true,
+																			"page_number": {
+																				Type:     schema.TypeString,
+																				Optional: true,
+																			},
 																		},
 																	},
 																},
@@ -494,104 +519,104 @@ func ResourceChannel() *schema.Resource {
 												},
 											},
 										},
-									},
-									"deblock_filter": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[types.InputDeblockFilter](),
-									},
-									"denoise_filter": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[types.InputDenoiseFilter](),
-									},
-									"filter_strength": {
-										Type:             schema.TypeInt,
-										Optional:         true,
-										ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1, 5)),
-									},
-									"input_filter": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										Computed:         true,
-										ValidateDiagFunc: enum.Validate[types.InputFilter](),
-									},
-									"network_input_settings": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"hls_input_settings": {
-													Type:     schema.TypeList,
-													Optional: true,
-													MaxItems: 1,
-													Elem: &schema.Resource{
-														Schema: map[string]*schema.Schema{
-															"bandwidth": {
-																Type:     schema.TypeInt,
-																Optional: true,
-															},
-															"buffer_segments": {
-																Type:     schema.TypeInt,
-																Optional: true,
-															},
-															"retries": {
-																Type:     schema.TypeInt,
-																Optional: true,
-															},
-															"retry_interval": {
-																Type:     schema.TypeInt,
-																Optional: true,
-															},
-															"scte35_source": {
-																Type:             schema.TypeString,
-																Optional:         true,
-																ValidateDiagFunc: enum.Validate[types.HlsScte35SourceType](),
+										"deblock_filter": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[types.InputDeblockFilter](),
+										},
+										"denoise_filter": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[types.InputDenoiseFilter](),
+										},
+										"filter_strength": {
+											Type:             schema.TypeInt,
+											Optional:         true,
+											ValidateDiagFunc: validation.ToDiagFunc(validation.IntBetween(1, 5)),
+										},
+										"input_filter": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											Computed:         true,
+											ValidateDiagFunc: enum.Validate[types.InputFilter](),
+										},
+										"network_input_settings": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"hls_input_settings": {
+														Type:     schema.TypeList,
+														Optional: true,
+														MaxItems: 1,
+														Elem: &schema.Resource{
+															Schema: map[string]*schema.Schema{
+																"bandwidth": {
+																	Type:     schema.TypeInt,
+																	Optional: true,
+																},
+																"buffer_segments": {
+																	Type:     schema.TypeInt,
+																	Optional: true,
+																},
+																"retries": {
+																	Type:     schema.TypeInt,
+																	Optional: true,
+																},
+																"retry_interval": {
+																	Type:     schema.TypeInt,
+																	Optional: true,
+																},
+																"scte35_source": {
+																	Type:             schema.TypeString,
+																	Optional:         true,
+																	ValidateDiagFunc: enum.Validate[types.HlsScte35SourceType](),
+																},
 															},
 														},
 													},
-												},
-												"server_validation": {
-													Type:             schema.TypeString,
-													Optional:         true,
-													ValidateDiagFunc: enum.Validate[types.NetworkInputServerValidation](),
+													"server_validation": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														ValidateDiagFunc: enum.Validate[types.NetworkInputServerValidation](),
+													},
 												},
 											},
 										},
-									},
-									"scte35_pid": {
-										Type:     schema.TypeInt,
-										Optional: true,
-									},
-									"smpte2038_data_preference": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[types.Smpte2038DataPreference](),
-									},
-									"source_end_behavior": {
-										Type:             schema.TypeString,
-										Optional:         true,
-										ValidateDiagFunc: enum.Validate[types.InputSourceEndBehavior](),
-									},
-									"video_selector": {
-										Type:     schema.TypeList,
-										Optional: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"color_space": {
-													Type:             schema.TypeString,
-													Optional:         true,
-													ValidateDiagFunc: enum.Validate[types.VideoSelectorColorSpace](),
+										"scte35_pid": {
+											Type:     schema.TypeInt,
+											Optional: true,
+										},
+										"smpte2038_data_preference": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[types.Smpte2038DataPreference](),
+										},
+										"source_end_behavior": {
+											Type:             schema.TypeString,
+											Optional:         true,
+											ValidateDiagFunc: enum.Validate[types.InputSourceEndBehavior](),
+										},
+										"video_selector": {
+											Type:     schema.TypeList,
+											Optional: true,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"color_space": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														ValidateDiagFunc: enum.Validate[types.VideoSelectorColorSpace](),
+													},
+													// TODO implement color_space_settings
+													"color_space_usage": {
+														Type:             schema.TypeString,
+														Optional:         true,
+														ValidateDiagFunc: enum.Validate[types.VideoSelectorColorSpaceUsage](),
+													},
+													// TODO implement selector_settings
 												},
-												// TODO implement color_space_settings
-												"color_space_usage": {
-													Type:             schema.TypeString,
-													Optional:         true,
-													ValidateDiagFunc: enum.Validate[types.VideoSelectorColorSpaceUsage](),
-												},
-												// TODO implement selector_settings
 											},
 										},
 									},
@@ -600,104 +625,109 @@ func ResourceChannel() *schema.Resource {
 						},
 					},
 				},
-			},
-			"input_specification": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"codec": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.InputCodec](),
-						},
-						"maximum_bitrate": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.InputMaximumBitrate](),
-						},
-						"input_resolution": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.InputResolution](),
-						},
-					},
-				},
-			},
-			"log_level": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateDiagFunc: enum.Validate[types.LogLevel](),
-			},
-			"maintenance": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"maintenance_day": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[types.MaintenanceDay](),
-						},
-						"maintenance_start_time": {
-							Type:     schema.TypeString,
-							Required: true,
+				"input_specification": {
+					Type:     schema.TypeList,
+					Required: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"codec": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[types.InputCodec](),
+							},
+							"maximum_bitrate": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[types.InputMaximumBitrate](),
+							},
+							"input_resolution": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[types.InputResolution](),
+							},
 						},
 					},
 				},
-			},
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"role_arn": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
-			},
-			"start_channel": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-			},
-			"vpc": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"availability_zones": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"public_address_allocation_ids": {
-							Type:     schema.TypeList,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"security_group_ids": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							MaxItems: 5,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"subnet_ids": {
-							Type:     schema.TypeList,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
+				"log_level": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					Computed:         true,
+					ValidateDiagFunc: enum.Validate[types.LogLevel](),
+				},
+				"maintenance": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"maintenance_day": {
+								Type:             schema.TypeString,
+								Required:         true,
+								ValidateDiagFunc: enum.Validate[types.MaintenanceDay](),
+							},
+							"maintenance_start_time": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
 						},
 					},
 				},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"name": {
+					Type:     schema.TypeString,
+					Required: true,
+				},
+				"role_arn": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ValidateDiagFunc: validation.ToDiagFunc(verify.ValidARN),
+				},
+				"start_channel": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"vpc": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"availability_zones": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"network_interface_ids": {
+								Type:     schema.TypeSet,
+								Computed: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"public_address_allocation_ids": {
+								Type:     schema.TypeList,
+								Required: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"security_group_ids": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Computed: true,
+								MaxItems: 5,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"subnet_ids": {
+								Type:     schema.TypeSet,
+								Required: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+						},
+					},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			}
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -709,6 +739,8 @@ const (
 )
 
 func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
 	in := &medialive.CreateChannelInput{
@@ -747,29 +779,31 @@ func resourceChannelCreate(ctx context.Context, d *schema.ResourceData, meta int
 
 	out, err := conn.CreateChannel(ctx, in)
 	if err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionCreating, ResNameChannel, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionCreating, ResNameChannel, d.Get("name").(string), err)
 	}
 
 	if out == nil || out.Channel == nil {
-		return create.DiagError(names.MediaLive, create.ErrActionCreating, ResNameChannel, d.Get("name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionCreating, ResNameChannel, d.Get("name").(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(out.Channel.Id))
 
 	if _, err := waitChannelCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionWaitingForCreation, ResNameChannel, d.Id(), err)
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionWaitingForCreation, ResNameChannel, d.Id(), err)
 	}
 
 	if d.Get("start_channel").(bool) {
 		if err := startChannel(ctx, conn, d.Timeout(schema.TimeoutCreate), d.Id()); err != nil {
-			return create.DiagError(names.MediaLive, create.ErrActionCreating, ResNameChannel, d.Get("name").(string), err)
+			return create.AppendDiagError(diags, names.MediaLive, create.ErrActionCreating, ResNameChannel, d.Get("name").(string), err)
 		}
 	}
 
-	return resourceChannelRead(ctx, d, meta)
+	return append(diags, resourceChannelRead(ctx, d, meta)...)
 }
 
 func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
 	out, err := FindChannelByID(ctx, conn, d.Id())
@@ -777,11 +811,11 @@ func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] MediaLive Channel (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionReading, ResNameChannel, d.Id(), err)
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionReading, ResNameChannel, d.Id(), err)
 	}
 
 	d.Set("arn", out.Arn)
@@ -792,31 +826,33 @@ func resourceChannelRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("role_arn", out.RoleArn)
 
 	if err := d.Set("cdi_input_specification", flattenChannelCdiInputSpecification(out.CdiInputSpecification)); err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
 	}
 	if err := d.Set("input_attachments", flattenChannelInputAttachments(out.InputAttachments)); err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
 	}
 	if err := d.Set("destinations", flattenChannelDestinations(out.Destinations)); err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
 	}
 	if err := d.Set("encoder_settings", flattenChannelEncoderSettings(out.EncoderSettings)); err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
 	}
 	if err := d.Set("input_specification", flattenChannelInputSpecification(out.InputSpecification)); err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
 	}
 	if err := d.Set("maintenance", flattenChannelMaintenance(out.Maintenance)); err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
 	}
 	if err := d.Set("vpc", flattenChannelVPC(out.Vpc)); err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionSetting, ResNameChannel, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all", "start_channel") {
@@ -863,28 +899,28 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		channel, err := FindChannelByID(ctx, conn, d.Id())
 
 		if err != nil {
-			return create.DiagError(names.MediaLive, create.ErrActionUpdating, ResNameChannel, d.Id(), err)
+			return create.AppendDiagError(diags, names.MediaLive, create.ErrActionUpdating, ResNameChannel, d.Id(), err)
 		}
 
 		if channel.State == types.ChannelStateRunning {
 			if err := stopChannel(ctx, conn, d.Timeout(schema.TimeoutUpdate), d.Id()); err != nil {
-				return create.DiagError(names.MediaLive, create.ErrActionUpdating, ResNameChannel, d.Id(), err)
+				return create.AppendDiagError(diags, names.MediaLive, create.ErrActionUpdating, ResNameChannel, d.Id(), err)
 			}
 		}
 
 		out, err := conn.UpdateChannel(ctx, in)
 		if err != nil {
-			return create.DiagError(names.MediaLive, create.ErrActionUpdating, ResNameChannel, d.Id(), err)
+			return create.AppendDiagError(diags, names.MediaLive, create.ErrActionUpdating, ResNameChannel, d.Id(), err)
 		}
 
 		if _, err := waitChannelUpdated(ctx, conn, aws.ToString(out.Channel.Id), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return create.DiagError(names.MediaLive, create.ErrActionWaitingForUpdate, ResNameChannel, d.Id(), err)
+			return create.AppendDiagError(diags, names.MediaLive, create.ErrActionWaitingForUpdate, ResNameChannel, d.Id(), err)
 		}
 	}
 
 	if d.Get("start_channel").(bool) {
 		if err := startChannel(ctx, conn, d.Timeout(schema.TimeoutUpdate), d.Id()); err != nil {
-			return create.DiagError(names.MediaLive, create.ErrActionUpdating, ResNameChannel, d.Get("name").(string), err)
+			return create.AppendDiagError(diags, names.MediaLive, create.ErrActionUpdating, ResNameChannel, d.Get("name").(string), err)
 		}
 	}
 
@@ -892,42 +928,48 @@ func resourceChannelUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		channel, err := FindChannelByID(ctx, conn, d.Id())
 
 		if err != nil {
-			return create.DiagError(names.MediaLive, create.ErrActionUpdating, ResNameChannel, d.Id(), err)
+			return create.AppendDiagError(diags, names.MediaLive, create.ErrActionUpdating, ResNameChannel, d.Id(), err)
 		}
 
 		switch d.Get("start_channel").(bool) {
 		case true:
 			if channel.State == types.ChannelStateIdle {
 				if err := startChannel(ctx, conn, d.Timeout(schema.TimeoutUpdate), d.Id()); err != nil {
-					return create.DiagError(names.MediaLive, create.ErrActionUpdating, ResNameChannel, d.Id(), err)
+					return create.AppendDiagError(diags, names.MediaLive, create.ErrActionUpdating, ResNameChannel, d.Id(), err)
 				}
 			}
 		default:
 			if channel.State == types.ChannelStateRunning {
 				if err := stopChannel(ctx, conn, d.Timeout(schema.TimeoutUpdate), d.Id()); err != nil {
-					return create.DiagError(names.MediaLive, create.ErrActionUpdating, ResNameChannel, d.Id(), err)
+					return create.AppendDiagError(diags, names.MediaLive, create.ErrActionUpdating, ResNameChannel, d.Id(), err)
 				}
 			}
 		}
 	}
 
-	return resourceChannelRead(ctx, d, meta)
+	return append(diags, resourceChannelRead(ctx, d, meta)...)
 }
 
 func resourceChannelDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MediaLiveClient(ctx)
 
 	log.Printf("[INFO] Deleting MediaLive Channel %s", d.Id())
 
 	channel, err := FindChannelByID(ctx, conn, d.Id())
 
+	if tfresource.NotFound(err) {
+		return diags
+	}
+
 	if err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionDeleting, ResNameChannel, d.Id(), err)
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionDeleting, ResNameChannel, d.Id(), err)
 	}
 
 	if channel.State == types.ChannelStateRunning {
 		if err := stopChannel(ctx, conn, d.Timeout(schema.TimeoutDelete), d.Id()); err != nil {
-			return create.DiagError(names.MediaLive, create.ErrActionDeleting, ResNameChannel, d.Id(), err)
+			return create.AppendDiagError(diags, names.MediaLive, create.ErrActionDeleting, ResNameChannel, d.Id(), err)
 		}
 	}
 
@@ -935,20 +977,19 @@ func resourceChannelDelete(ctx context.Context, d *schema.ResourceData, meta int
 		ChannelId: aws.String(d.Id()),
 	})
 
-	if err != nil {
-		var nfe *types.NotFoundException
-		if errors.As(err, &nfe) {
-			return nil
-		}
+	if errs.IsA[*types.NotFoundException](err) {
+		return diags
+	}
 
-		return create.DiagError(names.MediaLive, create.ErrActionDeleting, ResNameChannel, d.Id(), err)
+	if err != nil {
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionDeleting, ResNameChannel, d.Id(), err)
 	}
 
 	if _, err := waitChannelDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return create.DiagError(names.MediaLive, create.ErrActionWaitingForDeletion, ResNameChannel, d.Id(), err)
+		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionWaitingForDeletion, ResNameChannel, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func startChannel(ctx context.Context, conn *medialive.Client, timeout time.Duration, id string) error {
@@ -1091,15 +1132,15 @@ func FindChannelByID(ctx context.Context, conn *medialive.Client, id string) (*m
 		ChannelId: aws.String(id),
 	}
 	out, err := conn.DescribeChannel(ctx, in)
-	if err != nil {
-		var nfe *types.NotFoundException
-		if errors.As(err, &nfe) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
 
+	if errs.IsA[*types.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
@@ -1137,6 +1178,9 @@ func expandChannelInputAttachments(tfList []interface{}) []types.InputAttachment
 		if v, ok := m["input_settings"].([]interface{}); ok && len(v) > 0 {
 			a.InputSettings = expandInputAttachmentInputSettings(v)
 		}
+		if v, ok := m["automatic_input_failover_settings"].([]interface{}); ok && len(v) > 0 {
+			a.AutomaticInputFailoverSettings = expandInputAttachmentAutomaticInputFailoverSettings(v)
+		}
 
 		attachments = append(attachments, a)
 	}
@@ -1155,7 +1199,7 @@ func expandInputAttachmentInputSettings(tfList []interface{}) *types.InputSettin
 	if v, ok := m["audio_selector"].([]interface{}); ok && len(v) > 0 {
 		out.AudioSelectors = expandInputAttachmentInputSettingsAudioSelectors(v)
 	}
-	if v, ok := m["audio_selector"].([]interface{}); ok && len(v) > 0 {
+	if v, ok := m["caption_selector"].([]interface{}); ok && len(v) > 0 {
 		out.CaptionSelectors = expandInputAttachmentInputSettingsCaptionSelectors(v)
 	}
 	if v, ok := m["deblock_filter"].(string); ok && v != "" {
@@ -1164,8 +1208,8 @@ func expandInputAttachmentInputSettings(tfList []interface{}) *types.InputSettin
 	if v, ok := m["denoise_filter"].(string); ok && v != "" {
 		out.DenoiseFilter = types.InputDenoiseFilter(v)
 	}
-	if v, ok := m["filter_strength"].(int); ok {
-		out.FilterStrength = int32(v)
+	if v, ok := m["filter_strength"].(int); ok && v != 0 {
+		out.FilterStrength = aws.Int32(int32(v))
 	}
 	if v, ok := m["input_filter"].(string); ok && v != "" {
 		out.InputFilter = types.InputFilter(v)
@@ -1173,8 +1217,8 @@ func expandInputAttachmentInputSettings(tfList []interface{}) *types.InputSettin
 	if v, ok := m["network_input_settings"].([]interface{}); ok && len(v) > 0 {
 		out.NetworkInputSettings = expandInputAttachmentInputSettingsNetworkInputSettings(v)
 	}
-	if v, ok := m["scte35_pid"].(int); ok {
-		out.Scte35Pid = int32(v)
+	if v, ok := m["scte35_pid"].(int); ok && v != 0 {
+		out.Scte35Pid = aws.Int32(int32(v))
 	}
 	if v, ok := m["smpte2038_data_preference"].(string); ok && v != "" {
 		out.Smpte2038DataPreference = types.Smpte2038DataPreference(v)
@@ -1198,7 +1242,9 @@ func expandInputAttachmentInputSettingsAudioSelectors(tfList []interface{}) []ty
 		if v, ok := m["name"].(string); ok && v != "" {
 			a.Name = aws.String(v)
 		}
-		// TODO selectorSettings
+		if v, ok := m["selector_settings"].([]interface{}); ok && len(v) > 0 {
+			a.SelectorSettings = expandInputAttachmentInputSettingsAudioSelectorsSelectorSettings(v)
+		}
 
 		as = append(as, a)
 	}
@@ -1206,7 +1252,142 @@ func expandInputAttachmentInputSettingsAudioSelectors(tfList []interface{}) []ty
 	return as
 }
 
+func expandInputAttachmentInputSettingsAudioSelectorsSelectorSettings(tfList []interface{}) *types.AudioSelectorSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.AudioSelectorSettings
+	if v, ok := m["audio_hls_rendition_selection"].([]interface{}); ok && len(v) > 0 {
+		out.AudioHlsRenditionSelection = expandInputAttachmentInputSettingsAudioSelectorsSelectorSettingsAudioHlsRenditionSelection(v)
+	}
+	if v, ok := m["audio_language_selection"].([]interface{}); ok && len(v) > 0 {
+		out.AudioLanguageSelection = expandInputAttachmentInputSettingsAudioSelectorsSelectorSettingsAudioLanguageSelection(v)
+	}
+	if v, ok := m["audio_pid_selection"].([]interface{}); ok && len(v) > 0 {
+		out.AudioPidSelection = expandInputAttachmentInputSettingsAudioSelectorsSelectorSettingsAudioPidSelection(v)
+	}
+	if v, ok := m["audio_track_selection"].([]interface{}); ok && len(v) > 0 {
+		out.AudioTrackSelection = expandInputAttachmentInputSettingsAudioSelectorsSelectorSettingsAudioTrackSelection(v)
+	}
+
+	return &out
+}
+
+func expandInputAttachmentInputSettingsAudioSelectorsSelectorSettingsAudioHlsRenditionSelection(tfList []interface{}) *types.AudioHlsRenditionSelection {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.AudioHlsRenditionSelection
+	if v, ok := m["group_id"].(string); ok && len(v) > 0 {
+		out.GroupId = aws.String(v)
+	}
+	if v, ok := m["name"].(string); ok && len(v) > 0 {
+		out.Name = aws.String(v)
+	}
+
+	return &out
+}
+
+func expandInputAttachmentInputSettingsAudioSelectorsSelectorSettingsAudioLanguageSelection(tfList []interface{}) *types.AudioLanguageSelection {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.AudioLanguageSelection
+	if v, ok := m["language_code"].(string); ok && len(v) > 0 {
+		out.LanguageCode = aws.String(v)
+	}
+	if v, ok := m["language_selection_policy"].(string); ok && len(v) > 0 {
+		out.LanguageSelectionPolicy = types.AudioLanguageSelectionPolicy(v)
+	}
+
+	return &out
+}
+
+func expandInputAttachmentInputSettingsAudioSelectorsSelectorSettingsAudioPidSelection(tfList []interface{}) *types.AudioPidSelection {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.AudioPidSelection
+	if v, ok := m["pid"].(int); ok && v != 0 {
+		out.Pid = aws.Int32(int32(v))
+	}
+
+	return &out
+}
+
+func expandInputAttachmentInputSettingsAudioSelectorsSelectorSettingsAudioTrackSelection(tfList []interface{}) *types.AudioTrackSelection {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.AudioTrackSelection
+	if v, ok := m["tracks"].(*schema.Set); ok && v.Len() > 0 {
+		out.Tracks = expandInputAttachmentInputSettingsAudioSelectorsSelectorSettingsAudioTrackSelectionTracks(v.List())
+	}
+	if v, ok := m["dolby_e_decode"].([]interface{}); ok && len(v) > 0 {
+		out.DolbyEDecode = expandInputAttachmentInputSettingsAudioSelectorsSelectorSettingsAudioTrackSelectionDolbyEDecode(v)
+	}
+
+	return &out
+}
+
+func expandInputAttachmentInputSettingsAudioSelectorsSelectorSettingsAudioTrackSelectionTracks(tfList []interface{}) []types.AudioTrack {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var out []types.AudioTrack
+	for _, v := range tfList {
+		m, ok := v.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		var o types.AudioTrack
+		if v, ok := m["track"].(int); ok && v != 0 {
+			o.Track = aws.Int32(int32(v))
+		}
+
+		out = append(out, o)
+	}
+
+	return out
+}
+
+func expandInputAttachmentInputSettingsAudioSelectorsSelectorSettingsAudioTrackSelectionDolbyEDecode(tfList []interface{}) *types.AudioDolbyEDecode {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.AudioDolbyEDecode
+	if v, ok := m["program_selection"].(string); ok && v != "" {
+		out.ProgramSelection = types.DolbyEProgramSelection(v)
+	}
+
+	return &out
+}
+
 func expandInputAttachmentInputSettingsCaptionSelectors(tfList []interface{}) []types.CaptionSelector {
+	if len(tfList) == 0 {
+		return nil
+	}
+
 	var out []types.CaptionSelector
 	for _, v := range tfList {
 		m, ok := v.(map[string]interface{})
@@ -1221,12 +1402,179 @@ func expandInputAttachmentInputSettingsCaptionSelectors(tfList []interface{}) []
 		if v, ok := m["language_code"].(string); ok && v != "" {
 			o.LanguageCode = aws.String(v)
 		}
-		// TODO selectorSettings
+		if v, ok := m["selector_settings"].([]interface{}); ok && len(v) > 0 {
+			o.SelectorSettings = expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettings(v)
+		}
 
 		out = append(out, o)
 	}
 
 	return out
+}
+
+func expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettings(tfList []interface{}) *types.CaptionSelectorSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.CaptionSelectorSettings
+	if v, ok := m["ancillary_source_settings"].([]interface{}); ok && len(v) > 0 {
+		out.AncillarySourceSettings = expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsAncillarySourceSettings(v)
+	}
+	if v, ok := m["arib_source_settings"].([]interface{}); ok && len(v) > 0 {
+		out.AribSourceSettings = &types.AribSourceSettings{} // no exported fields
+	}
+	if v, ok := m["dvb_sub_source_settings"].([]interface{}); ok && len(v) > 0 {
+		out.DvbSubSourceSettings = expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsDvbSubSourceSettings(v)
+	}
+	if v, ok := m["embedded_source_settings"].([]interface{}); ok && len(v) > 0 {
+		out.EmbeddedSourceSettings = expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsEmbeddedSourceSettings(v)
+	}
+	if v, ok := m["scte20_source_settings"].([]interface{}); ok && len(v) > 0 {
+		out.Scte20SourceSettings = expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsScte20SourceSettings(v)
+	}
+	if v, ok := m["scte27_source_settings"].([]interface{}); ok && len(v) > 0 {
+		out.Scte27SourceSettings = expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsScte27SourceSettings(v)
+	}
+	if v, ok := m["teletext_source_settings"].([]interface{}); ok && len(v) > 0 {
+		out.TeletextSourceSettings = expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsTeletextSourceSettings(v)
+	}
+
+	return &out
+}
+
+func expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsAncillarySourceSettings(tfList []interface{}) *types.AncillarySourceSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.AncillarySourceSettings
+	if v, ok := m["source_ancillary_channel_number"].(int); ok && v != 0 {
+		out.SourceAncillaryChannelNumber = aws.Int32(int32(v))
+	}
+
+	return &out
+}
+
+func expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsDvbSubSourceSettings(tfList []interface{}) *types.DvbSubSourceSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.DvbSubSourceSettings
+	if v, ok := m["ocr_language"].(string); ok && v != "" {
+		out.OcrLanguage = types.DvbSubOcrLanguage(v)
+	}
+	if v, ok := m["pid"].(int); ok {
+		out.Pid = aws.Int32(int32(v))
+	}
+
+	return &out
+}
+
+func expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsEmbeddedSourceSettings(tfList []interface{}) *types.EmbeddedSourceSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.EmbeddedSourceSettings
+	if v, ok := m["convert_608_to_708"].(string); ok && v != "" {
+		out.Convert608To708 = types.EmbeddedConvert608To708(v)
+	}
+	if v, ok := m["scte20_detection"].(string); ok && v != "" {
+		out.Scte20Detection = types.EmbeddedScte20Detection(v)
+	}
+	if v, ok := m["source_608_channel_number"].(int); ok && v != 0 {
+		out.Source608ChannelNumber = aws.Int32(int32(v))
+	}
+
+	return &out
+}
+
+func expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsScte20SourceSettings(tfList []interface{}) *types.Scte20SourceSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.Scte20SourceSettings
+	if v, ok := m["convert_608_to_708"].(string); ok && v != "" {
+		out.Convert608To708 = types.Scte20Convert608To708(v)
+	}
+	if v, ok := m["source_608_channel_number"].(int); ok && v != 0 {
+		out.Source608ChannelNumber = aws.Int32(int32(v))
+	}
+
+	return &out
+}
+
+func expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsScte27SourceSettings(tfList []interface{}) *types.Scte27SourceSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.Scte27SourceSettings
+	if v, ok := m["ocr_language"].(string); ok && v != "" {
+		out.OcrLanguage = types.Scte27OcrLanguage(v)
+	}
+	if v, ok := m["pid"].(int); ok && v != 0 {
+		out.Pid = aws.Int32(int32(v))
+	}
+
+	return &out
+}
+
+func expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsTeletextSourceSettings(tfList []interface{}) *types.TeletextSourceSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.TeletextSourceSettings
+	if v, ok := m["output_rectangle"].([]interface{}); ok && len(v) > 0 {
+		out.OutputRectangle = expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsTeletextSourceSettingsOutputRectangle(v)
+	}
+	if v, ok := m["page_number"].(string); ok && v != "" {
+		out.PageNumber = aws.String(v)
+	}
+
+	return &out
+}
+
+func expandInputAttachmentInputSettingsCaptionSelectorsSelectorSettingsTeletextSourceSettingsOutputRectangle(tfList []interface{}) *types.CaptionRectangle {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.CaptionRectangle
+	if v, ok := m["height"].(float32); ok && v != 0.0 {
+		out.Height = aws.Float64(float64(v))
+	}
+	if v, ok := m["left_offset"].(float32); ok && v != 0.0 {
+		out.LeftOffset = aws.Float64(float64(v))
+	}
+	if v, ok := m["top_offset"].(float32); ok && v != 0.0 {
+		out.TopOffset = aws.Float64(float64(v))
+	}
+	if v, ok := m["width"].(float32); ok && v != 0.0 {
+		out.Width = aws.Float64(float64(v))
+	}
+
+	return &out
 }
 
 func expandInputAttachmentInputSettingsNetworkInputSettings(tfList []interface{}) *types.NetworkInputSettings {
@@ -1255,20 +1603,139 @@ func expandNetworkInputSettingsHLSInputSettings(tfList []interface{}) *types.Hls
 	m := tfList[0].(map[string]interface{})
 
 	var out types.HlsInputSettings
-	if v, ok := m["bandwidth"].(int); ok {
-		out.Bandwidth = int32(v)
+	if v, ok := m["bandwidth"].(int); ok && v != 0 {
+		out.Bandwidth = aws.Int32(int32(v))
 	}
-	if v, ok := m["buffer_segments"].(int); ok {
-		out.BufferSegments = int32(v)
+	if v, ok := m["buffer_segments"].(int); ok && v != 0 {
+		out.BufferSegments = aws.Int32(int32(v))
 	}
-	if v, ok := m["retries"].(int); ok {
-		out.Retries = int32(v)
+	if v, ok := m["retries"].(int); ok && v != 0 {
+		out.Retries = aws.Int32(int32(v))
 	}
-	if v, ok := m["retry_interval"].(int); ok {
-		out.RetryInterval = int32(v)
+	if v, ok := m["retry_interval"].(int); ok && v != 0 {
+		out.RetryInterval = aws.Int32(int32(v))
 	}
 	if v, ok := m["scte35_source"].(string); ok && v != "" {
 		out.Scte35Source = types.HlsScte35SourceType(v)
+	}
+
+	return &out
+}
+
+func expandInputAttachmentAutomaticInputFailoverSettings(tfList []interface{}) *types.AutomaticInputFailoverSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.AutomaticInputFailoverSettings
+	if v, ok := m["secondary_input_id"].(string); ok && v != "" {
+		out.SecondaryInputId = aws.String(v)
+	}
+	if v, ok := m["error_clear_time_msec"].(int); ok && v != 0 {
+		out.ErrorClearTimeMsec = aws.Int32(int32(v))
+	}
+	if v, ok := m["failover_condition"].(*schema.Set); ok && v.Len() > 0 {
+		out.FailoverConditions = expandInputAttachmentAutomaticInputFailoverSettingsFailoverConditions(v.List())
+	}
+	if v, ok := m["input_preference"].(string); ok && v != "" {
+		out.InputPreference = types.InputPreference(v)
+	}
+
+	return &out
+}
+
+func expandInputAttachmentAutomaticInputFailoverSettingsFailoverConditions(tfList []interface{}) []types.FailoverCondition {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var out []types.FailoverCondition
+	for _, v := range tfList {
+		m, ok := v.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		var o types.FailoverCondition
+		if v, ok := m["failover_condition_settings"].([]interface{}); ok && len(v) > 0 {
+			o.FailoverConditionSettings = expandInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettings(v)
+		}
+
+		out = append(out, o)
+	}
+
+	return out
+}
+
+func expandInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettings(tfList []interface{}) *types.FailoverConditionSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.FailoverConditionSettings
+	if v, ok := m["audio_silence_settings"].([]interface{}); ok && len(v) > 0 {
+		out.AudioSilenceSettings = expandInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettingsAudioSilenceSettings(v)
+	}
+	if v, ok := m["input_loss_settings"].([]interface{}); ok && len(v) > 0 {
+		out.InputLossSettings = expandInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettingsInputLossSettings(v)
+	}
+	if v, ok := m["video_black_settings"].([]interface{}); ok && len(v) > 0 {
+		out.VideoBlackSettings = expandInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettingsVideoBlackSettings(v)
+	}
+
+	return &out
+}
+
+func expandInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettingsAudioSilenceSettings(tfList []interface{}) *types.AudioSilenceFailoverSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.AudioSilenceFailoverSettings
+	if v, ok := m["audio_selector_name"].(string); ok && v != "" {
+		out.AudioSelectorName = aws.String(v)
+	}
+	if v, ok := m["audio_silence_threshold_msec"].(int); ok && v != 0 {
+		out.AudioSilenceThresholdMsec = aws.Int32(int32(v))
+	}
+
+	return &out
+}
+
+func expandInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettingsInputLossSettings(tfList []interface{}) *types.InputLossFailoverSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.InputLossFailoverSettings
+	if v, ok := m["input_loss_threshold_msec"].(int); ok && v != 0 {
+		out.InputLossThresholdMsec = aws.Int32(int32(v))
+	}
+
+	return &out
+}
+
+func expandInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettingsVideoBlackSettings(tfList []interface{}) *types.VideoBlackFailoverSettings {
+	if tfList == nil {
+		return nil
+	}
+
+	m := tfList[0].(map[string]interface{})
+
+	var out types.VideoBlackFailoverSettings
+	if v, ok := m["black_detect_threshold"].(float32); ok && v != 0.0 {
+		out.BlackDetectThreshold = aws.Float64(float64(v))
+	}
+	if v, ok := m["video_black_threshold_msec"].(int); ok && v != 0 {
+		out.VideoBlackThresholdMsec = aws.Int32(int32(v))
 	}
 
 	return &out
@@ -1283,13 +1750,15 @@ func flattenChannelInputAttachments(tfList []types.InputAttachment) []interface{
 
 	for _, item := range tfList {
 		m := map[string]interface{}{
-			"input_id":              aws.ToString(item.InputId),
-			"input_attachment_name": aws.ToString(item.InputAttachmentName),
-			"input_settings":        flattenInputAttachmentsInputSettings(item.InputSettings),
+			"input_id":                          aws.ToString(item.InputId),
+			"input_attachment_name":             aws.ToString(item.InputAttachmentName),
+			"input_settings":                    flattenInputAttachmentsInputSettings(item.InputSettings),
+			"automatic_input_failover_settings": flattenInputAttachmentAutomaticInputFailoverSettings(item.AutomaticInputFailoverSettings),
 		}
 
 		out = append(out, m)
 	}
+
 	return out
 }
 
@@ -1303,10 +1772,10 @@ func flattenInputAttachmentsInputSettings(in *types.InputSettings) []interface{}
 		"caption_selector":          flattenInputAttachmentsInputSettingsCaptionSelectors(in.CaptionSelectors),
 		"deblock_filter":            string(in.DeblockFilter),
 		"denoise_filter":            string(in.DenoiseFilter),
-		"filter_strength":           int(in.FilterStrength),
+		"filter_strength":           int(aws.ToInt32(in.FilterStrength)),
 		"input_filter":              string(in.InputFilter),
 		"network_input_settings":    flattenInputAttachmentsInputSettingsNetworkInputSettings(in.NetworkInputSettings),
-		"scte35_pid":                int(in.Scte35Pid),
+		"scte35_pid":                int(aws.ToInt32(in.Scte35Pid)),
 		"smpte2038_data_preference": string(in.Smpte2038DataPreference),
 		"source_end_behavior":       string(in.SourceEndBehavior),
 	}
@@ -1323,7 +1792,104 @@ func flattenInputAttachmentsInputSettingsAudioSelectors(tfList []types.AudioSele
 
 	for _, v := range tfList {
 		m := map[string]interface{}{
-			"name": aws.ToString(v.Name),
+			"name":              aws.ToString(v.Name),
+			"selector_settings": flattenInputAttachmentsInputSettingsAudioSelectorsSelectorSettings(v.SelectorSettings),
+		}
+
+		out = append(out, m)
+	}
+
+	return out
+}
+
+func flattenInputAttachmentsInputSettingsAudioSelectorsSelectorSettings(in *types.AudioSelectorSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"audio_hls_rendition_selection": flattenInputAttachmentsInputSettingsAudioSelectorsSelectorSettingsAudioHlsRenditionSelection(in.AudioHlsRenditionSelection),
+		"audio_language_selection":      flattenInputAttachmentsInputSettingsAudioSelectorsSelectorSettingsAudioLanguageSelection(in.AudioLanguageSelection),
+		"audio_pid_selection":           flattenInputAttachmentsInputSettingsAudioSelectorsSelectorSettingsAudioPidSelection(in.AudioPidSelection),
+		"audio_track_selection":         flattenInputAttachmentsInputSettingsAudioSelectorsSelectorSettingsAudioTrackSelection(in.AudioTrackSelection),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenInputAttachmentsInputSettingsAudioSelectorsSelectorSettingsAudioHlsRenditionSelection(in *types.AudioHlsRenditionSelection) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"group_id": aws.ToString(in.GroupId),
+		"name":     aws.ToString(in.Name),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenInputAttachmentsInputSettingsAudioSelectorsSelectorSettingsAudioLanguageSelection(in *types.AudioLanguageSelection) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"language_code":             aws.ToString(in.LanguageCode),
+		"language_selection_policy": string(in.LanguageSelectionPolicy),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenInputAttachmentsInputSettingsAudioSelectorsSelectorSettingsAudioPidSelection(in *types.AudioPidSelection) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"pid": int(aws.ToInt32(in.Pid)),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenInputAttachmentsInputSettingsAudioSelectorsSelectorSettingsAudioTrackSelection(in *types.AudioTrackSelection) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"dolby_e_decode": flattenInputAttachmentsInputSettingsAudioSelectorsSelectorSettingsAudioTrackSelectionDolbyEDecode(in.DolbyEDecode),
+		"tracks":         flattenInputAttachmentsInputSettingsAudioSelectorsSelectorSettingsAudioTrackSelectionTracks(in.Tracks),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenInputAttachmentsInputSettingsAudioSelectorsSelectorSettingsAudioTrackSelectionDolbyEDecode(in *types.AudioDolbyEDecode) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"program_selection": string(in.ProgramSelection),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenInputAttachmentsInputSettingsAudioSelectorsSelectorSettingsAudioTrackSelectionTracks(tfList []types.AudioTrack) []interface{} {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var out []interface{}
+
+	for _, v := range tfList {
+		m := map[string]interface{}{
+			"track": int(aws.ToInt32(v.Track)),
 		}
 
 		out = append(out, m)
@@ -1341,14 +1907,126 @@ func flattenInputAttachmentsInputSettingsCaptionSelectors(tfList []types.Caption
 
 	for _, v := range tfList {
 		m := map[string]interface{}{
-			"name":          aws.ToString(v.Name),
-			"language_code": aws.ToString(v.LanguageCode),
+			"name":              aws.ToString(v.Name),
+			"language_code":     aws.ToString(v.LanguageCode),
+			"selector_settings": flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettings(v.SelectorSettings),
 		}
 
 		out = append(out, m)
 	}
 
 	return out
+}
+
+func flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettings(in *types.CaptionSelectorSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"ancillary_source_settings": flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettingsAncillarySourceSettings(in.AncillarySourceSettings),
+		"arib_source_settings":      []interface{}{}, // attribute has no exported fields
+		"dvb_sub_source_settings":   flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettingsDvbSubSourceSettings(in.DvbSubSourceSettings),
+		"embedded_source_settings":  flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettingsEmbeddedSourceSettings(in.EmbeddedSourceSettings),
+		"scte20_source_settings":    flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettingsScte20SourceSettings(in.Scte20SourceSettings),
+		"scte27_source_settings":    flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettingsScte27SourceSettings(in.Scte27SourceSettings),
+		"teletext_source_settings":  flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettingsTeletextSourceSettings(in.TeletextSourceSettings),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettingsAncillarySourceSettings(in *types.AncillarySourceSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"source_ancillary_channel_number": int(aws.ToInt32(in.SourceAncillaryChannelNumber)),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettingsDvbSubSourceSettings(in *types.DvbSubSourceSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"ocr_language": string(in.OcrLanguage),
+		"pid":          int(aws.ToInt32(in.Pid)),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettingsEmbeddedSourceSettings(in *types.EmbeddedSourceSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"convert_608_to_708":        string(in.Convert608To708),
+		"scte20_detection":          string(in.Scte20Detection),
+		"source_608_channel_number": int(aws.ToInt32(in.Source608ChannelNumber)),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettingsScte20SourceSettings(in *types.Scte20SourceSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"convert_608_to_708":        string(in.Convert608To708),
+		"source_608_channel_number": int(aws.ToInt32(in.Source608ChannelNumber)),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettingsScte27SourceSettings(in *types.Scte27SourceSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"ocr_language": string(in.OcrLanguage),
+		"pid":          int(aws.ToInt32(in.Pid)),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettingsTeletextSourceSettings(in *types.TeletextSourceSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"output_rectangle": flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettingsTeletextSourceSettingsOutputRectangle(in.OutputRectangle),
+		"page_number":      aws.ToString(in.PageNumber),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenInputAttachmentsInputSettingsCaptionSelectorsSelectorSettingsTeletextSourceSettingsOutputRectangle(in *types.CaptionRectangle) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"height":      float32(aws.ToFloat64(in.Height)),
+		"left_offset": float32(aws.ToFloat64(in.LeftOffset)),
+		"top_offset":  float32(aws.ToFloat64(in.TopOffset)),
+		"width":       float32(aws.ToFloat64(in.Width)),
+	}
+
+	return []interface{}{m}
 }
 
 func flattenInputAttachmentsInputSettingsNetworkInputSettings(in *types.NetworkInputSettings) []interface{} {
@@ -1370,11 +2048,95 @@ func flattenNetworkInputSettingsHLSInputSettings(in *types.HlsInputSettings) []i
 	}
 
 	m := map[string]interface{}{
-		"bandwidth":       int(in.Bandwidth),
-		"buffer_segments": int(in.BufferSegments),
-		"retries":         int(in.Retries),
-		"retry_interval":  int(in.RetryInterval),
+		"bandwidth":       int(aws.ToInt32(in.Bandwidth)),
+		"buffer_segments": int(aws.ToInt32(in.BufferSegments)),
+		"retries":         int(aws.ToInt32(in.Retries)),
+		"retry_interval":  int(aws.ToInt32(in.RetryInterval)),
 		"scte35_source":   string(in.Scte35Source),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenInputAttachmentAutomaticInputFailoverSettings(in *types.AutomaticInputFailoverSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"secondary_input_id":    aws.ToString(in.SecondaryInputId),
+		"error_clear_time_msec": int(aws.ToInt32(in.ErrorClearTimeMsec)),
+		"failover_condition":    flattenInputAttachmentAutomaticInputFailoverSettingsFailoverConditions(in.FailoverConditions),
+		"input_preference":      string(in.InputPreference),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenInputAttachmentAutomaticInputFailoverSettingsFailoverConditions(tfList []types.FailoverCondition) []interface{} {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var out []interface{}
+
+	for _, item := range tfList {
+		m := map[string]interface{}{
+			"failover_condition_settings": flattenInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettings(item.FailoverConditionSettings),
+		}
+
+		out = append(out, m)
+	}
+	return out
+}
+
+func flattenInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettings(in *types.FailoverConditionSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"audio_silence_settings": flattenInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettingsAudioSilenceSettings(in.AudioSilenceSettings),
+		"input_loss_settings":    flattenInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettingsInputLossSettings(in.InputLossSettings),
+		"video_black_settings":   flattenInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettingsVideoBlackSettings(in.VideoBlackSettings),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettingsAudioSilenceSettings(in *types.AudioSilenceFailoverSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"audio_selector_name":          aws.ToString(in.AudioSelectorName),
+		"audio_silence_threshold_msec": int(aws.ToInt32(in.AudioSilenceThresholdMsec)),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettingsInputLossSettings(in *types.InputLossFailoverSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"input_loss_threshold_msec": int(aws.ToInt32(in.InputLossThresholdMsec)),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenInputAttachmentAutomaticInputFailoverSettingsFailoverConditionsFailoverConditionSettingsVideoBlackSettings(in *types.VideoBlackFailoverSettings) []interface{} {
+	if in == nil {
+		return nil
+	}
+
+	m := map[string]interface{}{
+		"black_detect_threshold":     float32(aws.ToFloat64(in.BlackDetectThreshold)),
+		"video_black_threshold_msec": int(aws.ToInt32(in.VideoBlackThresholdMsec)),
 	}
 
 	return []interface{}{m}
@@ -1673,14 +2435,14 @@ func expandChannelVPC(tfList []interface{}) *types.VpcOutputSettings {
 	m := tfList[0].(map[string]interface{})
 
 	settings := &types.VpcOutputSettings{}
-	if v, ok := m["security_group_ids"].([]string); ok && len(v) > 0 {
-		settings.SecurityGroupIds = v
+	if v, ok := m["security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
+		settings.SecurityGroupIds = flex.ExpandStringValueSet(v)
 	}
-	if v, ok := m["subnet_ids"].([]string); ok && len(v) > 0 {
-		settings.SubnetIds = v
+	if v, ok := m["subnet_ids"].(*schema.Set); ok && v.Len() > 0 {
+		settings.SubnetIds = flex.ExpandStringValueSet(v)
 	}
-	if v, ok := m["public_address_allocation_ids"].([]string); ok && len(v) > 0 {
-		settings.PublicAddressAllocationIds = v
+	if v, ok := m["public_address_allocation_ids"].(*schema.Set); ok && v.Len() > 0 {
+		settings.PublicAddressAllocationIds = flex.ExpandStringValueSet(v)
 	}
 
 	return settings
@@ -1692,8 +2454,10 @@ func flattenChannelVPC(apiObject *types.VpcOutputSettingsDescription) []interfac
 	}
 
 	m := map[string]interface{}{
-		"security_group_ids": flex.FlattenStringValueList(apiObject.SecurityGroupIds),
-		"subnet_ids":         flex.FlattenStringValueList(apiObject.SubnetIds),
+		"availability_zones":    flex.FlattenStringValueSet(apiObject.AvailabilityZones),
+		"network_interface_ids": flex.FlattenStringValueSet(apiObject.NetworkInterfaceIds),
+		"security_group_ids":    flex.FlattenStringValueSet(apiObject.SecurityGroupIds),
+		"subnet_ids":            flex.FlattenStringValueSet(apiObject.SubnetIds),
 		// public_address_allocation_ids is not included in the output struct
 	}
 

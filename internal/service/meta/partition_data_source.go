@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package meta
 
 import (
@@ -59,10 +62,10 @@ func (d *dataSourcePartition) Read(ctx context.Context, request datasource.ReadR
 		return
 	}
 
-	data.DNSSuffix = types.StringValue(d.Meta().DNSSuffix)
+	data.DNSSuffix = types.StringValue(d.Meta().DNSSuffix(ctx))
 	data.ID = types.StringValue(d.Meta().Partition)
 	data.Partition = types.StringValue(d.Meta().Partition)
-	data.ReverseDNSPrefix = types.StringValue(d.Meta().ReverseDNSPrefix)
+	data.ReverseDNSPrefix = types.StringValue(d.Meta().ReverseDNSPrefix(ctx))
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }

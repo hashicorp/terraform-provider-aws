@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package glue
 
 import (
@@ -18,8 +21,6 @@ const (
 	schemaAvailableTimeout        = 2 * time.Minute
 	schemaDeleteTimeout           = 2 * time.Minute
 	schemaVersionAvailableTimeout = 2 * time.Minute
-	triggerCreateTimeout          = 5 * time.Minute
-	triggerDeleteTimeout          = 5 * time.Minute
 )
 
 // waitMLTransformDeleted waits for an MLTransform to return Deleted
@@ -113,7 +114,7 @@ func waitSchemaVersionAvailable(ctx context.Context, conn *glue.Glue, registryID
 }
 
 // waitTriggerCreated waits for a Trigger to return Created
-func waitTriggerCreated(ctx context.Context, conn *glue.Glue, triggerName string) (*glue.GetTriggerOutput, error) { //nolint:unparam
+func waitTriggerCreated(ctx context.Context, conn *glue.Glue, triggerName string, timeout time.Duration) (*glue.GetTriggerOutput, error) { //nolint:unparam
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			glue.TriggerStateActivating,
@@ -125,7 +126,7 @@ func waitTriggerCreated(ctx context.Context, conn *glue.Glue, triggerName string
 			glue.TriggerStateCreated,
 		},
 		Refresh: statusTrigger(ctx, conn, triggerName),
-		Timeout: triggerCreateTimeout,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -138,12 +139,12 @@ func waitTriggerCreated(ctx context.Context, conn *glue.Glue, triggerName string
 }
 
 // waitTriggerDeleted waits for a Trigger to return Deleted
-func waitTriggerDeleted(ctx context.Context, conn *glue.Glue, triggerName string) (*glue.GetTriggerOutput, error) {
+func waitTriggerDeleted(ctx context.Context, conn *glue.Glue, triggerName string, timeout time.Duration) (*glue.GetTriggerOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{glue.TriggerStateDeleting},
 		Target:  []string{},
 		Refresh: statusTrigger(ctx, conn, triggerName),
-		Timeout: triggerDeleteTimeout,
+		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)

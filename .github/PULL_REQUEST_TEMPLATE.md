@@ -35,8 +35,8 @@ Replace ec2 with the service package corresponding to your tests.
 For more information on the `-run` flag, see the `go test` documentation at https://tip.golang.org/cmd/go/#hdr-Testing_flags.
 -->
 
-```
-$ make testacc TESTS=TestAccXXX PKG=ec2
+```console
+% make testacc TESTS=TestAccXXX PKG=ec2
 
 ...
 ```

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package pricing_test
 
 import (
@@ -18,7 +21,7 @@ func TestAccPricingProductDataSource_ec2(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApSouth1RegionID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PricingEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PricingServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -40,7 +43,7 @@ func TestAccPricingProductDataSource_redshift(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID, endpoints.ApSouth1RegionID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PricingEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PricingServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{

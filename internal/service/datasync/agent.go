@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package datasync
 
 import (
@@ -49,19 +52,19 @@ func ResourceAgent() *schema.Resource {
 				Optional:      true,
 				Computed:      true,
 				ForceNew:      true,
-				ExactlyOneOf:  []string{"activation_key", "ip_address"},
-				ConflictsWith: []string{"private_link_endpoint"},
+				ConflictsWith: []string{"private_link_endpoint", "ip_address"},
 			},
 			"ip_address": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ExactlyOneOf: []string{"activation_key", "ip_address"},
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"activation_key"},
 			},
 			"private_link_endpoint": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"activation_key"},
 			},
@@ -103,6 +106,10 @@ func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	// Perform one time fetch of activation key from gateway IP address.
 	if activationKey == "" {
+		if agentIpAddress == "" {
+			return sdkdiag.AppendErrorf(diags, "one of activation_key or ip_address is required")
+		}
+
 		client := &http.Client{
 			CheckRedirect: func(req *http.Request, via []*http.Request) error {
 				return http.ErrUseLastResponse
@@ -118,7 +125,7 @@ func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta inter
 			requestURL = fmt.Sprintf("http://%s/?gatewayType=SYNC&activationRegion=%s", agentIpAddress, region)
 		}
 
-		request, err := http.NewRequest("GET", requestURL, nil)
+		request, err := http.NewRequest(http.MethodGet, requestURL, nil)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "creating HTTP request: %s", err)
 		}
@@ -204,8 +211,9 @@ func resourceAgentCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
 		return FindAgentByARN(ctx, conn, d.Id())
 	})
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for DataSync Agent (%s) creation: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for DataSync Agent (%s) create: %s", d.Id(), err)
 	}
 
 	return append(diags, resourceAgentRead(ctx, d, meta)...)
@@ -282,4 +290,29 @@ func resourceAgentDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	return diags
+}
+
+func FindAgentByARN(ctx context.Context, conn *datasync.DataSync, arn string) (*datasync.DescribeAgentOutput, error) {
+	input := &datasync.DescribeAgentInput{
+		AgentArn: aws.String(arn),
+	}
+
+	output, err := conn.DescribeAgentWithContext(ctx, input)
+
+	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "does not exist") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }

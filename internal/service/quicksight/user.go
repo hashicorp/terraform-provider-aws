@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package quicksight
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -29,74 +32,76 @@ func ResourceUser() *schema.Resource {
 		UpdateWithoutTimeout: resourceUserUpdate,
 		DeleteWithoutTimeout: resourceUserDelete,
 
-		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 
-			"aws_account_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
+				"aws_account_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
 
-			"email": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+				"email": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
 
-			"iam_arn": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
+				"iam_arn": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
 
-			"identity_type": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					quicksight.IdentityTypeIam,
-					quicksight.IdentityTypeQuicksight,
-				}, false),
-			},
+				"identity_type": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.StringInSlice([]string{
+						quicksight.IdentityTypeIam,
+						quicksight.IdentityTypeQuicksight,
+					}, false),
+				},
 
-			"namespace": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  DefaultUserNamespace,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 63),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9._-]*$`), "must contain only alphanumeric characters, hyphens, underscores, and periods"),
-				),
-			},
+				"namespace": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+					Default:  DefaultUserNamespace,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 63),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "must contain only alphanumeric characters, hyphens, underscores, and periods"),
+					),
+				},
 
-			"session_name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
+				"session_name": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
 
-			"user_name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.NoZeroValues,
-			},
+				"user_name": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.NoZeroValues,
+				},
 
-			"user_role": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					quicksight.UserRoleReader,
-					quicksight.UserRoleAuthor,
-					quicksight.UserRoleAdmin,
-				}, false),
-			},
+				"user_role": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+					ValidateFunc: validation.StringInSlice([]string{
+						quicksight.UserRoleReader,
+						quicksight.UserRoleAuthor,
+						quicksight.UserRoleAdmin,
+					}, false),
+				},
+			}
 		},
 	}
 }

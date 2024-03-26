@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigatewayv2_test
 
 import (
@@ -14,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAPIGatewayV2Authorizer_basic(t *testing.T) {
@@ -26,7 +30,7 @@ func TestAccAPIGatewayV2Authorizer_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAuthorizerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -42,6 +46,16 @@ func TestAccAPIGatewayV2Authorizer_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "enable_simple_responses", "false"),
 					resource.TestCheckResourceAttr(resourceName, "identity_sources.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "jwt_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+				),
+			},
+			{
+				Config: testAccAuthorizerConfig_httpNoAuthenticationSources(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAuthorizerExists(ctx, resourceName, &apiId, &v),
+					resource.TestCheckResourceAttr(resourceName, "authorizer_type", "REQUEST"),
+					resource.TestCheckResourceAttr(resourceName, "identity_sources.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "authorizer_result_ttl_in_seconds", "0"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
 			},
@@ -64,7 +78,7 @@ func TestAccAPIGatewayV2Authorizer_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAuthorizerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -91,7 +105,7 @@ func TestAccAPIGatewayV2Authorizer_credentials(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAuthorizerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -162,7 +176,7 @@ func TestAccAPIGatewayV2Authorizer_jwt(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAuthorizerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -223,7 +237,7 @@ func TestAccAPIGatewayV2Authorizer_HTTPAPILambdaRequestAuthorizer_initialMissing
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAuthorizerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -297,7 +311,7 @@ func TestAccAPIGatewayV2Authorizer_HTTPAPILambdaRequestAuthorizer_initialZeroCac
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAuthorizerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -565,6 +579,22 @@ resource "aws_apigatewayv2_authorizer" "test" {
   authorizer_uri                    = aws_lambda_function.test.invoke_arn
   enable_simple_responses           = true
   identity_sources                  = ["$request.header.Auth"]
+  name                              = %[1]q
+}
+`, rName))
+}
+
+func testAccAuthorizerConfig_httpNoAuthenticationSources(rName string) string {
+	return acctest.ConfigCompose(
+		testAccAuthorizerConfig_apiHTTP(rName),
+		testAccAuthorizerConfig_baseLambda(rName),
+		fmt.Sprintf(`
+resource "aws_apigatewayv2_authorizer" "test" {
+  api_id                            = aws_apigatewayv2_api.test.id
+  authorizer_payload_format_version = "2.0"
+  authorizer_type                   = "REQUEST"
+  authorizer_uri                    = aws_lambda_function.test.invoke_arn
+  enable_simple_responses           = true
   name                              = %[1]q
 }
 `, rName))

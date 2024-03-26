@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package securityhub_test
 
 import (
@@ -15,17 +18,38 @@ func TestAccSecurityHub_serial(t *testing.T) {
 			"disappears":                  testAccAccount_disappears,
 			"EnableDefaultStandardsFalse": testAccAccount_enableDefaultStandardsFalse,
 			"MigrateV0":                   testAccAccount_migrateV0,
-			"full":                        testAccAccount_full,
+			"Full":                        testAccAccount_full,
+			"RemoveControlFindingGeneratorDefaultValue": testAccAccount_removeControlFindingGeneratorDefaultValue,
 		},
-		"Member": {
-			"basic":  testAccMember_basic,
-			"invite": testAccMember_invite,
+		"AutomationRule": {
+			"basic":         testAccAutomationRule_basic,
+			"full":          testAccAutomationRule_full,
+			"disappears":    testAccAutomationRule_disappears,
+			"stringFilters": testAccAutomationRule_stringFilters,
+			"numberFilters": testAccAutomationRule_numberFilters,
+			"dateFilters":   testAccAutomationRule_dateFilters,
+			"mapFilters":    testAccAutomationRule_mapFilters,
+			"tags":          testAccAutomationRule_tags,
 		},
 		"ActionTarget": {
 			"basic":       testAccActionTarget_basic,
 			"disappears":  testAccActionTarget_disappears,
 			"Description": testAccActionTarget_Description,
 			"Name":        testAccActionTarget_Name,
+		},
+		"ConfigurationPolicy": {
+			"basic":              testAccConfigurationPolicy_basic,
+			"disappears":         testAccConfigurationPolicy_disappears,
+			"CustomParameters":   testAccConfigurationPolicy_controlCustomParameters,
+			"ControlIdentifiers": testAccConfigurationPolicy_specificControlIdentifiers,
+		},
+		"ConfigurationPolicyAssociation": {
+			"basic":      testAccConfigurationPolicyAssociation_basic,
+			"disappears": testAccConfigurationPolicyAssociation_disappears,
+		},
+		"FindingAggregator": {
+			"basic":      testAccFindingAggregator_basic,
+			"disappears": testAccFindingAggregator_disappears,
 		},
 		"Insight": {
 			"basic":            testAccInsight_basic,
@@ -43,14 +67,19 @@ func TestAccSecurityHub_serial(t *testing.T) {
 		"InviteAccepter": {
 			"basic": testAccInviteAccepter_basic,
 		},
+		"Member": {
+			"basic":  testAccMember_basic,
+			"invite": testAccMember_invite,
+		},
 		"OrganizationAdminAccount": {
 			"basic":       testAccOrganizationAdminAccount_basic,
 			"disappears":  testAccOrganizationAdminAccount_disappears,
 			"MultiRegion": testAccOrganizationAdminAccount_MultiRegion,
 		},
 		"OrganizationConfiguration": {
-			"basic":               testAccOrganizationConfiguration_basic,
-			"AutoEnableStandards": testAccOrganizationConfiguration_autoEnableStandards,
+			"basic":                testAccOrganizationConfiguration_basic,
+			"AutoEnableStandards":  testAccOrganizationConfiguration_autoEnableStandards,
+			"CentralConfiguration": testAccOrganizationConfiguration_centralConfiguration,
 		},
 		"ProductSubscription": {
 			"basic": testAccProductSubscription_basic,
@@ -63,10 +92,6 @@ func TestAccSecurityHub_serial(t *testing.T) {
 		"StandardsSubscription": {
 			"basic":      testAccStandardsSubscription_basic,
 			"disappears": testAccStandardsSubscription_disappears,
-		},
-		"FindingAggregator": {
-			"basic":      testAccFindingAggregator_basic,
-			"disappears": testAccFindingAggregator_disappears,
 		},
 	}
 

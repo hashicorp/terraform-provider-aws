@@ -7,6 +7,7 @@ import (
 
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	sesv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sesv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -47,6 +48,11 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  ResourceAccountVDMAttributes,
+			TypeName: "aws_sesv2_account_vdm_attributes",
+			Name:     "Account VDM Attributes",
+		},
 		{
 			Factory:  ResourceConfigurationSet,
 			TypeName: "aws_sesv2_configuration_set",
@@ -95,6 +101,11 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  ResourceEmailIdentityMailFromAttributes,
 			TypeName: "aws_sesv2_email_identity_mail_from_attributes",
 		},
+		{
+			Factory:  ResourceEmailIdentityPolicy,
+			TypeName: "aws_sesv2_email_identity_policy",
+			Name:     "Email Identity Policy",
+		},
 	}
 }
 
@@ -108,9 +119,11 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 
 	return sesv2_sdkv2.NewFromConfig(cfg, func(o *sesv2_sdkv2.Options) {
 		if endpoint := config["endpoint"].(string); endpoint != "" {
-			o.EndpointResolver = sesv2_sdkv2.EndpointResolverFromURL(endpoint)
+			o.BaseEndpoint = aws_sdkv2.String(endpoint)
 		}
 	}), nil
 }
 
-var ServicePackage = &servicePackage{}
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}

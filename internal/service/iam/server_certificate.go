@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
@@ -27,8 +30,9 @@ import (
 )
 
 // @SDKResource("aws_iam_server_certificate", name="Server Certificate")
-// @Tags
-func ResourceServerCertificate() *schema.Resource {
+// @Tags(identifierAttribute="name", resourceType="ServerCertificate")
+// @Testing(tagsTest=false)
+func resourceServerCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServerCertificateCreate,
 		ReadWithoutTimeout:   resourceServerCertificateRead,
@@ -161,7 +165,7 @@ func resourceServerCertificateRead(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
-	cert, err := FindServerCertificateByName(ctx, conn, d.Get("name").(string))
+	cert, err := findServerCertificateByName(ctx, conn, d.Get("name").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IAM Server Certificate (%s) not found, removing from state", d.Id())
@@ -199,22 +203,8 @@ func resourceServerCertificateRead(ctx context.Context, d *schema.ResourceData, 
 
 func resourceServerCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		err := serverCertificateUpdateTags(ctx, conn, d.Get("name").(string), o, n)
-
-		// Some partitions (e.g. ISO) may not support tagging.
-		if errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
-			return append(diags, resourceServerCertificateRead(ctx, d, meta)...)
-		}
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags for IAM Server Certificate (%s): %s", d.Id(), err)
-		}
-	}
+	// Tags only.
 
 	return append(diags, resourceServerCertificateRead(ctx, d, meta)...)
 }
@@ -247,7 +237,7 @@ func resourceServerCertificateImport(ctx context.Context, d *schema.ResourceData
 	return []*schema.ResourceData{d}, nil
 }
 
-func FindServerCertificateByName(ctx context.Context, conn *iam.IAM, name string) (*iam.ServerCertificate, error) {
+func findServerCertificateByName(ctx context.Context, conn *iam.IAM, name string) (*iam.ServerCertificate, error) {
 	input := &iam.GetServerCertificateInput{
 		ServerCertificateName: aws.String(name),
 	}

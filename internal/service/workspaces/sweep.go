@@ -1,24 +1,28 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package workspaces
 
 import (
+	"context"
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/workspaces"
-	"github.com/hashicorp/go-multierror"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/workspaces"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_workspaces_directory", &resource.Sweeper{
-		Name:         "aws_workspaces_directory",
-		F:            sweepDirectories,
-		Dependencies: []string{"aws_workspaces_workspace", "aws_workspaces_ip_group"},
+		Name: "aws_workspaces_directory",
+		F:    sweepDirectories,
+		Dependencies: []string{
+			"aws_workspaces_workspace",
+			"aws_workspaces_ip_group",
+		},
 	})
 
 	resource.AddTestSweepers("aws_workspaces_ip_group", &resource.Sweeper{
@@ -38,36 +42,33 @@ func sweepDirectories(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.WorkSpacesConn(ctx)
 	input := &workspaces.DescribeWorkspaceDirectoriesInput{}
+	conn := client.WorkSpacesClient(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.DescribeWorkspaceDirectoriesPagesWithContext(ctx, input, func(page *workspaces.DescribeWorkspaceDirectoriesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	paginator := workspaces.NewDescribeWorkspaceDirectoriesPaginator(conn, input)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping WorkSpaces Directory sweep for %s: %s", region, err)
+			return nil
 		}
 
-		for _, directory := range page.Directories {
+		if err != nil {
+			return fmt.Errorf("error listing WorkSpaces Directories (%s): %w", region, err)
+		}
+
+		for _, v := range page.Directories {
 			r := ResourceDirectory()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(directory.DirectoryId))
+			d.SetId(aws.ToString(v.DirectoryId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping WorkSpaces Directory sweep for %s: %s", region, err)
-		return nil
 	}
 
-	if err != nil {
-		return fmt.Errorf("error listing WorkSpaces Directories (%s): %w", region, err)
-	}
-
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping WorkSpaces Directories (%s): %w", region, err)
@@ -82,7 +83,7 @@ func sweepIPGroups(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.WorkSpacesConn(ctx)
+	conn := client.WorkSpacesClient(ctx)
 	input := &workspaces.DescribeIpGroupsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -91,10 +92,10 @@ func sweepIPGroups(region string) error {
 			return !lastPage
 		}
 
-		for _, ipGroup := range page.Result {
+		for _, v := range page.Result {
 			r := ResourceIPGroup()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(ipGroup.GroupId))
+			d.SetId(aws.ToString(v.GroupId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -102,21 +103,38 @@ func sweepIPGroups(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping WorkSpaces Ip Group sweep for %s: %s", region, err)
+	if awsv2.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping WorkSpaces IP Group sweep for %s: %s", region, err)
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("error listing WorkSpaces Ip Groups (%s): %w", region, err)
+		return fmt.Errorf("error listing WorkSpaces IP Groups (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
-		return fmt.Errorf("error sweeping WorkSpaces Ip Groups (%s): %w", region, err)
+		return fmt.Errorf("error sweeping WorkSpaces IP Groups (%s): %w", region, err)
 	}
 
+	return nil
+}
+
+func describeIPGroupsPages(ctx context.Context, conn *workspaces.Client, input *workspaces.DescribeIpGroupsInput, fn func(*workspaces.DescribeIpGroupsOutput, bool) bool) error {
+	for {
+		output, err := conn.DescribeIpGroups(ctx, input)
+		if err != nil {
+			return err
+		}
+
+		lastPage := aws.ToString(output.NextToken) == ""
+		if !fn(output, lastPage) || lastPage {
+			break
+		}
+
+		input.NextToken = output.NextToken
+	}
 	return nil
 }
 
@@ -126,27 +144,37 @@ func sweepWorkspace(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.WorkSpacesConn(ctx)
-
-	var errors error
 	input := &workspaces.DescribeWorkspacesInput{}
-	err = conn.DescribeWorkspacesPagesWithContext(ctx, input, func(resp *workspaces.DescribeWorkspacesOutput, _ bool) bool {
-		for _, workspace := range resp.Workspaces {
-			err := WorkspaceDelete(ctx, conn, aws.StringValue(workspace.WorkspaceId), WorkspaceTerminatedTimeout)
-			if err != nil {
-				errors = multierror.Append(errors, err)
-			}
+	conn := client.WorkSpacesClient(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
 
+	paginator := workspaces.NewDescribeWorkspacesPaginator(conn, input)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping WorkSpaces Workspace sweep for %s: %s", region, err)
+			return nil
 		}
-		return true
-	})
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping workspaces sweep for %s: %s", region, err)
-		return errors // In case we have completed some pages, but had errors
-	}
-	if err != nil {
-		errors = multierror.Append(errors, fmt.Errorf("error listing workspaces: %s", err))
+
+		if err != nil {
+			return fmt.Errorf("error listing WorkSpaces Workspaces (%s): %w", region, err)
+		}
+
+		for _, v := range page.Workspaces {
+			r := ResourceWorkspace()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.WorkspaceId))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
 	}
 
-	return errors
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping WorkSpaces Workspaces (%s): %w", region, err)
+	}
+
+	return nil
 }

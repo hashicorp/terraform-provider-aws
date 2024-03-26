@@ -8,6 +8,7 @@ import (
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	iot_sdkv1 "github.com/aws/aws-sdk-go/service/iot"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -28,6 +29,11 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  DataSourceEndpoint,
 			TypeName: "aws_iot_endpoint",
 		},
+		{
+			Factory:  DataSourceRegistrationCode,
+			TypeName: "aws_iot_registration_code",
+			Name:     "Registration Code",
+		},
 	}
 }
 
@@ -38,8 +44,38 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_iot_authorizer",
 		},
 		{
+			Factory:  ResourceBillingGroup,
+			TypeName: "aws_iot_billing_group",
+			Name:     "Billing Group",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceCACertificate,
+			TypeName: "aws_iot_ca_certificate",
+			Name:     "CA Certificate",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
 			Factory:  ResourceCertificate,
 			TypeName: "aws_iot_certificate",
+			Name:     "Certificate",
+		},
+		{
+			Factory:  ResourceDomainConfiguration,
+			TypeName: "aws_iot_domain_configuration",
+			Name:     "Domain Configuration",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory:  ResourceEventConfigurations,
+			TypeName: "aws_iot_event_configurations",
+			Name:     "Event Configurations",
 		},
 		{
 			Factory:  ResourceIndexingConfiguration,
@@ -52,6 +88,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourcePolicy,
 			TypeName: "aws_iot_policy",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourcePolicyAttachment,
@@ -68,6 +107,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceRoleAlias,
 			TypeName: "aws_iot_role_alias",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 		{
 			Factory:  ResourceThing,
@@ -123,4 +165,6 @@ func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*i
 	return iot_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
 }
 
-var ServicePackage = &servicePackage{}
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}

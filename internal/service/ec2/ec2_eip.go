@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -202,7 +205,7 @@ func resourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interface
 		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic %s domain EC2 EIPs are no longer supported`, ec2.DomainTypeStandard)
 	}
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
 		return FindEIPByAllocationID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -229,11 +232,11 @@ func resourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("public_ipv4_pool", address.PublicIpv4Pool)
 	d.Set("private_ip", address.PrivateIpAddress)
 	if v := aws.StringValue(address.PrivateIpAddress); v != "" {
-		d.Set("private_dns", PrivateDNSNameForIP(meta.(*conns.AWSClient), v))
+		d.Set("private_dns", PrivateDNSNameForIP(ctx, meta.(*conns.AWSClient), v))
 	}
 	d.Set("public_ip", address.PublicIp)
 	if v := aws.StringValue(address.PublicIp); v != "" {
-		d.Set("public_dns", PublicDNSNameForIP(meta.(*conns.AWSClient), v))
+		d.Set("public_dns", PublicDNSNameForIP(ctx, meta.(*conns.AWSClient), v))
 	}
 	d.Set("vpc", aws.StringValue(address.Domain) == ec2.DomainTypeVpc)
 
@@ -339,7 +342,7 @@ func associateEIP(ctx context.Context, conn *ec2.EC2, allocationID, instanceID, 
 		return fmt.Errorf("associating EC2 EIP (%s): %w", allocationID, err)
 	}
 
-	_, err = tfresource.RetryWhen(ctx, propagationTimeout,
+	_, err = tfresource.RetryWhen(ctx, ec2PropagationTimeout,
 		func() (interface{}, error) {
 			return FindEIPByAssociationID(ctx, conn, aws.StringValue(output.AssociationId))
 		},
@@ -390,10 +393,10 @@ func ConvertIPToDashIP(ip string) string {
 	return strings.Replace(ip, ".", "-", -1)
 }
 
-func PrivateDNSNameForIP(client *conns.AWSClient, ip string) string {
+func PrivateDNSNameForIP(ctx context.Context, client *conns.AWSClient, ip string) string {
 	return fmt.Sprintf("ip-%s.%s", ConvertIPToDashIP(ip), RegionalPrivateDNSSuffix(client.Region))
 }
 
-func PublicDNSNameForIP(client *conns.AWSClient, ip string) string {
-	return client.PartitionHostname(fmt.Sprintf("ec2-%s.%s", ConvertIPToDashIP(ip), RegionalPublicDNSSuffix(client.Region)))
+func PublicDNSNameForIP(ctx context.Context, client *conns.AWSClient, ip string) string {
+	return client.PartitionHostname(ctx, fmt.Sprintf("ec2-%s.%s", ConvertIPToDashIP(ip), RegionalPublicDNSSuffix(client.Region)))
 }

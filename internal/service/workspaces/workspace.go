@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package workspaces
 
 import (
@@ -6,12 +9,14 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/workspaces"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/workspaces"
+	"github.com/aws/aws-sdk-go-v2/service/workspaces/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -84,8 +89,8 @@ func ResourceWorkspace() *schema.Resource {
 						"compute_type_name": {
 							Type:         schema.TypeString,
 							Optional:     true,
-							Default:      workspaces.ComputeValue,
-							ValidateFunc: validation.StringInSlice(workspaces.Compute_Values(), false),
+							Default:      string(types.ComputeValue),
+							ValidateFunc: validation.StringInSlice(flattenComputeEnumValues(types.Compute("").Values()), false),
 						},
 						"root_volume_size_gib": {
 							Type:     schema.TypeInt,
@@ -99,11 +104,11 @@ func ResourceWorkspace() *schema.Resource {
 						"running_mode": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  workspaces.RunningModeAlwaysOn,
-							ValidateFunc: validation.StringInSlice([]string{
-								workspaces.RunningModeAlwaysOn,
-								workspaces.RunningModeAutoStop,
-							}, false),
+							Default:  string(types.RunningModeAlwaysOn),
+							ValidateFunc: validation.StringInSlice(enum.Slice(
+								types.RunningModeAlwaysOn,
+								types.RunningModeAutoStop,
+							), false),
 						},
 						"running_mode_auto_stop_timeout_in_minutes": {
 							Type:     schema.TypeInt,
@@ -145,9 +150,9 @@ func ResourceWorkspace() *schema.Resource {
 
 func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WorkSpacesConn(ctx)
+	conn := meta.(*conns.AWSClient).WorkSpacesClient(ctx)
 
-	input := &workspaces.WorkspaceRequest{
+	input := types.WorkspaceRequest{
 		BundleId:                    aws.String(d.Get("bundle_id").(string)),
 		DirectoryId:                 aws.String(d.Get("directory_id").(string)),
 		UserName:                    aws.String(d.Get("user_name").(string)),
@@ -162,8 +167,8 @@ func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	input.WorkspaceProperties = ExpandWorkspaceProperties(d.Get("workspace_properties").([]interface{}))
 
-	resp, err := conn.CreateWorkspacesWithContext(ctx, &workspaces.CreateWorkspacesInput{
-		Workspaces: []*workspaces.WorkspaceRequest{input},
+	resp, err := conn.CreateWorkspaces(ctx, &workspaces.CreateWorkspacesInput{
+		Workspaces: []types.WorkspaceRequest{input},
 	})
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating WorkSpaces Workspace: %s", err)
@@ -171,10 +176,10 @@ func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 	wsFail := resp.FailedRequests
 	if len(wsFail) > 0 {
-		return sdkdiag.AppendErrorf(diags, "creating WorkSpaces Workspace: %s: %s", aws.StringValue(wsFail[0].ErrorCode), aws.StringValue(wsFail[0].ErrorMessage))
+		return sdkdiag.AppendErrorf(diags, "creating WorkSpaces Workspace: %s: %s", aws.ToString(wsFail[0].ErrorCode), aws.ToString(wsFail[0].ErrorMessage))
 	}
 
-	workspaceID := aws.StringValue(resp.PendingRequests[0].WorkspaceId)
+	workspaceID := aws.ToString(resp.PendingRequests[0].WorkspaceId)
 	d.SetId(workspaceID)
 
 	_, err = WaitWorkspaceAvailable(ctx, conn, workspaceID, d.Timeout(schema.TimeoutCreate))
@@ -187,19 +192,19 @@ func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WorkSpacesConn(ctx)
+	conn := meta.(*conns.AWSClient).WorkSpacesClient(ctx)
 
 	rawOutput, state, err := StatusWorkspaceState(ctx, conn, d.Id())()
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading WorkSpaces Workspace (%s): %s", d.Id(), err)
 	}
-	if state == workspaces.WorkspaceStateTerminated {
+	if state == string(types.WorkspaceStateTerminated) {
 		log.Printf("[WARN] WorkSpaces Workspace (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
-	workspace := rawOutput.(*workspaces.Workspace)
+	workspace := rawOutput.(types.Workspace)
 	d.Set("bundle_id", workspace.BundleId)
 	d.Set("directory_id", workspace.DirectoryId)
 	d.Set("ip_address", workspace.IpAddress)
@@ -218,7 +223,7 @@ func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta int
 
 func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WorkSpacesConn(ctx)
+	conn := meta.(*conns.AWSClient).WorkSpacesClient(ctx)
 
 	// IMPORTANT: Only one workspace property could be changed in a time.
 	// I've create AWS Support feature request to allow multiple properties modification in a time.
@@ -259,7 +264,7 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceWorkspaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WorkSpacesConn(ctx)
+	conn := meta.(*conns.AWSClient).WorkSpacesClient(ctx)
 
 	if err := WorkspaceDelete(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
@@ -267,9 +272,9 @@ func resourceWorkspaceDelete(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func WorkspaceDelete(ctx context.Context, conn *workspaces.WorkSpaces, id string, timeout time.Duration) error {
-	resp, err := conn.TerminateWorkspacesWithContext(ctx, &workspaces.TerminateWorkspacesInput{
-		TerminateWorkspaceRequests: []*workspaces.TerminateRequest{
+func WorkspaceDelete(ctx context.Context, conn *workspaces.Client, id string, timeout time.Duration) error {
+	resp, err := conn.TerminateWorkspaces(ctx, &workspaces.TerminateWorkspacesInput{
+		TerminateWorkspaceRequests: []types.TerminateRequest{
 			{
 				WorkspaceId: aws.String(id),
 			},
@@ -281,7 +286,7 @@ func WorkspaceDelete(ctx context.Context, conn *workspaces.WorkSpaces, id string
 
 	wsFail := resp.FailedRequests
 	if len(wsFail) > 0 {
-		return fmt.Errorf("deleting WorkSpaces Workspace (%s): %s: %s", id, aws.StringValue(wsFail[0].ErrorCode), aws.StringValue(wsFail[0].ErrorMessage))
+		return fmt.Errorf("deleting WorkSpaces Workspace (%s): %s: %s", id, aws.ToString(wsFail[0].ErrorCode), aws.ToString(wsFail[0].ErrorMessage))
 	}
 
 	_, err = WaitWorkspaceTerminated(ctx, conn, id, timeout)
@@ -292,40 +297,40 @@ func WorkspaceDelete(ctx context.Context, conn *workspaces.WorkSpaces, id string
 	return nil
 }
 
-func workspacePropertyUpdate(ctx context.Context, p string, conn *workspaces.WorkSpaces, d *schema.ResourceData) error {
+func workspacePropertyUpdate(ctx context.Context, p string, conn *workspaces.Client, d *schema.ResourceData) error {
 	id := d.Id()
 
-	var wsp *workspaces.WorkspaceProperties
+	var wsp *types.WorkspaceProperties
 
 	switch p {
 	case "compute_type_name":
-		wsp = &workspaces.WorkspaceProperties{
-			ComputeTypeName: aws.String(d.Get("workspace_properties.0.compute_type_name").(string)),
+		wsp = &types.WorkspaceProperties{
+			ComputeTypeName: types.Compute(d.Get("workspace_properties.0.compute_type_name").(string)),
 		}
 	case "root_volume_size_gib":
-		wsp = &workspaces.WorkspaceProperties{
-			RootVolumeSizeGib: aws.Int64(int64(d.Get("workspace_properties.0.root_volume_size_gib").(int))),
+		wsp = &types.WorkspaceProperties{
+			RootVolumeSizeGib: aws.Int32(int32(d.Get("workspace_properties.0.root_volume_size_gib").(int))),
 		}
 	case "running_mode":
-		wsp = &workspaces.WorkspaceProperties{
-			RunningMode: aws.String(d.Get("workspace_properties.0.running_mode").(string)),
+		wsp = &types.WorkspaceProperties{
+			RunningMode: types.RunningMode(d.Get("workspace_properties.0.running_mode").(string)),
 		}
 	case "running_mode_auto_stop_timeout_in_minutes":
-		if d.Get("workspace_properties.0.running_mode") != workspaces.RunningModeAutoStop {
+		if d.Get("workspace_properties.0.running_mode") != types.RunningModeAutoStop {
 			log.Printf("[DEBUG] Property running_mode_auto_stop_timeout_in_minutes makes sense only for AUTO_STOP running mode")
 			return nil
 		}
 
-		wsp = &workspaces.WorkspaceProperties{
-			RunningModeAutoStopTimeoutInMinutes: aws.Int64(int64(d.Get("workspace_properties.0.running_mode_auto_stop_timeout_in_minutes").(int))),
+		wsp = &types.WorkspaceProperties{
+			RunningModeAutoStopTimeoutInMinutes: aws.Int32(int32(d.Get("workspace_properties.0.running_mode_auto_stop_timeout_in_minutes").(int))),
 		}
 	case "user_volume_size_gib":
-		wsp = &workspaces.WorkspaceProperties{
-			UserVolumeSizeGib: aws.Int64(int64(d.Get("workspace_properties.0.user_volume_size_gib").(int))),
+		wsp = &types.WorkspaceProperties{
+			UserVolumeSizeGib: aws.Int32(int32(d.Get("workspace_properties.0.user_volume_size_gib").(int))),
 		}
 	}
 
-	_, err := conn.ModifyWorkspacePropertiesWithContext(ctx, &workspaces.ModifyWorkspacePropertiesInput{
+	_, err := conn.ModifyWorkspaceProperties(ctx, &workspaces.ModifyWorkspacePropertiesInput{
 		WorkspaceId:         aws.String(id),
 		WorkspaceProperties: wsp,
 	})
@@ -341,7 +346,7 @@ func workspacePropertyUpdate(ctx context.Context, p string, conn *workspaces.Wor
 	return nil
 }
 
-func ExpandWorkspaceProperties(properties []interface{}) *workspaces.WorkspaceProperties {
+func ExpandWorkspaceProperties(properties []interface{}) *types.WorkspaceProperties {
 	log.Printf("[DEBUG] Expand Workspace properties: %+v ", properties)
 
 	if len(properties) == 0 || properties[0] == nil {
@@ -350,21 +355,21 @@ func ExpandWorkspaceProperties(properties []interface{}) *workspaces.WorkspacePr
 
 	p := properties[0].(map[string]interface{})
 
-	workspaceProperties := &workspaces.WorkspaceProperties{
-		ComputeTypeName:   aws.String(p["compute_type_name"].(string)),
-		RootVolumeSizeGib: aws.Int64(int64(p["root_volume_size_gib"].(int))),
-		RunningMode:       aws.String(p["running_mode"].(string)),
-		UserVolumeSizeGib: aws.Int64(int64(p["user_volume_size_gib"].(int))),
+	workspaceProperties := &types.WorkspaceProperties{
+		ComputeTypeName:   types.Compute(p["compute_type_name"].(string)),
+		RootVolumeSizeGib: aws.Int32(int32(p["root_volume_size_gib"].(int))),
+		RunningMode:       types.RunningMode(p["running_mode"].(string)),
+		UserVolumeSizeGib: aws.Int32(int32(p["user_volume_size_gib"].(int))),
 	}
 
-	if p["running_mode"].(string) == workspaces.RunningModeAutoStop {
-		workspaceProperties.RunningModeAutoStopTimeoutInMinutes = aws.Int64(int64(p["running_mode_auto_stop_timeout_in_minutes"].(int)))
+	if p["running_mode"].(string) == string(types.RunningModeAutoStop) {
+		workspaceProperties.RunningModeAutoStopTimeoutInMinutes = aws.Int32(int32(p["running_mode_auto_stop_timeout_in_minutes"].(int)))
 	}
 
 	return workspaceProperties
 }
 
-func FlattenWorkspaceProperties(properties *workspaces.WorkspaceProperties) []map[string]interface{} {
+func FlattenWorkspaceProperties(properties *types.WorkspaceProperties) []map[string]interface{} {
 	log.Printf("[DEBUG] Flatten workspace properties: %+v ", properties)
 
 	if properties == nil {
@@ -373,11 +378,21 @@ func FlattenWorkspaceProperties(properties *workspaces.WorkspaceProperties) []ma
 
 	return []map[string]interface{}{
 		{
-			"compute_type_name":                         aws.StringValue(properties.ComputeTypeName),
-			"root_volume_size_gib":                      int(aws.Int64Value(properties.RootVolumeSizeGib)),
-			"running_mode":                              aws.StringValue(properties.RunningMode),
-			"running_mode_auto_stop_timeout_in_minutes": int(aws.Int64Value(properties.RunningModeAutoStopTimeoutInMinutes)),
-			"user_volume_size_gib":                      int(aws.Int64Value(properties.UserVolumeSizeGib)),
+			"compute_type_name":                         string(properties.ComputeTypeName),
+			"root_volume_size_gib":                      int(aws.ToInt32(properties.RootVolumeSizeGib)),
+			"running_mode":                              string(properties.RunningMode),
+			"running_mode_auto_stop_timeout_in_minutes": int(aws.ToInt32(properties.RunningModeAutoStopTimeoutInMinutes)),
+			"user_volume_size_gib":                      int(aws.ToInt32(properties.UserVolumeSizeGib)),
 		},
 	}
+}
+
+func flattenComputeEnumValues(t []types.Compute) []string {
+	var out []string
+
+	for _, v := range t {
+		out = append(out, string(v))
+	}
+
+	return out
 }

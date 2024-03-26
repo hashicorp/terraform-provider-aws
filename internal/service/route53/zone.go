@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53
 
 import (
@@ -314,7 +317,7 @@ func resourceZoneDelete(ctx context.Context, d *schema.ResourceData, meta interf
 		Id: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Deleting Route53 Hosted Zone: %s", input)
+	log.Printf("[DEBUG] Deleting Route53 Hosted Zone: %s", d.Id())
 	_, err := conn.DeleteHostedZoneWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchHostedZone) {
@@ -407,6 +410,10 @@ func deleteAllResourceRecordsFromHostedZone(ctx context.Context, conn *route53.R
 		return !lastPage
 	})
 
+	if tfawserr.ErrCodeEquals(err, route53.ErrCodeNoSuchHostedZone) {
+		return nil
+	}
+
 	if err != nil {
 		return fmt.Errorf("Failed listing/deleting record sets: %s\nLast error from deletion: %s\nLast error from waiter: %s",
 			err, lastDeleteErr, lastErrorFromWaiter)
@@ -442,7 +449,8 @@ func dnsSECStatus(ctx context.Context, conn *route53.Route53, hostedZoneID strin
 		output, err = conn.GetDNSSECWithContext(ctx, input)
 	}
 
-	if tfawserr.ErrMessageContains(err, route53.ErrCodeInvalidArgument, "Operation is unsupported for private") {
+	if tfawserr.ErrMessageContains(err, route53.ErrCodeInvalidArgument, "Operation is unsupported for private") ||
+		tfawserr.ErrMessageContains(err, "AccessDenied", "The operation GetDNSSEC is not available for the current AWS account") {
 		return "NOT_SIGNING", nil
 	}
 
