@@ -4,32 +4,20 @@
 package ec2
 
 import (
-	// TIP: ==== IMPORTS ====
-	// This is a common set of imports but not customized to your code since
-	// your code hasn't been written yet. Make sure you, your IDE, or
-	// goimports -w <file> fixes these imports.
-	//
-	// The provider linter wants your imports to be in two groups: first,
-	// standard library (i.e., "fmt" or "strings"), second, everything else.
-	//
-	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
-	// using the services/ec2/types package. If so, you'll
-	// need to import types and reference the nested types, e.g., as
-	// awstypes.<Type Name>.
 	"context"
 	"errors"
-	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -223,7 +211,7 @@ func (r *resourceEC2InstanceMetadataDefaults) Update(ctx context.Context, req re
 		)
 		return
 	}
-	if out == nil || out.Return == nil || *out.Return == false {
+	if out == nil || aws.ToBool(out.Return) == false {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.EC2, create.ErrActionCreating, ResNameEC2InstanceMetadataDefaults, meta.Region, nil),
 			errors.New("empty output").Error(),
@@ -242,7 +230,7 @@ func (r *resourceEC2InstanceMetadataDefaults) Delete(ctx context.Context, req re
 	var state resourceEC2InstanceMetadataDefaultsData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 
-	out, err := conn.ModifyInstanceMetadataDefaults(context.Background(), &ec2.ModifyInstanceMetadataDefaultsInput{
+	out, err := conn.ModifyInstanceMetadataDefaults(ctx, &ec2.ModifyInstanceMetadataDefaultsInput{
 		HttpEndpoint:            awstypes.DefaultInstanceMetadataEndpointStateNoPreference,
 		HttpPutResponseHopLimit: aws.Int32(-1), // -1 means "no preference"
 		HttpTokens:              awstypes.MetadataDefaultHttpTokensStateNoPreference,
@@ -256,7 +244,7 @@ func (r *resourceEC2InstanceMetadataDefaults) Delete(ctx context.Context, req re
 		)
 		return
 	}
-	if out == nil || out.Return == nil || *out.Return == false {
+	if out == nil || aws.ToBool(out.Return) == false {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.EC2, create.ErrActionCreating, ResNameEC2InstanceMetadataDefaults, meta.Region, nil),
 			errors.New("empty output").Error(),

@@ -4,46 +4,30 @@
 package ec2_test
 
 import (
-	// TIP: ==== IMPORTS ====
-	// This is a common set of imports but not customized to your code since
-	// your code hasn't been written yet. Make sure you, your IDE, or
-	// goimports -w <file> fixes these imports.
-	//
-	// The provider linter wants your imports to be in two groups: first,
-	// standard library (i.e., "fmt" or "strings"), second, everything else.
-	//
-	// Also, AWS Go SDK v2 may handle nested structures differently than v1,
-	// using the services/ec2/types package. If so, you'll
-	// need to import types and reference the nested types, e.g., as
-	// types.<Type Name>.
 	"context"
 	"errors"
 	"fmt"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/aws/aws-sdk-go/aws"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/names"
-
-	// TIP: You will often need to import the package that this test file lives
-	// in. Since it is in the "test" context, it must import the package to use
-	// any normal context constants, variables, or functions.
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccInstanceMetadataDefaultsConfig_basic() string {
 	return fmt.Sprintf(`
 resource "aws_ec2_instance_metadata_defaults" "test" {
-  http_tokens                   = "required" # non-default
-  instance_metadata_tags        = "disabled" 
-  http_endpoint                 = "enabled"
-  http_put_response_hop_limit   = 1
+  http_tokens                 = "required" # non-default
+  instance_metadata_tags      = "disabled"
+  http_endpoint               = "enabled"
+  http_put_response_hop_limit = 1
 }
 `)
 }
@@ -51,8 +35,8 @@ resource "aws_ec2_instance_metadata_defaults" "test" {
 func testAccInstanceMetadataDefaultsConfig_partial() string {
 	return fmt.Sprintf(`
 resource "aws_ec2_instance_metadata_defaults" "test-partial" {
-  http_tokens                   = "required" # non-default
-  http_put_response_hop_limit   = 2 # non-default
+  http_tokens                 = "required" # non-default
+  http_put_response_hop_limit = 2          # non-default
 }
 `)
 }
@@ -164,8 +148,8 @@ func testAccCheckInstanceMetadataDefaultsExists(ctx context.Context, name string
 		if resp.AccountLevel.HttpTokens != expectations.HttpTokens {
 			return fmt.Errorf("expected HttpTokens to be '%s', got '%s'", expectations.HttpTokens, resp.AccountLevel.HttpTokens)
 		}
-		if aws.Int32Value(resp.AccountLevel.HttpPutResponseHopLimit) != aws.Int32Value(expectations.HttpPutResponseHopLimit) {
-			return fmt.Errorf("expected HttpPutResponseHopLimit to be '%d', got '%d'", aws.Int32Value(expectations.HttpPutResponseHopLimit), aws.Int32Value(resp.AccountLevel.HttpPutResponseHopLimit))
+		if *resp.AccountLevel.HttpPutResponseHopLimit != *expectations.HttpPutResponseHopLimit {
+			return fmt.Errorf("expected HttpPutResponseHopLimit to be '%d', got '%d'", *expectations.HttpPutResponseHopLimit, *resp.AccountLevel.HttpPutResponseHopLimit)
 		}
 		if resp.AccountLevel.HttpEndpoint != expectations.HttpEndpoint {
 			return fmt.Errorf("expected HttpEndpoint to be '%s', got '%s'", expectations.HttpEndpoint, resp.AccountLevel.HttpEndpoint)
