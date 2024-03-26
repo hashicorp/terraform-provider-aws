@@ -6,7 +6,7 @@ require (
 	github.com/ProtonMail/go-crypto v1.1.0-alpha.2
 	github.com/YakDriver/go-version v0.1.0
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.51.6
+	github.com/aws/aws-sdk-go v1.51.7
 	github.com/aws/aws-sdk-go-v2 v1.26.0
 	github.com/aws/aws-sdk-go-v2/config v1.27.9
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.0
@@ -38,7 +38,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.36.3
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.35.0
 	github.com/aws/aws-sdk-go-v2/service/codeartifact v1.26.0
-	github.com/aws/aws-sdk-go-v2/service/codebuild v1.31.2
+	github.com/aws/aws-sdk-go-v2/service/codebuild v1.32.0
 	github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.12.3
 	github.com/aws/aws-sdk-go-v2/service/codecommit v1.22.3
 	github.com/aws/aws-sdk-go-v2/service/codedeploy v1.25.3
@@ -55,14 +55,15 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.13.3
 	github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.4.3
 	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.36.3
+	github.com/aws/aws-sdk-go-v2/service/datazone v1.6.3
 	github.com/aws/aws-sdk-go-v2/service/devopsguru v1.30.3
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.24.3
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.9.2
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.31.0
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.152.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.153.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.27.3
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.23.3
-	github.com/aws/aws-sdk-go-v2/service/ecs v1.41.3
+	github.com/aws/aws-sdk-go-v2/service/ecs v1.41.4
 	github.com/aws/aws-sdk-go-v2/service/eks v1.41.2
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.37.4
 	github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.23.3
@@ -87,13 +88,13 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.31.4
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.53.3
 	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.3.3
-	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.43.2
+	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.43.3
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.36.3
 	github.com/aws/aws-sdk-go-v2/service/lookoutmetrics v1.27.3
 	github.com/aws/aws-sdk-go-v2/service/m2 v1.12.3
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.28.3
 	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.52.3
-	github.com/aws/aws-sdk-go-v2/service/medialive v1.48.3
+	github.com/aws/aws-sdk-go-v2/service/medialive v1.49.0
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.30.3
 	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.10.1
 	github.com/aws/aws-sdk-go-v2/service/mediastore v1.20.3
@@ -191,6 +192,8 @@ require (
 	gopkg.in/yaml.v2 v2.4.0
 	syreclabs.com/go/faker v1.2.3
 )
+
+require github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.23.3
 
 require (
 	github.com/Masterminds/goutils v1.1.1 // indirect

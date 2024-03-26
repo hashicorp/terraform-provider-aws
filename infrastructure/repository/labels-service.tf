@@ -85,6 +85,7 @@ variable "service_labels" {
     "dataexchange",
     "datapipeline",
     "datasync",
+    "datazone",
     "dax",
     "deploy",
     "detective",
