@@ -6,6 +6,7 @@ package ssoadmin_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -78,6 +79,38 @@ func TestAccSSOAdminPermissionSetInlinePolicy_update(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccSSOAdminPermissionSetInlinePolicy_PolicySize_exceeded(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_ssoadmin_permission_set_inline_policy.test"
+	permissionSetResourceName := "aws_ssoadmin_permission_set.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckSSOAdminInstances(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSOAdminServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPermissionSetInlinePolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			// Create a policy exceeding the quota
+			{
+				Config:      testAccPermissionSetInlinePolicyConfig_long_policy(rName, 32768),
+				ExpectError: regexache.MustCompile("Cannot exceed quota for PolicySize: 32768"),
+			},
+			// Create a valid policy just under the limit
+			{
+				Config: testAccPermissionSetInlinePolicyConfig_long_policy(rName, 32768-1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPermissionSetInlinePolicyExists(ctx, resourceName),
+					resource.TestCheckResourceAttrPair(resourceName, "instance_arn", permissionSetResourceName, "instance_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "permission_set_arn", permissionSetResourceName, "arn"),
+					resource.TestMatchResourceAttr(resourceName, "inline_policy", regexache.MustCompile("s3:ListAllMyBuckets")),
+					resource.TestMatchResourceAttr(resourceName, "inline_policy", regexache.MustCompile("s3:GetBucketLocation")),
+				),
 			},
 		},
 	})
@@ -246,4 +279,37 @@ resource "aws_ssoadmin_permission_set_inline_policy" "test" {
   permission_set_arn = aws_ssoadmin_permission_set.test.arn
 }
 `, rName)
+}
+
+func testAccPermissionSetInlinePolicyConfig_long_policy(rName string, size int) string {
+	consumedLength := 45
+	longSid := strings.Repeat("a", size-consumedLength)
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+data "aws_ssoadmin_instances" "test" {}
+
+data "aws_iam_policy_document" "test" {
+  statement {
+    sid = %[2]q
+
+    actions = [
+      "s3:*",
+    ]
+
+    resources = "*"
+  }
+}
+
+resource "aws_ssoadmin_permission_set" "test" {
+  name         = %[1]q
+  instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+}
+
+resource "aws_ssoadmin_permission_set_inline_policy" "test" {
+  inline_policy      = data.aws_iam_policy_document.test.json
+  instance_arn       = aws_ssoadmin_permission_set.test.instance_arn
+  permission_set_arn = aws_ssoadmin_permission_set.test.arn
+}
+`, rName, longSid)
 }

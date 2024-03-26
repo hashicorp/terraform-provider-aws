@@ -185,6 +185,7 @@ linters-settings:
           - nullable.*
           - tfresource.Retry*
           - tfresource.With*
+          - verify.ValidIAMPolicyJSON
           # Terraform Plugin SDK
           - retry.RetryContext
           - schema.DefaultTimeout

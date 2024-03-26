@@ -41,10 +41,11 @@ func ResourcePermissionSetInlinePolicy() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			// 32 KB. Refer https://docs.aws.amazon.com/singlesignon/latest/APIReference/API_PutInlinePolicyToPermissionSet.html#API_PutInlinePolicyToPermissionSet_RequestParameters
 			"inline_policy": {
 				Type:                  schema.TypeString,
 				Required:              true,
-				ValidateFunc:          verify.ValidIAMPolicyJSON,
+				ValidateFunc:          verify.ValidIAMPolicyJSON(32768),
 				DiffSuppressFunc:      verify.SuppressEquivalentPolicyDiffs,
 				DiffSuppressOnRefresh: true,
 				StateFunc: func(v interface{}) string {

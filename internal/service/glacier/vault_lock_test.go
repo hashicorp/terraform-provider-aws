@@ -6,8 +6,10 @@ package glacier_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/glacier"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -111,6 +113,39 @@ func TestAccGlacierVaultLock_ignoreEquivalentPolicy(t *testing.T) {
 			{
 				Config:   testAccVaultLockConfig_policyNewOrder(rName, false),
 				PlanOnly: true,
+			},
+		},
+	})
+}
+
+func TestAccGlacierVaultLock_PolicySize_exceeded(t *testing.T) {
+	ctx := acctest.Context(t)
+	var vaultLock1 glacier.GetVaultLockOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	vaultResourceName := "aws_glacier_vault.test"
+	resourceName := "aws_glacier_vault_lock.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlacierServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckVaultLockDestroy(ctx),
+		Steps: []resource.TestStep{
+			// Create a policy exceeding the quota
+			{
+				Config:      testAccVaultLockConfig_long_policy(rName, 20480),
+				ExpectError: regexache.MustCompile("Cannot exceed quota for PolicySize: 20480"),
+			},
+			// Create a valid policy just under the limit
+			{
+				Config: testAccVaultLockConfig_long_policy(rName, 20480-1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckVaultLockExists(ctx, resourceName, &vaultLock1),
+					resource.TestCheckResourceAttr(resourceName, "complete_lock", "false"),
+					resource.TestCheckResourceAttr(resourceName, "ignore_deletion_error", "false"),
+					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+					resource.TestCheckResourceAttrPair(resourceName, "vault_name", vaultResourceName, "name"),
+				),
 			},
 		},
 	})
@@ -271,4 +306,38 @@ resource "aws_glacier_vault_lock" "test" {
   })
 }
 `, rName, completeLock)
+}
+
+func testAccVaultLockConfig_long_policy(rName string, size int) string {
+	consumedLength := 236
+	longSid := strings.Repeat("a", size-consumedLength)
+	return fmt.Sprintf(`
+resource "aws_glacier_vault" "test" {
+  name = %[1]q
+}
+
+data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
+
+resource "aws_glacier_vault_lock" "test" {
+  complete_lock         = false
+  ignore_deletion_error = false
+  vault_name            = aws_glacier_vault.test.name
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Sid = %[2]q
+      Principal = {
+        AWS = ["arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:root"]
+      }
+      Effect = "Allow"
+      Action = [
+        "glacier:*",
+      ]
+      Resource = [aws_glacier_vault.test.arn]
+    }]
+  })
+}
+`, rName, longSid)
 }

@@ -6,8 +6,10 @@ package transfer_test
 import (
 	"context"
 	"fmt"
+	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/transfer"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -163,6 +165,43 @@ func testAccAccess_s3_policy(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrSet(resourceName, "policy"),
+				),
+			},
+		},
+	})
+}
+
+func testAccAccess_PolicySize_exceeded(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf transfer.DescribedAccess
+	resourceName := "aws_transfer_access.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+			acctest.PreCheckDirectoryService(ctx, t)
+			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccessDestroy(ctx),
+		Steps: []resource.TestStep{
+			// Create a policy exceeding the quota
+			{
+				Config:      testAccAccessConfig_long_policy(rName, 2048),
+				ExpectError: regexache.MustCompile("Cannot exceed quota for PolicySize: 2048"),
+			},
+			// Create a valid policy just under the limit
+			{
+				Config: testAccAccessConfig_long_policy(rName, 2048-1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccessExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "external_id", "S-1-1-12-1234567890-123456789-1234567890-1234"),
+					resource.TestCheckResourceAttr(resourceName, "home_directory", "/"+rName+"/"),
+					resource.TestCheckResourceAttr(resourceName, "home_directory_type", "PATH"),
+					resource.TestCheckResourceAttrSet(resourceName, "role"),
 				),
 			},
 		},
@@ -503,4 +542,37 @@ resource "aws_transfer_access" "test" {
   }
 }
 `)
+}
+
+func testAccAccessConfig_long_policy(rName string, size int) string {
+	consumedLength := 98
+	longSid := strings.Repeat("a", size-consumedLength)
+	return acctest.ConfigCompose(
+		testAccAccessBaseConfig(rName),
+		testAccAccessBaseConfig_S3(rName),
+		fmt.Sprintf(`
+resource "aws_transfer_access" "test" {
+  external_id = "S-1-1-12-1234567890-123456789-1234567890-1234"
+  server_id   = aws_transfer_server.test.id
+  role        = aws_iam_role.test.arn
+
+  home_directory      = "/${aws_s3_bucket.test.id}/"
+  home_directory_type = "PATH"
+
+  policy = <<EOF
+{
+    "Version": "2012-10-17",
+    "Statement": [
+        {
+            "Sid": %[1]q,
+            "Action": [
+                "s3:*"
+            ],
+            "Effect": "Allow",
+            "Resource": "*"
+        }
+    ]
+}
+EOF
+}`, longSid))
 }
