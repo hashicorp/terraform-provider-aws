@@ -5,7 +5,6 @@ package cloudfrontkeyvaluestore_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -14,7 +13,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfcloudfrontkeyvaluestore "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfrontkeyvaluestore"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -22,7 +20,6 @@ import (
 
 func TestAccCloudFrontKeyValueStoreKey_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	value := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudfrontkeyvaluestore_key.test"
@@ -58,7 +55,6 @@ func TestAccCloudFrontKeyValueStoreKey_basic(t *testing.T) {
 
 func TestAccCloudFrontKeyValueStoreKey_value(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	value1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	value2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -141,44 +137,35 @@ func testAccCheckKeyDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, _, err := tfcloudfrontkeyvaluestore.FindKeyByID(ctx, conn, rs.Primary.ID)
+			_, err := tfcloudfrontkeyvaluestore.FindKeyByTwoPartKey(ctx, conn, rs.Primary.Attributes["key_value_store_arn"], rs.Primary.Attributes["key"])
+
 			if tfresource.NotFound(err) {
 				return nil
 			}
 
 			if err != nil {
-				return create.Error(names.CloudFrontKeyValueStore, create.ErrActionCheckingDestroyed, tfcloudfrontkeyvaluestore.ResNameKey, rs.Primary.ID, err)
+				return err
 			}
 
-			return create.Error(names.CloudFrontKeyValueStore, create.ErrActionCheckingDestroyed, tfcloudfrontkeyvaluestore.ResNameKey, rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("CloudFront KeyValueStore Key %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckKeyExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckKeyExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.CloudFrontKeyValueStore, create.ErrActionCheckingExistence, tfcloudfrontkeyvaluestore.ResNameKey, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.CloudFrontKeyValueStore, create.ErrActionCheckingExistence, tfcloudfrontkeyvaluestore.ResNameKey, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontKeyValueStoreClient(ctx)
-		_, _, err := tfcloudfrontkeyvaluestore.FindKeyByID(ctx, conn, rs.Primary.ID)
-		if tfresource.NotFound(err) {
-			return create.Error(names.CloudFrontKeyValueStore, create.ErrActionCheckingExistence, tfcloudfrontkeyvaluestore.ResNameKey, rs.Primary.ID, errors.New("Resource Not Found"))
-		}
 
-		if err != nil {
-			return create.Error(names.CloudFrontKeyValueStore, create.ErrActionCheckingExistence, tfcloudfrontkeyvaluestore.ResNameKey, rs.Primary.ID, err)
-		}
+		_, err := tfcloudfrontkeyvaluestore.FindKeyByTwoPartKey(ctx, conn, rs.Primary.Attributes["key_value_store_arn"], rs.Primary.Attributes["key"])
 
-		return nil
+		return err
 	}
 }
 
@@ -187,6 +174,7 @@ func testAccKeyConfig_basic(rName, value string) string {
 resource "aws_cloudfront_key_value_store" "test" {
   name = %[1]q
 }
+
 resource "aws_cloudfrontkeyvaluestore_key" "test" {
   key                 = %[1]q
   key_value_store_arn = aws_cloudfront_key_value_store.test.arn
