@@ -181,6 +181,8 @@ func TestObjectValueOfEqual(t *testing.T) {
 }
 
 func TestNullOutObjectPtrFields(t *testing.T) {
+	t.Parallel()
+
 	type A struct {
 		F1 types.Bool                        `tfsdk:"f1"`
 		F2 types.String                      `tfsdk:"f2"`
