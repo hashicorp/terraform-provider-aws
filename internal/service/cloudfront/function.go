@@ -73,9 +73,10 @@ func ResourceFunction() *schema.Resource {
 			"key_value_store_associations": {
 				Type:     schema.TypeSet,
 				Optional: true,
+				// AWS docs state that only one key value store can be associated with a function at a time.
+				MaxItems: 1,
 				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					// Required:     true,
+					Type:         schema.TypeString,
 					ValidateFunc: verify.ValidARN,
 				},
 			},
@@ -183,7 +184,7 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 	etag := d.Get("etag").(string)
 
-	if d.HasChanges("code", "comment", "runtime") {
+	if d.HasChanges("code", "comment", "runtime", "key_value_store_associations") {
 		input := &cloudfront.UpdateFunctionInput{
 			FunctionCode: []byte(d.Get("code").(string)),
 			FunctionConfig: &cloudfront.FunctionConfig{
@@ -192,6 +193,10 @@ func resourceFunctionUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			},
 			Name:    aws.String(d.Id()),
 			IfMatch: aws.String(etag),
+		}
+
+		if v, ok := d.GetOk("key_value_store_associations"); ok {
+			input.FunctionConfig.KeyValueStoreAssociations = expandKeyValueStoreAssociations(v.(*schema.Set).List())
 		}
 
 		log.Printf("[INFO] Updating CloudFront Function: %s", d.Id())
