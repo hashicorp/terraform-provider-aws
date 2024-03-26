@@ -41,6 +41,9 @@ resource "aws_ec2_instance_metadata_defaults" "test-partial" {
 `)
 }
 
+// Note: these acceptance tests cannot run in parallel using `resource.ParallelTest` because the
+// `aws_ec2_instance_metadata_defaults` resource is regional
+
 func TestAccEC2InstanceMetadataDefaults_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -49,7 +52,7 @@ func TestAccEC2InstanceMetadataDefaults_basic(t *testing.T) {
 
 	resourceName := "aws_ec2_instance_metadata_defaults.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, "ec2")
@@ -86,7 +89,7 @@ func TestAccEC2InstanceMetadataDefaults_partial(t *testing.T) {
 
 	resourceName := "aws_ec2_instance_metadata_defaults.test-partial"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, "ec2")

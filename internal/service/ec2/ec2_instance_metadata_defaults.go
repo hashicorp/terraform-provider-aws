@@ -85,17 +85,98 @@ func (r *resourceEC2InstanceMetadataDefaults) Schema(ctx context.Context, req re
 	}
 }
 
-func (r *resourceEC2InstanceMetadataDefaults) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *resourceEC2InstanceMetadataDefaults) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	meta := r.Meta()
 	conn := meta.EC2Client(ctx)
 
+	var state resourceEC2InstanceMetadataDefaultsData
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+
+	out, err := conn.GetInstanceMetadataDefaults(ctx, &ec2.GetInstanceMetadataDefaultsInput{})
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.EC2, create.ErrActionSetting, ResNameInstanceMetadataDefaults, meta.Region, err),
+			err.Error(),
+		)
+		return
+	}
+
+	// Convert what we read from the AWS API to our format
+	state = r.instanceMetadataDefaultsToPlan(out)
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+}
+
+func (r *resourceEC2InstanceMetadataDefaults) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	var plan resourceEC2InstanceMetadataDefaultsData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
 	if resp.Diagnostics.HasError() {
 		return
 	}
 
+	in := r.planToModifyInstanceMetadataDefaultsInput(&plan)
+	if err := r.updateDefaultInstanceMetadataDefaults(ctx, in, create.ErrActionCreating); err != nil {
+		resp.Diagnostics.AddError(err.Error(), "")
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+}
+
+// Update is very similar to Create as AWS has a single API call ModifyInstanceMetadataDefaults
+func (r *resourceEC2InstanceMetadataDefaults) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+	var plan, state resourceEC2InstanceMetadataDefaultsData
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+
+	in := r.planToModifyInstanceMetadataDefaultsInput(&plan)
+	if err := r.updateDefaultInstanceMetadataDefaults(ctx, in, create.ErrActionUpdating); err != nil {
+		resp.Diagnostics.AddError(err.Error(), "")
+	}
+
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+}
+
+func (r *resourceEC2InstanceMetadataDefaults) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+	var state resourceEC2InstanceMetadataDefaultsData
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+
+	in := &ec2.ModifyInstanceMetadataDefaultsInput{
+		HttpEndpoint:            awstypes.DefaultInstanceMetadataEndpointStateNoPreference,
+		HttpPutResponseHopLimit: aws.Int32(-1), // -1 means "no preference"
+		HttpTokens:              awstypes.MetadataDefaultHttpTokensStateNoPreference,
+		InstanceMetadataTags:    awstypes.DefaultInstanceMetadataTagsStateNoPreference,
+	}
+
+	if err := r.updateDefaultInstanceMetadataDefaults(ctx, in, create.ErrActionDeleting); err != nil {
+		resp.Diagnostics.AddError(err.Error(), "")
+	}
+
+}
+
+// utility function to avoid duplicating code, since Create, Update and Delete all use the same AWS API call ModifyInstanceMetadataDefaults
+func (r *resourceEC2InstanceMetadataDefaults) updateDefaultInstanceMetadataDefaults(ctx context.Context, in *ec2.ModifyInstanceMetadataDefaultsInput, action string) error {
+	meta := r.Meta()
+	conn := meta.EC2Client(ctx)
+	region := meta.Region
+
+	out, err := conn.ModifyInstanceMetadataDefaults(ctx, in)
+	if err != nil {
+		return errors.New(create.ProblemStandardMessage(names.EC2, action, ResNameInstanceMetadataDefaults, region, err))
+	}
+	if out == nil || aws.ToBool(out.Return) == false {
+		return errors.New(create.ProblemStandardMessage(names.EC2, action, ResNameInstanceMetadataDefaults, region, errors.New("empty output")))
+	}
+	return nil
+}
+
+// converts the plan to the input for the ModifyInstanceMetadataDefaults API call
+func (r *resourceEC2InstanceMetadataDefaults) planToModifyInstanceMetadataDefaultsInput(plan *resourceEC2InstanceMetadataDefaultsData) *ec2.ModifyInstanceMetadataDefaultsInput {
 	in := &ec2.ModifyInstanceMetadataDefaultsInput{}
+
+	// When an attribute is not explicily set, we don't populate it in the ModifyInstanceMetadataDefaultsInput object
 
 	if !plan.HttpEndpoint.IsNull() {
 		in.HttpEndpoint = awstypes.DefaultInstanceMetadataEndpointState(plan.HttpEndpoint.ValueString())
@@ -114,44 +195,12 @@ func (r *resourceEC2InstanceMetadataDefaults) Create(ctx context.Context, req re
 		in.InstanceMetadataTags = awstypes.DefaultInstanceMetadataTagsState(plan.InstanceMetadataTags.ValueString())
 	}
 
-	out, err := conn.ModifyInstanceMetadataDefaults(ctx, in)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionCreating, ResNameInstanceMetadataDefaults, meta.Region, err),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil || aws.ToBool(out.Return) == false {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionCreating, ResNameInstanceMetadataDefaults, meta.Region, nil),
-			errors.New("empty output").Error(),
-		)
-		return
-	}
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	return in
 }
 
-func (r *resourceEC2InstanceMetadataDefaults) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	meta := r.Meta()
-	conn := meta.EC2Client(ctx)
-
-	var state resourceEC2InstanceMetadataDefaultsData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	out, err := conn.GetInstanceMetadataDefaults(ctx, &ec2.GetInstanceMetadataDefaultsInput{})
-
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionSetting, ResNameInstanceMetadataDefaults, meta.Region, err),
-			err.Error(),
-		)
-		return
-	}
+// converts a result from the AWS API call to the state
+func (r *resourceEC2InstanceMetadataDefaults) instanceMetadataDefaultsToPlan(out *ec2.GetInstanceMetadataDefaultsOutput) resourceEC2InstanceMetadataDefaultsData {
+	state := resourceEC2InstanceMetadataDefaultsData{}
 
 	if out.AccountLevel.HttpEndpoint != "" {
 		state.HttpEndpoint = types.StringValue(string(out.AccountLevel.HttpEndpoint))
@@ -171,84 +220,5 @@ func (r *resourceEC2InstanceMetadataDefaults) Read(ctx context.Context, req reso
 		state.InstanceMetadataTags = types.StringValue(string(out.AccountLevel.InstanceMetadataTags))
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
-}
-
-func (r *resourceEC2InstanceMetadataDefaults) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan, state resourceEC2InstanceMetadataDefaultsData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-
-	// TODO: deduplicate
-	meta := r.Meta()
-	conn := meta.EC2Client(ctx)
-
-	in := &ec2.ModifyInstanceMetadataDefaultsInput{}
-
-	if !plan.HttpEndpoint.IsNull() {
-		in.HttpEndpoint = awstypes.DefaultInstanceMetadataEndpointState(plan.HttpEndpoint.ValueString())
-	}
-
-	if plan.HttpPutResponseHopLimit.IsNull() {
-		in.HttpPutResponseHopLimit = aws.Int32(-1)
-	} else {
-		in.HttpPutResponseHopLimit = aws.Int32(int32(plan.HttpPutResponseHopLimit.ValueInt64()))
-	}
-
-	if !plan.HttpTokens.IsNull() {
-		in.HttpTokens = awstypes.MetadataDefaultHttpTokensState(plan.HttpTokens.ValueString())
-	}
-
-	if !plan.InstanceMetadataTags.IsNull() {
-		in.InstanceMetadataTags = awstypes.DefaultInstanceMetadataTagsState(plan.InstanceMetadataTags.ValueString())
-	}
-
-	out, err := conn.ModifyInstanceMetadataDefaults(ctx, in)
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionCreating, ResNameInstanceMetadataDefaults, meta.Region, err),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil || aws.ToBool(out.Return) == false {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionCreating, ResNameInstanceMetadataDefaults, meta.Region, nil),
-			errors.New("empty output").Error(),
-		)
-		return
-	}
-
-	// END todo
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
-}
-
-func (r *resourceEC2InstanceMetadataDefaults) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	meta := r.Meta()
-	conn := meta.EC2Client(ctx)
-
-	var state resourceEC2InstanceMetadataDefaultsData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-
-	out, err := conn.ModifyInstanceMetadataDefaults(ctx, &ec2.ModifyInstanceMetadataDefaultsInput{
-		HttpEndpoint:            awstypes.DefaultInstanceMetadataEndpointStateNoPreference,
-		HttpPutResponseHopLimit: aws.Int32(-1), // -1 means "no preference"
-		HttpTokens:              awstypes.MetadataDefaultHttpTokensStateNoPreference,
-		InstanceMetadataTags:    awstypes.DefaultInstanceMetadataTagsStateNoPreference,
-	})
-
-	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionDeleting, ResNameInstanceMetadataDefaults, meta.Region, err),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil || aws.ToBool(out.Return) == false {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionCreating, ResNameInstanceMetadataDefaults, meta.Region, nil),
-			errors.New("empty output").Error(),
-		)
-		return
-	}
+	return state
 }
