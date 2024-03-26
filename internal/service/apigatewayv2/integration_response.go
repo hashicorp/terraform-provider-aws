@@ -9,13 +9,15 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/apigatewayv2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
@@ -38,12 +40,9 @@ func ResourceIntegrationResponse() *schema.Resource {
 				ForceNew: true,
 			},
 			"content_handling_strategy": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					apigatewayv2.ContentHandlingStrategyConvertToBinary,
-					apigatewayv2.ContentHandlingStrategyConvertToText,
-				}, false),
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(enum.Slice(awstypes.ContentHandlingStrategyConvertToBinary, awstypes.ContentHandlingStrategyConvertToText), false),
 			},
 			"integration_id": {
 				Type:     schema.TypeString,
@@ -69,7 +68,7 @@ func ResourceIntegrationResponse() *schema.Resource {
 
 func resourceIntegrationResponseCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	req := &apigatewayv2.CreateIntegrationResponseInput{
 		ApiId:                  aws.String(d.Get("api_id").(string)),
@@ -77,36 +76,36 @@ func resourceIntegrationResponseCreate(ctx context.Context, d *schema.ResourceDa
 		IntegrationResponseKey: aws.String(d.Get("integration_response_key").(string)),
 	}
 	if v, ok := d.GetOk("content_handling_strategy"); ok {
-		req.ContentHandlingStrategy = aws.String(v.(string))
+		req.ContentHandlingStrategy = awstypes.ContentHandlingStrategy(v.(string))
 	}
 	if v, ok := d.GetOk("response_templates"); ok {
-		req.ResponseTemplates = flex.ExpandStringMap(v.(map[string]interface{}))
+		req.ResponseTemplates = flex.ExpandStringValueMap(v.(map[string]interface{}))
 	}
 	if v, ok := d.GetOk("template_selection_expression"); ok {
 		req.TemplateSelectionExpression = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating API Gateway v2 integration response: %s", req)
-	resp, err := conn.CreateIntegrationResponseWithContext(ctx, req)
+	log.Printf("[DEBUG] Creating API Gateway v2 integration response: %+v", req)
+	resp, err := conn.CreateIntegrationResponse(ctx, req)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating API Gateway v2 integration response: %s", err)
 	}
 
-	d.SetId(aws.StringValue(resp.IntegrationResponseId))
+	d.SetId(aws.ToString(resp.IntegrationResponseId))
 
 	return append(diags, resourceIntegrationResponseRead(ctx, d, meta)...)
 }
 
 func resourceIntegrationResponseRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-	resp, err := conn.GetIntegrationResponseWithContext(ctx, &apigatewayv2.GetIntegrationResponseInput{
+	resp, err := conn.GetIntegrationResponse(ctx, &apigatewayv2.GetIntegrationResponseInput{
 		ApiId:                 aws.String(d.Get("api_id").(string)),
 		IntegrationId:         aws.String(d.Get("integration_id").(string)),
 		IntegrationResponseId: aws.String(d.Id()),
 	})
-	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) && !d.IsNewResource() {
+	if errs.IsA[*awstypes.NotFoundException](err) && !d.IsNewResource() {
 		log.Printf("[WARN] API Gateway v2 integration response (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -117,7 +116,7 @@ func resourceIntegrationResponseRead(ctx context.Context, d *schema.ResourceData
 
 	d.Set("content_handling_strategy", resp.ContentHandlingStrategy)
 	d.Set("integration_response_key", resp.IntegrationResponseKey)
-	err = d.Set("response_templates", flex.FlattenStringMap(resp.ResponseTemplates))
+	err = d.Set("response_templates", resp.ResponseTemplates)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting response_templates: %s", err)
 	}
@@ -128,7 +127,7 @@ func resourceIntegrationResponseRead(ctx context.Context, d *schema.ResourceData
 
 func resourceIntegrationResponseUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	req := &apigatewayv2.UpdateIntegrationResponseInput{
 		ApiId:                 aws.String(d.Get("api_id").(string)),
@@ -136,20 +135,20 @@ func resourceIntegrationResponseUpdate(ctx context.Context, d *schema.ResourceDa
 		IntegrationResponseId: aws.String(d.Id()),
 	}
 	if d.HasChange("content_handling_strategy") {
-		req.ContentHandlingStrategy = aws.String(d.Get("content_handling_strategy").(string))
+		req.ContentHandlingStrategy = awstypes.ContentHandlingStrategy(d.Get("content_handling_strategy").(string))
 	}
 	if d.HasChange("integration_response_key") {
 		req.IntegrationResponseKey = aws.String(d.Get("integration_response_key").(string))
 	}
 	if d.HasChange("response_templates") {
-		req.ResponseTemplates = flex.ExpandStringMap(d.Get("response_templates").(map[string]interface{}))
+		req.ResponseTemplates = flex.ExpandStringValueMap(d.Get("response_templates").(map[string]interface{}))
 	}
 	if d.HasChange("template_selection_expression") {
 		req.TemplateSelectionExpression = aws.String(d.Get("template_selection_expression").(string))
 	}
 
-	log.Printf("[DEBUG] Updating API Gateway v2 integration response: %s", req)
-	_, err := conn.UpdateIntegrationResponseWithContext(ctx, req)
+	log.Printf("[DEBUG] Updating API Gateway v2 integration response: %+v", req)
+	_, err := conn.UpdateIntegrationResponse(ctx, req)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating API Gateway v2 integration response: %s", err)
 	}
@@ -159,15 +158,15 @@ func resourceIntegrationResponseUpdate(ctx context.Context, d *schema.ResourceDa
 
 func resourceIntegrationResponseDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 integration response (%s)", d.Id())
-	_, err := conn.DeleteIntegrationResponseWithContext(ctx, &apigatewayv2.DeleteIntegrationResponseInput{
+	_, err := conn.DeleteIntegrationResponse(ctx, &apigatewayv2.DeleteIntegrationResponseInput{
 		ApiId:                 aws.String(d.Get("api_id").(string)),
 		IntegrationId:         aws.String(d.Get("integration_id").(string)),
 		IntegrationResponseId: aws.String(d.Id()),
 	})
-	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
 	}
 	if err != nil {

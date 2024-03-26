@@ -9,13 +9,15 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/apigatewayv2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
@@ -48,10 +50,10 @@ func ResourceRoute() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"authorization_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      apigatewayv2.AuthorizationTypeNone,
-				ValidateFunc: validation.StringInSlice(apigatewayv2.AuthorizationType_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          string(awstypes.AuthorizationTypeNone),
+				ValidateDiagFunc: enum.Validate[awstypes.AuthorizationType](),
 			},
 			"authorizer_id": {
 				Type:     schema.TypeString,
@@ -107,16 +109,16 @@ func ResourceRoute() *schema.Resource {
 
 func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	req := &apigatewayv2.CreateRouteInput{
 		ApiId:             aws.String(d.Get("api_id").(string)),
 		ApiKeyRequired:    aws.Bool(d.Get("api_key_required").(bool)),
-		AuthorizationType: aws.String(d.Get("authorization_type").(string)),
+		AuthorizationType: awstypes.AuthorizationType(d.Get("authorization_type").(string)),
 		RouteKey:          aws.String(d.Get("route_key").(string)),
 	}
 	if v, ok := d.GetOk("authorization_scopes"); ok {
-		req.AuthorizationScopes = flex.ExpandStringSet(v.(*schema.Set))
+		req.AuthorizationScopes = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 	if v, ok := d.GetOk("authorizer_id"); ok {
 		req.AuthorizerId = aws.String(v.(string))
@@ -128,7 +130,7 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		req.OperationName = aws.String(v.(string))
 	}
 	if v, ok := d.GetOk("request_models"); ok {
-		req.RequestModels = flex.ExpandStringMap(v.(map[string]interface{}))
+		req.RequestModels = flex.ExpandStringValueMap(v.(map[string]interface{}))
 	}
 	if v, ok := d.GetOk("request_parameter"); ok && v.(*schema.Set).Len() > 0 {
 		req.RequestParameters = expandRouteRequestParameters(v.(*schema.Set).List())
@@ -140,27 +142,27 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		req.Target = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating API Gateway v2 route: %s", req)
-	resp, err := conn.CreateRouteWithContext(ctx, req)
+	log.Printf("[DEBUG] Creating API Gateway v2 route: %+v", req)
+	resp, err := conn.CreateRoute(ctx, req)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating API Gateway v2 route: %s", err)
 	}
 
-	d.SetId(aws.StringValue(resp.RouteId))
+	d.SetId(aws.ToString(resp.RouteId))
 
 	return append(diags, resourceRouteRead(ctx, d, meta)...)
 }
 
 func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-	resp, err := conn.GetRouteWithContext(ctx, &apigatewayv2.GetRouteInput{
+	resp, err := conn.GetRoute(ctx, &apigatewayv2.GetRouteInput{
 		ApiId:   aws.String(d.Get("api_id").(string)),
 		RouteId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) && !d.IsNewResource() {
+	if errs.IsA[*awstypes.NotFoundException](err) && !d.IsNewResource() {
 		log.Printf("[WARN] API Gateway v2 route (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -171,14 +173,14 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	d.Set("api_key_required", resp.ApiKeyRequired)
-	if err := d.Set("authorization_scopes", flex.FlattenStringSet(resp.AuthorizationScopes)); err != nil {
+	if err := d.Set("authorization_scopes", flex.FlattenStringValueSet(resp.AuthorizationScopes)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting authorization_scopes: %s", err)
 	}
 	d.Set("authorization_type", resp.AuthorizationType)
 	d.Set("authorizer_id", resp.AuthorizerId)
 	d.Set("model_selection_expression", resp.ModelSelectionExpression)
 	d.Set("operation_name", resp.OperationName)
-	if err := d.Set("request_models", flex.FlattenStringMap(resp.RequestModels)); err != nil {
+	if err := d.Set("request_models", resp.RequestModels); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting request_models: %s", err)
 	}
 	if err := d.Set("request_parameter", flattenRouteRequestParameters(resp.RequestParameters)); err != nil {
@@ -193,9 +195,9 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-	var requestParameters map[string]*apigatewayv2.ParameterConstraints
+	var requestParameters map[string]awstypes.ParameterConstraints
 
 	if d.HasChange("request_parameter") {
 		o, n := d.GetChange("request_parameter")
@@ -211,13 +213,13 @@ func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 			if v, ok := tfMap["request_parameter_key"].(string); ok && v != "" {
 				log.Printf("[DEBUG] Deleting API Gateway v2 route (%s) request parameter (%s)", d.Id(), v)
-				_, err := conn.DeleteRouteRequestParameterWithContext(ctx, &apigatewayv2.DeleteRouteRequestParameterInput{
+				_, err := conn.DeleteRouteRequestParameter(ctx, &apigatewayv2.DeleteRouteRequestParameterInput{
 					ApiId:               aws.String(d.Get("api_id").(string)),
 					RequestParameterKey: aws.String(v),
 					RouteId:             aws.String(d.Id()),
 				})
 
-				if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
+				if errs.IsA[*awstypes.NotFoundException](err) {
 					continue
 				}
 
@@ -239,14 +241,14 @@ func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			req.ApiKeyRequired = aws.Bool(d.Get("api_key_required").(bool))
 		}
 		if d.HasChange("authorization_scopes") {
-			req.AuthorizationScopes = flex.ExpandStringSet(d.Get("authorization_scopes").(*schema.Set))
+			req.AuthorizationScopes = flex.ExpandStringValueSet(d.Get("authorization_scopes").(*schema.Set))
 		}
 		if d.HasChange("authorization_type") {
-			req.AuthorizationType = aws.String(d.Get("authorization_type").(string))
+			req.AuthorizationType = awstypes.AuthorizationType(d.Get("authorization_type").(string))
 		}
 		if d.HasChange("authorizer_id") {
 			req.AuthorizerId = aws.String(d.Get("authorizer_id").(string))
-			req.AuthorizationType = aws.String(d.Get("authorization_type").(string))
+			req.AuthorizationType = awstypes.AuthorizationType(d.Get("authorization_type").(string))
 		}
 		if d.HasChange("model_selection_expression") {
 			req.ModelSelectionExpression = aws.String(d.Get("model_selection_expression").(string))
@@ -255,7 +257,7 @@ func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			req.OperationName = aws.String(d.Get("operation_name").(string))
 		}
 		if d.HasChange("request_models") {
-			req.RequestModels = flex.ExpandStringMap(d.Get("request_models").(map[string]interface{}))
+			req.RequestModels = flex.ExpandStringValueMap(d.Get("request_models").(map[string]interface{}))
 		}
 		if d.HasChange("request_parameter") {
 			req.RequestParameters = requestParameters
@@ -270,8 +272,8 @@ func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			req.Target = aws.String(d.Get("target").(string))
 		}
 
-		log.Printf("[DEBUG] Updating API Gateway v2 route: %s", req)
-		_, err := conn.UpdateRouteWithContext(ctx, req)
+		log.Printf("[DEBUG] Updating API Gateway v2 route: %+v", req)
+		_, err := conn.UpdateRoute(ctx, req)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating API Gateway v2 route (%s): %s", d.Id(), err)
@@ -283,15 +285,15 @@ func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceRouteDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 route (%s)", d.Id())
-	_, err := conn.DeleteRouteWithContext(ctx, &apigatewayv2.DeleteRouteInput{
+	_, err := conn.DeleteRoute(ctx, &apigatewayv2.DeleteRouteInput{
 		ApiId:   aws.String(d.Get("api_id").(string)),
 		RouteId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
 	}
 
@@ -311,9 +313,9 @@ func resourceRouteImport(ctx context.Context, d *schema.ResourceData, meta inter
 	apiId := parts[0]
 	routeId := parts[1]
 
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-	resp, err := conn.GetRouteWithContext(ctx, &apigatewayv2.GetRouteInput{
+	resp, err := conn.GetRoute(ctx, &apigatewayv2.GetRouteInput{
 		ApiId:   aws.String(apiId),
 		RouteId: aws.String(routeId),
 	})
@@ -321,7 +323,7 @@ func resourceRouteImport(ctx context.Context, d *schema.ResourceData, meta inter
 		return nil, err
 	}
 
-	if aws.BoolValue(resp.ApiGatewayManaged) {
+	if aws.ToBool(resp.ApiGatewayManaged) {
 		return nil, fmt.Errorf("API Gateway v2 route (%s) was created via quick create", routeId)
 	}
 
@@ -331,12 +333,12 @@ func resourceRouteImport(ctx context.Context, d *schema.ResourceData, meta inter
 	return []*schema.ResourceData{d}, nil
 }
 
-func expandRouteRequestParameters(tfList []interface{}) map[string]*apigatewayv2.ParameterConstraints {
+func expandRouteRequestParameters(tfList []interface{}) map[string]awstypes.ParameterConstraints {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	apiObjects := map[string]*apigatewayv2.ParameterConstraints{}
+	apiObjects := map[string]awstypes.ParameterConstraints{}
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -345,7 +347,7 @@ func expandRouteRequestParameters(tfList []interface{}) map[string]*apigatewayv2
 			continue
 		}
 
-		apiObject := &apigatewayv2.ParameterConstraints{}
+		apiObject := awstypes.ParameterConstraints{}
 
 		if v, ok := tfMap["required"].(bool); ok {
 			apiObject.Required = aws.Bool(v)
@@ -359,7 +361,7 @@ func expandRouteRequestParameters(tfList []interface{}) map[string]*apigatewayv2
 	return apiObjects
 }
 
-func flattenRouteRequestParameters(apiObjects map[string]*apigatewayv2.ParameterConstraints) []interface{} {
+func flattenRouteRequestParameters(apiObjects map[string]awstypes.ParameterConstraints) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -367,13 +369,9 @@ func flattenRouteRequestParameters(apiObjects map[string]*apigatewayv2.Parameter
 	var tfList []interface{}
 
 	for k, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
 		tfList = append(tfList, map[string]interface{}{
 			"request_parameter_key": k,
-			"required":              aws.BoolValue(apiObject.Required),
+			"required":              aws.ToBool(apiObject.Required),
 		})
 	}
 

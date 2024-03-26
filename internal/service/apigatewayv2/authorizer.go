@@ -9,13 +9,15 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/apigatewayv2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -55,9 +57,9 @@ func ResourceAuthorizer() *schema.Resource {
 				ValidateFunc: validation.IntBetween(0, 3600),
 			},
 			"authorizer_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(apigatewayv2.AuthorizerType_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.AuthorizerType](),
 			},
 			"authorizer_uri": {
 				Type:         schema.TypeString,
@@ -103,7 +105,7 @@ func ResourceAuthorizer() *schema.Resource {
 
 func resourceAuthorizerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	apiId := d.Get("api_id").(string)
 	authorizerType := d.Get("authorizer_type").(string)
@@ -114,12 +116,12 @@ func resourceAuthorizerCreate(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway v2 API (%s): %s", apiId, err)
 	}
 
-	protocolType := aws.StringValue(apiOutput.ProtocolType)
+	protocolType := apiOutput.ProtocolType
 
 	req := &apigatewayv2.CreateAuthorizerInput{
 		ApiId:          aws.String(apiId),
-		AuthorizerType: aws.String(authorizerType),
-		IdentitySource: flex.ExpandStringSet(d.Get("identity_sources").(*schema.Set)),
+		AuthorizerType: awstypes.AuthorizerType(authorizerType),
+		IdentitySource: flex.ExpandStringValueSet(d.Get("identity_sources").(*schema.Set)),
 		Name:           aws.String(d.Get("name").(string)),
 	}
 	if v, ok := d.GetOk("authorizer_credentials_arn"); ok {
@@ -129,12 +131,12 @@ func resourceAuthorizerCreate(ctx context.Context, d *schema.ResourceData, meta 
 		req.AuthorizerPayloadFormatVersion = aws.String(v.(string))
 	}
 	if v, ok := d.GetOkExists("authorizer_result_ttl_in_seconds"); ok {
-		req.AuthorizerResultTtlInSeconds = aws.Int64(int64(v.(int)))
-	} else if protocolType == apigatewayv2.ProtocolTypeHttp && authorizerType == apigatewayv2.AuthorizerTypeRequest && len(req.IdentitySource) > 0 {
+		req.AuthorizerResultTtlInSeconds = aws.Int32(int32(v.(int)))
+	} else if protocolType == awstypes.ProtocolTypeHttp && authorizerType == string(awstypes.AuthorizerTypeRequest) && len(req.IdentitySource) > 0 {
 		// Default in the AWS Console is 300 seconds.
 		// Explicitly set on creation so that we can correctly detect changes to the 0 value.
 		// This value should only be set when IdentitySources have been defined
-		req.AuthorizerResultTtlInSeconds = aws.Int64(300)
+		req.AuthorizerResultTtlInSeconds = aws.Int32(300)
 	}
 	if v, ok := d.GetOk("authorizer_uri"); ok {
 		req.AuthorizerUri = aws.String(v.(string))
@@ -146,26 +148,26 @@ func resourceAuthorizerCreate(ctx context.Context, d *schema.ResourceData, meta 
 		req.JwtConfiguration = expandJWTConfiguration(v.([]interface{}))
 	}
 
-	log.Printf("[DEBUG] Creating API Gateway v2 authorizer: %s", req)
-	resp, err := conn.CreateAuthorizerWithContext(ctx, req)
+	log.Printf("[DEBUG] Creating API Gateway v2 authorizer: %+v", req)
+	resp, err := conn.CreateAuthorizer(ctx, req)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating API Gateway v2 authorizer: %s", err)
 	}
 
-	d.SetId(aws.StringValue(resp.AuthorizerId))
+	d.SetId(aws.ToString(resp.AuthorizerId))
 
 	return append(diags, resourceAuthorizerRead(ctx, d, meta)...)
 }
 
 func resourceAuthorizerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-	resp, err := conn.GetAuthorizerWithContext(ctx, &apigatewayv2.GetAuthorizerInput{
+	resp, err := conn.GetAuthorizer(ctx, &apigatewayv2.GetAuthorizerInput{
 		ApiId:        aws.String(d.Get("api_id").(string)),
 		AuthorizerId: aws.String(d.Id()),
 	})
-	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) && !d.IsNewResource() {
+	if errs.IsA[*awstypes.NotFoundException](err) && !d.IsNewResource() {
 		log.Printf("[WARN] API Gateway v2 authorizer (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -180,7 +182,7 @@ func resourceAuthorizerRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("authorizer_type", resp.AuthorizerType)
 	d.Set("authorizer_uri", resp.AuthorizerUri)
 	d.Set("enable_simple_responses", resp.EnableSimpleResponses)
-	if err := d.Set("identity_sources", flex.FlattenStringSet(resp.IdentitySource)); err != nil {
+	if err := d.Set("identity_sources", flex.FlattenStringValueSet(resp.IdentitySource)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting identity_sources: %s", err)
 	}
 	if err := d.Set("jwt_configuration", flattenJWTConfiguration(resp.JwtConfiguration)); err != nil {
@@ -193,7 +195,7 @@ func resourceAuthorizerRead(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceAuthorizerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	req := &apigatewayv2.UpdateAuthorizerInput{
 		ApiId:        aws.String(d.Get("api_id").(string)),
@@ -206,10 +208,10 @@ func resourceAuthorizerUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		req.AuthorizerPayloadFormatVersion = aws.String(d.Get("authorizer_payload_format_version").(string))
 	}
 	if d.HasChange("authorizer_result_ttl_in_seconds") {
-		req.AuthorizerResultTtlInSeconds = aws.Int64(int64(d.Get("authorizer_result_ttl_in_seconds").(int)))
+		req.AuthorizerResultTtlInSeconds = aws.Int32(int32(d.Get("authorizer_result_ttl_in_seconds").(int)))
 	}
 	if d.HasChange("authorizer_type") {
-		req.AuthorizerType = aws.String(d.Get("authorizer_type").(string))
+		req.AuthorizerType = awstypes.AuthorizerType(d.Get("authorizer_type").(string))
 	}
 	if d.HasChange("authorizer_uri") {
 		req.AuthorizerUri = aws.String(d.Get("authorizer_uri").(string))
@@ -218,7 +220,7 @@ func resourceAuthorizerUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		req.EnableSimpleResponses = aws.Bool(d.Get("enable_simple_responses").(bool))
 	}
 	if d.HasChange("identity_sources") {
-		req.IdentitySource = flex.ExpandStringSet(d.Get("identity_sources").(*schema.Set))
+		req.IdentitySource = flex.ExpandStringValueSet(d.Get("identity_sources").(*schema.Set))
 	}
 	if d.HasChange("name") {
 		req.Name = aws.String(d.Get("name").(string))
@@ -227,8 +229,8 @@ func resourceAuthorizerUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		req.JwtConfiguration = expandJWTConfiguration(d.Get("jwt_configuration").([]interface{}))
 	}
 
-	log.Printf("[DEBUG] Updating API Gateway v2 authorizer: %s", req)
-	_, err := conn.UpdateAuthorizerWithContext(ctx, req)
+	log.Printf("[DEBUG] Updating API Gateway v2 authorizer: %+v", req)
+	_, err := conn.UpdateAuthorizer(ctx, req)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating API Gateway v2 authorizer: %s", err)
 	}
@@ -238,14 +240,14 @@ func resourceAuthorizerUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceAuthorizerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	log.Printf("[DEBUG] Deleting API Gateway v2 authorizer (%s)", d.Id())
-	_, err := conn.DeleteAuthorizerWithContext(ctx, &apigatewayv2.DeleteAuthorizerInput{
+	_, err := conn.DeleteAuthorizer(ctx, &apigatewayv2.DeleteAuthorizerInput{
 		ApiId:        aws.String(d.Get("api_id").(string)),
 		AuthorizerId: aws.String(d.Id()),
 	})
-	if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
 	}
 	if err != nil {
@@ -267,8 +269,8 @@ func resourceAuthorizerImport(ctx context.Context, d *schema.ResourceData, meta 
 	return []*schema.ResourceData{d}, nil
 }
 
-func expandJWTConfiguration(vConfiguration []interface{}) *apigatewayv2.JWTConfiguration {
-	configuration := &apigatewayv2.JWTConfiguration{}
+func expandJWTConfiguration(vConfiguration []interface{}) *awstypes.JWTConfiguration {
+	configuration := &awstypes.JWTConfiguration{}
 
 	if len(vConfiguration) == 0 || vConfiguration[0] == nil {
 		return configuration
@@ -276,7 +278,7 @@ func expandJWTConfiguration(vConfiguration []interface{}) *apigatewayv2.JWTConfi
 	mConfiguration := vConfiguration[0].(map[string]interface{})
 
 	if vAudience, ok := mConfiguration["audience"].(*schema.Set); ok && vAudience.Len() > 0 {
-		configuration.Audience = flex.ExpandStringSet(vAudience)
+		configuration.Audience = flex.ExpandStringValueSet(vAudience)
 	}
 	if vIssuer, ok := mConfiguration["issuer"].(string); ok && vIssuer != "" {
 		configuration.Issuer = aws.String(vIssuer)
@@ -285,13 +287,13 @@ func expandJWTConfiguration(vConfiguration []interface{}) *apigatewayv2.JWTConfi
 	return configuration
 }
 
-func flattenJWTConfiguration(configuration *apigatewayv2.JWTConfiguration) []interface{} {
+func flattenJWTConfiguration(configuration *awstypes.JWTConfiguration) []interface{} {
 	if configuration == nil {
 		return []interface{}{}
 	}
 
 	return []interface{}{map[string]interface{}{
-		"audience": flex.FlattenStringSet(configuration.Audience),
-		"issuer":   aws.StringValue(configuration.Issuer),
+		"audience": flex.FlattenStringValueSet(configuration.Audience),
+		"issuer":   aws.ToString(configuration.Issuer),
 	}}
 }

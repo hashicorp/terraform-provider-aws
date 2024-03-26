@@ -6,8 +6,7 @@ package apigatewayv2
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -51,7 +50,7 @@ func DataSourceVPCLink() *schema.Resource {
 
 func dataSourceVPCLinkRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	vpcLinkID := d.Get("vpc_link_id").(string)
 	output, err := FindVPCLinkByID(ctx, conn, vpcLinkID)
@@ -69,8 +68,8 @@ func dataSourceVPCLinkRead(ctx context.Context, d *schema.ResourceData, meta int
 	}.String()
 	d.Set("arn", arn)
 	d.Set("name", output.Name)
-	d.Set("security_group_ids", aws.StringValueSlice(output.SecurityGroupIds))
-	d.Set("subnet_ids", aws.StringValueSlice(output.SubnetIds))
+	d.Set("security_group_ids", output.SecurityGroupIds)
+	d.Set("subnet_ids", output.SubnetIds)
 
 	setTagsOut(ctx, output.Tags)
 
