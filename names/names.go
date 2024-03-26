@@ -66,6 +66,7 @@ const (
 	Route53DomainsEndpointID             = "route53domains"
 	SchedulerEndpointID                  = "scheduler"
 	ServiceQuotasEndpointID              = "servicequotas"
+	ServiceCatalogAppRegistryEndpointID  = "servicecatalog-appregistry"
 	ShieldEndpointID                     = "shield"
 	SSMEndpointID                        = "ssm"
 	SSMIncidentsEndpointID               = "ssm-incidents"
