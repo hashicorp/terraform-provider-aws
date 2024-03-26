@@ -236,6 +236,7 @@ variable "service_labels" {
     "osis",
     "outposts",
     "panorama",
+    "paymentcryptography",
     "pcaconnectorad",
     "personalize",
     "personalizeevents",

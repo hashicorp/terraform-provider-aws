@@ -244,6 +244,8 @@ github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.11.3 h1:Hl+6c8DUmnp
 github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.11.3/go.mod h1:SoK8aerBG8p08vK4N1QAPg+743VWbrcTACKCVFnyLFs=
 github.com/aws/aws-sdk-go-v2/service/osis v1.8.3 h1:fETzs9pAxPp0gkIRJ1olOtN2M1Hi2oVF1QfewEjdr3g=
 github.com/aws/aws-sdk-go-v2/service/osis v1.8.3/go.mod h1:ixCAnUrXx5eW7WSRm62k8pQ2XvqOi7bMKB9qMEPPPhs=
+github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.9.3 h1:TPQIc4TaooKezlyDMoe9rbKwftOTe6eBoI9fhl3JLe8=
+github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.9.3/go.mod h1:fEeoWuZvJKM5gEg5Ch4T4EzXA+jdNVztidiARUPTgyc=
 github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.5.3 h1:Itfj1epf35aUtsAoSrx1PMulQTrLsh6iidiF7/+07BM=
 github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.5.3/go.mod h1:hw+93RlfeLZueByt54PWQFxqUSD7xTzyHFYc5xBuKR8=
 github.com/aws/aws-sdk-go-v2/service/pipes v1.11.3 h1:Tbj7OCbZgkhnkByBcObF1B8ZHacttdLlz4jKzWI/JYs=

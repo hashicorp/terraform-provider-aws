@@ -274,6 +274,7 @@ outposts,outposts,outposts,outposts,,outposts,,,Outposts,Outposts,,1,,,aws_outpo
 ,,,,,ec2outposts,ec2,,EC2Outposts,,,,,aws_ec2_(coip_pool|local_gateway),aws_ec2outposts_,outposts_,ec2_coip_pool;ec2_local_gateway,Outposts (EC2),AWS,x,,,x,,,,,,Part of EC2
 panorama,panorama,panorama,panorama,,panorama,,,Panorama,Panorama,,1,,,aws_panorama_,,panorama_,Panorama,AWS,,x,,,,,Panorama,,,
 ,,,,,,,,,,,,,,,,,ParallelCluster,AWS,x,,,,,,,,,No SDK support
+payment-cryptography,paymentcryptography,paymentcryptography,paymentcryptography,,paymentcryptography,,,PaymentCryptography,PaymentCryptography,,,2,,aws_paymentcryptography_,,paymentcryptography_,Payment Cryptography Control Plane,AWS,,,,,,,PaymentCryptography,ListKeys,,
 pca-connector-ad,pcaconnectorad,pcaconnectorad,pcaconnectorad,,pcaconnectorad,,,PCAConnectorAD,PcaConnectorAd,,,2,,aws_pcaconnectorad_,,pcaconnectorad_,Private CA Connector for Active Directory,AWS,,,,,,,Pca Connector Ad,ListConnectors,,
 personalize,personalize,personalize,personalize,,personalize,,,Personalize,Personalize,,1,,,aws_personalize_,,personalize_,Personalize,Amazon,,x,,,,,Personalize,,,
 personalize-events,personalizeevents,personalizeevents,personalizeevents,,personalizeevents,,,PersonalizeEvents,PersonalizeEvents,,1,,,aws_personalizeevents_,,personalizeevents_,Personalize Events,Amazon,,x,,,,,Personalize Events,,,
