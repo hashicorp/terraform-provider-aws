@@ -41,4 +41,3 @@ This data source exports the following attributes in addition to the arguments a
 * `last_modified_time` - When this resource was last modified.
 * `runtime` - Identifier of the function's runtime.
 * `status` - Status of the function. Can be `UNPUBLISHED`, `UNASSOCIATED` or `ASSOCIATED`.
-
