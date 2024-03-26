@@ -122,7 +122,7 @@ func (r *resourceEC2InstanceMetadataDefaults) Create(ctx context.Context, req re
 		)
 		return
 	}
-	if out == nil || out.Return == nil || *out.Return == false {
+	if out == nil || aws.ToBool(out.Return) == false {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.EC2, create.ErrActionCreating, ResNameInstanceMetadataDefaults, meta.Region, nil),
 			errors.New("empty output").Error(),
@@ -244,7 +244,7 @@ func (r *resourceEC2InstanceMetadataDefaults) Delete(ctx context.Context, req re
 		)
 		return
 	}
-	if out == nil || out.Return == nil || *out.Return == false {
+	if out == nil || aws.ToBool(out.Return) == false {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.EC2, create.ErrActionCreating, ResNameInstanceMetadataDefaults, meta.Region, nil),
 			errors.New("empty output").Error(),
