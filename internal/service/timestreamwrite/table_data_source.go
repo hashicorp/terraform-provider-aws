@@ -135,6 +135,7 @@ func dataSourceTableRead(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).TimestreamWriteClient(ctx)
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	databaseName := d.Get("database_name").(string)
 	tableName := d.Get("table_name").(string)
@@ -163,6 +164,19 @@ func dataSourceTableRead(ctx context.Context, d *schema.ResourceData, meta inter
 		}
 	} else {
 		d.Set("schema", nil)
+	}
+
+	tags, err := listTags(ctx, conn, d.Get("arn").(string))
+	if err != nil {
+		return diag.Errorf("listing tags for timestream table (%s): %s", d.Id(), err)
+	}
+
+	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return diag.Errorf("setting tags: %s", err)
+	}
+
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return diag.Errorf("setting tags_all: %s", err)
 	}
 
 	return diags
