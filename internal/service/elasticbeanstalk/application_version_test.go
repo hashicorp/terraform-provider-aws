@@ -115,6 +115,35 @@ func TestAccElasticBeanstalkApplicationVersion_BeanstalkApp_tags(t *testing.T) {
 	})
 }
 
+func TestAccElasticBeanstalkApplicationVersion_BeanstalkApp_process(t *testing.T) {
+  ctx := acctest.Context(t)
+	var appVersion elasticbeanstalk.ApplicationVersionDescription
+	resourceName := "aws_elastic_beanstalk_application_version.default"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, elasticbeanstalk.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckApplicationVersionDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccApplicationVersionConfig_process(sdkacctest.RandInt(), "true"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationVersionExists(resourceName, &appVersion),
+					testAccCheckApplicationVersionMatchStatus(resourceName, "PROCESSED", &appVersion),
+				),
+			},
+			{
+				Config: testAccApplicationVersionConfig_process(sdkacctest.RandInt(), "false"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckApplicationVersionExists(resourceName, &appVersion),
+					testAccCheckApplicationVersionMatchStatus(resourceName, "UNPROCESSED", &appVersion),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckApplicationVersionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkClient(ctx)
@@ -173,6 +202,44 @@ func testAccCheckApplicationVersionExists(ctx context.Context, n string, app *aw
 		}
 
 		*app = resp.ApplicationVersions[0]
+
+		return nil
+	}
+}
+
+func testAccCheckApplicationVersionMatchStatus(n string, status string, app *elasticbeanstalk.ApplicationVersionDescription) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("Elastic Beanstalk Application Version is not set")
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ElasticBeanstalkConn
+		describeApplicationVersionOpts := &elasticbeanstalk.DescribeApplicationVersionsInput{
+			ApplicationName: aws.String(rs.Primary.Attributes["application"]),
+			VersionLabels:   []*string{aws.String(rs.Primary.ID)},
+		}
+
+		log.Printf("[DEBUG] Elastic Beanstalk Application Version TEST describe opts: %s", describeApplicationVersionOpts)
+
+		resp, err := conn.DescribeApplicationVersions(describeApplicationVersionOpts)
+		if err != nil {
+			return err
+		}
+
+		if len(resp.ApplicationVersions) == 0 {
+			return fmt.Errorf("Elastic Beanstalk Application Version not found.")
+		}
+
+		*app = *resp.ApplicationVersions[0]
+
+		if *app.Status != status {
+			return fmt.Errorf("Elastic Beanstalk Application Version status %s does not match to expected status %s.", *app.Status, status)
+		}
 
 		return nil
 	}
@@ -303,4 +370,31 @@ resource "aws_elastic_beanstalk_application_version" "default" {
   }
 }
 `, randInt, tag1, tag2, tag3)
+}
+
+func testAccApplicationVersionConfig_process(randInt int, process string) string {
+	return fmt.Sprintf(`
+resource "aws_s3_bucket" "default" {
+  bucket = "tftest.applicationversion.bucket-%d"
+}
+
+resource "aws_s3_object" "default" {
+  bucket = aws_s3_bucket.default.id
+  key    = "beanstalk/python-v1.zip"
+  source = "test-fixtures/python-v1.zip"
+}
+
+resource "aws_elastic_beanstalk_application" "default" {
+  name        = "tf-test-name-%d"
+  description = "tf-test-desc"
+}
+
+resource "aws_elastic_beanstalk_application_version" "default" {
+  application = aws_elastic_beanstalk_application.default.name
+  name        = "tf-test-version-label-%d"
+  bucket      = aws_s3_bucket.default.id
+  key         = aws_s3_object.default.id
+  process     = %s
+}
+`, randInt, randInt, randInt, process)
 }

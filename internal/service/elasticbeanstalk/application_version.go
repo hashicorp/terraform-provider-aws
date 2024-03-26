@@ -66,6 +66,11 @@ func ResourceApplicationVersion() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"process": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
@@ -81,6 +86,7 @@ func resourceApplicationVersionCreate(ctx context.Context, d *schema.ResourceDat
 	bucket := d.Get("bucket").(string)
 	key := d.Get("key").(string)
 	name := d.Get("name").(string)
+	process := d.Get("process").(bool)
 
 	s3Location := awstypes.S3Location{
 		S3Bucket: aws.String(bucket),
@@ -93,6 +99,7 @@ func resourceApplicationVersionCreate(ctx context.Context, d *schema.ResourceDat
 		SourceBundle:    &s3Location,
 		Tags:            getTagsIn(ctx),
 		VersionLabel:    aws.String(name),
+		Process:         aws.Bool(process),
 	}
 
 	_, err := conn.CreateApplicationVersion(ctx, &createOpts)
