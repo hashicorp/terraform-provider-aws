@@ -21,7 +21,7 @@ resource "aws_servicecatalogappregistry_application" "example" {
 }
 ```
 
-### Connecting resources
+### Connecting Resources
 
 ```terraform
 resource "aws_servicecatalogappregistry_application" "example" {
