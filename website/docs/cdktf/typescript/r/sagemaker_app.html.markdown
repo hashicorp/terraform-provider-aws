@@ -46,7 +46,7 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `appName` - (Required) The name of the app.
-* `appType` - (Required) The type of app. Valid values are `JupyterServer`, `KernelGateway`, `RStudioServerPro`, `RSessionGateway` and `TensorBoard`.
+* `appType` - (Required) The type of app. Valid values are `JupyterServer`, `KernelGateway`, `RStudioServerPro`, `RSessionGateway`, `TensorBoard`, `CodeEditor`, `JupyterLab`, `DetailedProfiler`, and `Canvas`.
 * `domainId` - (Required) The domain ID.
 * `resourceSpec` - (Optional) The instance type and the Amazon Resource Name (ARN) of the SageMaker image created on the instance.See [Resource Spec](#resource-spec) below.
 * `spaceName` - (Optional) The name of the space. At least one of `userProfileName` or `spaceName` required.
