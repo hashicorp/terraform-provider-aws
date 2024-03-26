@@ -153,7 +153,6 @@ func (r *resourceEC2InstanceMetadataDefaults) Delete(ctx context.Context, req re
 	if err := r.updateDefaultInstanceMetadataDefaults(ctx, in, create.ErrActionDeleting); err != nil {
 		resp.Diagnostics.AddError(err.Error(), "")
 	}
-
 }
 
 // utility function to avoid duplicating code, since Create, Update and Delete all use the same AWS API call ModifyInstanceMetadataDefaults
@@ -166,7 +165,7 @@ func (r *resourceEC2InstanceMetadataDefaults) updateDefaultInstanceMetadataDefau
 	if err != nil {
 		return errors.New(create.ProblemStandardMessage(names.EC2, action, ResNameInstanceMetadataDefaults, region, err))
 	}
-	if out == nil || aws.ToBool(out.Return) == false {
+	if out == nil || !aws.ToBool(out.Return) {
 		return errors.New(create.ProblemStandardMessage(names.EC2, action, ResNameInstanceMetadataDefaults, region, errors.New("empty output")))
 	}
 	return nil

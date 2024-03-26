@@ -22,23 +22,23 @@ import (
 )
 
 func testAccInstanceMetadataDefaultsConfig_basic() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_ec2_instance_metadata_defaults" "test" {
   http_tokens                 = "required" # non-default
   instance_metadata_tags      = "disabled"
   http_endpoint               = "enabled"
   http_put_response_hop_limit = 1
 }
-`)
+`
 }
 
 func testAccInstanceMetadataDefaultsConfig_partial() string {
-	return fmt.Sprintf(`
+	return `
 resource "aws_ec2_instance_metadata_defaults" "test-partial" {
   http_tokens                 = "required" # non-default
   http_put_response_hop_limit = 2          # non-default
 }
-`)
+`
 }
 
 // Note: these acceptance tests cannot run in parallel using `resource.ParallelTest` because the
