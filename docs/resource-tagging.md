@@ -144,7 +144,7 @@ imports (
 
 Add the `tags` parameter and `tags_all` attribute to the schema, using constants defined in the `names` package.
 The `tags` parameter contains the tags set directly on the resource.
-The `tags_all` attribute contains union of the tags set directly on the resource and default tags configured on the provider.
+The `tags_all` attribute contains a union of the tags set directly on the resource and default tags configured on the provider.
 
 === "Terraform Plugin Framework (Preferred)"
     ```go
@@ -280,11 +280,11 @@ In the resource `Read` operation, use the `setTagsOut` function to signal to the
     setTagsOut(ctx, out.Tags)
     ```
 
-If the service API does not return the tags directly from reading the resource and requires use of the generated `listTags` function, do nothing and the transparent tagging mechanism will make the `listTags` call and save any tags into Terraform state.
+If the service API does not return the tags directly from reading the resource and requires use of the generated `listTags` function, do nothing and the transparent tagging mechanism will make the `listTags` call and save any tags into the Terraform state.
 
 #### Resource Update Operation
 
-In the resource `Update` operation, only non-`tags` updates need be done as the transparent tagging mechanism makes the `updateTags` call.
+In the resource `Update` operation, only non-`tags` updates need to be done as the transparent tagging mechanism makes the `updateTags` call.
 
 === "Terraform Plugin Framework (Preferred)"
     ```go
@@ -304,7 +304,7 @@ In the resource `Update` operation, only non-`tags` updates need be done as the 
     }
     ```
 
-For Terraform Plugin SDK V2 based resources, ensure that the `Update` operation always calls the resource `Read` operation before returning so that the transparent tagging mechanism correctly saves any tags into Terraform state.
+For Terraform Plugin SDK V2 based resources, ensure that the `Update` operation always calls the resource `Read` operation before returning so that the transparent tagging mechanism correctly saves any tags into the Terraform state.
 
 === "Terraform Plugin SDK V2"
     ```go
@@ -344,7 +344,7 @@ implement the logic to convert the configuration tags into the service tags, e.g
     }
     ```
 
-If the service API does not allow passing an empty list, the logic can be adjusted similar to:
+If the service API does not allow passing an empty list, the logic can be adjusted similarly to:
 
 === "Terraform Plugin SDK V2"
     ```go

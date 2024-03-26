@@ -12,12 +12,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// @SDKDataSource("aws_iam_access_keys")
-func DataSourceAccessKeys() *schema.Resource {
+// @SDKDataSource("aws_iam_access_keys", name="Access Keys")
+func dataSourceAccessKeys() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAccessKeysRead,
 		Schema: map[string]*schema.Schema{
@@ -49,26 +48,21 @@ func DataSourceAccessKeys() *schema.Resource {
 	}
 }
 
-const (
-	DSNameAccessKeys = "Access Keys Data Source"
-)
-
 func dataSourceAccessKeysRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
 	conn := meta.(*conns.AWSClient).IAMConn(ctx)
 
 	username := d.Get("user").(string)
-	out, err := FindAccessKeys(ctx, conn, username)
+	output, err := findAccessKeysByUser(ctx, conn, username)
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.IAM, create.ErrActionReading, DSNameAccessKeys, username, err)
+		return sdkdiag.AppendErrorf(diags, "reading IAM Access Keys (%s): %s", username, err)
 	}
 
 	d.SetId(username)
-
-	if err := d.Set("access_keys", flattenAccessKeys(out)); err != nil {
-		return create.AppendDiagError(diags, names.IAM, create.ErrActionSetting, DSNameAccessKeys, d.Id(), err)
+	if err := d.Set("access_keys", flattenAccessKeys(output)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting access_keys: %s", err)
 	}
 
 	return diags

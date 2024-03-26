@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/lakeformation"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -28,7 +27,7 @@ func TestAccLakeFormationResource_basic(t *testing.T) {
 	roleResourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.LakeFormation) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResourceDestroy(ctx),
@@ -53,7 +52,7 @@ func TestAccLakeFormationResource_disappears(t *testing.T) {
 	resourceName := "aws_lakeformation_resource.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.LakeFormation) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResourceDestroy(ctx),
@@ -79,7 +78,7 @@ func TestAccLakeFormationResource_serviceLinkedRole(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormation)
 			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/lakeformation.amazonaws.com")
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
@@ -108,7 +107,7 @@ func TestAccLakeFormationResource_updateRoleToRole(t *testing.T) {
 	roleResourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.LakeFormation) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResourceDestroy(ctx),
@@ -144,7 +143,7 @@ func TestAccLakeFormationResource_updateSLRToRole(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormation)
 			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/lakeformation.amazonaws.com")
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
@@ -180,7 +179,7 @@ func TestAccLakeFormationResource_hybridAccessEnabled(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, lakeformation.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.LakeFormation)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.LakeFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -205,7 +204,7 @@ func TestAccLakeFormationResource_hybridAccessEnabled(t *testing.T) {
 
 func testAccCheckResourceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_lakeformation_resource" {
@@ -236,7 +235,7 @@ func testAccCheckResourceExists(ctx context.Context, n string) resource.TestChec
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LakeFormationClient(ctx)
 
 		_, err := tflakeformation.FindResourceByARN(ctx, conn, rs.Primary.ID)
 

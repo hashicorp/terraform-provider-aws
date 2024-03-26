@@ -33,6 +33,7 @@ const (
 
 // @SDKResource("aws_acmpca_certificate_authority", name="Certificate Authority")
 // @Tags(identifierAttribute="id")
+// @Testing(existsType="github.com/aws/aws-sdk-go/service/acmpca.CertificateAuthority", generator="acctest.RandomDomainName()", importIgnore="permanent_deletion_time_in_days")
 func ResourceCertificateAuthority() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{

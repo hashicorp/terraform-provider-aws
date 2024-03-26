@@ -21,100 +21,139 @@ import (
 
 var dataSourcePolicyDocumentVarReplacer = strings.NewReplacer("&{", "${")
 
-// @SDKDataSource("aws_iam_policy_document")
-func DataSourcePolicyDocument() *schema.Resource {
-	setOfString := &schema.Schema{
-		Type:     schema.TypeSet,
-		Optional: true,
-		Elem: &schema.Schema{
-			Type: schema.TypeString,
-		},
-	}
-
+// @SDKDataSource("aws_iam_policy_document", name="Policy Document")
+func dataSourcePolicyDocument() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePolicyDocumentRead,
 
-		Schema: map[string]*schema.Schema{
-			"json": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"override_policy_documents": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringIsJSON,
+		SchemaFunc: func() map[string]*schema.Schema {
+			principalsSchema := func() *schema.Schema {
+				return &schema.Schema{
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"identifiers": {
+								Type:     schema.TypeSet,
+								Required: true,
+								Elem: &schema.Schema{
+									Type: schema.TypeString,
+								},
+							},
+							"type": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+						},
+					},
+				}
+			}
+			setOfStringSchema := func() *schema.Schema {
+				return &schema.Schema{
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type: schema.TypeString,
+					},
+				}
+			}
+
+			return map[string]*schema.Schema{
+				"json": {
+					Type:     schema.TypeString,
+					Computed: true,
 				},
-			},
-			"policy_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"source_policy_documents": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Schema{
+				// https://github.com/hashicorp/terraform-provider-aws/issues/31637.
+				"override_json": {
 					Type:         schema.TypeString,
-					ValidateFunc: validation.StringIsJSON,
+					Optional:     true,
+					ValidateFunc: validation.StringIsEmpty,
+					Deprecated:   "Not used",
 				},
-			},
-			"statement": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"actions": setOfString,
-						"condition": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"test": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"values": {
-										Type:     schema.TypeList,
-										Required: true,
-										Elem: &schema.Schema{
-											Type: schema.TypeString,
+				"override_policy_documents": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validation.StringIsJSON,
+					},
+				},
+				"policy_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
+				// https://github.com/hashicorp/terraform-provider-aws/issues/31637.
+				"source_json": {
+					Type:         schema.TypeString,
+					Optional:     true,
+					ValidateFunc: validation.StringIsEmpty,
+					Deprecated:   "Not used",
+				},
+				"source_policy_documents": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validation.StringIsJSON,
+					},
+				},
+				"statement": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"actions": setOfStringSchema(),
+							"condition": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"test": {
+											Type:     schema.TypeString,
+											Required: true,
 										},
-									},
-									"variable": {
-										Type:     schema.TypeString,
-										Required: true,
+										"values": {
+											Type:     schema.TypeList,
+											Required: true,
+											Elem: &schema.Schema{
+												Type: schema.TypeString,
+											},
+										},
+										"variable": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
 									},
 								},
 							},
-						},
-						"effect": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      "Allow",
-							ValidateFunc: validation.StringInSlice([]string{"Allow", "Deny"}, false),
-						},
-						"not_actions":    setOfString,
-						"not_principals": dataSourcePolicyPrincipalSchema(),
-						"not_resources":  setOfString,
-						"principals":     dataSourcePolicyPrincipalSchema(),
-						"resources":      setOfString,
-						"sid": {
-							Type:     schema.TypeString,
-							Optional: true,
+							"effect": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Default:      "Allow",
+								ValidateFunc: validation.StringInSlice([]string{"Allow", "Deny"}, false),
+							},
+							"not_actions":    setOfStringSchema(),
+							"not_principals": principalsSchema(),
+							"not_resources":  setOfStringSchema(),
+							"principals":     principalsSchema(),
+							"resources":      setOfStringSchema(),
+							"sid": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
 						},
 					},
 				},
-			},
-			"version": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "2012-10-17",
-				ValidateFunc: validation.StringInSlice([]string{
-					"2008-10-17",
-					"2012-10-17",
-				}, false),
-			},
+				"version": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Default:  "2012-10-17",
+					ValidateFunc: validation.StringInSlice([]string{
+						"2008-10-17",
+						"2012-10-17",
+					}, false),
+				},
+			}
 		},
 	}
 }
@@ -337,26 +376,4 @@ func dataSourcePolicyDocumentMakePrincipals(in []interface{}, version string) (I
 		}
 	}
 	return IAMPolicyStatementPrincipalSet(out), nil
-}
-
-func dataSourcePolicyPrincipalSchema() *schema.Schema {
-	return &schema.Schema{
-		Type:     schema.TypeSet,
-		Optional: true,
-		Elem: &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"type": {
-					Type:     schema.TypeString,
-					Required: true,
-				},
-				"identifiers": {
-					Type:     schema.TypeSet,
-					Required: true,
-					Elem: &schema.Schema{
-						Type: schema.TypeString,
-					},
-				},
-			},
-		},
-	}
 }

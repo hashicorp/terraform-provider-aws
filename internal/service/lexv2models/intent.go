@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/lexmodelsv2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/lexmodelsv2/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
@@ -842,7 +843,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 			},
 			"creation_date_time": schema.StringAttribute{
 				Computed:   true,
-				CustomType: fwtypes.TimestampType,
+				CustomType: timetypes.RFC3339Type{},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -859,7 +860,7 @@ func (r *resourceIntent) Schema(ctx context.Context, req resource.SchemaRequest,
 			},
 			"last_updated_date_time": schema.StringAttribute{
 				Computed:   true,
-				CustomType: fwtypes.TimestampType,
+				CustomType: timetypes.RFC3339Type{},
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -1499,7 +1500,7 @@ type ResourceIntentData struct {
 	BotVersion             types.String                                                 `tfsdk:"bot_version"`
 	ClosingSetting         fwtypes.ListNestedObjectValueOf[IntentClosingSetting]        `tfsdk:"closing_setting"`
 	ConfirmationSetting    fwtypes.ListNestedObjectValueOf[IntentConfirmationSetting]   `tfsdk:"confirmation_setting"`
-	CreationDateTime       fwtypes.Timestamp                                            `tfsdk:"creation_date_time"`
+	CreationDateTime       timetypes.RFC3339                                            `tfsdk:"creation_date_time"`
 	Description            types.String                                                 `tfsdk:"description"`
 	DialogCodeHook         fwtypes.ListNestedObjectValueOf[DialogCodeHookSettings]      `tfsdk:"dialog_code_hook"`
 	FulfillmentCodeHook    fwtypes.ListNestedObjectValueOf[FulfillmentCodeHookSettings] `tfsdk:"fulfillment_code_hook"`
@@ -1508,7 +1509,7 @@ type ResourceIntentData struct {
 	InitialResponseSetting fwtypes.ListNestedObjectValueOf[InitialResponseSetting]      `tfsdk:"initial_response_setting"`
 	InputContext           fwtypes.ListNestedObjectValueOf[InputContext]                `tfsdk:"input_context"`
 	KendraConfiguration    fwtypes.ListNestedObjectValueOf[KendraConfiguration]         `tfsdk:"kendra_configuration"`
-	LastUpdatedDateTime    fwtypes.Timestamp                                            `tfsdk:"last_updated_date_time"`
+	LastUpdatedDateTime    timetypes.RFC3339                                            `tfsdk:"last_updated_date_time"`
 	LocaleID               types.String                                                 `tfsdk:"locale_id"`
 	Name                   types.String                                                 `tfsdk:"name"`
 	OutputContext          fwtypes.ListNestedObjectValueOf[OutputContext]               `tfsdk:"output_context"`

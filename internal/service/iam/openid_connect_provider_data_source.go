@@ -19,8 +19,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKDataSource("aws_iam_openid_connect_provider")
-func DataSourceOpenIDConnectProvider() *schema.Resource {
+// @SDKDataSource("aws_iam_openid_connect_provider", name="OIDC Provider")
+func dataSourceOpenIDConnectProvider() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceOpenIDConnectProviderRead,
 

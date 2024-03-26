@@ -62,7 +62,7 @@ servicediscovery,servicediscovery,servicediscovery,servicediscovery,,servicedisc
 cloud9,cloud9,cloud9,cloud9,,cloud9,,,Cloud9,Cloud9,,,2,,aws_cloud9_,,cloud9_,Cloud9,AWS,,,,,,,Cloud9,ListEnvironments,,
 cloudformation,cloudformation,cloudformation,cloudformation,,cloudformation,,,CloudFormation,CloudFormation,,1,,,aws_cloudformation_,,cloudformation_,CloudFormation,AWS,,,,,,,CloudFormation,ListStackInstances,,
 cloudfront,cloudfront,cloudfront,cloudfront,,cloudfront,,,CloudFront,CloudFront,,1,2,,aws_cloudfront_,,cloudfront_,CloudFront,Amazon,,,,,,,CloudFront,ListDistributions,,
-cloudfront-keyvaluestore,cloudfrontkeyvaluestore,,cloudfrontkeyvaluestore,,cloudfrontkeyvaluestore,,,CloudFrontKeyValueStore,CloudFrontKeyValueStore,,,2,,aws_cloudfrontkeyvaluestore_,,cloudfront_keyvaluestore_,CloudFront KeyValueStore,Amazon,,,,,,,CloudFront KeyValueStore,ListKeys,"KvsARN: aws_sdkv2.String(""arn:aws:cloudfront::111122223333:key-value-store/MaxAge"")",
+cloudfront-keyvaluestore,cloudfrontkeyvaluestore,,cloudfrontkeyvaluestore,,cloudfrontkeyvaluestore,,,CloudFrontKeyValueStore,CloudFrontKeyValueStore,,,2,,aws_cloudfrontkeyvaluestore_,,cloudfrontkeyvaluestore_,CloudFront KeyValueStore,Amazon,,,,,,,CloudFront KeyValueStore,ListKeys,"KvsARN: aws_sdkv2.String(""arn:aws:cloudfront::111122223333:key-value-store/MaxAge"")",
 cloudhsm,cloudhsm,cloudhsm,cloudhsm,,,,,,,,,,,,,,CloudHSM,AWS,x,,,,,,,,,Legacy
 cloudhsmv2,cloudhsmv2,cloudhsmv2,cloudhsmv2,,cloudhsmv2,,cloudhsm,CloudHSMV2,CloudHSMV2,x,,2,aws_cloudhsm_v2_,aws_cloudhsmv2_,,cloudhsm,CloudHSM,AWS,,,,,,,CloudHSM V2,DescribeClusters,,
 cloudsearch,cloudsearch,cloudsearch,cloudsearch,,cloudsearch,,,CloudSearch,CloudSearch,,,2,,aws_cloudsearch_,,cloudsearch_,CloudSearch,Amazon,,,,,,,CloudSearch,ListDomainNames,,
@@ -86,7 +86,7 @@ codepipeline,codepipeline,codepipeline,codepipeline,,codepipeline,,,CodePipeline
 codestar,codestar,codestar,codestar,,codestar,,,CodeStar,CodeStar,,1,,,aws_codestar_,,codestar_,CodeStar,AWS,,x,,,,,CodeStar,,,
 codestar-connections,codestarconnections,codestarconnections,codestarconnections,,codestarconnections,,,CodeStarConnections,CodeStarConnections,,,2,,aws_codestarconnections_,,codestarconnections_,CodeStar Connections,AWS,,,,,,,CodeStar connections,ListConnections,,
 codestar-notifications,codestarnotifications,codestarnotifications,codestarnotifications,,codestarnotifications,,,CodeStarNotifications,CodeStarNotifications,,,2,,aws_codestarnotifications_,,codestarnotifications_,CodeStar Notifications,AWS,,,,,,,codestar notifications,ListTargets,,
-cognito-identity,cognitoidentity,cognitoidentity,cognitoidentity,,cognitoidentity,,,CognitoIdentity,CognitoIdentity,,1,,aws_cognito_identity_(?!provider),aws_cognitoidentity_,,cognito_identity_pool,Cognito Identity,Amazon,,,,,,,Cognito Identity,ListIdentityPools,,
+cognito-identity,cognitoidentity,cognitoidentity,cognitoidentity,,cognitoidentity,,,CognitoIdentity,CognitoIdentity,,,2,aws_cognito_identity_(?!provider),aws_cognitoidentity_,,cognito_identity_pool,Cognito Identity,Amazon,,,,,,,Cognito Identity,ListIdentityPools,MaxResults: aws_sdkv2.Int32(1),
 cognito-idp,cognitoidp,cognitoidentityprovider,cognitoidentityprovider,,cognitoidp,,cognitoidentityprovider,CognitoIDP,CognitoIdentityProvider,,1,,aws_cognito_(identity_provider|resource|user|risk),aws_cognitoidp_,,cognito_identity_provider;cognito_managed_user;cognito_resource_;cognito_user;cognito_risk,Cognito IDP (Identity Provider),Amazon,,,,,,,Cognito Identity Provider,ListUserPools,,
 cognito-sync,cognitosync,cognitosync,cognitosync,,cognitosync,,,CognitoSync,CognitoSync,,1,,,aws_cognitosync_,,cognitosync_,Cognito Sync,Amazon,,x,,,,,Cognito Sync,,,
 comprehend,comprehend,comprehend,comprehend,,comprehend,,,Comprehend,Comprehend,,,2,,aws_comprehend_,,comprehend_,Comprehend,Amazon,,,,,,,Comprehend,ListDocumentClassifiers,,
@@ -103,12 +103,13 @@ wisdom,wisdom,connectwisdomservice,wisdom,,wisdom,,connectwisdomservice,Wisdom,C
 ,,,,,,,,,,,,,,,,,Console Mobile Application,AWS,x,,,,,,,,,No SDK support
 controltower,controltower,controltower,controltower,,controltower,,,ControlTower,ControlTower,,,2,,aws_controltower_,,controltower_,Control Tower,AWS,,,,,,,ControlTower,ListLandingZones,,
 cost-optimization-hub,costoptimizationhub,costoptimizationhub,costoptimizationhub,,costoptimizationhub,,,CostOptimizationHub,CostOptimizationHub,x,,2,,aws_costoptimizationhub_,,costoptimizationhub_,Cost Optimization Hub,AWS,,,,,,,Cost Optimization Hub,GetPreferences,,
-cur,cur,costandusagereportservice,costandusagereportservice,,cur,,costandusagereportservice,CUR,CostandUsageReportService,,1,,,aws_cur_,,cur_,Cost and Usage Report,AWS,,,,,,,Cost and Usage Report Service,DescribeReportDefinitions,,
+cur,cur,costandusagereportservice,costandusagereportservice,,cur,,costandusagereportservice,CUR,CostandUsageReportService,x,,2,,aws_cur_,,cur_,Cost and Usage Report,AWS,,,,,,,Cost and Usage Report Service,DescribeReportDefinitions,,
 ,,,,,,,,,,,,,,,,,Crypto Tools,AWS,x,,,,,,,,,No SDK support
 ,,,,,,,,,,,,,,,,,Cryptographic Services Overview,AWS,x,,,,,,,,,No SDK support
 dataexchange,dataexchange,dataexchange,dataexchange,,dataexchange,,,DataExchange,DataExchange,,1,,,aws_dataexchange_,,dataexchange_,Data Exchange,AWS,,,,,,,DataExchange,ListDataSets,,
 datapipeline,datapipeline,datapipeline,datapipeline,,datapipeline,,,DataPipeline,DataPipeline,,1,,,aws_datapipeline_,,datapipeline_,Data Pipeline,AWS,,,,,,,Data Pipeline,ListPipelines,,
 datasync,datasync,datasync,datasync,,datasync,,,DataSync,DataSync,,1,,,aws_datasync_,,datasync_,DataSync,AWS,,,,,,,DataSync,ListAgents,,
+datazone,datazone,datazone,datazone,,datazone,,,DataZone,DataZone,,,2,,aws_datazone_,,datazone_,DataZone,Amazon,,,,,,,DataZone,ListDomains,,
 ,,,,,,,,,,,,,,,,,Deep Learning AMIs,AWS,x,,,,,,,,,No SDK support
 ,,,,,,,,,,,,,,,,,Deep Learning Containers,AWS,x,,,,,,,,,No SDK support
 ,,,,,,,,,,,,,,,,,DeepComposer,AWS,x,,,,,,,,,No SDK support
@@ -116,7 +117,7 @@ datasync,datasync,datasync,datasync,,datasync,,,DataSync,DataSync,,1,,,aws_datas
 ,,,,,,,,,,,,,,,,,DeepRacer,AWS,x,,,,,,,,,No SDK support
 detective,detective,detective,detective,,detective,,,Detective,Detective,,1,,,aws_detective_,,detective_,Detective,Amazon,,,,,,,Detective,ListGraphs,,
 devicefarm,devicefarm,devicefarm,devicefarm,,devicefarm,,,DeviceFarm,DeviceFarm,,1,,,aws_devicefarm_,,devicefarm_,Device Farm,AWS,,,,,,,Device Farm,ListDeviceInstances,,
-devops-guru,devopsguru,devopsguru,devopsguru,,devopsguru,,,DevOpsGuru,DevOpsGuru,,1,,,aws_devopsguru_,,devopsguru_,DevOps Guru,Amazon,,x,,,,,DevOps Guru,,,
+devops-guru,devopsguru,devopsguru,devopsguru,,devopsguru,,,DevOpsGuru,DevOpsGuru,,,2,,aws_devopsguru_,,devopsguru_,DevOps Guru,Amazon,,,,,,,DevOps Guru,DescribeAccountHealth,,
 directconnect,directconnect,directconnect,directconnect,,directconnect,,,DirectConnect,DirectConnect,,1,,aws_dx_,aws_directconnect_,,dx_,Direct Connect,AWS,,,,,,,Direct Connect,DescribeConnections,,
 dlm,dlm,dlm,dlm,,dlm,,,DLM,DLM,,1,,,aws_dlm_,,dlm_,DLM (Data Lifecycle Manager),Amazon,,,,,,,DLM,GetLifecyclePolicies,,
 dms,dms,databasemigrationservice,databasemigrationservice,,dms,,databasemigration;databasemigrationservice,DMS,DatabaseMigrationService,,1,,,aws_dms_,,dms_,DMS (Database Migration),AWS,,,,,,,Database Migration Service,DescribeCertificates,,
@@ -125,7 +126,7 @@ docdb-elastic,docdbelastic,docdbelastic,docdbelastic,,docdbelastic,,,DocDBElasti
 drs,drs,drs,drs,,drs,,,DRS,Drs,,1,,,aws_drs_,,drs_,DRS (Elastic Disaster Recovery),AWS,,x,,,,,drs,,,
 ds,ds,directoryservice,directoryservice,,ds,,directoryservice,DS,DirectoryService,,1,2,aws_directory_service_,aws_ds_,,directory_service_,Directory Service,AWS,,,,,,,Directory Service,DescribeDirectories,,
 dynamodb,dynamodb,dynamodb,dynamodb,,dynamodb,,,DynamoDB,DynamoDB,,1,2,,aws_dynamodb_,,dynamodb_,DynamoDB,Amazon,,,,,AWS_DYNAMODB_ENDPOINT,TF_AWS_DYNAMODB_ENDPOINT,DynamoDB,ListTables,,
-dax,dax,dax,dax,,dax,,,DAX,DAX,,1,,,aws_dax_,,dax_,DynamoDB Accelerator (DAX),Amazon,,,,,,,DAX,DescribeClusters,,
+dax,dax,dax,dax,,dax,,,DAX,DAX,,,2,,aws_dax_,,dax_,DynamoDB Accelerator (DAX),Amazon,,,,,,,DAX,DescribeClusters,,
 dynamodbstreams,dynamodbstreams,dynamodbstreams,dynamodbstreams,,dynamodbstreams,,,DynamoDBStreams,DynamoDBStreams,,1,,,aws_dynamodbstreams_,,dynamodbstreams_,DynamoDB Streams,Amazon,,x,,,,,DynamoDB Streams,,,
 ,,,,,ec2ebs,ec2,,EC2EBS,,,,,aws_(ebs_|volume_attach|snapshot_create),aws_ec2ebs_,ebs_,ebs_;volume_attachment;snapshot_,EBS (EC2),Amazon,x,,,x,,,,,,Part of EC2
 ebs,ebs,ebs,ebs,,ebs,,,EBS,EBS,,1,,,aws_ebs_,,changewhenimplemented,EBS (Elastic Block Store),Amazon,,x,,,,,EBS,,,
@@ -133,11 +134,11 @@ ec2,ec2,ec2,ec2,,ec2,ec2,,EC2,EC2,,1,2,aws_(ami|availability_zone|ec2_(availabil
 imagebuilder,imagebuilder,imagebuilder,imagebuilder,,imagebuilder,,,ImageBuilder,Imagebuilder,,1,,,aws_imagebuilder_,,imagebuilder_,EC2 Image Builder,Amazon,,,,,,,imagebuilder,ListImages,,
 ec2-instance-connect,ec2instanceconnect,ec2instanceconnect,ec2instanceconnect,,ec2instanceconnect,,,EC2InstanceConnect,EC2InstanceConnect,,1,,,aws_ec2instanceconnect_,,ec2instanceconnect_,EC2 Instance Connect,AWS,,x,,,,,EC2 Instance Connect,,,
 ecr,ecr,ecr,ecr,,ecr,,,ECR,ECR,,1,2,,aws_ecr_,,ecr_,ECR (Elastic Container Registry),Amazon,,,,,,,ECR,DescribeRepositories,,
-ecr-public,ecrpublic,ecrpublic,ecrpublic,,ecrpublic,,,ECRPublic,ECRPublic,,1,,,aws_ecrpublic_,,ecrpublic_,ECR Public,Amazon,,,,,,,ECR PUBLIC,DescribeRepositories,,
+ecr-public,ecrpublic,ecrpublic,ecrpublic,,ecrpublic,,,ECRPublic,ECRPublic,,,2,,aws_ecrpublic_,,ecrpublic_,ECR Public,Amazon,,,,,,,ECR PUBLIC,DescribeRepositories,,
 ecs,ecs,ecs,ecs,,ecs,,,ECS,ECS,,1,2,,aws_ecs_,,ecs_,ECS (Elastic Container),Amazon,,,,,,,ECS,ListClusters,,
 efs,efs,efs,efs,,efs,,,EFS,EFS,,1,,,aws_efs_,,efs_,EFS (Elastic File System),Amazon,,,,,,,EFS,DescribeFileSystems,,
 eks,eks,eks,eks,,eks,,,EKS,EKS,,,2,,aws_eks_,,eks_,EKS (Elastic Kubernetes),Amazon,,,,,,,EKS,ListClusters,,
-elasticbeanstalk,elasticbeanstalk,elasticbeanstalk,elasticbeanstalk,,elasticbeanstalk,,beanstalk,ElasticBeanstalk,ElasticBeanstalk,,1,,aws_elastic_beanstalk_,aws_elasticbeanstalk_,,elastic_beanstalk_,Elastic Beanstalk,AWS,,,,,,,Elastic Beanstalk,ListAvailableSolutionStacks,,
+elasticbeanstalk,elasticbeanstalk,elasticbeanstalk,elasticbeanstalk,,elasticbeanstalk,,beanstalk,ElasticBeanstalk,ElasticBeanstalk,,,2,aws_elastic_beanstalk_,aws_elasticbeanstalk_,,elastic_beanstalk_,Elastic Beanstalk,AWS,,,,,,,Elastic Beanstalk,ListAvailableSolutionStacks,,
 elastic-inference,elasticinference,elasticinference,elasticinference,,elasticinference,,,ElasticInference,ElasticInference,,1,,,aws_elasticinference_,,elasticinference_,Elastic Inference,Amazon,,x,,,,,Elastic Inference,,,
 elastictranscoder,elastictranscoder,elastictranscoder,elastictranscoder,,elastictranscoder,,,ElasticTranscoder,ElasticTranscoder,,1,,,aws_elastictranscoder_,,elastictranscoder_,Elastic Transcoder,Amazon,,,,,,,Elastic Transcoder,ListPipelines,,
 elasticache,elasticache,elasticache,elasticache,,elasticache,,,ElastiCache,ElastiCache,,1,2,,aws_elasticache_,,elasticache_,ElastiCache,Amazon,,,,,,,ElastiCache,DescribeCacheClusters,,
@@ -215,7 +216,7 @@ kinesis-video-archived-media,kinesisvideoarchivedmedia,kinesisvideoarchivedmedia
 kinesis-video-media,kinesisvideomedia,kinesisvideomedia,kinesisvideomedia,,kinesisvideomedia,,,KinesisVideoMedia,KinesisVideoMedia,,1,,,aws_kinesisvideomedia_,,kinesisvideomedia_,Kinesis Video Media,Amazon,,x,,,,,Kinesis Video Media,,,
 kinesis-video-signaling,kinesisvideosignaling,kinesisvideosignalingchannels,kinesisvideosignaling,,kinesisvideosignaling,,kinesisvideosignalingchannels,KinesisVideoSignaling,KinesisVideoSignalingChannels,,1,,,aws_kinesisvideosignaling_,,kinesisvideosignaling_,Kinesis Video Signaling,Amazon,,x,,,,,Kinesis Video Signaling,,,
 kms,kms,kms,kms,,kms,,,KMS,KMS,,1,,,aws_kms_,,kms_,KMS (Key Management),AWS,,,,,,,KMS,ListKeys,,
-lakeformation,lakeformation,lakeformation,lakeformation,,lakeformation,,,LakeFormation,LakeFormation,,1,,,aws_lakeformation_,,lakeformation_,Lake Formation,AWS,,,,,,,LakeFormation,ListResources,,
+lakeformation,lakeformation,lakeformation,lakeformation,,lakeformation,,,LakeFormation,LakeFormation,,,2,,aws_lakeformation_,,lakeformation_,Lake Formation,AWS,,,,,,,LakeFormation,ListResources,,
 lambda,lambda,lambda,lambda,,lambda,,,Lambda,Lambda,,1,2,,aws_lambda_,,lambda_,Lambda,AWS,,,,,,,Lambda,ListFunctions,,
 launch-wizard,launchwizard,launchwizard,launchwizard,,launchwizard,,,LaunchWizard,LaunchWizard,,,2,,aws_launchwizard_,,launchwizard_,Launch Wizard,AWS,,,,,,,Launch Wizard,ListWorkloads,,
 lex-models,lexmodels,lexmodelbuildingservice,lexmodelbuildingservice,,lexmodels,,lexmodelbuilding;lexmodelbuildingservice;lex,LexModels,LexModelBuildingService,,1,,aws_lex_,aws_lexmodels_,,lex_,Lex Model Building,Amazon,,,,,,,Lex Model Building Service,GetBots,,
@@ -273,6 +274,7 @@ outposts,outposts,outposts,outposts,,outposts,,,Outposts,Outposts,,1,,,aws_outpo
 ,,,,,ec2outposts,ec2,,EC2Outposts,,,,,aws_ec2_(coip_pool|local_gateway),aws_ec2outposts_,outposts_,ec2_coip_pool;ec2_local_gateway,Outposts (EC2),AWS,x,,,x,,,,,,Part of EC2
 panorama,panorama,panorama,panorama,,panorama,,,Panorama,Panorama,,1,,,aws_panorama_,,panorama_,Panorama,AWS,,x,,,,,Panorama,,,
 ,,,,,,,,,,,,,,,,,ParallelCluster,AWS,x,,,,,,,,,No SDK support
+payment-cryptography,paymentcryptography,paymentcryptography,paymentcryptography,,paymentcryptography,,,PaymentCryptography,PaymentCryptography,,,2,,aws_paymentcryptography_,,paymentcryptography_,Payment Cryptography Control Plane,AWS,,,,,,,PaymentCryptography,ListKeys,,
 pca-connector-ad,pcaconnectorad,pcaconnectorad,pcaconnectorad,,pcaconnectorad,,,PCAConnectorAD,PcaConnectorAd,,,2,,aws_pcaconnectorad_,,pcaconnectorad_,Private CA Connector for Active Directory,AWS,,,,,,,Pca Connector Ad,ListConnectors,,
 personalize,personalize,personalize,personalize,,personalize,,,Personalize,Personalize,,1,,,aws_personalize_,,personalize_,Personalize,Amazon,,x,,,,,Personalize,,,
 personalize-events,personalizeevents,personalizeevents,personalizeevents,,personalizeevents,,,PersonalizeEvents,PersonalizeEvents,,1,,,aws_personalizeevents_,,personalizeevents_,Personalize Events,Amazon,,x,,,,,Personalize Events,,,

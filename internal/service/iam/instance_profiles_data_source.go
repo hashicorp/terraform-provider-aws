@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// @SDKDataSource("aws_iam_instance_profiles")
-func DataSourceInstanceProfiles() *schema.Resource {
+// @SDKDataSource("aws_iam_instance_profiles", name="Instance Profiles")
+func dataSourceInstanceProfiles() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceInstanceProfilesRead,
 

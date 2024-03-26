@@ -5,13 +5,13 @@ package elasticache
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math"
 	"regexp"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
-	multierror "github.com/hashicorp/go-multierror"
 	gversion "github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -78,9 +78,7 @@ func validateClusterEngineVersion(engine, engineVersion string) error {
 
 	_, errs := validator(engineVersion, "engine_version")
 
-	var err *multierror.Error
-	err = multierror.Append(err, errs...)
-	return err.ErrorOrNil()
+	return errors.Join(errs...)
 }
 
 // customizeDiffEngineVersionForceNewOnDowngrade causes re-creation of the resource if the version is being downgraded

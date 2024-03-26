@@ -162,6 +162,7 @@ class MyConvertedCode(TerraformStack):
   <li><code>deploy</code> (or <code>codedeploy</code>)</li>
   <li><code>detective</code></li>
   <li><code>devicefarm</code></li>
+  <li><code>devopsguru</code></li>
   <li><code>directconnect</code></li>
   <li><code>dlm</code></li>
   <li><code>dms</code> (or <code>databasemigration</code> or <code>databasemigrationservice</code>)</li>
@@ -419,4 +420,4 @@ class MyConvertedCode(TerraformStack):
         )
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-92281460ae8e42aaedb22af077c061fd80a891cc882d073eb1a3b6adface31a9 -->
+<!-- cache-key: cdktf-0.20.1 input-c07ce09718a0c466712ecaf61e2dbc9d141b981471b7621e8f49cae77bc74715 -->

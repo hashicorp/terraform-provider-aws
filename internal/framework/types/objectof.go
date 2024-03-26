@@ -6,18 +6,15 @@ package types
 import (
 	"context"
 	"fmt"
+	"reflect"
 
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 )
-
-// objectTypeOf is the attribute type of an ObjectValueOf.
-type objectTypeOf[T any] struct {
-	basetypes.ObjectType
-}
 
 var (
 	_ basetypes.ObjectTypable  = (*objectTypeOf[struct{}])(nil)
@@ -25,6 +22,11 @@ var (
 	_ basetypes.ObjectValuable = (*ObjectValueOf[struct{}])(nil)
 	_ NestedObjectValue        = (*ObjectValueOf[struct{}])(nil)
 )
+
+// objectTypeOf is the attribute type of an ObjectValueOf.
+type objectTypeOf[T any] struct {
+	basetypes.ObjectType
+}
 
 func newObjectTypeOf[T any](ctx context.Context) (objectTypeOf[T], diag.Diagnostics) {
 	var diags diag.Diagnostics
@@ -44,7 +46,6 @@ func NewObjectTypeOf[T any](ctx context.Context) objectTypeOf[T] {
 
 func (t objectTypeOf[T]) Equal(o attr.Type) bool {
 	other, ok := o.(objectTypeOf[T])
-
 	if !ok {
 		return false
 	}
@@ -94,13 +95,11 @@ func (t objectTypeOf[T]) ValueFromTerraform(ctx context.Context, in tftypes.Valu
 	}
 
 	objectValue, ok := attrValue.(basetypes.ObjectValue)
-
 	if !ok {
 		return nil, fmt.Errorf("unexpected value type of %T", attrValue)
 	}
 
 	objectValuable, diags := t.ValueFromObject(ctx, objectValue)
-
 	if diags.HasError() {
 		return nil, fmt.Errorf("unexpected error converting ObjectValue to ObjectValuable: %v", diags)
 	}
@@ -118,7 +117,6 @@ func (t objectTypeOf[T]) NewObjectPtr(ctx context.Context) (any, diag.Diagnostic
 
 func (t objectTypeOf[T]) NullValue(ctx context.Context) (attr.Value, diag.Diagnostics) {
 	var diags diag.Diagnostics
-
 	return NewObjectValueOfNull[T](ctx), diags
 }
 
@@ -135,10 +133,89 @@ func (t objectTypeOf[T]) ValueFromObjectPtr(ctx context.Context, ptr any) (attr.
 	return nil, diags
 }
 
-func objectTypeNewObjectPtr[T any](_ context.Context) (*T, diag.Diagnostics) {
+func objectTypeNewObjectPtr[T any](context.Context) (*T, diag.Diagnostics) {
 	var diags diag.Diagnostics
-
 	return new(T), diags
+}
+
+// NullOutObjectPtrFields sets all applicable fields of the specified object pointer to their null values.
+func NullOutObjectPtrFields[T any](ctx context.Context, t *T) diag.Diagnostics {
+	var diags diag.Diagnostics
+	val := reflect.ValueOf(t)
+	typ := val.Type().Elem()
+
+	if typ.Kind() != reflect.Struct {
+		return diags
+	}
+
+	val = val.Elem()
+
+	for i := 0; i < typ.NumField(); i++ {
+		val := val.Field(i)
+		if !val.CanInterface() {
+			continue
+		}
+
+		var attrType attr.Type
+		var tfType tftypes.Type
+
+		switch v := val.Interface().(type) {
+		case basetypes.BoolValuable:
+			attrType = v.Type(ctx)
+			tfType = tftypes.Bool
+		case basetypes.Float64Valuable:
+			attrType = v.Type(ctx)
+			tfType = tftypes.Number
+		case basetypes.Int64Valuable:
+			attrType = v.Type(ctx)
+			tfType = tftypes.Number
+		case basetypes.StringValuable:
+			attrType = v.Type(ctx)
+			tfType = tftypes.String
+		case basetypes.ListValuable:
+			attrType = v.Type(ctx)
+			if v, ok := attrType.(attr.TypeWithElementType); ok {
+				tfType = tftypes.List{ElementType: v.ElementType().TerraformType(ctx)}
+			} else {
+				tfType = tftypes.List{}
+			}
+		case basetypes.SetValuable:
+			attrType = v.Type(ctx)
+			if v, ok := attrType.(attr.TypeWithElementType); ok {
+				tfType = tftypes.Set{ElementType: v.ElementType().TerraformType(ctx)}
+			} else {
+				tfType = tftypes.Set{}
+			}
+		case basetypes.MapValuable:
+			attrType = v.Type(ctx)
+			if v, ok := attrType.(attr.TypeWithElementType); ok {
+				tfType = tftypes.Map{ElementType: v.ElementType().TerraformType(ctx)}
+			} else {
+				tfType = tftypes.Map{}
+			}
+		case basetypes.ObjectValuable:
+			attrType = v.Type(ctx)
+			if v, ok := attrType.(attr.TypeWithAttributeTypes); ok {
+				tfType = tftypes.Object{AttributeTypes: tfmaps.ApplyToAllValues(v.AttributeTypes(), func(attrType attr.Type) tftypes.Type {
+					return attrType.TerraformType(ctx)
+				})}
+			} else {
+				tfType = tftypes.Object{}
+			}
+		default:
+			continue
+		}
+
+		attrValue, err := attrType.ValueFromTerraform(ctx, tftypes.NewValue(tfType, nil))
+		if err != nil {
+			diags.Append(diag.NewErrorDiagnostic("attr.Type.ValueFromTerraform", err.Error()))
+			return diags
+		}
+
+		val.Set(reflect.ValueOf(attrValue))
+	}
+
+	return diags
 }
 
 // ObjectValueOf represents a Terraform Plugin Framework Object value whose corresponding Go type is the structure T.
@@ -148,7 +225,6 @@ type ObjectValueOf[T any] struct {
 
 func (v ObjectValueOf[T]) Equal(o attr.Value) bool {
 	other, ok := o.(ObjectValueOf[T])
-
 	if !ok {
 		return false
 	}
@@ -171,7 +247,12 @@ func (v ObjectValueOf[T]) ToPtr(ctx context.Context) (*T, diag.Diagnostics) {
 func objectValueObjectPtr[T any](ctx context.Context, val attr.Value) (*T, diag.Diagnostics) {
 	var diags diag.Diagnostics
 
-	ptr := new(T)
+	ptr, d := objectTypeNewObjectPtr[T](ctx)
+	diags.Append(d...)
+	if diags.HasError() {
+		return nil, diags
+	}
+
 	diags.Append(val.(ObjectValueOf[T]).ObjectValue.As(ctx, ptr, basetypes.ObjectAsOptions{})...)
 	if diags.HasError() {
 		return nil, diags

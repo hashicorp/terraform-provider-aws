@@ -135,11 +135,11 @@ func testAccCheckEndpointAccessDestroy(ctx context.Context) resource.TestCheckFu
 	}
 }
 
-func testAccCheckEndpointAccessExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckEndpointAccessExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("not found: %s", name)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessConn(ctx)
