@@ -5,7 +5,6 @@ package resourceexplorer2
 
 import (
 	"context"
-	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
@@ -65,65 +64,65 @@ func (d *dataSourceSearch) Schema(ctx context.Context, req datasource.SchemaRequ
 				},
 			},
 		},
-		// Blocks: map[string]schema.Block{
-		// 	"rsc_count": schema.ListNestedBlock{
-		// 		CustomType: fwtypes.NewListNestedObjectTypeOf[countData](ctx),
-		// 		NestedObject: schema.NestedBlockObject{
-		// 			Attributes: map[string]schema.Attribute{
-		// 				"complete": schema.BoolAttribute{
-		// 					Computed: true,
-		// 				},
-		// 				"total_resources": schema.Int64Attribute{
-		// 					Computed: true,
-		// 				},
-		// 			},
-		// 		},
-		// 	},
-		// 	"resources": schema.ListNestedBlock{
-		// 		CustomType: fwtypes.NewListNestedObjectTypeOf[resourcesData](ctx),
-		// 		NestedObject: schema.NestedBlockObject{
-		// 			Attributes: map[string]schema.Attribute{
-		// 				"arn": schema.StringAttribute{
-		// 					Computed: true,
-		// 				},
-		// 				"last_reported_at": schema.StringAttribute{
-		// 					Computed: true,
-		// 				},
-		// 				"owning_account_id": schema.StringAttribute{
-		// 					Computed: true,
-		// 				},
-		// 				"region": schema.StringAttribute{
-		// 					Computed: true,
-		// 				},
-		// 				"resource_type": schema.StringAttribute{
-		// 					Computed: true,
-		// 				},
-		// 				"service": schema.StringAttribute{
-		// 					Computed: true,
-		// 				},
-		// 			},
-		// 			Blocks: map[string]schema.Block{
-		// 				"resource_property": schema.ListNestedBlock{
-		// 					CustomType: fwtypes.NewListNestedObjectTypeOf[resourcePropertyData](ctx),
-		// 					NestedObject: schema.NestedBlockObject{
-		// 						Attributes: map[string]schema.Attribute{
-		// 							"data": schema.StringAttribute{
-		// 								Computed: true,
-		// 								// Validators: jsonvalidator.JSON(),
-		// 							},
-		// 							"last_reported_at": schema.StringAttribute{
-		// 								Computed: true,
-		// 							},
-		// 							"name": schema.StringAttribute{
-		// 								Computed: true,
-		// 							},
-		// 						},
-		// 					},
-		// 				},
-		// 			},
-		// 		},
-		// 	},
-		// },
+		Blocks: map[string]schema.Block{
+			"resource_count": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[countData](ctx),
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"complete": schema.BoolAttribute{
+							Computed: true,
+						},
+						"total_resources": schema.Int64Attribute{
+							Computed: true,
+						},
+					},
+				},
+			},
+			"resources": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[resourcesData](ctx),
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"arn": schema.StringAttribute{
+							Computed: true,
+						},
+						"last_reported_at": schema.StringAttribute{
+							Computed: true,
+						},
+						"owning_account_id": schema.StringAttribute{
+							Computed: true,
+						},
+						"region": schema.StringAttribute{
+							Computed: true,
+						},
+						"resource_type": schema.StringAttribute{
+							Computed: true,
+						},
+						"service": schema.StringAttribute{
+							Computed: true,
+						},
+					},
+					Blocks: map[string]schema.Block{
+						"resource_property": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[resourcePropertyData](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"data": schema.StringAttribute{
+										Computed: true,
+										// Validators: jsonvalidator.JSON(),
+									},
+									"last_reported_at": schema.StringAttribute{
+										Computed: true,
+									},
+									"name": schema.StringAttribute{
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
 	}
 }
 
@@ -139,11 +138,8 @@ func (d *dataSourceSearch) Read(ctx context.Context, req datasource.ReadRequest,
 	data.ID = types.StringValue(data.ViewArn.ValueString())
 
 	input := &resourceexplorer2.SearchInput{
-		// ViewArn:     aws.String(data.ViewArn.ValueString()),
 		QueryString: aws.String(data.QueryString.ValueString()),
 	}
-
-	log.Printf("[WARN] VIEWARN: %s", data.ViewArn.ValueString())
 
 	paginator := resourceexplorer2.NewSearchPaginator(conn, input)
 
@@ -167,34 +163,16 @@ func (d *dataSourceSearch) Read(ctx context.Context, req datasource.ReadRequest,
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	// out, err := findSearchByName(ctx, conn, data.Name.ValueString())
-	// if err != nil {
-	// 	resp.Diagnostics.AddError(
-	// 		create.ProblemStandardMessage(names.ResourceExplorer2, create.ErrActionReading, DSNameSearch, data.Name.String(), err),
-	// 		err.Error(),
-	// 	)
-	// 	return
-	// }
-
-	// data.ARN = flex.StringToFramework(ctx, out.Arn)
-	// data.ID = flex.StringToFramework(ctx, out.SearchId)
-	// data.Name = flex.StringToFramework(ctx, out.SearchName)
-	// data.Type = flex.StringToFramework(ctx, out.SearchType)
-	// complexArgument, diag := flattenComplexArgument(ctx, out.ComplexArgument)
-	// resp.Diagnostics.Append(diag...)
-	// data.ComplexArgument = complexArgument
-
-	// resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
 }
 
 type dataSourceSearchData struct {
-	// Count       fwtypes.ListNestedObjectValueOf[countData] `tfsdk:"rsc_count"`
-	MaxResults  types.Int64  `tfsdk:"max_results"`
-	ID          types.String `tfsdk:"id"`
-	NextToken   types.String `tfsdk:"next_token"`
-	ViewArn     types.String `tfsdk:"view_arn"`
-	QueryString types.String `tfsdk:"query_string"`
+	ResourceCount fwtypes.ListNestedObjectValueOf[countData]     `tfsdk:"resource_count"`
+	Resources     fwtypes.ListNestedObjectValueOf[resourcesData] `tfsdk:"resources"`
+	MaxResults    types.Int64                                    `tfsdk:"max_results"`
+	ID            types.String                                   `tfsdk:"id"`
+	NextToken     types.String                                   `tfsdk:"next_token"`
+	ViewArn       types.String                                   `tfsdk:"view_arn"`
+	QueryString   types.String                                   `tfsdk:"query_string"`
 }
 
 type countData struct {
