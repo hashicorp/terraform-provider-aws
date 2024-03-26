@@ -83,6 +83,44 @@ func TestAccIAMPolicy_description(t *testing.T) {
 	})
 }
 
+func TestAccIAMPolicy_whitespace(t *testing.T) {
+	ctx := acctest.Context(t)
+	var out iam.Policy
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_iam_policy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_whitespace(rName, "", "", ""),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, resourceName, &out),
+				),
+			},
+			{
+				Config:   testAccPolicyConfig_whitespace(rName, " ", "", ""),
+				PlanOnly: true,
+			},
+			{
+				Config:   testAccPolicyConfig_whitespace(rName, " ", "\n", ""),
+				PlanOnly: true,
+			},
+			{
+				Config:   testAccPolicyConfig_whitespace(rName, " ", "\n", " "),
+				PlanOnly: true,
+			},
+			{
+				Config:   testAccPolicyConfig_whitespace(rName, " \n", "\n", "\t "),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
 func TestAccIAMPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var out iam.Policy
@@ -406,6 +444,29 @@ resource "aws_iam_policy" "test" {
 EOF
 }
 `, rName)
+}
+
+func testAccPolicyConfig_whitespace(rName, ws1, ws2, ws3 string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_policy" "test" {
+  name = %[1]q
+
+  policy = <<EOF
+%[2]s{
+  "Version": "2012-10-17",%[3]s
+  "Statement": [
+    {
+      "Action": [
+        "ec2:Describe*"
+      ],
+      "Effect": %[3]s"Allow",
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+`, rName, ws1, ws2, ws3)
 }
 
 func testAccPolicyConfig_namePrefix(namePrefix string) string {
