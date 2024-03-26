@@ -11,7 +11,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	servicecatalogappregistry_sdkv2 "github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry"
+	"github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry"
 	"github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -20,16 +20,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	servicecatalogappregistry "github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalogappregistry"
+	tfservicecatalogappregistry "github.com/hashicorp/terraform-provider-aws/internal/service/servicecatalogappregistry"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccServiceCatalogAppRegistryApplication_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_servicecatalogappregistry_application.test"
 
@@ -60,10 +56,6 @@ func TestAccServiceCatalogAppRegistryApplication_basic(t *testing.T) {
 
 func TestAccServiceCatalogAppRegistryApplication_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_servicecatalogappregistry_application.test"
 
@@ -79,7 +71,7 @@ func TestAccServiceCatalogAppRegistryApplication_disappears(t *testing.T) {
 				Config: testAccApplicationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, servicecatalogappregistry.ResourceApplication, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfservicecatalogappregistry.ResourceApplication, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -96,7 +88,7 @@ func testAccCheckApplicationDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			_, err := conn.GetApplication(ctx, &servicecatalogappregistry_sdkv2.GetApplicationInput{
+			_, err := conn.GetApplication(ctx, &servicecatalogappregistry.GetApplicationInput{
 				Application: aws.String(rs.Primary.Attributes["name"]),
 			})
 
@@ -104,10 +96,10 @@ func testAccCheckApplicationDestroy(ctx context.Context) resource.TestCheckFunc 
 				return nil
 			}
 			if err != nil {
-				return create.Error(names.ServiceCatalogAppRegistry, create.ErrActionCheckingDestroyed, servicecatalogappregistry.ResNameApplication, rs.Primary.ID, err)
+				return create.Error(names.ServiceCatalogAppRegistry, create.ErrActionCheckingDestroyed, tfservicecatalogappregistry.ResNameApplication, rs.Primary.ID, err)
 			}
 
-			return create.Error(names.ServiceCatalogAppRegistry, create.ErrActionCheckingDestroyed, servicecatalogappregistry.ResNameApplication, rs.Primary.ID, errors.New("not destroyed"))
+			return create.Error(names.ServiceCatalogAppRegistry, create.ErrActionCheckingDestroyed, tfservicecatalogappregistry.ResNameApplication, rs.Primary.ID, errors.New("not destroyed"))
 		}
 
 		return nil
@@ -118,16 +110,16 @@ func testAccCheckApplicationExists(ctx context.Context, name string) resource.Te
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
-			return create.Error(names.ServiceCatalogAppRegistry, create.ErrActionCheckingExistence, servicecatalogappregistry.ResNameApplication, name, errors.New("not found"))
+			return create.Error(names.ServiceCatalogAppRegistry, create.ErrActionCheckingExistence, tfservicecatalogappregistry.ResNameApplication, name, errors.New("not found"))
 		}
 
 		if rs.Primary.ID == "" {
-			return create.Error(names.ServiceCatalogAppRegistry, create.ErrActionCheckingExistence, servicecatalogappregistry.ResNameApplication, name, errors.New("not set"))
+			return create.Error(names.ServiceCatalogAppRegistry, create.ErrActionCheckingExistence, tfservicecatalogappregistry.ResNameApplication, name, errors.New("not set"))
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogAppRegistryClient(ctx)
 
-		_, err := servicecatalogappregistry.FindApplicationByID(ctx, conn, rs.Primary.ID)
+		_, err := tfservicecatalogappregistry.FindApplicationByID(ctx, conn, rs.Primary.ID)
 
 		return err
 	}
