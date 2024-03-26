@@ -13,6 +13,7 @@ ENHANCEMENTS:
 
 * data-source/aws_db_snapshot: Add `original_snapshot_create_time` attribute ([#36544](https://github.com/hashicorp/terraform-provider-aws/issues/36544))
 * resource/aws_ec2_host: Add user configurable timeouts ([#36538](https://github.com/hashicorp/terraform-provider-aws/issues/36538))
+* resource/aws_kinesisanalyticsv2_application: Add support for `FLINK-1_18` `runtime_environment` value ([#36562](https://github.com/hashicorp/terraform-provider-aws/issues/36562))
 * resource/aws_vpc_ipam: Add `tier` argument ([#36504](https://github.com/hashicorp/terraform-provider-aws/issues/36504))
 
 BUG FIXES:
@@ -22,6 +23,8 @@ BUG FIXES:
 * resource/aws_quicksight_dashboard: Fix failure when updating a dashboard takes a while ([#34227](https://github.com/hashicorp/terraform-provider-aws/issues/34227))
 * resource/aws_quicksight_template: Fix "Invalid address to set" errors ([#34227](https://github.com/hashicorp/terraform-provider-aws/issues/34227))
 * resource/aws_quicksight_template: Fix "a number is required" errors when state contains an empty string ([#34227](https://github.com/hashicorp/terraform-provider-aws/issues/34227))
+* resource/aws_route53_zone: Prevent re-creation when `name` casing changes ([#36563](https://github.com/hashicorp/terraform-provider-aws/issues/36563))
+* resource/aws_ssm_parameter: force create a new SSM parameter when `data_type` is updated. ([#35960](https://github.com/hashicorp/terraform-provider-aws/issues/35960))
 
 ## 5.42.0 (March 22, 2024)
 
