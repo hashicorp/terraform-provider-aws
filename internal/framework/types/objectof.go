@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 )
 
 var (
@@ -149,11 +150,10 @@ func NullOutObjectPtrFields[T any](ctx context.Context, t *T) diag.Diagnostics {
 
 	val = val.Elem()
 
-FieldLoop:
 	for i := 0; i < typ.NumField(); i++ {
 		val := val.Field(i)
 		if !val.CanInterface() {
-			continue FieldLoop
+			continue
 		}
 
 		var attrType attr.Type
@@ -174,20 +174,41 @@ FieldLoop:
 			tfType = tftypes.String
 		case basetypes.ListValuable:
 			attrType = v.Type(ctx)
-			tfType = tftypes.List{}
+			if v, ok := attrType.(attr.TypeWithElementType); ok {
+				tfType = tftypes.List{ElementType: v.ElementType().TerraformType(ctx)}
+			} else {
+				tfType = tftypes.List{}
+			}
 		case basetypes.SetValuable:
 			attrType = v.Type(ctx)
-			tfType = tftypes.Set{}
+			if v, ok := attrType.(attr.TypeWithElementType); ok {
+				tfType = tftypes.Set{ElementType: v.ElementType().TerraformType(ctx)}
+			} else {
+				tfType = tftypes.Set{}
+			}
 		case basetypes.MapValuable:
 			attrType = v.Type(ctx)
-			tfType = tftypes.Map{}
+			if v, ok := attrType.(attr.TypeWithElementType); ok {
+				tfType = tftypes.Map{ElementType: v.ElementType().TerraformType(ctx)}
+			} else {
+				tfType = tftypes.Map{}
+			}
+		case basetypes.ObjectValuable:
+			attrType = v.Type(ctx)
+			if v, ok := attrType.(attr.TypeWithAttributeTypes); ok {
+				tfType = tftypes.Object{AttributeTypes: tfmaps.ApplyToAllValues(v.AttributeTypes(), func(attrType attr.Type) tftypes.Type {
+					return attrType.TerraformType(ctx)
+				})}
+			} else {
+				tfType = tftypes.Object{}
+			}
 		default:
-			continue FieldLoop
+			continue
 		}
 
 		attrValue, err := attrType.ValueFromTerraform(ctx, tftypes.NewValue(tfType, nil))
 		if err != nil {
-			diags.Append(diag.NewErrorDiagnostic("Type.ValueFromTerraform", err.Error()))
+			diags.Append(diag.NewErrorDiagnostic("attr.Type.ValueFromTerraform", err.Error()))
 			return diags
 		}
 
