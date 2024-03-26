@@ -10,13 +10,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/applicationautoscaling"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/applicationautoscaling/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -112,15 +113,15 @@ func resourceScheduledAction() *schema.Resource {
 
 func resourceScheduledActionPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppAutoScalingConn(ctx)
+	conn := meta.(*conns.AWSClient).AppAutoScalingClient(ctx)
 
 	name, serviceNamespace, resourceID := d.Get("name").(string), d.Get("service_namespace").(string), d.Get("resource_id").(string)
 	id := strings.Join([]string{name, serviceNamespace, resourceID}, "-")
 	input := &applicationautoscaling.PutScheduledActionInput{
 		ResourceId:          aws.String(resourceID),
-		ScalableDimension:   aws.String(d.Get("scalable_dimension").(string)),
+		ScalableDimension:   awstypes.ScalableDimension(d.Get("scalable_dimension").(string)),
 		ScheduledActionName: aws.String(name),
-		ServiceNamespace:    aws.String(serviceNamespace),
+		ServiceNamespace:    awstypes.ServiceNamespace(serviceNamespace),
 	}
 
 	if d.IsNewResource() {
@@ -158,9 +159,9 @@ func resourceScheduledActionPut(ctx context.Context, d *schema.ResourceData, met
 	const (
 		timeout = 5 * time.Minute
 	)
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout, func() (interface{}, error) {
-		return conn.PutScheduledActionWithContext(ctx, input)
-	}, applicationautoscaling.ErrCodeObjectNotFoundException)
+	_, err := tfresource.RetryWhenIsA[*awstypes.ObjectNotFoundException](ctx, timeout, func() (interface{}, error) {
+		return conn.PutScheduledAction(ctx, input)
+	})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "putting Application Auto Scaling Scheduled Action (%s): %s", id, err)
@@ -175,7 +176,7 @@ func resourceScheduledActionPut(ctx context.Context, d *schema.ResourceData, met
 
 func resourceScheduledActionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppAutoScalingConn(ctx)
+	conn := meta.(*conns.AWSClient).AppAutoScalingClient(ctx)
 
 	scheduledAction, err := findScheduledActionByFourPartKey(ctx, conn, d.Get("name").(string), d.Get("service_namespace").(string), d.Get("resource_id").(string), d.Get("scalable_dimension").(string))
 
@@ -207,17 +208,17 @@ func resourceScheduledActionRead(ctx context.Context, d *schema.ResourceData, me
 
 func resourceScheduledActionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppAutoScalingConn(ctx)
+	conn := meta.(*conns.AWSClient).AppAutoScalingClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Application Auto Scaling Scheduled Action: %s", d.Id())
-	_, err := conn.DeleteScheduledActionWithContext(ctx, &applicationautoscaling.DeleteScheduledActionInput{
+	_, err := conn.DeleteScheduledAction(ctx, &applicationautoscaling.DeleteScheduledActionInput{
 		ResourceId:          aws.String(d.Get("resource_id").(string)),
-		ScalableDimension:   aws.String(d.Get("scalable_dimension").(string)),
+		ScalableDimension:   awstypes.ScalableDimension(d.Get("scalable_dimension").(string)),
 		ScheduledActionName: aws.String(d.Get("name").(string)),
-		ServiceNamespace:    aws.String(d.Get("service_namespace").(string)),
+		ServiceNamespace:    awstypes.ServiceNamespace(d.Get("service_namespace").(string)),
 	})
 
-	if tfawserr.ErrCodeEquals(err, applicationautoscaling.ErrCodeObjectNotFoundException) {
+	if errs.IsA[*awstypes.ObjectNotFoundException](err) {
 		return diags
 	}
 
@@ -228,87 +229,85 @@ func resourceScheduledActionDelete(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func findScheduledActionByFourPartKey(ctx context.Context, conn *applicationautoscaling.ApplicationAutoScaling, name, serviceNamespace, resourceID, scalableDimension string) (*applicationautoscaling.ScheduledAction, error) {
+func findScheduledActionByFourPartKey(ctx context.Context, conn *applicationautoscaling.Client, name, serviceNamespace, resourceID, scalableDimension string) (*awstypes.ScheduledAction, error) {
 	input := &applicationautoscaling.DescribeScheduledActionsInput{
 		ResourceId:           aws.String(resourceID),
-		ScalableDimension:    aws.String(scalableDimension),
-		ScheduledActionNames: aws.StringSlice([]string{name}),
-		ServiceNamespace:     aws.String(serviceNamespace),
+		ScalableDimension:    awstypes.ScalableDimension(scalableDimension),
+		ScheduledActionNames: []string{name},
+		ServiceNamespace:     awstypes.ServiceNamespace(serviceNamespace),
 	}
 
-	return findScheduledAction(ctx, conn, input, func(v *applicationautoscaling.ScheduledAction) bool {
-		return aws.StringValue(v.ScheduledActionName) == name && aws.StringValue(v.ScalableDimension) == scalableDimension
+	return findScheduledAction(ctx, conn, input, func(v awstypes.ScheduledAction) bool {
+		return aws.ToString(v.ScheduledActionName) == name && string(v.ScalableDimension) == scalableDimension
 	})
 }
 
-func findScheduledAction(ctx context.Context, conn *applicationautoscaling.ApplicationAutoScaling, input *applicationautoscaling.DescribeScheduledActionsInput, filter tfslices.Predicate[*applicationautoscaling.ScheduledAction]) (*applicationautoscaling.ScheduledAction, error) {
+func findScheduledAction(ctx context.Context, conn *applicationautoscaling.Client, input *applicationautoscaling.DescribeScheduledActionsInput, filter tfslices.Predicate[awstypes.ScheduledAction]) (*awstypes.ScheduledAction, error) {
 	output, err := findScheduledActions(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findScheduledActions(ctx context.Context, conn *applicationautoscaling.ApplicationAutoScaling, input *applicationautoscaling.DescribeScheduledActionsInput, filter tfslices.Predicate[*applicationautoscaling.ScheduledAction]) ([]*applicationautoscaling.ScheduledAction, error) {
-	var output []*applicationautoscaling.ScheduledAction
+func findScheduledActions(ctx context.Context, conn *applicationautoscaling.Client, input *applicationautoscaling.DescribeScheduledActionsInput, filter tfslices.Predicate[awstypes.ScheduledAction]) ([]awstypes.ScheduledAction, error) {
+	var output []awstypes.ScheduledAction
 
-	err := conn.DescribeScheduledActionsPagesWithContext(ctx, input, func(page *applicationautoscaling.DescribeScheduledActionsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := applicationautoscaling.NewDescribeScheduledActionsPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
 		}
 
 		for _, v := range page.ScheduledActions {
-			if v != nil && filter(v) {
+			if filter(v) {
 				output = append(output, v)
 			}
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return nil, err
 	}
 
 	return output, nil
 }
 
-func expandScalableTargetAction(l []interface{}) *applicationautoscaling.ScalableTargetAction {
+func expandScalableTargetAction(l []interface{}) *awstypes.ScalableTargetAction {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
 
 	m := l[0].(map[string]interface{})
 
-	result := &applicationautoscaling.ScalableTargetAction{}
+	result := &awstypes.ScalableTargetAction{}
 
 	if v, ok := m["max_capacity"]; ok {
 		if v, null, _ := nullable.Int(v.(string)).Value(); !null {
-			result.MaxCapacity = aws.Int64(v)
+			result.MaxCapacity = aws.Int32(int32(v))
 		}
 	}
 	if v, ok := m["min_capacity"]; ok {
 		if v, null, _ := nullable.Int(v.(string)).Value(); !null {
-			result.MinCapacity = aws.Int64(v)
+			result.MinCapacity = aws.Int32(int32(v))
 		}
 	}
 
 	return result
 }
 
-func flattenScalableTargetAction(cfg *applicationautoscaling.ScalableTargetAction) []interface{} {
+func flattenScalableTargetAction(cfg *awstypes.ScalableTargetAction) []interface{} {
 	if cfg == nil {
 		return []interface{}{}
 	}
 
 	m := make(map[string]interface{})
 	if cfg.MaxCapacity != nil {
-		m["max_capacity"] = strconv.FormatInt(aws.Int64Value(cfg.MaxCapacity), 10)
+		m["max_capacity"] = strconv.FormatInt(int64(aws.ToInt32(cfg.MaxCapacity)), 10)
 	}
 	if cfg.MinCapacity != nil {
-		m["min_capacity"] = strconv.FormatInt(aws.Int64Value(cfg.MinCapacity), 10)
+		m["min_capacity"] = strconv.FormatInt(int64(aws.ToInt32(cfg.MinCapacity)), 10)
 	}
 
 	return []interface{}{m}

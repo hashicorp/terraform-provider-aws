@@ -9,7 +9,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aws/aws-sdk-go/service/applicationautoscaling"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/applicationautoscaling/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func TestAccAppAutoScalingTarget_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var target applicationautoscaling.ScalableTarget
+	var target awstypes.ScalableTarget
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appautoscaling_target.test"
 
@@ -66,7 +66,7 @@ func TestAccAppAutoScalingTarget_basic(t *testing.T) {
 
 func TestAccAppAutoScalingTarget_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var target applicationautoscaling.ScalableTarget
+	var target awstypes.ScalableTarget
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appautoscaling_target.test"
 
@@ -90,7 +90,7 @@ func TestAccAppAutoScalingTarget_disappears(t *testing.T) {
 
 func TestAccAppAutoScalingTarget_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var target applicationautoscaling.ScalableTarget
+	var target awstypes.ScalableTarget
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appautoscaling_target.test"
 
@@ -137,7 +137,7 @@ func TestAccAppAutoScalingTarget_tags(t *testing.T) {
 
 func TestAccAppAutoScalingTarget_spotFleetRequest(t *testing.T) {
 	ctx := acctest.Context(t)
-	var target applicationautoscaling.ScalableTarget
+	var target awstypes.ScalableTarget
 	validUntil := time.Now().UTC().Add(24 * time.Hour).Format(time.RFC3339)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appautoscaling_target.test"
@@ -168,7 +168,7 @@ func TestAccAppAutoScalingTarget_spotFleetRequest(t *testing.T) {
 
 func TestAccAppAutoScalingTarget_emrCluster(t *testing.T) {
 	ctx := acctest.Context(t)
-	var target applicationautoscaling.ScalableTarget
+	var target awstypes.ScalableTarget
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appautoscaling_target.test"
 
@@ -198,8 +198,8 @@ func TestAccAppAutoScalingTarget_emrCluster(t *testing.T) {
 
 func TestAccAppAutoScalingTarget_multipleTargets(t *testing.T) {
 	ctx := acctest.Context(t)
-	var writeTarget applicationautoscaling.ScalableTarget
-	var readTarget applicationautoscaling.ScalableTarget
+	var writeTarget awstypes.ScalableTarget
+	var readTarget awstypes.ScalableTarget
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	readResourceName := "aws_appautoscaling_target.read"
 	writeResourceName := "aws_appautoscaling_target.write"
@@ -234,7 +234,7 @@ func TestAccAppAutoScalingTarget_multipleTargets(t *testing.T) {
 
 func TestAccAppAutoScalingTarget_optionalRoleARN(t *testing.T) {
 	ctx := acctest.Context(t)
-	var readTarget applicationautoscaling.ScalableTarget
+	var readTarget awstypes.ScalableTarget
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appautoscaling_target.test"
 
@@ -257,7 +257,7 @@ func TestAccAppAutoScalingTarget_optionalRoleARN(t *testing.T) {
 
 func testAccCheckTargetDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppAutoScalingConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppAutoScalingClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appautoscaling_target" {
@@ -281,7 +281,7 @@ func testAccCheckTargetDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckTargetExists(ctx context.Context, n string, v *applicationautoscaling.ScalableTarget) resource.TestCheckFunc {
+func testAccCheckTargetExists(ctx context.Context, n string, v *awstypes.ScalableTarget) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -292,7 +292,7 @@ func testAccCheckTargetExists(ctx context.Context, n string, v *applicationautos
 			return fmt.Errorf("No Application AutoScaling Target ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppAutoScalingConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppAutoScalingClient(ctx)
 
 		output, err := tfappautoscaling.FindTargetByThreePartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["service_namespace"], rs.Primary.Attributes["scalable_dimension"])
 
