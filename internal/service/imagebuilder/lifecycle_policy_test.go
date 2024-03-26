@@ -133,9 +133,14 @@ resource "aws_imagebuilder_lifecycle_policy" "test" {
     filter {
       type  = "AGE"
       value = 6
+      unit  = "YEARS"
     }
   }
-  resource_selection {}
+  resource_selection {
+    tag_map = {
+      "key" = "value"
+    }
+  }
 }
 `, rName)
 }

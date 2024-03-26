@@ -82,7 +82,6 @@ func (r *resourceLifecyclePolicy) Schema(ctx context.Context, req resource.Schem
 			},
 			"status": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -278,7 +277,6 @@ func (r *resourceLifecyclePolicy) Create(ctx context.Context, req resource.Creat
 		ExecutionRole: aws.String(plan.ExecutionRole.ValueString()),
 		Name:          aws.String(plan.Name.ValueString()),
 		ResourceType:  awstypes.LifecyclePolicyResourceType(plan.ResourceType.ValueString()),
-		Status:        awstypes.LifecyclePolicyStatus(plan.Status.ValueString()),
 		Tags:          getTagsIn(ctx),
 	}
 
@@ -314,6 +312,10 @@ func (r *resourceLifecyclePolicy) Create(ctx context.Context, req resource.Creat
 			return
 		}
 		in.ResourceSelection = resourceSelection
+	}
+
+	if !plan.Status.IsNull() {
+		in.Status = awstypes.LifecyclePolicyStatus(plan.Status.ValueString())
 	}
 
 	out, err := conn.CreateLifecyclePolicy(ctx, in)
@@ -495,7 +497,7 @@ func findLifecyclePolicyByARN(ctx context.Context, conn *imagebuilder.Client, ar
 
 	out, err := conn.GetLifecyclePolicy(ctx, in)
 	if err != nil {
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		if errs.MessageContains(err, ResourceNotFoundException, "cannot be found") {
 			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: in,
@@ -639,7 +641,7 @@ func expandPolicyDetailFilter(tfList []resourceFilterData) *awstypes.LifecyclePo
 	}
 
 	if !tfObj.Unit.IsNull() {
-		apiObject.Unit = awstypes.LifecyclePolicyTimeUnit(tfObj.Type.ValueString())
+		apiObject.Unit = awstypes.LifecyclePolicyTimeUnit(tfObj.Unit.ValueString())
 	}
 
 	return &apiObject
