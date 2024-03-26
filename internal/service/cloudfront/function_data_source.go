@@ -72,8 +72,7 @@ func DataSourceFunction() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Schema{
-					Type: schema.TypeString,
-					// Required:     true,
+					Type:         schema.TypeString,
 					ValidateFunc: verify.ValidARN,
 				},
 			},
