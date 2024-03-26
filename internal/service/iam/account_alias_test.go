@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -61,7 +61,7 @@ func testAccAccountAlias_basic(t *testing.T) {
 
 func testAccCheckAccountAliasDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iam_account_alias" {
@@ -70,7 +70,7 @@ func testAccCheckAccountAliasDestroy(ctx context.Context) resource.TestCheckFunc
 
 			params := &iam.ListAccountAliasesInput{}
 
-			resp, err := conn.ListAccountAliasesWithContext(ctx, params)
+			resp, err := conn.ListAccountAliases(ctx, params)
 
 			if err != nil {
 				return fmt.Errorf("error reading IAM Account Alias (%s): %w", rs.Primary.ID, err)
@@ -96,10 +96,10 @@ func testAccCheckAccountAliasExists(ctx context.Context, n string) resource.Test
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 		params := &iam.ListAccountAliasesInput{}
 
-		resp, err := conn.ListAccountAliasesWithContext(ctx, params)
+		resp, err := conn.ListAccountAliases(ctx, params)
 
 		if err != nil {
 			return fmt.Errorf("error reading IAM Account Alias (%s): %w", rs.Primary.ID, err)
