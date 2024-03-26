@@ -9,14 +9,16 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -201,8 +203,8 @@ func addUserToGroups(ctx context.Context, conn *iam.IAM, user string, groups []s
 	return nil
 }
 
-func addUserToGroup(ctx context.Context, conn *iam.IAM, user, group string) error {
-	_, err := conn.AddUserToGroupWithContext(ctx, &iam.AddUserToGroupInput{
+func addUserToGroup(ctx context.Context, conn *iam.Client, user, group string) error {
+	_, err := conn.AddUserToGroup(ctx, &iam.AddUserToGroupInput{
 		UserName:  aws.String(user),
 		GroupName: aws.String(group),
 	})
@@ -212,13 +214,13 @@ func addUserToGroup(ctx context.Context, conn *iam.IAM, user, group string) erro
 	return nil
 }
 
-func removeUserFromGroup(ctx context.Context, conn *iam.IAM, user, group string) error {
-	_, err := conn.RemoveUserFromGroupWithContext(ctx, &iam.RemoveUserFromGroupInput{
+func removeUserFromGroup(ctx context.Context, conn *iam.Client, user, group string) error {
+	_, err := conn.RemoveUserFromGroup(ctx, &iam.RemoveUserFromGroupInput{
 		UserName:  aws.String(user),
 		GroupName: aws.String(group),
 	})
 
-	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+	if errs.IsA[*awstypes.NoSuchEntityException](err) {
 		return nil
 	}
 
