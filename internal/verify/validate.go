@@ -172,7 +172,7 @@ func ValidIAMPolicyJSON(v interface{}, k string) (ws []string, errors []error) {
 	}
 
 	if first := value[:1]; first != "{" {
-		switch value[:1] {
+		switch first {
 		case " ", "\t", "\r", "\n":
 			errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: leading space characters are not allowed", k))
 		case `"`:
