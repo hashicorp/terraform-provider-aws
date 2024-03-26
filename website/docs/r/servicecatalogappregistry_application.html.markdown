@@ -17,7 +17,7 @@ Terraform resource for managing an AWS Service Catalog AppRegistry Application.
 
 ```terraform
 resource "aws_servicecatalogappregistry_application" "example" {
-  name = "myApplication"
+  name = "example-app"
 }
 ```
 
@@ -25,17 +25,16 @@ resource "aws_servicecatalogappregistry_application" "example" {
 
 ```terraform
 resource "aws_servicecatalogappregistry_application" "example" {
-  name = "myApplication"
+  name = "example-app"
 }
 
 resource "aws_s3_bucket" "bucket" {
-  bucket = "application_bucket"
+  bucket = "example-bucket"
 
   tags = {
     awsApplication = aws_servicecatalogappregistry_application.example.arn
   }
 }
-
 ```
 
 ## Argument Reference
