@@ -382,6 +382,7 @@ func testAccPermissions_tableBasic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "table.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "table.0.database_name", tableName, "database_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "table.0.name", tableName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "table.0.region", tableName, "region"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.0", string(awstypes.PermissionAlter)),
 					resource.TestCheckResourceAttr(resourceName, "permissions.1", string(awstypes.PermissionDelete)),
@@ -413,6 +414,7 @@ func testAccPermissions_tableIAMAllowed(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "table.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "table.0.database_name", dbName, "database_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "table.0.name", dbName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "table.0.region", dbName, "region"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.0", string(awstypes.PermissionAll)),
 					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.#", "0"),
@@ -443,6 +445,7 @@ func testAccPermissions_tableImplicit(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "table.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "table.0.database_name", tableName, "database_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "table.0.name", tableName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "table.0.region", tableName, "region"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "7"),
 					resource.TestCheckResourceAttr(resourceName, "permissions_with_grant_option.#", "7"),
 				),
@@ -483,6 +486,7 @@ func testAccPermissions_tableMultipleRoles(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName2, "table.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName2, "table.0.database_name", tableName, "database_name"),
 					resource.TestCheckResourceAttrPair(resourceName2, "table.0.name", tableName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName2, "table.0.region", tableName, "region"),
 					resource.TestCheckResourceAttr(resourceName2, "permissions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName2, "permissions.0", string(awstypes.PermissionSelect)),
 				),
@@ -512,6 +516,7 @@ func testAccPermissions_tableSelectOnly(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "table.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "table.0.database_name", tableName, "database_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "table.0.name", tableName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "table.0.region", tableName, "region"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "permissions.0", string(awstypes.PermissionSelect)),
 				),
@@ -550,6 +555,7 @@ func testAccPermissions_tableWildcardNoSelect(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_lakeformation_permissions.test"
 	databaseResourceName := "aws_glue_catalog_database.test"
+	regionResourceName := "aws_glue_catalog_region.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.LakeFormation) },
@@ -563,6 +569,7 @@ func testAccPermissions_tableWildcardNoSelect(t *testing.T) {
 					testAccCheckPermissionsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "table.#", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "table.0.database_name", databaseResourceName, "name"),
+					resource.TestCheckResourceAttrPair(resourceName, "table.0.region", regionResourceName, "region"),
 					resource.TestCheckResourceAttr(resourceName, "table.0.wildcard", "true"),
 				),
 			},
@@ -1014,6 +1021,10 @@ func permissionCountForResource(ctx context.Context, conn *lakeformation.Client,
 
 		if v := rs.Primary.Attributes["table_with_columns.0.database_name"]; v != "" {
 			tfMap["database_name"] = v
+		}
+
+		if v := rs.Primary.Attributes["table_with_columns.0.region"]; v != "" {
+			tfMap["region"] = v
 		}
 
 		if v := rs.Primary.Attributes["table_with_columns.0.name"]; v != "" {
@@ -1767,6 +1778,7 @@ resource "aws_lakeformation_permissions" "test" {
   table {
     database_name = aws_glue_catalog_table.test.database_name
     name          = aws_glue_catalog_table.test.name
+	region        = "us-east-2"
   }
 
   # for consistency, ensure that admins are setup before testing
@@ -1822,6 +1834,7 @@ resource "aws_lakeformation_permissions" "test" {
   table {
     database_name = aws_glue_catalog_database.test.name
     name          = aws_glue_catalog_table.test.name
+    region        = "us-east-2"
   }
 }
 `, rName)
@@ -1892,6 +1905,7 @@ resource "aws_lakeformation_permissions" "test" {
   table {
     database_name = aws_glue_catalog_table.test.database_name
     name          = aws_glue_catalog_table.test.name
+	region        = "us-east-2"
   }
 
   # for consistency, ensure that admins are setup before testing
@@ -1962,6 +1976,7 @@ resource "aws_lakeformation_permissions" "test" {
   table {
     database_name = aws_glue_catalog_table.test.database_name
     name          = aws_glue_catalog_table.test.name
+    region        = "us-east-2"
   }
 
   # for consistency, ensure that admins are setup before testing
@@ -1975,6 +1990,7 @@ resource "aws_lakeformation_permissions" "test2" {
   table {
     database_name = aws_glue_catalog_table.test.database_name
     name          = aws_glue_catalog_table.test.name
+    region        = "us-east-2"
   }
 
   # for consistency, ensure that admins are setup before testing
@@ -2029,6 +2045,7 @@ resource "aws_lakeformation_permissions" "test" {
   table {
     database_name = aws_glue_catalog_table.test.database_name
     name          = aws_glue_catalog_table.test.name
+    region        = "us-east-2"
   }
 
   # for consistency, ensure that admins are setup before testing
@@ -2102,6 +2119,7 @@ resource "aws_lakeformation_permissions" "test" {
   table {
     database_name = aws_glue_catalog_table.test.database_name
     name          = aws_glue_catalog_table.test.name
+    region        = "us-east-2"
   }
 
   # for consistency, ensure that admins are setup before testing
@@ -2152,6 +2170,7 @@ resource "aws_lakeformation_permissions" "test" {
   table {
     database_name = aws_glue_catalog_database.test.name
     wildcard      = true
+	region        = "us-east-2"
   }
 
   # for consistency, ensure that admins are setup before testing
@@ -2224,6 +2243,7 @@ resource "aws_lakeformation_permissions" "test" {
   table {
     database_name = aws_glue_catalog_table.test.database_name
     wildcard      = true
+	region        = "us-east-2"
   }
 
   # for consistency, ensure that admins are setup before testing
@@ -2297,6 +2317,7 @@ resource "aws_lakeformation_permissions" "test" {
   table {
     database_name = aws_glue_catalog_table.test.database_name
     wildcard      = true
+	region        = "us-east-2"
   }
 
   # for consistency, ensure that admins are setup before testing
@@ -2369,6 +2390,7 @@ resource "aws_lakeformation_permissions" "test" {
     database_name = aws_glue_catalog_table.test.database_name
     name          = aws_glue_catalog_table.test.name
     column_names  = [%[2]s]
+	region        = "us-east-2"
   }
 
   # for consistency, ensure that admins are setup before testing
@@ -2443,6 +2465,7 @@ resource "aws_lakeformation_permissions" "test" {
     database_name = aws_glue_catalog_table.test.database_name
     name          = aws_glue_catalog_table.test.name
     wildcard      = true
+	region        = "us-east-2"
   }
 
   # for consistency, ensure that admins are setup before testing
@@ -2516,6 +2539,7 @@ resource "aws_lakeformation_permissions" "test" {
     name                  = aws_glue_catalog_table.test.name
     wildcard              = true
     excluded_column_names = ["value"]
+    region                = "us-east-2"
   }
 
   # for consistency, ensure that admins are setup before testing
@@ -2571,6 +2595,7 @@ resource "aws_lakeformation_permissions" "test" {
     database_name = aws_glue_catalog_table.test.database_name
     name          = aws_glue_catalog_table.test.name
     wildcard      = true
+	region        = "us-east-2"
   }
 
   # for consistency, ensure that admins are setup before testing
@@ -2643,6 +2668,7 @@ resource "aws_lakeformation_permissions" "test" {
     database_name = aws_glue_catalog_table.test.database_name
     name          = aws_glue_catalog_table.test.name
     wildcard      = true
+	region        = "us-east-2"
   }
 
   # for consistency, ensure that admins are setup before testing

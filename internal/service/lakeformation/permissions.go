@@ -327,6 +327,11 @@ func ResourcePermissions() *schema.Resource {
 								"table.0.wildcard",
 							},
 						},
+						"region": {
+							Type:     schema.TypeString,
+							ForceNew: true,
+							Optional: true,
+						},
 					},
 				},
 			},
@@ -396,6 +401,12 @@ func ResourcePermissions() *schema.Resource {
 								"table_with_columns.0.column_names",
 								"table_with_columns.0.wildcard",
 							},
+						},
+						"region": {
+							Type:     schema.TypeString,
+							ForceNew: true,
+							Optional: true,
+							Computed: true,
 						},
 					},
 				},
@@ -1110,6 +1121,10 @@ func ExpandTableResource(tfMap map[string]interface{}) *awstypes.TableResource {
 
 	if v, ok := tfMap["database_name"].(string); ok && v != "" {
 		apiObject.DatabaseName = aws.String(v)
+	}
+
+	if v, ok := tfMap["region"].(string); ok && v != "" {
+		apiObject.aws_glue_catalog_region = aws.String(v)
 	}
 
 	if v, ok := tfMap["name"].(string); ok && v != "" {
