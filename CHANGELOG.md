@@ -20,6 +20,7 @@ BUG FIXES:
 
 * data-source/aws_cur_report_definition: Direct all API calls to the `us-east-1` endpoint as this is the only Region in which AWS Cost and Usage Reports is available ([#36540](https://github.com/hashicorp/terraform-provider-aws/issues/36540))
 * resource/aws_cur_report_definition: Direct all API calls to the `us-east-1` endpoint as this is the only Region in which AWS Cost and Usage Reports is available ([#36540](https://github.com/hashicorp/terraform-provider-aws/issues/36540))
+* resource/aws_instance: Replace an instance when an `instance_type` change also requires an architecture change, such as x86_64 to arm64 ([#36590](https://github.com/hashicorp/terraform-provider-aws/issues/36590))
 * resource/aws_quicksight_dashboard: Fix failure when updating a dashboard takes a while ([#34227](https://github.com/hashicorp/terraform-provider-aws/issues/34227))
 * resource/aws_quicksight_template: Fix "Invalid address to set" errors ([#34227](https://github.com/hashicorp/terraform-provider-aws/issues/34227))
 * resource/aws_quicksight_template: Fix "a number is required" errors when state contains an empty string ([#34227](https://github.com/hashicorp/terraform-provider-aws/issues/34227))
