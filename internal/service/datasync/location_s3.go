@@ -5,10 +5,12 @@ package datasync
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/datasync"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -26,7 +28,7 @@ import (
 
 // @SDKResource("aws_datasync_location_s3", name="Location S3")
 // @Tags(identifierAttribute="id")
-func ResourceLocationS3() *schema.Resource {
+func resourceLocationS3() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationS3Create,
 		ReadWithoutTimeout:   resourceLocationS3Read,
@@ -159,7 +161,7 @@ func resourceLocationS3Read(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
-	output, err := FindLocationS3ByARN(ctx, conn, d.Id())
+	output, err := findLocationS3ByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DataSync Location S3 (%s) not found, removing from state", d.Id())
@@ -172,13 +174,23 @@ func resourceLocationS3Read(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	uri := aws.StringValue(output.LocationUri)
+	s3BucketName, err := globalIDFromLocationURI(aws.StringValue(output.LocationUri))
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
 	subdirectory, err := subdirectoryFromLocationURI(aws.StringValue(output.LocationUri))
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+	locationARN, err := arn.Parse(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	d.Set("agent_arns", aws.StringValueSlice(output.AgentArns))
 	d.Set("arn", output.LocationArn)
+	s3BucketArn := fmt.Sprintf("arn:%s:s3:::%s", locationARN.Partition, s3BucketName)
+	d.Set("s3_bucket_arn", s3BucketArn)
 	if err := d.Set("s3_config", flattenS3Config(output.S3Config)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting s3_config: %s", err)
 	}
@@ -217,7 +229,7 @@ func resourceLocationS3Delete(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func FindLocationS3ByARN(ctx context.Context, conn *datasync.DataSync, arn string) (*datasync.DescribeLocationS3Output, error) {
+func findLocationS3ByARN(ctx context.Context, conn *datasync.DataSync, arn string) (*datasync.DescribeLocationS3Output, error) {
 	input := &datasync.DescribeLocationS3Input{
 		LocationArn: aws.String(arn),
 	}

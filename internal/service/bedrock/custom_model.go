@@ -379,7 +379,7 @@ func (r *customModelResource) Read(ctx context.Context, request resource.ReadReq
 				if len(strings.SplitN(old.Resource, ":", 2)) == 1 {
 					// Old ARN doesn't contain the model version and parameter count.
 					new.Resource = strings.SplitN(new.Resource, ":", 2)[0]
-					data.BaseModelIdentifier = fwtypes.ARNValue(new.String())
+					data.BaseModelIdentifier = fwtypes.ARNValueMust(new.String())
 				}
 			}
 		}

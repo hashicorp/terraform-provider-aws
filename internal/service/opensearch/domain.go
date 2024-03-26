@@ -182,7 +182,6 @@ func ResourceDomain() *schema.Resource {
 						"maintenance_schedule": {
 							Type:     schema.TypeSet,
 							Optional: true,
-							Computed: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"cron_expression_for_recurrence": {
@@ -220,6 +219,11 @@ func ResourceDomain() *schema.Resource {
 							Optional:     true,
 							Computed:     true,
 							ValidateFunc: validation.StringInSlice(opensearchservice.RollbackOnDisable_Values(), false),
+						},
+						"use_off_peak_window": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
 						},
 					},
 				},
@@ -759,45 +763,14 @@ func resourceDomainCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	// IAM Roles can take some time to propagate if set in AccessPolicies and created in the same terraform
-	var out *opensearchservice.CreateDomainOutput
-	err = retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
-		var err error
-		out, err = conn.CreateDomainWithContext(ctx, input)
-		if err != nil {
-			if tfawserr.ErrMessageContains(err, "InvalidTypeException", "Error setting policy") {
-				return retry.RetryableError(err)
-			}
-			if tfawserr.ErrMessageContains(err, "ValidationException", "enable a service-linked role to give Amazon ES permissions") {
-				return retry.RetryableError(err)
-			}
-			if tfawserr.ErrMessageContains(err, "ValidationException", "Domain is still being deleted") {
-				return retry.RetryableError(err)
-			}
-			if tfawserr.ErrMessageContains(err, "ValidationException", "Amazon OpenSearch Service must be allowed to use the passed role") {
-				return retry.RetryableError(err)
-			}
-			if tfawserr.ErrMessageContains(err, "ValidationException", "The passed role has not propagated yet") {
-				return retry.RetryableError(err)
-			}
-			if tfawserr.ErrMessageContains(err, "ValidationException", "Authentication error") {
-				return retry.RetryableError(err)
-			}
-			if tfawserr.ErrMessageContains(err, "ValidationException", "Unauthorized Operation: OpenSearch Service must be authorised to describe") {
-				return retry.RetryableError(err)
-			}
-			if tfawserr.ErrMessageContains(err, "ValidationException", "The passed role must authorize Amazon OpenSearch Service to describe") {
-				return retry.RetryableError(err)
-			}
-			return retry.NonRetryableError(err)
-		}
-		return nil
-	})
-	if tfresource.TimedOut(err) {
-		out, err = conn.CreateDomainWithContext(ctx, input)
-	}
+	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout, func() (any, error) {
+		return conn.CreateDomainWithContext(ctx, input)
+	},
+		domainErrorRetryable)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating OpenSearch Domain: %s", err)
 	}
+	out := outputRaw.(*opensearchservice.CreateDomainOutput)
 
 	d.SetId(aws.StringValue(out.DomainStatus.ARN))
 
@@ -978,7 +951,11 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			o, n := d.GetChange("access_policies")
 
 			if equivalent, err := awspolicy.PoliciesAreEquivalent(o.(string), n.(string)); err != nil || !equivalent {
-				input.AccessPolicies = aws.String(d.Get("access_policies").(string))
+				policy, err := structure.NormalizeJsonString(n.(string))
+				if err != nil {
+					return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policy, err)
+				}
+				input.AccessPolicies = aws.String(policy)
 			}
 		}
 
@@ -1091,7 +1068,10 @@ func resourceDomainUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			input.VPCOptions = expandVPCOptions(s)
 		}
 
-		_, err := conn.UpdateDomainConfigWithContext(ctx, &input)
+		_, err := tfresource.RetryWhen(ctx, propagationTimeout, func() (any, error) {
+			return conn.UpdateDomainConfigWithContext(ctx, &input)
+		},
+			domainErrorRetryable)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating OpenSearch Domain (%s): %s", d.Id(), err)
 		}
@@ -1458,4 +1438,21 @@ func EBSVolumeTypePermitsThroughputInput(volumeType string) bool {
 		}
 	}
 	return false
+}
+
+func domainErrorRetryable(err error) (bool, error) {
+	switch {
+	case tfawserr.ErrMessageContains(err, "InvalidTypeException", "Error setting policy"),
+		tfawserr.ErrMessageContains(err, "ValidationException", "enable a service-linked role to give Amazon ES permissions"),
+		tfawserr.ErrMessageContains(err, "ValidationException", "Domain is still being deleted"),
+		tfawserr.ErrMessageContains(err, "ValidationException", "Amazon OpenSearch Service must be allowed to use the passed role"),
+		tfawserr.ErrMessageContains(err, "ValidationException", "The passed role has not propagated yet"),
+		tfawserr.ErrMessageContains(err, "ValidationException", "Authentication error"),
+		tfawserr.ErrMessageContains(err, "ValidationException", "Unauthorized Operation: OpenSearch Service must be authorised to describe"),
+		tfawserr.ErrMessageContains(err, "ValidationException", "The passed role must authorize Amazon OpenSearch Service to describe"):
+		return true, err
+
+	default:
+		return false, err
+	}
 }

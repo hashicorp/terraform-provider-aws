@@ -218,6 +218,30 @@ func TestAccRedshiftServerlessNamespace_withWorkgroup(t *testing.T) {
 	})
 }
 
+func TestAccRedshiftServerlessNamespace_manageAdminPassword(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_redshiftserverless_namespace.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServerlessServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckNamespaceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccNamespaceConfig_manageAdminPassword(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckNamespaceExists(ctx, resourceName),
+					testAccCheckNamespaceExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "manage_admin_password", "true"),
+					resource.TestCheckResourceAttrSet(resourceName, "admin_password_secret_arn"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckNamespaceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftServerlessConn(ctx)
@@ -226,6 +250,7 @@ func testAccCheckNamespaceDestroy(ctx context.Context) resource.TestCheckFunc {
 			if rs.Type != "aws_redshiftserverless_namespace" {
 				continue
 			}
+
 			_, err := tfredshiftserverless.FindNamespaceByName(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
@@ -361,6 +386,15 @@ resource "aws_redshiftserverless_namespace" "test" {
   iam_roles            = aws_iam_role.test[*].arn
 }
 `, rName))
+}
+
+func testAccNamespaceConfig_manageAdminPassword(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_redshiftserverless_namespace" "test" {
+  namespace_name        = %[1]q
+  manage_admin_password = true
+}
+`, rName)
 }
 
 func testAccNamespaceConfig_withWorkgroup(rName string) string {

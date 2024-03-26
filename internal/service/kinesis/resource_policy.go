@@ -218,7 +218,7 @@ type resourcePolicyResourceModel struct {
 }
 
 func (data *resourcePolicyResourceModel) InitFromID() error {
-	data.ResourceARN = fwtypes.ARNValue(data.ID.ValueString())
+	data.ResourceARN = fwtypes.ARNValueMust(data.ID.ValueString())
 
 	return nil
 }

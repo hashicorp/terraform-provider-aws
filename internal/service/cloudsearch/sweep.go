@@ -33,6 +33,15 @@ func sweepDomains(region string) error {
 
 	domains, err := conn.DescribeDomains(ctx, input)
 
+	if awsv2.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping CloudSearch Domain sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing CloudSearch Domains (%s): %w", region, err)
+	}
+
 	for _, v := range domains.DomainStatusList {
 		name := aws.ToString(v.DomainName)
 
@@ -46,15 +55,6 @@ func sweepDomains(region string) error {
 		d.SetId(name)
 
 		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-	}
-
-	if awsv2.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping CloudSearch Domain sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing CloudSearch Domains (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)

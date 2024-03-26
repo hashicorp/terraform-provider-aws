@@ -77,7 +77,7 @@ class MyConvertedCode extends TerraformStack {
     Ec2ClientVpnNetworkAssociation.generateConfigForImport(
       this,
       "example",
-      "cvpn-endpoint-0ac3a1abbccddd666,vpn-assoc-0b8db902465d069ad"
+      "cvpn-endpoint-0ac3a1abbccddd666,cvpn-assoc-0b8db902465d069ad"
     );
   }
 }
@@ -87,7 +87,7 @@ class MyConvertedCode extends TerraformStack {
 Using `terraform import`, import AWS Client VPN network associations using the endpoint ID and the association ID. Values are separated by a `,`. For example:
 
 ```console
-% terraform import aws_ec2_client_vpn_network_association.example cvpn-endpoint-0ac3a1abbccddd666,vpn-assoc-0b8db902465d069ad
+% terraform import aws_ec2_client_vpn_network_association.example cvpn-endpoint-0ac3a1abbccddd666,cvpn-assoc-0b8db902465d069ad
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-93b06b3eb31b248a508f1acf81dceb795b39cf3f2e929e8af4cfbaad6365e994 -->
+<!-- cache-key: cdktf-0.20.1 input-3516daa1a8b964892b817b662d1092c9051df485ef6975797faf258ed31b7bb3 -->

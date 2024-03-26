@@ -22,13 +22,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_iam_user_group_membership")
-func ResourceUserGroupMembership() *schema.Resource {
+// @SDKResource("aws_iam_user_group_membership", name="User Group Membership")
+func resourceUserGroupMembership() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserGroupMembershipCreate,
 		ReadWithoutTimeout:   resourceUserGroupMembershipRead,
 		UpdateWithoutTimeout: resourceUserGroupMembershipUpdate,
 		DeleteWithoutTimeout: resourceUserGroupMembershipDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceUserGroupMembershipImport,
 		},

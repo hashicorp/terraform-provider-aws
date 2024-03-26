@@ -20,8 +20,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_iam_service_specific_credential")
-func ResourceServiceSpecificCredential() *schema.Resource {
+// @SDKResource("aws_iam_service_specific_credential", name="Service Specific Credential")
+func resourceServiceSpecificCredential() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceServiceSpecificCredentialCreate,
 		ReadWithoutTimeout:   resourceServiceSpecificCredentialRead,

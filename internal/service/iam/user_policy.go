@@ -23,8 +23,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_iam_user_policy")
-func ResourceUserPolicy() *schema.Resource {
+// @SDKResource("aws_iam_user_policy", name="User Policy")
+func resourceUserPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserPolicyPut,
 		ReadWithoutTimeout:   resourceUserPolicyRead,

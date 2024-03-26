@@ -93,6 +93,7 @@ func ResourceCluster() *schema.Resource {
 									"logging": {
 										Type:         schema.TypeString,
 										Optional:     true,
+										Default:      ecs.ExecuteCommandLoggingDefault,
 										ValidateFunc: validation.StringInSlice(ecs.ExecuteCommandLogging_Values(), false),
 									},
 								},
@@ -576,7 +577,7 @@ func flattenClusterConfigurationExecuteCommandConfigurationLogConfiguration(apiO
 }
 
 func expandClusterConfiguration(nc []interface{}) *ecs.ClusterConfiguration {
-	if len(nc) == 0 {
+	if len(nc) == 0 || nc[0] == nil {
 		return &ecs.ClusterConfiguration{}
 	}
 	raw := nc[0].(map[string]interface{})
@@ -590,7 +591,7 @@ func expandClusterConfiguration(nc []interface{}) *ecs.ClusterConfiguration {
 }
 
 func expandClusterConfigurationExecuteCommandConfiguration(nc []interface{}) *ecs.ExecuteCommandConfiguration {
-	if len(nc) == 0 {
+	if len(nc) == 0 || nc[0] == nil {
 		return &ecs.ExecuteCommandConfiguration{}
 	}
 	raw := nc[0].(map[string]interface{})
@@ -612,7 +613,7 @@ func expandClusterConfigurationExecuteCommandConfiguration(nc []interface{}) *ec
 }
 
 func expandClusterConfigurationExecuteCommandLogConfiguration(nc []interface{}) *ecs.ExecuteCommandLogConfiguration {
-	if len(nc) == 0 {
+	if len(nc) == 0 || nc[0] == nil {
 		return &ecs.ExecuteCommandLogConfiguration{}
 	}
 	raw := nc[0].(map[string]interface{})

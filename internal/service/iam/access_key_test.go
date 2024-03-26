@@ -58,6 +58,30 @@ func TestAccIAMAccessKey_basic(t *testing.T) {
 	})
 }
 
+func TestAccIAMAccessKey_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf iam.AccessKeyMetadata
+	resourceName := "aws_iam_access_key.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccessKeyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAccessKeyConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAccessKeyExists(ctx, resourceName, &conf),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfiam.ResourceAccessKey(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccIAMAccessKey_encrypted(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf iam.AccessKeyMetadata
@@ -145,13 +169,16 @@ func testAccCheckAccessKeyDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfiam.FindAccessKey(ctx, conn, rs.Primary.Attributes["user"], rs.Primary.ID)
+			_, err := tfiam.FindAccessKeyByTwoPartKey(ctx, conn, rs.Primary.Attributes["user"], rs.Primary.ID)
+
 			if tfresource.NotFound(err) {
 				return nil
 			}
+
 			if err != nil {
 				return err
 			}
+
 			return fmt.Errorf("IAM Access Key (%s) still exists", rs.Primary.ID)
 		}
 
@@ -159,25 +186,22 @@ func testAccCheckAccessKeyDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckAccessKeyExists(ctx context.Context, n string, res *iam.AccessKeyMetadata) resource.TestCheckFunc {
+func testAccCheckAccessKeyExists(ctx context.Context, n string, v *iam.AccessKeyMetadata) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Access Key ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
 
-		accessKey, err := tfiam.FindAccessKey(ctx, conn, rs.Primary.Attributes["user"], rs.Primary.ID)
+		output, err := tfiam.FindAccessKeyByTwoPartKey(ctx, conn, rs.Primary.Attributes["user"], rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		*res = *accessKey
+		*v = *output
 
 		return nil
 	}
@@ -285,7 +309,7 @@ func TestSESSMTPPasswordFromSecretKeySigV4(t *testing.T) {
 	}
 
 	for _, tc := range cases {
-		actual, err := tfiam.SessmTPPasswordFromSecretKeySigV4(&tc.Input, tc.Region)
+		actual, err := tfiam.SESSMTPPasswordFromSecretKeySigV4(&tc.Input, tc.Region)
 		if err != nil {
 			t.Fatalf("unexpected error: %s", err)
 		}

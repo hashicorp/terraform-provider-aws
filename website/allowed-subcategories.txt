@@ -72,7 +72,9 @@ DMS (Database Migration)
 Data Exchange
 Data Pipeline
 DataSync
+DataZone
 Detective
+DevOps Guru
 Device Farm
 Direct Connect
 Directory Service
