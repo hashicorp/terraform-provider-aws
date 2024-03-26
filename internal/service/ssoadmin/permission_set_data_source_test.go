@@ -88,7 +88,7 @@ data "aws_ssoadmin_instances" "test" {}
 resource "aws_ssoadmin_permission_set" "test" {
   name         = %[1]q
   description  = %[1]q
-  instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  instance_arn = data.aws_ssoadmin_instances.test.instances[0].arn
   relay_state  = "https://example.com"
 
   tags = {
@@ -105,7 +105,7 @@ func testAccPermissionSetDataSourceConfig_ssoByARN(rName string) string {
 		testAccSSOPermissionSetBaseDataSourceConfig(rName),
 		`
 data "aws_ssoadmin_permission_set" "test" {
-  instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  instance_arn = data.aws_ssoadmin_instances.test.instances[0].arn
   arn          = aws_ssoadmin_permission_set.test.arn
 }
 `)
@@ -116,7 +116,7 @@ func testAccPermissionSetDataSourceConfig_ssoByName(rName string) string {
 		testAccSSOPermissionSetBaseDataSourceConfig(rName),
 		`
 data "aws_ssoadmin_permission_set" "test" {
-  instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  instance_arn = data.aws_ssoadmin_instances.test.instances[0].arn
   name         = aws_ssoadmin_permission_set.test.name
 }
 `)
@@ -126,7 +126,7 @@ const testAccPermissionSetDataSourceConfig_ssoByNameNonExistent = `
 data "aws_ssoadmin_instances" "test" {}
 
 data "aws_ssoadmin_permission_set" "test" {
-  instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  instance_arn = data.aws_ssoadmin_instances.test.instances[0].arn
   name         = "does-not-exist"
 }
 `

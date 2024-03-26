@@ -170,7 +170,7 @@ func testAccGroupConfig_basic(displayName string) string {
 	return fmt.Sprintf(`
 data "aws_ssoadmin_instances" "test" {}
 resource "aws_identitystore_group" "test" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+  identity_store_id = data.aws_ssoadmin_instances.test.instances[0].identity_store_id
   display_name      = %[1]q
   description       = "Example description"
 }
@@ -181,7 +181,7 @@ func testAccGroupConfig_description(description string) string {
 	return fmt.Sprintf(`
 data "aws_ssoadmin_instances" "test" {}
 resource "aws_identitystore_group" "test" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+  identity_store_id = data.aws_ssoadmin_instances.test.instances[0].identity_store_id
   display_name      = "Test display name"
   description       = %[1]q
 }

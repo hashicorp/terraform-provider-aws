@@ -19,7 +19,7 @@ data "aws_ssoadmin_instances" "example" {}
 resource "aws_ssoadmin_application" "example" {
   name                     = "example"
   application_provider_arn = "arn:aws:sso::aws:applicationProvider/custom"
-  instance_arn             = tolist(data.aws_ssoadmin_instances.example.arns)[0]
+  instance_arn             = data.aws_ssoadmin_instances.test.instances[0].arn
 }
 
 resource "aws_ssoadmin_application_access_scope" "example" {

@@ -16,7 +16,7 @@ Use this data source to get a Single Sign-On (SSO) Permission Set.
 data "aws_ssoadmin_instances" "example" {}
 
 data "aws_ssoadmin_permission_set" "example" {
-  instance_arn = tolist(data.aws_ssoadmin_instances.example.arns)[0]
+  instance_arn = data.aws_ssoadmin_instances.example.instances[0].arn
   name         = "Example"
 }
 

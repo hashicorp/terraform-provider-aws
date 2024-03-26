@@ -16,7 +16,7 @@ Use this data source to get an Identity Store User.
 data "aws_ssoadmin_instances" "example" {}
 
 data "aws_identitystore_user" "example" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.example.identity_store_ids)[0]
+  identity_store_id = data.aws_ssoadmin_instances.example.instances[0].identity_store_id
 
   alternate_identifier {
     unique_attribute {

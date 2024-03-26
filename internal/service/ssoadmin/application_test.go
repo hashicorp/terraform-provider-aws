@@ -339,7 +339,7 @@ data "aws_ssoadmin_instances" "test" {}
 resource "aws_ssoadmin_application" "test" {
   name                     = %[1]q
   application_provider_arn = %[2]q
-  instance_arn             = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  instance_arn             = data.aws_ssoadmin_instances.test.instances[0].arn
 }
 `, rName, applicationProviderARN)
 }
@@ -351,7 +351,7 @@ data "aws_ssoadmin_instances" "test" {}
 resource "aws_ssoadmin_application" "test" {
   name                     = %[1]q
   application_provider_arn = %[2]q
-  instance_arn             = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  instance_arn             = data.aws_ssoadmin_instances.test.instances[0].arn
   description              = %[3]q
 }
 `, rName, applicationProviderARN, description)
@@ -364,7 +364,7 @@ data "aws_ssoadmin_instances" "test" {}
 resource "aws_ssoadmin_application" "test" {
   name                     = %[1]q
   application_provider_arn = %[2]q
-  instance_arn             = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  instance_arn             = data.aws_ssoadmin_instances.test.instances[0].arn
 
   portal_options {
     visibility = "ENABLED"
@@ -384,7 +384,7 @@ data "aws_ssoadmin_instances" "test" {}
 resource "aws_ssoadmin_application" "test" {
   name                     = %[1]q
   application_provider_arn = %[2]q
-  instance_arn             = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  instance_arn             = data.aws_ssoadmin_instances.test.instances[0].arn
   status                   = %[3]q
 }
 `, rName, applicationProviderARN, status)
@@ -397,7 +397,7 @@ data "aws_ssoadmin_instances" "test" {}
 resource "aws_ssoadmin_application" "test" {
   name                     = %[1]q
   application_provider_arn = %[2]q
-  instance_arn             = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  instance_arn             = data.aws_ssoadmin_instances.test.instances[0].arn
 
   tags = {
     %[3]q = %[4]q
@@ -413,7 +413,7 @@ data "aws_ssoadmin_instances" "test" {}
 resource "aws_ssoadmin_application" "test" {
   name                     = %[1]q
   application_provider_arn = %[2]q
-  instance_arn             = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  instance_arn             = data.aws_ssoadmin_instances.test.instances[0].arn
 
   tags = {
     %[3]q = %[4]q

@@ -334,7 +334,7 @@ data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_ssoadmin_permission_set" "test" {
   name         = %[1]q
-  instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  instance_arn = data.aws_ssoadmin_instances.test.instances[0].arn
 }
 `, rName)
 }
@@ -346,7 +346,7 @@ data "aws_ssoadmin_instances" "test" {}
 resource "aws_ssoadmin_permission_set" "test" {
   name         = %[1]q
   description  = %[1]q
-  instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  instance_arn = data.aws_ssoadmin_instances.test.instances[0].arn
 }
 `, rName)
 }
@@ -357,7 +357,7 @@ data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_ssoadmin_permission_set" "test" {
   name         = %[1]q
-  instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  instance_arn = data.aws_ssoadmin_instances.test.instances[0].arn
   relay_state  = "https://example.com"
 }
 `, rName)
@@ -369,7 +369,7 @@ data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_ssoadmin_permission_set" "test" {
   name             = %[1]q
-  instance_arn     = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  instance_arn     = data.aws_ssoadmin_instances.test.instances[0].arn
   session_duration = "PT2H"
 }
 `, rName)
@@ -382,7 +382,7 @@ data "aws_ssoadmin_instances" "test" {}
 resource "aws_ssoadmin_permission_set" "test" {
   description      = %[1]q
   name             = %[1]q
-  instance_arn     = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  instance_arn     = data.aws_ssoadmin_instances.test.instances[0].arn
   relay_state      = "https://example.com"
   session_duration = "PT1H"
 }
@@ -396,7 +396,7 @@ data "aws_ssoadmin_instances" "test" {}
 resource "aws_ssoadmin_permission_set" "test" {
   description      = %[1]q
   name             = %[1]q
-  instance_arn     = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  instance_arn     = data.aws_ssoadmin_instances.test.instances[0].arn
   relay_state      = "https://example.com"
   session_duration = "PT2H"
 }
@@ -409,7 +409,7 @@ data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_ssoadmin_permission_set" "test" {
   name         = %[1]q
-  instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  instance_arn = data.aws_ssoadmin_instances.test.instances[0].arn
 
   tags = {
     %[2]q = %[3]q
@@ -424,7 +424,7 @@ data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_ssoadmin_permission_set" "test" {
   name         = %[1]q
-  instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  instance_arn = data.aws_ssoadmin_instances.test.instances[0].arn
 
   tags = {
     %[2]q = %[3]q
@@ -442,7 +442,7 @@ data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_ssoadmin_permission_set" "test" {
   name         = %[1]q
-  instance_arn = tolist(data.aws_ssoadmin_instances.test.arns)[0]
+  instance_arn = data.aws_ssoadmin_instances.test.instances[0].arn
 }
 
 resource "aws_ssoadmin_managed_policy_attachment" "test" {
