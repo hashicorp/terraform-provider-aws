@@ -9,7 +9,7 @@ description: |-
 
 Terraform resource for managing an AWS Service Catalog AppRegistry Application.
 
-~> **NOTE:** An AWS Service Catalog AppRegistry Application is also available in the AWS Console as "MyApplications"
+~> An AWS Service Catalog AppRegistry Application is displayed in the AWS Console under "MyApplications".
 
 ## Example Usage
 
@@ -42,7 +42,7 @@ resource "aws_s3_bucket" "bucket" {
 
 The following arguments are required:
 
-* `Name` - (Required) Name of the application. The name must be unique in the region in which you are creating the application.
+* `name` - (Required) Name of the application. The name must be unique within an AWS region.
 
 The following arguments are optional:
 
@@ -52,8 +52,8 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Application.
-* `id` - Identifier of the Application
+* `arn` - ARN (Amazon Resource Name) of the application.
+* `id` - Identifier of the application.
 
 ## Import
 
