@@ -1850,15 +1850,19 @@ func drainGroup(ctx context.Context, conn *autoscaling.AutoScaling, name string,
 	// desired capacity is set to 0. There is also the possibility that this ASG
 	// no longer applies scale-in protection to new instances, but there's still
 	// old ones that have it.
-
+	//
+	// Filter by ProtectedFromScaleIn to avoid unnecessary API calls (#36584)
+	var instanceIDs []string
+	for _, instance := range instances {
+		if aws.BoolValue(instance.ProtectedFromScaleIn) {
+			instanceIDs = append(instanceIDs, aws.StringValue(instance.InstanceId))
+		}
+	}
 	const batchSize = 50 // API limit.
-	for _, chunk := range tfslices.Chunks(instances, batchSize) {
-		instanceIDs := tfslices.ApplyToAll(chunk, func(v *autoscaling.Instance) string {
-			return aws.StringValue(v.InstanceId)
-		})
+	for _, chunk := range tfslices.Chunks(instanceIDs, batchSize) {
 		input := &autoscaling.SetInstanceProtectionInput{
 			AutoScalingGroupName: aws.String(name),
-			InstanceIds:          aws.StringSlice(instanceIDs),
+			InstanceIds:          aws.StringSlice(chunk),
 			ProtectedFromScaleIn: aws.Bool(false),
 		}
 
