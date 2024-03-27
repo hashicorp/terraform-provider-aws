@@ -189,11 +189,14 @@ func resourceInstanceProfileRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("name", instanceProfile.InstanceProfileName)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(instanceProfile.InstanceProfileName)))
 	d.Set("path", instanceProfile.Path)
-	if len(instanceProfile.Roles) > 0 {
-		d.Set("role", instanceProfile.Roles[0].RoleName) //there will only be 1 role returned
-	} else if d.Get("role") != "" {
+
+	if d.Get("role") != "" {
 		d.Set("role", nil)
 	}
+	if len(instanceProfile.Roles) > 0 {
+		d.Set("role", instanceProfile.Roles[0].RoleName) //there will only be 1 role returned
+	}
+
 	d.Set("unique_id", instanceProfile.InstanceProfileId)
 
 	setTagsOut(ctx, instanceProfile.Tags)
