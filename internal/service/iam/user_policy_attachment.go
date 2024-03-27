@@ -9,8 +9,8 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
@@ -120,7 +120,7 @@ func resourceUserPolicyAttachmentImport(ctx context.Context, d *schema.ResourceD
 	return []*schema.ResourceData{d}, nil
 }
 
-func attachPolicyToUser(ctx context.Context, conn *iam.IAM, user, policyARN string) error {
+func attachPolicyToUser(ctx context.Context, conn *iam.Client, user, policyARN string) error {
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
 		return conn.AttachUserPolicyWithContext(ctx, &iam.AttachUserPolicyInput{
 			PolicyArn: aws.String(policyARN),

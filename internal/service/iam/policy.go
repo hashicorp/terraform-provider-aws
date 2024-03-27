@@ -8,11 +8,11 @@ import (
 	"fmt"
 	"log"
 	"net/url"
+	"reflect"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -105,7 +105,7 @@ func resourcePolicy() *schema.Resource {
 
 func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 	if err != nil {
@@ -121,27 +121,28 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		Tags:           getTagsIn(ctx),
 	}
 
-	output, err := conn.CreatePolicyWithContext(ctx, input)
+	output, err := conn.CreatePolicy(ctx, input)
 
 	// Some partitions (e.g. ISO) may not support tag-on-create.
-	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+	partition := meta.(*conns.AWSClient).Partition
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 		input.Tags = nil
 
-		output, err = conn.CreatePolicyWithContext(ctx, input)
+		output, err = conn.CreatePolicy(ctx, input)
 	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating IAM Policy (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.Policy.Arn))
+	d.SetId(aws.ToString(output.Policy.Arn))
 
 	// For partitions not supporting tag-on-create, attempt tag after create.
 	if tags := getTagsIn(ctx); input.Tags == nil && len(tags) > 0 {
 		err := policyCreateTags(ctx, conn, d.Id(), tags)
 
 		// If default tags only, continue. Otherwise, error.
-		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(partition, err) {
 			return append(diags, resourcePolicyRead(ctx, d, meta)...)
 		}
 
@@ -155,11 +156,11 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	type policyWithVersion struct {
-		policy        *iam.Policy
-		policyVersion *iam.PolicyVersion
+		policy        *awstypes.Policy
+		policyVersion *awstypes.PolicyVersion
 	}
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
 		iamPolicy := &policyWithVersion{}
@@ -170,7 +171,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 			return nil, err
 		}
 
-		if v, err := findPolicyVersion(ctx, conn, d.Id(), aws.StringValue(iamPolicy.policy.DefaultVersionId)); err == nil {
+		if v, err := findPolicyVersion(ctx, conn, d.Id(), aws.ToString(iamPolicy.policy.DefaultVersionId)); err == nil {
 			iamPolicy.policyVersion = v
 		} else {
 			return nil, err
@@ -195,13 +196,13 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("arn", policy.Arn)
 	d.Set("description", policy.Description)
 	d.Set("name", policy.PolicyName)
-	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(policy.PolicyName)))
+	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(policy.PolicyName)))
 	d.Set("path", policy.Path)
 	d.Set("policy_id", policy.PolicyId)
 
 	setTagsOut(ctx, policy.Tags)
 
-	policyDocument, err := url.QueryUnescape(aws.StringValue(output.policyVersion.Document))
+	policyDocument, err := url.QueryUnescape(aws.ToString(output.policyVersion.Document))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "parsing IAM Policy (%s) document: %s", d.Id(), err)
@@ -219,7 +220,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		if err := policyPruneVersions(ctx, conn, d.Id()); err != nil {
@@ -234,10 +235,10 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		input := &iam.CreatePolicyVersionInput{
 			PolicyArn:      aws.String(d.Id()),
 			PolicyDocument: aws.String(policy),
-			SetAsDefault:   aws.Bool(true),
+			SetAsDefault:   true,
 		}
 
-		_, err = conn.CreatePolicyVersionWithContext(ctx, input)
+		_, err = conn.CreatePolicyVersion(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating IAM Policy (%s): %s", d.Id(), err)
@@ -249,7 +250,7 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	// Delete non-default policy versions.
 	versions, err := findPolicyVersionsByARN(ctx, conn, d.Id())
@@ -263,21 +264,21 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	for _, version := range versions {
-		if aws.BoolValue(version.IsDefaultVersion) {
+		if version.IsDefaultVersion {
 			continue
 		}
 
-		if err := policyDeleteVersion(ctx, conn, d.Id(), aws.StringValue(version.VersionId)); err != nil {
+		if err := policyDeleteVersion(ctx, conn, d.Id(), aws.ToString(version.VersionId)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
 	log.Printf("[INFO] Deleting IAM Policy: %s", d.Id())
-	_, err = conn.DeletePolicyWithContext(ctx, &iam.DeletePolicyInput{
+	_, err = conn.DeletePolicy(ctx, &iam.DeletePolicyInput{
 		PolicyArn: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+	if errs.IsA[*awstypes.NoSuchEntityException](err) {
 		return diags
 	}
 
@@ -294,7 +295,7 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta inte
 // least one more can be created before hitting the maximum of 5.
 //
 // The default version is never deleted.
-func policyPruneVersions(ctx context.Context, conn *iam.IAM, arn string) error {
+func policyPruneVersions(ctx context.Context, conn *iam.Client, arn string) error {
 	versions, err := findPolicyVersionsByARN(ctx, conn, arn)
 
 	if err != nil {
@@ -305,15 +306,15 @@ func policyPruneVersions(ctx context.Context, conn *iam.IAM, arn string) error {
 		return nil
 	}
 
-	var oldestVersion *iam.PolicyVersion
+	var oldestVersion *awstypes.PolicyVersion
 
 	for _, version := range versions {
-		if aws.BoolValue(version.IsDefaultVersion) {
+		if version.IsDefaultVersion {
 			continue
 		}
 
-		if oldestVersion == nil || version.CreateDate.Before(aws.TimeValue(oldestVersion.CreateDate)) {
-			oldestVersion = version
+		if oldestVersion == nil || version.CreateDate.Before(aws.ToTime(oldestVersion.CreateDate)) {
+			oldestVersion = &version
 		}
 	}
 
@@ -321,16 +322,16 @@ func policyPruneVersions(ctx context.Context, conn *iam.IAM, arn string) error {
 		return nil
 	}
 
-	return policyDeleteVersion(ctx, conn, arn, aws.StringValue(oldestVersion.VersionId))
+	return policyDeleteVersion(ctx, conn, arn, aws.ToString(oldestVersion.VersionId))
 }
 
-func policyDeleteVersion(ctx context.Context, conn *iam.IAM, arn, versionID string) error {
+func policyDeleteVersion(ctx context.Context, conn *iam.Client, arn, versionID string) error {
 	input := &iam.DeletePolicyVersionInput{
 		PolicyArn: aws.String(arn),
 		VersionId: aws.String(versionID),
 	}
 
-	_, err := conn.DeletePolicyVersionWithContext(ctx, input)
+	_, err := conn.DeletePolicyVersion(ctx, input)
 
 	if err != nil {
 		return fmt.Errorf("deleting IAM Policy (%s) version (%s): %w", arn, versionID, err)
@@ -339,14 +340,14 @@ func policyDeleteVersion(ctx context.Context, conn *iam.IAM, arn, versionID stri
 	return nil
 }
 
-func findPolicyByARN(ctx context.Context, conn *iam.IAM, arn string) (*iam.Policy, error) {
+func findPolicyByARN(ctx context.Context, conn *iam.Client, arn string) (*awstypes.Policy, error) {
 	input := &iam.GetPolicyInput{
 		PolicyArn: aws.String(arn),
 	}
 
-	output, err := conn.GetPolicyWithContext(ctx, input)
+	output, err := conn.GetPolicy(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+	if errs.IsA[*awstypes.NoSuchEntityException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -364,7 +365,7 @@ func findPolicyByARN(ctx context.Context, conn *iam.IAM, arn string) (*iam.Polic
 	return output.Policy, nil
 }
 
-func findPolicyByTwoPartKey(ctx context.Context, conn *iam.IAM, name, pathPrefix string) (*iam.Policy, error) {
+func findPolicyByTwoPartKey(ctx context.Context, conn *iam.Client, name, pathPrefix string) (*awstypes.Policy, error) {
 	input := &iam.ListPoliciesInput{}
 	if pathPrefix != "" {
 		input.PathPrefix = aws.String(pathPrefix)
@@ -377,47 +378,44 @@ func findPolicyByTwoPartKey(ctx context.Context, conn *iam.IAM, name, pathPrefix
 	}
 
 	if name != "" {
-		output = slices.Filter(output, func(v *iam.Policy) bool {
-			return aws.StringValue(v.PolicyName) == name
+		output = slices.Filter(output, func(v awstypes.Policy) bool {
+			return aws.ToString(v.PolicyName) == name
 		})
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findPolicies(ctx context.Context, conn *iam.IAM, input *iam.ListPoliciesInput) ([]*iam.Policy, error) {
-	var output []*iam.Policy
+func findPolicies(ctx context.Context, conn *iam.Client, input *iam.ListPoliciesInput) ([]awstypes.Policy, error) {
+	var output []awstypes.Policy
 
-	err := conn.ListPoliciesPagesWithContext(ctx, input, func(page *iam.ListPoliciesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := iam.NewListPoliciesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
 		}
 
 		for _, v := range page.Policies {
-			if v != nil {
+			if !reflect.ValueOf(v).IsZero() {
 				output = append(output, v)
 			}
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return nil, err
 	}
 
 	return output, nil
 }
 
-func findPolicyVersion(ctx context.Context, conn *iam.IAM, arn, versionID string) (*iam.PolicyVersion, error) {
+func findPolicyVersion(ctx context.Context, conn *iam.Client, arn, versionID string) (*awstypes.PolicyVersion, error) {
 	input := &iam.GetPolicyVersionInput{
 		PolicyArn: aws.String(arn),
 		VersionId: aws.String(versionID),
 	}
 
-	output, err := conn.GetPolicyVersionWithContext(ctx, input)
+	output, err := conn.GetPolicyVersion(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+	if errs.IsA[*awstypes.NoSuchEntityException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -435,35 +433,32 @@ func findPolicyVersion(ctx context.Context, conn *iam.IAM, arn, versionID string
 	return output.PolicyVersion, nil
 }
 
-func findPolicyVersionsByARN(ctx context.Context, conn *iam.IAM, arn string) ([]*iam.PolicyVersion, error) {
+func findPolicyVersionsByARN(ctx context.Context, conn *iam.Client, arn string) ([]awstypes.PolicyVersion, error) {
 	input := &iam.ListPolicyVersionsInput{
 		PolicyArn: aws.String(arn),
 	}
-	var output []*iam.PolicyVersion
+	var output []awstypes.PolicyVersion
 
-	err := conn.ListPolicyVersionsPagesWithContext(ctx, input, func(page *iam.ListPolicyVersionsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
+	pages := iam.NewListPolicyVersionsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-		for _, v := range page.Versions {
-			if v != nil {
-				output = append(output, v)
+		if errs.IsA[*awstypes.NoSuchEntityException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
 			}
 		}
 
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		if err != nil {
+			return nil, err
 		}
-	}
 
-	if err != nil {
-		return nil, err
+		for _, v := range page.Versions {
+			if !reflect.ValueOf(v).IsZero() {
+				output = append(output, v)
+			}
+		}
 	}
 
 	return output, nil
