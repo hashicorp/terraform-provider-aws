@@ -16,7 +16,7 @@ Terraform data source for managing an AWS Resource Explorer Search.
 ```terraform
 data "aws_resourceexplorer2_search" "example" {
   query_string = "region:us-west-2"
-  view_arn = aws_resourceexplorer2_index.test.arn
+  view_arn     = aws_resourceexplorer2_index.test.arn
 }
 ```
 

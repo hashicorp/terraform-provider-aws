@@ -28,7 +28,7 @@ func testAccSearchDataSource_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ResourceExplorer2EndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceExplorer2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceExplorer2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
@@ -59,7 +59,7 @@ func testAccSearchDataSource_IndexType(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.ResourceExplorer2EndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceExplorer2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceExplorer2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
@@ -94,7 +94,7 @@ resource "aws_resourceexplorer2_view" "test" {
 
 data "aws_resourceexplorer2_search" "test" {
   query_string = "region:global"
-  view_arn = aws_resourceexplorer2_view.test.arn
+  view_arn     = aws_resourceexplorer2_view.test.arn
 
   depends_on = [aws_resourceexplorer2_view.test]
 }
