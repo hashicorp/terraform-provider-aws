@@ -85,7 +85,7 @@ func TestAccIAMPolicy_description(t *testing.T) {
 
 func TestAccIAMPolicy_whitespace(t *testing.T) {
 	ctx := acctest.Context(t)
-	var out iam.Policy
+	var out awstypes.Policy
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_policy.test"
 
