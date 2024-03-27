@@ -8,6 +8,5 @@ var (
 	ResourceCertificateAuthority            = resourceCertificateAuthority
 	ResourceCertificateAuthorityCertificate = resourceCertificateAuthorityCertificate
 
-	FindCertificateAuthorityByARN            = findCertificateAuthorityByARN
 	FindCertificateAuthorityCertificateByARN = findCertificateAuthorityCertificateByARN
 )

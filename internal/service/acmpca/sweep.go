@@ -12,7 +12,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/acmpca/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
 func RegisterSweepers() {
@@ -35,8 +35,14 @@ func sweepCertificateAuthorities(region string) error {
 	paginator := acmpca.NewListCertificateAuthoritiesPaginator(conn, input)
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping ACM PCA Certificate Authority sweep for %s: %s", region, err)
+			return nil
+		}
+
 		if err != nil {
-			return err
+			return fmt.Errorf("error listing ACM PCA Certificate Authorities (%s): %w", region, err)
 		}
 
 		for _, v := range page.CertificateAuthorities {
@@ -47,22 +53,13 @@ func sweepCertificateAuthorities(region string) error {
 				continue
 			}
 
-			r := ResourceCertificateAuthority()
+			r := resourceCertificateAuthority()
 			d := r.Data(nil)
 			d.SetId(arn)
 			d.Set("permanent_deletion_time_in_days", 7) //nolint:gomnd
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-	}
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping ACM PCA Certificate Authority sweep for %s: %s", region, err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("error listing ACM PCA Certificate Authorities (%s): %w", region, err)
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
