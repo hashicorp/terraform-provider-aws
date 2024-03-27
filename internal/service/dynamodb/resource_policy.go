@@ -240,7 +240,7 @@ type resourcePolicyResourceModel struct {
 }
 
 func (data *resourcePolicyResourceModel) InitFromID() error {
-	v, err := fwdiag.AsErr(fwtypes.ARNValue(data.ID.ValueString()))
+	v, err := fwdiag.AsError(fwtypes.ARNValue(data.ID.ValueString()))
 	if err != nil {
 		return err
 	}

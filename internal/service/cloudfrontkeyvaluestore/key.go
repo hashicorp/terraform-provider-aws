@@ -303,7 +303,7 @@ func (data *keyResourceModel) InitFromID() error {
 		return err
 	}
 
-	v, err := fwdiag.AsErr(fwtypes.ARNValue(parts[0]))
+	v, err := fwdiag.AsError(fwtypes.ARNValue(parts[0]))
 	if err != nil {
 		return err
 	}
