@@ -54,6 +54,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_cloudfront_log_delivery_canonical_user_id",
 		},
 		{
+			Factory:  DataSourceOriginAccessControl,
+			TypeName: "aws_cloudfront_origin_access_control",
+		},
+		{
 			Factory:  DataSourceOriginAccessIdentities,
 			TypeName: "aws_cloudfront_origin_access_identities",
 		},
