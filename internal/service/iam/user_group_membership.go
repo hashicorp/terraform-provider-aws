@@ -126,7 +126,7 @@ func resourceUserGroupMembershipRead(ctx context.Context, d *schema.ResourceData
 
 func resourceUserGroupMembershipUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	if d.HasChange("groups") {
 		user := d.Get("user").(string)
@@ -158,7 +158,7 @@ func resourceUserGroupMembershipUpdate(ctx context.Context, d *schema.ResourceDa
 
 func resourceUserGroupMembershipDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 	user := d.Get("user").(string)
 	groups := flex.ExpandStringValueSet(d.Get("groups").(*schema.Set))
 
