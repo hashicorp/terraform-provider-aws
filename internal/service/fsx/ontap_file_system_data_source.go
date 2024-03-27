@@ -211,12 +211,12 @@ func dataSourceONTAPFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 	d.Set("storage_capacity", filesystem.StorageCapacity)
 	d.Set("storage_type", filesystem.StorageType)
 	d.Set("subnet_ids", aws.StringValueSlice(filesystem.SubnetIds))
-	if haPairs > 1 {
+	if aws.StringValue(ontapConfig.DeploymentType) == "SINGLE_AZ_2" {
 		d.Set("throughput_capacity", nil)
 		d.Set("throughput_capacity_per_ha_pair", ontapConfig.ThroughputCapacityPerHAPair)
 	} else {
 		d.Set("throughput_capacity", ontapConfig.ThroughputCapacity)
-		d.Set("throughput_capacity_per_ha_pair", nil)
+		d.Set("throughput_capacity_per_ha_pair", ontapConfig.ThroughputCapacityPerHAPair)
 	}
 	d.Set("vpc_id", filesystem.VpcId)
 	d.Set("weekly_maintenance_start_time", ontapConfig.WeeklyMaintenanceStartTime)
