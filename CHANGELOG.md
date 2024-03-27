@@ -14,7 +14,9 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* data-source/aws_cloudfront_function: Add `key_value_store_associations` attribute ([#36585](https://github.com/hashicorp/terraform-provider-aws/issues/36585))
 * data-source/aws_db_snapshot: Add `original_snapshot_create_time` attribute ([#36544](https://github.com/hashicorp/terraform-provider-aws/issues/36544))
+* resource/aws_cloudfront_function: Add `key_value_store_associations` argument ([#36585](https://github.com/hashicorp/terraform-provider-aws/issues/36585))
 * resource/aws_ec2_host: Add user configurable timeouts ([#36538](https://github.com/hashicorp/terraform-provider-aws/issues/36538))
 * resource/aws_glacier_vault_lock: Allow `policy` to have leading whitespace ([#36597](https://github.com/hashicorp/terraform-provider-aws/issues/36597))
 * resource/aws_iam_group_policy: Allow `policy` to have leading whitespace ([#36597](https://github.com/hashicorp/terraform-provider-aws/issues/36597))
