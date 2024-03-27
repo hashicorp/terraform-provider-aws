@@ -445,6 +445,11 @@ func resourceDeploymentGroup() *schema.Resource {
 					},
 				},
 			},
+			"termination_hook_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -515,6 +520,10 @@ func resourceDeploymentGroupCreate(ctx context.Context, d *schema.ResourceData, 
 
 	if v, ok := d.GetOk("trigger_configuration"); ok {
 		input.TriggerConfigurations = expandTriggerConfigs(v.(*schema.Set).List())
+	}
+
+	if v, ok := d.GetOk("termination_hook_enabled"); ok {
+		input.TerminationHookEnabled = aws.Bool(v.(bool))
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, 5*time.Minute,
@@ -609,6 +618,7 @@ func resourceDeploymentGroupRead(ctx context.Context, d *schema.ResourceData, me
 	if err := d.Set("trigger_configuration", flattenTriggerConfigs(group.TriggerConfigurations)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting trigger_configuration: %s", err)
 	}
+	d.Set("termination_hook_enabled", group.TerminationHookEnabled)
 
 	return diags
 }
@@ -707,6 +717,11 @@ func resourceDeploymentGroupUpdate(ctx context.Context, d *schema.ResourceData, 
 			} else if n.(string) != "" { //
 				input.OutdatedInstancesStrategy = types.OutdatedInstancesStrategy(n.(string))
 			}
+		}
+
+		if d.HasChange("termination_hook_enabled") {
+			_, n := d.GetChange("termination_hook_enabled")
+			input.TerminationHookEnabled = aws.Bool(n.(bool))
 		}
 
 		log.Printf("[DEBUG] Updating CodeDeploy DeploymentGroup %s", d.Id())
