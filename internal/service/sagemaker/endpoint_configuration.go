@@ -368,6 +368,34 @@ func ResourceEndpointConfiguration() *schema.Resource {
 								},
 							},
 						},
+						"managed_instance_scaling": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"status": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.StringInSlice(sagemaker.ManagedInstanceScalingStatus_Values(), false),
+									},
+									"min_instance_count": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.IntAtLeast(1),
+									},
+									"max_instance_count": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.IntAtLeast(1),
+									},
+								},
+							},
+						},
 						"variant_name": {
 							Type:     schema.TypeString,
 							Optional: true,
@@ -502,6 +530,34 @@ func ResourceEndpointConfiguration() *schema.Resource {
 										Optional:     true,
 										ForceNew:     true,
 										ValidateFunc: validation.IntBetween(1, 200),
+									},
+								},
+							},
+						},
+						"managed_instance_scaling": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"status": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.StringInSlice(sagemaker.ManagedInstanceScalingStatus_Values(), false),
+									},
+									"min_instance_count": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.IntAtLeast(1),
+									},
+									"max_instance_count": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.IntAtLeast(1),
 									},
 								},
 							},
@@ -697,6 +753,10 @@ func expandProductionVariants(configured []interface{}) []*sagemaker.ProductionV
 			l.EnableSSMAccess = aws.Bool(v)
 		}
 
+		if v, ok := data["managed_instance_scaling"].([]interface{}); ok && len(v) > 0 {
+			l.ManagedInstanceScaling = expandManagedInstanceScaling(v)
+		}
+
 		containers = append(containers, l)
 	}
 
@@ -748,6 +808,10 @@ func flattenProductionVariants(list []*sagemaker.ProductionVariant) []map[string
 
 		if i.EnableSSMAccess != nil {
 			l["enable_ssm_access"] = aws.BoolValue(i.EnableSSMAccess)
+		}
+
+		if i.ManagedInstanceScaling != nil {
+			l["managed_instance_scaling"] = flattenManagedInstanceScaling(i.ManagedInstanceScaling)
 		}
 
 		result = append(result, l)
@@ -1014,6 +1078,30 @@ func expandCoreDumpConfig(configured []interface{}) *sagemaker.ProductionVariant
 	return c
 }
 
+func expandManagedInstanceScaling(configured []interface{}) *sagemaker.ProductionVariantManagedInstanceScaling {
+	if len(configured) == 0 {
+		return nil
+	}
+
+	m := configured[0].(map[string]interface{})
+
+	c := &sagemaker.ProductionVariantManagedInstanceScaling{}
+
+	if v, ok := m["status"].(string); ok {
+		c.Status = aws.String(v)
+	}
+
+	if v, ok := m["min_instance_count"].(int); ok && v > 0 {
+		c.MinInstanceCount = aws.Int64(int64(v))
+	}
+
+	if v, ok := m["max_instance_count"].(int); ok && v > 0 {
+		c.MaxInstanceCount = aws.Int64(int64(v))
+	}
+
+	return c
+}
+
 func flattenEndpointConfigAsyncInferenceConfig(config *sagemaker.AsyncInferenceConfig) []map[string]interface{} {
 	if config == nil {
 		return []map[string]interface{}{}
@@ -1141,6 +1229,28 @@ func flattenCoreDumpConfig(config *sagemaker.ProductionVariantCoreDumpConfig) []
 
 	if config.KmsKeyId != nil {
 		cfg["kms_key_id"] = aws.StringValue(config.KmsKeyId)
+	}
+
+	return []map[string]interface{}{cfg}
+}
+
+func flattenManagedInstanceScaling(config *sagemaker.ProductionVariantManagedInstanceScaling) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	cfg := map[string]interface{}{}
+
+	if config.Status != nil {
+		cfg["status"] = aws.StringValue(config.Status)
+	}
+
+	if config.MinInstanceCount != nil {
+		cfg["min_instance_count"] = aws.Int64Value(config.MinInstanceCount)
+	}
+
+	if config.MaxInstanceCount != nil {
+		cfg["max_instance_count"] = aws.Int64Value(config.MaxInstanceCount)
 	}
 
 	return []map[string]interface{}{cfg}
