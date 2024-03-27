@@ -199,7 +199,6 @@ import (
 	glue_sdkv1 "github.com/aws/aws-sdk-go/service/glue"
 	greengrass_sdkv1 "github.com/aws/aws-sdk-go/service/greengrass"
 	guardduty_sdkv1 "github.com/aws/aws-sdk-go/service/guardduty"
-	iam_sdkv1 "github.com/aws/aws-sdk-go/service/iam"
 	imagebuilder_sdkv1 "github.com/aws/aws-sdk-go/service/imagebuilder"
 	inspector_sdkv1 "github.com/aws/aws-sdk-go/service/inspector"
 	iot_sdkv1 "github.com/aws/aws-sdk-go/service/iot"
@@ -729,10 +728,6 @@ func (c *AWSClient) GuardDutyConn(ctx context.Context) *guardduty_sdkv1.GuardDut
 
 func (c *AWSClient) HealthLakeClient(ctx context.Context) *healthlake_sdkv2.Client {
 	return errs.Must(client[*healthlake_sdkv2.Client](ctx, c, names.HealthLake, make(map[string]any)))
-}
-
-func (c *AWSClient) IAMConn(ctx context.Context) *iam_sdkv1.IAM {
-	return errs.Must(conn[*iam_sdkv1.IAM](ctx, c, names.IAM, make(map[string]any)))
 }
 
 func (c *AWSClient) IAMClient(ctx context.Context) *iam_sdkv2.Client {
