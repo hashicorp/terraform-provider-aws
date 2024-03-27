@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -437,16 +438,16 @@ func deleteUserLoginProfile(ctx context.Context, conn *iam.Client, username stri
 	}
 	err = retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		_, err = conn.DeleteLoginProfile(ctx, input)
-		if errs.IsA[*awstypes.NoSuchEntityException](err) {
-			return nil
-		}
-
-		// EntityTemporarilyUnmodifiable: Login Profile for User XXX cannot be modified while login profile is being created.
-		if errs.IsA[*awstypes.EntityTemporarilyUnmodifiableException](err) {
-			return retry.RetryableError(err)
-		}
-
 		if err != nil {
+			var errNoSuchEntityException *awstypes.NoSuchEntityException
+			if tfawserr.ErrCodeEquals(err, errNoSuchEntityException.ErrorCode()) {
+				return nil
+			}
+			// EntityTemporarilyUnmodifiable: Login Profile for User XXX cannot be modified while login profile is being created.
+			var etu *awstypes.EntityTemporarilyUnmodifiableException
+			if tfawserr.ErrCodeEquals(err, etu.ErrorCode()) {
+				return retry.RetryableError(err)
+			}
 			return retry.NonRetryableError(err)
 		}
 		return nil
