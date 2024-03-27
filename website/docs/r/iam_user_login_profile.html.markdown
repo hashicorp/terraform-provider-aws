@@ -38,7 +38,17 @@ This resource supports the following arguments:
 * `user` - (Required) The IAM user's name.
 * `pgp_key` - (Optional) Either a base-64 encoded PGP public key, or a keybase username in the form `keybase:username`. Only applies on resource creation. Drift detection is not possible with this argument.
 * `password_length` - (Optional) The length of the generated password on resource creation. Only applies on resource creation. Drift detection is not possible with this argument. Default value is `20`.
-* `password_reset_required` - (Optional) Whether the user should be forced to reset the generated password on resource creation. Only applies on resource creation.
+* `password_reset_required` - (Optional) Whether the user should be forced to reset the generated password. This is applied all the time! If you want to avoid the situation where you set up a new user, they change their password as required, then the next `terraform apply` causes that user to be destroyed and then created with a new initial password, then, you need to use:
+
+  ```
+  lifecycle {
+    ignore_changes = [
+      password_reset_required,
+    ]
+  }
+  ```
+
+  Currently waiting on issue [#23567](https://github.com/hashicorp/terraform-provider-aws/issues/23567) to be prioritized which would hope to restore the default behaviour of applying this only on resource creation.
 
 ## Attribute Reference
 
