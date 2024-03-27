@@ -104,7 +104,23 @@ func resourceUserGroupMembershipRead(ctx context.Context, d *schema.ResourceData
 	})
 
 	if tfresource.TimedOut(err) {
-		_, err = conn.ListGroupsForUser(ctx, input)
+		pages := iam.NewListGroupsForUserPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx)
+			if d.IsNewResource() && errs.IsA[*awstypes.NoSuchEntityException](err) {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
+
+			if err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
+
+			for _, group := range page.Groups {
+				if groups.Contains(aws.ToString(group.GroupName)) {
+					gl = append(gl, aws.ToString(group.GroupName))
+				}
+			}
+		}
 	}
 
 	if !d.IsNewResource() && errs.IsA[*awstypes.NoSuchEntityException](err) {

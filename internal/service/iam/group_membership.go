@@ -101,7 +101,22 @@ func resourceGroupMembershipRead(ctx context.Context, d *schema.ResourceData, me
 	})
 
 	if tfresource.TimedOut(err) {
-		_, err = conn.GetGroup(ctx, input)
+		pages := iam.NewGetGroupPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx)
+
+			if d.IsNewResource() && errs.IsA[*awstypes.NoSuchEntityException](err) {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
+
+			if err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
+
+			for _, user := range page.Users {
+				ul = append(ul, aws.ToString(user.UserName))
+			}
+		}
 	}
 
 	var noSuchEntityException *awstypes.NoSuchEntityException

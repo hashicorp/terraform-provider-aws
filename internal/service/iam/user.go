@@ -437,14 +437,16 @@ func deleteUserLoginProfile(ctx context.Context, conn *iam.Client, username stri
 	}
 	err = retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		_, err = conn.DeleteLoginProfile(ctx, input)
+		if errs.IsA[*awstypes.NoSuchEntityException](err) {
+			return nil
+		}
+
+		// EntityTemporarilyUnmodifiable: Login Profile for User XXX cannot be modified while login profile is being created.
+		if errs.IsA[*awstypes.EntityTemporarilyUnmodifiableException](err) {
+			return retry.RetryableError(err)
+		}
+
 		if err != nil {
-			if errs.IsA[*awstypes.NoSuchEntityException](err) {
-				return nil
-			}
-			// EntityTemporarilyUnmodifiable: Login Profile for User XXX cannot be modified while login profile is being created.
-			if errs.IsA[*awstypes.EntityTemporarilyUnmodifiableException](err) {
-				return retry.RetryableError(err)
-			}
 			return retry.NonRetryableError(err)
 		}
 		return nil
