@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_servicecatalogappregistry_application` ([#36596](https://github.com/hashicorp/terraform-provider-aws/issues/36596))
 * **New Resource:** `aws_cloudfrontkeyvaluestore_key` ([#36534](https://github.com/hashicorp/terraform-provider-aws/issues/36534))
 * **New Resource:** `aws_devopsguru_notification_channel` ([#36557](https://github.com/hashicorp/terraform-provider-aws/issues/36557))
 * **New Resource:** `aws_lakeformation_resource_lf_tag` ([#36537](https://github.com/hashicorp/terraform-provider-aws/issues/36537))
