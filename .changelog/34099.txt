@@ -1,3 +1,3 @@
 ```release-note:bug
-resource/instance_profile: Fix aws_iam_instance_profile detects that the instance profile is not associated with IAM Role.
+resource/instance_profile: Detect when the associated `role` no longer exists
 ```
