@@ -8,7 +8,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
-	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
@@ -45,18 +44,6 @@ func (d *dataSourceSearch) Schema(ctx context.Context, req datasource.SchemaRequ
 				Required: true,
 			},
 			"id": framework.IDAttribute(),
-			"max_results": schema.Int64Attribute{
-				Optional: true,
-				Validators: []validator.Int64{
-					int64validator.Between(1, 1000),
-				},
-			},
-			"next_token": schema.StringAttribute{
-				Computed: true,
-				Validators: []validator.String{
-					stringvalidator.LengthBetween(1, 2048),
-				},
-			},
 			"view_arn": schema.StringAttribute{
 				Optional: true,
 				Validators: []validator.String{
