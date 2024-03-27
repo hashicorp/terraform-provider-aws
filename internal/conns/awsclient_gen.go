@@ -47,8 +47,10 @@ import (
 	configservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/configservice"
 	connectcases_sdkv2 "github.com/aws/aws-sdk-go-v2/service/connectcases"
 	controltower_sdkv2 "github.com/aws/aws-sdk-go-v2/service/controltower"
+	costandusagereportservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/costandusagereportservice"
 	costoptimizationhub_sdkv2 "github.com/aws/aws-sdk-go-v2/service/costoptimizationhub"
 	customerprofiles_sdkv2 "github.com/aws/aws-sdk-go-v2/service/customerprofiles"
+	datazone_sdkv2 "github.com/aws/aws-sdk-go-v2/service/datazone"
 	dax_sdkv2 "github.com/aws/aws-sdk-go-v2/service/dax"
 	devopsguru_sdkv2 "github.com/aws/aws-sdk-go-v2/service/devopsguru"
 	directoryservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/directoryservice"
@@ -56,6 +58,7 @@ import (
 	dynamodb_sdkv2 "github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
 	ecr_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ecr"
+	ecrpublic_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ecrpublic"
 	ecs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ecs"
 	eks_sdkv2 "github.com/aws/aws-sdk-go-v2/service/eks"
 	elasticache_sdkv2 "github.com/aws/aws-sdk-go-v2/service/elasticache"
@@ -96,6 +99,7 @@ import (
 	oam_sdkv2 "github.com/aws/aws-sdk-go-v2/service/oam"
 	opensearchserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	osis_sdkv2 "github.com/aws/aws-sdk-go-v2/service/osis"
+	paymentcryptography_sdkv2 "github.com/aws/aws-sdk-go-v2/service/paymentcryptography"
 	pcaconnectorad_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pcaconnectorad"
 	pipes_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pipes"
 	polly_sdkv2 "github.com/aws/aws-sdk-go-v2/service/polly"
@@ -163,7 +167,6 @@ import (
 	cloudwatchrum_sdkv1 "github.com/aws/aws-sdk-go/service/cloudwatchrum"
 	cognitoidentityprovider_sdkv1 "github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	connect_sdkv1 "github.com/aws/aws-sdk-go/service/connect"
-	costandusagereportservice_sdkv1 "github.com/aws/aws-sdk-go/service/costandusagereportservice"
 	costexplorer_sdkv1 "github.com/aws/aws-sdk-go/service/costexplorer"
 	databasemigrationservice_sdkv1 "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	dataexchange_sdkv1 "github.com/aws/aws-sdk-go/service/dataexchange"
@@ -178,7 +181,6 @@ import (
 	dynamodb_sdkv1 "github.com/aws/aws-sdk-go/service/dynamodb"
 	ec2_sdkv1 "github.com/aws/aws-sdk-go/service/ec2"
 	ecr_sdkv1 "github.com/aws/aws-sdk-go/service/ecr"
-	ecrpublic_sdkv1 "github.com/aws/aws-sdk-go/service/ecrpublic"
 	ecs_sdkv1 "github.com/aws/aws-sdk-go/service/ecs"
 	efs_sdkv1 "github.com/aws/aws-sdk-go/service/efs"
 	elasticache_sdkv1 "github.com/aws/aws-sdk-go/service/elasticache"
@@ -372,8 +374,8 @@ func (c *AWSClient) CEConn(ctx context.Context) *costexplorer_sdkv1.CostExplorer
 	return errs.Must(conn[*costexplorer_sdkv1.CostExplorer](ctx, c, names.CE, make(map[string]any)))
 }
 
-func (c *AWSClient) CURConn(ctx context.Context) *costandusagereportservice_sdkv1.CostandUsageReportService {
-	return errs.Must(conn[*costandusagereportservice_sdkv1.CostandUsageReportService](ctx, c, names.CUR, make(map[string]any)))
+func (c *AWSClient) CURClient(ctx context.Context) *costandusagereportservice_sdkv2.Client {
+	return errs.Must(client[*costandusagereportservice_sdkv2.Client](ctx, c, names.CUR, make(map[string]any)))
 }
 
 func (c *AWSClient) ChimeConn(ctx context.Context) *chime_sdkv1.Chime {
@@ -540,6 +542,10 @@ func (c *AWSClient) DataSyncConn(ctx context.Context) *datasync_sdkv1.DataSync {
 	return errs.Must(conn[*datasync_sdkv1.DataSync](ctx, c, names.DataSync, make(map[string]any)))
 }
 
+func (c *AWSClient) DataZoneClient(ctx context.Context) *datazone_sdkv2.Client {
+	return errs.Must(client[*datazone_sdkv2.Client](ctx, c, names.DataZone, make(map[string]any)))
+}
+
 func (c *AWSClient) DeployClient(ctx context.Context) *codedeploy_sdkv2.Client {
 	return errs.Must(client[*codedeploy_sdkv2.Client](ctx, c, names.Deploy, make(map[string]any)))
 }
@@ -592,8 +598,8 @@ func (c *AWSClient) ECRClient(ctx context.Context) *ecr_sdkv2.Client {
 	return errs.Must(client[*ecr_sdkv2.Client](ctx, c, names.ECR, make(map[string]any)))
 }
 
-func (c *AWSClient) ECRPublicConn(ctx context.Context) *ecrpublic_sdkv1.ECRPublic {
-	return errs.Must(conn[*ecrpublic_sdkv1.ECRPublic](ctx, c, names.ECRPublic, make(map[string]any)))
+func (c *AWSClient) ECRPublicClient(ctx context.Context) *ecrpublic_sdkv2.Client {
+	return errs.Must(client[*ecrpublic_sdkv2.Client](ctx, c, names.ECRPublic, make(map[string]any)))
 }
 
 func (c *AWSClient) ECSConn(ctx context.Context) *ecs_sdkv1.ECS {
@@ -934,6 +940,10 @@ func (c *AWSClient) OutpostsConn(ctx context.Context) *outposts_sdkv1.Outposts {
 
 func (c *AWSClient) PCAConnectorADClient(ctx context.Context) *pcaconnectorad_sdkv2.Client {
 	return errs.Must(client[*pcaconnectorad_sdkv2.Client](ctx, c, names.PCAConnectorAD, make(map[string]any)))
+}
+
+func (c *AWSClient) PaymentCryptographyClient(ctx context.Context) *paymentcryptography_sdkv2.Client {
+	return errs.Must(client[*paymentcryptography_sdkv2.Client](ctx, c, names.PaymentCryptography, make(map[string]any)))
 }
 
 func (c *AWSClient) PinpointConn(ctx context.Context) *pinpoint_sdkv1.Pinpoint {

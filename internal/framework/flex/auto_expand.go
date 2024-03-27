@@ -384,7 +384,13 @@ func (expander autoExpander) listOfString(ctx context.Context, vFrom basetypes.L
 				return diags
 			}
 
-			vTo.Set(reflect.ValueOf(to))
+			// Copy elements individually to enable expansion of lists of
+			// custom string types (AWS enums)
+			vals := reflect.MakeSlice(vTo.Type(), len(to), len(to))
+			for i := 0; i < len(to); i++ {
+				vals.Index(i).SetString(to[i])
+			}
+			vTo.Set(vals)
 			return diags
 
 		case reflect.Ptr:
@@ -616,10 +622,24 @@ func (expander autoExpander) nestedObjectCollection(ctx context.Context, vFrom f
 				diags.Append(expander.nestedObjectToSlice(ctx, vFrom, tTo, tElem, vTo)...)
 				return diags
 			}
+
+		case reflect.Interface:
+			//
+			// types.List(OfObject) -> []interface.
+			//
+			// Smithy union type handling not yet implemented. Silently skip.
+			return diags
 		}
+
+	case reflect.Interface:
+		//
+		// types.List(OfObject) -> interface.
+		//
+		// Smithy union type handling not yet implemented. Silently skip.
+		return diags
 	}
 
-	diags.AddError("Incompatible types", fmt.Sprintf("nestedObject[%s] cannot be expanded to %s", vFrom.Type(ctx).(attr.TypeWithElementType).ElementType(), vTo.Kind()))
+	diags.AddError("Incompatible types", fmt.Sprintf("nestedObjectCollection[%s] cannot be expanded to %s", vFrom.Type(ctx).(attr.TypeWithElementType).ElementType(), vTo.Kind()))
 	return diags
 }
 

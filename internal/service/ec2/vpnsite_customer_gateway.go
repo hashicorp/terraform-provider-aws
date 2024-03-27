@@ -26,7 +26,7 @@ import (
 
 // @SDKResource("aws_customer_gateway", name="Customer Gateway")
 // @Tags(identifierAttribute="id")
-func ResourceCustomerGateway() *schema.Resource {
+func resourceCustomerGateway() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCustomerGatewayCreate,
 		ReadWithoutTimeout:   resourceCustomerGatewayRead,

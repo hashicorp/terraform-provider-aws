@@ -58,6 +58,8 @@ This argument supports the following arguments:
 * `adminContact` - (Optional) Details about the domain administrative contact. See [Contact Blocks](#contact-blocks) for more details.
 * `adminPrivacy` - (Optional) Whether domain administrative contact information is concealed from WHOIS queries. Default: `true`.
 * `autoRenew` - (Optional) Whether the domain registration is set to renew automatically. Default: `true`.
+* `billingContact` - (Optional) Details about the domain billing contact. See [Contact Blocks](#contact-blocks) for more details.
+* `billingPrivacy` - (Optional) Whether domain billing contact information is concealed from WHOIS queries. Default: `true`.
 * `domainName` - (Required) The name of the registered domain.
 * `nameServer` - (Optional) The list of nameservers for the domain. See [`nameServer` Blocks](#name_server-blocks) for more details.
 * `registrantContact` - (Optional) Details about the domain registrant. See [Contact Blocks](#contact-blocks) for more details.
@@ -149,4 +151,4 @@ Using `terraform import`, import domains using the domain name. For example:
 % terraform import aws_route53domains_registered_domain.example example.com
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-41a47d4bcdaedeed1d522ab257d17e74b814853b0355455c3a3cc0b6e6f27c8b -->
+<!-- cache-key: cdktf-0.20.1 input-c569bdb14e20e946199538f9489aec56d2ab0d9ba80660ce3c540c45817507e9 -->

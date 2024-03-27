@@ -25,7 +25,7 @@ import (
 
 // @SDKResource("aws_datasync_location_smb", name="Location SMB")
 // @Tags(identifierAttribute="id")
-func ResourceLocationSMB() *schema.Resource {
+func resourceLocationSMB() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationSMBCreate,
 		ReadWithoutTimeout:   resourceLocationSMBRead,
@@ -149,7 +149,7 @@ func resourceLocationSMBRead(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
-	output, err := FindLocationSMBByARN(ctx, conn, d.Id())
+	output, err := findLocationSMBByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DataSync Location SMB (%s) not found, removing from state", d.Id())
@@ -162,6 +162,10 @@ func resourceLocationSMBRead(ctx context.Context, d *schema.ResourceData, meta i
 	}
 
 	uri := aws.StringValue(output.LocationUri)
+	serverHostName, err := globalIDFromLocationURI(uri)
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
 	subdirectory, err := subdirectoryFromLocationURI(aws.StringValue(output.LocationUri))
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
@@ -173,6 +177,7 @@ func resourceLocationSMBRead(ctx context.Context, d *schema.ResourceData, meta i
 	if err := d.Set("mount_options", flattenSMBMountOptions(output.MountOptions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting mount_options: %s", err)
 	}
+	d.Set("server_hostname", serverHostName)
 	d.Set("subdirectory", subdirectory)
 	d.Set("uri", uri)
 	d.Set("user", output.User)
@@ -228,7 +233,7 @@ func resourceLocationSMBDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func FindLocationSMBByARN(ctx context.Context, conn *datasync.DataSync, arn string) (*datasync.DescribeLocationSmbOutput, error) {
+func findLocationSMBByARN(ctx context.Context, conn *datasync.DataSync, arn string) (*datasync.DescribeLocationSmbOutput, error) {
 	input := &datasync.DescribeLocationSmbInput{
 		LocationArn: aws.String(arn),
 	}
