@@ -71,12 +71,12 @@ func TestAccKinesisResourcePolicy_disappears(t *testing.T) {
 
 func testAccCheckResourcePolicyExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisClient(ctx)
-
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisClient(ctx)
 
 		_, err := tfkinesis.FindResourcePolicyByResourceARN(ctx, conn, rs.Primary.ID)
 

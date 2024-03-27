@@ -10,5 +10,6 @@ var (
 	ResourceResourcePolicy              = newResourcePolicyResource
 
 	FindKinesisDataStreamDestinationByTwoPartKey = findKinesisDataStreamDestinationByTwoPartKey
+	FindResourcePolicyByARN                      = findResourcePolicyByARN
 	ListTags                                     = listTags
 )

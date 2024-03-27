@@ -5,21 +5,16 @@ package dynamodb_test
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfdynamodb "github.com/hashicorp/terraform-provider-aws/internal/service/dynamodb"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -27,7 +22,6 @@ import (
 
 func TestAccDynamoDBResourcePolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var resourcepolicy dynamodb.GetResourcePolicyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dynamodb_resource_policy.test"
@@ -57,7 +51,6 @@ func TestAccDynamoDBResourcePolicy_basic(t *testing.T) {
 
 func TestAccDynamoDBResourcePolicy_update(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var resourcepolicy dynamodb.GetResourcePolicyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dynamodb_resource_policy.test"
@@ -93,7 +86,6 @@ func TestAccDynamoDBResourcePolicy_update(t *testing.T) {
 
 func TestAccDynamoDBResourcePolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-
 	var out dynamodb.GetResourcePolicyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dynamodb_resource_policy.test"
@@ -125,59 +117,39 @@ func testAccCheckResourcePolicyDestroy(ctx context.Context) resource.TestCheckFu
 				continue
 			}
 
-			input := &dynamodb.GetResourcePolicyInput{
-				ResourceArn: aws.String(rs.Primary.ID),
-			}
-			_, err := conn.GetResourcePolicy(ctx, input)
-			if errs.IsA[*awstypes.PolicyNotFoundException](err) || errs.IsA[*awstypes.ResourceNotFoundException](err) {
-				return nil
-			}
-			if err != nil {
-				return create.Error(names.DynamoDB, create.ErrActionCheckingDestroyed, tfdynamodb.ResNameResourcePolicy, rs.Primary.ID, err)
+			_, err := tfdynamodb.FindResourcePolicyByARN(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			return create.Error(names.DynamoDB, create.ErrActionCheckingDestroyed, tfdynamodb.ResNameResourcePolicy, rs.Primary.ID, errors.New("not destroyed"))
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Kinesis Resource Policy %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckResourcePolicyExists(ctx context.Context, name string, resourcepolicy *dynamodb.GetResourcePolicyOutput) resource.TestCheckFunc {
+func testAccCheckResourcePolicyExists(ctx context.Context, n string, v *dynamodb.GetResourcePolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.DynamoDB, create.ErrActionCheckingExistence, tfdynamodb.ResNameResourcePolicy, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.DynamoDB, create.ErrActionCheckingExistence, tfdynamodb.ResNameResourcePolicy, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBClient(ctx)
 
-		err := retry.RetryContext(ctx, tfdynamodb.ReadPolicyTimeOut, func() *retry.RetryError {
-			resp, err := conn.GetResourcePolicy(ctx, &dynamodb.GetResourcePolicyInput{
-				ResourceArn: aws.String(rs.Primary.ID),
-			})
+		output, err := tfdynamodb.FindResourcePolicyByARN(ctx, conn, rs.Primary.ID)
 
-			// If a policy is initially created and then immediately read, it may not be available.
-			if errs.IsA[*awstypes.PolicyNotFoundException](err) {
-				return retry.RetryableError(err)
-			}
-
-			if err != nil {
-				return retry.NonRetryableError(err)
-			}
-
-			*resourcepolicy = *resp
-
-			return nil
-		})
-
-		if tfresource.TimedOut(err) || err != nil {
-			return create.Error(names.DynamoDB, create.ErrActionCheckingExistence, tfdynamodb.ResNameResourcePolicy, rs.Primary.ID, err)
+		if err != nil {
+			return err
 		}
+
+		*v = *output
 
 		return nil
 	}
