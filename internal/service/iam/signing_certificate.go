@@ -68,7 +68,6 @@ func resourceSigningCertificateCreate(ctx context.Context, d *schema.ResourceDat
 		UserName:        aws.String(d.Get("user_name").(string)),
 	}
 
-	log.Printf("[DEBUG] Creating IAM Signing Certificate with opts: %s", createOpts)
 	resp, err := conn.UploadSigningCertificate(ctx, createOpts)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "uploading IAM Signing Certificate: %s", err)

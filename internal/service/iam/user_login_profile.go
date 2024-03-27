@@ -239,7 +239,7 @@ func resourceUserLoginProfileDelete(ctx context.Context, d *schema.ResourceData,
 		UserName: aws.String(d.Id()),
 	}
 
-	log.Printf("[DEBUG] Deleting IAM User Login Profile (%s): %s", d.Id(), input)
+	log.Printf("[DEBUG] Deleting IAM User Login Profile (%s): %v", d.Id(), input)
 	// Handle IAM eventual consistency
 	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
 		_, err := conn.DeleteLoginProfile(ctx, input)

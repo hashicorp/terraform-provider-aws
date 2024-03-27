@@ -57,7 +57,7 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 		UserName: aws.String(userName),
 	}
 
-	log.Printf("[DEBUG] Reading IAM User: %s", req)
+	log.Printf("[DEBUG] Reading IAM User: %v", req)
 	resp, err := conn.GetUser(ctx, req)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "getting user: %s", err)

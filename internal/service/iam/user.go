@@ -531,7 +531,7 @@ func deleteServiceSpecificCredentials(ctx context.Context, conn *iam.Client, use
 			ServiceSpecificCredentialId: m.ServiceSpecificCredentialId,
 		})
 		if err != nil {
-			return fmt.Errorf("deleting Service Specific Credentials %s: %w", m, err)
+			return fmt.Errorf("deleting Service Specific Credentials %v: %w", m, err)
 		}
 	}
 
