@@ -303,10 +303,11 @@ Defaults to true.
 * `blue_green_update` - (Optional) Enables low-downtime updates using [RDS Blue/Green deployments][blue-green].
   See [`blue_green_update`](#blue_green_update) below.
 * `ca_cert_identifier` - (Optional) The identifier of the CA certificate for the DB instance.
-* `character_set_name` - (Optional) The character set name to use for DB
-encoding in Oracle and Microsoft SQL instances (collation). This can't be changed. See [Oracle Character Sets
-Supported in Amazon RDS](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.OracleCharacterSets.html)
-or [Server-Level Collation for Microsoft SQL Server](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.SQLServer.CommonDBATasks.Collation.html) for more information.
+* `character_set_name` - (Optional) The character set name to use for DB encoding in Oracle and Microsoft SQL instances (collation).
+  This can't be changed.
+  See [Oracle Character Sets Supported in Amazon RDS](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.OracleCharacterSets.html) or
+  [Server-Level Collation for Microsoft SQL Server](https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/Appendix.SQLServer.CommonDBATasks.Collation.html) for more information.
+  Cannot be set  with `replicate_source_db`, `restore_to_point_in_time`, `s3_import`, or `snapshot_identifier`.
 * `copy_tags_to_snapshot` – (Optional, boolean) Copy all Instance `tags` to snapshots. Default is `false`.
 * `custom_iam_instance_profile` - (Optional) The instance profile associated with the underlying Amazon EC2 instance of an RDS Custom DB instance.
 * `db_name` - (Optional) The name of the database to create when the DB instance is created. If this parameter is not specified, no database is created in the DB instance. Note that this does not apply for Oracle or SQL Server engines. See the [AWS documentation](https://awscli.amazonaws.com/v2/documentation/api/latest/reference/rds/create-db-instance.html) for more details on what applies for those engines. If you are providing an Oracle db name, it needs to be in all upper case. Cannot be specified for a replica.
