@@ -5,66 +5,44 @@ package ec2_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccInstanceMetadataDefaultsConfig_basic() string {
-	return `
-resource "aws_ec2_instance_metadata_defaults" "test" {
-  http_tokens                 = "required" # non-default
-  instance_metadata_tags      = "disabled"
-  http_endpoint               = "enabled"
-  http_put_response_hop_limit = 1
-}
-`
-}
+func TestAccEC2InstanceMetadataDefaults_serial(t *testing.T) {
+	t.Parallel()
 
-func testAccInstanceMetadataDefaultsConfig_partial() string {
-	return `
-resource "aws_ec2_instance_metadata_defaults" "test-partial" {
-  http_tokens                 = "required" # non-default
-  http_put_response_hop_limit = 2          # non-default
-}
-`
-}
-
-// Note: these acceptance tests cannot run in parallel using `resource.ParallelTest` because the
-// `aws_ec2_instance_metadata_defaults` resource is regional
-
-func TestAccEC2InstanceMetadataDefaults_basic(t *testing.T) {
-	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
+	testCases := map[string]func(t *testing.T){
+		"basic":  testAccInstanceMetadataDefaults_basic,
+		"update": testAccInstanceMetadataDefaults_update,
 	}
 
+	acctest.RunSerialTests1Level(t, testCases, 0)
+}
+
+func testAccInstanceMetadataDefaults_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_instance_metadata_defaults.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, "ec2")
-			testAccPreCheck(ctx, t)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceMetadataDefaultsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceMetadataDefaultsConfig_basic(),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceMetadataDefaultsExists(ctx, resourceName, &awstypes.InstanceMetadataDefaultsResponse{
 						HttpTokens:              awstypes.HttpTokensState(awstypes.MetadataDefaultHttpTokensStateRequired),
 						HttpPutResponseHopLimit: aws.Int32(1),
@@ -81,20 +59,12 @@ func TestAccEC2InstanceMetadataDefaults_basic(t *testing.T) {
 	})
 }
 
-func TestAccEC2InstanceMetadataDefaults_partial(t *testing.T) {
+func testAccInstanceMetadataDefaults_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
-
-	resourceName := "aws_ec2_instance_metadata_defaults.test-partial"
+	resourceName := "aws_ec2_instance_metadata_defaults.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck: func() {
-			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, "ec2")
-			testAccPreCheck(ctx, t)
-		},
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckInstanceMetadataDefaultsDestroy(ctx),
@@ -118,61 +88,67 @@ func TestAccEC2InstanceMetadataDefaults_partial(t *testing.T) {
 
 func testAccCheckInstanceMetadataDefaultsDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		result, err := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx).GetInstanceMetadataDefaults(ctx, &ec2.GetInstanceMetadataDefaultsInput{})
-		if err != nil {
-			return fmt.Errorf("unable to describe instance metadata defaults: %w", err)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_ec2_instance_metadata_defaults" {
+				continue
+			}
+
+			_, err := tfec2.FindInstanceMetadataDefaults(ctx, conn)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("EC2 Instance Metadata Defaults %s still exists", rs.Primary.ID)
 		}
-		if string(result.AccountLevel.HttpEndpoint) != "" || string(result.AccountLevel.HttpTokens) != "" || result.AccountLevel.HttpPutResponseHopLimit != nil || string(result.AccountLevel.InstanceMetadataTags) != "" {
-			return errors.New("expected instance metadata defaults to be reset")
-		}
+
 		return nil
 	}
 }
 
-func testAccCheckInstanceMetadataDefaultsExists(ctx context.Context, name string, expectations *awstypes.InstanceMetadataDefaultsResponse) resource.TestCheckFunc {
+func testAccCheckInstanceMetadataDefaultsExists(ctx context.Context, n string, v *awstypes.InstanceMetadataDefaultsResponse) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		_, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameInstanceMetadataDefaults, name, errors.New("not found"))
-		}
-
-		if rs.Primary.ID == "" {
-			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameInstanceMetadataDefaults, name, errors.New("not set"))
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
-		resp, err := conn.GetInstanceMetadataDefaults(ctx, &ec2.GetInstanceMetadataDefaultsInput{})
+
+		output, err := tfec2.FindInstanceMetadataDefaults(ctx, conn)
 
 		if err != nil {
-			return create.Error(names.EC2, create.ErrActionCheckingExistence, tfec2.ResNameInstanceMetadataDefaults, rs.Primary.ID, err)
+			return err
 		}
 
-		// check assertions
-		if resp.AccountLevel.HttpTokens != expectations.HttpTokens {
-			return fmt.Errorf("expected HttpTokens to be '%s', got '%s'", expectations.HttpTokens, resp.AccountLevel.HttpTokens)
-		}
-		if *resp.AccountLevel.HttpPutResponseHopLimit != *expectations.HttpPutResponseHopLimit {
-			return fmt.Errorf("expected HttpPutResponseHopLimit to be '%d', got '%d'", *expectations.HttpPutResponseHopLimit, *resp.AccountLevel.HttpPutResponseHopLimit)
-		}
-		if resp.AccountLevel.HttpEndpoint != expectations.HttpEndpoint {
-			return fmt.Errorf("expected HttpEndpoint to be '%s', got '%s'", expectations.HttpEndpoint, resp.AccountLevel.HttpEndpoint)
-		}
-		if resp.AccountLevel.InstanceMetadataTags != expectations.InstanceMetadataTags {
-			return fmt.Errorf("expected InstanceMetadataTags to be '%s', got '%s'", expectations.InstanceMetadataTags, resp.AccountLevel.InstanceMetadataTags)
-		}
+		*v = *output
 
 		return nil
 	}
 }
-func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-	_, err := conn.GetInstanceMetadataDefaults(ctx, &ec2.GetInstanceMetadataDefaultsInput{})
+func testAccInstanceMetadataDefaultsConfig_basic() string {
+	return `
+resource "aws_ec2_instance_metadata_defaults" "test" {
+  http_tokens                 = "required" # non-default
+  instance_metadata_tags      = "disabled"
+  http_endpoint               = "enabled"
+  http_put_response_hop_limit = 1
+}
+`
+}
 
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
+func testAccInstanceMetadataDefaultsConfig_partial() string {
+	return `
+resource "aws_ec2_instance_metadata_defaults" "test" {
+  http_tokens                 = "required" # non-default
+  http_put_response_hop_limit = 2          # non-default
+}
+`
 }

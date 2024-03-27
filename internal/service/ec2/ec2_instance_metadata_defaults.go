@@ -5,8 +5,6 @@ package ec2
 
 import (
 	"context"
-	"errors"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
@@ -14,210 +12,199 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Instance Metadata Defaults")
-func newResourceInstanceMetadataDefaults(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceEC2InstanceMetadataDefaults{}
+const (
+	httpPutResponseHopLimitNoPreference = -1
+)
 
-	r.SetDefaultCreateTimeout(10 * time.Minute)
-	r.SetDefaultUpdateTimeout(10 * time.Minute)
-	r.SetDefaultDeleteTimeout(10 * time.Minute)
+// @FrameworkResource(name="Instance Metadata Defaults")
+func newInstanceMetadataDefaultsResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &instanceMetadataDefaultsResource{}
 
 	return r, nil
 }
 
-const (
-	ResNameInstanceMetadataDefaults = "EC2 Instance Metadata Defaults"
-)
-
-type resourceEC2InstanceMetadataDefaults struct {
+type instanceMetadataDefaultsResource struct {
 	framework.ResourceWithConfigure
-	framework.WithTimeouts
+	framework.WithImportByID
 }
 
-type resourceEC2InstanceMetadataDefaultsData struct {
-	HttpEndpoint            types.String `tfsdk:"http_endpoint"`
-	HttpPutResponseHopLimit types.Int64  `tfsdk:"http_put_response_hop_limit"`
-	HttpTokens              types.String `tfsdk:"http_tokens"`
-	InstanceMetadataTags    types.String `tfsdk:"instance_metadata_tags"`
+func (*instanceMetadataDefaultsResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_ec2_instance_metadata_defaults"
 }
 
-func (r *resourceEC2InstanceMetadataDefaults) Metadata(_ context.Context, _ resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_ec2_instance_metadata_defaults"
-}
+func (r *instanceMetadataDefaultsResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	httpEndpointType := fwtypes.StringEnumType[awstypes.DefaultInstanceMetadataEndpointState]()
+	httpTokensType := fwtypes.StringEnumType[awstypes.MetadataDefaultHttpTokensState]()
+	instanceMetadataTagsType := fwtypes.StringEnumType[awstypes.DefaultInstanceMetadataTagsState]()
 
-func (r *resourceEC2InstanceMetadataDefaults) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"http_endpoint": schema.StringAttribute{
-				Optional: true,
-				Validators: []validator.String{
-					enum.FrameworkValidate[awstypes.DefaultInstanceMetadataEndpointState](),
-				},
+				CustomType: httpEndpointType,
+				Optional:   true,
+				Computed:   true,
+				Default:    httpEndpointType.AttributeDefault(awstypes.DefaultInstanceMetadataEndpointStateNoPreference),
 			},
 			"http_put_response_hop_limit": schema.Int64Attribute{
 				Optional: true,
+				Computed: true,
+				Default:  int64default.StaticInt64(httpPutResponseHopLimitNoPreference),
 				Validators: []validator.Int64{
 					int64validator.Between(-1, 64),
 				},
 			},
 			"http_tokens": schema.StringAttribute{
-				Optional: true,
-				Validators: []validator.String{
-					enum.FrameworkValidate[awstypes.MetadataDefaultHttpTokensState](),
-				},
+				CustomType: httpTokensType,
+				Optional:   true,
+				Computed:   true,
+				Default:    httpTokensType.AttributeDefault(awstypes.MetadataDefaultHttpTokensStateNoPreference),
 			},
+			names.AttrID: framework.IDAttribute(),
 			"instance_metadata_tags": schema.StringAttribute{
-				Optional: true,
-				Validators: []validator.String{
-					enum.FrameworkValidate[awstypes.DefaultInstanceMetadataTagsState](),
-				},
+				CustomType: instanceMetadataTagsType,
+				Optional:   true,
+				Computed:   true,
+				Default:    instanceMetadataTagsType.AttributeDefault(awstypes.DefaultInstanceMetadataTagsStateNoPreference),
 			},
 		},
-		Blocks: map[string]schema.Block{},
 	}
 }
 
-func (r *resourceEC2InstanceMetadataDefaults) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	meta := r.Meta()
-	conn := meta.EC2Client(ctx)
-
-	var state resourceEC2InstanceMetadataDefaultsData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+func (r *instanceMetadataDefaultsResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data instanceMetadataDefaultsModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	out, err := conn.GetInstanceMetadataDefaults(ctx, &ec2.GetInstanceMetadataDefaultsInput{})
+	conn := r.Meta().EC2Client(ctx)
+
+	input := &ec2.ModifyInstanceMetadataDefaultsInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	_, err := conn.ModifyInstanceMetadataDefaults(ctx, input)
+
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.EC2, create.ErrActionSetting, ResNameInstanceMetadataDefaults, meta.Region, err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError("creating EC2 Instance Metadata Defaults", err.Error())
+
 		return
 	}
 
-	// Convert what we read from the AWS API to our format
-	state = r.instanceMetadataDefaultsToPlan(out)
-
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceEC2InstanceMetadataDefaults) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	var plan resourceEC2InstanceMetadataDefaultsData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+func (r *instanceMetadataDefaultsResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+	var data instanceMetadataDefaultsModel
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	in := r.planToModifyInstanceMetadataDefaultsInput(&plan)
-	if err := r.updateDefaultInstanceMetadataDefaults(ctx, in, create.ErrActionCreating); err != nil {
-		resp.Diagnostics.AddError(err.Error(), "")
+	conn := r.Meta().EC2Client(ctx)
+
+	output, err := findInstanceMetadataDefaults(ctx, conn)
+
+	if tfresource.NotFound(err) {
+		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
+		response.State.RemoveResource(ctx)
+
+		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	if err != nil {
+		response.Diagnostics.AddError("reading EC2 Instance Metadata Defaults", err.Error())
+
+		return
+	}
+
+	// Set attributes for import.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 // Update is very similar to Create as AWS has a single API call ModifyInstanceMetadataDefaults
-func (r *resourceEC2InstanceMetadataDefaults) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	var plan, state resourceEC2InstanceMetadataDefaultsData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-
-	in := r.planToModifyInstanceMetadataDefaultsInput(&plan)
-	if err := r.updateDefaultInstanceMetadataDefaults(ctx, in, create.ErrActionUpdating); err != nil {
-		resp.Diagnostics.AddError(err.Error(), "")
+func (r *instanceMetadataDefaultsResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var new instanceMetadataDefaultsModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	conn := r.Meta().EC2Client(ctx)
+
+	input := &ec2.ModifyInstanceMetadataDefaultsInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	_, err := conn.ModifyInstanceMetadataDefaults(ctx, input)
+
+	if err != nil {
+		response.Diagnostics.AddError("updating EC2 Instance Metadata Defaults", err.Error())
+
+		return
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *resourceEC2InstanceMetadataDefaults) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	var state resourceEC2InstanceMetadataDefaultsData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+func (r *instanceMetadataDefaultsResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+	conn := r.Meta().EC2Client(ctx)
 
-	in := &ec2.ModifyInstanceMetadataDefaultsInput{
+	input := &ec2.ModifyInstanceMetadataDefaultsInput{
 		HttpEndpoint:            awstypes.DefaultInstanceMetadataEndpointStateNoPreference,
-		HttpPutResponseHopLimit: aws.Int32(-1), // -1 means "no preference"
+		HttpPutResponseHopLimit: aws.Int32(httpPutResponseHopLimitNoPreference),
 		HttpTokens:              awstypes.MetadataDefaultHttpTokensStateNoPreference,
 		InstanceMetadataTags:    awstypes.DefaultInstanceMetadataTagsStateNoPreference,
 	}
 
-	if err := r.updateDefaultInstanceMetadataDefaults(ctx, in, create.ErrActionDeleting); err != nil {
-		resp.Diagnostics.AddError(err.Error(), "")
-	}
-}
+	_, err := conn.ModifyInstanceMetadataDefaults(ctx, input)
 
-// utility function to avoid duplicating code, since Create, Update and Delete all use the same AWS API call ModifyInstanceMetadataDefaults
-func (r *resourceEC2InstanceMetadataDefaults) updateDefaultInstanceMetadataDefaults(ctx context.Context, in *ec2.ModifyInstanceMetadataDefaultsInput, action string) error {
-	meta := r.Meta()
-	conn := meta.EC2Client(ctx)
-	region := meta.Region
-
-	out, err := conn.ModifyInstanceMetadataDefaults(ctx, in)
 	if err != nil {
-		return errors.New(create.ProblemStandardMessage(names.EC2, action, ResNameInstanceMetadataDefaults, region, err))
+		response.Diagnostics.AddError("deleting EC2 Instance Metadata Defaults", err.Error())
+
+		return
 	}
-	if out == nil || !aws.ToBool(out.Return) {
-		return errors.New(create.ProblemStandardMessage(names.EC2, action, ResNameInstanceMetadataDefaults, region, errors.New("empty output")))
-	}
-	return nil
 }
 
-// converts the plan to the input for the ModifyInstanceMetadataDefaults API call
-func (r *resourceEC2InstanceMetadataDefaults) planToModifyInstanceMetadataDefaultsInput(plan *resourceEC2InstanceMetadataDefaultsData) *ec2.ModifyInstanceMetadataDefaultsInput {
-	in := &ec2.ModifyInstanceMetadataDefaultsInput{}
+func findInstanceMetadataDefaults(ctx context.Context, conn *ec2.Client) (*awstypes.InstanceMetadataDefaultsResponse, error) {
+	input := &ec2.GetInstanceMetadataDefaultsInput{}
 
-	// When an attribute is not explicily set, we don't populate it in the ModifyInstanceMetadataDefaultsInput object
+	output, err := conn.GetInstanceMetadataDefaults(ctx, &ec2.GetInstanceMetadataDefaultsInput{})
 
-	if !plan.HttpEndpoint.IsNull() {
-		in.HttpEndpoint = awstypes.DefaultInstanceMetadataEndpointState(plan.HttpEndpoint.ValueString())
-	}
-	if !plan.HttpPutResponseHopLimit.IsNull() {
-		// When the value is -1, it means "no preference"
-		// In which case we don't set the argument and leave it to null
-		if httpPutResponseHopLimit := int32(plan.HttpPutResponseHopLimit.ValueInt64()); httpPutResponseHopLimit != -1 {
-			in.HttpPutResponseHopLimit = aws.Int32(httpPutResponseHopLimit)
-		}
-	}
-	if !plan.HttpTokens.IsNull() {
-		in.HttpTokens = awstypes.MetadataDefaultHttpTokensState(plan.HttpTokens.ValueString())
-	}
-	if !plan.InstanceMetadataTags.IsNull() {
-		in.InstanceMetadataTags = awstypes.DefaultInstanceMetadataTagsState(plan.InstanceMetadataTags.ValueString())
+	if err != nil {
+		return nil, err
 	}
 
-	return in
+	if output == nil || output.AccountLevel == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.AccountLevel, nil
 }
 
-// converts a result from the AWS API call to the state
-func (r *resourceEC2InstanceMetadataDefaults) instanceMetadataDefaultsToPlan(out *ec2.GetInstanceMetadataDefaultsOutput) resourceEC2InstanceMetadataDefaultsData {
-	state := resourceEC2InstanceMetadataDefaultsData{}
-
-	if out.AccountLevel.HttpEndpoint != "" {
-		state.HttpEndpoint = types.StringValue(string(out.AccountLevel.HttpEndpoint))
-	}
-
-	if out.AccountLevel.HttpPutResponseHopLimit == nil {
-		state.HttpPutResponseHopLimit = types.Int64Value(-1)
-	} else {
-		state.HttpPutResponseHopLimit = types.Int64Value(int64(*out.AccountLevel.HttpPutResponseHopLimit))
-	}
-
-	if out.AccountLevel.HttpTokens != "" {
-		state.HttpTokens = types.StringValue(string(out.AccountLevel.HttpTokens))
-	}
-
-	if out.AccountLevel.InstanceMetadataTags != "" {
-		state.InstanceMetadataTags = types.StringValue(string(out.AccountLevel.InstanceMetadataTags))
-	}
-
-	return state
+type instanceMetadataDefaultsModel struct {
+	HttpEndpoint            types.String `tfsdk:"http_endpoint"`
+	HttpPutResponseHopLimit types.Int64  `tfsdk:"http_put_response_hop_limit"`
+	HttpTokens              types.String `tfsdk:"http_tokens"`
+	InstanceMetadataTags    types.String `tfsdk:"instance_metadata_tags"`
 }
