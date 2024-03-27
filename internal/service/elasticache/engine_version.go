@@ -175,7 +175,7 @@ func setEngineVersionRedis(d *schema.ResourceData, version *string) error {
 	} else {
 		// Handle major-only version number
 		configVersion := d.Get("engine_version").(string)
-		if t, _ := regexp.MatchString(`[6-9]\.x`, configVersion); t {
+		if t, _ := regexp.MatchString(`6\.x`, configVersion); t {
 			d.Set("engine_version", fmt.Sprintf("%d.x", engineVersion.Segments()[0]))
 		} else {
 			d.Set("engine_version", fmt.Sprintf("%d.%d", engineVersion.Segments()[0], engineVersion.Segments()[1]))
