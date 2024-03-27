@@ -83,7 +83,7 @@ resource "aws_glue_connection" "example_connector" {
     CONNECTOR_CLASS_NAME = "net.snowflake.client.jdbc.SnowflakeDriver"
     CONNECTION_TYPE      = "Jdbc"
     CONNECTOR_URL        = "s3://example/snowflake-jdbc.jar" # S3 path to the snowflake jdbc jar
-    JDBC_CONNECTION_URL  = "[[\"default=jdbc:snowflake://example.com/?user=$${user}&password=$${password}\"],\",\"]"
+    JDBC_CONNECTION_URL  = "[[\"default=jdbc:snowflake//example.com/?user=$${user}&password=$${password}\"],\",\"]"
   }
 
   name = "example_connector"
@@ -100,7 +100,7 @@ resource "aws_glue_connection" "example_connection" {
     CONNECTOR_CLASS_NAME = "net.snowflake.client.jdbc.SnowflakeDriver"
     CONNECTION_TYPE      = "Jdbc"
     CONNECTOR_URL        = "s3://example/snowflake-jdbc.jar"
-    JDBC_CONNECTION_URL  = "jdbc:snowflake://example.com/?user=$${user}&password=$${password}"
+    JDBC_CONNECTION_URL  = "jdbc:snowflake//example.com/?user=$${user}&password=$${password}"
     SECRET_ID            = data.aws_secretmanager_secret.example.name
   }
   name           = "example"
