@@ -214,7 +214,7 @@ service/cloudfront:
   - 'website/**/cloudfront_*'
 service/cloudfrontkeyvaluestore:
   - 'internal/service/cloudfrontkeyvaluestore/**/*'
-  - 'website/**/cloudfront_keyvaluestore_*'
+  - 'website/**/cloudfrontkeyvaluestore_*'
 service/cloudhsmv2:
   - 'internal/service/cloudhsmv2/**/*'
   - 'website/**/cloudhsm*'
@@ -813,6 +813,9 @@ service/outposts:
 service/panorama:
   - 'internal/service/panorama/**/*'
   - 'website/**/panorama_*'
+service/paymentcryptography:
+  - 'internal/service/paymentcryptography/**/*'
+  - 'website/**/paymentcryptography_*'
 service/pcaconnectorad:
   - 'internal/service/pcaconnectorad/**/*'
   - 'website/**/pcaconnectorad_*'

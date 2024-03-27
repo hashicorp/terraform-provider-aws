@@ -91,10 +91,16 @@ func resourceDomainPolicyUpsert(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policy, err)
 	}
 
-	_, err = conn.UpdateElasticsearchDomainConfigWithContext(ctx, &elasticsearch.UpdateElasticsearchDomainConfigInput{
-		DomainName:     aws.String(domainName),
-		AccessPolicies: aws.String(policy),
-	})
+	_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
+		func() (interface{}, error) {
+			return conn.UpdateElasticsearchDomainConfigWithContext(ctx, &elasticsearch.UpdateElasticsearchDomainConfigInput{
+				DomainName:     aws.String(domainName),
+				AccessPolicies: aws.String(policy),
+			})
+		},
+		elasticsearch.ErrCodeValidationException,
+		"A change/update is in progress",
+	)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting Elasticsearch Domain Policy (%s): %s", d.Id(), err)
 	}
