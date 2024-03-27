@@ -45,6 +45,6 @@ func NewResourceNotFoundWarningDiagnostic(err error) diag.Diagnostic {
 	)
 }
 
-func AsErr[T any](x T, diags diag.Diagnostics) (T, error) {
+func AsError[T any](x T, diags diag.Diagnostics) (T, error) {
 	return x, DiagnosticsError(diags)
 }
