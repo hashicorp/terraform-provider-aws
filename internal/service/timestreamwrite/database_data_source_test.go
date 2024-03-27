@@ -11,6 +11,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -21,23 +22,24 @@ func TestAccTimestreamWriteDatabaseDataSource_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
+	// var database types.Database
+	rDatabaseName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_timestreamwrite_database.test"
-	resourceName := "aws_timestreamwrite_database.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamWriteServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             nil,
+		CheckDestroy:             testAccCheckDatabaseDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDatabaseDataSourceConfig_basic(rName),
+				Config: testAccDatabaseDataSourceConfig_basic(rDatabaseName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrPair(dataSourceName, "arn", resourceName, "arn"),
-					resource.TestCheckResourceAttr(dataSourceName, "database_name", rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "kms_key_id", "kms", regexache.MustCompile(`key/.+`)),
-					resource.TestCheckResourceAttr(dataSourceName, "table_count", "0"),
+					testAccCheckDatabaseExists(ctx, dataSourceName),
+					acctest.CheckResourceAttrRegionalARN(dataSourceName, "arn", "timestream", fmt.Sprintf("database/%s", rDatabaseName)),
+					resource.TestCheckResourceAttr(dataSourceName, "database_name", rDatabaseName),
+					acctest.MatchResourceAttrRegionalARN(dataSourceName, "kms_key_id", "kms", regexache.MustCompile(`key/.+`)),
+					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "0"),
 				),
 			},
 		},
@@ -46,11 +48,10 @@ func TestAccTimestreamWriteDatabaseDataSource_basic(t *testing.T) {
 
 func TestAccTimestreamWriteDatabaseDataSource_kmsKey(t *testing.T) {
 	ctx := acctest.Context(t)
-
+	rDatabaseName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rKmsKeyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_timestreamwrite_database.test"
 	kmsResourceName := "aws_kms_key.test"
-	resourceName := "aws_timestreamwrite_database.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -59,16 +60,50 @@ func TestAccTimestreamWriteDatabaseDataSource_kmsKey(t *testing.T) {
 		CheckDestroy:             testAccCheckDatabaseDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDatabaseDataSourceConfig_kmsKey(rName),
+				Config: testAccDatabaseDataSourceConfig_kmsKey(rDatabaseName, rKmsKeyName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "database_name", rName),
+					testAccCheckDatabaseExists(ctx, dataSourceName),
+					resource.TestCheckResourceAttr(dataSourceName, "database_name", rDatabaseName),
+					resource.TestCheckResourceAttrPair(dataSourceName, "kms_key_id", kmsResourceName, "arn"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccTimestreamWriteDatabaseDataSource_updateKMSKey(t *testing.T) {
+	ctx := acctest.Context(t)
+	rDatabaseName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	rKmsKeyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dataSourceName := "data.aws_timestreamwrite_database.test"
+	kmsResourceName := "aws_kms_key.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.TimestreamWriteServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDatabaseDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDatabaseDataSourceConfig_basic(rDatabaseName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDatabaseExists(ctx, dataSourceName),
+					acctest.MatchResourceAttrRegionalARN(dataSourceName, "kms_key_id", "kms", regexache.MustCompile(`key/.+`)),
+				),
+			},
+			{
+				Config: testAccDatabaseDataSourceConfig_kmsKey(rDatabaseName, rKmsKeyName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDatabaseExists(ctx, dataSourceName),
 					resource.TestCheckResourceAttrPair(dataSourceName, "kms_key_id", kmsResourceName, "arn"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				Config: testAccDatabaseDataSourceConfig_basic(rDatabaseName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDatabaseExists(ctx, dataSourceName),
+					acctest.MatchResourceAttrRegionalARN(dataSourceName, "kms_key_id", "kms", regexache.MustCompile(`key/.+`)),
+				),
 			},
 		},
 	})
@@ -76,10 +111,8 @@ func TestAccTimestreamWriteDatabaseDataSource_kmsKey(t *testing.T) {
 
 func TestAccTimestreamWriteDatabaseDataSource_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-
+	rDatabaseName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_timestreamwrite_database.test"
-	resourceName := "aws_timestreamwrite_database.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -88,8 +121,9 @@ func TestAccTimestreamWriteDatabaseDataSource_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckDatabaseDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDatabaseConfig_tags1(rName, "key1", "value1"),
+				Config: testAccDatabaseDataSourceConfig_tags1(rDatabaseName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDatabaseExists(ctx, dataSourceName),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.key1", "value1"),
 					resource.TestCheckResourceAttr(dataSourceName, "tags_all.%", "1"),
@@ -97,8 +131,9 @@ func TestAccTimestreamWriteDatabaseDataSource_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDatabaseConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Config: testAccDatabaseDataSourceConfig_tags2(rDatabaseName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDatabaseExists(ctx, dataSourceName),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.key2", "value2"),
@@ -108,36 +143,32 @@ func TestAccTimestreamWriteDatabaseDataSource_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccDatabaseConfig_tags1(rName, "key2", "value2"),
+				Config: testAccDatabaseDataSourceConfig_tags1(rDatabaseName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDatabaseExists(ctx, dataSourceName),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.key2", "value2"),
 					resource.TestCheckResourceAttr(dataSourceName, "tags_all.%", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "tags_all.key2", "value2"),
 				),
 			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
 		},
 	})
 }
 
-func testAccDatabaseDataSourceConfig_basic(rName string) string {
+func testAccDatabaseDataSourceConfig_basic(rDatabaseName string) string {
 	return fmt.Sprintf(`
 resource "aws_timestreamwrite_database" "test" {
-	database_name = %[1]q
-}
+		database_name = %[1]q
+  }
 
 data "aws_timestreamwrite_database" "test" {
 	database_name = aws_timestreamwrite_database.test.database_name
-}
-`, rName)
+  }
+`, rDatabaseName)
 }
 
-func testAccDatabaseDataSourceConfig_kmsKey(rName string) string {
+func testAccDatabaseDataSourceConfig_kmsKey(rDatabaseName, rKmsKeyName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description = %[1]q
@@ -160,17 +191,17 @@ POLICY
 }
 
 resource "aws_timestreamwrite_database" "test" {
-  database_name = %[1]q
+  database_name = %[2]q
   kms_key_id    = aws_kms_key.test.arn
 }
 
 data "aws_timestreamwrite_database" "test" {
-  database_name = aws_timestreamwrite_database.test.database_name
-}
-`, rName)
+	database_name = aws_timestreamwrite_database.test.database_name
+  }
+`, rKmsKeyName, rDatabaseName)
 }
 
-func testAccDatabaseDataSourceConfig_tags1(rName, tagKey1, tagValue1 string) string {
+func testAccDatabaseDataSourceConfig_tags1(rDatabaseName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_timestreamwrite_database" "test" {
   database_name = %[1]q
@@ -182,11 +213,11 @@ resource "aws_timestreamwrite_database" "test" {
 
 data "aws_timestreamwrite_database" "test" {
 	database_name = aws_timestreamwrite_database.test.database_name
-}
-`, rName, tagKey1, tagValue1)
+  }
+`, rDatabaseName, tagKey1, tagValue1)
 }
 
-func testAccDatabaseDataSourceConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccDatabaseDataSourceConfig_tags2(rDatabaseName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_timestreamwrite_database" "test" {
   database_name = %[1]q
@@ -199,6 +230,6 @@ resource "aws_timestreamwrite_database" "test" {
 
 data "aws_timestreamwrite_database" "test" {
 	database_name = aws_timestreamwrite_database.test.database_name
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+  }
+`, rDatabaseName, tagKey1, tagValue1, tagKey2, tagValue2)
 }

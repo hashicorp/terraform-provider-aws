@@ -6,97 +6,80 @@ package timestreamwrite
 import (
 	"context"
 
-	// "github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/hashicorp/terraform-plugin-framework/datasource"
-	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	// "github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	// "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // Function annotations are used for datasource registration to the Provider. DO NOT EDIT.
-// @FrameworkDataSource(name="Database")
-func newDataSourceDatabase(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceDatabase{}, nil
+// @SDKDataSource("aws_timestreamwrite_database", name="Database")
+func DataSourceDatabase() *schema.Resource {
+	return &schema.Resource{
+		ReadWithoutTimeout: dataSourceDatabaseRead,
+
+		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"database_name": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"kms_key_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"table_count": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+		},
+	}
 }
 
 const (
 	DSNameDatabase = "Database Data Source"
 )
 
-type dataSourceDatabase struct {
-	framework.DataSourceWithConfigure
-}
+func dataSourceDatabaseRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 
-func (d *dataSourceDatabase) Metadata(_ context.Context, req datasource.MetadataRequest, resp *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
-	resp.TypeName = "aws_timestreamwrite_database"
-}
+	conn := meta.(*conns.AWSClient).TimestreamWriteClient(ctx)
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-func (d *dataSourceDatabase) Schema(ctx context.Context, req datasource.SchemaRequest, resp *datasource.SchemaResponse) {
-	resp.Schema = schema.Schema{
-		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
-			"database_name": schema.StringAttribute{
-				Required: true,
-			},
-			"kms_key_id": schema.StringAttribute{
-				Computed: true,
-			},
-			"table_count": schema.Int64Attribute{
-				Computed: true,
-			},
-			"tags": tftags.TagsSchemaComputed(),
-		},
-	}
-}
+	name := d.Get("database_name").(string)
 
-func (d *dataSourceDatabase) Read(ctx context.Context, req datasource.ReadRequest, resp *datasource.ReadResponse) {
-	conn := d.Meta().TimestreamWriteClient(ctx)
-
-	var data dataSourceDatabaseData
-	resp.Diagnostics.Append(req.Config.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
-		return
-	}
-
-	out, err := findDatabaseByName(ctx, conn, data.DatabaseName.ValueString())
+	out, err := findDatabaseByName(ctx, conn, name)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.TimestreamWrite, create.ErrActionReading, DSNameDatabase, data.DatabaseName.String(), err),
-			err.Error(),
-		)
-		return
+		return create.AppendDiagError(diags, names.TimestreamWrite, create.ErrActionReading, DSNameDatabase, name, err)
 	}
 
-	data.ARN = flex.StringToFramework(ctx, out.Arn)
-	data.DatabaseName = flex.StringToFramework(ctx, out.DatabaseName)
-	data.KmsKeyId = flex.StringToFramework(ctx, out.KmsKeyId)
-	data.TableCount = flex.Int64ToFramework(ctx, &out.TableCount)
+	d.SetId(aws.ToString(out.DatabaseName))
 
-	tags, err := listTags(ctx, conn, *out.DatabaseName)
+	d.Set("arn", out.Arn)
+	d.Set("database_name", out.DatabaseName)
+	d.Set("kms_key_id", out.KmsKeyId)
+	d.Set("table_count", out.TableCount)
+
+	tags, err := listTags(ctx, conn, d.Get("arn").(string))
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.TimestreamWrite, create.ErrActionReading, DSNameDatabase, data.DatabaseName.String(), err),
-			err.Error(),
-		)
-		return
+		return diag.Errorf("listing tags for timestream table (%s): %s", d.Id(), err)
 	}
 
-	ignoreTagsConfig := d.Meta().IgnoreTagsConfig
-	data.Tags = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map())
+	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return diag.Errorf("setting tags: %s", err)
+	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &data)...)
-}
+	if err := d.Set("tags_all", tags.Map()); err != nil {
+		return diag.Errorf("setting tags_all: %s", err)
+	}
 
-type dataSourceDatabaseData struct {
-	ARN          types.String `tfsdk:"arn"`
-	DatabaseName types.String `tfsdk:"database_name"`
-	KmsKeyId     types.String `tfsdk:"kms_key_id"`
-	TableCount   types.Int64  `tfsdk:"table_count"`
-	Tags         types.Map    `tfsdk:"tags"`
+	return diags
 }
