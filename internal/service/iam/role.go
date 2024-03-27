@@ -12,8 +12,9 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -955,8 +956,8 @@ func inlinePoliciesEquivalent(readPolicies, configPolicies []*iam.PutRolePolicyI
 	return matches == len(readPolicies)
 }
 
-func roleTags(ctx context.Context, conn *iam.IAM, identifier string) ([]*iam.Tag, error) {
-	output, err := conn.ListRoleTagsWithContext(ctx, &iam.ListRoleTagsInput{
+func roleTags(ctx context.Context, conn *iam.Client, identifier string) ([]awstypes.Tag, error) {
+	output, err := conn.ListRoleTags(ctx, &iam.ListRoleTagsInput{
 		RoleName: aws.String(identifier),
 	})
 	if err != nil {

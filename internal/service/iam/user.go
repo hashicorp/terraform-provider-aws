@@ -10,8 +10,9 @@ import (
 	"log"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -528,8 +529,8 @@ func deleteServiceSpecificCredentials(ctx context.Context, conn *iam.IAM, userna
 	return nil
 }
 
-func userTags(ctx context.Context, conn *iam.IAM, identifier string) ([]*iam.Tag, error) {
-	output, err := conn.ListUserTagsWithContext(ctx, &iam.ListUserTagsInput{
+func userTags(ctx context.Context, conn *iam.Client, identifier string) ([]awstypes.Tag, error) {
+	output, err := conn.ListUserTags(ctx, &iam.ListUserTagsInput{
 		UserName: aws.String(identifier),
 	})
 	if err != nil {

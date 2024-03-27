@@ -9,8 +9,9 @@ import (
 	"log"
 	"net/url"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
@@ -468,8 +469,8 @@ func findPolicyVersionsByARN(ctx context.Context, conn *iam.IAM, arn string) ([]
 	return output, nil
 }
 
-func policyTags(ctx context.Context, conn *iam.IAM, identifier string) ([]*iam.Tag, error) {
-	output, err := conn.ListPolicyTagsWithContext(ctx, &iam.ListPolicyTagsInput{
+func policyTags(ctx context.Context, conn *iam.Client, identifier string) ([]awstypes.Tag, error) {
+	output, err := conn.ListPolicyTags(ctx, &iam.ListPolicyTagsInput{
 		PolicyArn: aws.String(identifier),
 	})
 	if err != nil {

@@ -7,8 +7,9 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -208,8 +209,8 @@ func findOpenIDConnectProviderByARN(ctx context.Context, conn *iam.IAM, arn stri
 	return output, nil
 }
 
-func openIDConnectProviderTags(ctx context.Context, conn *iam.IAM, identifier string) ([]*iam.Tag, error) {
-	output, err := conn.ListOpenIDConnectProviderTagsWithContext(ctx, &iam.ListOpenIDConnectProviderTagsInput{
+func openIDConnectProviderTags(ctx context.Context, conn *iam.Client, identifier string) ([]awstypes.Tag, error) {
+	output, err := conn.ListOpenIDConnectProviderTags(ctx, &iam.ListOpenIDConnectProviderTagsInput{
 		OpenIDConnectProviderArn: aws.String(identifier),
 	})
 	if err != nil {
