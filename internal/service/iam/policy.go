@@ -36,7 +36,7 @@ const (
 
 // @SDKResource("aws_iam_policy", name="Policy")
 // @Tags(identifierAttribute="id", resourceType="Policy")
-// @Testing(existsType="github.com/aws/aws-sdk-go/service/iam.Policy")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/iam/types.Policy")
 func resourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePolicyCreate,
