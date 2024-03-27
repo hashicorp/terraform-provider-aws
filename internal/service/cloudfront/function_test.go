@@ -342,7 +342,7 @@ func testAccCheckFunctionDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfcloudfront.FindFunctionByNameAndStage(ctx, conn, rs.Primary.ID, cloudfront.FunctionStageDevelopment)
+			_, err := tfcloudfront.FindFunctionByTwoPartKey(ctx, conn, rs.Primary.ID, cloudfront.FunctionStageDevelopment)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -363,16 +363,12 @@ func testAccCheckFunctionExists(ctx context.Context, n string, v *cloudfront.Des
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("CloudFront Function not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("CloudFront Function ID not set")
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn(ctx)
 
-		output, err := tfcloudfront.FindFunctionByNameAndStage(ctx, conn, rs.Primary.ID, cloudfront.FunctionStageDevelopment)
+		output, err := tfcloudfront.FindFunctionByTwoPartKey(ctx, conn, rs.Primary.ID, cloudfront.FunctionStageDevelopment)
 
 		if err != nil {
 			return err
