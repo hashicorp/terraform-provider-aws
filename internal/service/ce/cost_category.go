@@ -22,6 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const costCategoryRuleMaxNesting int = 1
+
 // @SDKResource("aws_ce_cost_category", name="Cost Category")
 // @Tags(identifierAttribute="id")
 func ResourceCostCategory() *schema.Resource {
@@ -174,7 +176,7 @@ func schemaCostCategoryRule() *schema.Resource {
 			"and": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				Elem:     schemaCostCategoryRuleExpression(),
+				Elem:     schemaCostCategoryRuleLevel(1),
 			},
 			"cost_category": {
 				Type:     schema.TypeList,
@@ -240,12 +242,128 @@ func schemaCostCategoryRule() *schema.Resource {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
-				Elem:     schemaCostCategoryRuleExpression(),
+				Elem:     schemaCostCategoryRuleLevel(1),
 			},
 			"or": {
 				Type:     schema.TypeSet,
 				Optional: true,
-				Elem:     schemaCostCategoryRuleExpression(),
+				Elem:     schemaCostCategoryRuleLevel(1),
+			},
+			"tags": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"key": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"match_options": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringInSlice(costexplorer.MatchOption_Values(), false),
+							},
+						},
+						"values": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringLenBetween(0, 1024),
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func schemaCostCategoryRuleLevel(level int) *schema.Resource {
+	var elem interface{} = schemaCostCategoryRuleExpression()
+	if level < costCategoryRuleMaxNesting {
+		elem = schemaCostCategoryRuleLevel(level + 1)
+	}
+	return &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"and": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     elem,
+			},
+			"cost_category": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"key": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(1, 50),
+						},
+						"match_options": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringInSlice(costexplorer.MatchOption_Values(), false),
+							},
+						},
+						"values": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringLenBetween(0, 1024),
+							},
+						},
+					},
+				},
+			},
+			"dimension": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"key": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(costexplorer.Dimension_Values(), false),
+						},
+						"match_options": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringInSlice(costexplorer.MatchOption_Values(), false),
+							},
+						},
+						"values": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type:         schema.TypeString,
+								ValidateFunc: validation.StringLenBetween(0, 1024),
+							},
+						},
+					},
+				},
+			},
+			"not": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Elem:     elem,
+			},
+			"or": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Elem:     elem,
 			},
 			"tags": {
 				Type:     schema.TypeList,
