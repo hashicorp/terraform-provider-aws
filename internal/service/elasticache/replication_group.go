@@ -135,6 +135,7 @@ func ResourceReplicationGroup() *schema.Resource {
 					"node_type",
 					"security_group_names",
 					"transit_encryption_enabled",
+					"transit_encryption_mode",
 					"at_rest_encryption_enabled",
 					"snapshot_arns",
 					"snapshot_name",
@@ -327,8 +328,12 @@ func ResourceReplicationGroup() *schema.Resource {
 			"transit_encryption_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				ForceNew: true,
 				Computed: true,
+			},
+			"transit_encryption_mode": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice([]string{"preferred", "required"}, false),
 			},
 			"user_group_ids": {
 				Type:          schema.TypeSet,
@@ -381,6 +386,9 @@ func ResourceReplicationGroup() *schema.Resource {
 				return diff.HasChange("num_cache_clusters") ||
 					diff.HasChange("num_node_groups") ||
 					diff.HasChange("replicas_per_node_group")
+			}),
+			customdiff.ForceNewIf("transit_encryption_enabled", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
+				return verify.SemVerLessThan(d.Get("engine_version_actual").(string), "7.0.5")
 			}),
 			verify.SetTagsDiff,
 		),
@@ -503,6 +511,10 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 
 	if _, ok := d.GetOk("transit_encryption_enabled"); ok {
 		input.TransitEncryptionEnabled = aws.Bool(d.Get("transit_encryption_enabled").(bool))
+	}
+
+	if v, ok := d.GetOk("transit_encryption_mode"); ok {
+		input.TransitEncryptionMode = aws.String(v.(string))
 	}
 
 	if _, ok := d.GetOk("at_rest_encryption_enabled"); ok {
@@ -665,9 +677,11 @@ func resourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, m
 	// Tags cannot be read when the replication group is not Available
 	log.Printf("[DEBUG] Waiting for ElastiCache Replication Group (%s) to become available", d.Id())
 
-	_, err = WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Replication Group to be available (%s): %s", aws.StringValue(rgp.ARN), err)
+	if aws.StringValue(rgp.Status) != "available" {
+		_, err = WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Replication Group to be available (%s): %s", aws.StringValue(rgp.ARN), err)
+		}
 	}
 
 	log.Printf("[DEBUG] ElastiCache Replication Group (%s): Checking underlying cache clusters", d.Id())
@@ -696,6 +710,7 @@ func resourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, m
 
 		d.Set("at_rest_encryption_enabled", c.AtRestEncryptionEnabled)
 		d.Set("transit_encryption_enabled", c.TransitEncryptionEnabled)
+		d.Set("transit_encryption_mode", c.TransitEncryptionMode)
 
 		if c.AuthTokenEnabled != nil && !aws.BoolValue(c.AuthTokenEnabled) {
 			d.Set("auth_token", nil)
@@ -859,6 +874,16 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 				input.UserGroupIdsToRemove = flex.ExpandStringSet(remove)
 				requestUpdate = true
 			}
+		}
+
+		if d.HasChange("transit_encryption_enabled") {
+			input.TransitEncryptionEnabled = aws.Bool(d.Get("transit_encryption_enabled").(bool))
+			requestUpdate = true
+		}
+
+		if d.HasChange("transit_encryption_mode") {
+			input.TransitEncryptionMode = aws.String(d.Get("transit_encryption_mode").(string))
+			requestUpdate = true
 		}
 
 		if requestUpdate {
