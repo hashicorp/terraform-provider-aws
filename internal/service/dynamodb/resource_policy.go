@@ -6,12 +6,12 @@ package dynamodb
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/dynamodb"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/dynamodb/types"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -34,47 +35,40 @@ const (
 )
 
 // @FrameworkResource(name="Resource Policy")
-func newResourceResourcePolicy(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceResourcePolicy{}
-	r.SetDefaultCreateTimeout(30 * time.Minute)
-	r.SetDefaultUpdateTimeout(30 * time.Minute)
-	r.SetDefaultDeleteTimeout(30 * time.Minute)
+func newResourcePolicyResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &resourcePolicyResource{}
 
 	return r, nil
 }
 
-const (
-	ResNameResourcePolicy = "Resource Policy"
-)
-
-type resourceResourcePolicy struct {
+type resourcePolicyResource struct {
 	framework.ResourceWithConfigure
-	framework.WithTimeouts
+	framework.WithImportByID
 }
 
-func (r *resourceResourcePolicy) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_dynamodb_resource_policy"
+func (*resourcePolicyResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_dynamodb_resource_policy"
 }
 
-func (r *resourceResourcePolicy) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *resourcePolicyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"confirm_remove_self_resource_access": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(false),
+			},
+			names.AttrID: framework.IDAttribute(),
+			"policy": schema.StringAttribute{
+				CustomType: fwtypes.IAMPolicyType,
+				Required:   true,
+			},
 			"resource_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
-			},
-			"id": framework.IDAttribute(),
-			"policy": schema.StringAttribute{
-				CustomType: fwtypes.IAMPolicyType,
-				Required:   true,
-			},
-			"confirm_remove_self_resource_access": schema.BoolAttribute{
-				Optional: true,
-				Computed: true,
-				Default:  booldefault.StaticBool(false),
 			},
 			"revision_id": schema.StringAttribute{
 				Computed: true,
@@ -83,48 +77,41 @@ func (r *resourceResourcePolicy) Schema(ctx context.Context, req resource.Schema
 	}
 }
 
-func (r *resourceResourcePolicy) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *resourcePolicyResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+	var data resourcePolicyResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
 	conn := r.Meta().DynamoDBClient(ctx)
 
-	var plan resourceResourcePolicyData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+	input := &dynamodb.PutResourcePolicyInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	in := &dynamodb.PutResourcePolicyInput{
-		Policy:                          aws.String(plan.Policy.ValueString()),
-		ResourceArn:                     aws.String(plan.ARN.ValueString()),
-		ConfirmRemoveSelfResourceAccess: plan.ConfirmRemoveSelfResourceAccess.ValueBool(),
-	}
+	output, err := conn.PutResourcePolicy(ctx, input)
 
-	out, err := conn.PutResourcePolicy(ctx, in)
 	if err != nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DynamoDB, create.ErrActionCreating, ResNameResourcePolicy, plan.ARN.String(), err),
-			err.Error(),
-		)
-		return
-	}
-	if out == nil {
-		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.DynamoDB, create.ErrActionCreating, ResNameResourcePolicy, plan.ARN.String(), nil),
-			errors.New("empty output").Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("creating DynamoDB Resource Policy (%s)", data.ResourceARN.ValueString()), err.Error())
+
 		return
 	}
 
-	plan.RevisionId = flex.StringToFramework(ctx, out.RevisionId)
-	plan.ID = flex.StringToFramework(ctx, plan.ARN.ValueStringPointer())
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	// Set values for unknowns.
+	data.RevisionID = fwflex.StringToFramework(ctx, output.RevisionId)
+	data.ID = flex.StringToFramework(ctx, data.ARN.ValueStringPointer())
+	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceResourcePolicy) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *resourcePolicyResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	conn := r.Meta().DynamoDBClient(ctx)
 
-	var state resourceResourcePolicyData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+	var state resourcePolicyResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
@@ -143,48 +130,48 @@ func (r *resourceResourcePolicy) Read(ctx context.Context, req resource.ReadRequ
 		}
 
 		state.Policy = fwtypes.IAMPolicyValue(aws.ToString(out.Policy))
-		state.RevisionId = flex.StringToFramework(ctx, out.RevisionId)
+		state.RevisionID = flex.StringToFramework(ctx, out.RevisionId)
 		return nil
 	})
 
 	// if the dynamodb table gets removed, a Resource not found will be thrown.
 	if errs.IsA[*awstypes.PolicyNotFoundException](err) ||
 		errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		resp.State.RemoveResource(ctx)
+		response.State.RemoveResource(ctx)
 		return
 	}
 
 	if tfresource.TimedOut(err) {
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.DynamoDB, create.ErrActionReading, ResNameResourcePolicy, state.ID.String(), err),
 			err.Error(),
 		)
 		return
 	}
 	if err != nil {
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.DynamoDB, create.ErrActionReading, ResNameResourcePolicy, state.ID.String(), err),
 			err.Error(),
 		)
 	}
 
 	arn, d := fwtypes.ARNValue(state.ID.ValueString())
-	resp.Diagnostics.Append(d...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(d...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 	state.ARN = arn
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
 }
 
-func (r *resourceResourcePolicy) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *resourcePolicyResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	conn := r.Meta().DynamoDBClient(ctx)
 
-	var plan, state resourceResourcePolicyData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+	var plan, state resourcePolicyResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
+	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
@@ -196,31 +183,31 @@ func (r *resourceResourcePolicy) Update(ctx context.Context, req resource.Update
 		}
 		out, err := conn.PutResourcePolicy(ctx, &in)
 		if err != nil {
-			resp.Diagnostics.AddError(
+			response.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.DynamoDB, create.ErrActionUpdating, ResNameResourcePolicy, plan.ID.String(), err),
 				err.Error(),
 			)
 			return
 		}
 		if out == nil {
-			resp.Diagnostics.AddError(
+			response.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.DynamoDB, create.ErrActionUpdating, ResNameResourcePolicy, plan.ID.String(), nil),
 				errors.New("empty output").Error(),
 			)
 			return
 		}
-		plan.RevisionId = flex.StringToFramework(ctx, out.RevisionId)
+		plan.RevisionID = flex.StringToFramework(ctx, out.RevisionId)
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceResourcePolicy) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *resourcePolicyResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	conn := r.Meta().DynamoDBClient(ctx)
 
-	var state resourceResourcePolicyData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+	var state resourcePolicyResourceModel
+	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
@@ -233,7 +220,7 @@ func (r *resourceResourcePolicy) Delete(ctx context.Context, req resource.Delete
 		if errs.IsA[*awstypes.PolicyNotFoundException](err) || errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return
 		}
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.DynamoDB, create.ErrActionDeleting, ResNameResourcePolicy, state.ID.String(), err),
 			err.Error(),
 		)
@@ -241,14 +228,39 @@ func (r *resourceResourcePolicy) Delete(ctx context.Context, req resource.Delete
 	}
 }
 
-func (r *resourceResourcePolicy) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+func findResourcePolicyByARN(ctx context.Context, conn *dynamodb.Client, arn string) (*dynamodb.GetResourcePolicyOutput, error) {
+	input := &dynamodb.GetResourcePolicyInput{
+		ResourceArn: aws.String(arn),
+	}
+
+	output, err := conn.GetResourcePolicy(ctx, input)
+
+	if errs.IsA[*awstypes.PolicyNotFoundException](err) || errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Policy == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
 
-type resourceResourcePolicyData struct {
-	ARN                             fwtypes.ARN       `tfsdk:"resource_arn"`
-	Policy                          fwtypes.IAMPolicy `tfsdk:"policy"`
-	ID                              types.String      `tfsdk:"id"`
-	RevisionId                      types.String      `tfsdk:"revision_id"`
+type resourcePolicyResourceModel struct {
 	ConfirmRemoveSelfResourceAccess types.Bool        `tfsdk:"confirm_remove_self_resource_access"`
+	ID                              types.String      `tfsdk:"id"`
+	Policy                          fwtypes.IAMPolicy `tfsdk:"policy"`
+	ResourceARN                     fwtypes.ARN       `tfsdk:"resource_arn"`
+	RevisionID                      types.String      `tfsdk:"revision_id"`
+}
+
+func (data *resourcePolicyResourceModel) InitFromID() error {
+	data.ResourceARN = fwtypes.ARNValue
 }

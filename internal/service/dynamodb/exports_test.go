@@ -7,7 +7,7 @@ package dynamodb
 var (
 	ResourceKinesisStreamingDestination = resourceKinesisStreamingDestination
 	ResourceTag                         = resourceTag
-	ResourceResourcePolicy              = newResourceResourcePolicy
+	ResourceResourcePolicy              = newResourcePolicyResource
 
 	FindKinesisDataStreamDestinationByTwoPartKey = findKinesisDataStreamDestinationByTwoPartKey
 	ListTags                                     = listTags
