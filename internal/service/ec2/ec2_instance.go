@@ -324,6 +324,16 @@ func ResourceInstance() *schema.Resource {
 					},
 				},
 			},
+			"enable_primary_ipv6": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Computed: true,
+				ForceNew: true, // TODO: this can be set on an existing instance but not unset after. don't know how to model that?
+				AtLeastOneOf: []string{
+					"ipv6_address_count",
+					"ipv6_addresses",
+				},
+			},
 			"ephemeral_block_device": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -582,7 +592,7 @@ func ResourceInstance() *schema.Resource {
 				Computed: true,
 			},
 			"network_interface": {
-				ConflictsWith: []string{"associate_public_ip_address", "subnet_id", "private_ip", "secondary_private_ips", "vpc_security_group_ids", "security_groups", "ipv6_addresses", "ipv6_address_count", "source_dest_check"},
+				ConflictsWith: []string{"associate_public_ip_address", "enable_primary_ipv6", "subnet_id", "private_ip", "secondary_private_ips", "vpc_security_group_ids", "security_groups", "ipv6_addresses", "ipv6_address_count", "source_dest_check"},
 				Type:          schema.TypeSet,
 				Optional:      true,
 				Computed:      true,
@@ -983,6 +993,7 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		DisableApiTermination:             instanceOpts.DisableAPITermination,
 		EbsOptimized:                      instanceOpts.EBSOptimized,
 		EnclaveOptions:                    instanceOpts.EnclaveOptions,
+		EnablePrimaryIpv6:                 instanceOpts.EnablePrimaryIpv6,
 		HibernationOptions:                instanceOpts.HibernationOptions,
 		IamInstanceProfile:                instanceOpts.IAMInstanceProfile,
 		ImageId:                           instanceOpts.ImageID,
@@ -1291,6 +1302,12 @@ func resourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 			for _, address := range primaryNetworkInterface.Ipv6Addresses {
 				ipv6Addresses = append(ipv6Addresses, aws.StringValue(address.Ipv6Address))
+			}
+
+			if len(primaryNetworkInterface.Ipv6Addresses) > 0 {
+				if err := d.Set("enable_primary_ipv6", primaryNetworkInterface.Ipv6Addresses[0].IsPrimaryIpv6); err != nil {
+					return sdkdiag.AppendErrorf(diags, "setting enable_primary_ipv6: %s", err)
+				}
 			}
 		}
 	} else {
@@ -1604,6 +1621,10 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 	}
 
+	if d.HasChange("enable_primary_ipv6") && !d.IsNewResource() {
+
+	}
+
 	// SourceDestCheck can only be modified on an instance without manually specified network interfaces.
 	// SourceDestCheck, in that case, is configured at the network interface level
 	if _, ok := d.GetOk("network_interface"); !ok {
@@ -1627,6 +1648,39 @@ func resourceInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				return sdkdiag.AppendErrorf(diags, "modifying EC2 Instance (%s) SourceDestCheck attribute: %s", d.Id(), err)
 			}
 		}
+	}
+
+	if d.HasChange("enable_primary_ipv6") && !d.IsNewResource() {
+		instance, err := FindInstanceByID(ctx, conn, d.Id())
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", d.Id(), err)
+		}
+
+		var primaryInterface *ec2.InstanceNetworkInterface
+		for _, ni := range instance.NetworkInterfaces {
+			if aws.Int64Value(ni.Attachment.DeviceIndex) == 0 {
+				primaryInterface = ni
+			}
+		}
+
+		if primaryInterface == nil {
+			return sdkdiag.AppendErrorf(diags, "Failed to update enable_primary_ipv6 on %q, which does not contain a primary network interface", d.Id())
+		}
+
+		enablePrimaryIpv6 := d.Get("enable_primary_ipv6").(bool)
+
+		input := ec2.ModifyNetworkInterfaceAttributeInput{
+			NetworkInterfaceId: primaryInterface.NetworkInterfaceId,
+			EnablePrimaryIpv6:  aws.Bool(enablePrimaryIpv6),
+		}
+
+		_, err = conn.ModifyNetworkInterfaceAttributeWithContext(ctx, &input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "modifying EC2 Instance (%s) primary network interface: %s", d.Id(), err)
+		}
+
 	}
 
 	if d.HasChange("ipv6_address_count") && !d.IsNewResource() {
@@ -2853,6 +2907,7 @@ type instanceOpts struct {
 	DisableAPITermination             *bool
 	EBSOptimized                      *bool
 	EnclaveOptions                    *ec2.EnclaveOptionsRequest
+	EnablePrimaryIpv6                 *bool
 	HibernationOptions                *ec2.HibernationOptionsRequest
 	IAMInstanceProfile                *ec2.IamInstanceProfileSpecification
 	ImageID                           *string
@@ -3060,6 +3115,10 @@ func buildInstanceOpts(ctx context.Context, d *schema.ResourceData, meta interfa
 			opts.SecurityGroupIDs = groups
 		} else {
 			opts.SecurityGroups = groups
+		}
+
+		if v, ok := d.GetOk("enable_primary_ipv6"); ok {
+			opts.EnablePrimaryIpv6 = aws.Bool(v.(bool))
 		}
 
 		if v, ok := d.GetOk("ipv6_address_count"); ok {

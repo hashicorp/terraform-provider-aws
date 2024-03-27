@@ -759,6 +759,12 @@ func ResourceLaunchTemplate() *schema.Resource {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
+						"enable_primary_ipv6": {
+							Type:             nullable.TypeNullableBool,
+							Optional:         true,
+							DiffSuppressFunc: nullable.DiffSuppressNullableBool,
+							ValidateFunc:     nullable.ValidateTypeStringNullableBool,
+						},
 						"interface_type": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -1989,6 +1995,10 @@ func expandLaunchTemplateInstanceNetworkInterfaceSpecificationRequest(tfMap map[
 		apiObject.DeviceIndex = aws.Int64(int64(v))
 	}
 
+	if v, null, _ := nullable.Bool(tfMap["enable_primary_ipv6"].(string)).Value(); !null {
+		apiObject.PrimaryIpv6 = aws.Bool(v)
+	}
+
 	if v, ok := tfMap["interface_type"].(string); ok && v != "" {
 		apiObject.InterfaceType = aws.String(v)
 	}
@@ -2978,6 +2988,10 @@ func flattenLaunchTemplateInstanceNetworkInterfaceSpecification(apiObject *ec2.L
 
 	if v := apiObject.DeviceIndex; v != nil {
 		tfMap["device_index"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.PrimaryIpv6; v != nil {
+		tfMap["enable_primary_ipv6"] = strconv.FormatBool(aws.BoolValue(v))
 	}
 
 	if v := apiObject.InterfaceType; v != nil {
