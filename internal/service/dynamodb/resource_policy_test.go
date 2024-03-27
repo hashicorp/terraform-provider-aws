@@ -6,7 +6,6 @@ package dynamodb_test
 import (
 	"context"
 	"errors"
-	"fmt"
 	"testing"
 
 	"github.com/YakDriver/regexache"
@@ -21,9 +20,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/names"
-
 	tfdynamodb "github.com/hashicorp/terraform-provider-aws/internal/service/dynamodb"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDynamoDBResourcePolicy_basic(t *testing.T) {
@@ -163,8 +162,7 @@ func testAccCheckResourcePolicyExists(ctx context.Context, name string, resource
 			})
 
 			// If a policy is initially created and then immediately read, it may not be available.
-			if errs.IsA[*awstypes.PolicyNotFoundException](err) ||
-				errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			if errs.IsA[*awstypes.PolicyNotFoundException](err) {
 				return retry.RetryableError(err)
 			}
 
@@ -177,7 +175,7 @@ func testAccCheckResourcePolicyExists(ctx context.Context, name string, resource
 			return nil
 		})
 
-		if err != nil {
+		if tfresource.TimedOut(err) || err != nil {
 			return create.Error(names.DynamoDB, create.ErrActionCheckingExistence, tfdynamodb.ResNameResourcePolicy, rs.Primary.ID, err)
 		}
 
@@ -186,7 +184,7 @@ func testAccCheckResourcePolicyExists(ctx context.Context, name string, resource
 }
 
 func testAccResourcePolicyConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccTableConfig_basic(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccTableConfig_basic(rName), `
 data "aws_caller_identity" "current" {}
 data "aws_iam_policy_document" "test" {
   statement {
@@ -203,11 +201,11 @@ resource "aws_dynamodb_resource_policy" "test" {
   resource_arn = aws_dynamodb_table.test.arn
   policy       = data.aws_iam_policy_document.test.json
 }
-`))
+`)
 }
 
 func testAccResourcePolicyConfig_update(rName string) string {
-	return acctest.ConfigCompose(testAccTableConfig_basic(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccTableConfig_basic(rName), `
 data "aws_caller_identity" "current" {}
 data "aws_iam_policy_document" "test" {
   statement {
@@ -224,5 +222,5 @@ resource "aws_dynamodb_resource_policy" "test" {
   resource_arn = aws_dynamodb_table.test.arn
   policy       = data.aws_iam_policy_document.test.json
 }
-`))
+`)
 }
