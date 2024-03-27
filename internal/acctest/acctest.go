@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
@@ -20,6 +21,8 @@ import (
 	"github.com/YakDriver/regexache"
 	accounttypes "github.com/aws/aws-sdk-go-v2/service/account/types"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
 	inspector2types "github.com/aws/aws-sdk-go-v2/service/inspector2/types"
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
@@ -30,7 +33,6 @@ import (
 	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/outposts"
 	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -1139,7 +1141,7 @@ func PreCheckSSOAdminInstances(ctx context.Context, t *testing.T) {
 func PreCheckHasIAMRole(ctx context.Context, t *testing.T, roleName string) {
 	t.Helper()
 
-	_, err := tfiam.FindRoleByName(ctx, Provider.Meta().(*conns.AWSClient).IAMConn(ctx), roleName)
+	_, err := tfiam.FindRoleByName(ctx, Provider.Meta().(*conns.AWSClient).IAMClient(ctx), roleName)
 
 	if tfresource.NotFound(err) {
 		t.Skipf("skipping acceptance test: required IAM role %q not found", roleName)
@@ -1162,30 +1164,30 @@ func PreCheckIAMServiceLinkedRole(ctx context.Context, t *testing.T, pathPrefix 
 func PreCheckIAMServiceLinkedRoleWithProvider(ctx context.Context, t *testing.T, providerF ProviderFunc, pathPrefix string) {
 	t.Helper()
 
-	conn := providerF().Meta().(*conns.AWSClient).IAMConn(ctx)
+	conn := providerF().Meta().(*conns.AWSClient).IAMClient(ctx)
 	input := &iam.ListRolesInput{
 		PathPrefix: aws.String(pathPrefix),
 	}
-	var role *iam.Role
+	var role awstypes.Role
 
-	err := conn.ListRolesPagesWithContext(ctx, input, func(page *iam.ListRolesOutput, lastPage bool) bool {
+	pages := iam.NewListRolesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if PreCheckSkipError(err) {
+			t.Skipf("skipping tests: %s", err)
+		}
+		if err != nil {
+			t.Fatalf("listing IAM roles: %s", err)
+		}
+
 		for _, r := range page.Roles {
 			role = r
 			break
 		}
 
-		return !lastPage
-	})
-
-	if PreCheckSkipError(err) {
-		t.Skipf("skipping tests: %s", err)
 	}
 
-	if err != nil {
-		t.Fatalf("listing IAM roles: %s", err)
-	}
-
-	if role == nil {
+	if reflect.ValueOf(role).IsZero() {
 		t.Skipf("skipping tests; missing IAM service-linked role %s. Please create the role and retry", pathPrefix)
 	}
 }
