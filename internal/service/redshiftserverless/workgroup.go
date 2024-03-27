@@ -11,6 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshiftserverless"
+	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -305,13 +306,6 @@ func resourceWorkgroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
 
-	checkCapacityChange := func(key string) (bool, int, int) {
-		o, n := d.GetChange(key)
-		oldCapacity, newCapacity := o.(int), n.(int)
-		hasCapacityChange := newCapacity != oldCapacity
-		return hasCapacityChange, oldCapacity, newCapacity
-	}
-
 	// You can't update multiple workgroup parameters in one request.
 	// This is particularly important when adjusting base_capacity and max_capacity due to their interdependencies:
 	// - base_capacity cannot be increased to a value greater than the current max_capacity.
@@ -322,8 +316,8 @@ func resourceWorkgroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	// resulting in errors due to the lack of AWS API idempotency.
 	// Some validations, such as increasing base_capacity beyond an unchanged max_capacity, are deferred to the AWS API.
 
-	hasBaseCapacityChange, _, newBaseCapacity := checkCapacityChange("base_capacity")
-	hasMaxCapacityChange, oldMaxCapacity, newMaxCapacity := checkCapacityChange("max_capacity")
+	hasBaseCapacityChange, _, newBaseCapacity := checkChange[int](d, "base_capacity")
+	hasMaxCapacityChange, oldMaxCapacity, newMaxCapacity := checkChange[int](d, "max_capacity")
 
 	switch {
 	case hasMaxCapacityChange && newMaxCapacity == 0:
@@ -375,9 +369,10 @@ func resourceWorkgroupUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 	}
 
-	if d.HasChange("config_parameter") {
+	hasParamsChange, o, n := checkChange[*schema.Set](d, "config_parameter")
+	if hasParamsChange {
 		input := &redshiftserverless.UpdateWorkgroupInput{
-			ConfigParameters: expandConfigParameters(d.Get("config_parameter").(*schema.Set).List()),
+			ConfigParameters: appendQueryMonitoringRemovals(expandConfigParameters(n.List()), expandConfigParameters(o.List())),
 			WorkgroupName:    aws.String(d.Id()),
 		}
 
@@ -743,4 +738,46 @@ func flattenNetworkInterface(apiObject *redshiftserverless.NetworkInterface) map
 		tfMap["subnet_id"] = aws.StringValue(v)
 	}
 	return tfMap
+}
+
+func checkChange[T any](d *schema.ResourceData, key string) (bool, T, T) {
+	o, n := d.GetChange(key)
+	hasChange := !cmp.Equal(n, o)
+	return hasChange, o.(T), n.(T)
+}
+
+// This function appends to the list of config parameters, any query monitoring rule that was previously present but is now missing from the plan.
+// In order to properly remove the rule, "-1" must be passed as the value of the rule to the AWS API.
+func appendQueryMonitoringRemovals(newParams, oldParams []*redshiftserverless.ConfigParameter) []*redshiftserverless.ConfigParameter {
+	rules := map[string]bool{
+		"max_query_cpu_time":             true,
+		"max_query_blocks_read":          true,
+		"max_scan_row_count":             true,
+		"max_query_execution_time":       true,
+		"max_query_queue_time":           true,
+		"max_query_cpu_usage_percent":    true,
+		"max_query_temp_blocks_to_disk":  true,
+		"max_join_row_count":             true,
+		"max_nested_loop_join_row_count": true,
+	}
+
+	existingKeys := make(map[string]bool)
+	for _, param := range newParams {
+		if param.ParameterKey != nil {
+			existingKeys[*param.ParameterKey] = true
+		}
+	}
+
+	for _, oldParam := range oldParams {
+		if !existingKeys[*oldParam.ParameterKey] && rules[*oldParam.ParameterKey] {
+			newParam := &redshiftserverless.ConfigParameter{
+				ParameterKey:   oldParam.ParameterKey,
+				ParameterValue: aws.String("-1"),
+			}
+			newParams = append(newParams, newParam)
+			existingKeys[*oldParam.ParameterKey] = true
+		}
+	}
+
+	return newParams
 }
