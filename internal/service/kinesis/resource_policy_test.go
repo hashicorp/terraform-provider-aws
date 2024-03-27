@@ -78,7 +78,7 @@ func testAccCheckResourcePolicyExists(ctx context.Context, n string) resource.Te
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).KinesisClient(ctx)
 
-		_, err := tfkinesis.FindResourcePolicyByResourceARN(ctx, conn, rs.Primary.ID)
+		_, err := tfkinesis.FindResourcePolicyByARN(ctx, conn, rs.Primary.ID)
 
 		return err
 	}
@@ -93,7 +93,7 @@ func testAccCheckResourcePolicyDestroy(ctx context.Context) resource.TestCheckFu
 				continue
 			}
 
-			_, err := tfkinesis.FindResourcePolicyByResourceARN(ctx, conn, rs.Primary.ID)
+			_, err := tfkinesis.FindResourcePolicyByARN(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
