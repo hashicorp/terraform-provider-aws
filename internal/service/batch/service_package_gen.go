@@ -76,7 +76,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceSchedulingPolicy,
 			TypeName: "aws_batch_scheduling_policy",
-			Name:     "Job Definition",
+			Name:     "Scheduling Policy",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "arn",
 			},
