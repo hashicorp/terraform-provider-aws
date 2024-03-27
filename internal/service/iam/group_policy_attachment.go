@@ -7,12 +7,12 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"reflect"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -54,7 +54,7 @@ func resourceGroupPolicyAttachment() *schema.Resource {
 
 func resourceGroupPolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	group := d.Get("group").(string)
 	policyARN := d.Get("policy_arn").(string)
@@ -71,7 +71,7 @@ func resourceGroupPolicyAttachmentCreate(ctx context.Context, d *schema.Resource
 
 func resourceGroupPolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	group := d.Get("group").(string)
 	policyARN := d.Get("policy_arn").(string)
@@ -97,7 +97,7 @@ func resourceGroupPolicyAttachmentRead(ctx context.Context, d *schema.ResourceDa
 
 func resourceGroupPolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	if err := detachPolicyFromGroup(ctx, conn, d.Get("group").(string), d.Get("policy_arn").(string)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
@@ -163,12 +163,12 @@ func findAttachedGroupPolicyByTwoPartKey(ctx context.Context, conn *iam.Client, 
 		GroupName: aws.String(groupName),
 	}
 
-	return findAttachedGroupPolicy(ctx, conn, input, func(v *awstypes.AttachedPolicy) bool {
+	return findAttachedGroupPolicy(ctx, conn, input, func(v awstypes.AttachedPolicy) bool {
 		return aws.ToString(v.PolicyArn) == policyARN
 	})
 }
 
-func findAttachedGroupPolicy(ctx context.Context, conn *iam.Client, input *iam.ListAttachedGroupPoliciesInput, filter tfslices.Predicate[*awstypes.AttachedPolicy]) (*awstypes.AttachedPolicy, error) {
+func findAttachedGroupPolicy(ctx context.Context, conn *iam.Client, input *iam.ListAttachedGroupPoliciesInput, filter tfslices.Predicate[awstypes.AttachedPolicy]) (*awstypes.AttachedPolicy, error) {
 	output, err := findAttachedGroupPolicies(ctx, conn, input, filter)
 
 	if err != nil {
@@ -178,32 +178,29 @@ func findAttachedGroupPolicy(ctx context.Context, conn *iam.Client, input *iam.L
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findAttachedGroupPolicies(ctx context.Context, conn *iam.Client, input *iam.ListAttachedGroupPoliciesInput, filter tfslices.Predicate[*awstypes.AttachedPolicy]) ([]awstypes.AttachedPolicy, error) {
+func findAttachedGroupPolicies(ctx context.Context, conn *iam.Client, input *iam.ListAttachedGroupPoliciesInput, filter tfslices.Predicate[awstypes.AttachedPolicy]) ([]awstypes.AttachedPolicy, error) {
 	var output []awstypes.AttachedPolicy
 
-	err := conn.ListAttachedGroupPoliciesPagesWithContext(ctx, input, func(page *iam.ListAttachedGroupPoliciesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
+	pages := iam.NewListAttachedGroupPoliciesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-		for _, v := range page.AttachedPolicies {
-			if v != nil && filter(v) {
-				output = append(output, v)
+		if errs.IsA[*awstypes.NoSuchEntityException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
 			}
 		}
 
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		if err != nil {
+			return nil, err
 		}
-	}
 
-	if err != nil {
-		return nil, err
+		for _, v := range page.AttachedPolicies {
+			if !reflect.ValueOf(v).IsZero() && filter(v) {
+				output = append(output, v)
+			}
+		}
 	}
 
 	return output, nil
