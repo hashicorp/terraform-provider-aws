@@ -35,6 +35,8 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * data-source/aws_cur_report_definition: Direct all API calls to the `us-east-1` endpoint as this is the only Region in which AWS Cost and Usage Reports is available ([#36540](https://github.com/hashicorp/terraform-provider-aws/issues/36540))
+* resource/aws_applicationinsights_application: Make `ACTIVE` a valid create target status ([#36615](https://github.com/hashicorp/terraform-provider-aws/issues/36615))
+* resource/aws_autoscaling_group: Don't attempt to remove scale-in protection from instances that don't have the feature enabled ([#36586](https://github.com/hashicorp/terraform-provider-aws/issues/36586))
 * resource/aws_cur_report_definition: Direct all API calls to the `us-east-1` endpoint as this is the only Region in which AWS Cost and Usage Reports is available ([#36540](https://github.com/hashicorp/terraform-provider-aws/issues/36540))
 * resource/aws_elasticsearch_domain_policy: Handle delayed domain status propagation, preventing a `ValidationException`. ([#36592](https://github.com/hashicorp/terraform-provider-aws/issues/36592))
 * resource/aws_instance: Replace an instance when an `instance_type` change also requires an architecture change, such as x86_64 to arm64 ([#36590](https://github.com/hashicorp/terraform-provider-aws/issues/36590))
