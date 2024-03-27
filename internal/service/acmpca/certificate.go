@@ -140,7 +140,7 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
 
 	certificateAuthorityARN := d.Get("certificate_authority_arn").(string)
-	input := &acmpca.IssueCertificateInput{
+	inputI := &acmpca.IssueCertificateInput{
 		CertificateAuthorityArn: aws.String(certificateAuthorityARN),
 		Csr:                     []byte(d.Get("certificate_signing_request").(string)),
 		IdempotencyToken:        aws.String(id.UniqueId()),
@@ -152,21 +152,21 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 		if err := json.Unmarshal([]byte(v), ap); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
-		input.ApiPassthrough = ap
+		inputI.ApiPassthrough = ap
 	}
 
 	if v, ok := d.Get("template_arn").(string); ok && v != "" {
-		input.TemplateArn = aws.String(v)
+		inputI.TemplateArn = aws.String(v)
 	}
 
 	if validity, err := expandValidity(d.Get("validity").([]interface{})); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	} else {
-		input.Validity = validity
+		inputI.Validity = validity
 	}
 
 	outputRaw, err := tfresource.RetryWhenIsAErrorMessageContains[*types.InvalidStateException](ctx, certificateAuthorityActiveTimeout, func() (interface{}, error) {
-		return conn.IssueCertificate(ctx, input)
+		return conn.IssueCertificate(ctx, inputI)
 	}, "The certificate authority is not in a valid state for issuing certificates")
 
 	if err != nil {
@@ -176,10 +176,11 @@ func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta
 	d.SetId(aws.ToString(outputRaw.(*acmpca.IssueCertificateOutput).CertificateArn))
 
 	// Wait for certificate status to become ISSUED.
-	err = acmpca.NewCertificateIssuedWaiter(conn).Wait(ctx, &acmpca.GetCertificateInput{
+	inputG := &acmpca.GetCertificateInput{
 		CertificateArn:          aws.String(d.Id()),
 		CertificateAuthorityArn: aws.String(d.Get("certificate_authority_arn").(string)),
-	}, certificateIssueTimeout)
+	}
+	err = acmpca.NewCertificateIssuedWaiter(conn).Wait(ctx, inputG, certificateIssueTimeout)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for ACM PCA Certificate Authority (%s) to issue Certificate (%s), error: %s", certificateAuthorityARN, d.Id(), err)
