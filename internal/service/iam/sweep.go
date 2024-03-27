@@ -11,16 +11,19 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -118,17 +121,24 @@ func sweepGroups(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.IAMConn(ctx)
+	conn := client.IAMClient(ctx)
 	input := &iam.ListGroupsInput{}
 	var sweeperErrs *multierror.Error
 
-	err = conn.ListGroupsPagesWithContext(ctx, input, func(page *iam.ListGroupsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := iam.NewListGroupsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping IAM Group sweep for %s: %s", region, err)
+			return sweeperErrs.ErrorOrNil()
+		}
+
+		if err != nil {
+			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving IAM Groups: %w", err))
 		}
 
 		for _, group := range page.Groups {
-			name := aws.StringValue(group.GroupName)
+			name := aws.ToString(group.GroupName)
 
 			if name == "Admin" || name == "TerraformAccTests" {
 				continue
@@ -140,9 +150,9 @@ func sweepGroups(region string) error {
 				GroupName: group.GroupName,
 			}
 
-			getGroupOutput, err := conn.GetGroupWithContext(ctx, getGroupInput)
+			getGroupOutput, err := conn.GetGroup(ctx, getGroupInput)
 
-			if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+			if errs.IsA[*awstypes.NoSuchEntityException](err) {
 				continue
 			}
 
@@ -155,7 +165,7 @@ func sweepGroups(region string) error {
 
 			if getGroupOutput != nil {
 				for _, user := range getGroupOutput.Users {
-					username := aws.StringValue(user.UserName)
+					username := aws.ToString(user.UserName)
 
 					log.Printf("[INFO] Removing IAM User (%s) from Group: %s", username, name)
 
@@ -164,9 +174,9 @@ func sweepGroups(region string) error {
 						GroupName: group.GroupName,
 					}
 
-					_, err := conn.RemoveUserFromGroupWithContext(ctx, input)
+					_, err := conn.RemoveUserFromGroup(ctx, input)
 
-					if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+					if errs.IsA[*awstypes.NoSuchEntityException](err) {
 						continue
 					}
 
@@ -197,9 +207,9 @@ func sweepGroups(region string) error {
 				continue
 			}
 
-			_, err = conn.DeleteGroupWithContext(ctx, input)
+			_, err = conn.DeleteGroup(ctx, input)
 
-			if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+			if errs.IsA[*awstypes.NoSuchEntityException](err) {
 				continue
 			}
 
@@ -210,17 +220,6 @@ func sweepGroups(region string) error {
 				continue
 			}
 		}
-
-		return !lastPage
-	})
-
-	if awsv1.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping IAM Group sweep for %s: %s", region, err)
-		return sweeperErrs.ErrorOrNil()
-	}
-
-	if err != nil {
-		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving IAM Groups: %w", err))
 	}
 
 	return sweeperErrs.ErrorOrNil()
