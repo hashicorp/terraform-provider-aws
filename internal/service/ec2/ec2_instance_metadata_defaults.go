@@ -10,6 +10,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
+	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
@@ -20,6 +22,7 @@ import (
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -36,7 +39,6 @@ func newInstanceMetadataDefaultsResource(_ context.Context) (resource.ResourceWi
 
 type instanceMetadataDefaultsResource struct {
 	framework.ResourceWithConfigure
-	framework.WithImportByID
 }
 
 func (*instanceMetadataDefaultsResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
@@ -61,7 +63,10 @@ func (r *instanceMetadataDefaultsResource) Schema(ctx context.Context, request r
 				Computed: true,
 				Default:  int64default.StaticInt64(httpPutResponseHopLimitNoPreference),
 				Validators: []validator.Int64{
-					int64validator.Between(-1, 64),
+					int64validator.Any(
+						int64validator.Between(1, 64),
+						int64validator.OneOf(httpPutResponseHopLimitNoPreference),
+					),
 				},
 			},
 			"http_tokens": schema.StringAttribute{
@@ -78,6 +83,17 @@ func (r *instanceMetadataDefaultsResource) Schema(ctx context.Context, request r
 				Default:    instanceMetadataTagsType.AttributeDefault(awstypes.DefaultInstanceMetadataTagsStateNoPreference),
 			},
 		},
+	}
+}
+
+func (r *instanceMetadataDefaultsResource) ConfigValidators(context.Context) []resource.ConfigValidator {
+	return []resource.ConfigValidator{
+		resourcevalidator.AtLeastOneOf(
+			path.MatchRoot("http_endpoint"),
+			path.MatchRoot("http_put_response_hop_limit"),
+			path.MatchRoot("http_tokens"),
+			path.MatchRoot("instance_metadata_tags"),
+		),
 	}
 }
 
@@ -104,6 +120,9 @@ func (r *instanceMetadataDefaultsResource) Create(ctx context.Context, request r
 		return
 	}
 
+	// Set values for unknowns.
+	data.ID = types.StringValue(r.Meta().AccountID)
+
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
@@ -118,23 +137,38 @@ func (r *instanceMetadataDefaultsResource) Read(ctx context.Context, request res
 
 	output, err := findInstanceMetadataDefaults(ctx, conn)
 
-	if tfresource.NotFound(err) {
+	switch {
+	case err == nil && itypes.IsZero(output):
+		err = tfresource.NewEmptyResultError(nil)
+		fallthrough
+	case tfresource.NotFound(err):
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		response.State.RemoveResource(ctx)
 
 		return
-	}
-
-	if err != nil {
+	case err != nil:
 		response.Diagnostics.AddError("reading EC2 Instance Metadata Defaults", err.Error())
 
 		return
 	}
 
-	// Set attributes for import.
 	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
 	if response.Diagnostics.HasError() {
 		return
+	}
+
+	// Defaults.
+	if data.HttpEndpoint.IsNull() {
+		data.HttpEndpoint = fwtypes.StringEnumValue(awstypes.DefaultInstanceMetadataEndpointStateNoPreference)
+	}
+	if data.HttpPutResponseHopLimit.IsNull() || data.HttpPutResponseHopLimit.ValueInt64() == 0 {
+		data.HttpPutResponseHopLimit = types.Int64Value(httpPutResponseHopLimitNoPreference)
+	}
+	if data.HttpTokens.IsNull() {
+		data.HttpTokens = fwtypes.StringEnumValue(awstypes.MetadataDefaultHttpTokensStateNoPreference)
+	}
+	if data.InstanceMetadataTags.IsNull() {
+		data.InstanceMetadataTags = fwtypes.StringEnumValue(awstypes.DefaultInstanceMetadataTagsStateNoPreference)
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
@@ -203,8 +237,9 @@ func findInstanceMetadataDefaults(ctx context.Context, conn *ec2.Client) (*awsty
 }
 
 type instanceMetadataDefaultsModel struct {
-	HttpEndpoint            types.String `tfsdk:"http_endpoint"`
-	HttpPutResponseHopLimit types.Int64  `tfsdk:"http_put_response_hop_limit"`
-	HttpTokens              types.String `tfsdk:"http_tokens"`
-	InstanceMetadataTags    types.String `tfsdk:"instance_metadata_tags"`
+	HttpEndpoint            fwtypes.StringEnum[awstypes.DefaultInstanceMetadataEndpointState] `tfsdk:"http_endpoint"`
+	HttpPutResponseHopLimit types.Int64                                                       `tfsdk:"http_put_response_hop_limit"`
+	HttpTokens              fwtypes.StringEnum[awstypes.MetadataDefaultHttpTokensState]       `tfsdk:"http_tokens"`
+	ID                      types.String                                                      `tfsdk:"id"`
+	InstanceMetadataTags    fwtypes.StringEnum[awstypes.DefaultInstanceMetadataTagsState]     `tfsdk:"instance_metadata_tags"`
 }

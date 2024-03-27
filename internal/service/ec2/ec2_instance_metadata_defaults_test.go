@@ -8,14 +8,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -23,8 +23,9 @@ func TestAccEC2InstanceMetadataDefaults_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		"basic":  testAccInstanceMetadataDefaults_basic,
-		"update": testAccInstanceMetadataDefaults_update,
+		"basic":      testAccInstanceMetadataDefaults_basic,
+		"disappears": testAccInstanceMetadataDefaults_disappears,
+		"empty":      testAccInstanceMetadataDefaults_empty,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -41,25 +42,47 @@ func testAccInstanceMetadataDefaults_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceMetadataDefaultsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceMetadataDefaultsConfig_basic(),
+				Config: testAccInstanceMetadataDefaultsConfig_full,
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckInstanceMetadataDefaultsExists(ctx, resourceName, &awstypes.InstanceMetadataDefaultsResponse{
-						HttpTokens:              awstypes.HttpTokensState(awstypes.MetadataDefaultHttpTokensStateRequired),
-						HttpPutResponseHopLimit: aws.Int32(1),
-						HttpEndpoint:            awstypes.InstanceMetadataEndpointStateEnabled,
-						InstanceMetadataTags:    awstypes.InstanceMetadataTagsStateDisabled,
-					}),
-					resource.TestCheckResourceAttr(resourceName, "http_tokens", "required"),
-					resource.TestCheckResourceAttr(resourceName, "instance_metadata_tags", "disabled"),
+					testAccCheckInstanceMetadataDefaultsExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "http_endpoint", "enabled"),
 					resource.TestCheckResourceAttr(resourceName, "http_put_response_hop_limit", "1"),
+					resource.TestCheckResourceAttr(resourceName, "http_tokens", "required"),
+					resource.TestCheckResourceAttr(resourceName, "instance_metadata_tags", "disabled"),
+				),
+			},
+			{
+				Config: testAccInstanceMetadataDefaultsConfig_partial,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceMetadataDefaultsExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "http_endpoint", "no-preference"),
+					resource.TestCheckResourceAttr(resourceName, "http_put_response_hop_limit", "2"),
+					resource.TestCheckResourceAttr(resourceName, "http_tokens", "required"),
+					resource.TestCheckResourceAttr(resourceName, "instance_metadata_tags", "no-preference"),
 				),
 			},
 		},
 	})
 }
 
-func testAccInstanceMetadataDefaults_update(t *testing.T) {
+func testAccInstanceMetadataDefaults_empty(t *testing.T) {
+	ctx := acctest.Context(t)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceMetadataDefaultsDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccInstanceMetadataDefaultsConfig_empty,
+				ExpectError: regexache.MustCompile(`At least one of these attributes must be configured`),
+			},
+		},
+	})
+}
+
+func testAccInstanceMetadataDefaults_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ec2_instance_metadata_defaults.test"
 
@@ -70,17 +93,12 @@ func testAccInstanceMetadataDefaults_update(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceMetadataDefaultsDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceMetadataDefaultsConfig_partial(),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceMetadataDefaultsExists(ctx, resourceName, &awstypes.InstanceMetadataDefaultsResponse{
-						HttpTokens:              awstypes.HttpTokensState(awstypes.MetadataDefaultHttpTokensStateRequired),
-						HttpPutResponseHopLimit: aws.Int32(2),
-						HttpEndpoint:            "",
-						InstanceMetadataTags:    "",
-					}),
-					resource.TestCheckResourceAttr(resourceName, "http_tokens", "required"),
-					resource.TestCheckResourceAttr(resourceName, "http_put_response_hop_limit", "2"),
+				Config: testAccInstanceMetadataDefaultsConfig_full,
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceMetadataDefaultsExists(ctx, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfec2.ResourceInstanceMetadataDefaults, resourceName),
 				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -95,9 +113,9 @@ func testAccCheckInstanceMetadataDefaultsDestroy(ctx context.Context) resource.T
 				continue
 			}
 
-			_, err := tfec2.FindInstanceMetadataDefaults(ctx, conn)
+			output, err := tfec2.FindInstanceMetadataDefaults(ctx, conn)
 
-			if tfresource.NotFound(err) {
+			if tfresource.NotFound(err) || err == nil && itypes.IsZero(output) {
 				continue
 			}
 
@@ -112,7 +130,7 @@ func testAccCheckInstanceMetadataDefaultsDestroy(ctx context.Context) resource.T
 	}
 }
 
-func testAccCheckInstanceMetadataDefaultsExists(ctx context.Context, n string, v *awstypes.InstanceMetadataDefaultsResponse) resource.TestCheckFunc {
+func testAccCheckInstanceMetadataDefaultsExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		_, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -121,20 +139,18 @@ func testAccCheckInstanceMetadataDefaultsExists(ctx context.Context, n string, v
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		output, err := tfec2.FindInstanceMetadataDefaults(ctx, conn)
+		_, err := tfec2.FindInstanceMetadataDefaults(ctx, conn)
 
-		if err != nil {
-			return err
-		}
-
-		*v = *output
-
-		return nil
+		return err
 	}
 }
 
-func testAccInstanceMetadataDefaultsConfig_basic() string {
-	return `
+const (
+	testAccInstanceMetadataDefaultsConfig_empty = `
+resource "aws_ec2_instance_metadata_defaults" "test" {}
+`
+
+	testAccInstanceMetadataDefaultsConfig_full = `
 resource "aws_ec2_instance_metadata_defaults" "test" {
   http_tokens                 = "required" # non-default
   instance_metadata_tags      = "disabled"
@@ -142,13 +158,10 @@ resource "aws_ec2_instance_metadata_defaults" "test" {
   http_put_response_hop_limit = 1
 }
 `
-}
-
-func testAccInstanceMetadataDefaultsConfig_partial() string {
-	return `
+	testAccInstanceMetadataDefaultsConfig_partial = `
 resource "aws_ec2_instance_metadata_defaults" "test" {
   http_tokens                 = "required" # non-default
   http_put_response_hop_limit = 2          # non-default
 }
 `
-}
+)
