@@ -56,7 +56,8 @@ This argument should only be specified for `FORWARD` type rules.
 The `target_ip` object supports the following:
 
 * `ip` - (Required) One IP address that you want to forward DNS queries to. You can specify only IPv4 addresses.
-* `port` - (Optional) The port at `ip` that you want to forward DNS queries to. Default value is `53`
+* `port` - (Optional) The port at `ip` that you want to forward DNS queries to. Default value is `53`.
+* `protocol` - (Optional) The protocol for the resolver endpoint. Valid values can be found in the [AWS documentation](https://docs.aws.amazon.com/Route53/latest/APIReference/API_route53resolver_TargetAddress.html). Default value is `Do53`.
 
 ## Attribute Reference
 
