@@ -5,12 +5,11 @@ package acmpca
 
 import (
 	"context"
-	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/acmpca"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/acmpca/types"
+	"github.com/aws/aws-sdk-go-v2/service/acmpca/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -19,8 +18,10 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
-// @SDKDataSource("aws_acmpca_certificate_authority")
-func DataSourceCertificateAuthority() *schema.Resource {
+// @SDKDataSource("aws_acmpca_certificate_authority", name="Certificate Authority")
+// @Tags(identifierAttribute="arn")
+// @Testing(tagsTest=false)
+func dataSourceCertificateAuthority() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCertificateAuthorityRead,
 
@@ -132,25 +133,19 @@ func DataSourceCertificateAuthority() *schema.Resource {
 func dataSourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-	certificateAuthorityARN := d.Get("arn").(string)
 
-	describeCertificateAuthorityInput := &acmpca.DescribeCertificateAuthorityInput{
+	certificateAuthorityARN := d.Get("arn").(string)
+	input := &acmpca.DescribeCertificateAuthorityInput{
 		CertificateAuthorityArn: aws.String(certificateAuthorityARN),
 	}
 
-	log.Printf("[DEBUG] Reading ACM PCA Certificate Authority: %+v", describeCertificateAuthorityInput)
+	certificateAuthority, err := findCertificateAuthority(ctx, conn, input)
 
-	describeCertificateAuthorityOutput, err := conn.DescribeCertificateAuthority(ctx, describeCertificateAuthorityInput)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ACM PCA Certificate Authority (%s): %s", certificateAuthorityARN, err)
 	}
 
-	if describeCertificateAuthorityOutput.CertificateAuthority == nil {
-		return sdkdiag.AppendErrorf(diags, "reading ACM PCA Certificate Authority: not found")
-	}
-	certificateAuthority := describeCertificateAuthorityOutput.CertificateAuthority
-
+	d.SetId(certificateAuthorityARN)
 	d.Set("arn", certificateAuthority.Arn)
 	d.Set("key_storage_security_standard", certificateAuthority.KeyStorageSecurityStandard)
 	d.Set("not_after", aws.ToTime(certificateAuthority.NotAfter).Format(time.RFC3339))
@@ -163,55 +158,37 @@ func dataSourceCertificateAuthorityRead(ctx context.Context, d *schema.ResourceD
 	d.Set("type", certificateAuthority.Type)
 	d.Set("usage_mode", certificateAuthority.UsageMode)
 
-	getCertificateAuthorityCertificateInput := &acmpca.GetCertificateAuthorityCertificateInput{
+	outputGCACert, err := conn.GetCertificateAuthorityCertificate(ctx, &acmpca.GetCertificateAuthorityCertificateInput{
 		CertificateAuthorityArn: aws.String(certificateAuthorityARN),
-	}
+	})
 
-	log.Printf("[DEBUG] Reading ACM PCA Certificate Authority Certificate: %+v", getCertificateAuthorityCertificateInput)
-
-	getCertificateAuthorityCertificateOutput, err := conn.GetCertificateAuthorityCertificate(ctx, getCertificateAuthorityCertificateInput)
-	if err != nil {
-		// Returned when in PENDING_CERTIFICATE status
-		// InvalidStateException: The certificate authority XXXXX is not in the correct state to have a certificate signing request.
-		if errs.IsA[*awstypes.InvalidStateException](err) {
-			return sdkdiag.AppendErrorf(diags, "reading ACM PCA Certificate Authority Certificate: %s", err)
-		}
+	// Returned when in PENDING_CERTIFICATE status
+	// InvalidStateException: The certificate authority XXXXX is not in the correct state to have a certificate signing request.
+	if err != nil && !errs.IsA[*types.InvalidStateException](err) {
+		return sdkdiag.AppendErrorf(diags, "reading ACM PCA Certificate Authority (%s) Certificate: %s", d.Id(), err)
 	}
 
 	d.Set("certificate", "")
 	d.Set("certificate_chain", "")
-	if getCertificateAuthorityCertificateOutput != nil {
-		d.Set("certificate", getCertificateAuthorityCertificateOutput.Certificate)
-		d.Set("certificate_chain", getCertificateAuthorityCertificateOutput.CertificateChain)
+	if outputGCACert != nil {
+		d.Set("certificate", outputGCACert.Certificate)
+		d.Set("certificate_chain", outputGCACert.CertificateChain)
 	}
 
-	getCertificateAuthorityCsrInput := &acmpca.GetCertificateAuthorityCsrInput{
+	outputGCACsr, err := conn.GetCertificateAuthorityCsr(ctx, &acmpca.GetCertificateAuthorityCsrInput{
 		CertificateAuthorityArn: aws.String(certificateAuthorityARN),
-	}
+	})
 
-	log.Printf("[DEBUG] Reading ACM PCA Certificate Authority Certificate Signing Request: %+v", getCertificateAuthorityCsrInput)
-
-	getCertificateAuthorityCsrOutput, err := conn.GetCertificateAuthorityCsr(ctx, getCertificateAuthorityCsrInput)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading ACM PCA Certificate Authority Certificate Signing Request: %s", err)
+	// Returned when in PENDING_CERTIFICATE status
+	// InvalidStateException: The certificate authority XXXXX is not in the correct state to have a certificate signing request.
+	if err != nil && !errs.IsA[*types.InvalidStateException](err) {
+		return sdkdiag.AppendErrorf(diags, "reading ACM PCA Certificate Authority (%s) Certificate Signing Request: %s", d.Id(), err)
 	}
 
 	d.Set("certificate_signing_request", "")
-	if getCertificateAuthorityCsrOutput != nil {
-		d.Set("certificate_signing_request", getCertificateAuthorityCsrOutput.Csr)
+	if outputGCACsr != nil {
+		d.Set("certificate_signing_request", outputGCACsr.Csr)
 	}
-
-	tags, err := listTags(ctx, conn, certificateAuthorityARN)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for ACM PCA Certificate Authority (%s): %s", certificateAuthorityARN, err)
-	}
-
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
-	d.SetId(certificateAuthorityARN)
 
 	return diags
 }

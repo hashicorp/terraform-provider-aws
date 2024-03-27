@@ -29,8 +29,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_acmpca_certificate",
 		},
 		{
-			Factory:  DataSourceCertificateAuthority,
+			Factory:  dataSourceCertificateAuthority,
 			TypeName: "aws_acmpca_certificate_authority",
+			Name:     "Certificate Authority",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
 		},
 	}
 }
