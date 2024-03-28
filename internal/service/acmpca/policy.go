@@ -9,8 +9,9 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/acmpca"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/acmpca/types"
+	"github.com/aws/aws-sdk-go-v2/service/acmpca/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -21,8 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_acmpca_policy")
-func ResourcePolicy() *schema.Resource {
+// @SDKResource("aws_acmpca_policy", name="Policy")
+func resourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePolicyPut,
 		ReadWithoutTimeout:   resourcePolicyRead,
@@ -59,9 +60,8 @@ func resourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta interfa
 	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
 
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
-
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", d.Get("policy").(string), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	resourceARN := d.Get("resource_arn").(string)
@@ -70,14 +70,15 @@ func resourcePolicyPut(ctx context.Context, d *schema.ResourceData, meta interfa
 		ResourceArn: aws.String(resourceARN),
 	}
 
-	log.Printf("[DEBUG] Putting ACM PCA Policy: %+v", input)
 	_, err = conn.PutPolicy(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "putting ACM PCA Policy (%s): %s", resourceARN, err)
 	}
 
-	d.SetId(resourceARN)
+	if d.IsNewResource() {
+		d.SetId(resourceARN)
+	}
 
 	return append(diags, resourcePolicyRead(ctx, d, meta)...)
 }
@@ -86,7 +87,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
 
-	policy, err := FindPolicyByARN(ctx, conn, d.Id())
+	policy, err := findPolicyByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ACM PCA Policy (%s) not found, removing from state", d.Id())
@@ -113,10 +114,10 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		ResourceArn: aws.String(d.Id()),
 	})
 
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) ||
-		errs.IsA[*awstypes.RequestAlreadyProcessedException](err) ||
-		errs.IsA[*awstypes.RequestInProgressException](err) ||
-		errs.IsAErrorMessageContains[*awstypes.InvalidRequestException](err, "Self-signed policy can not be revoked") {
+	if errs.IsA[*types.ResourceNotFoundException](err) ||
+		errs.IsA[*types.RequestAlreadyProcessedException](err) ||
+		errs.IsA[*types.RequestInProgressException](err) ||
+		errs.IsAErrorMessageContains[*types.InvalidRequestException](err, "Self-signed policy can not be revoked") {
 		return diags
 	}
 
@@ -125,4 +126,29 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	return diags
+}
+
+func findPolicyByARN(ctx context.Context, conn *acmpca.Client, arn string) (*string, error) {
+	input := &acmpca.GetPolicyInput{
+		ResourceArn: aws.String(arn),
+	}
+
+	output, err := conn.GetPolicy(ctx, input)
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Policy == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Policy, nil
 }

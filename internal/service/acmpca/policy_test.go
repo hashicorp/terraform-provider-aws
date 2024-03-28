@@ -76,10 +76,6 @@ func testAccCheckPolicyExists(ctx context.Context, n string) resource.TestCheckF
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ACM PCA Policy ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAClient(ctx)
 
 		_, err := tfacmpca.FindPolicyByARN(ctx, conn, rs.Primary.ID)

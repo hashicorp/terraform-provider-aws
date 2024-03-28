@@ -66,8 +66,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Permission",
 		},
 		{
-			Factory:  ResourcePolicy,
+			Factory:  resourcePolicy,
 			TypeName: "aws_acmpca_policy",
+			Name:     "Policy",
 		},
 	}
 }

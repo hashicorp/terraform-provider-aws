@@ -9,9 +9,11 @@ var (
 	ResourceCertificateAuthority            = resourceCertificateAuthority
 	ResourceCertificateAuthorityCertificate = resourceCertificateAuthorityCertificate
 	ResourcePermission                      = resourcePermission
+	ResourcePolicy                          = resourcePolicy
 
 	FindCertificateAuthorityCertificateByARN = findCertificateAuthorityCertificateByARN
 	FindCertificateByTwoPartKey              = findCertificateByTwoPartKey
 	FindPermissionByThreePartKey             = findPermissionByThreePartKey
+	FindPolicyByARN                          = findPolicyByARN
 	ValidTemplateARN                         = validTemplateARN
 )
