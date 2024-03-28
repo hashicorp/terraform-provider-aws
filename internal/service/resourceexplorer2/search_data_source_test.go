@@ -5,6 +5,7 @@ package resourceexplorer2_test
 
 import (
 	"fmt"
+	"os"
 	"testing"
 
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -47,6 +48,9 @@ func testAccSearchDataSource_basic(t *testing.T) {
 // Can only be run once a day as changing the index type has a 24 hr cooldown
 func testAccSearchDataSource_IndexType(t *testing.T) {
 	ctx := acctest.Context(t)
+	if os.Getenv("RESOURCEEXPLORER_INDEX_TYPE") != "AGGREGATOR" {
+		t.Skip("Environment variable RESOURCEEXPLORER_INDEX_TYPE is not set to AGGREGATOR. Before setting this environment variable and running this test, ensure no tests with a LOCAL index type also need to run. Changing the index type will trigger a cool down period of 24 hours.")
+	}
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
