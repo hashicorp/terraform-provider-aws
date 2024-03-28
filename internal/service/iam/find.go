@@ -33,10 +33,6 @@ func FindUsers(ctx context.Context, conn *iam.Client, nameRegex, pathPrefix stri
 		}
 
 		for _, user := range page.Users {
-			if reflect.ValueOf(user).IsZero() {
-				continue
-			}
-
 			if nameRegex != "" && !regexache.MustCompile(nameRegex).MatchString(aws.ToString(user.UserName)) {
 				continue
 			}
@@ -111,19 +107,19 @@ func FindSigningCertificate(ctx context.Context, conn *iam.Client, userName, cer
 		return nil, tfresource.NewEmptyResultError(output)
 	}
 
-	var cert *awstypes.SigningCertificate
+	var cert awstypes.SigningCertificate
 
 	for _, crt := range output.Certificates {
 		if aws.ToString(crt.UserName) == userName &&
 			aws.ToString(crt.CertificateId) == certId {
-			cert = &crt
+			cert = crt
 			break
 		}
 	}
 
-	if cert == nil {
+	if reflect.ValueOf(cert).IsZero() {
 		return nil, tfresource.NewEmptyResultError(cert)
 	}
 
-	return cert, nil
+	return &cert, nil
 }

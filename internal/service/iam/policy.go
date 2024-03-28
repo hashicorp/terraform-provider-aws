@@ -306,19 +306,19 @@ func policyPruneVersions(ctx context.Context, conn *iam.Client, arn string) erro
 		return nil
 	}
 
-	var oldestVersion *awstypes.PolicyVersion
+	var oldestVersion awstypes.PolicyVersion
 
 	for _, version := range versions {
 		if version.IsDefaultVersion {
 			continue
 		}
 
-		if oldestVersion == nil || version.CreateDate.Before(aws.ToTime(oldestVersion.CreateDate)) {
-			oldestVersion = &version
+		if oldestVersion == (awstypes.PolicyVersion{}) || version.CreateDate.Before(aws.ToTime(oldestVersion.CreateDate)) {
+			oldestVersion = version
 		}
 	}
 
-	if oldestVersion == nil {
+	if oldestVersion == (awstypes.PolicyVersion{}) {
 		return nil
 	}
 

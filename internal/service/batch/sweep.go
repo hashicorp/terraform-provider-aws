@@ -21,6 +21,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
 )
 
+const propagationTimeout = 2 * time.Minute
+
 func RegisterSweepers() {
 	resource.AddTestSweepers("aws_batch_compute_environment", &resource.Sweeper{
 		Name: "aws_batch_compute_environment",
@@ -119,7 +121,7 @@ func sweepComputeEnvironments(region string) error {
 				}
 
 				waiter := iam.NewRoleExistsWaiter(iamconn)
-				err = waiter.Wait(ctx, iamGetRoleInput, 2*time.Minute)
+				err = waiter.Wait(ctx, iamGetRoleInput, propagationTimeout)
 
 				if err != nil {
 					sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error waiting for IAM Role (%s) creation for INVALID Batch Compute Environment (%s): %w", serviceRoleName, name, err))
