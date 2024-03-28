@@ -35,8 +35,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Authorization Token",
 		},
 		{
-			Factory:  DataSourceImage,
+			Factory:  dataSourceImage,
 			TypeName: "aws_ecr_image",
+			Name:     "Image",
 		},
 		{
 			Factory:  dataSourcePullThroughCacheRule,

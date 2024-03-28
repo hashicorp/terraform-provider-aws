@@ -135,7 +135,7 @@ func dataSourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	imageDetails, err := FindImageDetails(ctx, conn, &ecr.DescribeImagesInput{
+	imageDetails, err := findImageDetails(ctx, conn, &ecr.DescribeImagesInput{
 		RepositoryName: repository.RepositoryName,
 		RegistryId:     repository.RegistryId,
 	})
@@ -145,7 +145,7 @@ func dataSourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if len(imageDetails) >= 1 {
-		slices.SortFunc(imageDetails, func(a, b *awstypes.ImageDetail) int {
+		slices.SortFunc(imageDetails, func(a, b awstypes.ImageDetail) int {
 			if aws.ToTime(a.ImagePushedAt).After(aws.ToTime(b.ImagePushedAt)) {
 				return -1
 			}
