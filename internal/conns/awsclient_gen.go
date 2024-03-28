@@ -15,6 +15,7 @@ import (
 	apprunner_sdkv2 "github.com/aws/aws-sdk-go-v2/service/apprunner"
 	athena_sdkv2 "github.com/aws/aws-sdk-go-v2/service/athena"
 	auditmanager_sdkv2 "github.com/aws/aws-sdk-go-v2/service/auditmanager"
+	autoscaling_sdkv2 "github.com/aws/aws-sdk-go-v2/service/autoscaling"
 	batch_sdkv2 "github.com/aws/aws-sdk-go-v2/service/batch"
 	bedrock_sdkv2 "github.com/aws/aws-sdk-go-v2/service/bedrock"
 	bedrockagent_sdkv2 "github.com/aws/aws-sdk-go-v2/service/bedrockagent"
@@ -158,7 +159,6 @@ import (
 	appmesh_sdkv1 "github.com/aws/aws-sdk-go/service/appmesh"
 	appstream_sdkv1 "github.com/aws/aws-sdk-go/service/appstream"
 	appsync_sdkv1 "github.com/aws/aws-sdk-go/service/appsync"
-	autoscaling_sdkv1 "github.com/aws/aws-sdk-go/service/autoscaling"
 	autoscalingplans_sdkv1 "github.com/aws/aws-sdk-go/service/autoscalingplans"
 	backup_sdkv1 "github.com/aws/aws-sdk-go/service/backup"
 	batch_sdkv1 "github.com/aws/aws-sdk-go/service/batch"
@@ -338,8 +338,8 @@ func (c *AWSClient) AuditManagerClient(ctx context.Context) *auditmanager_sdkv2.
 	return errs.Must(client[*auditmanager_sdkv2.Client](ctx, c, names.AuditManager, make(map[string]any)))
 }
 
-func (c *AWSClient) AutoScalingConn(ctx context.Context) *autoscaling_sdkv1.AutoScaling {
-	return errs.Must(conn[*autoscaling_sdkv1.AutoScaling](ctx, c, names.AutoScaling, make(map[string]any)))
+func (c *AWSClient) AutoScalingClient(ctx context.Context) *autoscaling_sdkv2.Client {
+	return errs.Must(client[*autoscaling_sdkv2.Client](ctx, c, names.AutoScaling, make(map[string]any)))
 }
 
 func (c *AWSClient) AutoScalingPlansConn(ctx context.Context) *autoscalingplans_sdkv1.AutoScalingPlans {

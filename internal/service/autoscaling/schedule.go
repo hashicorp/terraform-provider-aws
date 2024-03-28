@@ -10,11 +10,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/autoscaling"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
@@ -93,7 +93,7 @@ func ResourceSchedule() *schema.Resource {
 
 func resourceSchedulePut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AutoScalingConn(ctx)
+	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
 	name := d.Get("scheduled_action_name").(string)
 	input := &autoscaling.PutScheduledUpdateGroupActionInput{
@@ -127,21 +127,21 @@ func resourceSchedulePut(ctx context.Context, d *schema.ResourceData, meta inter
 	// autoscaling rules. Since Terraform doesn't have a great pattern for
 	// differentiating between 0 and unset fields, we accept "-1" to mean "don't
 	// include this parameter in the action".
-	minSize := int64(d.Get("min_size").(int))
-	maxSize := int64(d.Get("max_size").(int))
-	desiredCapacity := int64(d.Get("desired_capacity").(int))
+	minSize := int32(d.Get("min_size").(int))
+	maxSize := int32(d.Get("max_size").(int))
+	desiredCapacity := int32(d.Get("desired_capacity").(int))
 	if minSize != -1 {
-		input.MinSize = aws.Int64(minSize)
+		input.MinSize = aws.Int32(minSize)
 	}
 	if maxSize != -1 {
-		input.MaxSize = aws.Int64(maxSize)
+		input.MaxSize = aws.Int32(maxSize)
 	}
 	if desiredCapacity != -1 {
-		input.DesiredCapacity = aws.Int64(desiredCapacity)
+		input.DesiredCapacity = aws.Int32(desiredCapacity)
 	}
 
 	log.Printf("[INFO] Putting Auto Scaling Scheduled Action: %s", input)
-	_, err := conn.PutScheduledUpdateGroupActionWithContext(ctx, input)
+	_, err := conn.PutScheduledUpdateGroupAction(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Auto Scaling Scheduled Action (%s): %s", name, err)
@@ -154,7 +154,7 @@ func resourceSchedulePut(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AutoScalingConn(ctx)
+	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
 	sa, err := FindScheduledUpdateGroupAction(ctx, conn, d.Get("autoscaling_group_name").(string), d.Id())
 
@@ -199,10 +199,10 @@ func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceScheduleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AutoScalingConn(ctx)
+	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
 	log.Printf("[INFO] Deleting Auto Scaling Scheduled Action: %s", d.Id())
-	_, err := conn.DeleteScheduledActionWithContext(ctx, &autoscaling.DeleteScheduledActionInput{
+	_, err := conn.DeleteScheduledAction(ctx, &autoscaling.DeleteScheduledActionInput{
 		AutoScalingGroupName: aws.String(d.Get("autoscaling_group_name").(string)),
 		ScheduledActionName:  aws.String(d.Id()),
 	})
@@ -239,49 +239,32 @@ func resourceScheduleImport(ctx context.Context, d *schema.ResourceData, meta in
 	return []*schema.ResourceData{d}, nil
 }
 
-func FindScheduledUpdateGroupAction(ctx context.Context, conn *autoscaling.AutoScaling, asgName, actionName string) (*autoscaling.ScheduledUpdateGroupAction, error) {
+func FindScheduledUpdateGroupAction(ctx context.Context, conn *autoscaling.Client, asgName, actionName string) (*awstypes.ScheduledUpdateGroupAction, error) {
 	input := &autoscaling.DescribeScheduledActionsInput{
 		AutoScalingGroupName: aws.String(asgName),
-		ScheduledActionNames: aws.StringSlice([]string{actionName}),
+		ScheduledActionNames: []string{actionName},
 	}
-	var output []*autoscaling.ScheduledUpdateGroupAction
+	var output []awstypes.ScheduledUpdateGroupAction
 
-	err := conn.DescribeScheduledActionsPagesWithContext(ctx, input, func(page *autoscaling.DescribeScheduledActionsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := autoscaling.NewDescribeScheduledActionsPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
 		}
 
 		for _, v := range page.ScheduledUpdateGroupActions {
-			if v == nil || aws.StringValue(v.ScheduledActionName) != actionName {
+			if aws.ToString(v.ScheduledActionName) != actionName {
 				continue
 			}
 
 			output = append(output, v)
 		}
-
-		return !lastPage
-	})
-
-	if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
 	}
 
-	if err != nil {
-		return nil, err
-	}
-
-	if len(output) == 0 || output[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return output[0], nil
+	return tfresource.AssertSingleValueResult(output)
 }
 
 func validScheduleTimestamp(v interface{}, k string) (ws []string, errors []error) {

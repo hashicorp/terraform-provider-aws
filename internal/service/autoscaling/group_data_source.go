@@ -8,7 +8,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -574,7 +574,7 @@ func DataSourceGroup() *schema.Resource {
 
 func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AutoScalingConn(ctx)
+	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	groupName := d.Get("name").(string)
@@ -584,9 +584,9 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "reading Auto Scaling Group (%s): %s", groupName, err)
 	}
 
-	d.SetId(aws.StringValue(group.AutoScalingGroupName))
+	d.SetId(aws.ToString(group.AutoScalingGroupName))
 	d.Set("arn", group.AutoScalingGroupARN)
-	d.Set("availability_zones", aws.StringValueSlice(group.AvailabilityZones))
+	d.Set("availability_zones", group.AvailabilityZones)
 	d.Set("default_cooldown", group.DefaultCooldown)
 	d.Set("desired_capacity", group.DesiredCapacity)
 	d.Set("desired_capacity_type", group.DesiredCapacityType)
@@ -604,7 +604,7 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 	} else {
 		d.Set("launch_template", nil)
 	}
-	d.Set("load_balancers", aws.StringValueSlice(group.LoadBalancerNames))
+	d.Set("load_balancers", group.LoadBalancerNames)
 	d.Set("max_instance_lifetime", group.MaxInstanceLifetime)
 	d.Set("max_size", group.MaxSize)
 	d.Set("min_size", group.MinSize)
@@ -625,8 +625,8 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if err := d.Set("tag", ListOfMap(KeyValueTags(ctx, group.Tags, d.Id(), TagResourceTypeGroup).IgnoreAWS().IgnoreConfig(ignoreTagsConfig))); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tag: %s", err)
 	}
-	d.Set("target_group_arns", aws.StringValueSlice(group.TargetGroupARNs))
-	d.Set("termination_policies", aws.StringValueSlice(group.TerminationPolicies))
+	d.Set("target_group_arns", group.TargetGroupARNs)
+	d.Set("termination_policies", group.TerminationPolicies)
 	if err := d.Set("traffic_source", flattenTrafficSourceIdentifiers(group.TrafficSources)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting traffic_source: %s", err)
 	}

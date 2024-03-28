@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/autoscaling"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,7 +21,7 @@ import (
 
 func TestAccAutoScalingPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v autoscaling.ScalingPolicy
+	var v awstypes.ScalingPolicy
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceSimpleName := "aws_autoscaling_policy.test_simple"
 	resourceStepName := "aws_autoscaling_policy.test_step"
@@ -119,7 +119,7 @@ func TestAccAutoScalingPolicy_basic(t *testing.T) {
 
 func TestAccAutoScalingPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v autoscaling.ScalingPolicy
+	var v awstypes.ScalingPolicy
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_policy.test_simple"
 
@@ -143,7 +143,7 @@ func TestAccAutoScalingPolicy_disappears(t *testing.T) {
 
 func TestAccAutoScalingPolicy_predictiveScalingPredefined(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v autoscaling.ScalingPolicy
+	var v awstypes.ScalingPolicy
 	resourceSimpleName := "aws_autoscaling_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -180,7 +180,7 @@ func TestAccAutoScalingPolicy_predictiveScalingPredefined(t *testing.T) {
 
 func TestAccAutoScalingPolicy_predictiveScalingResourceLabel(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v autoscaling.ScalingPolicy
+	var v awstypes.ScalingPolicy
 	resourceSimpleName := "aws_autoscaling_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -217,7 +217,7 @@ func TestAccAutoScalingPolicy_predictiveScalingResourceLabel(t *testing.T) {
 
 func TestAccAutoScalingPolicy_predictiveScalingCustom(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v autoscaling.ScalingPolicy
+	var v awstypes.ScalingPolicy
 	resourceName := "aws_autoscaling_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -270,7 +270,7 @@ func TestAccAutoScalingPolicy_predictiveScalingCustom(t *testing.T) {
 
 func TestAccAutoScalingPolicy_predictiveScalingRemoved(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v autoscaling.ScalingPolicy
+	var v awstypes.ScalingPolicy
 	resourceName := "aws_autoscaling_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -306,7 +306,7 @@ func TestAccAutoScalingPolicy_predictiveScalingRemoved(t *testing.T) {
 
 func TestAccAutoScalingPolicy_predictiveScalingUpdated(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v autoscaling.ScalingPolicy
+	var v awstypes.ScalingPolicy
 	resourceName := "aws_autoscaling_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -358,7 +358,7 @@ func TestAccAutoScalingPolicy_predictiveScalingUpdated(t *testing.T) {
 
 func TestAccAutoScalingPolicy_predictiveScalingFloatTargetValue(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v autoscaling.ScalingPolicy
+	var v awstypes.ScalingPolicy
 	resourceSimpleName := "aws_autoscaling_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -389,7 +389,7 @@ func TestAccAutoScalingPolicy_predictiveScalingFloatTargetValue(t *testing.T) {
 
 func TestAccAutoScalingPolicy_simpleScalingStepAdjustment(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v autoscaling.ScalingPolicy
+	var v awstypes.ScalingPolicy
 	resourceName := "aws_autoscaling_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -419,7 +419,7 @@ func TestAccAutoScalingPolicy_simpleScalingStepAdjustment(t *testing.T) {
 
 func TestAccAutoScalingPolicy_TargetTrack_predefined(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v autoscaling.ScalingPolicy
+	var v awstypes.ScalingPolicy
 	resourceName := "aws_autoscaling_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -447,7 +447,7 @@ func TestAccAutoScalingPolicy_TargetTrack_predefined(t *testing.T) {
 
 func TestAccAutoScalingPolicy_TargetTrack_custom(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v autoscaling.ScalingPolicy
+	var v awstypes.ScalingPolicy
 	resourceName := "aws_autoscaling_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -475,7 +475,7 @@ func TestAccAutoScalingPolicy_TargetTrack_custom(t *testing.T) {
 
 func TestAccAutoScalingPolicy_TargetTrack_metricMath(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v autoscaling.ScalingPolicy
+	var v awstypes.ScalingPolicy
 	resourceName := "aws_autoscaling_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -503,7 +503,7 @@ func TestAccAutoScalingPolicy_TargetTrack_metricMath(t *testing.T) {
 
 func TestAccAutoScalingPolicy_zeroValue(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2 autoscaling.ScalingPolicy
+	var v1, v2 awstypes.ScalingPolicy
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceSimpleName := "aws_autoscaling_policy.test_simple"
 	resourceStepName := "aws_autoscaling_policy.test_step"
@@ -541,7 +541,7 @@ func TestAccAutoScalingPolicy_zeroValue(t *testing.T) {
 	})
 }
 
-func testAccCheckScalingPolicyExists(ctx context.Context, n string, v *autoscaling.ScalingPolicy) resource.TestCheckFunc {
+func testAccCheckScalingPolicyExists(ctx context.Context, n string, v *awstypes.ScalingPolicy) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -552,7 +552,7 @@ func testAccCheckScalingPolicyExists(ctx context.Context, n string, v *autoscali
 			return fmt.Errorf("No Auto Scaling Policy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingClient(ctx)
 
 		output, err := tfautoscaling.FindScalingPolicy(ctx, conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.ID)
 
@@ -568,7 +568,7 @@ func testAccCheckScalingPolicyExists(ctx context.Context, n string, v *autoscali
 
 func testAccCheckPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_autoscaling_policy" {

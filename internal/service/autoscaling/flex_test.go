@@ -7,8 +7,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/autoscaling"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
 )
 
 func TestExpandStepAdjustments(t *testing.T) {
@@ -26,10 +26,10 @@ func TestExpandStepAdjustments(t *testing.T) {
 		t.Fatalf("bad: %#v", err)
 	}
 
-	expected := &autoscaling.StepAdjustment{
+	expected := &awstypes.StepAdjustment{
 		MetricIntervalLowerBound: aws.Float64(1.0),
 		MetricIntervalUpperBound: aws.Float64(2.0),
-		ScalingAdjustment:        aws.Int64(1),
+		ScalingAdjustment:        aws.Int32(1),
 	}
 
 	if !reflect.DeepEqual(parameters[0], expected) {
@@ -43,11 +43,11 @@ func TestExpandStepAdjustments(t *testing.T) {
 func TestFlattenStepAdjustments(t *testing.T) {
 	t.Parallel()
 
-	expanded := []*autoscaling.StepAdjustment{
+	expanded := []awstypes.StepAdjustment{
 		{
 			MetricIntervalLowerBound: aws.Float64(1.0),
 			MetricIntervalUpperBound: aws.Float64(2.5),
-			ScalingAdjustment:        aws.Int64(1),
+			ScalingAdjustment:        aws.Int32(1),
 		},
 	}
 

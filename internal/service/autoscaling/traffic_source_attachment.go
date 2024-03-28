@@ -10,8 +10,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/autoscaling"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -68,19 +69,19 @@ func ResourceTrafficSourceAttachment() *schema.Resource {
 
 func resourceTrafficSourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AutoScalingConn(ctx)
+	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
 	asgName := d.Get("autoscaling_group_name").(string)
 	trafficSource := expandTrafficSourceIdentifier(d.Get("traffic_source").([]interface{})[0].(map[string]interface{}))
-	trafficSourceID := aws.StringValue(trafficSource.Identifier)
-	trafficSourceType := aws.StringValue(trafficSource.Type)
+	trafficSourceID := aws.ToString(trafficSource.Identifier)
+	trafficSourceType := aws.ToString(trafficSource.Type)
 	id := trafficSourceAttachmentCreateResourceID(asgName, trafficSourceType, trafficSourceID)
 	input := &autoscaling.AttachTrafficSourcesInput{
 		AutoScalingGroupName: aws.String(asgName),
-		TrafficSources:       []*autoscaling.TrafficSourceIdentifier{trafficSource},
+		TrafficSources:       []awstypes.TrafficSourceIdentifier{trafficSource},
 	}
 
-	_, err := conn.AttachTrafficSourcesWithContext(ctx, input)
+	_, err := conn.AttachTrafficSources(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Auto Scaling Traffic Source Attachment (%s): %s", id, err)
@@ -97,7 +98,7 @@ func resourceTrafficSourceAttachmentCreate(ctx context.Context, d *schema.Resour
 
 func resourceTrafficSourceAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AutoScalingConn(ctx)
+	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
 	asgName, trafficSourceType, trafficSourceID, err := TrafficSourceAttachmentParseResourceID(d.Id())
 
@@ -122,7 +123,7 @@ func resourceTrafficSourceAttachmentRead(ctx context.Context, d *schema.Resource
 
 func resourceTrafficSourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AutoScalingConn(ctx)
+	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
 	asgName, trafficSourceType, trafficSourceID, err := TrafficSourceAttachmentParseResourceID(d.Id())
 
@@ -130,10 +131,12 @@ func resourceTrafficSourceAttachmentDelete(ctx context.Context, d *schema.Resour
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
+	trafficSource := expandTrafficSourceIdentifier(d.Get("traffic_source").([]interface{})[0].(map[string]interface{}))
+
 	log.Printf("[INFO] Deleting Auto Scaling Traffic Source Attachment: %s", d.Id())
-	_, err = conn.DetachTrafficSourcesWithContext(ctx, &autoscaling.DetachTrafficSourcesInput{
+	_, err = conn.DetachTrafficSources(ctx, &autoscaling.DetachTrafficSourcesInput{
 		AutoScalingGroupName: aws.String(asgName),
-		TrafficSources:       []*autoscaling.TrafficSourceIdentifier{expandTrafficSourceIdentifier(d.Get("traffic_source").([]interface{})[0].(map[string]interface{}))},
+		TrafficSources:       []awstypes.TrafficSourceIdentifier{trafficSource},
 	})
 
 	if err != nil {
@@ -166,7 +169,7 @@ func TrafficSourceAttachmentParseResourceID(id string) (string, string, string, 
 	return "", "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected asg-name%[2]straffic-source-type%[2]straffic-source-id", id, trafficSourceAttachmentIDSeparator)
 }
 
-func FindTrafficSourceAttachmentByThreePartKey(ctx context.Context, conn *autoscaling.AutoScaling, asgName, trafficSourceType, trafficSourceID string) (*autoscaling.TrafficSourceState, error) {
+func FindTrafficSourceAttachmentByThreePartKey(ctx context.Context, conn *autoscaling.Client, asgName, trafficSourceType, trafficSourceID string) (*awstypes.TrafficSourceState, error) {
 	input := &autoscaling.DescribeTrafficSourcesInput{
 		AutoScalingGroupName: aws.String(asgName),
 		TrafficSourceType:    aws.String(trafficSourceType),
@@ -178,14 +181,14 @@ func FindTrafficSourceAttachmentByThreePartKey(ctx context.Context, conn *autosc
 		return nil, err
 	}
 
-	output = slices.Filter(output, func(v *autoscaling.TrafficSourceState) bool {
-		return aws.StringValue(v.Identifier) == trafficSourceID
+	output = slices.Filter(output, func(v awstypes.TrafficSourceState) bool {
+		return aws.ToString(v.Identifier) == trafficSourceID
 	})
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func statusTrafficSourceAttachment(ctx context.Context, conn *autoscaling.AutoScaling, asgName, trafficSourceType, trafficSourceID string) retry.StateRefreshFunc {
+func statusTrafficSourceAttachment(ctx context.Context, conn *autoscaling.Client, asgName, trafficSourceType, trafficSourceID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindTrafficSourceAttachmentByThreePartKey(ctx, conn, asgName, trafficSourceType, trafficSourceID)
 
@@ -197,11 +200,11 @@ func statusTrafficSourceAttachment(ctx context.Context, conn *autoscaling.AutoSc
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.State), nil
+		return output, aws.ToString(output.State), nil
 	}
 }
 
-func waitTrafficSourceAttachmentCreated(ctx context.Context, conn *autoscaling.AutoScaling, asgName, trafficSourceType, trafficSourceID string, timeout time.Duration) (*autoscaling.TrafficSourceState, error) {
+func waitTrafficSourceAttachmentCreated(ctx context.Context, conn *autoscaling.Client, asgName, trafficSourceType, trafficSourceID string, timeout time.Duration) (*awstypes.TrafficSourceState, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{TrafficSourceStateAdding},
 		Target:  []string{TrafficSourceStateAdded, TrafficSourceStateInService},
@@ -211,14 +214,14 @@ func waitTrafficSourceAttachmentCreated(ctx context.Context, conn *autoscaling.A
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*autoscaling.TrafficSourceState); ok {
+	if output, ok := outputRaw.(*awstypes.TrafficSourceState); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitTrafficSourceAttachmentDeleted(ctx context.Context, conn *autoscaling.AutoScaling, asgName, trafficSourceType, trafficSourceID string, timeout time.Duration) (*autoscaling.TrafficSourceState, error) {
+func waitTrafficSourceAttachmentDeleted(ctx context.Context, conn *autoscaling.Client, asgName, trafficSourceType, trafficSourceID string, timeout time.Duration) (*awstypes.TrafficSourceState, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{TrafficSourceStateRemoving, TrafficSourceStateRemoved},
 		Target:  []string{},
@@ -228,7 +231,7 @@ func waitTrafficSourceAttachmentDeleted(ctx context.Context, conn *autoscaling.A
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*autoscaling.TrafficSourceState); ok {
+	if output, ok := outputRaw.(*awstypes.TrafficSourceState); ok {
 		return output, err
 	}
 

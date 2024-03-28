@@ -6,7 +6,6 @@ package autoscaling
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -190,7 +189,7 @@ func DataSourceLaunchConfiguration() *schema.Resource {
 
 func dataSourceLaunchConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	autoscalingconn := meta.(*conns.AWSClient).AutoScalingConn(ctx)
+	autoscalingconn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 	ec2conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	name := d.Get("name").(string)
@@ -223,7 +222,7 @@ func dataSourceLaunchConfigurationRead(ctx context.Context, d *schema.ResourceDa
 	}
 	d.Set("name", lc.LaunchConfigurationName)
 	d.Set("placement_tenancy", lc.PlacementTenancy)
-	d.Set("security_groups", aws.StringValueSlice(lc.SecurityGroups))
+	d.Set("security_groups", lc.SecurityGroups)
 	d.Set("spot_price", lc.SpotPrice)
 	d.Set("user_data", lc.UserData)
 

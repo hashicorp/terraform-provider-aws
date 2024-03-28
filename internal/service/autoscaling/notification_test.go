@@ -9,8 +9,8 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/autoscaling"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -129,13 +129,13 @@ func testAccCheckASGNotificationExists(ctx context.Context, n string, groups []s
 			return fmt.Errorf("No ASG Notification ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingClient(ctx)
 		opts := &autoscaling.DescribeNotificationConfigurationsInput{
-			AutoScalingGroupNames: aws.StringSlice(groups),
-			MaxRecords:            aws.Int64(100),
+			AutoScalingGroupNames: groups,
+			MaxRecords:            aws.Int32(100),
 		}
 
-		resp, err := conn.DescribeNotificationConfigurationsWithContext(ctx, opts)
+		resp, err := conn.DescribeNotificationConfigurations(ctx, opts)
 		if err != nil {
 			return fmt.Errorf("Error describing notifications: %s", err)
 		}
@@ -153,13 +153,13 @@ func testAccCheckASGNDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			groups := []*string{aws.String("foobar1-terraform-test")}
-			conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn(ctx)
+			groups := []string{"foobar1-terraform-test"}
+			conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingClient(ctx)
 			opts := &autoscaling.DescribeNotificationConfigurationsInput{
 				AutoScalingGroupNames: groups,
 			}
 
-			resp, err := conn.DescribeNotificationConfigurationsWithContext(ctx, opts)
+			resp, err := conn.DescribeNotificationConfigurations(ctx, opts)
 			if err != nil {
 				return fmt.Errorf("Error describing notifications")
 			}

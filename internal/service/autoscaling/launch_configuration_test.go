@@ -9,8 +9,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/autoscaling"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -25,7 +25,7 @@ import (
 
 func TestAccAutoScalingLaunchConfiguration_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf autoscaling.LaunchConfiguration
+	var conf awstypes.LaunchConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_launch_configuration.test"
 
@@ -71,7 +71,7 @@ func TestAccAutoScalingLaunchConfiguration_basic(t *testing.T) {
 
 func TestAccAutoScalingLaunchConfiguration_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf autoscaling.LaunchConfiguration
+	var conf awstypes.LaunchConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_launch_configuration.test"
 
@@ -95,7 +95,7 @@ func TestAccAutoScalingLaunchConfiguration_disappears(t *testing.T) {
 
 func TestAccAutoScalingLaunchConfiguration_Name_generated(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf autoscaling.LaunchConfiguration
+	var conf awstypes.LaunchConfiguration
 	resourceName := "aws_launch_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -123,7 +123,7 @@ func TestAccAutoScalingLaunchConfiguration_Name_generated(t *testing.T) {
 
 func TestAccAutoScalingLaunchConfiguration_namePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf autoscaling.LaunchConfiguration
+	var conf awstypes.LaunchConfiguration
 	resourceName := "aws_launch_configuration.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -151,7 +151,7 @@ func TestAccAutoScalingLaunchConfiguration_namePrefix(t *testing.T) {
 
 func TestAccAutoScalingLaunchConfiguration_withBlockDevices(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf autoscaling.LaunchConfiguration
+	var conf awstypes.LaunchConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_launch_configuration.test"
 
@@ -199,7 +199,7 @@ func TestAccAutoScalingLaunchConfiguration_withBlockDevices(t *testing.T) {
 
 func TestAccAutoScalingLaunchConfiguration_withInstanceStoreAMI(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf autoscaling.LaunchConfiguration
+	var conf awstypes.LaunchConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_launch_configuration.test"
 
@@ -227,7 +227,7 @@ func TestAccAutoScalingLaunchConfiguration_withInstanceStoreAMI(t *testing.T) {
 func TestAccAutoScalingLaunchConfiguration_RootBlockDevice_amiDisappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var ami ec2.Image
-	var conf autoscaling.LaunchConfiguration
+	var conf awstypes.LaunchConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	amiCopyResourceName := "aws_ami_copy.test"
 	resourceName := "aws_launch_configuration.test"
@@ -259,7 +259,7 @@ func TestAccAutoScalingLaunchConfiguration_RootBlockDevice_amiDisappears(t *test
 
 func TestAccAutoScalingLaunchConfiguration_RootBlockDevice_volumeSize(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf autoscaling.LaunchConfiguration
+	var conf awstypes.LaunchConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_launch_configuration.test"
 
@@ -296,7 +296,7 @@ func TestAccAutoScalingLaunchConfiguration_RootBlockDevice_volumeSize(t *testing
 
 func TestAccAutoScalingLaunchConfiguration_encryptedRootBlockDevice(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf autoscaling.LaunchConfiguration
+	var conf awstypes.LaunchConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_launch_configuration.test"
 
@@ -329,7 +329,7 @@ func TestAccAutoScalingLaunchConfiguration_encryptedRootBlockDevice(t *testing.T
 
 func TestAccAutoScalingLaunchConfiguration_withSpotPrice(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf autoscaling.LaunchConfiguration
+	var conf awstypes.LaunchConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_launch_configuration.test"
 
@@ -357,7 +357,7 @@ func TestAccAutoScalingLaunchConfiguration_withSpotPrice(t *testing.T) {
 
 func TestAccAutoScalingLaunchConfiguration_withIAMProfile(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf autoscaling.LaunchConfiguration
+	var conf awstypes.LaunchConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_launch_configuration.test"
 
@@ -385,7 +385,7 @@ func TestAccAutoScalingLaunchConfiguration_withIAMProfile(t *testing.T) {
 
 func TestAccAutoScalingLaunchConfiguration_withGP3(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf autoscaling.LaunchConfiguration
+	var conf awstypes.LaunchConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_launch_configuration.test"
 
@@ -425,7 +425,7 @@ func TestAccAutoScalingLaunchConfiguration_withGP3(t *testing.T) {
 
 func TestAccAutoScalingLaunchConfiguration_encryptedEBSBlockDevice(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf autoscaling.LaunchConfiguration
+	var conf awstypes.LaunchConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_launch_configuration.test"
 
@@ -480,7 +480,7 @@ func TestAccAutoScalingLaunchConfiguration_encryptedEBSBlockDevice(t *testing.T)
 
 func TestAccAutoScalingLaunchConfiguration_metadataOptions(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf autoscaling.LaunchConfiguration
+	var conf awstypes.LaunchConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_launch_configuration.test"
 
@@ -511,7 +511,7 @@ func TestAccAutoScalingLaunchConfiguration_metadataOptions(t *testing.T) {
 
 func TestAccAutoScalingLaunchConfiguration_EBS_noDevice(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf autoscaling.LaunchConfiguration
+	var conf awstypes.LaunchConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_launch_configuration.test"
 
@@ -543,7 +543,7 @@ func TestAccAutoScalingLaunchConfiguration_EBS_noDevice(t *testing.T) {
 
 func TestAccAutoScalingLaunchConfiguration_userData(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf autoscaling.LaunchConfiguration
+	var conf awstypes.LaunchConfiguration
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_launch_configuration.test"
 
@@ -578,8 +578,8 @@ func TestAccAutoScalingLaunchConfiguration_userData(t *testing.T) {
 
 func TestAccAutoScalingLaunchConfiguration_AssociatePublicIPAddress_subnetFalseConfigNull(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf autoscaling.LaunchConfiguration
-	var group autoscaling.Group
+	var conf awstypes.LaunchConfiguration
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_launch_configuration.test"
 	groupResourceName := "aws_autoscaling_group.test"
@@ -610,8 +610,8 @@ func TestAccAutoScalingLaunchConfiguration_AssociatePublicIPAddress_subnetFalseC
 
 func TestAccAutoScalingLaunchConfiguration_AssociatePublicIPAddress_subnetFalseConfigFalse(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf autoscaling.LaunchConfiguration
-	var group autoscaling.Group
+	var conf awstypes.LaunchConfiguration
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_launch_configuration.test"
 	groupResourceName := "aws_autoscaling_group.test"
@@ -642,8 +642,8 @@ func TestAccAutoScalingLaunchConfiguration_AssociatePublicIPAddress_subnetFalseC
 
 func TestAccAutoScalingLaunchConfiguration_AssociatePublicIPAddress_subnetFalseConfigTrue(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf autoscaling.LaunchConfiguration
-	var group autoscaling.Group
+	var conf awstypes.LaunchConfiguration
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_launch_configuration.test"
 	groupResourceName := "aws_autoscaling_group.test"
@@ -674,8 +674,8 @@ func TestAccAutoScalingLaunchConfiguration_AssociatePublicIPAddress_subnetFalseC
 
 func TestAccAutoScalingLaunchConfiguration_AssociatePublicIPAddress_subnetTrueConfigNull(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf autoscaling.LaunchConfiguration
-	var group autoscaling.Group
+	var conf awstypes.LaunchConfiguration
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_launch_configuration.test"
 	groupResourceName := "aws_autoscaling_group.test"
@@ -706,8 +706,8 @@ func TestAccAutoScalingLaunchConfiguration_AssociatePublicIPAddress_subnetTrueCo
 
 func TestAccAutoScalingLaunchConfiguration_AssociatePublicIPAddress_subnetTrueConfigFalse(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf autoscaling.LaunchConfiguration
-	var group autoscaling.Group
+	var conf awstypes.LaunchConfiguration
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_launch_configuration.test"
 	groupResourceName := "aws_autoscaling_group.test"
@@ -738,8 +738,8 @@ func TestAccAutoScalingLaunchConfiguration_AssociatePublicIPAddress_subnetTrueCo
 
 func TestAccAutoScalingLaunchConfiguration_AssociatePublicIPAddress_subnetTrueConfigTrue(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf autoscaling.LaunchConfiguration
-	var group autoscaling.Group
+	var conf awstypes.LaunchConfiguration
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_launch_configuration.test"
 	groupResourceName := "aws_autoscaling_group.test"
@@ -770,7 +770,7 @@ func TestAccAutoScalingLaunchConfiguration_AssociatePublicIPAddress_subnetTrueCo
 
 func testAccCheckLaunchConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_launch_configuration" {
@@ -794,7 +794,7 @@ func testAccCheckLaunchConfigurationDestroy(ctx context.Context) resource.TestCh
 	}
 }
 
-func testAccCheckLaunchConfigurationExists(ctx context.Context, n string, v *autoscaling.LaunchConfiguration) resource.TestCheckFunc {
+func testAccCheckLaunchConfigurationExists(ctx context.Context, n string, v *awstypes.LaunchConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -805,7 +805,7 @@ func testAccCheckLaunchConfigurationExists(ctx context.Context, n string, v *aut
 			return fmt.Errorf("No Auto Scaling Launch Configuration ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingClient(ctx)
 
 		output, err := tfautoscaling.FindLaunchConfigurationByName(ctx, conn, rs.Primary.ID)
 
@@ -844,18 +844,18 @@ func testAccCheckAMIExists(ctx context.Context, n string, v *ec2.Image) resource
 	}
 }
 
-func testAccCheckInstanceHasPublicIPAddress(ctx context.Context, group *autoscaling.Group, idx int, expected bool) resource.TestCheckFunc {
+func testAccCheckInstanceHasPublicIPAddress(ctx context.Context, group *awstypes.AutoScalingGroup, idx int, expected bool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
-		instanceID := aws.StringValue(group.Instances[idx].InstanceId)
+		instanceID := aws.ToString(group.Instances[idx].InstanceId)
 		instance, err := tfec2.FindInstanceByID(ctx, conn, instanceID)
 
 		if err != nil {
 			return err
 		}
 
-		hasPublicIPAddress := aws.StringValue(instance.PublicIpAddress) != ""
+		hasPublicIPAddress := aws.ToString(instance.PublicIpAddress) != ""
 
 		if hasPublicIPAddress != expected {
 			return fmt.Errorf("%s has public IP address; got %t, expected %t", instanceID, hasPublicIPAddress, expected)

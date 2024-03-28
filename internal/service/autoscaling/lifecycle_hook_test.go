@@ -105,7 +105,7 @@ func testAccCheckLifecycleHookExists(ctx context.Context, n string) resource.Tes
 			return fmt.Errorf("No Auto Scaling Lifecycle Hook ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingClient(ctx)
 
 		_, err := tfautoscaling.FindLifecycleHook(ctx, conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.ID)
 
@@ -115,7 +115,7 @@ func testAccCheckLifecycleHookExists(ctx context.Context, n string) resource.Tes
 
 func testAccCheckLifecycleHookDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_autoscaling_lifecycle_hook" {

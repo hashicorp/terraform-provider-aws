@@ -60,7 +60,7 @@ func ResourceGroupTag() *schema.Resource {
 
 func resourceGroupTagCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.semgrep.tags.calling-UpdateTags-in-resource-create
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AutoScalingConn(ctx)
+	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
 	identifier := d.Get("autoscaling_group_name").(string)
 	tags := d.Get("tag").([]interface{})
@@ -77,7 +77,7 @@ func resourceGroupTagCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceGroupTagRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AutoScalingConn(ctx)
+	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 	identifier, key, err := tftags.GetResourceID(d.Id())
 
 	if err != nil {
@@ -111,7 +111,7 @@ func resourceGroupTagRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceGroupTagUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AutoScalingConn(ctx)
+	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 	identifier, key, err := tftags.GetResourceID(d.Id())
 
 	if err != nil {
@@ -127,7 +127,7 @@ func resourceGroupTagUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceGroupTagDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AutoScalingConn(ctx)
+	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 	identifier, key, err := tftags.GetResourceID(d.Id())
 
 	if err != nil {

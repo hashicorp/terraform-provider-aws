@@ -9,8 +9,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/autoscaling"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -23,7 +23,7 @@ import (
 
 func TestAccAutoScalingSchedule_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v autoscaling.ScheduledUpdateGroupAction
+	var v awstypes.ScheduledUpdateGroupAction
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	startTime := testAccScheduleValidStart(t)
@@ -54,7 +54,7 @@ func TestAccAutoScalingSchedule_basic(t *testing.T) {
 
 func TestAccAutoScalingSchedule_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v autoscaling.ScheduledUpdateGroupAction
+	var v awstypes.ScheduledUpdateGroupAction
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	startTime := testAccScheduleValidStart(t)
@@ -81,7 +81,7 @@ func TestAccAutoScalingSchedule_disappears(t *testing.T) {
 
 func TestAccAutoScalingSchedule_recurrence(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v autoscaling.ScheduledUpdateGroupAction
+	var v awstypes.ScheduledUpdateGroupAction
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_schedule.test"
 
@@ -110,7 +110,7 @@ func TestAccAutoScalingSchedule_recurrence(t *testing.T) {
 
 func TestAccAutoScalingSchedule_zeroValues(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v autoscaling.ScheduledUpdateGroupAction
+	var v awstypes.ScheduledUpdateGroupAction
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	startTime := testAccScheduleValidStart(t)
 	endTime := testAccScheduleValidEnd(t)
@@ -140,7 +140,7 @@ func TestAccAutoScalingSchedule_zeroValues(t *testing.T) {
 
 func TestAccAutoScalingSchedule_negativeOne(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v autoscaling.ScheduledUpdateGroupAction
+	var v awstypes.ScheduledUpdateGroupAction
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	startTime := testAccScheduleValidStart(t)
 	endTime := testAccScheduleValidEnd(t)
@@ -187,7 +187,7 @@ func testAccScheduleTime(t *testing.T, duration string) string {
 	return n.Add(d).Format(tfautoscaling.ScheduleTimeLayout)
 }
 
-func testAccCheckScalingScheduleExists(ctx context.Context, n string, v *autoscaling.ScheduledUpdateGroupAction) resource.TestCheckFunc {
+func testAccCheckScalingScheduleExists(ctx context.Context, n string, v *awstypes.ScheduledUpdateGroupAction) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -198,7 +198,7 @@ func testAccCheckScalingScheduleExists(ctx context.Context, n string, v *autosca
 			return fmt.Errorf("No Auto Scaling Scheduled Action ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingClient(ctx)
 
 		output, err := tfautoscaling.FindScheduledUpdateGroupAction(ctx, conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.ID)
 
@@ -214,7 +214,7 @@ func testAccCheckScalingScheduleExists(ctx context.Context, n string, v *autosca
 
 func testAccCheckScheduleDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_autoscaling_schedule" {
@@ -238,13 +238,13 @@ func testAccCheckScheduleDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckScalingScheduleHasNoDesiredCapacity(v *autoscaling.ScheduledUpdateGroupAction) resource.TestCheckFunc {
+func testAccCheckScalingScheduleHasNoDesiredCapacity(v *awstypes.ScheduledUpdateGroupAction) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if v.DesiredCapacity == nil {
 			return nil
 		}
 
-		return fmt.Errorf("Expected not to set desired capacity, got %v", aws.Int64Value(v.DesiredCapacity))
+		return fmt.Errorf("Expected not to set desired capacity, got %v", aws.ToInt32(v.DesiredCapacity))
 	}
 }
 

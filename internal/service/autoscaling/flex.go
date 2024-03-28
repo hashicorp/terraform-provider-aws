@@ -7,14 +7,14 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/autoscaling"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
 )
 
 // Takes the result of flatmap.Expand for an array of step adjustments and
-// returns a []*autoscaling.StepAdjustment.
-func ExpandStepAdjustments(configured []interface{}) ([]*autoscaling.StepAdjustment, error) {
-	var adjustments []*autoscaling.StepAdjustment
+// returns a []*awstypes.StepAdjustment.
+func ExpandStepAdjustments(configured []interface{}) ([]awstypes.StepAdjustment, error) {
+	var adjustments []awstypes.StepAdjustment
 
 	// Loop over our configured step adjustments and create an array
 	// of aws-sdk-go compatible objects. We're forced to convert strings
@@ -24,8 +24,8 @@ func ExpandStepAdjustments(configured []interface{}) ([]*autoscaling.StepAdjustm
 	// struct value.
 	for _, raw := range configured {
 		data := raw.(map[string]interface{})
-		a := &autoscaling.StepAdjustment{
-			ScalingAdjustment: aws.Int64(int64(data["scaling_adjustment"].(int))),
+		a := awstypes.StepAdjustment{
+			ScalingAdjustment: aws.Int32(int32(data["scaling_adjustment"].(int))),
 		}
 		if data["metric_interval_lower_bound"] != "" {
 			bound := data["metric_interval_lower_bound"]
@@ -64,17 +64,17 @@ func ExpandStepAdjustments(configured []interface{}) ([]*autoscaling.StepAdjustm
 }
 
 // Flattens step adjustments into a list of map[string]interface.
-func FlattenStepAdjustments(adjustments []*autoscaling.StepAdjustment) []map[string]interface{} {
+func FlattenStepAdjustments(adjustments []awstypes.StepAdjustment) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(adjustments))
 	for _, raw := range adjustments {
 		a := map[string]interface{}{
-			"scaling_adjustment": aws.Int64Value(raw.ScalingAdjustment),
+			"scaling_adjustment": aws.ToInt32(raw.ScalingAdjustment),
 		}
 		if raw.MetricIntervalUpperBound != nil {
-			a["metric_interval_upper_bound"] = fmt.Sprintf("%g", aws.Float64Value(raw.MetricIntervalUpperBound))
+			a["metric_interval_upper_bound"] = fmt.Sprintf("%g", aws.ToFloat64(raw.MetricIntervalUpperBound))
 		}
 		if raw.MetricIntervalLowerBound != nil {
-			a["metric_interval_lower_bound"] = fmt.Sprintf("%g", aws.Float64Value(raw.MetricIntervalLowerBound))
+			a["metric_interval_lower_bound"] = fmt.Sprintf("%g", aws.ToFloat64(raw.MetricIntervalLowerBound))
 		}
 		result = append(result, a)
 	}

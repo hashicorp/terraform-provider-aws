@@ -222,6 +222,14 @@ func FlattenInt64Set(list []*int64) *schema.Set {
 	return schema.NewSet(schema.HashInt, FlattenInt64List(list))
 }
 
+// Takes the result of flatmap.Expand for an array of int32
+// and returns a []int32
+func ExpandInt32ValueList(configured []interface{}) []int32 {
+	return tfslices.ApplyToAll(configured, func(v any) int32 {
+		return int32(v.(int))
+	})
+}
+
 // Takes the result of flatmap.Expand for an array of int64
 // and returns a []*int64
 func ExpandInt64List(configured []interface{}) []*int64 {
@@ -339,6 +347,11 @@ func Float64ToStringValue(v *float64) string {
 // IntValueToString converts a Go int value to a string pointer.
 func IntValueToString(v int) *string {
 	return aws.String(strconv.Itoa(v))
+}
+
+// Int64ToStringValue converts an int64 pointer to a Go string value.
+func Int32ToStringValue(v *int32) string {
+	return strconv.FormatInt(int64(aws.Int32Value(v)), 10)
 }
 
 // Int64ToStringValue converts an int64 pointer to a Go string value.
