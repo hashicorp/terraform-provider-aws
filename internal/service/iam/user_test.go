@@ -290,7 +290,7 @@ func TestAccIAMUser_ForceDestroy_policyAttached(t *testing.T) {
 				Config: testAccUserConfig_forceDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
-					testAccCheckUserAttachPolicy(ctx, t, &user),
+					testAccCheckUserAttachPolicy(ctx, t, &user), // externally attach a policy
 				),
 			},
 		},
@@ -314,7 +314,7 @@ func TestAccIAMUser_ForceDestroy_policyInline(t *testing.T) {
 				Config: testAccUserConfig_forceDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
-					testAccCheckUserInlinePolicy(ctx, t, &user),
+					testAccCheckUserInlinePolicy(ctx, t, &user), // externally put an inline policy
 				),
 			},
 		},
@@ -338,8 +338,8 @@ func TestAccIAMUser_ForceDestroy_policyInlineAttached(t *testing.T) {
 				Config: testAccUserConfig_forceDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
-					testAccCheckUserInlinePolicy(ctx, t, &user),
-					testAccCheckUserAttachPolicy(ctx, t, &user),
+					testAccCheckUserInlinePolicy(ctx, t, &user), // externally put an inline policy
+					testAccCheckUserAttachPolicy(ctx, t, &user), // externally attach a policy
 				),
 			},
 		},
