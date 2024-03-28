@@ -2,6 +2,7 @@
 
 FEATURES:
 
+* **New Data Source:** `aws_resourceexplorer2_search` ([#36560](https://github.com/hashicorp/terraform-provider-aws/issues/36560))
 * **New Data Source:** `aws_servicecatalogappregistry_application` ([#36596](https://github.com/hashicorp/terraform-provider-aws/issues/36596))
 * **New Resource:** `aws_cloudfrontkeyvaluestore_key` ([#36534](https://github.com/hashicorp/terraform-provider-aws/issues/36534))
 * **New Resource:** `aws_devopsguru_notification_channel` ([#36557](https://github.com/hashicorp/terraform-provider-aws/issues/36557))
@@ -45,6 +46,7 @@ BUG FIXES:
 * resource/aws_quicksight_dashboard: Fix failure when updating a dashboard takes a while ([#34227](https://github.com/hashicorp/terraform-provider-aws/issues/34227))
 * resource/aws_quicksight_template: Fix "Invalid address to set" errors ([#34227](https://github.com/hashicorp/terraform-provider-aws/issues/34227))
 * resource/aws_quicksight_template: Fix "a number is required" errors when state contains an empty string ([#34227](https://github.com/hashicorp/terraform-provider-aws/issues/34227))
+* resource/aws_redshift_cluster: Fix `InvalidParameterCombination` errors when updating only `skip_final_snapshot` ([#36635](https://github.com/hashicorp/terraform-provider-aws/issues/36635))
 * resource/aws_route53_zone: Prevent re-creation when `name` casing changes ([#36563](https://github.com/hashicorp/terraform-provider-aws/issues/36563))
 * resource/aws_secretsmanager_secret_version: Fix to handle versions deleted out-of-band without raising an `InvalidRequestException` ([#36609](https://github.com/hashicorp/terraform-provider-aws/issues/36609))
 * resource/aws_ssm_parameter: force create a new SSM parameter when `data_type` is updated. ([#35960](https://github.com/hashicorp/terraform-provider-aws/issues/35960))
