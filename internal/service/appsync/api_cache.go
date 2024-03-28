@@ -7,13 +7,14 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/appsync"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/appsync"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/appsync/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -35,14 +36,14 @@ func ResourceAPICache() *schema.Resource {
 				Required: true,
 			},
 			"api_caching_behavior": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(appsync.ApiCachingBehavior_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.ApiCachingBehavior](),
 			},
 			"type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(appsync.ApiCacheType_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.ApiCacheType](),
 			},
 			"ttl": {
 				Type:     schema.TypeInt,
@@ -64,26 +65,26 @@ func ResourceAPICache() *schema.Resource {
 
 func resourceAPICacheCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
+	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
 	apiID := d.Get("api_id").(string)
 
 	params := &appsync.CreateApiCacheInput{
 		ApiId:              aws.String(apiID),
-		Type:               aws.String(d.Get("type").(string)),
-		ApiCachingBehavior: aws.String(d.Get("api_caching_behavior").(string)),
-		Ttl:                aws.Int64(int64(d.Get("ttl").(int))),
+		Type:               awstypes.ApiCacheType(d.Get("type").(string)),
+		ApiCachingBehavior: awstypes.ApiCachingBehavior(d.Get("api_caching_behavior").(string)),
+		Ttl:                int64(d.Get("ttl").(int)),
 	}
 
 	if v, ok := d.GetOk("at_rest_encryption_enabled"); ok {
-		params.AtRestEncryptionEnabled = aws.Bool(v.(bool))
+		params.AtRestEncryptionEnabled = v.(bool)
 	}
 
 	if v, ok := d.GetOk("transit_encryption_enabled"); ok {
-		params.TransitEncryptionEnabled = aws.Bool(v.(bool))
+		params.TransitEncryptionEnabled = v.(bool)
 	}
 
-	_, err := conn.CreateApiCacheWithContext(ctx, params)
+	_, err := conn.CreateApiCache(ctx, params)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Appsync API Cache: %s", err)
 	}
@@ -99,7 +100,7 @@ func resourceAPICacheCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceAPICacheRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
+	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
 	cache, err := FindAPICacheByID(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -124,25 +125,25 @@ func resourceAPICacheRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceAPICacheUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
+	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
 	params := &appsync.UpdateApiCacheInput{
 		ApiId: aws.String(d.Id()),
 	}
 
 	if d.HasChange("type") {
-		params.Type = aws.String(d.Get("type").(string))
+		params.Type = awstypes.ApiCacheType(d.Get("type").(string))
 	}
 
 	if d.HasChange("api_caching_behavior") {
-		params.ApiCachingBehavior = aws.String(d.Get("api_caching_behavior").(string))
+		params.ApiCachingBehavior = awstypes.ApiCachingBehavior(d.Get("api_caching_behavior").(string))
 	}
 
 	if d.HasChange("ttl") {
-		params.Ttl = aws.Int64(int64(d.Get("ttl").(int)))
+		params.Ttl = int64(d.Get("ttl").(int))
 	}
 
-	_, err := conn.UpdateApiCacheWithContext(ctx, params)
+	_, err := conn.UpdateApiCache(ctx, params)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Appsync API Cache %q: %s", d.Id(), err)
 	}
@@ -156,14 +157,14 @@ func resourceAPICacheUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceAPICacheDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
+	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
 	input := &appsync.DeleteApiCacheInput{
 		ApiId: aws.String(d.Id()),
 	}
-	_, err := conn.DeleteApiCacheWithContext(ctx, input)
+	_, err := conn.DeleteApiCache(ctx, input)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) {
+		if errs.IsA[*awstypes.NotFoundException](err) {
 			return diags
 		}
 		return sdkdiag.AppendErrorf(diags, "deleting Appsync API Cache: %s", err)

@@ -10,13 +10,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/appsync"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/appsync"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/appsync/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -83,10 +85,10 @@ func ResourceResolver() *schema.Resource {
 				ForceNew: true,
 			},
 			"kind": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      appsync.ResolverKindUnit,
-				ValidateFunc: validation.StringInSlice(appsync.ResolverKind_Values(), true),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.ResolverKindUnit,
+				ValidateDiagFunc: enum.Validate[awstypes.ResolverKind](),
 			},
 			"max_batch_size": {
 				Type:         schema.TypeInt,
@@ -126,9 +128,9 @@ func ResourceResolver() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(appsync.RuntimeName_Values(), false),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.RuntimeName](),
 						},
 						"runtime_version": {
 							Type:     schema.TypeString,
@@ -144,14 +146,14 @@ func ResourceResolver() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"conflict_detection": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice(appsync.ConflictDetectionType_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.ConflictDetectionType](),
 						},
 						"conflict_handler": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice(appsync.ConflictHandlerType_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.ConflictHandlerType](),
 						},
 						"lambda_conflict_handler_config": {
 							Type:     schema.TypeList,
@@ -181,13 +183,13 @@ func ResourceResolver() *schema.Resource {
 
 func resourceResolverCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
+	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
 	apiID, typeName, fieldName := d.Get("api_id").(string), d.Get("type").(string), d.Get("field").(string)
 	input := &appsync.CreateResolverInput{
 		ApiId:     aws.String(apiID),
 		FieldName: aws.String(fieldName),
-		Kind:      aws.String(d.Get("kind").(string)),
+		Kind:      awstypes.ResolverKind(d.Get("kind").(string)),
 		TypeName:  aws.String(typeName),
 	}
 
@@ -196,7 +198,7 @@ func resourceResolverCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if v, ok := d.GetOkExists("max_batch_size"); ok {
-		input.MaxBatchSize = aws.Int64(int64(v.(int)))
+		input.MaxBatchSize = int32(v.(int))
 	}
 
 	if v, ok := d.GetOk("sync_config"); ok && len(v.([]interface{})) > 0 {
@@ -231,9 +233,9 @@ func resourceResolverCreate(ctx context.Context, d *schema.ResourceData, meta in
 	conns.GlobalMutexKV.Lock(mutexKey)
 	defer conns.GlobalMutexKV.Unlock(mutexKey)
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
-		return conn.CreateResolverWithContext(ctx, input)
-	}, appsync.ErrCodeConcurrentModificationException)
+	_, err := tfresource.RetryWhenIsA[*awstypes.ConcurrentModificationException](ctx, 2*time.Minute, func() (interface{}, error) {
+		return conn.CreateResolver(ctx, input)
+	})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating AppSync Resolver: %s", err)
@@ -246,7 +248,7 @@ func resourceResolverCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceResolverRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
+	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
 	apiID, typeName, fieldName, err := DecodeResolverID(d.Id())
 	if err != nil {
@@ -259,9 +261,9 @@ func resourceResolverRead(ctx context.Context, d *schema.ResourceData, meta inte
 		FieldName: aws.String(fieldName),
 	}
 
-	resp, err := conn.GetResolverWithContext(ctx, input)
+	resp, err := conn.GetResolver(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) && !d.IsNewResource() {
+	if errs.IsA[*awstypes.NotFoundException](err) && !d.IsNewResource() {
 		log.Printf("[WARN] AppSync Resolver (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -304,7 +306,7 @@ func resourceResolverRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceResolverUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
+	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
 	apiID, typeName, fieldName, err := DecodeResolverID(d.Id())
 	if err != nil {
@@ -314,7 +316,7 @@ func resourceResolverUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	input := &appsync.UpdateResolverInput{
 		ApiId:     aws.String(apiID),
 		FieldName: aws.String(fieldName),
-		Kind:      aws.String(d.Get("kind").(string)),
+		Kind:      awstypes.ResolverKind(d.Get("kind").(string)),
 		TypeName:  aws.String(typeName),
 	}
 
@@ -328,8 +330,8 @@ func resourceResolverUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 	if v, ok := d.GetOk("pipeline_config"); ok {
 		config := v.([]interface{})[0].(map[string]interface{})
-		input.PipelineConfig = &appsync.PipelineConfig{
-			Functions: flex.ExpandStringList(config["functions"].([]interface{})),
+		input.PipelineConfig = &awstypes.PipelineConfig{
+			Functions: flex.ExpandStringValueList(config["functions"].([]interface{})),
 		}
 	}
 
@@ -346,7 +348,7 @@ func resourceResolverUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if v, ok := d.GetOkExists("max_batch_size"); ok {
-		input.MaxBatchSize = aws.Int64(int64(v.(int)))
+		input.MaxBatchSize = int32(v.(int))
 	}
 
 	if v, ok := d.GetOk("sync_config"); ok && len(v.([]interface{})) > 0 {
@@ -361,9 +363,9 @@ func resourceResolverUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	conns.GlobalMutexKV.Lock(mutexKey)
 	defer conns.GlobalMutexKV.Unlock(mutexKey)
 
-	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
-		return conn.UpdateResolverWithContext(ctx, input)
-	}, appsync.ErrCodeConcurrentModificationException)
+	_, err = tfresource.RetryWhenIsA[*awstypes.ConcurrentModificationException](ctx, 2*time.Minute, func() (interface{}, error) {
+		return conn.UpdateResolver(ctx, input)
+	})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating AppSync Resolver (%s): %s", d.Id(), err)
@@ -374,7 +376,7 @@ func resourceResolverUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceResolverDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppSyncConn(ctx)
+	conn := meta.(*conns.AWSClient).AppSyncClient(ctx)
 
 	apiID, typeName, fieldName, err := DecodeResolverID(d.Id())
 	if err != nil {
@@ -391,11 +393,11 @@ func resourceResolverDelete(ctx context.Context, d *schema.ResourceData, meta in
 	conns.GlobalMutexKV.Lock(mutexKey)
 	defer conns.GlobalMutexKV.Unlock(mutexKey)
 
-	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, 2*time.Minute, func() (interface{}, error) {
-		return conn.DeleteResolverWithContext(ctx, input)
-	}, appsync.ErrCodeConcurrentModificationException)
+	_, err = tfresource.RetryWhenIsA[*awstypes.ConcurrentModificationException](ctx, 2*time.Minute, func() (interface{}, error) {
+		return conn.DeleteResolver(ctx, input)
+	})
 
-	if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return diags
 	}
 
@@ -414,41 +416,41 @@ func DecodeResolverID(id string) (string, string, string, error) {
 	return idParts[0], idParts[1], idParts[2], nil
 }
 
-func expandResolverCachingConfig(l []interface{}) *appsync.CachingConfig {
+func expandResolverCachingConfig(l []interface{}) *awstypes.CachingConfig {
 	if len(l) < 1 || l[0] == nil {
 		return nil
 	}
 
 	m := l[0].(map[string]interface{})
 
-	cachingConfig := &appsync.CachingConfig{
-		CachingKeys: flex.ExpandStringSet(m["caching_keys"].(*schema.Set)),
+	cachingConfig := &awstypes.CachingConfig{
+		CachingKeys: flex.ExpandStringValueSet(m["caching_keys"].(*schema.Set)),
 	}
 
 	if v, ok := m["ttl"].(int); ok && v != 0 {
-		cachingConfig.Ttl = aws.Int64(int64(v))
+		cachingConfig.Ttl = int64(v)
 	}
 
 	return cachingConfig
 }
 
-func expandPipelineConfig(l []interface{}) *appsync.PipelineConfig {
+func expandPipelineConfig(l []interface{}) *awstypes.PipelineConfig {
 	if len(l) < 1 || l[0] == nil {
 		return nil
 	}
 
 	m := l[0].(map[string]interface{})
 
-	config := &appsync.PipelineConfig{}
+	config := &awstypes.PipelineConfig{}
 
 	if v, ok := m["functions"].([]interface{}); ok && len(v) > 0 {
-		config.Functions = flex.ExpandStringList(v)
+		config.Functions = flex.ExpandStringValueList(v)
 	}
 
 	return config
 }
 
-func flattenPipelineConfig(c *appsync.PipelineConfig) []interface{} {
+func flattenPipelineConfig(c *awstypes.PipelineConfig) []interface{} {
 	if c == nil {
 		return nil
 	}
@@ -458,24 +460,24 @@ func flattenPipelineConfig(c *appsync.PipelineConfig) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"functions": flex.FlattenStringList(c.Functions),
+		"functions": flex.FlattenStringValueList(c.Functions),
 	}
 
 	return []interface{}{m}
 }
 
-func flattenCachingConfig(c *appsync.CachingConfig) []interface{} {
+func flattenCachingConfig(c *awstypes.CachingConfig) []interface{} {
 	if c == nil {
 		return nil
 	}
 
-	if len(c.CachingKeys) == 0 && aws.Int64Value(c.Ttl) == 0 {
+	if len(c.CachingKeys) == 0 && c.Ttl == 0 {
 		return nil
 	}
 
 	m := map[string]interface{}{
-		"caching_keys": flex.FlattenStringSet(c.CachingKeys),
-		"ttl":          int(aws.Int64Value(c.Ttl)),
+		"caching_keys": flex.FlattenStringValueSet(c.CachingKeys),
+		"ttl":          int(c.Ttl),
 	}
 
 	return []interface{}{m}

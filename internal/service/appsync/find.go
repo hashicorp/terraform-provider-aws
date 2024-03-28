@@ -6,20 +6,21 @@ package appsync
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/appsync"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/appsync"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/appsync/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindAPICacheByID(ctx context.Context, conn *appsync.AppSync, id string) (*appsync.ApiCache, error) {
+func FindAPICacheByID(ctx context.Context, conn *appsync.Client, id string) (*awstypes.ApiCache, error) {
 	input := &appsync.GetApiCacheInput{
 		ApiId: aws.String(id),
 	}
-	out, err := conn.GetApiCacheWithContext(ctx, input)
+	out, err := conn.GetApiCache(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -37,13 +38,13 @@ func FindAPICacheByID(ctx context.Context, conn *appsync.AppSync, id string) (*a
 	return out.ApiCache, nil
 }
 
-func FindDomainNameByID(ctx context.Context, conn *appsync.AppSync, id string) (*appsync.DomainNameConfig, error) {
+func FindDomainNameByID(ctx context.Context, conn *appsync.Client, id string) (*awstypes.DomainNameConfig, error) {
 	input := &appsync.GetDomainNameInput{
 		DomainName: aws.String(id),
 	}
-	out, err := conn.GetDomainNameWithContext(ctx, input)
+	out, err := conn.GetDomainName(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -61,13 +62,13 @@ func FindDomainNameByID(ctx context.Context, conn *appsync.AppSync, id string) (
 	return out.DomainNameConfig, nil
 }
 
-func FindDomainNameAPIAssociationByID(ctx context.Context, conn *appsync.AppSync, id string) (*appsync.ApiAssociation, error) {
+func FindDomainNameAPIAssociationByID(ctx context.Context, conn *appsync.Client, id string) (*awstypes.ApiAssociation, error) {
 	input := &appsync.GetApiAssociationInput{
 		DomainName: aws.String(id),
 	}
-	out, err := conn.GetApiAssociationWithContext(ctx, input)
+	out, err := conn.GetApiAssociation(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -85,16 +86,16 @@ func FindDomainNameAPIAssociationByID(ctx context.Context, conn *appsync.AppSync
 	return out.ApiAssociation, nil
 }
 
-func FindTypeByThreePartKey(ctx context.Context, conn *appsync.AppSync, apiID, format, name string) (*appsync.Type, error) {
+func FindTypeByThreePartKey(ctx context.Context, conn *appsync.Client, apiID, format, name string) (*awstypes.Type, error) {
 	input := &appsync.GetTypeInput{
 		ApiId:    aws.String(apiID),
-		Format:   aws.String(format),
+		Format:   awstypes.TypeDefinitionFormat(format),
 		TypeName: aws.String(name),
 	}
 
-	output, err := conn.GetTypeWithContext(ctx, input)
+	output, err := conn.GetType(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) {
+	if errs.IsA[*awstypes.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

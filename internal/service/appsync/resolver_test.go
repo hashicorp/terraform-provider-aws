@@ -9,26 +9,27 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/appsync"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/appsync"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/appsync/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfappsync "github.com/hashicorp/terraform-provider-aws/internal/service/appsync"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccResolver_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var resolver1 appsync.Resolver
+	var resolver1 awstypes.Resolver
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	resourceName := "aws_appsync_resolver.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResolverDestroy(ctx),
@@ -56,12 +57,12 @@ func testAccResolver_basic(t *testing.T) {
 
 func testAccResolver_code(t *testing.T) {
 	ctx := acctest.Context(t)
-	var resolver1 appsync.Resolver
+	var resolver1 awstypes.Resolver
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	resourceName := "aws_appsync_resolver.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResolverDestroy(ctx),
@@ -86,12 +87,12 @@ func testAccResolver_code(t *testing.T) {
 
 func testAccResolver_syncConfig(t *testing.T) {
 	ctx := acctest.Context(t)
-	var resolver1 appsync.Resolver
+	var resolver1 awstypes.Resolver
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	resourceName := "aws_appsync_resolver.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResolverDestroy(ctx),
@@ -116,14 +117,14 @@ func testAccResolver_syncConfig(t *testing.T) {
 
 func testAccResolver_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var api1 appsync.GraphqlApi
-	var resolver1 appsync.Resolver
+	var api1 awstypes.GraphqlApi
+	var resolver1 awstypes.Resolver
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	appsyncGraphqlApiResourceName := "aws_appsync_graphql_api.test"
 	resourceName := "aws_appsync_resolver.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResolverDestroy(ctx),
@@ -143,12 +144,12 @@ func testAccResolver_disappears(t *testing.T) {
 
 func testAccResolver_dataSource(t *testing.T) {
 	ctx := acctest.Context(t)
-	var resolver1, resolver2 appsync.Resolver
+	var resolver1, resolver2 awstypes.Resolver
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	resourceName := "aws_appsync_resolver.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResolverDestroy(ctx),
@@ -178,12 +179,12 @@ func testAccResolver_dataSource(t *testing.T) {
 
 func testAccResolver_DataSource_lambda(t *testing.T) {
 	ctx := acctest.Context(t)
-	var resolver appsync.Resolver
+	var resolver awstypes.Resolver
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	resourceName := "aws_appsync_resolver.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResolverDestroy(ctx),
@@ -206,12 +207,12 @@ func testAccResolver_DataSource_lambda(t *testing.T) {
 
 func testAccResolver_requestTemplate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var resolver1, resolver2 appsync.Resolver
+	var resolver1, resolver2 awstypes.Resolver
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	resourceName := "aws_appsync_resolver.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResolverDestroy(ctx),
@@ -241,12 +242,12 @@ func testAccResolver_requestTemplate(t *testing.T) {
 
 func testAccResolver_responseTemplate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var resolver1, resolver2 appsync.Resolver
+	var resolver1, resolver2 awstypes.Resolver
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	resourceName := "aws_appsync_resolver.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResolverDestroy(ctx),
@@ -276,12 +277,12 @@ func testAccResolver_responseTemplate(t *testing.T) {
 
 func testAccResolver_multipleResolvers(t *testing.T) {
 	ctx := acctest.Context(t)
-	var resolver appsync.Resolver
+	var resolver awstypes.Resolver
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	resourceName := "aws_appsync_resolver.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResolverDestroy(ctx),
@@ -307,12 +308,12 @@ func testAccResolver_multipleResolvers(t *testing.T) {
 
 func testAccResolver_pipeline(t *testing.T) {
 	ctx := acctest.Context(t)
-	var resolver appsync.Resolver
+	var resolver awstypes.Resolver
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	resourceName := "aws_appsync_resolver.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResolverDestroy(ctx),
@@ -336,12 +337,12 @@ func testAccResolver_pipeline(t *testing.T) {
 
 func testAccResolver_caching(t *testing.T) {
 	ctx := acctest.Context(t)
-	var resolver appsync.Resolver
+	var resolver awstypes.Resolver
 	rName := fmt.Sprintf("tfacctest%d", sdkacctest.RandInt())
 	resourceName := "aws_appsync_resolver.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, appsync.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.AppSyncEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResolverDestroy(ctx),
@@ -365,7 +366,7 @@ func testAccResolver_caching(t *testing.T) {
 
 func testAccCheckResolverDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncClient(ctx)
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appsync_resolver" {
 				continue
@@ -383,9 +384,9 @@ func testAccCheckResolverDestroy(ctx context.Context) resource.TestCheckFunc {
 				FieldName: aws.String(fieldName),
 			}
 
-			_, err = conn.GetResolverWithContext(ctx, input)
+			_, err = conn.GetResolver(ctx, input)
 
-			if tfawserr.ErrCodeEquals(err, appsync.ErrCodeNotFoundException) {
+			if errs.IsA[*awstypes.NotFoundException](err) {
 				continue
 			}
 
@@ -397,7 +398,7 @@ func testAccCheckResolverDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckResolverExists(ctx context.Context, name string, resolver *appsync.Resolver) resource.TestCheckFunc {
+func testAccCheckResolverExists(ctx context.Context, name string, resolver *awstypes.Resolver) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -413,7 +414,7 @@ func testAccCheckResolverExists(ctx context.Context, name string, resolver *apps
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppSyncClient(ctx)
 
 		input := &appsync.GetResolverInput{
 			ApiId:     aws.String(apiID),
@@ -421,7 +422,7 @@ func testAccCheckResolverExists(ctx context.Context, name string, resolver *apps
 			FieldName: aws.String(fieldName),
 		}
 
-		output, err := conn.GetResolverWithContext(ctx, input)
+		output, err := conn.GetResolver(ctx, input)
 
 		if err != nil {
 			return err
