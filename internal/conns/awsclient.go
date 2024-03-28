@@ -14,6 +14,8 @@ import (
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	config_sdkv2 "github.com/aws/aws-sdk-go-v2/config"
 	s3_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3"
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
+	client_sdkv1 "github.com/aws/aws-sdk-go/aws/client"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	apigatewayv2_sdkv1 "github.com/aws/aws-sdk-go/service/apigatewayv2"
 	baselogging "github.com/hashicorp/aws-sdk-go-base/v2/logging"
@@ -70,11 +72,6 @@ func (c *AWSClient) PartitionHostname(ctx context.Context, prefix string) string
 // The prefix should not contain a trailing period.
 func (c *AWSClient) RegionalHostname(ctx context.Context, prefix string) string {
 	return fmt.Sprintf("%s.%s.%s", prefix, c.Region, c.DNSSuffix(ctx))
-}
-
-// Session returns the AWS SDK for Go v1 `Session`.
-func (c *AWSClient) Session(context.Context) *session_sdkv1.Session {
-	return c.session
 }
 
 // S3ExpressClient returns an S3 API client suitable for use with S3 Express (directory buckets).
@@ -195,7 +192,7 @@ func (c *AWSClient) apiClientConfig(ctx context.Context, servicePackageName stri
 		"aws_sdkv2_config": c.awsConfig,
 		"endpoint":         c.resolveEndpoint(ctx, servicePackageName),
 		"partition":        c.Partition,
-		"session":          c.Session(ctx),
+		"session":          c.session,
 	}
 	switch servicePackageName {
 	case names.S3:
@@ -212,6 +209,7 @@ func (c *AWSClient) apiClientConfig(ctx context.Context, servicePackageName stri
 
 	return m
 }
+
 func (c *AWSClient) resolveEndpoint(ctx context.Context, servicePackageName string) string {
 	endpoint := c.endpoints[servicePackageName]
 	if endpoint != "" {
@@ -265,8 +263,13 @@ func resolveServiceBaseEndpoint(ctx context.Context, sdkID string, configs []any
 	return
 }
 
+func NewConnForRegion[T any](ctx context.Context, c *AWSClient, region string, f func(client_sdkv1.ConfigProvider, ...*aws_sdkv1.Config) T) T {
+	return f(c.session, aws_sdkv1.NewConfig().WithRegion(region))
+}
+
 // conn returns the AWS SDK for Go v1 API client for the specified service.
 // The default service client (`extra` is empty) is cached. In this case the AWSClient lock is held.
+// This function is not a method on `AWSClient` as methods can't be parameterize (https://go.googlesource.com/proposal/+/refs/heads/master/design/43651-type-parameters.md#no-parameterized-methods).
 func conn[T any](ctx context.Context, c *AWSClient, servicePackageName string, extra map[string]any) (T, error) {
 	isDefault := len(extra) == 0
 	// Default service client is cached.
@@ -326,6 +329,7 @@ func conn[T any](ctx context.Context, c *AWSClient, servicePackageName string, e
 
 // client returns the AWS SDK for Go v2 API client for the specified service.
 // The default service client (`extra` is empty) is cached. In this case the AWSClient lock is held.
+// This function is not a method on `AWSClient` as methods can't be parameterize (https://go.googlesource.com/proposal/+/refs/heads/master/design/43651-type-parameters.md#no-parameterized-methods).
 func client[T any](ctx context.Context, c *AWSClient, servicePackageName string, extra map[string]any) (T, error) {
 	isDefault := len(extra) == 0
 	// Default service client is cached.
