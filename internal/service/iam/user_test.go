@@ -290,7 +290,7 @@ func TestAccIAMUser_ForceDestroy_policyAttached(t *testing.T) {
 				Config: testAccUserConfig_forceDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
-					testAccCheckUserAttachPolicy(ctx, t, &user), // externally attach a policy
+					testAccCheckUserAttachPolicy(ctx, &user), // externally attach a policy
 				),
 			},
 		},
@@ -314,7 +314,7 @@ func TestAccIAMUser_ForceDestroy_policyInline(t *testing.T) {
 				Config: testAccUserConfig_forceDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
-					testAccCheckUserInlinePolicy(ctx, t, &user), // externally put an inline policy
+					testAccCheckUserInlinePolicy(ctx, &user), // externally put an inline policy
 				),
 			},
 		},
@@ -338,8 +338,8 @@ func TestAccIAMUser_ForceDestroy_policyInlineAttached(t *testing.T) {
 				Config: testAccUserConfig_forceDestroy(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckUserExists(ctx, resourceName, &user),
-					testAccCheckUserInlinePolicy(ctx, t, &user), // externally put an inline policy
-					testAccCheckUserAttachPolicy(ctx, t, &user), // externally attach a policy
+					testAccCheckUserInlinePolicy(ctx, &user), // externally put an inline policy
+					testAccCheckUserAttachPolicy(ctx, &user), // externally attach a policy
 				),
 			},
 		},
@@ -741,7 +741,7 @@ func testAccCheckUserUploadSigningCertificate(ctx context.Context, t *testing.T,
 	}
 }
 
-func testAccCheckUserAttachPolicy(ctx context.Context, t *testing.T, user *awstypes.User) resource.TestCheckFunc {
+func testAccCheckUserAttachPolicy(ctx context.Context, user *awstypes.User) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
@@ -772,7 +772,7 @@ func testAccCheckUserAttachPolicy(ctx context.Context, t *testing.T, user *awsty
 	}
 }
 
-func testAccCheckUserInlinePolicy(ctx context.Context, t *testing.T, user *awstypes.User) resource.TestCheckFunc {
+func testAccCheckUserInlinePolicy(ctx context.Context, user *awstypes.User) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
