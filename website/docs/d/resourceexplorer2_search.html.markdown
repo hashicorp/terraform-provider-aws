@@ -36,7 +36,7 @@ This data source exports the following attributes in addition to the arguments a
 
 * `resource_count` - Number of resources that match the query. See [`resource_count`](#resource_count-attribute-reference) below.
 * `resources` - List of structures that describe the resources that match the query. See [`resources`](#resources-attribute-reference) below.
-* `id` - Query String
+* `id` - Query String.
 
 ### `resource_count` Attribute Reference
 
@@ -45,7 +45,7 @@ This data source exports the following attributes in addition to the arguments a
 
 ### `resources` Attribute Reference
 
-* `arn` - Amazon resource name of resource
+* `arn` - Amazon resource name of resource.
 * `last_reported_at` - Date and time that Resource Explorer last queried this resource and updated the index with the latest information about the resource.
 * `owning_account_id` - Amazon Web Services account that owns the resource.
 * `resource_property` - Structure with additional type-specific details about the resource.  See [`resource_property`](#resource_property-attribute-reference) below.
@@ -57,4 +57,4 @@ This data source exports the following attributes in addition to the arguments a
 
 * `data` - Details about this property. The content of this field is a JSON object that varies based on the resource type.
 * `last_reported_at` - The date and time that the information about this resource property was last updated.
-* `name` - Name of this property of the resource
+* `name` - Name of this property of the resource.
