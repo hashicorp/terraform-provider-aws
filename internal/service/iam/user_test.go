@@ -273,6 +273,79 @@ func TestAccIAMUser_ForceDestroy_signingCertificate(t *testing.T) {
 	})
 }
 
+func TestAccIAMUser_ForceDestroy_policyAttached(t *testing.T) {
+	ctx := acctest.Context(t)
+	var user awstypes.User
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_iam_user.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserConfig_forceDestroy(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserAttachPolicy(ctx, t, &user),
+				),
+			},
+		},
+	})
+}
+
+func TestAccIAMUser_ForceDestroy_policyInline(t *testing.T) {
+	ctx := acctest.Context(t)
+	var user awstypes.User
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_iam_user.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserConfig_forceDestroy(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserInlinePolicy(ctx, t, &user),
+				),
+			},
+		},
+	})
+}
+
+func TestAccIAMUser_ForceDestroy_policyInlineAttached(t *testing.T) {
+	ctx := acctest.Context(t)
+	var user awstypes.User
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_iam_user.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserConfig_forceDestroy(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckUserExists(ctx, resourceName, &user),
+					testAccCheckUserInlinePolicy(ctx, t, &user),
+					testAccCheckUserAttachPolicy(ctx, t, &user),
+				),
+			},
+		},
+	})
+}
+
 func TestAccIAMUser_nameChange(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf awstypes.User
@@ -662,6 +735,65 @@ func testAccCheckUserUploadSigningCertificate(ctx context.Context, t *testing.T,
 
 		if _, err := conn.UploadSigningCertificate(ctx, input); err != nil {
 			return fmt.Errorf("error uploading IAM User (%s) Signing Certificate : %s", aws.ToString(user.UserName), err)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckUserAttachPolicy(ctx context.Context, t *testing.T, user *awstypes.User) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
+
+		doc := `{"Version":"2012-10-17","Statement":[{"Action":["iam:ChangePassword"],"Resource":"*","Effect":"Allow"}]}`
+
+		input := &iam.CreatePolicyInput{
+			PolicyDocument: aws.String(doc),
+			PolicyName:     user.UserName,
+		}
+
+		output, err := conn.CreatePolicy(ctx, input)
+		if err != nil {
+			return fmt.Errorf("externally creating IAM Policy (%s): %s", aws.ToString(user.UserName), err)
+		}
+
+		_, err = tfresource.RetryWhenNewResourceNotFound(ctx, 2*time.Minute, func() (interface{}, error) {
+			return tfiam.FindPolicyByARN(ctx, conn, aws.ToString(output.Policy.Arn))
+		}, true)
+		if err != nil {
+			return fmt.Errorf("waiting for external creation of IAM Policy (%s): %s", aws.ToString(user.UserName), err)
+		}
+
+		if err := tfiam.AttachPolicyToUser(ctx, conn, aws.ToString(user.UserName), aws.ToString(output.Policy.Arn)); err != nil {
+			return fmt.Errorf("externally attaching IAM User (%s) to policy (%s): %s", aws.ToString(user.UserName), aws.ToString(output.Policy.Arn), err)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckUserInlinePolicy(ctx context.Context, t *testing.T, user *awstypes.User) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
+
+		doc := `{"Version":"2012-10-17","Statement":{"Effect":"Allow","Action":["ec2:DescribeElasticGpus","ec2:DescribeFastSnapshotRestores","ec2:DescribeScheduledInstances","ec2:DescribeScheduledInstanceAvailability"],"Resource":"*"}}`
+
+		input := &iam.PutUserPolicyInput{
+			PolicyDocument: aws.String(doc),
+			PolicyName:     user.UserName,
+			UserName:       user.UserName,
+		}
+
+		_, err := conn.PutUserPolicy(ctx, input)
+		if err != nil {
+			return fmt.Errorf("externally putting IAM User (%s) policy: %s", aws.ToString(user.UserName), err)
+		}
+
+		_, err = tfresource.RetryWhenNotFound(ctx, 2*time.Minute, func() (interface{}, error) {
+			return tfiam.FindUserPolicyByTwoPartKey(ctx, conn, aws.ToString(user.UserName), aws.ToString(user.UserName))
+		})
+		if err != nil {
+			return fmt.Errorf("waiting for external creation of inline IAM User Policy (%s): %s", aws.ToString(user.UserName), err)
 		}
 
 		return nil
