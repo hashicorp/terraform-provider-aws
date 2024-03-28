@@ -336,6 +336,9 @@ func TestAccIAMPolicyDocumentDataSource_overridePolicyDocumentValidJSON(t *testi
 					),
 				),
 			},
+			{
+				Config: testAccPolicyDocumentDataSourceConfig_sourcePolicyDocument_emptyString,
+			},
 		},
 	})
 }
@@ -1612,5 +1615,31 @@ data "aws_iam_policy_document" "test" {
 var testAccPolicyDocumentDataSourceConfig_overridePolicyDocument_invalidJSON = `
 data "aws_iam_policy_document" "test" {
   override_policy_documents = ["{"]
+}
+`
+
+var testAccPolicyDocumentDataSourceConfig_sourcePolicyDocument_emptyString = `
+variable "additional_policy_statements" {
+  type        = string
+  description = "additional policy statements that can be added to the role's policy document"
+  default     = ""
+}
+
+data "aws_iam_policy_document" "assume_role_policy" {
+  source_policy_documents = [
+    data.aws_iam_policy_document.partial.json,
+    var.additional_policy_statements
+  ]
+}
+
+data "aws_iam_policy_document" "partial" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.amazonaws.com"]
+    }
+  }
 }
 `
