@@ -94,6 +94,36 @@ EOT
 }
 ```
 
+### Use default EKS scraper configuration
+
+You can use the data source `aws_prometheus_scraper_configuration` to use a
+service managed scrape configuration.
+
+-> **Note:** If the configuration is updated, this will trigger a replacement
+of your scraper.
+
+```terraform
+data "aws_prometheus_scraper_configuration" "example" {}
+
+resource "aws_prometheus_scraper" "example" {
+
+  destination {
+    amp {
+      workspace_arn = aws_prometheus_workspace.example.arn
+    }
+  }
+
+  scrape_configuration = data.aws_prometheus_scraper_configuration.example.default
+
+  source {
+    eks {
+      cluster_arn = data.aws_eks_cluster.example.arn
+      subnet_ids  = data.aws_eks_cluster.example.vpc_config[0].subnet_ids
+    }
+  }
+}
+```
+
 ### Ignoring changes to Prometheus Workspace destination
 
 A managed scraper will add a `AMPAgentlessScraper` tag to its Prometheus workspace
