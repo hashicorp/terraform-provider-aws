@@ -8,7 +8,9 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -39,7 +41,10 @@ func testAccAccountAlias_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckAccountAlias(ctx, t)
+		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccountAliasDestroy(ctx),
@@ -114,6 +119,23 @@ func testAccCheckAccountAliasExists(ctx context.Context, n string) resource.Test
 		}
 
 		return nil
+	}
+}
+
+func testAccPreCheckAccountAlias(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
+
+	input := &iam.CreateAccountAliasInput{
+		AccountAlias: aws.String(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)),
+	}
+	_, err := conn.CreateAccountAlias(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, "AccessDenied") {
+		t.Skip("skipping acceptance testing: AccessDenied")
+	}
+
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
 	}
 }
 
