@@ -36,6 +36,7 @@ This data source exports the following attributes in addition to the arguments a
 
 * `resource_count` - Number of resources that match the query. See [`resource_count`](#resource_count-attribute-reference) below.
 * `resources` - List of structures that describe the resources that match the query. See [`resources`](#resources-attribute-reference) below.
+* `id` - Query String
 
 ### `resource_count` Attribute Reference
 

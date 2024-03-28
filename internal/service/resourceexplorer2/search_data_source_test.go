@@ -44,6 +44,7 @@ func testAccSearchDataSource_basic(t *testing.T) {
 	})
 }
 
+// Can only be run once a day as changing the index type has a 24 hr cooldown
 func testAccSearchDataSource_IndexType(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -86,17 +87,17 @@ resource "aws_resourceexplorer2_index" "test" {
 }
 
 resource "aws_resourceexplorer2_view" "test" {
+  depends_on = [aws_resourceexplorer2_index.test]
+
   name         = %[1]q
   default_view = true
-
-  depends_on = [aws_resourceexplorer2_index.test]
 }
 
 data "aws_resourceexplorer2_search" "test" {
+  depends_on = [aws_resourceexplorer2_view.test]
+
   query_string = "region:global"
   view_arn     = aws_resourceexplorer2_view.test.arn
-
-  depends_on = [aws_resourceexplorer2_view.test]
 }
 `, rName, indexType)
 }

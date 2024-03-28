@@ -95,7 +95,6 @@ func (d *dataSourceSearch) Schema(ctx context.Context, req datasource.SchemaRequ
 								Attributes: map[string]schema.Attribute{
 									"data": schema.StringAttribute{
 										Computed: true,
-										// Validators: jsonvalidator.JSON(),
 									},
 									"last_reported_at": schema.StringAttribute{
 										Computed: true,
@@ -122,7 +121,7 @@ func (d *dataSourceSearch) Read(ctx context.Context, req datasource.ReadRequest,
 		return
 	}
 
-	data.ID = types.StringValue(data.ViewArn.ValueString())
+	data.ID = types.StringValue(data.QueryString.ValueString())
 
 	input := &resourceexplorer2.SearchInput{
 		QueryString: aws.String(data.QueryString.ValueString()),
@@ -155,9 +154,7 @@ func (d *dataSourceSearch) Read(ctx context.Context, req datasource.ReadRequest,
 type dataSourceSearchData struct {
 	ResourceCount fwtypes.ListNestedObjectValueOf[countData]     `tfsdk:"resource_count"`
 	Resources     fwtypes.ListNestedObjectValueOf[resourcesData] `tfsdk:"resources"`
-	MaxResults    types.Int64                                    `tfsdk:"max_results"`
 	ID            types.String                                   `tfsdk:"id"`
-	NextToken     types.String                                   `tfsdk:"next_token"`
 	ViewArn       types.String                                   `tfsdk:"view_arn"`
 	QueryString   types.String                                   `tfsdk:"query_string"`
 }
