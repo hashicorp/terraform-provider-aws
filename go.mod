@@ -14,6 +14,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.29.0
 	github.com/aws/aws-sdk-go-v2/service/account v1.16.3
 	github.com/aws/aws-sdk-go-v2/service/acm v1.25.3
+	github.com/aws/aws-sdk-go-v2/service/acmpca v1.29.3
 	github.com/aws/aws-sdk-go-v2/service/amp v1.25.3
 	github.com/aws/aws-sdk-go-v2/service/appconfig v1.29.1
 	github.com/aws/aws-sdk-go-v2/service/appfabric v1.7.3
@@ -53,6 +54,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.46.3
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.15.3
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.13.3
+	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.23.3
 	github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.4.3
 	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.36.3
 	github.com/aws/aws-sdk-go-v2/service/datazone v1.6.3
@@ -192,10 +194,6 @@ require (
 	gopkg.in/yaml.v2 v2.4.0
 	syreclabs.com/go/faker v1.2.3
 )
-
-require github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.23.3
-
-require github.com/aws/aws-sdk-go-v2/service/acmpca v1.29.3
 
 require (
 	github.com/Masterminds/goutils v1.1.1 // indirect
