@@ -738,7 +738,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
-	if d.HasChangesExcept("aqua_configuration_status", "availability_zone", "iam_roles", "logging", "multi_az", "snapshot_copy", "tags", "tags_all") {
+	if d.HasChangesExcept("aqua_configuration_status", "availability_zone", "iam_roles", "logging", "multi_az", "snapshot_copy", "tags", "tags_all", "skip_final_snapshot") {
 		input := &redshift.ModifyClusterInput{
 			ClusterIdentifier: aws.String(d.Id()),
 		}
