@@ -67,6 +67,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_s3_objects",
 			Name:     "Objects",
 		},
+		{
+			Factory:  DataSourceBucketNotification,
+			TypeName: "aws_s3_bucket_notification",
+		},
 	}
 }
 
