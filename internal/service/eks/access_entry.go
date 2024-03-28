@@ -183,13 +183,8 @@ func resourceAccessEntryUpdate(ctx context.Context, d *schema.ResourceData, meta
 			PrincipalArn: aws.String(principalARN),
 		}
 
-		if d.HasChange("kubernetes_groups") {
-			input.KubernetesGroups = flex.ExpandStringValueSet(d.Get("kubernetes_groups").(*schema.Set))
-		}
-
-		if d.HasChange("user_name") {
-			input.Username = aws.String(d.Get("user_name").(string))
-		}
+		input.KubernetesGroups = flex.ExpandStringValueSet(d.Get("kubernetes_groups").(*schema.Set))
+		input.Username = aws.String(d.Get("user_name").(string))
 
 		_, err = conn.UpdateAccessEntry(ctx, input)
 

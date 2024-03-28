@@ -19,8 +19,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_vpn_connection_route")
-func ResourceVPNConnectionRoute() *schema.Resource {
+// @SDKResource("aws_vpn_connection_route", name="VPN Connection Route")
+func resourceVPNConnectionRoute() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPNConnectionRouteCreate,
 		ReadWithoutTimeout:   resourceVPNConnectionRouteRead,

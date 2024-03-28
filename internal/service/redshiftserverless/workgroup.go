@@ -27,7 +27,7 @@ import (
 
 // @SDKResource("aws_redshiftserverless_workgroup", name="Workgroup")
 // @Tags(identifierAttribute="arn")
-func ResourceWorkgroup() *schema.Resource {
+func resourceWorkgroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceWorkgroupCreate,
 		ReadWithoutTimeout:   resourceWorkgroupRead,
