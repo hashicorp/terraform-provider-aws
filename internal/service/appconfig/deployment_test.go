@@ -9,8 +9,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/appconfig"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/appconfig"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -199,15 +199,15 @@ func testAccCheckDeploymentExists(ctx context.Context, resourceName string) reso
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigClient(ctx)
 
 		input := &appconfig.GetDeploymentInput{
 			ApplicationId:    aws.String(appID),
-			DeploymentNumber: aws.Int64(int64(deploymentNum)),
+			DeploymentNumber: aws.Int32(int32(deploymentNum)),
 			EnvironmentId:    aws.String(envID),
 		}
 
-		output, err := conn.GetDeploymentWithContext(ctx, input)
+		output, err := conn.GetDeployment(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("error getting Appconfig Deployment (%s): %w", rs.Primary.ID, err)

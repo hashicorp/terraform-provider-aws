@@ -157,7 +157,7 @@ func (r *resourceEnvironment) Create(ctx context.Context, request resource.Creat
 	input := &appconfig.CreateEnvironmentInput{
 		Name:          aws.String(plan.Name.ValueString()),
 		ApplicationId: aws.String(appId),
-		Tags:          aws.ToStringMap(getTagsIn(ctx)),
+		Tags:          getTagsIn(ctx),
 		Monitors:      expandMonitors(monitors),
 	}
 

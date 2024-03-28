@@ -9,14 +9,15 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/appconfig"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/appconfig"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/appconfig/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfappconfig "github.com/hashicorp/terraform-provider-aws/internal/service/appconfig"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -79,7 +80,7 @@ func TestAccAppConfigHostedConfigurationVersion_disappears(t *testing.T) {
 
 func testAccCheckHostedConfigurationVersionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appconfig_hosted_configuration_version" {
@@ -95,12 +96,12 @@ func testAccCheckHostedConfigurationVersionDestroy(ctx context.Context) resource
 			input := &appconfig.GetHostedConfigurationVersionInput{
 				ApplicationId:          aws.String(appID),
 				ConfigurationProfileId: aws.String(confProfID),
-				VersionNumber:          aws.Int64(int64(versionNumber)),
+				VersionNumber:          aws.Int32(int32(versionNumber)),
 			}
 
-			output, err := conn.GetHostedConfigurationVersionWithContext(ctx, input)
+			output, err := conn.GetHostedConfigurationVersion(ctx, input)
 
-			if tfawserr.ErrCodeEquals(err, appconfig.ErrCodeResourceNotFoundException) {
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				continue
 			}
 
@@ -134,12 +135,12 @@ func testAccCheckHostedConfigurationVersionExists(ctx context.Context, resourceN
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigClient(ctx)
 
-		output, err := conn.GetHostedConfigurationVersionWithContext(ctx, &appconfig.GetHostedConfigurationVersionInput{
+		output, err := conn.GetHostedConfigurationVersion(ctx, &appconfig.GetHostedConfigurationVersionInput{
 			ApplicationId:          aws.String(appID),
 			ConfigurationProfileId: aws.String(confProfID),
-			VersionNumber:          aws.Int64(int64(versionNumber)),
+			VersionNumber:          aws.Int32(int32(versionNumber)),
 		})
 
 		if err != nil {

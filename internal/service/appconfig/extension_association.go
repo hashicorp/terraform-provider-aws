@@ -8,8 +8,8 @@ import (
 	"errors"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/appconfig"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/appconfig"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -66,7 +66,7 @@ func ResourceExtensionAssociation() *schema.Resource {
 func resourceExtensionAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
+	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
 	in := appconfig.CreateExtensionAssociationInput{
 		ExtensionIdentifier: aws.String(d.Get("extension_arn").(string)),
@@ -74,10 +74,10 @@ func resourceExtensionAssociationCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	if v, ok := d.GetOk("parameters"); ok {
-		in.Parameters = flex.ExpandStringMap(v.(map[string]interface{}))
+		in.Parameters = flex.ExpandStringValueMap(v.(map[string]interface{}))
 	}
 
-	out, err := conn.CreateExtensionAssociationWithContext(ctx, &in)
+	out, err := conn.CreateExtensionAssociation(ctx, &in)
 
 	if err != nil {
 		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionCreating, ResExtensionAssociation, d.Get("extension_arn").(string), err)
@@ -87,7 +87,7 @@ func resourceExtensionAssociationCreate(ctx context.Context, d *schema.ResourceD
 		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionCreating, ResExtensionAssociation, d.Get("extension_arn").(string), errors.New("No Extension Association returned with create request."))
 	}
 
-	d.SetId(aws.StringValue(out.Id))
+	d.SetId(aws.ToString(out.Id))
 
 	return append(diags, resourceExtensionAssociationRead(ctx, d, meta)...)
 }
@@ -95,7 +95,7 @@ func resourceExtensionAssociationCreate(ctx context.Context, d *schema.ResourceD
 func resourceExtensionAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
+	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
 	out, err := FindExtensionAssociationById(ctx, conn, d.Id())
 
@@ -121,7 +121,7 @@ func resourceExtensionAssociationRead(ctx context.Context, d *schema.ResourceDat
 func resourceExtensionAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
+	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 	requestUpdate := false
 
 	in := &appconfig.UpdateExtensionAssociationInput{
@@ -129,12 +129,12 @@ func resourceExtensionAssociationUpdate(ctx context.Context, d *schema.ResourceD
 	}
 
 	if d.HasChange("parameters") {
-		in.Parameters = flex.ExpandStringMap(d.Get("parameters").(map[string]interface{}))
+		in.Parameters = flex.ExpandStringValueMap(d.Get("parameters").(map[string]interface{}))
 		requestUpdate = true
 	}
 
 	if requestUpdate {
-		out, err := conn.UpdateExtensionAssociationWithContext(ctx, in)
+		out, err := conn.UpdateExtensionAssociation(ctx, in)
 
 		if err != nil {
 			return create.AppendDiagError(diags, names.AppConfig, create.ErrActionWaitingForUpdate, ResExtensionAssociation, d.Id(), err)
@@ -151,10 +151,10 @@ func resourceExtensionAssociationUpdate(ctx context.Context, d *schema.ResourceD
 func resourceExtensionAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
+	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
 	log.Printf("[INFO] Deleting AppConfig Hosted Extension Association: %s", d.Id())
-	_, err := conn.DeleteExtensionAssociationWithContext(ctx, &appconfig.DeleteExtensionAssociationInput{
+	_, err := conn.DeleteExtensionAssociation(ctx, &appconfig.DeleteExtensionAssociationInput{
 		ExtensionAssociationId: aws.String(d.Id()),
 	})
 
