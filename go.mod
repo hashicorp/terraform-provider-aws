@@ -6,7 +6,7 @@ require (
 	github.com/ProtonMail/go-crypto v1.1.0-alpha.2
 	github.com/YakDriver/go-version v0.1.0
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.51.8
+	github.com/aws/aws-sdk-go v1.51.9
 	github.com/aws/aws-sdk-go-v2 v1.26.0
 	github.com/aws/aws-sdk-go-v2/config v1.27.9
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.0
@@ -21,9 +21,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/apprunner v1.28.3
 	github.com/aws/aws-sdk-go-v2/service/athena v1.40.3
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.32.3
-	github.com/aws/aws-sdk-go-v2/service/batch v1.35.1
+	github.com/aws/aws-sdk-go-v2/service/batch v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.7.3
-	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.4.3
+	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.5.0
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.22.3
 	github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.15.4
 	github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.14.3
@@ -65,7 +65,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.23.3
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.41.5
 	github.com/aws/aws-sdk-go-v2/service/eks v1.41.2
-	github.com/aws/aws-sdk-go-v2/service/elasticache v1.37.4
+	github.com/aws/aws-sdk-go-v2/service/elasticache v1.38.0
 	github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.23.3
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.30.4
 	github.com/aws/aws-sdk-go-v2/service/emr v1.39.3
@@ -93,8 +93,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lookoutmetrics v1.27.3
 	github.com/aws/aws-sdk-go-v2/service/m2 v1.12.3
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.28.3
-	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.52.3
-	github.com/aws/aws-sdk-go-v2/service/medialive v1.49.0
+	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.52.4
+	github.com/aws/aws-sdk-go-v2/service/medialive v1.49.1
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.30.3
 	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.10.1
 	github.com/aws/aws-sdk-go-v2/service/mediastore v1.20.3
@@ -124,7 +124,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.53.0
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.44.3
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.8.3
-	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.28.4
+	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.28.5
 	github.com/aws/aws-sdk-go-v2/service/securityhub v1.47.0
 	github.com/aws/aws-sdk-go-v2/service/securitylake v1.13.2
 	github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry v1.26.3
