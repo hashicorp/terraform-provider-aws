@@ -8,8 +8,10 @@ var (
 	ResourceCertificate                     = resourceCertificate
 	ResourceCertificateAuthority            = resourceCertificateAuthority
 	ResourceCertificateAuthorityCertificate = resourceCertificateAuthorityCertificate
+	ResourcePermission                      = resourcePermission
 
 	FindCertificateAuthorityCertificateByARN = findCertificateAuthorityCertificateByARN
 	FindCertificateByTwoPartKey              = findCertificateByTwoPartKey
+	FindPermissionByThreePartKey             = findPermissionByThreePartKey
 	ValidTemplateARN                         = validTemplateARN
 )

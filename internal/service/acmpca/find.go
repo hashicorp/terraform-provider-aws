@@ -38,30 +38,3 @@ func FindPolicyByARN(ctx context.Context, conn *acmpca.Client, arn string) (stri
 
 	return aws.ToString(output.Policy), nil
 }
-
-func FindPermission(ctx context.Context, conn *acmpca.Client, certificateAuthorityARN, principal, sourceAccount string) (*awstypes.Permission, error) {
-	input := &acmpca.ListPermissionsInput{
-		CertificateAuthorityArn: aws.String(certificateAuthorityARN),
-	}
-
-	var results []awstypes.Permission
-	paginator := acmpca.NewListPermissionsPaginator(conn, input)
-	for paginator.HasMorePages() {
-		page, err := paginator.NextPage(ctx)
-		if err != nil {
-			return nil, err
-		}
-
-		for _, permission := range page.Permissions {
-			if aws.ToString(permission.Principal) == principal && (sourceAccount == "" || aws.ToString(permission.SourceAccount) == sourceAccount) {
-				results = append(results, permission)
-			}
-		}
-	}
-
-	permission, err := tfresource.AssertSingleValueResult(results)
-	if err != nil {
-		return nil, err
-	}
-	return permission, nil
-}

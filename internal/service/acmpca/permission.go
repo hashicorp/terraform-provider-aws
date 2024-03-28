@@ -5,13 +5,11 @@ package acmpca
 
 import (
 	"context"
-	"fmt"
 	"log"
-	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/acmpca"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/acmpca/types"
+	"github.com/aws/aws-sdk-go-v2/service/acmpca/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -19,12 +17,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_acmpca_permission")
-func ResourcePermission() *schema.Resource {
+const (
+	permissionResourceIDPartCount = 3
+)
+
+// @SDKResource("aws_acmpca_permission", name="Permission")
+func resourcePermission() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePermissionCreate,
 		ReadWithoutTimeout:   resourcePermissionRead,
@@ -37,7 +41,7 @@ func ResourcePermission() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Schema{
 					Type:             schema.TypeString,
-					ValidateDiagFunc: enum.Validate[awstypes.ActionType](),
+					ValidateDiagFunc: enum.Validate[types.ActionType](),
 				},
 			},
 			"certificate_authority_arn": {
@@ -75,7 +79,7 @@ func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta 
 	caARN := d.Get("certificate_authority_arn").(string)
 	principal := d.Get("principal").(string)
 	sourceAccount := d.Get("source_account").(string)
-	id := PermissionCreateResourceID(caARN, principal, sourceAccount)
+	id := errs.Must(flex.FlattenResourceId([]string{caARN, principal, sourceAccount}, permissionResourceIDPartCount, false))
 	input := &acmpca.CreatePermissionInput{
 		Actions:                 expandPermissionActions(d.Get("actions").(*schema.Set)),
 		CertificateAuthorityArn: aws.String(caARN),
@@ -86,7 +90,6 @@ func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.SourceAccount = aws.String(sourceAccount)
 	}
 
-	log.Printf("[DEBUG] Creating ACM PCA Permission: %+v", input)
 	_, err := conn.CreatePermission(ctx, input)
 
 	if err != nil {
@@ -102,13 +105,13 @@ func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
 
-	caARN, principal, sourceAccount, err := PermissionParseResourceID(d.Id())
-
+	parts, err := flex.ExpandResourceId(d.Id(), permissionResourceIDPartCount, false)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading ACM PCA Permission (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	permission, err := FindPermission(ctx, conn, caARN, principal, sourceAccount)
+	caARN, principal, sourceAccount := parts[0], parts[1], parts[2]
+	permission, err := findPermissionByThreePartKey(ctx, conn, caARN, principal, sourceAccount)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ACM PCA Permission (%s) not found, removing from state", d.Id())
@@ -133,12 +136,12 @@ func resourcePermissionDelete(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
 
-	caARN, principal, sourceAccount, err := PermissionParseResourceID(d.Id())
-
+	parts, err := flex.ExpandResourceId(d.Id(), permissionResourceIDPartCount, false)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting ACM PCA Permission (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
+	caARN, principal, sourceAccount := parts[0], parts[1], parts[2]
 	input := &acmpca.DeletePermissionInput{
 		CertificateAuthorityArn: aws.String(caARN),
 		Principal:               aws.String(principal),
@@ -151,7 +154,7 @@ func resourcePermissionDelete(ctx context.Context, d *schema.ResourceData, meta 
 	log.Printf("[DEBUG] Deleting ACM PCA Permission: %s", d.Id())
 	_, err = conn.DeletePermission(ctx, input)
 
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+	if errs.IsA[*types.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -162,36 +165,58 @@ func resourcePermissionDelete(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-const permissionIDSeparator = ","
-
-func PermissionCreateResourceID(caARN, principal, sourceAccount string) string {
-	parts := []string{caARN, principal, sourceAccount}
-	id := strings.Join(parts, permissionIDSeparator)
-
-	return id
-}
-
-func PermissionParseResourceID(id string) (string, string, string, error) {
-	parts := strings.Split(id, permissionIDSeparator)
-
-	if len(parts) == 3 && parts[0] != "" && parts[1] != "" {
-		return parts[0], parts[1], parts[2], nil
+func findPermissionByThreePartKey(ctx context.Context, conn *acmpca.Client, certificateAuthorityARN, principal, sourceAccount string) (*types.Permission, error) {
+	input := &acmpca.ListPermissionsInput{
+		CertificateAuthorityArn: aws.String(certificateAuthorityARN),
 	}
 
-	return "", "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected CertificateAuthorityARN%[2]sPrincipal%[2]sSourceAccount", id, permissionIDSeparator)
+	return findPermission(ctx, conn, input, func(v *types.Permission) bool {
+		return aws.ToString(v.Principal) == principal && (sourceAccount == "" || aws.ToString(v.SourceAccount) == sourceAccount)
+	})
 }
 
-func expandPermissionActions(s *schema.Set) []awstypes.ActionType {
-	actions := make([]awstypes.ActionType, 0)
+func findPermission(ctx context.Context, conn *acmpca.Client, input *acmpca.ListPermissionsInput, filter tfslices.Predicate[*types.Permission]) (*types.Permission, error) {
+	output, err := findPermissions(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findPermissions(ctx context.Context, conn *acmpca.Client, input *acmpca.ListPermissionsInput, filter tfslices.Predicate[*types.Permission]) ([]types.Permission, error) {
+	var output []types.Permission
+
+	pages := acmpca.NewListPermissionsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Permissions {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
+	}
+
+	return output, nil
+}
+
+func expandPermissionActions(s *schema.Set) []types.ActionType {
+	actions := make([]types.ActionType, 0)
 
 	for _, a := range s.List() {
-		action := awstypes.ActionType(a.(string))
+		action := types.ActionType(a.(string))
 		actions = append(actions, action)
 	}
 	return actions
 }
 
-func flattenPermissionActions(list []awstypes.ActionType) []string {
+func flattenPermissionActions(list []types.ActionType) []string {
 	if len(list) == 0 {
 		return nil
 	}
