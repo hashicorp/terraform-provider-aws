@@ -169,10 +169,7 @@ func resourceInstanceAutomatedBackupsReplicationDelete(ctx context.Context, d *s
 	}
 
 	// Create a new client to the source region.
-	sourceDatabaseConn := conn
-	if sourceDatabaseARN.Region != meta.(*conns.AWSClient).Region {
-		sourceDatabaseConn = conns.NewConnForRegion(ctx, meta.(*conns.AWSClient), sourceDatabaseARN.Region, rds.New)
-	}
+	sourceDatabaseConn := meta.(*conns.AWSClient).RDSConnForRegion(ctx, sourceDatabaseARN.Region)
 
 	if _, err := waitDBInstanceAutomatedBackupDeleted(ctx, sourceDatabaseConn, dbInstanceID, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for DB instance automated backup (%s) delete: %s", d.Id(), err)

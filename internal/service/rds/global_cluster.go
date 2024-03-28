@@ -633,11 +633,8 @@ func globalClusterUpgradeMajorEngineVersion(ctx context.Context, meta interface{
 			continue
 		}
 
-		useConn := conn // clusters may not all be in the same region
-
-		if clusterRegion != meta.(*conns.AWSClient).Region {
-			useConn = conns.NewConnForRegion(ctx, meta.(*conns.AWSClient), clusterRegion, rds.New)
-		}
+		// Clusters may not all be in the same region.
+		useConn := meta.(*conns.AWSClient).RDSConnForRegion(ctx, clusterRegion)
 
 		if err := WaitForClusterUpdate(ctx, useConn, dbi, timeout); err != nil {
 			return fmt.Errorf("failed to update engine_version, waiting for RDS Global Cluster (%s) to update: %s", dbi, err)
@@ -674,11 +671,7 @@ func globalClusterUpgradeMinorEngineVersion(ctx context.Context, meta interface{
 			continue
 		}
 
-		useConn := conn
-
-		if clusterRegion != meta.(*conns.AWSClient).Region {
-			useConn = conns.NewConnForRegion(ctx, meta.(*conns.AWSClient), clusterRegion, rds.New)
-		}
+		useConn := meta.(*conns.AWSClient).RDSConnForRegion(ctx, clusterRegion)
 
 		// pre-wait for the cluster to be in a state where it can be updated
 		if err := WaitForClusterUpdate(ctx, useConn, dbi, timeout); err != nil {

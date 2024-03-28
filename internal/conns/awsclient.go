@@ -15,9 +15,9 @@ import (
 	config_sdkv2 "github.com/aws/aws-sdk-go-v2/config"
 	s3_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3"
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	client_sdkv1 "github.com/aws/aws-sdk-go/aws/client"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	apigatewayv2_sdkv1 "github.com/aws/aws-sdk-go/service/apigatewayv2"
+	rds_sdkv1 "github.com/aws/aws-sdk-go/service/rds"
 	baselogging "github.com/hashicorp/aws-sdk-go-base/v2/logging"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -74,7 +74,17 @@ func (c *AWSClient) RegionalHostname(ctx context.Context, prefix string) string 
 	return fmt.Sprintf("%s.%s.%s", prefix, c.Region, c.DNSSuffix(ctx))
 }
 
-// S3ExpressClient returns an S3 API client suitable for use with S3 Express (directory buckets).
+// RDSConnForRegion returns an AWS SDK For Go v1 RDS API client for the specified AWS Region.
+// If the specified region is not the default a new "simple" client is created.
+// This new client does not use any configured endpoint override.
+func (c *AWSClient) RDSConnForRegion(ctx context.Context, region string) *rds_sdkv1.RDS {
+	if region == c.Region {
+		return c.RDSConn(ctx)
+	}
+	return rds_sdkv1.New(c.session, aws_sdkv1.NewConfig().WithRegion(region))
+}
+
+// S3ExpressClient returns an AWS SDK for Go v2 S3 API client suitable for use with S3 Express (directory buckets).
 // This client differs from the standard S3 API client only in us-east-1 if the global S3 endpoint is used.
 // In that case the returned client uses the regional S3 endpoint.
 func (c *AWSClient) S3ExpressClient(ctx context.Context) *s3_sdkv2.Client {
@@ -261,10 +271,6 @@ func resolveServiceBaseEndpoint(ctx context.Context, sdkID string, configs []any
 		}
 	}
 	return
-}
-
-func NewConnForRegion[T any](ctx context.Context, c *AWSClient, region string, f func(client_sdkv1.ConfigProvider, ...*aws_sdkv1.Config) T) T {
-	return f(c.session, aws_sdkv1.NewConfig().WithRegion(region))
 }
 
 // conn returns the AWS SDK for Go v1 API client for the specified service.
