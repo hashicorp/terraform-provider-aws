@@ -9,14 +9,15 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -52,7 +53,7 @@ func resourceUserPolicyAttachment() *schema.Resource {
 
 func resourceUserPolicyAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	user := d.Get("user").(string)
 	policyARN := d.Get("policy_arn").(string)
@@ -69,7 +70,7 @@ func resourceUserPolicyAttachmentCreate(ctx context.Context, d *schema.ResourceD
 
 func resourceUserPolicyAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	user := d.Get("user").(string)
 	policyARN := d.Get("policy_arn").(string)
@@ -95,7 +96,7 @@ func resourceUserPolicyAttachmentRead(ctx context.Context, d *schema.ResourceDat
 
 func resourceUserPolicyAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	if err := detachPolicyFromUser(ctx, conn, d.Get("user").(string), d.Get("policy_arn").(string)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
@@ -120,13 +121,13 @@ func resourceUserPolicyAttachmentImport(ctx context.Context, d *schema.ResourceD
 	return []*schema.ResourceData{d}, nil
 }
 
-func attachPolicyToUser(ctx context.Context, conn *iam.IAM, user, policyARN string) error {
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
-		return conn.AttachUserPolicyWithContext(ctx, &iam.AttachUserPolicyInput{
+func attachPolicyToUser(ctx context.Context, conn *iam.Client, user, policyARN string) error {
+	_, err := tfresource.RetryWhenIsA[*awstypes.ConcurrentModificationException](ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.AttachUserPolicy(ctx, &iam.AttachUserPolicyInput{
 			PolicyArn: aws.String(policyARN),
 			UserName:  aws.String(user),
 		})
-	}, iam.ErrCodeConcurrentModificationException)
+	})
 
 	if err != nil {
 		return fmt.Errorf("attaching IAM Policy (%s) to IAM User (%s): %w", policyARN, user, err)
@@ -135,15 +136,15 @@ func attachPolicyToUser(ctx context.Context, conn *iam.IAM, user, policyARN stri
 	return nil
 }
 
-func detachPolicyFromUser(ctx context.Context, conn *iam.IAM, user, policyARN string) error {
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, propagationTimeout, func() (interface{}, error) {
-		return conn.DetachUserPolicyWithContext(ctx, &iam.DetachUserPolicyInput{
+func detachPolicyFromUser(ctx context.Context, conn *iam.Client, user, policyARN string) error {
+	_, err := tfresource.RetryWhenIsA[*awstypes.ConcurrentModificationException](ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.DetachUserPolicy(ctx, &iam.DetachUserPolicyInput{
 			PolicyArn: aws.String(policyARN),
 			UserName:  aws.String(user),
 		})
-	}, iam.ErrCodeConcurrentModificationException)
+	})
 
-	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+	if errs.IsA[*awstypes.NoSuchEntityException](err) {
 		return nil
 	}
 
@@ -154,52 +155,49 @@ func detachPolicyFromUser(ctx context.Context, conn *iam.IAM, user, policyARN st
 	return nil
 }
 
-func findAttachedUserPolicyByTwoPartKey(ctx context.Context, conn *iam.IAM, userName, policyARN string) (*iam.AttachedPolicy, error) {
+func findAttachedUserPolicyByTwoPartKey(ctx context.Context, conn *iam.Client, userName, policyARN string) (*awstypes.AttachedPolicy, error) {
 	input := &iam.ListAttachedUserPoliciesInput{
 		UserName: aws.String(userName),
 	}
 
-	return findAttachedUserPolicy(ctx, conn, input, func(v *iam.AttachedPolicy) bool {
-		return aws.StringValue(v.PolicyArn) == policyARN
+	return findAttachedUserPolicy(ctx, conn, input, func(v awstypes.AttachedPolicy) bool {
+		return aws.ToString(v.PolicyArn) == policyARN
 	})
 }
 
-func findAttachedUserPolicy(ctx context.Context, conn *iam.IAM, input *iam.ListAttachedUserPoliciesInput, filter tfslices.Predicate[*iam.AttachedPolicy]) (*iam.AttachedPolicy, error) {
+func findAttachedUserPolicy(ctx context.Context, conn *iam.Client, input *iam.ListAttachedUserPoliciesInput, filter tfslices.Predicate[awstypes.AttachedPolicy]) (*awstypes.AttachedPolicy, error) {
 	output, err := findAttachedUserPolicies(ctx, conn, input, filter)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findAttachedUserPolicies(ctx context.Context, conn *iam.IAM, input *iam.ListAttachedUserPoliciesInput, filter tfslices.Predicate[*iam.AttachedPolicy]) ([]*iam.AttachedPolicy, error) {
-	var output []*iam.AttachedPolicy
+func findAttachedUserPolicies(ctx context.Context, conn *iam.Client, input *iam.ListAttachedUserPoliciesInput, filter tfslices.Predicate[awstypes.AttachedPolicy]) ([]awstypes.AttachedPolicy, error) {
+	var output []awstypes.AttachedPolicy
 
-	err := conn.ListAttachedUserPoliciesPagesWithContext(ctx, input, func(page *iam.ListAttachedUserPoliciesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
+	pages := iam.NewListAttachedUserPoliciesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
-		for _, v := range page.AttachedPolicies {
-			if v != nil && filter(v) {
-				output = append(output, v)
+		if errs.IsA[*awstypes.NoSuchEntityException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
 			}
 		}
 
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		if err != nil {
+			return nil, err
 		}
-	}
 
-	if err != nil {
-		return nil, err
+		for _, v := range page.AttachedPolicies {
+			if filter(v) {
+				output = append(output, v)
+			}
+		}
 	}
 
 	return output, nil

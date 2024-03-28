@@ -10,8 +10,8 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -22,7 +22,7 @@ import (
 func TestResourceSortByExpirationDate(t *testing.T) {
 	t.Parallel()
 
-	certs := []*iam.ServerCertificateMetadata{
+	certs := []awstypes.ServerCertificateMetadata{
 		{
 			ServerCertificateName: aws.String("oldest"),
 			Expiration:            aws.Time(time.Now()),
@@ -37,7 +37,7 @@ func TestResourceSortByExpirationDate(t *testing.T) {
 		},
 	}
 	sort.Sort(tfiam.CertificateByExpiration(certs))
-	if aws.StringValue(certs[0].ServerCertificateName) != "latest" {
+	if aws.ToString(certs[0].ServerCertificateName) != "latest" {
 		t.Fatalf("Expected first item to be %q, but was %q", "latest", *certs[0].ServerCertificateName)
 	}
 }

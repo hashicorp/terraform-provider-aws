@@ -6,8 +6,9 @@ package iam
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -209,13 +210,13 @@ func dataSourcePrincipalPolicySimulation() *schema.Resource {
 
 func dataSourcePrincipalPolicySimulationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	setAsAWSStringSlice := func(raw interface{}) []*string {
+	setAsAWSStringSlice := func(raw interface{}) []string {
 		if raw.(*schema.Set).Len() == 0 {
 			return nil
 		}
-		return flex.ExpandStringSet(raw.(*schema.Set))
+		return flex.ExpandStringValueSet(raw.(*schema.Set))
 	}
 
 	input := &iam.SimulatePrincipalPolicyInput{
@@ -228,9 +229,9 @@ func dataSourcePrincipalPolicySimulationRead(ctx context.Context, d *schema.Reso
 
 	for _, entryRaw := range d.Get("context").(*schema.Set).List() {
 		entryRaw := entryRaw.(map[string]interface{})
-		entry := &iam.ContextEntry{
+		entry := awstypes.ContextEntry{
 			ContextKeyName:   aws.String(entryRaw["key"].(string)),
-			ContextKeyType:   aws.String(entryRaw["type"].(string)),
+			ContextKeyType:   awstypes.ContextKeyTypeEnum(entryRaw["type"].(string)),
 			ContextKeyValues: setAsAWSStringSlice(entryRaw["values"]),
 		}
 		input.ContextEntries = append(input.ContextEntries, entry)
@@ -253,19 +254,19 @@ func dataSourcePrincipalPolicySimulationRead(ctx context.Context, d *schema.Reso
 	// results in order to return a complete result, so we'll ask the API
 	// to return as much as possible in each request to minimize the
 	// round-trips.
-	input.MaxItems = aws.Int64(1000)
+	input.MaxItems = aws.Int32(1000)
 
-	var results []*iam.EvaluationResult
+	var results []awstypes.EvaluationResult
 
 	for { // Terminates below, once we see a result that does not set IsTruncated.
-		output, err := conn.SimulatePrincipalPolicyWithContext(ctx, input)
+		output, err := conn.SimulatePrincipalPolicy(ctx, input)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "simulating IAM Principal Policy: %s", err)
 		}
 
 		results = append(results, output.EvaluationResults...)
 
-		if !aws.BoolValue(output.IsTruncated) {
+		if !output.IsTruncated {
 			break // All done!
 		}
 
@@ -283,9 +284,9 @@ func dataSourcePrincipalPolicySimulationRead(ctx context.Context, d *schema.Reso
 	rawResults := make([]interface{}, len(results))
 	for i, result := range results {
 		rawResult := map[string]interface{}{}
-		rawResult["action_name"] = aws.StringValue(result.EvalActionName)
-		rawResult["decision"] = aws.StringValue(result.EvalDecision)
-		allowed := aws.StringValue(result.EvalDecision) == "allowed"
+		rawResult["action_name"] = aws.ToString(result.EvalActionName)
+		rawResult["decision"] = string(result.EvalDecision)
+		allowed := string(result.EvalDecision) == "allowed"
 		rawResult["allowed"] = allowed
 		if allowed {
 			allowedCount++
@@ -293,21 +294,21 @@ func dataSourcePrincipalPolicySimulationRead(ctx context.Context, d *schema.Reso
 			deniedCount++
 		}
 		if result.EvalResourceName != nil {
-			rawResult["resource_arn"] = aws.StringValue(result.EvalResourceName)
+			rawResult["resource_arn"] = aws.ToString(result.EvalResourceName)
 		}
 
 		var missingContextKeys []string
 		for _, mkk := range result.MissingContextValues {
-			if mkk != nil {
-				missingContextKeys = append(missingContextKeys, *mkk)
+			if mkk != "" {
+				missingContextKeys = append(missingContextKeys, mkk)
 			}
 		}
 		rawResult["missing_context_keys"] = missingContextKeys
 
 		decisionDetails := make(map[string]string, len(result.EvalDecisionDetails))
 		for k, pv := range result.EvalDecisionDetails {
-			if pv != nil {
-				decisionDetails[k] = aws.StringValue(pv)
+			if pv != "" {
+				decisionDetails[k] = string(pv)
 			}
 		}
 		rawResult["decision_details"] = decisionDetails

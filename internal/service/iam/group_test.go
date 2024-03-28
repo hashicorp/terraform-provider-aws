@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/iam"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,7 +21,7 @@ import (
 
 func TestAccIAMGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf iam.Group
+	var conf awstypes.Group
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_group.test"
 
@@ -53,7 +53,7 @@ func TestAccIAMGroup_basic(t *testing.T) {
 
 func TestAccIAMGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf iam.Group
+	var conf awstypes.Group
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_group.test"
 
@@ -77,7 +77,7 @@ func TestAccIAMGroup_disappears(t *testing.T) {
 
 func TestAccIAMGroup_nameChange(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf iam.Group
+	var conf awstypes.Group
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_group.test"
@@ -110,7 +110,7 @@ func TestAccIAMGroup_nameChange(t *testing.T) {
 
 func TestAccIAMGroup_path(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf iam.Group
+	var conf awstypes.Group
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_group.test"
 
@@ -149,7 +149,7 @@ func TestAccIAMGroup_path(t *testing.T) {
 
 func testAccCheckGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iam_group" {
@@ -173,14 +173,14 @@ func testAccCheckGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckGroupExists(ctx context.Context, n string, v *iam.Group) resource.TestCheckFunc {
+func testAccCheckGroupExists(ctx context.Context, n string, v *awstypes.Group) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
 		output, err := tfiam.FindGroupByName(ctx, conn, rs.Primary.Attributes["name"])
 

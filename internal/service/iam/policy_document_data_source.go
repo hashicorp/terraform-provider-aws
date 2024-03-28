@@ -11,7 +11,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -344,7 +344,7 @@ func dataSourcePolicyDocumentMakeConditions(in []interface{}, version string) (I
 			Variable: item["variable"].(string),
 		}
 		out[i].Values, err = dataSourcePolicyDocumentReplaceVarsInList(
-			aws.StringValueSlice(expandStringListKeepEmpty(item["values"].([]interface{}))),
+			aws.ToStringSlice(expandStringListKeepEmpty(item["values"].([]interface{}))),
 			version,
 		)
 		if err != nil {

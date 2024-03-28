@@ -7,8 +7,8 @@ import (
 	"context"
 	"net/url"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -65,7 +65,7 @@ func dataSourcePolicy() *schema.Resource {
 
 func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	arn := d.Get("arn").(string)
@@ -83,7 +83,7 @@ func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta inte
 			return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("IAM Policy", err))
 		}
 
-		arn = aws.StringValue((outputRaw.(*iam.Policy)).Arn)
+		arn = aws.ToString((outputRaw.(*awstypes.Policy)).Arn)
 	}
 
 	// We need to make a call to `iam.GetPolicy` because `iam.ListPolicies` doesn't return all values
@@ -93,7 +93,7 @@ func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading IAM Policy (%s): %s", arn, err)
 	}
 
-	arn = aws.StringValue(policy.Arn)
+	arn = aws.ToString(policy.Arn)
 
 	d.SetId(arn)
 	d.Set("arn", arn)
@@ -108,7 +108,7 @@ func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	outputRaw, err := tfresource.RetryWhenNotFound(ctx, propagationTimeout,
 		func() (interface{}, error) {
-			return findPolicyVersion(ctx, conn, arn, aws.StringValue(policy.DefaultVersionId))
+			return findPolicyVersion(ctx, conn, arn, aws.ToString(policy.DefaultVersionId))
 		},
 	)
 
@@ -116,7 +116,7 @@ func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading IAM Policy (%s) default version: %s", arn, err)
 	}
 
-	policyDocument, err := url.QueryUnescape(aws.StringValue(outputRaw.(*iam.PolicyVersion).Document))
+	policyDocument, err := url.QueryUnescape(aws.ToString(outputRaw.(*awstypes.PolicyVersion).Document))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "parsing IAM Policy (%s) document: %s", arn, err)
 	}

@@ -192,7 +192,7 @@ func TestAccIAMGroupPolicy_update(t *testing.T) {
 
 func testAccCheckGroupPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iam_group_policy" {
@@ -233,7 +233,7 @@ func testAccCheckGroupPolicyExists(ctx context.Context, n string, v *string) res
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
 		output, err := tfiam.FindGroupPolicyByTwoPartKey(ctx, conn, groupName, policyName)
 

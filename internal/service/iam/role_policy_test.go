@@ -222,7 +222,7 @@ func TestAccIAMRolePolicy_unknownsInPolicy(t *testing.T) {
 
 func testAccCheckRolePolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iam_role_policy" {
@@ -263,7 +263,7 @@ func testAccCheckRolePolicyExists(ctx context.Context, n string, v *string) reso
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
 		output, err := tfiam.FindRolePolicyByTwoPartKey(ctx, conn, roleName, policyName)
 
