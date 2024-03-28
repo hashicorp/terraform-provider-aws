@@ -29,7 +29,6 @@ type AWSClient struct {
 	Partition         string
 	Region            string
 	ServicePackages   map[string]ServicePackage
-	Session           *session_sdkv1.Session
 	TerraformVersion  string
 
 	awsConfig                 *aws_sdkv2.Config
@@ -40,6 +39,7 @@ type AWSClient struct {
 	httpClient                *http.Client
 	lock                      sync.Mutex
 	logger                    baselogging.Logger
+	session                   *session_sdkv1.Session
 	s3ExpressClient           *s3_sdkv2.Client
 	s3UsePathStyle            bool   // From provider configuration.
 	s3USEast1RegionalEndpoint string // From provider configuration.
@@ -72,6 +72,11 @@ func (c *AWSClient) RegionalHostname(ctx context.Context, prefix string) string 
 	return fmt.Sprintf("%s.%s.%s", prefix, c.Region, c.DNSSuffix(ctx))
 }
 
+// Session returns the AWS SDK for Go v1 `Session`.
+func (c *AWSClient) Session(context.Context) *session_sdkv1.Session {
+	return c.session
+}
+
 // S3ExpressClient returns an S3 API client suitable for use with S3 Express (directory buckets).
 // This client differs from the standard S3 API client only in us-east-1 if the global S3 endpoint is used.
 // In that case the returned client uses the regional S3 endpoint.
@@ -102,7 +107,7 @@ func (c *AWSClient) S3UsePathStyle(context.Context) bool {
 // SetHTTPClient sets the http.Client used for AWS API calls.
 // To have effect it must be called before the AWS SDK v1 Session is created.
 func (c *AWSClient) SetHTTPClient(_ context.Context, httpClient *http.Client) {
-	if c.Session == nil {
+	if c.session == nil {
 		c.httpClient = httpClient
 	}
 }
@@ -190,7 +195,7 @@ func (c *AWSClient) apiClientConfig(ctx context.Context, servicePackageName stri
 		"aws_sdkv2_config": c.awsConfig,
 		"endpoint":         c.resolveEndpoint(ctx, servicePackageName),
 		"partition":        c.Partition,
-		"session":          c.Session,
+		"session":          c.Session(ctx),
 	}
 	switch servicePackageName {
 	case names.S3:

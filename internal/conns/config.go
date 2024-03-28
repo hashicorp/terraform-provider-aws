@@ -156,7 +156,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	awsbaseConfig.SkipCredsValidation = skipCredsValidation
 
 	tflog.Debug(ctx, "Creating AWS SDK v1 session")
-	sess, awsDiags := awsbasev1.GetSession(ctx, &cfg, &awsbaseConfig)
+	session, awsDiags := awsbasev1.GetSession(ctx, &cfg, &awsbaseConfig)
 
 	for _, d := range awsDiags {
 		diags = append(diags, diag.Diagnostic{
@@ -202,8 +202,8 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	client.IgnoreTagsConfig = c.IgnoreTagsConfig
 	client.Partition = partition
 	client.Region = c.Region
-	client.SetHTTPClient(ctx, sess.Config.HTTPClient) // Must be called while client.Session is nil.
-	client.Session = sess
+	client.SetHTTPClient(ctx, session.Config.HTTPClient) // Must be called while client.Session is nil.
+	client.session = session
 	client.TerraformVersion = c.TerraformVersion
 
 	// Used for lazy-loading AWS API clients.

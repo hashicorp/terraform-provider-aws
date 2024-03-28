@@ -636,7 +636,7 @@ func globalClusterUpgradeMajorEngineVersion(ctx context.Context, meta interface{
 		useConn := conn // clusters may not all be in the same region
 
 		if clusterRegion != meta.(*conns.AWSClient).Region {
-			useConn = rds.New(meta.(*conns.AWSClient).Session, aws.NewConfig().WithRegion(clusterRegion))
+			useConn = rds.New(meta.(*conns.AWSClient).Session(ctx), aws.NewConfig().WithRegion(clusterRegion))
 		}
 
 		if err := WaitForClusterUpdate(ctx, useConn, dbi, timeout); err != nil {
@@ -677,7 +677,7 @@ func globalClusterUpgradeMinorEngineVersion(ctx context.Context, meta interface{
 		useConn := conn
 
 		if clusterRegion != meta.(*conns.AWSClient).Region {
-			useConn = rds.New(meta.(*conns.AWSClient).Session, aws.NewConfig().WithRegion(clusterRegion))
+			useConn = rds.New(meta.(*conns.AWSClient).Session(ctx), aws.NewConfig().WithRegion(clusterRegion))
 		}
 
 		// pre-wait for the cluster to be in a state where it can be updated
