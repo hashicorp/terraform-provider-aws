@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -127,23 +128,18 @@ func testAccCheckUserGroupMembershipDestroy(ctx context.Context) resource.TestCh
 					UserName: aws.String(rs.Primary.Attributes["user"]),
 				}
 				foundGroups := 0
-				pages := iam.NewListGroupsForUserPaginator(conn, input)
-				for pages.HasMorePages() {
-					page, err := pages.NextPage(ctx)
-
-					if errs.IsA[*awstypes.NoSuchEntityException](err) {
-						continue
-					}
-
-					if err != nil {
-						return err
-					}
-
+				err := tfiam.ListGroupsForUserPages(ctx, conn, input, func(page *iam.ListGroupsForUserOutput, lastPage bool) bool {
 					if len(page.Groups) > 0 {
 						foundGroups = foundGroups + len(page.Groups)
 					}
+					return !lastPage
+				})
+				if err != nil {
+					if errs.IsA[*awstypes.NoSuchEntityException](err) {
+						continue
+					}
+					return err
 				}
-
 				if foundGroups > 0 {
 					return fmt.Errorf("Expected all group membership for user to be removed, found: %d", foundGroups)
 				}

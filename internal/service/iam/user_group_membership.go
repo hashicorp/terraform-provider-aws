@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -82,15 +83,9 @@ func resourceUserGroupMembershipRead(ctx context.Context, d *schema.ResourceData
 	var gl []string
 
 	err := retry.RetryContext(ctx, propagationTimeout, func() *retry.RetryError {
-		pages := iam.NewListGroupsForUserPaginator(conn, input)
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
-			if d.IsNewResource() && errs.IsA[*awstypes.NoSuchEntityException](err) {
-				return retry.NonRetryableError(err)
-			}
-
-			if err != nil {
-				return retry.NonRetryableError(err)
+		err := listGroupsForUserPages(ctx, conn, input, func(page *iam.ListGroupsForUserOutput, lastPage bool) bool {
+			if page == nil {
+				return !lastPage
 			}
 
 			for _, group := range page.Groups {
@@ -98,21 +93,25 @@ func resourceUserGroupMembershipRead(ctx context.Context, d *schema.ResourceData
 					gl = append(gl, aws.ToString(group.GroupName))
 				}
 			}
+
+			return !lastPage
+		})
+
+		if d.IsNewResource() && errs.IsA[*awstypes.NoSuchEntityException](err) {
+			return retry.RetryableError(err)
+		}
+
+		if err != nil {
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
 	})
 
 	if tfresource.TimedOut(err) {
-		pages := iam.NewListGroupsForUserPaginator(conn, input)
-		for pages.HasMorePages() {
-			page, err := pages.NextPage(ctx)
-			if d.IsNewResource() && errs.IsA[*awstypes.NoSuchEntityException](err) {
-				return sdkdiag.AppendFromErr(diags, err)
-			}
-
-			if err != nil {
-				return sdkdiag.AppendFromErr(diags, err)
+		err = listGroupsForUserPages(ctx, conn, input, func(page *iam.ListGroupsForUserOutput, lastPage bool) bool {
+			if page == nil {
+				return !lastPage
 			}
 
 			for _, group := range page.Groups {
@@ -120,10 +119,13 @@ func resourceUserGroupMembershipRead(ctx context.Context, d *schema.ResourceData
 					gl = append(gl, aws.ToString(group.GroupName))
 				}
 			}
-		}
+
+			return !lastPage
+		})
 	}
 
-	if !d.IsNewResource() && errs.IsA[*awstypes.NoSuchEntityException](err) {
+	var nse *awstypes.NoSuchEntityException
+	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, nse.ErrorCode()) {
 		log.Printf("[WARN] IAM User Group Membership (%s) not found, removing from state", user)
 		d.SetId("")
 		return diags
