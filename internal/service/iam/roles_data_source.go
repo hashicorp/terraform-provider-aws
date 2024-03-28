@@ -7,6 +7,7 @@ import (
 	"context"
 	"reflect"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/iam"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
@@ -67,6 +68,10 @@ func dataSourceRolesRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 		for _, role := range page.Roles {
 			if reflect.ValueOf(role).IsZero() {
+				continue
+			}
+
+			if v, ok := d.GetOk("name_regex"); ok && !regexache.MustCompile(v.(string)).MatchString(aws.ToString(role.RoleName)) {
 				continue
 			}
 

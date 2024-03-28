@@ -207,7 +207,6 @@ func DeleteGroupPolicyAttachments(ctx context.Context, conn *iam.Client, groupNa
 		}
 
 		attachedPolicies = append(attachedPolicies, page.AttachedPolicies...)
-
 	}
 
 	for _, attachedPolicy := range attachedPolicies {
@@ -249,7 +248,6 @@ func DeleteGroupPolicies(ctx context.Context, conn *iam.Client, groupName string
 		}
 
 		inlinePolicies = append(inlinePolicies, page.PolicyNames...)
-
 	}
 
 	for _, policyName := range inlinePolicies {

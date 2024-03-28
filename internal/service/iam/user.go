@@ -311,7 +311,6 @@ func deleteUserGroupMemberships(ctx context.Context, conn *iam.Client, user stri
 		for _, v := range page.Groups {
 			groupNames = append(groupNames, aws.ToString(v.GroupName))
 		}
-
 	}
 
 	for _, groupName := range groupNames {
@@ -342,7 +341,6 @@ func deleteUserSSHKeys(ctx context.Context, conn *iam.Client, username string) e
 		for _, k := range page.SSHPublicKeys {
 			publicKeys = append(publicKeys, *k.SSHPublicKeyId)
 		}
-
 	}
 
 	for _, k := range publicKeys {

@@ -102,7 +102,6 @@ func findInstanceProfilesForRole(ctx context.Context, conn *iam.Client, roleName
 				output = append(output, v)
 			}
 		}
-
 	}
 
 	return output, nil

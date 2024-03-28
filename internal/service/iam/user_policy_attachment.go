@@ -198,7 +198,6 @@ func findAttachedUserPolicies(ctx context.Context, conn *iam.Client, input *iam.
 				output = append(output, v)
 			}
 		}
-
 	}
 
 	return output, nil

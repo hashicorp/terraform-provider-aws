@@ -353,7 +353,6 @@ func resourceRoleUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 				return conn.UpdateAssumeRolePolicy(ctx, input)
 			},
 			func(err error) (bool, error) {
-
 				if errs.IsAErrorMessageContains[*awstypes.MalformedPolicyDocumentException](err, "Invalid principal in policy") {
 					return true, err
 				}

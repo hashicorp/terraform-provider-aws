@@ -326,7 +326,6 @@ func findAccessKeys(ctx context.Context, conn *iam.Client, input *iam.ListAccess
 				output = append(output, v)
 			}
 		}
-
 	}
 
 	return output, nil

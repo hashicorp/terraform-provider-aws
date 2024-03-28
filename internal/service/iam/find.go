@@ -71,22 +71,22 @@ func FindServiceSpecificCredential(ctx context.Context, conn *iam.Client, servic
 		return nil, tfresource.NewEmptyResultError(output)
 	}
 
-	var cred *awstypes.ServiceSpecificCredentialMetadata
+	var cred awstypes.ServiceSpecificCredentialMetadata
 
 	for _, crd := range output.ServiceSpecificCredentials {
 		if aws.ToString(crd.ServiceName) == serviceName &&
 			aws.ToString(crd.UserName) == userName &&
 			aws.ToString(crd.ServiceSpecificCredentialId) == credID {
-			cred = &crd
+			cred = crd
 			break
 		}
 	}
 
-	if cred == nil {
+	if reflect.ValueOf(cred).IsZero() {
 		return nil, tfresource.NewEmptyResultError(cred)
 	}
 
-	return cred, nil
+	return &cred, nil
 }
 
 func FindSigningCertificate(ctx context.Context, conn *iam.Client, userName, certId string) (*awstypes.SigningCertificate, error) {

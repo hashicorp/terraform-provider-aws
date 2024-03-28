@@ -40,19 +40,19 @@ func resourceAccountAliasCreate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	account_alias := d.Get("account_alias").(string)
+	accountAlias := d.Get("account_alias").(string)
 
 	params := &iam.CreateAccountAliasInput{
-		AccountAlias: aws.String(account_alias),
+		AccountAlias: aws.String(accountAlias),
 	}
 
 	_, err := conn.CreateAccountAlias(ctx, params)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating account alias with name '%s': %s", account_alias, err)
+		return sdkdiag.AppendErrorf(diags, "creating account alias with name '%s': %s", accountAlias, err)
 	}
 
-	d.SetId(account_alias)
+	d.SetId(accountAlias)
 
 	return diags
 }
@@ -86,16 +86,16 @@ func resourceAccountAliasDelete(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
-	account_alias := d.Get("account_alias").(string)
+	accountAlias := d.Get("account_alias").(string)
 
 	params := &iam.DeleteAccountAliasInput{
-		AccountAlias: aws.String(account_alias),
+		AccountAlias: aws.String(accountAlias),
 	}
 
 	_, err := conn.DeleteAccountAlias(ctx, params)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting account alias with name '%s': %s", account_alias, err)
+		return sdkdiag.AppendErrorf(diags, "deleting account alias with name '%s': %s", accountAlias, err)
 	}
 
 	return diags

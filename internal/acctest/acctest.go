@@ -1184,7 +1184,6 @@ func PreCheckIAMServiceLinkedRoleWithProvider(ctx context.Context, t *testing.T,
 			role = r
 			break
 		}
-
 	}
 
 	if reflect.ValueOf(role).IsZero() {
