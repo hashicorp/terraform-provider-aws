@@ -203,7 +203,7 @@ require (
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.1 // indirect
-	github.com/aws/aws-sdk-go-v2/credentials v1.17.9 // indirect
+	github.com/aws/aws-sdk-go-v2/credentials v1.17.9
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.3.4 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.6.4 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/ini v1.8.0 // indirect
