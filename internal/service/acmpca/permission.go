@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/acmpca"
 	"github.com/aws/aws-sdk-go-v2/service/acmpca/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -79,7 +80,7 @@ func resourcePermissionCreate(ctx context.Context, d *schema.ResourceData, meta 
 	caARN := d.Get("certificate_authority_arn").(string)
 	principal := d.Get("principal").(string)
 	sourceAccount := d.Get("source_account").(string)
-	id := errs.Must(flex.FlattenResourceId([]string{caARN, principal, sourceAccount}, permissionResourceIDPartCount, false))
+	id := errs.Must(flex.FlattenResourceId([]string{caARN, principal, sourceAccount}, permissionResourceIDPartCount, true))
 	input := &acmpca.CreatePermissionInput{
 		Actions:                 expandPermissionActions(d.Get("actions").(*schema.Set)),
 		CertificateAuthorityArn: aws.String(caARN),
@@ -105,7 +106,7 @@ func resourcePermissionRead(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
 
-	parts, err := flex.ExpandResourceId(d.Id(), permissionResourceIDPartCount, false)
+	parts, err := flex.ExpandResourceId(d.Id(), permissionResourceIDPartCount, true)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -136,7 +137,7 @@ func resourcePermissionDelete(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ACMPCAClient(ctx)
 
-	parts, err := flex.ExpandResourceId(d.Id(), permissionResourceIDPartCount, false)
+	parts, err := flex.ExpandResourceId(d.Id(), permissionResourceIDPartCount, true)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -191,6 +192,13 @@ func findPermissions(ctx context.Context, conn *acmpca.Client, input *acmpca.Lis
 	pages := acmpca.NewListPermissionsPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
+
+		if errs.IsAErrorMessageContains[*types.InvalidStateException](err, "The certificate authority is in the DELETED state") {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
 
 		if err != nil {
 			return nil, err
