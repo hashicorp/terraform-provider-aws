@@ -5,7 +5,6 @@ package ecr
 
 import (
 	"context"
-	"log"
 	"strings"
 	"time"
 
@@ -18,30 +17,18 @@ import (
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
-// @SDKDataSource("aws_ecr_authorization_token")
-func DataSourceAuthorizationToken() *schema.Resource {
+// @SDKDataSource("aws_ecr_authorization_token", name="Authorization Token")
+func dataSourceAuthorizationToken() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAuthorizationTokenRead,
 
 		Schema: map[string]*schema.Schema{
-			"registry_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
 			"authorization_token": {
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
 			},
-			"proxy_endpoint": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"expires_at": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"user_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -50,6 +37,18 @@ func DataSourceAuthorizationToken() *schema.Resource {
 				Computed:  true,
 				Sensitive: true,
 			},
+			"proxy_endpoint": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"registry_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"user_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 		},
 	}
 }
@@ -57,14 +56,13 @@ func DataSourceAuthorizationToken() *schema.Resource {
 func dataSourceAuthorizationTokenRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRClient(ctx)
-	params := &ecr.GetAuthorizationTokenInput{}
 
-	log.Printf("[DEBUG] Getting ECR authorization token")
-	out, err := conn.GetAuthorizationToken(ctx, params)
+	out, err := conn.GetAuthorizationToken(ctx, &ecr.GetAuthorizationTokenInput{})
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting ECR authorization token: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading ECR Authorization Token: %s", err)
 	}
-	log.Printf("[DEBUG] Received ECR AuthorizationData %v", out.AuthorizationData)
+
 	authorizationData := out.AuthorizationData[0]
 	authorizationToken := aws.ToString(authorizationData.AuthorizationToken)
 	expiresAt := aws.ToTime(authorizationData.ExpiresAt).Format(time.RFC3339)
@@ -86,5 +84,6 @@ func dataSourceAuthorizationTokenRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("expires_at", expiresAt)
 	d.Set("user_name", userName)
 	d.Set("password", password)
+
 	return diags
 }

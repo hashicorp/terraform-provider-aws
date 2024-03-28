@@ -30,8 +30,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceAuthorizationToken,
+			Factory:  dataSourceAuthorizationToken,
 			TypeName: "aws_ecr_authorization_token",
+			Name:     "Authorization Token",
 		},
 		{
 			Factory:  DataSourceImage,
