@@ -328,6 +328,30 @@ func TestAccAthenaDatabase_disppears(t *testing.T) {
 	})
 }
 
+func TestAccAthenaDatabase_withWorkgroup(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	dbName := sdkacctest.RandString(8)
+	wgName := sdkacctest.RandString(8)
+
+	resourceName := "aws_athena_database.test"
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDatabaseDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDatabaseConfig_withWorkgroup(rName, dbName, true, wgName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDatabaseExists(ctx, resourceName),
+					testAccCheckDatabaseWorkgroup(ctx, dbName, wgName),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckDatabaseDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaClient(ctx)
@@ -480,6 +504,27 @@ func testAccDatabaseFindBucketName(s *terraform.State, dbName string) (bucket st
 	return bucket, err
 }
 
+func testAccCheckDatabaseWorkgroup(ctx context.Context, dbName string, wgName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaClient(ctx)
+
+		input := &athena.ListQueryExecutionsInput{
+			WorkGroup: aws.String(wgName),
+		}
+		output, err := conn.ListQueryExecutions(ctx, input)
+		if err != nil {
+			return err
+		}
+
+		if len(output.QueryExecutionIds) == 0 {
+			return fmt.Errorf("no query executions found for workgroup %s", wgName)
+		}
+
+		return nil
+	}
+}
+
 func testAccDatabaseConfig_basic(rName string, dbName string, forceDestroy bool) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
@@ -602,4 +647,25 @@ resource "aws_athena_database" "test" {
   force_destroy = %[3]t
 }
 `, rName, dbName, forceDestroy)
+}
+
+func testAccDatabaseConfig_withWorkgroup(rName string, dbName string, forceDestroy bool, wgName string) string {
+	return fmt.Sprintf(`
+resource "aws_athena_workgroup" "test" {
+	name          = %[4]q
+	force_destroy = %[3]t
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket        = %[1]q
+  force_destroy = true
+}
+
+resource "aws_athena_database" "test" {
+  name          = %[2]q
+  bucket        = aws_s3_bucket.test.bucket
+  force_destroy = %[3]t
+  workgroup     = aws_athena_workgroup.test.id
+}
+`, rName, dbName, forceDestroy, wgName)
 }
