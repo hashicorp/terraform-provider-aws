@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/iam"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func TestAccIAMPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var out iam.Policy
+	var out awstypes.Policy
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_policy.test"
 	expectedPolicyText := `{"Statement":[{"Action":["ec2:Describe*"],"Effect":"Allow","Resource":"*"}],"Version":"2012-10-17"}`
@@ -57,7 +57,7 @@ func TestAccIAMPolicy_basic(t *testing.T) {
 
 func TestAccIAMPolicy_description(t *testing.T) {
 	ctx := acctest.Context(t)
-	var out iam.Policy
+	var out awstypes.Policy
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_policy.test"
 
@@ -85,7 +85,7 @@ func TestAccIAMPolicy_description(t *testing.T) {
 
 func TestAccIAMPolicy_whitespace(t *testing.T) {
 	ctx := acctest.Context(t)
-	var out iam.Policy
+	var out awstypes.Policy
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_policy.test"
 
@@ -123,7 +123,7 @@ func TestAccIAMPolicy_whitespace(t *testing.T) {
 
 func TestAccIAMPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var out iam.Policy
+	var out awstypes.Policy
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_policy.test"
 
@@ -147,7 +147,7 @@ func TestAccIAMPolicy_disappears(t *testing.T) {
 
 func TestAccIAMPolicy_namePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
-	var out iam.Policy
+	var out awstypes.Policy
 	resourceName := "aws_iam_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -174,7 +174,7 @@ func TestAccIAMPolicy_namePrefix(t *testing.T) {
 
 func TestAccIAMPolicy_path(t *testing.T) {
 	ctx := acctest.Context(t)
-	var out iam.Policy
+	var out awstypes.Policy
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_policy.test"
 
@@ -202,7 +202,7 @@ func TestAccIAMPolicy_path(t *testing.T) {
 
 func TestAccIAMPolicy_policy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var out iam.Policy
+	var out awstypes.Policy
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_policy.test"
 	policy1 := `{"Statement":[{"Action":["ec2:Describe*"],"Effect":"Allow","Resource":"*"}],"Version":"2012-10-17"}`
@@ -244,7 +244,7 @@ func TestAccIAMPolicy_policy(t *testing.T) {
 // https://github.com/hashicorp/terraform-provider-aws/issues/28833
 func TestAccIAMPolicy_diffs(t *testing.T) {
 	ctx := acctest.Context(t)
-	var out iam.Policy
+	var out awstypes.Policy
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_policy.test"
 
@@ -348,7 +348,7 @@ func TestAccIAMPolicy_policyDuplicateKeys(t *testing.T) {
 	})
 }
 
-func testAccCheckPolicyExists(ctx context.Context, n string, v *iam.Policy) resource.TestCheckFunc {
+func testAccCheckPolicyExists(ctx context.Context, n string, v *awstypes.Policy) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -359,7 +359,7 @@ func testAccCheckPolicyExists(ctx context.Context, n string, v *iam.Policy) reso
 			return fmt.Errorf("No IAM Policy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
 		output, err := tfiam.FindPolicyByARN(ctx, conn, rs.Primary.ID)
 
@@ -375,7 +375,7 @@ func testAccCheckPolicyExists(ctx context.Context, n string, v *iam.Policy) reso
 
 func testAccCheckPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iam_policy" {
