@@ -7,6 +7,7 @@ import (
 	accessanalyzer_sdkv2 "github.com/aws/aws-sdk-go-v2/service/accessanalyzer"
 	account_sdkv2 "github.com/aws/aws-sdk-go-v2/service/account"
 	acm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/acm"
+	acmpca_sdkv2 "github.com/aws/aws-sdk-go-v2/service/acmpca"
 	amp_sdkv2 "github.com/aws/aws-sdk-go-v2/service/amp"
 	appconfig_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appconfig"
 	appfabric_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appfabric"
@@ -147,7 +148,6 @@ import (
 	wellarchitected_sdkv2 "github.com/aws/aws-sdk-go-v2/service/wellarchitected"
 	workspaces_sdkv2 "github.com/aws/aws-sdk-go-v2/service/workspaces"
 	xray_sdkv2 "github.com/aws/aws-sdk-go-v2/service/xray"
-	acmpca_sdkv1 "github.com/aws/aws-sdk-go/service/acmpca"
 	amplify_sdkv1 "github.com/aws/aws-sdk-go/service/amplify"
 	apigateway_sdkv1 "github.com/aws/aws-sdk-go/service/apigateway"
 	apigatewayv2_sdkv1 "github.com/aws/aws-sdk-go/service/apigatewayv2"
@@ -258,8 +258,8 @@ func (c *AWSClient) ACMClient(ctx context.Context) *acm_sdkv2.Client {
 	return errs.Must(client[*acm_sdkv2.Client](ctx, c, names.ACM, make(map[string]any)))
 }
 
-func (c *AWSClient) ACMPCAConn(ctx context.Context) *acmpca_sdkv1.ACMPCA {
-	return errs.Must(conn[*acmpca_sdkv1.ACMPCA](ctx, c, names.ACMPCA, make(map[string]any)))
+func (c *AWSClient) ACMPCAClient(ctx context.Context) *acmpca_sdkv2.Client {
+	return errs.Must(client[*acmpca_sdkv2.Client](ctx, c, names.ACMPCA, make(map[string]any)))
 }
 
 func (c *AWSClient) AMPClient(ctx context.Context) *amp_sdkv2.Client {
