@@ -257,9 +257,15 @@ The following arguments are optional:
 
 ### `domain_settings` Block
 
+* `docker_settings` - (Optional) A collection of settings that configure the domain’s Docker interaction. see [`docker_settings` Block](#docker_settings-block) below.
 * `execution_role_identity_config` - (Optional) The configuration for attaching a SageMaker user profile name to the execution role as a sts:SourceIdentity key [AWS Docs](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_temp_control-access_monitor.html). Valid values are `USER_PROFILE_NAME` and `DISABLED`.
 * `r_studio_server_pro_domain_settings` - (Optional) A collection of settings that configure the RStudioServerPro Domain-level app. see [`r_studio_server_pro_domain_settings` Block](#r_studio_server_pro_domain_settings-block) below.
 * `security_group_ids` - (Optional) The security groups for the Amazon Virtual Private Cloud that the Domain uses for communication between Domain-level apps and user apps.
+
+#### `docker_settings` Block
+
+* `enable_docker_access` - (Optional) Indicates whether the domain can access Docker. Valid values are `ENABLED` and `DISABLED`.
+* `vpc_only_trusted_accounts` - (Optional) The list of Amazon Web Services accounts that are trusted when the domain is created in VPC-only mode.
 
 #### `r_studio_server_pro_domain_settings` Block
 

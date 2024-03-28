@@ -101,6 +101,48 @@ func testAccDomain_domainSettings(t *testing.T) {
 	})
 }
 
+func testAccDomain_domainSettingsDockerSettingsUpdated(t *testing.T) {
+	ctx := acctest.Context(t)
+	var domain sagemaker.DescribeDomainOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_domain.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_domainSettingsDockerSettings(rName, "DISABLED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "domain_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "domain_settings.0.docker_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "domain_settings.0.docker_settings.0.enable_docker_access", "DISABLED"),
+					resource.TestCheckResourceAttr(resourceName, "domain_settings.0.docker_settings.0.vpc_only_trusted_accounts.#", "1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"retention_policy"},
+			},
+			{
+				Config: testAccDomainConfig_domainSettingsDockerSettings(rName, "ENABLED"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+					resource.TestCheckResourceAttr(resourceName, "domain_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "domain_settings.0.docker_settings.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "domain_settings.0.docker_settings.0.enable_docker_access", "ENABLED"),
+					resource.TestCheckResourceAttr(resourceName, "domain_settings.0.docker_settings.0.vpc_only_trusted_accounts.#", "1"),
+				),
+			},
+		},
+	})
+}
+
 func testAccDomain_kms(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domain sagemaker.DescribeDomainOutput
@@ -177,7 +219,7 @@ func testAccDomain_tags(t *testing.T) {
 	})
 }
 
-func testAccDomain_securityGroup(t *testing.T) {
+func testAccDomain_defaultUserSettingsSecurityGroupUpdated(t *testing.T) {
 	ctx := acctest.Context(t)
 	var domain sagemaker.DescribeDomainOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -190,7 +232,7 @@ func testAccDomain_securityGroup(t *testing.T) {
 		CheckDestroy:             testAccCheckDomainDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainConfig_securityGroup1(rName),
+				Config: testAccDomainConfig_defaultUserSettingsSecurityGroupUpdated(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
@@ -204,7 +246,7 @@ func testAccDomain_securityGroup(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"retention_policy"},
 			},
 			{
-				Config: testAccDomainConfig_securityGroup2(rName),
+				Config: testAccDomainConfig_defaultUserSettingsSecurityGroupUpdated(rName, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainExists(ctx, resourceName, &domain),
 					resource.TestCheckResourceAttr(resourceName, "default_user_settings.#", "1"),
@@ -1246,6 +1288,36 @@ resource "aws_sagemaker_domain" "test" {
 `, rName, config))
 }
 
+func testAccDomainConfig_domainSettingsDockerSettings(rName, config string) string {
+	return acctest.ConfigCompose(testAccDomainConfig_base(rName), fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_sagemaker_domain" "test" {
+  domain_name = %[1]q
+  auth_mode   = "IAM"
+  vpc_id      = aws_vpc.test.id
+  subnet_ids  = aws_subnet.test[*].id
+
+  default_user_settings {
+    execution_role = aws_iam_role.test.arn
+  }
+
+  app_network_access_type = "VpcOnly"
+
+  domain_settings {
+	docker_settings {
+		enable_docker_access      = %[2]q
+		vpc_only_trusted_accounts = [data.aws_caller_identity.current.account_id]
+	}
+  }
+
+  retention_policy {
+    home_efs_file_system = "Delete"
+  }
+}
+`, rName, config))
+}
+
 func testAccDomainConfig_kms(rName string) string {
 	return acctest.ConfigCompose(testAccDomainConfig_base(rName), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
@@ -1271,15 +1343,15 @@ resource "aws_sagemaker_domain" "test" {
 `, rName))
 }
 
-func testAccDomainConfig_securityGroup1(rName string) string {
+func testAccDomainConfig_defaultUserSettingsSecurityGroupUpdated(rName string, sgCount int) string {
 	return acctest.ConfigCompose(testAccDomainConfig_base(rName), fmt.Sprintf(`
 resource "aws_security_group" "test" {
-  count = 1
+  count = %[2]d
 
   name = "%[1]s-${count.index}"
 
   tags = {
-    Name = %[1]q
+    Name = "%[1]s-${count.index}"
   }
 }
 
@@ -1298,37 +1370,7 @@ resource "aws_sagemaker_domain" "test" {
     home_efs_file_system = "Delete"
   }
 }
-`, rName))
-}
-
-func testAccDomainConfig_securityGroup2(rName string) string {
-	return acctest.ConfigCompose(testAccDomainConfig_base(rName), fmt.Sprintf(`
-resource "aws_security_group" "test" {
-  count = 2
-
-  name = "%[1]s-${count.index}"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_sagemaker_domain" "test" {
-  domain_name = %[1]q
-  auth_mode   = "IAM"
-  vpc_id      = aws_vpc.test.id
-  subnet_ids  = aws_subnet.test[*].id
-
-  default_user_settings {
-    execution_role  = aws_iam_role.test.arn
-    security_groups = aws_security_group.test[*].id
-  }
-
-  retention_policy {
-    home_efs_file_system = "Delete"
-  }
-}
-`, rName))
+`, rName, sgCount))
 }
 
 func testAccDomainConfig_tags1(rName, tagKey1, tagValue1 string) string {
