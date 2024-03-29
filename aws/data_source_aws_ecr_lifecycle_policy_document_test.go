@@ -52,13 +52,11 @@ var testAccAWSEcrLifecyclePolicyDocumentConfig = `
 data "aws_ecr_lifecycle_policy_document" "test" {
     rule {
       priority        = 1
-			description     = "This is a test."
-			selection 			= {
-				tag_status      = "tagged"
-				tag_prefix_list = ["prod"]
-				count_type      = "imageCountMoreThan"
-				count_number    = 100
-			}
+      description     = "This is a test."
+      tag_status      = "tagged"
+      tag_prefix_list = ["prod"]
+      count_type      = "imageCountMoreThan"
+      count_number    = 100
     }
 }
 `
@@ -68,17 +66,15 @@ var testAccAWSEcrLifecyclePolicyDocumentExpectedJSON = `{
     {
       "rulePriority": 1,
       "description": "This is a test.",
-      "selection": {
+      "selection": [
         "tagStatus": "tagged",
-        "tagPrefixList": [
-          "prod"
-        ],
+        "tagPrefixList": ["prod"],
         "countType": "imageCountMoreThan",
         "countNumber": 100
-      },
-      "action": {
+      ],
+      "action": [
         "type": "expire"
-      }
+      ]
     }
   ]
 }`
