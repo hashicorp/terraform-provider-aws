@@ -277,7 +277,7 @@ func FindRepositoryByName(ctx context.Context, conn *ecr.Client, name string) (*
 		RepositoryNames: []string{name},
 	}
 
-	output, err := FindRepository(ctx, conn, input)
+	output, err := findRepository(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -293,29 +293,14 @@ func FindRepositoryByName(ctx context.Context, conn *ecr.Client, name string) (*
 	return output, nil
 }
 
-func FindRepository(ctx context.Context, conn *ecr.Client, input *ecr.DescribeRepositoriesInput) (*awstypes.Repository, error) {
-	output, err := conn.DescribeRepositories(ctx, input)
-
-	if errs.IsA[*awstypes.RepositoryNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
+func findRepository(ctx context.Context, conn *ecr.Client, input *ecr.DescribeRepositoriesInput) (*awstypes.Repository, error) {
+	output, err := findRepositories(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil || len(output.Repositories) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output.Repositories); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return &output.Repositories[0], nil
+	return tfresource.AssertSingleValueResult(output)
 }
 
 func flattenImageScanningConfiguration(isc *awstypes.ImageScanningConfiguration) []map[string]interface{} {

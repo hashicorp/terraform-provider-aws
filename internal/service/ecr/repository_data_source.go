@@ -5,23 +5,21 @@ package ecr
 
 import (
 	"context"
-	"log"
 	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ecr/types"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
-// @SDKDataSource("aws_ecr_repository")
-func DataSourceRepository() *schema.Resource {
+// @SDKDataSource("aws_ecr_repository", name="Repository
+// @Tags(identifierAttribute="arn"))
+func dataSourceRepository() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRepositoryRead,
 
@@ -88,7 +86,6 @@ func DataSourceRepository() *schema.Resource {
 func dataSourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
 	input := &ecr.DescribeRepositoriesInput{
@@ -99,7 +96,7 @@ func dataSourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta 
 		input.RegistryId = aws.String(v.(string))
 	}
 
-	repository, err := FindRepository(ctx, conn, input)
+	repository, err := findRepository(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ECR Repository (%s): %s", name, err)
@@ -119,22 +116,6 @@ func dataSourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("registry_id", repository.RegistryId)
 	d.Set("repository_url", repository.RepositoryUri)
 
-	tags, err := listTags(ctx, conn, arn)
-
-	// Some partitions (i.e., ISO) may not support tagging, giving error
-	if meta.(*conns.AWSClient).Partition != endpoints.AwsPartitionID && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
-		log.Printf("[WARN] failed listing tags for ECR Repository (%s): %s", d.Id(), err)
-		return diags
-	}
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "listing tags for ECR Repository (%s): %s", arn, err)
-	}
-
-	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
-
 	imageDetails, err := findImageDetails(ctx, conn, &ecr.DescribeImagesInput{
 		RepositoryName: repository.RepositoryName,
 		RegistryId:     repository.RegistryId,
@@ -145,7 +126,7 @@ func dataSourceRepositoryRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if len(imageDetails) >= 1 {
-		slices.SortFunc(imageDetails, func(a, b awstypes.ImageDetail) int {
+		slices.SortFunc(imageDetails, func(a, b types.ImageDetail) int {
 			if aws.ToTime(a.ImagePushedAt).After(aws.ToTime(b.ImagePushedAt)) {
 				return -1
 			}
