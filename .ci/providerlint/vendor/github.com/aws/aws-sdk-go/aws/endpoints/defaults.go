@@ -45459,6 +45459,20 @@ var awsisobPartition = partition{
 				}: endpoint{},
 			},
 		},
+		"medialive": service{
+			Endpoints: serviceEndpoints{
+				endpointKey{
+					Region: "us-isob-east-1",
+				}: endpoint{},
+			},
+		},
+		"mediapackage": service{
+			Endpoints: serviceEndpoints{
+				endpointKey{
+					Region: "us-isob-east-1",
+				}: endpoint{},
+			},
+		},
 		"metering.marketplace": service{
 			Defaults: endpointDefaults{
 				defaultKey{}: endpoint{
