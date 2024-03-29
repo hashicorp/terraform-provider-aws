@@ -4,11 +4,6 @@ BUG FIXES:
 
 * resource/aws_iam_user: When `force_destroy` is used and there are inline or attached policies, allow resource to be destroyed ([#36640](https://github.com/hashicorp/terraform-provider-aws/issues/36640))
 
-ENHANCEMENTS:
-
-* data-source/aws_batch_job_queue: Add `job_state_time_limit_action` attribute ([#36384](https://github.com/hashicorp/terraform-provider-aws/issues/36384))
-* resource/aws_batch_job_queue: Add `job_state_time_limit_action` attribute ([#36384](https://github.com/hashicorp/terraform-provider-aws/issues/36384))
-
 ## 5.43.0 (March 28, 2024)
 
 FEATURES:
