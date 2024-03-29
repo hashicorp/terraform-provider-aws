@@ -10,7 +10,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ecr/types"
+	"github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -144,7 +144,7 @@ func resourcePullThroughCacheRuleDelete(ctx context.Context, d *schema.ResourceD
 		RegistryId:          aws.String(d.Get("registry_id").(string)),
 	})
 
-	if errs.IsA[*awstypes.PullThroughCacheRuleNotFoundException](err) {
+	if errs.IsA[*types.PullThroughCacheRuleNotFoundException](err) {
 		return diags
 	}
 
@@ -155,33 +155,44 @@ func resourcePullThroughCacheRuleDelete(ctx context.Context, d *schema.ResourceD
 	return diags
 }
 
-func findPullThroughCacheRuleByRepositoryPrefix(ctx context.Context, conn *ecr.Client, repositoryPrefix string) (*awstypes.PullThroughCacheRule, error) {
+func findPullThroughCacheRuleByRepositoryPrefix(ctx context.Context, conn *ecr.Client, repositoryPrefix string) (*types.PullThroughCacheRule, error) {
 	input := &ecr.DescribePullThroughCacheRulesInput{
-		EcrRepositoryPrefixes: aws.ToStringSlice([]*string{&repositoryPrefix}),
+		EcrRepositoryPrefixes: []string{repositoryPrefix},
 	}
 
-	output, err := conn.DescribePullThroughCacheRules(ctx, input)
+	return findPullThroughCacheRule(ctx, conn, input)
+}
 
-	if errs.IsA[*awstypes.PullThroughCacheRuleNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
+func findPullThroughCacheRule(ctx context.Context, conn *ecr.Client, input *ecr.DescribePullThroughCacheRulesInput) (*types.PullThroughCacheRule, error) {
+	output, err := findPullThroughCacheRules(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findPullThroughCacheRules(ctx context.Context, conn *ecr.Client, input *ecr.DescribePullThroughCacheRulesInput) ([]types.PullThroughCacheRule, error) {
+	var output []types.PullThroughCacheRule
+
+	pages := ecr.NewDescribePullThroughCacheRulesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*types.PullThroughCacheRuleNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.PullThroughCacheRules...)
 	}
 
-	ptrSlice := make([]*awstypes.PullThroughCacheRule, len(output.PullThroughCacheRules))
-	for i, rule := range output.PullThroughCacheRules {
-		ptrRule := rule
-		ptrSlice[i] = &ptrRule
-	}
-
-	return tfresource.AssertSinglePtrResult(ptrSlice)
+	return output, nil
 }
