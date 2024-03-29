@@ -143,7 +143,6 @@ func (d *lifecyclePolicyDocumentDataSource) Read(ctx context.Context, request da
 			v.Action = &lifecyclePolicyRuleAction{
 				Type: aws.String("expire"),
 			}
-
 		}
 	}
 
