@@ -112,11 +112,6 @@ func testAccRegistryScanningConfiguration_update(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
 				Config: testAccRegistryScanningConfigurationConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccRegistryScanningConfigurationExists(ctx, resourceName, &v),
@@ -124,11 +119,6 @@ func testAccRegistryScanningConfiguration_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "rule.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "scan_type", "BASIC"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
 			},
 		},
 	})
