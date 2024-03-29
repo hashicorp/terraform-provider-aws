@@ -917,11 +917,16 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	if d.HasChange("snapshot_copy") {
 		if v, ok := d.GetOk("snapshot_copy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			if err := enableSnapshotCopy(ctx, conn, d.Id(), v.([]interface{})[0].(map[string]interface{})); err != nil {
-				return sdkdiag.AppendErrorf(diags, "updating Redshift Cluster (%s): %s", d.Id(), err)
+				if !tfawserr.ErrCodeEquals(err, redshift.ErrCodeSnapshotCopyAlreadyEnabledFault) {
+					return sdkdiag.AppendErrorf(diags, "updating Redshift Cluster (%s) snapshot_copy: %s", d.Id(), err)
+				}
+				if err := toggleSnapshotCopy(ctx, conn, d.Id(), v.([]interface{})[0].(map[string]interface{})); err != nil {
+					return sdkdiag.AppendErrorf(diags, "updating Redshift Cluster (%s) snapshot_copy: %s", d.Id(), err)
+				}
 			}
 		} else {
 			if err := disableSnapshotCopy(ctx, conn, d.Id()); err != nil {
-				return sdkdiag.AppendErrorf(diags, "updating Redshift Cluster (%s): %s", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "updating Redshift Cluster (%s) snapshot_copy: %s", d.Id(), err)
 			}
 		}
 	}
@@ -1118,6 +1123,23 @@ func disableSnapshotCopy(ctx context.Context, conn *redshift.Redshift, clusterID
 		return fmt.Errorf("disabling snapshot copy: %w", err)
 	}
 
+	return nil
+}
+
+// toggleSnapshotCopy calls disableSnapshotCopy followed by enableSnapshotCopy
+//
+// This workflow is necessary in cases where the existing snapshot copy configuration
+// needs to be updated. Once enabled, `EnableSnapshotCopy` cannot be called to update existing
+// settings. While the `ModifySnapshotCopyRetentionPeriod` API is available to update the
+// `retention_period` argument, there is no mechanism to update other arguments such
+// as `destination_region` or `snapshot_copy_grant_name` without disabling first.
+func toggleSnapshotCopy(ctx context.Context, conn *redshift.Redshift, clusterID string, tfMap map[string]interface{}) error {
+	if err := disableSnapshotCopy(ctx, conn, clusterID); err != nil {
+		return err
+	}
+	if err := enableSnapshotCopy(ctx, conn, clusterID, tfMap); err != nil {
+		return err
+	}
 	return nil
 }
 
