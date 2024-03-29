@@ -74,8 +74,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Registry Scanning Configuration",
 		},
 		{
-			Factory:  ResourceReplicationConfiguration,
+			Factory:  resourceReplicationConfiguration,
 			TypeName: "aws_ecr_replication_configuration",
+			Name:     "Replication Configuration",
 		},
 		{
 			Factory:  ResourceRepository,
