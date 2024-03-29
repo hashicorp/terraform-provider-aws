@@ -1,5 +1,9 @@
 ## 5.44.0 (Unreleased)
 
+FEATURES:
+
+* **New Data Source:** `aws_devopsguru_notification_channel` ([#36656](https://github.com/hashicorp/terraform-provider-aws/issues/36656))
+
 BUG FIXES:
 
 * resource/aws_iam_user: When `force_destroy` is used and there are inline or attached policies, allow resource to be destroyed ([#36640](https://github.com/hashicorp/terraform-provider-aws/issues/36640))
