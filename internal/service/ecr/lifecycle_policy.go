@@ -175,11 +175,12 @@ func findLifecyclePolicyByRepositoryName(ctx context.Context, conn *ecr.Client, 
 }
 
 type lifecyclePolicyRuleSelection struct {
-	TagStatus     *string   `locationName:"tagStatus" type:"string" enum:"tagStatus" required:"true"`
-	TagPrefixList []*string `locationName:"tagPrefixList" type:"list"`
-	CountType     *string   `locationName:"countType" type:"string" enum:"countType" required:"true"`
-	CountUnit     *string   `locationName:"countUnit" type:"string" enum:"countType"`
-	CountNumber   *int64    `locationName:"countNumber" min:"1" type:"integer"`
+	TagStatus      *string   `locationName:"tagStatus" type:"string" enum:"tagStatus" required:"true"`
+	TagPatternList []*string `locationName:"tagPatternList" type:"list"`
+	TagPrefixList  []*string `locationName:"tagPrefixList" type:"list"`
+	CountType      *string   `locationName:"countType" type:"string" enum:"countType" required:"true"`
+	CountUnit      *string   `locationName:"countUnit" type:"string" enum:"countType"`
+	CountNumber    *int64    `locationName:"countNumber" min:"1" type:"integer"`
 }
 
 type lifecyclePolicyRuleAction struct {
@@ -208,6 +209,14 @@ func (lp *lifecyclePolicy) reduce() {
 }
 
 func (lprs *lifecyclePolicyRuleSelection) reduce() {
+	sort.Slice(lprs.TagPatternList, func(i, j int) bool {
+		return aws.ToString(lprs.TagPatternList[i]) < aws.ToString(lprs.TagPatternList[j])
+	})
+
+	if len(lprs.TagPatternList) == 0 {
+		lprs.TagPatternList = nil
+	}
+
 	sort.Slice(lprs.TagPrefixList, func(i, j int) bool {
 		return aws.ToString(lprs.TagPrefixList[i]) < aws.ToString(lprs.TagPrefixList[j])
 	})

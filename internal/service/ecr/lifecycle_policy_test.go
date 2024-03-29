@@ -118,6 +118,32 @@ func TestAccECRLifecyclePolicy_detectDiff(t *testing.T) {
 	})
 }
 
+func TestAccECRLifecyclePolicy_detectTagPatternListDiff(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecr_lifecycle_policy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLifecyclePolicyConfig_tagPatternList(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLifecyclePolicyExists(ctx, resourceName),
+				),
+			},
+			{
+				Config:             testAccLifecyclePolicyConfig_tagPatternListChanged(rName),
+				ExpectNonEmptyPlan: true,
+				PlanOnly:           true,
+			},
+		},
+	})
+}
+
 func testAccCheckLifecyclePolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRClient(ctx)
@@ -313,6 +339,72 @@ resource "aws_ecr_lifecycle_policy" "test" {
           type = "expire"
         }
       },
+    ]
+  })
+}
+`, rName)
+}
+
+func testAccLifecyclePolicyConfig_tagPatternList(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecr_repository" "test" {
+  name = "%s"
+}
+
+resource "aws_ecr_lifecycle_policy" "test" {
+  repository = aws_ecr_repository.test.name
+
+  policy = jsonencode({
+    rules = [
+      {
+        rulePriority = 1
+        description  = "Expire tagged images older than 14 days"
+        selection = {
+          tagStatus = "tagged"
+          tagPatternList = [
+            "alpha-*"
+          ]
+          countType   = "sinceImagePushed"
+          countUnit   = "days"
+          countNumber = 14
+        }
+        action = {
+          type = "expire"
+        }
+      }
+    ]
+  })
+}
+`, rName)
+}
+
+func testAccLifecyclePolicyConfig_tagPatternListChanged(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecr_repository" "test" {
+  name = %[1]q
+}
+
+resource "aws_ecr_lifecycle_policy" "test" {
+  repository = aws_ecr_repository.test.name
+
+  policy = jsonencode({
+    rules = [
+      {
+        rulePriority = 1
+        description  = "Expire tagged images older than 14 days"
+        selection = {
+          tagStatus = "tagged"
+          tagPatternList = [
+            "beta-*"
+          ]
+          countType   = "sinceImagePushed"
+          countUnit   = "days"
+          countNumber = 14
+        }
+        action = {
+          type = "expire"
+        }
+      }
     ]
   })
 }
