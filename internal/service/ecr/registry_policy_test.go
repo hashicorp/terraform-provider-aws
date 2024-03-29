@@ -10,13 +10,12 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/ecr"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfecr "github.com/hashicorp/terraform-provider-aws/internal/service/ecr"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -100,41 +99,39 @@ func testAccCheckRegistryPolicyDestroy(ctx context.Context) resource.TestCheckFu
 				continue
 			}
 
-			_, err := conn.GetRegistryPolicy(ctx, &ecr.GetRegistryPolicyInput{})
+			_, err := tfecr.FindRegistryPolicy(ctx, conn)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
 			if err != nil {
-				if errs.IsA[*awstypes.RegistryPolicyNotFoundException](err) {
-					return nil
-				}
 				return err
 			}
+
+			return fmt.Errorf("ECR Registry Policy %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckRegistryPolicyExists(ctx context.Context, name string, res *ecr.GetRegistryPolicyOutput) resource.TestCheckFunc {
+func testAccCheckRegistryPolicyExists(ctx context.Context, n string, v *ecr.GetRegistryPolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		_, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ECR registry policy ID is set")
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRClient(ctx)
 
-		output, err := conn.GetRegistryPolicy(ctx, &ecr.GetRegistryPolicyInput{})
+		output, err := tfecr.FindRegistryPolicy(ctx, conn)
+
 		if err != nil {
-			if errs.IsA[*awstypes.RegistryPolicyNotFoundException](err) {
-				return fmt.Errorf("ECR repository %s not found", rs.Primary.ID)
-			}
 			return err
 		}
 
-		*res = *output
+		*v = *output
 
 		return nil
 	}

@@ -64,8 +64,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Pull Through Cache Rule",
 		},
 		{
-			Factory:  ResourceRegistryPolicy,
+			Factory:  resourceRegistryPolicy,
 			TypeName: "aws_ecr_registry_policy",
+			Name:     "Registry Policy",
 		},
 		{
 			Factory:  ResourceRegistryScanningConfiguration,

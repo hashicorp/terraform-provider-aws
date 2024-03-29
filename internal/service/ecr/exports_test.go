@@ -7,7 +7,9 @@ package ecr
 var (
 	ResourceLifecyclePolicy      = resourceLifecyclePolicy
 	ResourcePullThroughCacheRule = resourcePullThroughCacheRule
+	ResourceRegistryPolicy       = resourceRegistryPolicy
 
 	FindLifecyclePolicyByRepositoryName        = findLifecyclePolicyByRepositoryName
 	FindPullThroughCacheRuleByRepositoryPrefix = findPullThroughCacheRuleByRepositoryPrefix
+	FindRegistryPolicy                         = findRegistryPolicy
 )

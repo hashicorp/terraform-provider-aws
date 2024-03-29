@@ -45,7 +45,6 @@ func resourceLifecyclePolicy() *schema.Resource {
 				ValidateFunc: validation.StringIsJSON,
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					equal, _ := equivalentLifecyclePolicyJSON(old, new)
-
 					return equal
 				},
 				DiffSuppressOnRefresh: true,
@@ -112,8 +111,6 @@ func resourceLifecyclePolicyRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	output := outputRaw.(*ecr.GetLifecyclePolicyOutput)
-	d.Set("repository", output.RepositoryName)
-	d.Set("registry_id", output.RegistryId)
 
 	if equivalent, err := equivalentLifecyclePolicyJSON(d.Get("policy").(string), aws.ToString(output.LifecyclePolicyText)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
@@ -125,6 +122,9 @@ func resourceLifecyclePolicyRead(ctx context.Context, d *schema.ResourceData, me
 
 		d.Set("policy", policyToSet)
 	}
+
+	d.Set("registry_id", output.RegistryId)
+	d.Set("repository", output.RepositoryName)
 
 	return diags
 }
