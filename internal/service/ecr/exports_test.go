@@ -11,6 +11,7 @@ var (
 	ResourceRegistryScanningConfiguration = resourceRegistryScanningConfiguration
 	ResourceReplicationConfiguration      = resourceReplicationConfiguration
 	ResourceRepository                    = resourceRepository
+	ResourceRepositoryPolicy              = resourceRepositoryPolicy
 
 	FindLifecyclePolicyByRepositoryName        = findLifecyclePolicyByRepositoryName
 	FindPullThroughCacheRuleByRepositoryPrefix = findPullThroughCacheRuleByRepositoryPrefix
@@ -18,4 +19,5 @@ var (
 	FindRegistryScanningConfiguration          = findRegistryScanningConfiguration
 	FindReplicationConfiguration               = findReplicationConfiguration
 	FindRepositoryByName                       = findRepositoryByName
+	FindRepositoryPolicyByRepositoryName       = findRepositoryPolicyByRepositoryName
 )

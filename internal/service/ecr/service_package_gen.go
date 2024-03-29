@@ -83,8 +83,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceRepositoryPolicy,
+			Factory:  resourceRepositoryPolicy,
 			TypeName: "aws_ecr_repository_policy",
+			Name:     "Repsitory Policy",
 		},
 	}
 }
