@@ -318,11 +318,19 @@ func TestAccRedshiftCluster_snapshotCopy(t *testing.T) {
 		CheckDestroy:             testAccCheckClusterDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccClusterConfig_snapshotCopyEnabled(rName),
+				Config: testAccClusterConfig_snapshotCopyEnabled(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckClusterExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "snapshot_copy.0.destination_region", "data.aws_region.alternate", "name"),
 					resource.TestCheckResourceAttr(resourceName, "snapshot_copy.0.retention_period", "1"),
+				),
+			},
+			{
+				Config: testAccClusterConfig_snapshotCopyEnabled(rName, 3),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "snapshot_copy.0.destination_region", "data.aws_region.alternate", "name"),
+					resource.TestCheckResourceAttr(resourceName, "snapshot_copy.0.retention_period", "3"),
 				),
 			},
 			{
@@ -1406,7 +1414,7 @@ resource "aws_redshift_cluster" "test" {
 `, rName))
 }
 
-func testAccClusterConfig_snapshotCopyEnabled(rName string) string {
+func testAccClusterConfig_snapshotCopyEnabled(rName string, retentionPeriod int) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(2),
 		acctest.ConfigAvailableAZsNoOptInExclude("usw2-az2"),
@@ -1427,12 +1435,12 @@ resource "aws_redshift_cluster" "test" {
 
   snapshot_copy {
     destination_region = data.aws_region.alternate.name
-    retention_period   = 1
+    retention_period   = %[2]d
   }
 
   skip_final_snapshot = true
 }
-`, rName))
+`, rName, retentionPeriod))
 }
 
 func testAccClusterConfig_tags1(rName, tagKey1, tagValue1 string) string {
