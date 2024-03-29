@@ -100,7 +100,7 @@ func resourceLifecyclePolicyRead(ctx context.Context, d *schema.ResourceData, me
 		return findLifecyclePolicyByRepositoryName(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
-	if d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ECR Lifecycle Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

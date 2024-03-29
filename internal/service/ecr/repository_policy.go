@@ -97,7 +97,7 @@ func resourceRepositoryPolicyRead(ctx context.Context, d *schema.ResourceData, m
 		return findRepositoryPolicyByRepositoryName(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
-	if d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ECR Repository Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

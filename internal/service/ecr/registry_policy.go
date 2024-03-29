@@ -84,7 +84,7 @@ func resourceRegistryPolicyRead(ctx context.Context, d *schema.ResourceData, met
 
 	output, err := findRegistryPolicy(ctx, conn)
 
-	if d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ECR Registry Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

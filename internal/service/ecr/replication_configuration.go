@@ -123,7 +123,7 @@ func resourceReplicationConfigurationRead(ctx context.Context, d *schema.Resourc
 
 	output, err := findReplicationConfiguration(ctx, conn)
 
-	if d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ECR Replication Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags

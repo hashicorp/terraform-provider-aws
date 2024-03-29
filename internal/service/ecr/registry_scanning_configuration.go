@@ -111,7 +111,7 @@ func resourceRegistryScanningConfigurationRead(ctx context.Context, d *schema.Re
 
 	output, err := findRegistryScanningConfiguration(ctx, conn)
 
-	if d.IsNewResource() && tfresource.NotFound(err) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ECR Registry Scanning Configuration (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
