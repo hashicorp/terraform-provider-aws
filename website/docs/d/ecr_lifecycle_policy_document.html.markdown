@@ -43,7 +43,7 @@ This data source supports the following arguments:
 Each document configuration may have one or more `rule` blocks, which each accept the following arguments:
 
 * `action` (Optional) - Specifies the action type.
-  * `type` (Required) - The supported value is `expire`.
+    * `type` (Required) - The supported value is `expire`.
 * `description` (Optional) - Describes the purpose of a rule within a lifecycle policy.
 * `priority` (Required) - Sets the order in which rules are evaluated, lowest to highest. When you add rules to a lifecycle policy, you must give them each a unique value for `priority`. Values do not need to be sequential across rules in a policy. A rule with a `tag_status` value of any must have the highest value for `priority` and be evaluated last.
 * `selection` (Required) -  Collects parameters describing the selection criteria for the ECR lifecycle policy:
