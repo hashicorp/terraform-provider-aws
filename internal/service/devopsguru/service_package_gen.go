@@ -20,6 +20,10 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 			Factory: newDataSourceNotificationChannel,
 			Name:    "Notification Channel",
 		},
+		{
+			Factory: newDataSourceResourceCollection,
+			Name:    "Resource Collection",
+		},
 	}
 }
 

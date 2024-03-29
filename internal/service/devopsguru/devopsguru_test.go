@@ -34,6 +34,9 @@ func TestAccDevOpsGuru_serial(t *testing.T) {
 			"tags":             testAccResourceCollection_tags,
 			"tagsAllResources": testAccResourceCollection_tagsAllResources,
 		},
+		"ResourceCollectionDataSource": {
+			"basic": testAccResourceCollectionDataSource_basic,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)
