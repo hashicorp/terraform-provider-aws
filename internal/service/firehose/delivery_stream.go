@@ -1059,8 +1059,8 @@ func resourceDeliveryStream() *schema.Resource {
 									},
 								},
 							},
-							"cloud_watch_logging_options": cloudWatchLoggingOptionsSchema(), 
-							"processing_configuration": processingConfigurationSchema(),     
+							"cloud_watch_logging_options": cloudWatchLoggingOptionsSchema(),
+							"processing_configuration":    processingConfigurationSchema(),
 							"role_arn": {
 								Type:     schema.TypeString,
 								Required: true,
@@ -1082,7 +1082,7 @@ func resourceDeliveryStream() *schema.Resource {
 								Type:     schema.TypeString,
 								Optional: true,
 							},
-							"s3_configuration": s3ConfigurationSchema(), 
+							"s3_configuration": s3ConfigurationSchema(),
 						},
 					},
 				},
@@ -3703,11 +3703,11 @@ func defaultProcessorParameters(destinationType destinationType, processorType t
 }
 
 func validateSnowflakeAccountURL(v interface{}, k string) (ws []string, errors []error) {
-    value := v.(string)
-    if !strings.HasPrefix(value, "https://") {
-        errors = append(errors, fmt.Errorf("%q must start with 'https://'", k))
-    }
-    // Add more validation logic if needed, such as checking the format of the account URL
-    // You can use regular expressions or other methods for this validation.
-    return
+	value := v.(string)
+	if !strings.HasPrefix(value, "https://") {
+		errors = append(errors, fmt.Errorf("%q must start with 'https://'", k))
+	}
+	// Add more validation logic if needed, such as checking the format of the account URL
+	// You can use regular expressions or other methods for this validation.
+	return
 }
