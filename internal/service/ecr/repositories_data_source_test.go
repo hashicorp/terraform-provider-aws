@@ -6,7 +6,6 @@ package ecr_test
 import (
 	"encoding/json"
 	"fmt"
-	"strconv"
 	"strings"
 	"testing"
 
@@ -20,7 +19,7 @@ import (
 func TestAccECRRepositoriesDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var rNames []string
-	for i := 1; i < 6; i++ {
+	for i := 0; i < 5; i++ {
 		rNames = append(rNames, sdkacctest.RandomWithPrefix(acctest.ResourcePrefix))
 	}
 	dataSourceName := "data.aws_ecr_repositories.test"
@@ -36,17 +35,7 @@ func TestAccECRRepositoriesDataSource_basic(t *testing.T) {
 			{
 				Config: testAccRepositoriesDataSourceConfig_basic(rNames),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttrWith(dataSourceName, "names.#", func(value string) error {
-						valueInt, err := strconv.Atoi(value)
-						if err != nil {
-							return err
-						}
-
-						if valueInt < 5 {
-							return fmt.Errorf("Number of repositories should be >= 5")
-						}
-						return nil
-					}),
+					acctest.CheckResourceAttrGreaterThanOrEqualValue(dataSourceName, "names.#", 5),
 					resource.TestCheckTypeSetElemAttr(dataSourceName, "names.*", rNames[0]),
 					resource.TestCheckTypeSetElemAttr(dataSourceName, "names.*", rNames[1]),
 					resource.TestCheckTypeSetElemAttr(dataSourceName, "names.*", rNames[2]),
