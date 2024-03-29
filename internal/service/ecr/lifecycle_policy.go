@@ -175,27 +175,27 @@ func findLifecyclePolicyByRepositoryName(ctx context.Context, conn *ecr.Client, 
 }
 
 type lifecyclePolicyRuleSelection struct {
-	TagStatus      *string   `locationName:"tagStatus" type:"string" enum:"tagStatus" required:"true"`
-	TagPatternList []*string `locationName:"tagPatternList" type:"list"`
-	TagPrefixList  []*string `locationName:"tagPrefixList" type:"list"`
-	CountType      *string   `locationName:"countType" type:"string" enum:"countType" required:"true"`
-	CountUnit      *string   `locationName:"countUnit" type:"string" enum:"countType"`
-	CountNumber    *int64    `locationName:"countNumber" min:"1" type:"integer"`
+	TagStatus      *string   `json:"tagStatus,omitempty"`
+	TagPatternList []*string `json:"tagPatternList,omitempty"`
+	TagPrefixList  []*string `json:"tagPrefixList,omitempty"`
+	CountType      *string   `json:"countType,omitempty"`
+	CountUnit      *string   `json:"countUnit,omitempty"`
+	CountNumber    *int64    `json:"countNumber,omitempty"`
 }
 
 type lifecyclePolicyRuleAction struct {
-	ActionType *string `locationName:"type" type:"string" required:"true"`
+	Type *string `json:"type"`
 }
 
 type lifecyclePolicyRule struct {
-	RulePriority *int64                        `locationName:"rulePriority" type:"integer" required:"true"`
-	Description  *string                       `locationName:"description" type:"string"`
-	Selection    *lifecyclePolicyRuleSelection `locationName:"selection" type:"structure" required:"true"`
-	Action       *lifecyclePolicyRuleAction    `locationName:"action" type:"structure" required:"true"`
+	RulePriority *int64                        `json:"rulePriority,omitempty"`
+	Description  *string                       `json:"description,omitempty"`
+	Selection    *lifecyclePolicyRuleSelection `json:"selection,omitempty"`
+	Action       *lifecyclePolicyRuleAction    `json:"action"`
 }
 
 type lifecyclePolicy struct {
-	Rules []*lifecyclePolicyRule `locationName:"rules" min:"1" type:"list" required:"true"`
+	Rules []*lifecyclePolicyRule `json:"rules"`
 }
 
 func (lp *lifecyclePolicy) reduce() {
