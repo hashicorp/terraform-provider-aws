@@ -1,4 +1,9 @@
 ## 5.44.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_iam_user: When `force_destroy` is used and there are inline or attached policies, allow resource to be destroyed ([#36640](https://github.com/hashicorp/terraform-provider-aws/issues/36640))
+
 ## 5.43.0 (March 28, 2024)
 
 FEATURES:
