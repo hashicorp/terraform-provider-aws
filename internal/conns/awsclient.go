@@ -329,7 +329,7 @@ func resolveServiceBaseEndpoint(ctx context.Context, sdkID string, configs []any
 
 // conn returns the AWS SDK for Go v1 API client for the specified service.
 // The default service client (`extra` is empty) is cached. In this case the AWSClient lock is held.
-// This function is not a method on `AWSClient` as methods can't be parameterize (https://go.googlesource.com/proposal/+/refs/heads/master/design/43651-type-parameters.md#no-parameterized-methods).
+// This function is not a method on `AWSClient` as methods can't be parameterized (https://go.googlesource.com/proposal/+/refs/heads/master/design/43651-type-parameters.md#no-parameterized-methods).
 func conn[T any](ctx context.Context, c *AWSClient, servicePackageName string, extra map[string]any) (T, error) {
 	isDefault := len(extra) == 0
 	// Default service client is cached.
@@ -389,7 +389,7 @@ func conn[T any](ctx context.Context, c *AWSClient, servicePackageName string, e
 
 // client returns the AWS SDK for Go v2 API client for the specified service.
 // The default service client (`extra` is empty) is cached. In this case the AWSClient lock is held.
-// This function is not a method on `AWSClient` as methods can't be parameterize (https://go.googlesource.com/proposal/+/refs/heads/master/design/43651-type-parameters.md#no-parameterized-methods).
+// This function is not a method on `AWSClient` as methods can't be parameterized (https://go.googlesource.com/proposal/+/refs/heads/master/design/43651-type-parameters.md#no-parameterized-methods).
 func client[T any](ctx context.Context, c *AWSClient, servicePackageName string, extra map[string]any) (T, error) {
 	isDefault := len(extra) == 0
 	// Default service client is cached.
