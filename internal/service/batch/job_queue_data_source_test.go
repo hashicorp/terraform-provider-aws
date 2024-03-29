@@ -29,6 +29,7 @@ func TestAccBatchJobQueueDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(datasourceName, "compute_environment_order.#", resourceName, "compute_environments.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "job_state_time_limit_action.#", resourceName, "job_state_time_limit_action.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "priority", resourceName, "priority"),
 					resource.TestCheckResourceAttrPair(datasourceName, "scheduling_policy_arn", resourceName, "scheduling_policy_arn"),
@@ -177,6 +178,13 @@ resource "aws_batch_job_queue" "test" {
   state                = "ENABLED"
   priority             = 1
   compute_environments = [aws_batch_compute_environment.sample.arn]
+
+  job_state_time_limit_action {
+    action           = "CANCEL"
+    max_time_seconds = 123
+    reason           = "foobar"
+    state            = "RUNNABLE"
+  }
 }
 
 resource "aws_batch_job_queue" "wrong" {

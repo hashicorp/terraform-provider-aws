@@ -75,6 +75,31 @@ func DataSourceJobQueue() *schema.Resource {
 					},
 				},
 			},
+
+			"job_state_time_limit_action": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"action": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"max_time_seconds": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"reason": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"state": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }
@@ -119,6 +144,19 @@ func dataSourceJobQueueRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 	if err := d.Set("compute_environment_order", ceos); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting compute_environment_order: %s", err)
+	}
+
+	jobStateTimeLimitActions := make([]map[string]interface{}, 0)
+	for _, v := range jobQueue.JobStateTimeLimitActions {
+		jobStateTimeLimitAction := map[string]interface{}{}
+		jobStateTimeLimitAction["action"] = aws.StringValue(v.Action)
+		jobStateTimeLimitAction["max_time_seconds"] = aws.Int64Value(v.MaxTimeSeconds)
+		jobStateTimeLimitAction["reason"] = aws.StringValue(v.Reason)
+		jobStateTimeLimitAction["state"] = aws.StringValue(v.State)
+		jobStateTimeLimitActions = append(jobStateTimeLimitActions, jobStateTimeLimitAction)
+	}
+	if err := d.Set("job_state_time_limit_action", jobStateTimeLimitActions); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting job_state_time_limit_action: %s", err)
 	}
 
 	if err := d.Set("tags", KeyValueTags(ctx, jobQueue.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {

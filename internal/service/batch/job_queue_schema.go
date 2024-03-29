@@ -91,6 +91,7 @@ func upgradeJobQueueResourceStateV0toV1(ctx context.Context, req resource.Upgrad
 		return
 	}
 	ceo := fwtypes.NewListNestedObjectValueOfNull[computeEnvironmentOrder](ctx)
+	jobStateTimeLimitActions := fwtypes.NewListNestedObjectValueOfNull[jobStateTimeLimitAction](ctx)
 
 	jobQueueDataV2 := resourceJobQueueData{
 		ComputeEnvironments:     jobQueueDataV0.ComputeEnvironments,
@@ -99,6 +100,7 @@ func upgradeJobQueueResourceStateV0toV1(ctx context.Context, req resource.Upgrad
 		JobQueueName:            jobQueueDataV0.Name,
 		Priority:                jobQueueDataV0.Priority,
 		State:                   jobQueueDataV0.State,
+		JobStateTimeLimitAction: jobStateTimeLimitActions,
 		Tags:                    jobQueueDataV0.Tags,
 		TagsAll:                 jobQueueDataV0.TagsAll,
 		Timeouts:                jobQueueDataV0.Timeouts,
