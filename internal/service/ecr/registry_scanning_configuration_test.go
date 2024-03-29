@@ -13,6 +13,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfecr "github.com/hashicorp/terraform-provider-aws/internal/service/ecr"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -20,8 +22,9 @@ func TestAccECRScanningConfiguration_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(t *testing.T){
-		"basic":  testAccRegistryScanningConfiguration_basic,
-		"update": testAccRegistryScanningConfiguration_update,
+		"basic":      testAccRegistryScanningConfiguration_basic,
+		"update":     testAccRegistryScanningConfiguration_update,
+		"disappears": testAccRegistryScanningConfiguration_disappears,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -133,6 +136,29 @@ func testAccRegistryScanningConfiguration_update(t *testing.T) {
 	})
 }
 
+func testAccRegistryScanningConfiguration_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v ecr.GetRegistryScanningConfigurationOutput
+	resourceName := "aws_ecr_registry_scanning_configuration.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRegistryScanningConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccRegistryScanningConfigurationConfig_basic(),
+				Check: resource.ComposeTestCheckFunc(
+					testAccRegistryScanningConfigurationExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfecr.ResourceRegistryScanningConfiguration(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckRegistryScanningConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRClient(ctx)
@@ -142,31 +168,33 @@ func testAccCheckRegistryScanningConfigurationDestroy(ctx context.Context) resou
 				continue
 			}
 
-			_, err := conn.GetRegistryScanningConfiguration(ctx, &ecr.GetRegistryScanningConfigurationInput{})
+			_, err := tfecr.FindRegistryScanningConfiguration(ctx, conn)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
 
 			if err != nil {
 				return err
 			}
+
+			return fmt.Errorf("ECR Registry Scanning Configuration %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccRegistryScanningConfigurationExists(ctx context.Context, name string, v *ecr.GetRegistryScanningConfigurationOutput) resource.TestCheckFunc {
+func testAccRegistryScanningConfigurationExists(ctx context.Context, n string, v *ecr.GetRegistryScanningConfigurationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		_, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ECR Registry Scanning Configuration ID is set")
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRClient(ctx)
 
-		output, err := conn.GetRegistryScanningConfiguration(ctx, &ecr.GetRegistryScanningConfigurationInput{})
+		output, err := tfecr.FindRegistryScanningConfiguration(ctx, conn)
 
 		if err != nil {
 			return err

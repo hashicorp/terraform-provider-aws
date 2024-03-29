@@ -69,8 +69,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Registry Policy",
 		},
 		{
-			Factory:  ResourceRegistryScanningConfiguration,
+			Factory:  resourceRegistryScanningConfiguration,
 			TypeName: "aws_ecr_registry_scanning_configuration",
+			Name:     "Registry Scanning Configuration",
 		},
 		{
 			Factory:  ResourceReplicationConfiguration,

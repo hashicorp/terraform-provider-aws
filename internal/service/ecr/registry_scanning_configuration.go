@@ -17,15 +17,17 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_ecr_registry_scanning_configuration")
-func ResourceRegistryScanningConfiguration() *schema.Resource {
+// @SDKResource("aws_ecr_registry_scanning_configuration", name="Registry Scanning Configuration")
+func resourceRegistryScanningConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRegistryScanningConfigurationPut,
 		ReadWithoutTimeout:   resourceRegistryScanningConfigurationRead,
 		UpdateWithoutTimeout: resourceRegistryScanningConfigurationPut,
 		DeleteWithoutTimeout: resourceRegistryScanningConfigurationDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -93,10 +95,12 @@ func resourceRegistryScanningConfigurationPut(ctx context.Context, d *schema.Res
 	_, err := conn.PutRegistryScanningConfiguration(ctx, &input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating ECR Registry Scanning Configuration: %s", err)
+		return sdkdiag.AppendErrorf(diags, "putting ECR Registry Scanning Configuration: %s", err)
 	}
 
-	d.SetId(meta.(*conns.AWSClient).AccountID)
+	if d.IsNewResource() {
+		d.SetId(meta.(*conns.AWSClient).AccountID)
+	}
 
 	return append(diags, resourceRegistryScanningConfigurationRead(ctx, d, meta)...)
 }
@@ -105,15 +109,23 @@ func resourceRegistryScanningConfigurationRead(ctx context.Context, d *schema.Re
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
-	out, err := conn.GetRegistryScanningConfiguration(ctx, &ecr.GetRegistryScanningConfigurationInput{})
+	output, err := findRegistryScanningConfiguration(ctx, conn)
+
+	if d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] ECR Registry Scanning Configuration (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading ECR Registry Scanning Configuration (%s): %s", d.Id(), err)
 	}
 
-	d.Set("registry_id", out.RegistryId)
-	d.Set("scan_type", out.ScanningConfiguration.ScanType)
-	d.Set("rule", flattenScanningConfigurationRules(out.ScanningConfiguration.Rules))
+	d.Set("registry_id", output.RegistryId)
+	if err := d.Set("rule", flattenScanningConfigurationRules(output.ScanningConfiguration.Rules)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
+	}
+	d.Set("scan_type", output.ScanningConfiguration.ScanType)
 
 	return diags
 }
@@ -133,6 +145,22 @@ func resourceRegistryScanningConfigurationDelete(ctx context.Context, d *schema.
 	}
 
 	return diags
+}
+
+func findRegistryScanningConfiguration(ctx context.Context, conn *ecr.Client) (*ecr.GetRegistryScanningConfigurationOutput, error) {
+	input := &ecr.GetRegistryScanningConfigurationInput{}
+
+	output, err := conn.GetRegistryScanningConfiguration(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
 
 // Helper functions
