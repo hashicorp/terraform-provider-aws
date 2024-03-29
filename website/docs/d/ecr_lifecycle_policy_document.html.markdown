@@ -30,7 +30,7 @@ data "aws_ecr_lifecycle_policy_document" "example" {
 }
 
 resource "aws_ecr_lifecycle_policy" "example" {
-  repository = aws_ecr_repository.example.nam
+  repository = aws_ecr_repository.example.name
 
   policy = data.aws_ecr_lifecycle_policy_document.example.json}
 }
