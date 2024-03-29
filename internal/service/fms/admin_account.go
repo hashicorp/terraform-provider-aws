@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -200,11 +201,11 @@ func statusAdminAccount(ctx context.Context, conn *fms.Client) retry.StateRefres
 
 func waitAdminAccountCreated(ctx context.Context, conn *fms.Client, accountID string, timeout time.Duration) (*fms.GetAdminAccountOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{
+		Pending: enum.Slice(
 			string(awstypes.AccountRoleStatusDeleted), // Recreating association can return this status.
 			string(awstypes.AccountRoleStatusCreating),
-		},
-		Target:  []string{string(awstypes.AccountRoleStatusReady)},
+		),
+		Target:  enum.Slice(string(awstypes.AccountRoleStatusReady)),
 		Refresh: statusAssociateAdminAccount(ctx, conn, accountID),
 		Timeout: timeout,
 		Delay:   10 * time.Second,
@@ -221,11 +222,11 @@ func waitAdminAccountCreated(ctx context.Context, conn *fms.Client, accountID st
 
 func waitAdminAccountDeleted(ctx context.Context, conn *fms.Client, timeout time.Duration) (*fms.GetAdminAccountOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{
+		Pending: enum.Slice(
 			string(awstypes.AccountRoleStatusDeleting),
 			string(awstypes.AccountRoleStatusPendingDeletion),
 			string(awstypes.AccountRoleStatusReady),
-		},
+		),
 		Target:  []string{},
 		Refresh: statusAdminAccount(ctx, conn),
 		Timeout: timeout,
