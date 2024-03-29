@@ -537,13 +537,3 @@ func constructResourceTags(rTags interface{}) []awstypes.ResourceTag {
 
 	return rTagList
 }
-
-func firewallDeploymentModelValues(in []awstypes.FirewallDeploymentModel) []string {
-	var out []string
-
-	for _, v := range in {
-		out = append(out, string(v))
-	}
-
-	return out
-}
