@@ -31,9 +31,7 @@ resource "aws_servicecatalogappregistry_application" "example" {
 resource "aws_s3_bucket" "bucket" {
   bucket = "example-bucket"
 
-  tags = {
-    awsApplication = aws_servicecatalogappregistry_application.example.arn
-  }
+  tags = aws_servicecatalogappregistry_application.example.application_tag
 }
 ```
 
@@ -53,6 +51,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `arn` - ARN (Amazon Resource Name) of the application.
 * `id` - Identifier of the application.
+* `application_tag` - A map of tags to assign to resources that should be connected to the application
 
 ## Import
 

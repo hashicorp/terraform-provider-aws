@@ -33,3 +33,4 @@ This data source exports the following attributes in addition to the arguments a
 * `arn` - ARN (Amazon Resource Name) of the application.
 * `description` - Description of the application.
 * `name` - Name of the application.
+* `application_tag` - A map of tags containing the tags to assigned to resources that should be connected to the application
