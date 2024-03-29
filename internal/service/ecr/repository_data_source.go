@@ -17,7 +17,7 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
-// @SDKDataSource("aws_ecr_repository", name="Repository
+// @SDKDataSource("aws_ecr_repository", name="Repository")
 // @Tags(identifierAttribute="arn"))
 func dataSourceRepository() *schema.Resource {
 	return &schema.Resource{
