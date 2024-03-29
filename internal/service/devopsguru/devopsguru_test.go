@@ -24,6 +24,9 @@ func TestAccDevOpsGuru_serial(t *testing.T) {
 			"disappears": testAccNotificationChannel_disappears,
 			"filters":    testAccNotificationChannel_filters,
 		},
+		"NotificationChannelDataSource": {
+			"basic": testAccNotificationChannelDataSource_basic,
+		},
 		"ResourceCollection": {
 			"basic":            testAccResourceCollection_basic,
 			"cloudformation":   testAccResourceCollection_cloudformation,
