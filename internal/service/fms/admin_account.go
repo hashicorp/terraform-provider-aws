@@ -8,13 +8,14 @@ import (
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/fms"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/fms"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/fms/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -50,13 +51,13 @@ func resourceAdminAccount() *schema.Resource {
 
 func resourceAdminAccountCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FMSConn(ctx)
+	conn := meta.(*conns.AWSClient).FMSClient(ctx)
 
 	// Ensure there is not an existing FMS Admin Account.
 	output, err := findAdminAccount(ctx, conn)
 
 	if !tfresource.NotFound(err) {
-		return sdkdiag.AppendErrorf(diags, "FMS Admin Account (%s) already associated: import this Terraform resource to manage", aws.StringValue(output.AdminAccount))
+		return sdkdiag.AppendErrorf(diags, "FMS Admin Account (%s) already associated: import this Terraform resource to manage", aws.ToString(output.AdminAccount))
 	}
 
 	accountID := meta.(*conns.AWSClient).AccountID
@@ -75,7 +76,7 @@ func resourceAdminAccountCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceAdminAccountRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FMSConn(ctx)
+	conn := meta.(*conns.AWSClient).FMSClient(ctx)
 
 	output, err := findAdminAccount(ctx, conn)
 
@@ -96,9 +97,9 @@ func resourceAdminAccountRead(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceAdminAccountDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FMSConn(ctx)
+	conn := meta.(*conns.AWSClient).FMSClient(ctx)
 
-	_, err := conn.DisassociateAdminAccountWithContext(ctx, &fms.DisassociateAdminAccountInput{})
+	_, err := conn.DisassociateAdminAccount(ctx, &fms.DisassociateAdminAccountInput{})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "disassociating FMS Admin Account (%s): %s", d.Id(), err)
@@ -111,12 +112,12 @@ func resourceAdminAccountDelete(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func findAdminAccount(ctx context.Context, conn *fms.FMS) (*fms.GetAdminAccountOutput, error) {
+func findAdminAccount(ctx context.Context, conn *fms.Client) (*fms.GetAdminAccountOutput, error) {
 	input := &fms.GetAdminAccountInput{}
 
-	output, err := conn.GetAdminAccountWithContext(ctx, input)
+	output, err := conn.GetAdminAccount(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, fms.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -131,7 +132,7 @@ func findAdminAccount(ctx context.Context, conn *fms.FMS) (*fms.GetAdminAccountO
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	if status := aws.StringValue(output.RoleStatus); status == fms.AccountRoleStatusDeleted {
+	if status := string(output.RoleStatus); status == string(awstypes.AccountRoleStatusDeleted) {
 		return nil, &retry.NotFoundError{
 			Message:     status,
 			LastRequest: input,
@@ -141,7 +142,7 @@ func findAdminAccount(ctx context.Context, conn *fms.FMS) (*fms.GetAdminAccountO
 	return output, nil
 }
 
-func statusAssociateAdminAccount(ctx context.Context, conn *fms.FMS, accountID string) retry.StateRefreshFunc {
+func statusAssociateAdminAccount(ctx context.Context, conn *fms.Client, accountID string) retry.StateRefreshFunc {
 	// This is all wrapped in a StateRefreshFunc since AssociateAdminAccount returns
 	// success even though it failed if called too quickly after creating an Organization.
 	return func() (interface{}, string, error) {
@@ -149,21 +150,23 @@ func statusAssociateAdminAccount(ctx context.Context, conn *fms.FMS, accountID s
 			AdminAccount: aws.String(accountID),
 		}
 
-		_, err := conn.AssociateAdminAccountWithContext(ctx, input)
+		_, err := conn.AssociateAdminAccount(ctx, input)
 
 		if err != nil {
 			return nil, "", err
 		}
 
-		output, err := conn.GetAdminAccountWithContext(ctx, &fms.GetAdminAccountInput{})
+		output, err := conn.GetAdminAccount(ctx, &fms.GetAdminAccountInput{})
 
 		// FMS returns an AccessDeniedException if no account is associated,
 		// but does not define this in its error codes.
-		if tfawserr.ErrMessageContains(err, "AccessDeniedException", "is not currently delegated by AWS FM") {
+
+		// if tfawserr.ErrMessageContains(err, "AccessDeniedException", "is not currently delegated by AWS FM") {
+		if errs.IsAErrorMessageContains[*awstypes.InvalidOperationException](err, "is not currently delegated by AWS FM") {
 			return nil, "", nil
 		}
 
-		if tfawserr.ErrCodeEquals(err, fms.ErrCodeResourceNotFoundException) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return nil, "", nil
 		}
 
@@ -171,15 +174,15 @@ func statusAssociateAdminAccount(ctx context.Context, conn *fms.FMS, accountID s
 			return nil, "", err
 		}
 
-		if aws.StringValue(output.AdminAccount) != accountID {
+		if aws.ToString(output.AdminAccount) != accountID {
 			return nil, "", nil
 		}
 
-		return output, aws.StringValue(output.RoleStatus), err
+		return output, string(output.RoleStatus), err
 	}
 }
 
-func statusAdminAccount(ctx context.Context, conn *fms.FMS) retry.StateRefreshFunc {
+func statusAdminAccount(ctx context.Context, conn *fms.Client) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := findAdminAccount(ctx, conn)
 
@@ -191,17 +194,17 @@ func statusAdminAccount(ctx context.Context, conn *fms.FMS) retry.StateRefreshFu
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.RoleStatus), nil
+		return output, string(output.RoleStatus), nil
 	}
 }
 
-func waitAdminAccountCreated(ctx context.Context, conn *fms.FMS, accountID string, timeout time.Duration) (*fms.GetAdminAccountOutput, error) {
+func waitAdminAccountCreated(ctx context.Context, conn *fms.Client, accountID string, timeout time.Duration) (*fms.GetAdminAccountOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
-			fms.AccountRoleStatusDeleted, // Recreating association can return this status.
-			fms.AccountRoleStatusCreating,
+			string(awstypes.AccountRoleStatusDeleted), // Recreating association can return this status.
+			string(awstypes.AccountRoleStatusCreating),
 		},
-		Target:  []string{fms.AccountRoleStatusReady},
+		Target:  []string{string(awstypes.AccountRoleStatusReady)},
 		Refresh: statusAssociateAdminAccount(ctx, conn, accountID),
 		Timeout: timeout,
 		Delay:   10 * time.Second,
@@ -216,12 +219,12 @@ func waitAdminAccountCreated(ctx context.Context, conn *fms.FMS, accountID strin
 	return nil, err
 }
 
-func waitAdminAccountDeleted(ctx context.Context, conn *fms.FMS, timeout time.Duration) (*fms.GetAdminAccountOutput, error) {
+func waitAdminAccountDeleted(ctx context.Context, conn *fms.Client, timeout time.Duration) (*fms.GetAdminAccountOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
-			fms.AccountRoleStatusDeleting,
-			fms.AccountRoleStatusPendingDeletion,
-			fms.AccountRoleStatusReady,
+			string(awstypes.AccountRoleStatusDeleting),
+			string(awstypes.AccountRoleStatusPendingDeletion),
+			string(awstypes.AccountRoleStatusReady),
 		},
 		Target:  []string{},
 		Refresh: statusAdminAccount(ctx, conn),

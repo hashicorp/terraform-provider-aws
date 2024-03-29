@@ -8,15 +8,17 @@ import (
 	"log"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/fms"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/fms"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/fms/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -171,9 +173,9 @@ func resourcePolicy() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"firewall_deployment_model": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: validation.StringInSlice(fms.FirewallDeploymentModel_Values(), false),
+													Type:             schema.TypeString,
+													Optional:         true,
+													ValidateDiagFunc: enum.Validate[awstypes.FirewallDeploymentModel](),
 												},
 											},
 										},
@@ -185,9 +187,9 @@ func resourcePolicy() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"firewall_deployment_model": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													ValidateFunc: validation.StringInSlice(fms.FirewallDeploymentModel_Values(), false),
+													Type:             schema.TypeString,
+													Optional:         true,
+													ValidateDiagFunc: enum.Validate[awstypes.FirewallDeploymentModel](),
 												},
 											},
 										},
@@ -210,27 +212,27 @@ func resourcePolicy() *schema.Resource {
 
 func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FMSConn(ctx)
+	conn := meta.(*conns.AWSClient).FMSClient(ctx)
 
 	input := &fms.PutPolicyInput{
 		Policy:  resourcePolicyExpandPolicy(d),
 		TagList: getTagsIn(ctx),
 	}
 
-	output, err := conn.PutPolicyWithContext(ctx, input)
+	output, err := conn.PutPolicy(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating FMS Policy: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.Policy.PolicyId))
+	d.SetId(aws.ToString(output.Policy.PolicyId))
 
 	return append(diags, resourcePolicyRead(ctx, d, meta)...)
 }
 
 func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FMSConn(ctx)
+	conn := meta.(*conns.AWSClient).FMSClient(ctx)
 
 	output, err := findPolicyByID(ctx, conn, d.Id())
 
@@ -244,7 +246,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading FMS Policy (%s): %s", d.Id(), err)
 	}
 
-	arn := aws.StringValue(output.PolicyArn)
+	arn := aws.ToString(output.PolicyArn)
 	d.Set("arn", arn)
 	policy := output.Policy
 	d.Set("delete_unused_fm_managed_resources", policy.DeleteUnusedFMManagedResources)
@@ -267,8 +269,8 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 		sdkdiag.AppendErrorf(diags, "setting resource_type_list: %s", err)
 	}
 	securityServicePolicy := []map[string]interface{}{{
-		"type":                 aws.StringValue(policy.SecurityServicePolicyData.Type),
-		"managed_service_data": aws.StringValue(policy.SecurityServicePolicyData.ManagedServiceData),
+		"type":                 string(policy.SecurityServicePolicyData.Type),
+		"managed_service_data": aws.ToString(policy.SecurityServicePolicyData.ManagedServiceData),
 		"policy_option":        flattenPolicyOption(policy.SecurityServicePolicyData.PolicyOption),
 	}}
 	if err := d.Set("security_service_policy_data", securityServicePolicy); err != nil {
@@ -280,14 +282,14 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FMSConn(ctx)
+	conn := meta.(*conns.AWSClient).FMSClient(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &fms.PutPolicyInput{
 			Policy: resourcePolicyExpandPolicy(d),
 		}
 
-		_, err := conn.PutPolicyWithContext(ctx, input)
+		_, err := conn.PutPolicy(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating FMS Policy (%s): %s", d.Id(), err)
@@ -299,15 +301,15 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FMSConn(ctx)
+	conn := meta.(*conns.AWSClient).FMSClient(ctx)
 
 	log.Printf("[DEBUG] Deleting FMS Policy: %s", d.Id())
-	_, err := conn.DeletePolicyWithContext(ctx, &fms.DeletePolicyInput{
+	_, err := conn.DeletePolicy(ctx, &fms.DeletePolicyInput{
 		PolicyId:                 aws.String(d.Id()),
-		DeleteAllPolicyResources: aws.Bool(d.Get("delete_all_policy_resources").(bool)),
+		DeleteAllPolicyResources: aws.ToBool(d.Get("delete_all_policy_resources").(*bool)),
 	})
 
-	if tfawserr.ErrCodeEquals(err, fms.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -318,14 +320,14 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func findPolicyByID(ctx context.Context, conn *fms.FMS, id string) (*fms.GetPolicyOutput, error) {
+func findPolicyByID(ctx context.Context, conn *fms.Client, id string) (*fms.GetPolicyOutput, error) {
 	input := &fms.GetPolicyInput{
 		PolicyId: aws.String(id),
 	}
 
-	output, err := conn.GetPolicyWithContext(ctx, input)
+	output, err := conn.GetPolicy(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, fms.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -343,21 +345,21 @@ func findPolicyByID(ctx context.Context, conn *fms.FMS, id string) (*fms.GetPoli
 	return output, nil
 }
 
-func resourcePolicyExpandPolicy(d *schema.ResourceData) *fms.Policy {
+func resourcePolicyExpandPolicy(d *schema.ResourceData) *awstypes.Policy {
 	resourceType := aws.String("ResourceTypeList")
 	resourceTypeList := flex.ExpandStringSet(d.Get("resource_type_list").(*schema.Set))
 	if t, ok := d.GetOk("resource_type"); ok {
 		resourceType = aws.String(t.(string))
 	}
 
-	fmsPolicy := &fms.Policy{
-		DeleteUnusedFMManagedResources: aws.Bool(d.Get("delete_unused_fm_managed_resources").(bool)),
-		ExcludeResourceTags:            aws.Bool(d.Get("exclude_resource_tags").(bool)),
+	fmsPolicy := &awstypes.Policy{
+		DeleteUnusedFMManagedResources: aws.ToBool(d.Get("delete_unused_fm_managed_resources").(*bool)),
+		ExcludeResourceTags:            aws.ToBool(d.Get("exclude_resource_tags").(*bool)),
 		PolicyDescription:              aws.String(d.Get("description").(string)),
 		PolicyName:                     aws.String(d.Get("name").(string)),
-		RemediationEnabled:             aws.Bool(d.Get("remediation_enabled").(bool)),
+		RemediationEnabled:             aws.ToBool(d.Get("remediation_enabled").(*bool)),
 		ResourceType:                   resourceType,
-		ResourceTypeList:               resourceTypeList,
+		ResourceTypeList:               aws.ToStringSlice(resourceTypeList),
 	}
 
 	if d.Id() != "" {
@@ -372,9 +374,9 @@ func resourcePolicyExpandPolicy(d *schema.ResourceData) *fms.Policy {
 	fmsPolicy.ResourceTags = constructResourceTags(d.Get("resource_tags"))
 
 	securityServicePolicy := d.Get("security_service_policy_data").([]interface{})[0].(map[string]interface{})
-	fmsPolicy.SecurityServicePolicyData = &fms.SecurityServicePolicyData{
+	fmsPolicy.SecurityServicePolicyData = &awstypes.SecurityServicePolicyData{
 		ManagedServiceData: aws.String(securityServicePolicy["managed_service_data"].(string)),
-		Type:               aws.String(securityServicePolicy["type"].(string)),
+		Type:               awstypes.SecurityServiceType(securityServicePolicy["type"].(string)),
 	}
 
 	if v, ok := securityServicePolicy["policy_option"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
@@ -384,12 +386,12 @@ func resourcePolicyExpandPolicy(d *schema.ResourceData) *fms.Policy {
 	return fmsPolicy
 }
 
-func expandPolicyOption(tfMap map[string]interface{}) *fms.PolicyOption {
+func expandPolicyOption(tfMap map[string]interface{}) *awstypes.PolicyOption {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &fms.PolicyOption{}
+	apiObject := &awstypes.PolicyOption{}
 
 	if v, ok := tfMap["network_firewall_policy"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.NetworkFirewallPolicy = expandPolicyOptionNetworkFirewall(v[0].(map[string]interface{}))
@@ -402,36 +404,36 @@ func expandPolicyOption(tfMap map[string]interface{}) *fms.PolicyOption {
 	return apiObject
 }
 
-func expandPolicyOptionNetworkFirewall(tfMap map[string]interface{}) *fms.NetworkFirewallPolicy {
+func expandPolicyOptionNetworkFirewall(tfMap map[string]interface{}) *awstypes.NetworkFirewallPolicy {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &fms.NetworkFirewallPolicy{}
+	apiObject := &awstypes.NetworkFirewallPolicy{}
 
 	if v, ok := tfMap["firewall_deployment_model"].(string); ok {
-		apiObject.FirewallDeploymentModel = aws.String(v)
+		apiObject.FirewallDeploymentModel = awstypes.FirewallDeploymentModel(v)
 	}
 
 	return apiObject
 }
 
-func expandPolicyOptionThirdPartyFirewall(tfMap map[string]interface{}) *fms.ThirdPartyFirewallPolicy {
+func expandPolicyOptionThirdPartyFirewall(tfMap map[string]interface{}) *awstypes.ThirdPartyFirewallPolicy {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &fms.ThirdPartyFirewallPolicy{}
+	apiObject := &awstypes.ThirdPartyFirewallPolicy{}
 
 	if v, ok := tfMap["firewall_deployment_model"].(string); ok {
-		apiObject.FirewallDeploymentModel = aws.String(v)
+		apiObject.FirewallDeploymentModel = awstypes.FirewallDeploymentModel(v)
 	}
 
 	return apiObject
 }
 
-func expandPolicyMap(set []interface{}) map[string][]*string {
-	fmsPolicyMap := map[string][]*string{}
+func expandPolicyMap(set []interface{}) map[string][]string {
+	fmsPolicyMap := map[string][]string{}
 	if len(set) > 0 {
 		if _, ok := set[0].(map[string]interface{}); !ok {
 			return fmsPolicyMap
@@ -446,14 +448,14 @@ func expandPolicyMap(set []interface{}) map[string][]*string {
 			}
 
 			for _, value := range listValue.(*schema.Set).List() {
-				fmsPolicyMap[flatKey] = append(fmsPolicyMap[flatKey], aws.String(value.(string)))
+				fmsPolicyMap[flatKey] = append(fmsPolicyMap[flatKey], aws.ToString(value.(*string)))
 			}
 		}
 	}
 	return fmsPolicyMap
 }
 
-func flattenPolicyMap(fmsPolicyMap map[string][]*string) []interface{} {
+func flattenPolicyMap(fmsPolicyMap map[string][]string) []interface{} {
 	flatPolicyMap := map[string]interface{}{}
 
 	for key, value := range fmsPolicyMap {
@@ -470,7 +472,7 @@ func flattenPolicyMap(fmsPolicyMap map[string][]*string) []interface{} {
 	return []interface{}{flatPolicyMap}
 }
 
-func flattenPolicyOption(fmsPolicyOption *fms.PolicyOption) []interface{} {
+func flattenPolicyOption(fmsPolicyOption *awstypes.PolicyOption) []interface{} {
 	if fmsPolicyOption == nil {
 		return nil
 	}
@@ -488,35 +490,35 @@ func flattenPolicyOption(fmsPolicyOption *fms.PolicyOption) []interface{} {
 	return []interface{}{tfMap}
 }
 
-func flattenPolicyOptionNetworkFirewall(fmsNetworkFirewallPolicy *fms.NetworkFirewallPolicy) []interface{} {
+func flattenPolicyOptionNetworkFirewall(fmsNetworkFirewallPolicy *awstypes.NetworkFirewallPolicy) []interface{} {
 	if fmsNetworkFirewallPolicy == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 
-	if v := fmsNetworkFirewallPolicy.FirewallDeploymentModel; v != nil {
-		tfMap["firewall_deployment_model"] = aws.StringValue(v)
+	if v := fmsNetworkFirewallPolicy.FirewallDeploymentModel; v != "" {
+		tfMap["firewall_deployment_model"] = string(v)
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenPolicyOptionThirdPartyFirewall(fmsThirdPartyFirewallPolicy *fms.ThirdPartyFirewallPolicy) []interface{} {
+func flattenPolicyOptionThirdPartyFirewall(fmsThirdPartyFirewallPolicy *awstypes.ThirdPartyFirewallPolicy) []interface{} {
 	if fmsThirdPartyFirewallPolicy == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 
-	if v := fmsThirdPartyFirewallPolicy.FirewallDeploymentModel; v != nil {
-		tfMap["firewall_deployment_model"] = aws.StringValue(v)
+	if v := fmsThirdPartyFirewallPolicy.FirewallDeploymentModel; v != "" {
+		tfMap["firewall_deployment_model"] = string(v)
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenResourceTags(resourceTags []*fms.ResourceTag) map[string]interface{} {
+func flattenResourceTags(resourceTags []awstypes.ResourceTag) map[string]interface{} {
 	resTags := map[string]interface{}{}
 
 	for _, v := range resourceTags {
@@ -525,13 +527,23 @@ func flattenResourceTags(resourceTags []*fms.ResourceTag) map[string]interface{}
 	return resTags
 }
 
-func constructResourceTags(rTags interface{}) []*fms.ResourceTag {
-	var rTagList []*fms.ResourceTag
+func constructResourceTags(rTags interface{}) []awstypes.ResourceTag {
+	var rTagList []awstypes.ResourceTag
 
 	tags := rTags.(map[string]interface{})
 	for k, v := range tags {
-		rTagList = append(rTagList, &fms.ResourceTag{Key: aws.String(k), Value: aws.String(v.(string))})
+		rTagList = append(rTagList, awstypes.ResourceTag{Key: aws.String(k), Value: aws.String(v.(string))})
 	}
 
 	return rTagList
+}
+
+func firewallDeploymentModelValues(in []awstypes.FirewallDeploymentModel) []string {
+	var out []string
+
+	for _, v := range in {
+		out = append(out, string(v))
+	}
+
+	return out
 }

@@ -70,6 +70,7 @@ import (
 	finspace_sdkv2 "github.com/aws/aws-sdk-go-v2/service/finspace"
 	firehose_sdkv2 "github.com/aws/aws-sdk-go-v2/service/firehose"
 	fis_sdkv2 "github.com/aws/aws-sdk-go-v2/service/fis"
+	fms_sdkv2 "github.com/aws/aws-sdk-go-v2/service/fms"
 	glacier_sdkv2 "github.com/aws/aws-sdk-go-v2/service/glacier"
 	groundstation_sdkv2 "github.com/aws/aws-sdk-go-v2/service/groundstation"
 	healthlake_sdkv2 "github.com/aws/aws-sdk-go-v2/service/healthlake"
@@ -192,7 +193,6 @@ import (
 	emr_sdkv1 "github.com/aws/aws-sdk-go/service/emr"
 	emrcontainers_sdkv1 "github.com/aws/aws-sdk-go/service/emrcontainers"
 	eventbridge_sdkv1 "github.com/aws/aws-sdk-go/service/eventbridge"
-	fms_sdkv1 "github.com/aws/aws-sdk-go/service/fms"
 	fsx_sdkv1 "github.com/aws/aws-sdk-go/service/fsx"
 	gamelift_sdkv1 "github.com/aws/aws-sdk-go/service/gamelift"
 	globalaccelerator_sdkv1 "github.com/aws/aws-sdk-go/service/globalaccelerator"
@@ -678,8 +678,8 @@ func (c *AWSClient) FISClient(ctx context.Context) *fis_sdkv2.Client {
 	return errs.Must(client[*fis_sdkv2.Client](ctx, c, names.FIS, make(map[string]any)))
 }
 
-func (c *AWSClient) FMSConn(ctx context.Context) *fms_sdkv1.FMS {
-	return errs.Must(conn[*fms_sdkv1.FMS](ctx, c, names.FMS, make(map[string]any)))
+func (c *AWSClient) FMSClient(ctx context.Context) *fms_sdkv2.Client {
+	return errs.Must(client[*fms_sdkv2.Client](ctx, c, names.FMS, make(map[string]any)))
 }
 
 func (c *AWSClient) FSxConn(ctx context.Context) *fsx_sdkv1.FSx {
