@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 const (
@@ -178,6 +179,13 @@ func ExpandBoolMap(m map[string]interface{}) map[string]*bool {
 	})
 }
 
+// Expands a map of string to interface to a map of string to *bool
+func ExpandBoolValueMap(m map[string]interface{}) map[string]bool {
+	return tfmaps.ApplyToAllValues(m, func(v any) bool {
+		return v.(bool)
+	})
+}
+
 // Takes the result of schema.Set of strings and returns a []*string
 func ExpandStringSet(configured *schema.Set) []*string {
 	return ExpandStringList(configured.List()) // nosemgrep:ci.helper-schema-Set-extraneous-ExpandStringList-with-List
@@ -307,6 +315,11 @@ func FlattenResourceId(idParts []string, partCount int, allowEmptyPart bool) (st
 	return strings.Join(idParts, ResourceIdSeparator), nil
 }
 
+// BoolToStringValue converts a bool pointer to a Go string value.
+func BoolToStringValue(v *bool) string {
+	return strconv.FormatBool(aws.BoolValue(v))
+}
+
 // BoolValueToString converts a Go bool value to a string pointer.
 func BoolValueToString(v bool) *string {
 	return aws.String(strconv.FormatBool(v))
@@ -318,9 +331,19 @@ func StringToBoolValue(v *string) bool {
 	return aws.StringValue(v) == strconv.FormatBool(true)
 }
 
+// Float64ToStringValue converts a float64 pointer to a Go string value.
+func Float64ToStringValue(v *float64) string {
+	return strconv.FormatFloat(aws.Float64Value(v), 'f', -1, 64)
+}
+
 // IntValueToString converts a Go int value to a string pointer.
 func IntValueToString(v int) *string {
 	return aws.String(strconv.Itoa(v))
+}
+
+// Int64ToStringValue converts an int64 pointer to a Go string value.
+func Int64ToStringValue(v *int64) string {
+	return strconv.FormatInt(aws.Int64Value(v), 10)
 }
 
 // Int64ValueToString converts a Go int64 value to a string pointer.
@@ -333,6 +356,11 @@ func Int64ValueToString(v int64) *string {
 func StringToIntValue(v *string) int {
 	i, _ := strconv.Atoi(aws.StringValue(v))
 	return i
+}
+
+// StringValueToBase64String converts a string to a Go base64 string pointer.
+func StringValueToBase64String(v string) *string {
+	return aws.String(itypes.Base64EncodeOnce([]byte(v)))
 }
 
 // StringValueToInt64 converts a string to a Go int64 pointer.
@@ -389,6 +417,30 @@ func DiffStringMaps(oldMap, newMap map[string]interface{}) (map[string]*string, 
 			remove[k] = aws.String(v)
 		} else if ok {
 			unchanged[k] = aws.String(v)
+			// Already present, so remove from new.
+			delete(add, k)
+		}
+	}
+
+	return add, remove, unchanged
+}
+
+// DiffStringValueMaps returns the set of keys and values that must be created, the set of keys
+// and values that must be destroyed, and the set of keys and values that are unchanged.
+func DiffStringValueMaps(oldMap, newMap map[string]interface{}) (map[string]string, map[string]string, map[string]string) {
+	// First, we're creating everything we have.
+	add := ExpandStringValueMap(newMap)
+
+	// Build the maps of what to remove and what is unchanged.
+	remove := make(map[string]string)
+	unchanged := make(map[string]string)
+	for k, v := range oldMap {
+		v := v.(string)
+		if old, ok := add[k]; !ok || old != v {
+			// Delete it!
+			remove[k] = v
+		} else if ok {
+			unchanged[k] = v
 			// Already present, so remove from new.
 			delete(add, k)
 		}

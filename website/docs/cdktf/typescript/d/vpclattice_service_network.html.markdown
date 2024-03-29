@@ -55,4 +55,4 @@ This data source exports the following attributes in addition to the arguments a
 * `numberOfAssociatedServices` - Number of services associated with this service network.
 * `numberOfAssociatedVpcs` - Number of VPCs associated with this service network.
 
-<!-- cache-key: cdktf-0.19.0 input-f4109a8ce33f12e8a0ef307b66a1c9cc873bcdc0d442d07fb6e1314973b2d72a -->
+<!-- cache-key: cdktf-0.20.1 input-f4109a8ce33f12e8a0ef307b66a1c9cc873bcdc0d442d07fb6e1314973b2d72a -->

@@ -24,7 +24,7 @@ resource "aws_elasticache_serverless_cache" "example" {
       unit    = "GB"
     }
     ecpu_per_second {
-      maximum = 5
+      maximum = 5000
     }
   }
   description          = "Test Server"
@@ -47,7 +47,7 @@ resource "aws_elasticache_serverless_cache" "example" {
       unit    = "GB"
     }
     ecpu_per_second {
-      maximum = 5
+      maximum = 5000
     }
   }
   daily_snapshot_time      = "09:00"
@@ -70,7 +70,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `cache_usage_limits` - (Optional) Sets the cache usage limits for storage and ElastiCache Processing Units for the cache. See configuration below.
-* `daily_snapshott_time` - (Optional) The daily time that snapshots will be created from the new serverless cache. Only supported for engine type `"redis"`. Defaults to `0`.
+* `daily_snapshot_time` - (Optional) The daily time that snapshots will be created from the new serverless cache. Only supported for engine type `"redis"`. Defaults to `0`.
 * `description` - (Optional) User-provided description for the serverless cache. The default is NULL.
 * `kms_key_id` - (Optional) ARN of the customer managed key for encrypting the data at rest. If no KMS key is provided, a default service key is used.
 * `major_engine_version` – (Optional) The version of the cache engine that will be used to create the serverless cache.
@@ -89,12 +89,12 @@ The following arguments are optional:
 
 ### DataStorage Configuration
 
-* `maximum` - The upper limit for data storage the cache is set to use. Set as Integer.
+* `maximum` - The upper limit for data storage the cache is set to use. Must be between 1 and 5,000.
 * `unit` - The unit that the storage is measured in, in GB.
 
 ### ECPUPerSecond Configuration
 
-* `maximum` - The upper limit for data storage the cache is set to use. Set as Integer.
+* `maximum` - The maximum number of ECPUs the cache can consume per second. Must be between 1,000 and 15,000,000.
 
 ## Attribute Reference
 

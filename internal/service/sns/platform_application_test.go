@@ -181,7 +181,7 @@ func TestAccSNSPlatformApplication_GCM_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SNSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SNSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPlatformApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -221,7 +221,7 @@ func TestAccSNSPlatformApplication_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SNSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SNSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPlatformApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -249,7 +249,7 @@ func TestAccSNSPlatformApplication_GCM_allAttributes(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SNSEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SNSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckPlatformApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -314,7 +314,7 @@ func TestAccSNSPlatformApplication_basic(t *testing.T) {
 		t.Run(platform.Name, func(*testing.T) {
 			resource.ParallelTest(t, resource.TestCase{
 				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-				ErrorCheck:               acctest.ErrorCheck(t, names.SNSEndpointID),
+				ErrorCheck:               acctest.ErrorCheck(t, names.SNSServiceID),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				CheckDestroy:             testAccCheckPlatformApplicationDestroy(ctx),
 				Steps: []resource.TestStep{
@@ -368,7 +368,7 @@ func TestAccSNSPlatformApplication_basicAttributes(t *testing.T) {
 
 					resource.Test(t, resource.TestCase{
 						PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-						ErrorCheck:               acctest.ErrorCheck(t, names.SNSEndpointID),
+						ErrorCheck:               acctest.ErrorCheck(t, names.SNSServiceID),
 						ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 						CheckDestroy:             testAccCheckPlatformApplicationDestroy(ctx),
 						Steps: []resource.TestStep{
@@ -419,7 +419,7 @@ func TestAccSNSPlatformApplication_basicApnsWithTokenCredentials(t *testing.T) {
 		t.Run(platform.Name, func(*testing.T) {
 			resource.ParallelTest(t, resource.TestCase{
 				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-				ErrorCheck:               acctest.ErrorCheck(t, names.SNSEndpointID),
+				ErrorCheck:               acctest.ErrorCheck(t, names.SNSServiceID),
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 				CheckDestroy:             testAccCheckPlatformApplicationDestroy(ctx),
 				Steps: []resource.TestStep{

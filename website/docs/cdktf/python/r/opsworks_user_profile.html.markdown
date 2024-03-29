@@ -47,4 +47,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - Same value as `user_arn`
 
-<!-- cache-key: cdktf-0.19.0 input-731328ff75f486df9bef040dc213e2c98c675ba2402982b18b6e320cea2b89f9 -->
+<!-- cache-key: cdktf-0.20.1 input-731328ff75f486df9bef040dc213e2c98c675ba2402982b18b6e320cea2b89f9 -->

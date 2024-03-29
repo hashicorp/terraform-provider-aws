@@ -16,7 +16,6 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -2119,16 +2118,53 @@ func WaitVPNConnectionRouteDeleted(ctx context.Context, conn *ec2.EC2, vpnConnec
 }
 
 const (
-	HostCreatedTimeout = 10 * time.Minute
-	HostUpdatedTimeout = 10 * time.Minute
-	HostDeletedTimeout = 20 * time.Minute
+	vpnGatewayCreatedTimeout = 10 * time.Minute
+	vpnGatewayDeletedTimeout = 10 * time.Minute
 )
 
-func WaitHostCreated(ctx context.Context, conn *ec2.EC2, id string) (*ec2.Host, error) {
+func WaitVPNGatewayCreated(ctx context.Context, conn *ec2.EC2, id string) (*ec2.VpnGateway, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{ec2.VpnStatePending},
+		Target:     []string{ec2.VpnStateAvailable},
+		Refresh:    StatusVPNGatewayState(ctx, conn, id),
+		Timeout:    vpnGatewayCreatedTimeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*ec2.VpnGateway); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitVPNGatewayDeleted(ctx context.Context, conn *ec2.EC2, id string) (*ec2.VpnGateway, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{ec2.VpnStateDeleting},
+		Target:     []string{},
+		Refresh:    StatusVPNGatewayState(ctx, conn, id),
+		Timeout:    vpnGatewayDeletedTimeout,
+		Delay:      10 * time.Second,
+		MinTimeout: 10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*ec2.VpnGateway); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func WaitHostCreated(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Host, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{ec2.AllocationStatePending},
 		Target:  []string{ec2.AllocationStateAvailable},
-		Timeout: HostCreatedTimeout,
+		Timeout: timeout,
 		Refresh: StatusHostState(ctx, conn, id),
 	}
 
@@ -2141,11 +2177,11 @@ func WaitHostCreated(ctx context.Context, conn *ec2.EC2, id string) (*ec2.Host, 
 	return nil, err
 }
 
-func WaitHostUpdated(ctx context.Context, conn *ec2.EC2, id string) (*ec2.Host, error) {
+func WaitHostUpdated(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Host, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{ec2.AllocationStatePending},
 		Target:  []string{ec2.AllocationStateAvailable},
-		Timeout: HostUpdatedTimeout,
+		Timeout: timeout,
 		Refresh: StatusHostState(ctx, conn, id),
 	}
 
@@ -2158,11 +2194,11 @@ func WaitHostUpdated(ctx context.Context, conn *ec2.EC2, id string) (*ec2.Host, 
 	return nil, err
 }
 
-func WaitHostDeleted(ctx context.Context, conn *ec2.EC2, id string) (*ec2.Host, error) {
+func WaitHostDeleted(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Host, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{ec2.AllocationStateAvailable},
 		Target:  []string{},
-		Timeout: HostDeletedTimeout,
+		Timeout: timeout,
 		Refresh: StatusHostState(ctx, conn, id),
 	}
 
@@ -2454,7 +2490,7 @@ func WaitSpotFleetRequestFulfilled(ctx context.Context, conn *ec2.EC2, id string
 
 	if output, ok := outputRaw.(*ec2.SpotFleetRequestConfig); ok {
 		if activityStatus := aws.StringValue(output.ActivityStatus); activityStatus == ec2.ActivityStatusError {
-			var errs *multierror.Error
+			var errs []error
 
 			input := &ec2.DescribeSpotFleetRequestHistoryInput{
 				SpotFleetRequestId: aws.String(id),
@@ -2464,12 +2500,12 @@ func WaitSpotFleetRequestFulfilled(ctx context.Context, conn *ec2.EC2, id string
 			if output, err := FindSpotFleetRequestHistoryRecords(ctx, conn, input); err == nil {
 				for _, v := range output {
 					if eventType := aws.StringValue(v.EventType); eventType == ec2.EventTypeError || eventType == ec2.EventTypeInformation {
-						errs = multierror.Append(errs, errors.New(v.String()))
+						errs = append(errs, errors.New(v.String()))
 					}
 				}
 			}
 
-			tfresource.SetLastError(err, errs.ErrorOrNil())
+			tfresource.SetLastError(err, errors.Join(errs...))
 		}
 
 		return output, err

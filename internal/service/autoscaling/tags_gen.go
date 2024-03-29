@@ -64,14 +64,27 @@ func listTags(ctx context.Context, conn autoscalingiface.AutoScalingAPI, identif
 			},
 		},
 	}
+	var output []*autoscaling.TagDescription
 
-	output, err := conn.DescribeTagsWithContext(ctx, input)
+	err := conn.DescribeTagsPagesWithContext(ctx, input, func(page *autoscaling.DescribeTagsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Tags {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
 
 	if err != nil {
 		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(ctx, output.Tags, identifier, resourceType), nil
+	return KeyValueTags(ctx, output, identifier, resourceType), nil
 }
 
 // ListTags lists autoscaling service tags and set them in Context.

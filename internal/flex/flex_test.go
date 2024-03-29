@@ -370,3 +370,99 @@ func TestDiffStringMaps(t *testing.T) {
 		}
 	}
 }
+
+func TestDiffStringValueMaps(t *testing.T) {
+	t.Parallel()
+
+	cases := []struct {
+		Old, New                  map[string]interface{}
+		Create, Remove, Unchanged map[string]string
+	}{
+		// Add
+		{
+			Old: map[string]interface{}{
+				"foo": "bar",
+			},
+			New: map[string]interface{}{
+				"foo": "bar",
+				"bar": "baz",
+			},
+			Create: map[string]string{
+				"bar": "baz",
+			},
+			Remove: map[string]string{},
+			Unchanged: map[string]string{
+				"foo": "bar",
+			},
+		},
+
+		// Modify
+		{
+			Old: map[string]interface{}{
+				"foo": "bar",
+			},
+			New: map[string]interface{}{
+				"foo": "baz",
+			},
+			Create: map[string]string{
+				"foo": "baz",
+			},
+			Remove: map[string]string{
+				"foo": "bar",
+			},
+			Unchanged: map[string]string{},
+		},
+
+		// Overlap
+		{
+			Old: map[string]interface{}{
+				"foo":   "bar",
+				"hello": "world",
+			},
+			New: map[string]interface{}{
+				"foo":   "baz",
+				"hello": "world",
+			},
+			Create: map[string]string{
+				"foo": "baz",
+			},
+			Remove: map[string]string{
+				"foo": "bar",
+			},
+			Unchanged: map[string]string{
+				"hello": "world",
+			},
+		},
+
+		// Remove
+		{
+			Old: map[string]interface{}{
+				"foo": "bar",
+				"bar": "baz",
+			},
+			New: map[string]interface{}{
+				"foo": "bar",
+			},
+			Create: map[string]string{},
+			Remove: map[string]string{
+				"bar": "baz",
+			},
+			Unchanged: map[string]string{
+				"foo": "bar",
+			},
+		},
+	}
+
+	for _, tc := range cases {
+		c, r, u := DiffStringValueMaps(tc.Old, tc.New)
+		if diff := cmp.Diff(c, tc.Create); diff != "" {
+			t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+		}
+		if diff := cmp.Diff(r, tc.Remove); diff != "" {
+			t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+		}
+		if diff := cmp.Diff(u, tc.Unchanged); diff != "" {
+			t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+		}
+	}
+}

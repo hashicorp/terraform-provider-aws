@@ -503,6 +503,10 @@ func resourceTableReplicaDelete(ctx context.Context, d *schema.ResourceData, met
 		_, err = conn.UpdateTableWithContext(ctx, input)
 	}
 
+	if tfawserr.ErrMessageContains(err, errCodeValidationException, "Replica specified in the Replica Update or Replica Delete action of the request was not found") {
+		return diags
+	}
+
 	if err != nil {
 		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionDeleting, ResNameTableReplica, d.Id(), err)
 	}

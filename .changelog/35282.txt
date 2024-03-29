@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_datasync_task: Allow `schedule` to be removed successfully
+```

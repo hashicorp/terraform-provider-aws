@@ -25,7 +25,7 @@ func TestAccCodeStarConnectionsConnectionDataSource_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CodeStarConnectionsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeStarConnectionsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeStarConnectionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -60,7 +60,7 @@ func TestAccCodeStarConnectionsConnectionDataSource_tags(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CodeStarConnectionsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeStarConnectionsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeStarConnectionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{

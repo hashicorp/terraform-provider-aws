@@ -30,7 +30,7 @@ func TestRegexpTypeValueFromTerraform(t *testing.T) {
 		},
 		"valid Regexp": {
 			val:      tftypes.NewValue(tftypes.String, `\w+`),
-			expected: fwtypes.RegexpValue(`\w+`),
+			expected: fwtypes.RegexpValueMust(`\w+`),
 		},
 		"invalid Regexp": {
 			val:      tftypes.NewValue(tftypes.String, `(`),
@@ -112,7 +112,7 @@ func TestRegexpToStringValue(t *testing.T) {
 		expected types.String
 	}{
 		"value": {
-			regexp:   fwtypes.RegexpValue(`\w+`),
+			regexp:   fwtypes.RegexpValueMust(`\w+`),
 			expected: types.StringValue(`\w+`),
 		},
 		"null": {

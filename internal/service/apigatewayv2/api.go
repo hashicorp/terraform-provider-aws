@@ -251,7 +251,7 @@ func resourceAPIRead(ctx context.Context, d *schema.ResourceData, meta interface
 		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "apigateway",
 		Region:    meta.(*conns.AWSClient).Region,
-		Resource:  fmt.Sprintf("/apis/%s", d.Id()),
+		Resource:  "/apis/" + d.Id(),
 	}.String()
 	d.Set("arn", apiARN)
 	if err := d.Set("cors_configuration", flattenCORSConfiguration(output.CorsConfiguration)); err != nil {

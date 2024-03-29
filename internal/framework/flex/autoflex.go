@@ -160,6 +160,7 @@ func findFieldFuzzy(ctx context.Context, fieldNameFrom string, valTo, valFrom re
 
 	// fourth precedence is using resource prefix
 	if v, ok := ctx.Value(ResourcePrefix).(string); ok && v != "" {
+		v = strings.ReplaceAll(v, " ", "")
 		if ctx.Value(ResourcePrefixRecurse) == nil {
 			// so it will only recurse once
 			ctx = context.WithValue(ctx, ResourcePrefixRecurse, true)

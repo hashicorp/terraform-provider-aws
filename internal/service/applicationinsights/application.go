@@ -5,7 +5,6 @@ package applicationinsights
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -134,10 +133,9 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta i
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Partition: meta.(*conns.AWSClient).Partition,
 		Region:    meta.(*conns.AWSClient).Region,
-		Resource:  fmt.Sprintf("application/resource-group/%s", aws.StringValue(application.ResourceGroupName)),
+		Resource:  "application/resource-group/" + aws.StringValue(application.ResourceGroupName),
 		Service:   "applicationinsights",
 	}.String()
-
 	d.Set("arn", arn)
 	d.Set("resource_group_name", application.ResourceGroupName)
 	d.Set("auto_config_enabled", application.AutoConfigEnabled)

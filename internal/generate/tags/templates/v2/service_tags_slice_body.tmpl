@@ -129,7 +129,7 @@ func {{ .KeyValueTagsFunc }}(ctx context.Context, tags any{{ if .TagTypeIDElem }
 		{{- end }}
 
 		return tftags.New(ctx, m)
-	case []*{{ .AWSService }}.{{ .TagType2 }}:
+	case []awstypes.{{ .TagType2 }}:
 		{{- if or ( .TagTypeIDElem ) ( .TagTypeAddBoolElem) }}
 		m := make(map[string]*tftags.TagData, len(tags))
 
@@ -164,7 +164,7 @@ func {{ .KeyValueTagsFunc }}(ctx context.Context, tags any{{ if .TagTypeIDElem }
 		return tftags.New(ctx, m)
 	{{- if .TagTypeAddBoolElem }}
 	case *schema.Set:
-		return {{ .KeyValueTagsFunc }}(tags.List(){{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }})
+		return {{ .KeyValueTagsFunc }}(ctx, tags.List(){{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }})
 	case []any:
 		result := make(map[string]*tftags.TagData)
 

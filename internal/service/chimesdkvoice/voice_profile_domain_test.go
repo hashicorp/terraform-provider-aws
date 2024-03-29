@@ -51,7 +51,7 @@ func testAccVoiceProfileDomain_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.ChimeSDKVoiceEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVoiceProfileDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -86,7 +86,7 @@ func testAccVoiceProfileDomain_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.ChimeSDKVoiceEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVoiceProfileDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -116,7 +116,7 @@ func testAccVoiceProfileDomain_update(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.ChimeSDKVoiceEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVoiceProfileDomainDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -156,7 +156,7 @@ func testAccVoiceProfileDomain_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.ChimeSDKVoiceEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKVoiceServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckVoiceProfileDomainDestroy(ctx),
 		Steps: []resource.TestStep{

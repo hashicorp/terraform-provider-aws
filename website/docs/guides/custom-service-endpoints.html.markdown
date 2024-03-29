@@ -95,6 +95,7 @@ provider "aws" {
   <li><code>backup</code></li>
   <li><code>batch</code></li>
   <li><code>bedrock</code></li>
+  <li><code>bedrockagent</code></li>
   <li><code>budgets</code></li>
   <li><code>ce</code> (or <code>costexplorer</code>)</li>
   <li><code>chime</code></li>
@@ -105,6 +106,7 @@ provider "aws" {
   <li><code>cloudcontrol</code> (or <code>cloudcontrolapi</code>)</li>
   <li><code>cloudformation</code></li>
   <li><code>cloudfront</code></li>
+  <li><code>cloudfrontkeyvaluestore</code></li>
   <li><code>cloudhsmv2</code> (or <code>cloudhsm</code>)</li>
   <li><code>cloudsearch</code></li>
   <li><code>cloudtrail</code></li>
@@ -126,15 +128,18 @@ provider "aws" {
   <li><code>connect</code></li>
   <li><code>connectcases</code></li>
   <li><code>controltower</code></li>
+  <li><code>costoptimizationhub</code></li>
   <li><code>cur</code> (or <code>costandusagereportservice</code>)</li>
   <li><code>customerprofiles</code></li>
   <li><code>dataexchange</code></li>
   <li><code>datapipeline</code></li>
   <li><code>datasync</code></li>
+  <li><code>datazone</code></li>
   <li><code>dax</code></li>
   <li><code>deploy</code> (or <code>codedeploy</code>)</li>
   <li><code>detective</code></li>
   <li><code>devicefarm</code></li>
+  <li><code>devopsguru</code></li>
   <li><code>directconnect</code></li>
   <li><code>dlm</code></li>
   <li><code>dms</code> (or <code>databasemigration</code> or <code>databasemigrationservice</code>)</li>
@@ -203,6 +208,7 @@ provider "aws" {
   <li><code>location</code> (or <code>locationservice</code>)</li>
   <li><code>logs</code> (or <code>cloudwatchlog</code> or <code>cloudwatchlogs</code>)</li>
   <li><code>lookoutmetrics</code></li>
+  <li><code>m2</code></li>
   <li><code>macie2</code></li>
   <li><code>mediaconnect</code></li>
   <li><code>mediaconvert</code></li>
@@ -223,6 +229,7 @@ provider "aws" {
   <li><code>organizations</code></li>
   <li><code>osis</code> (or <code>opensearchingestion</code>)</li>
   <li><code>outposts</code></li>
+  <li><code>paymentcryptography</code></li>
   <li><code>pcaconnectorad</code></li>
   <li><code>pinpoint</code></li>
   <li><code>pipes</code></li>
@@ -237,6 +244,7 @@ provider "aws" {
   <li><code>redshift</code></li>
   <li><code>redshiftdata</code> (or <code>redshiftdataapiservice</code>)</li>
   <li><code>redshiftserverless</code></li>
+  <li><code>rekognition</code></li>
   <li><code>resourceexplorer2</code></li>
   <li><code>resourcegroups</code></li>
   <li><code>resourcegroupstaggingapi</code> (or <code>resourcegroupstagging</code>)</li>

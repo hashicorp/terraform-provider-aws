@@ -18,6 +18,10 @@ func New(t string) Timestamp {
 	return Timestamp(t)
 }
 
+func FromTime(t *time.Time) Timestamp {
+	return New(t.Format(time.RFC3339))
+}
+
 func (t Timestamp) String() string {
 	return string(t)
 }

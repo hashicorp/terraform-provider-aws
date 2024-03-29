@@ -1,6 +1,6 @@
 # Provider Scaffolding (skaff)
 
-`skaff` is a Terraform AWS Provider scaffolding command line tool. It generates resource/data source files and accompanying test files which adhere to the latest best practice. These files are heavily commented with instructions so serve as the best way to get started with provider development.
+`skaff` is a Terraform AWS Provider scaffolding command line tool. It generates resource/data source files and accompanying test files which adhere to the latest best practices. These files are heavily commented with instructions so serve as the best way to get started with provider development.
 
 ## Overview workflow steps
 
@@ -14,12 +14,12 @@
 1. Go through the generated code completing code and customizing for the AWS Go SDK API
 1. Run, test, refine
 1. Remove "TIP" comments
-1. Submit code in pull request
+1. Submit code in the pull request
 
 ## Running `skaff`
 
 1. Clone the [Terraform AWS Provider](https://github.com/hashicorp/terraform-provider-aws) repository.
-1. Install skaff
+1. Install `skaff`
 
     ```sh
     make skaff
@@ -54,7 +54,7 @@ Flags:
 
 ### Autocompletion
 
-Generate the autocompletion script for skaff for the specified shell
+Generate the autocompletion script for `skaff` for the specified shell
 
 ```console
 skaff completion --help

@@ -52,13 +52,13 @@ This data source exports the following attributes in addition to the arguments a
 * `maxSessionDuration` - Maximum session duration.
 * `path` - Path to the role.
 * `permissionsBoundary` - The ARN of the policy that is used to set the permissions boundary for the role.
-* `roleLastUsed` - Contains information about the last time that an IAM role was used. See [`role_last_used`](#role_last_used) for details.
+* `roleLastUsed` - Contains information about the last time that an IAM role was used. See [`roleLastUsed`](#role_last_used) for details.
 * `uniqueId` - Stable and unique string identifying the role.
 * `tags` - Tags attached to the role.
 
 ### role_last_used
 
 * `region` - The name of the AWS Region in which the role was last used.
-* `lastUsedDate` - The date and time, in RFC 3339 format, that the role was last used.
+* `last_used_date` - The date and time, in RFC 3339 format, that the role was last used.
 
-<!-- cache-key: cdktf-0.19.0 input-f419dd0c81b1d5dcbc960f11de5335c9a815a56c17e6d9214e419f0ce6cd1165 -->
+<!-- cache-key: cdktf-0.20.1 input-f419dd0c81b1d5dcbc960f11de5335c9a815a56c17e6d9214e419f0ce6cd1165 -->

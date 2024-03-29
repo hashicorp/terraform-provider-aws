@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 	"strings"
 	"time"
 
@@ -29,7 +30,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"golang.org/x/exp/slices"
 )
 
 type destinationType string
@@ -160,7 +160,8 @@ func resourceDeliveryStream() *schema.Resource {
 										"parameters": {
 											// See AWS::KinesisFirehose::DeliveryStream CloudFormation resource schema.
 											// uniqueItems is true and insertionOrder is true.
-											Type:     schema.TypeList,
+											// However, IRL the order of the processors is not important.
+											Type:     schema.TypeSet,
 											Optional: true,
 											Elem: &schema.Resource{
 												Schema: map[string]*schema.Schema{
@@ -437,6 +438,12 @@ func resourceDeliveryStream() *schema.Resource {
 								Default:          types.CompressionFormatUncompressed,
 								ValidateDiagFunc: enum.Validate[types.CompressionFormat](),
 							},
+							"custom_time_zone": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								Default:      "UTC",
+								ValidateFunc: validation.StringLenBetween(0, 50),
+							},
 							"data_format_conversion_configuration": {
 								Type:     schema.TypeList,
 								Optional: true,
@@ -686,6 +693,14 @@ func resourceDeliveryStream() *schema.Resource {
 								Type:         schema.TypeString,
 								Optional:     true,
 								ValidateFunc: validation.StringLenBetween(0, 1024),
+							},
+							"file_extension": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ValidateFunc: validation.All(
+									validation.StringLenBetween(0, 50),
+									validation.StringMatch(regexache.MustCompile(`^$|\.[0-9a-z!\-_.*'()]+`), ""),
+								),
 							},
 							"kms_key_arn": {
 								Type:         schema.TypeString,
@@ -1774,8 +1789,10 @@ func expandExtendedS3DestinationConfiguration(s3 map[string]interface{}) *types.
 		},
 		Prefix:                            expandPrefix(s3),
 		CompressionFormat:                 types.CompressionFormat(s3["compression_format"].(string)),
+		CustomTimeZone:                    aws.String(s3["custom_time_zone"].(string)),
 		DataFormatConversionConfiguration: expandDataFormatConversionConfiguration(s3["data_format_conversion_configuration"].([]interface{})),
 		EncryptionConfiguration:           expandEncryptionConfiguration(s3),
+		FileExtension:                     aws.String(s3["file_extension"].(string)),
 	}
 
 	if _, ok := s3["processing_configuration"]; ok {
@@ -1863,7 +1880,9 @@ func expandExtendedS3DestinationUpdate(s3 map[string]interface{}) *types.Extende
 			IntervalInSeconds: aws.Int32(int32(s3["buffering_interval"].(int))),
 			SizeInMBs:         aws.Int32(int32(s3["buffering_size"].(int))),
 		},
+		CustomTimeZone:                    aws.String(s3["custom_time_zone"].(string)),
 		ErrorOutputPrefix:                 aws.String(s3["error_output_prefix"].(string)),
+		FileExtension:                     aws.String(s3["file_extension"].(string)),
 		Prefix:                            expandPrefix(s3),
 		CompressionFormat:                 types.CompressionFormat(s3["compression_format"].(string)),
 		EncryptionConfiguration:           expandEncryptionConfiguration(s3),
@@ -2133,7 +2152,7 @@ func expandProcessor(processingConfigurationProcessor map[string]interface{}) *t
 	if processorType != "" {
 		processor = &types.Processor{
 			Type:       types.ProcessorType(processorType),
-			Parameters: expandProcessorParameters(processingConfigurationProcessor["parameters"].([]interface{})),
+			Parameters: expandProcessorParameters(processingConfigurationProcessor["parameters"].(*schema.Set).List()),
 		}
 	}
 	return processor
@@ -3056,8 +3075,10 @@ func flattenExtendedS3DestinationDescription(description *types.ExtendedS3Destin
 		"bucket_arn":                           aws.ToString(description.BucketARN),
 		"cloudwatch_logging_options":           flattenCloudWatchLoggingOptions(description.CloudWatchLoggingOptions),
 		"compression_format":                   description.CompressionFormat,
+		"custom_time_zone":                     aws.ToString(description.CustomTimeZone),
 		"data_format_conversion_configuration": flattenDataFormatConversionConfiguration(description.DataFormatConversionConfiguration),
 		"error_output_prefix":                  aws.ToString(description.ErrorOutputPrefix),
+		"file_extension":                       aws.ToString(description.FileExtension),
 		"prefix":                               aws.ToString(description.Prefix),
 		"processing_configuration":             flattenProcessingConfiguration(description.ProcessingConfiguration, destinationTypeExtendedS3, aws.ToString(description.RoleARN)),
 		"dynamic_partitioning_configuration":   flattenDynamicPartitioningConfiguration(description.DynamicPartitioningConfiguration),

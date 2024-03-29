@@ -1,0 +1,27 @@
+```release-note:bug
+resource/aws_s3_bucket: Tags with empty values no longer remove all tags.
+```
+
+```release-note:bug
+resource/aws_s3_bucket_object: Tags with empty values no longer remove all tags.
+```
+
+```release-note:bug
+resource/aws_s3_object: Tags with empty values no longer remove all tags.
+```
+
+```release-note:bug
+resource/aws_s3_object_copy: Tags with empty values no longer remove all tags.
+```
+
+```release-note:enhancement
+resource/aws_s3_bucket_object: Adds attribute `arn`.
+```
+
+```release-note:enhancement
+resource/aws_s3_object: Adds attribute `arn`.
+```
+
+```release-note:enhancement
+resource/aws_s3_object_copy: Adds attribute `arn`.
+```

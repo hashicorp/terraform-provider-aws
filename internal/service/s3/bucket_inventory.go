@@ -25,8 +25,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_s3_bucket_inventory")
-func ResourceBucketInventory() *schema.Resource {
+// @SDKResource("aws_s3_bucket_inventory", name="Bucket Inventory")
+func resourceBucketInventory() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketInventoryPut,
 		ReadWithoutTimeout:   resourceBucketInventoryRead,

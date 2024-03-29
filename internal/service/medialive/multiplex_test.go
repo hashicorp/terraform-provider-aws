@@ -37,7 +37,7 @@ func testAccMultiplex_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccMultiplexesPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMultiplexDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -79,7 +79,7 @@ func testAccMultiplex_start(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccMultiplexesPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMultiplexDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -119,7 +119,7 @@ func testAccMultiplex_update(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccMultiplexesPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMultiplexDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -167,7 +167,7 @@ func testAccMultiplex_updateTags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccMultiplexesPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMultiplexDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -216,7 +216,7 @@ func testAccMultiplex_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.MediaLiveEndpointID)
 			testAccMultiplexesPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MediaLiveServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMultiplexDestroy(ctx),
 		Steps: []resource.TestStep{

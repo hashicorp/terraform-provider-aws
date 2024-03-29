@@ -225,6 +225,10 @@ func DataSourceInstanceType() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"maximum_network_cards": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"maximum_network_interfaces": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -388,6 +392,7 @@ func dataSourceInstanceTypeRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("ipv6_supported", v.NetworkInfo.Ipv6Supported)
 	d.Set("maximum_ipv4_addresses_per_interface", v.NetworkInfo.Ipv4AddressesPerInterface)
 	d.Set("maximum_ipv6_addresses_per_interface", v.NetworkInfo.Ipv6AddressesPerInterface)
+	d.Set("maximum_network_cards", v.NetworkInfo.MaximumNetworkCards)
 	d.Set("maximum_network_interfaces", v.NetworkInfo.MaximumNetworkInterfaces)
 	d.Set("memory_size", v.MemoryInfo.SizeInMiB)
 	d.Set("network_performance", v.NetworkInfo.NetworkPerformance)
