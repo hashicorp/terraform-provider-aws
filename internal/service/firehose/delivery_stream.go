@@ -42,6 +42,7 @@ const (
 	destinationTypeOpenSearchServerless destinationType = "opensearchserverless"
 	destinationTypeRedshift             destinationType = "redshift"
 	destinationTypeSplunk               destinationType = "splunk"
+	destinationTypeSnowflake            destinationType = "snowflake"
 )
 
 func (destinationType) Values() []destinationType {
@@ -53,6 +54,7 @@ func (destinationType) Values() []destinationType {
 		destinationTypeOpenSearchServerless,
 		destinationTypeRedshift,
 		destinationTypeSplunk,
+		destinationTypeSnowflake,
 	}
 }
 
@@ -974,6 +976,113 @@ func resourceDeliveryStream() *schema.Resource {
 									},
 								},
 							},
+						},
+					},
+				},
+				"snowflake_configuration": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"account_url": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validateSnowflakeAccountURL,
+							},
+							"private_key": {
+								Type:      schema.TypeString,
+								Required:  true,
+								Sensitive: true,
+							},
+							"key_passphrase": {
+								Type:      schema.TypeString,
+								Required:  true,
+								Sensitive: true,
+							},
+							"user": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"database": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"schema": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"table": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"snowflake_role_configuration": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"enabled": {
+											Type:     schema.TypeBool,
+											Optional: true,
+											Default:  false,
+										},
+										"snowflake_role": {
+											Type:     schema.TypeString,
+											Optional: true,
+										},
+									},
+								},
+							},
+							"data_loading_option": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"meta_data_column_name": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"content_column_name": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"snowflake_vpc_configuration": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"private_link_vpce_id": {
+											Type:     schema.TypeString,
+											Required: true,
+										},
+									},
+								},
+							},
+							"cloud_watch_logging_options": cloudWatchLoggingOptionsSchema(), 
+							"processing_configuration": processingConfigurationSchema(),     
+							"role_arn": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"retry_options": {
+								Type:     schema.TypeList,
+								Optional: true,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"duration_in_seconds": {
+											Type:     schema.TypeInt,
+											Required: true,
+										},
+									},
+								},
+							},
+							"s3_backup_mode": {
+								Type:     schema.TypeString,
+								Optional: true,
+							},
+							"s3_configuration": s3ConfigurationSchema(), 
 						},
 					},
 				},
@@ -3591,4 +3700,14 @@ func defaultProcessorParameters(destinationType destinationType, processorType t
 	default:
 		return make(map[types.ProcessorParameterName]string)
 	}
+}
+
+func validateSnowflakeAccountURL(v interface{}, k string) (ws []string, errors []error) {
+    value := v.(string)
+    if !strings.HasPrefix(value, "https://") {
+        errors = append(errors, fmt.Errorf("%q must start with 'https://'", k))
+    }
+    // Add more validation logic if needed, such as checking the format of the account URL
+    // You can use regular expressions or other methods for this validation.
+    return
 }

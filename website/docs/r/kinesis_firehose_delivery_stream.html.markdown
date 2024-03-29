@@ -8,7 +8,7 @@ description: |-
 
 # Resource: aws_kinesis_firehose_delivery_stream
 
-Provides a Kinesis Firehose Delivery Stream resource. Amazon Kinesis Firehose is a fully managed, elastic service to easily deliver real-time data streams to destinations such as Amazon S3 and Amazon Redshift.
+Provides a Kinesis Firehose Delivery Stream resource. Amazon Kinesis Firehose is a fully managed, elastic service to easily deliver real-time data streams to destinations such as Amazon S3 , Amazon Redshift and Snowflake.
 
 For more details, see the [Amazon Kinesis Firehose Documentation][1].
 
@@ -592,6 +592,83 @@ resource "aws_kinesis_firehose_delivery_stream" "test_stream" {
 }
 ```
 
+### Snowflake Destination
+
+```terraform
+resource "aws_kinesis_firehose_delivery_stream" "example_snowflake_destination" {
+  name        = "example-snowflake-destination"
+  destination = "snowflake"
+
+  snowflake_destination_configuration {
+    account_url    = "string"
+    private_key    = "string"
+    key_passphrase = "string"
+    user           = "string"
+    database       = "string"
+    schema         = "string"
+    table          = "string"
+    snowflake_role_configuration {
+      enabled        = true
+      snowflake_role = "string"
+    }
+    data_loading_option   = "JSON_MAPPING"
+    meta_data_column_name = "string"
+    content_column_name   = "string"
+    snowflake_vpc_configuration {
+      private_link_vpce_id = "string"
+    }
+    cloud_watch_logging_options {
+      enabled         = true
+      log_group_name  = "string"
+      log_stream_name = "string"
+    }
+    processing_configuration {
+      enabled = true
+      processors = [
+        {
+          type = "RecordDeAggregation"
+          parameters = [
+            {
+              parameter_name  = "LambdaArn"
+              parameter_value = "string"
+            }
+            # Add more parameters as needed
+          ]
+        }
+        # Add more processors as needed
+      ]
+    }
+    role_arn = "string"
+    retry_options {
+      duration_in_seconds = 123
+    }
+    s3_backup_mode = "FailedDataOnly"
+    s3_configuration {
+      role_arn            = "string"
+      bucket_arn          = "string"
+      prefix              = "string"
+      error_output_prefix = "string"
+      buffering_hints {
+        size_in_mbs         = 123
+        interval_in_seconds = 456
+      }
+      compression_format = "UNCOMPRESSED"
+      encryption_configuration {
+        no_encryption_config = "NoEncryption"
+        kms_encryption_config {
+          aws_kms_key_arn = "string"
+        }
+      }
+      cloud_watch_logging_options {
+        enabled         = true
+        log_group_name  = "string"
+        log_stream_name = "string"
+      }
+    }
+  }
+}
+```
+
 ## Argument Reference
 
 This resource supports the following arguments:
@@ -759,6 +836,29 @@ The `http_endpoint_configuration` configuration block supports the following arg
 * `processing_configuration` - (Optional) The data processing configuration.  See [`processing_configuration` block](#processing_configuration-block) below for details.
 * `request_configuration` - (Optional) The request configuration.  See [`request_configuration` block](#request_configuration-block) below for details.
 * `retry_duration` - (Optional) Total amount of seconds Firehose spends on retries. This duration starts after the initial attempt fails, It does not include the time periods during which Firehose waits for acknowledgment from the specified destination after each attempt. Valid values between `0` and `7200`. Default is `300`.
+
+### `snowflake_configuration` block
+
+The `snowflake_configuration` configuration block supports the following arguments:
+
+* `account_url` - (Required) The URL of the Snowflake account. Format: https://[account_identifier].snowflakecomputing.com.
+* `private_key` - (Required) The private key for authentication.
+* `key_passphrase` - (Required) The passphrase for the private key.
+* `user` - (Required) The user for authentication.
+* `database` - (Required) The Snowflake database name.
+* `schema` - (Required) The Snowflake schema name.
+* `table` - (Required) The Snowflake table name.
+* `snowflake_role_configuration` - (Optional) The configuration for Snowflake role. See [`snowflake_role_configuration` block](#snowflake_role_configuration-block) below for details.
+* `data_loading_option` - (Optional) The data loading option.
+* `meta_data_column_name` - (Optional) The name of the metadata column.
+* `content_column_name` - (Optional) The name of the content column.
+* `snowflake_vpc_configuration` - (Optional) The VPC configuration for Snowflake. See [`snowflake_vpc_configuration` block](#snowflake_vpc_configuration-block) below for details.
+* `cloud_watch_logging_options` - (Optional) The CloudWatch logging options. See [`cloud_watch_logging_options` block](#cloud_watch_logging_options-block) below for details.
+* `processing_configuration` - (Optional) The processing configuration. See [`processing_configuration` block](#processing_configuration-block) below for details.
+* `role_arn` - (Required) The ARN of the IAM role.
+* `retry_options` - (Optional) The retry options. See [`retry_options` block](#retry_options-block) below for details.
+* `s3_backup_mode` - (Optional) The S3 backup mode.
+* `s3_configuration` - (Required) The S3 configuration. See [`s3_configuration` block](#s3_configuration-block) below for details.
 
 ### `cloudwatch_logging_options` block
 
