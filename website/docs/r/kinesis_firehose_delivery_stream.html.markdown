@@ -915,7 +915,7 @@ The `output_format_configuration` configuration block supports the following arg
 The `serializer` configuration block supports the following arguments:
 
 * `orc_ser_de` - (Optional) Specifies converting data to the ORC format before storing it in Amazon S3. For more information, see [Apache ORC](https://orc.apache.org/docs/). See [`orc_ser_de` block](#orc_ser_de-block) below for details.
-* `parquet_ser_de` - (Optional) Specifies converting data to the Parquet format before storing it in Amazon S3. For more information, see [Apache Parquet](https://parquet.apache.org/documentation/latest/). More details below.
+* `parquet_ser_de` - (Optional) Specifies converting data to the Parquet format before storing it in Amazon S3. For more information, see [Apache Parquet](https://parquet.apache.org/docs/). More details below.
 
 #### `orc_ser_de` block
 

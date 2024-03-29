@@ -47,7 +47,7 @@ HashiCorp's open-source projects have always maintained a user-friendly, readabl
 
 When your contribution is ready, Create a [Pull Request](raising-a-pull-request.md) in the AWS provider repository.
 
-Pull requests are usually triaged within a few days of creation and are prioritized based on community reactions. Our [Prioritization Guides](prioritization.md) provides more details about the process.
+Pull requests are usually triaged within a few days of creation and are prioritized based on community reactions. Our [Prioritization Guides](prioritization.md) provide more details about the process.
 
 ## Submit an Issue
 

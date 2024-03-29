@@ -10,6 +10,7 @@ var (
 	ResourceDefaultRouteTable               = resourceDefaultRouteTable
 	ResourceEBSFastSnapshotRestore          = newResourceEBSFastSnapshotRestore
 	ResourceInstanceConnectEndpoint         = newResourceInstanceConnectEndpoint
+	ResourceInstanceMetadataDefaults        = newInstanceMetadataDefaultsResource
 	ResourceNetworkACL                      = resourceNetworkACL
 	ResourceNetworkACLRule                  = resourceNetworkACLRule
 	ResourceRoute                           = resourceRoute
@@ -26,6 +27,7 @@ var (
 
 	CustomFiltersSchema            = customFiltersSchema
 	FindEBSFastSnapshotRestoreByID = findEBSFastSnapshotRestoreByID
+	FindInstanceMetadataDefaults   = findInstanceMetadataDefaults
 	FindNetworkACLByIDV2           = findNetworkACLByIDV2
 	NewAttributeFilterList         = newAttributeFilterList
 	NewCustomFilterList            = newCustomFilterList

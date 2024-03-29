@@ -33,6 +33,10 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
+			Factory: newInstanceMetadataDefaultsResource,
+			Name:    "Instance Metadata Defaults",
+		},
+		{
 			Factory: newResourceEBSFastSnapshotRestore,
 			Name:    "EBS Fast Snapshot Restore",
 		},

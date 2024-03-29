@@ -26,6 +26,7 @@ import (
 // Endpoint constants defined by the AWS SDK v1 but not defined in the AWS SDK v2.
 const (
 	AccessAnalyzerEndpointID             = "access-analyzer"
+	ACMPCAEndpointID                     = "acm-pca"
 	AMPEndpointID                        = "aps"
 	AthenaEndpointID                     = "athena"
 	AuditManagerEndpointID               = "auditmanager"
@@ -53,6 +54,8 @@ const (
 	IVSChatEndpointID                    = "ivschat"
 	KendraEndpointID                     = "kendra"
 	LexV2ModelsEndpointID                = "models-v2-lex"
+	M2EndpointID                         = "m2"
+	MediaConvertEndpointID               = "mediaconvert"
 	MediaLiveEndpointID                  = "medialive"
 	MQEndpointID                         = "mq"
 	ObservabilityAccessManagerEndpointID = "oam"
@@ -61,6 +64,7 @@ const (
 	PipesEndpointID                      = "pipes"
 	PollyEndpointID                      = "polly"
 	QLDBEndpointID                       = "qldb"
+	RedshiftServerlessEndpointID         = "redshift-serverless"
 	RedshiftEndpointID                   = "redshift"
 	RekognitionEndpointID                = "rekognition"
 	ResourceExplorer2EndpointID          = "resource-explorer-2"
@@ -68,6 +72,7 @@ const (
 	Route53DomainsEndpointID             = "route53domains"
 	SchedulerEndpointID                  = "scheduler"
 	ServiceQuotasEndpointID              = "servicequotas"
+	ServiceCatalogAppRegistryEndpointID  = "servicecatalog-appregistry"
 	ShieldEndpointID                     = "shield"
 	SSMEndpointID                        = "ssm"
 	SSMIncidentsEndpointID               = "ssm-incidents"

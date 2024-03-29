@@ -7,11 +7,12 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
+	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/batch"
-	"github.com/aws/aws-sdk-go/service/iam"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -19,6 +20,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
 )
+
+const propagationTimeout = 2 * time.Minute
 
 func RegisterSweepers() {
 	resource.AddTestSweepers("aws_batch_compute_environment", &resource.Sweeper{
@@ -58,7 +61,7 @@ func sweepComputeEnvironments(region string) error {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 	conn := client.BatchConn(ctx)
-	iamconn := client.IAMConn(ctx)
+	iamconn := client.IAMClient(ctx)
 
 	var sweeperErrs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
@@ -98,7 +101,7 @@ func sweepComputeEnvironments(region string) error {
 					AccountID: "aws",
 					Partition: sweep.Partition(region),
 					Resource:  "policy/service-role/AWSBatchServiceRole",
-					Service:   iam.ServiceName,
+					Service:   "iam",
 				}.String()
 
 				iamCreateRoleInput := &iam.CreateRoleInput{
@@ -106,7 +109,7 @@ func sweepComputeEnvironments(region string) error {
 					RoleName:                 aws.String(serviceRoleName),
 				}
 
-				_, err = iamconn.CreateRoleWithContext(ctx, iamCreateRoleInput)
+				_, err = iamconn.CreateRole(ctx, iamCreateRoleInput)
 
 				if err != nil {
 					sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error creating IAM Role (%s) for INVALID Batch Compute Environment (%s): %w", serviceRoleName, name, err))
@@ -117,7 +120,8 @@ func sweepComputeEnvironments(region string) error {
 					RoleName: aws.String(serviceRoleName),
 				}
 
-				err = iamconn.WaitUntilRoleExistsWithContext(ctx, iamGetRoleInput)
+				waiter := iam.NewRoleExistsWaiter(iamconn)
+				err = waiter.Wait(ctx, iamGetRoleInput, propagationTimeout)
 
 				if err != nil {
 					sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error waiting for IAM Role (%s) creation for INVALID Batch Compute Environment (%s): %w", serviceRoleName, name, err))
@@ -129,7 +133,7 @@ func sweepComputeEnvironments(region string) error {
 					RoleName:  aws.String(serviceRoleName),
 				}
 
-				_, err = iamconn.AttachRolePolicyWithContext(ctx, iamAttachRolePolicyInput)
+				_, err = iamconn.AttachRolePolicy(ctx, iamAttachRolePolicyInput)
 
 				if err != nil {
 					sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error attaching Batch IAM Policy (%s) to IAM Role (%s) for INVALID Batch Compute Environment (%s): %w", serviceRolePolicyARN, serviceRoleName, name, err))
