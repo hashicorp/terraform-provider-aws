@@ -52,10 +52,10 @@ data "aws_servicecatalogappregistry_application" "test" {
 }
 
 resource "aws_ssm_parameter" "test" {
-	name  = %[1]q
-	type  = "String"
-	value = "test"
-	tags  = data.aws_servicecatalogappregistry_application.test.application_tag
-  }
+  name  = %[1]q
+  type  = "String"
+  value = "test"
+  tags  = data.aws_servicecatalogappregistry_application.test.application_tag
+}
 `, rName)
 }
