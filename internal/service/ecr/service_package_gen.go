@@ -54,8 +54,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceLifecyclePolicy,
+			Factory:  resourceLifecyclePolicy,
 			TypeName: "aws_ecr_lifecycle_policy",
+			Name:     "Lifecycle Policy",
 		},
 		{
 			Factory:  resourcePullThroughCacheRule,

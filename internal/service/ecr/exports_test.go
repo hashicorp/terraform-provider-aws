@@ -5,7 +5,9 @@ package ecr
 
 // Exports for use in tests only.
 var (
+	ResourceLifecyclePolicy      = resourceLifecyclePolicy
 	ResourcePullThroughCacheRule = resourcePullThroughCacheRule
 
+	FindLifecyclePolicyByRepositoryName        = findLifecyclePolicyByRepositoryName
 	FindPullThroughCacheRuleByRepositoryPrefix = findPullThroughCacheRuleByRepositoryPrefix
 )

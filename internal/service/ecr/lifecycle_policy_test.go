@@ -8,22 +8,19 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/ecr"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/ecr/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	tfecr "github.com/hashicorp/terraform-provider-aws/internal/service/ecr"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccECRLifecyclePolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	randString := sdkacctest.RandString(10)
-	rName := fmt.Sprintf("tf-acc-test-lifecycle-%s", randString)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ecr_lifecycle_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -42,6 +39,29 @@ func TestAccECRLifecyclePolicy_basic(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccECRLifecyclePolicy_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecr_lifecycle_policy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLifecyclePolicyConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLifecyclePolicyExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfecr.ResourceLifecyclePolicy(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
@@ -107,37 +127,34 @@ func testAccCheckLifecyclePolicyDestroy(ctx context.Context) resource.TestCheckF
 				continue
 			}
 
-			input := &ecr.GetLifecyclePolicyInput{
-				RepositoryName: aws.String(rs.Primary.ID),
+			_, err := tfecr.FindLifecyclePolicyByRepositoryName(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			_, err := conn.GetLifecyclePolicy(ctx, input)
 			if err != nil {
-				if errs.IsA[*awstypes.RepositoryNotFoundException](err) || errs.IsA[*awstypes.LifecyclePolicyNotFoundException](err) {
-					return nil
-				}
 				return err
 			}
+
+			return fmt.Errorf("ECR Lifecycle Policy %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckLifecyclePolicyExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckLifecyclePolicyExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRClient(ctx)
 
-		input := &ecr.GetLifecyclePolicyInput{
-			RepositoryName: aws.String(rs.Primary.ID),
-		}
+		_, err := tfecr.FindLifecyclePolicyByRepositoryName(ctx, conn, rs.Primary.ID)
 
-		_, err := conn.GetLifecyclePolicy(ctx, input)
 		return err
 	}
 }
@@ -145,7 +162,7 @@ func testAccCheckLifecyclePolicyExists(ctx context.Context, name string) resourc
 func testAccLifecyclePolicyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecr_repository" "test" {
-  name = "%s"
+  name = %[1]q
 }
 
 resource "aws_ecr_lifecycle_policy" "test" {
@@ -177,7 +194,7 @@ EOF
 func testAccLifecyclePolicyConfig_changed(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecr_repository" "test" {
-  name = "%s"
+  name = %[1]q
 }
 
 resource "aws_ecr_lifecycle_policy" "test" {
@@ -257,7 +274,7 @@ resource "aws_ecr_lifecycle_policy" "test" {
 func testAccLifecyclePolicyConfig_newOrder(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecr_repository" "test" {
-  name = "%s"
+  name = %[1]q
 }
 
 resource "aws_ecr_lifecycle_policy" "test" {
