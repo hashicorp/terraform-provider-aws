@@ -134,7 +134,7 @@ func resourceRegistryScanningConfigurationDelete(ctx context.Context, d *schema.
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ECRClient(ctx)
 
-	log.Printf("[DEBUG] Deleting ECR Registry Scanning Configuration: (%s)", d.Id())
+	log.Printf("[DEBUG] Deleting ECR Registry Scanning Configuration: %s", d.Id())
 	_, err := conn.PutRegistryScanningConfiguration(ctx, &ecr.PutRegistryScanningConfigurationInput{
 		Rules:    []awstypes.RegistryScanningRule{},
 		ScanType: awstypes.ScanTypeBasic,
