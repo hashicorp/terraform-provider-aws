@@ -1,12 +1,12 @@
 ---
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_network_interface_sg_attachment"
-sidebar_current: "docs-aws-resource-network-interface-sg-attachment"
 description: |-
   Associates a security group with a network interface.
 ---
 
-# aws_network_interface_sg_attachment
+# Resource: aws_network_interface_sg_attachment
 
 This resource attaches a security group to an Elastic Network Interface (ENI).
 It can be used to attach a security group to any existing ENI, be it a
@@ -30,7 +30,7 @@ by `instance`) in the default security group, creating a security group
 primary network interface via the `aws_network_interface_sg_attachment` resource,
 named `sg_attachment`:
 
-```hcl
+```terraform
 data "aws_ami" "ami" {
   most_recent = true
 
@@ -44,22 +44,22 @@ data "aws_ami" "ami" {
 
 resource "aws_instance" "instance" {
   instance_type = "t2.micro"
-  ami           = "${data.aws_ami.ami.id}"
+  ami           = data.aws_ami.ami.id
 
   tags = {
-    "type" = "terraform-test-instance"
+    type = "terraform-test-instance"
   }
 }
 
 resource "aws_security_group" "sg" {
   tags = {
-    "type" = "terraform-test-security-group"
+    type = "terraform-test-security-group"
   }
 }
 
 resource "aws_network_interface_sg_attachment" "sg_attachment" {
-  security_group_id    = "${aws_security_group.sg.id}"
-  network_interface_id = "${aws_instance.instance.primary_network_interface_id}"
+  security_group_id    = aws_security_group.sg.id
+  network_interface_id = aws_instance.instance.primary_network_interface_id
 }
 ```
 
@@ -67,28 +67,53 @@ In this example, `instance` is provided by the `aws_instance` data source,
 fetching an external instance, possibly not managed by Terraform.
 `sg_attachment` then attaches to the output instance's `network_interface_id`:
 
-```hcl
+```terraform
 data "aws_instance" "instance" {
   instance_id = "i-1234567890abcdef0"
 }
 
 resource "aws_security_group" "sg" {
   tags = {
-    "type" = "terraform-test-security-group"
+    type = "terraform-test-security-group"
   }
 }
 
 resource "aws_network_interface_sg_attachment" "sg_attachment" {
-  security_group_id    = "${aws_security_group.sg.id}"
-  network_interface_id = "${data.aws_instance.instance.network_interface_id}"
+  security_group_id    = aws_security_group.sg.id
+  network_interface_id = data.aws_instance.instance.network_interface_id
 }
 ```
 
 ## Argument Reference
 
- * `security_group_id` - (Required) The ID of the security group.
- * `network_interface_id` - (Required) The ID of the network interface to attach to.
+* `security_group_id` - (Required) The ID of the security group.
+* `network_interface_id` - (Required) The ID of the network interface to attach to.
 
-## Output Reference
+## Attribute Reference
 
-There are no outputs for this resource.
+This resource exports no additional attributes.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `3m`)
+- `read` - (Default `3m`)
+- `delete` - (Default `3m`)
+
+## Import
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Network Interface Security Group attachments using the associated network interface ID and security group ID, separated by an underscore (`_`). For example:
+
+```terraform
+import {
+  to = aws_network_interface_sg_attachment.sg_attachment
+  id = "eni-1234567890abcdef0_sg-1234567890abcdef0"
+}
+```
+
+Using `terraform import`, import Network Interface Security Group attachments using the associated network interface ID and security group ID, separated by an underscore (`_`). For example:
+
+```console
+% terraform import aws_network_interface_sg_attachment.sg_attachment eni-1234567890abcdef0_sg-1234567890abcdef0
+```

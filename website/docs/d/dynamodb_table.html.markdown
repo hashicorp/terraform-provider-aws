@@ -1,7 +1,7 @@
 ---
+subcategory: "DynamoDB"
 layout: "aws"
 page_title: "AWS: aws_dynamodb_table"
-sidebar_current: "docs-aws-datasource-dynamodb-table"
 description: |-
   Provides a DynamoDB table data source.
 ---
@@ -12,7 +12,7 @@ Provides information about a DynamoDB table.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_dynamodb_table" "tableName" {
   name = "tableName"
 }
@@ -20,11 +20,11 @@ data "aws_dynamodb_table" "tableName" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
-* `name` - (Required) The name of the DynamoDB table.
+* `name` - (Required) Name of the DynamoDB table.
 
-## Attributes Reference
+## Attribute Reference
 
 See the [DynamoDB Table Resource](/docs/providers/aws/r/dynamodb_table.html) for details on the
 returned attributes - they are identical.

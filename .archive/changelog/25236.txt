@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_sagemaker_notebook_instance: Add `instance_metadata_service_configuration` argument
+```
+
+```release-note:enhancement
+resource/aws_sagemaker_notebook_instance: Support `notebook-al2-v2` value for `platform_identifier`
+```

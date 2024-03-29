@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_alb_listener_rule: Don't force recreate listener rule on priority change.
+```

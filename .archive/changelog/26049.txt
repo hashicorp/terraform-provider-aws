@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_fsx_openzfs_file_system: Add `root_volume_configuration.record_size_kib` argument
+```
+
+```release-note:enhancement
+resource/aws_fsx_openzfs_volume: Add `record_size_kib` argument
+```

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_appstream_stack: Fix crash when setting `embed_host_domains`
+```

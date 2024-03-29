@@ -1,60 +1,67 @@
 ---
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_default_subnet"
-sidebar_current: "docs-aws-resource-default-subnet"
 description: |-
-  Manage a default VPC subnet resource.
+  Manage a default subnet resource.
 ---
 
-# aws_default_subnet
+# Resource: aws_default_subnet
 
-Provides a resource to manage a [default AWS VPC subnet](http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/default-vpc.html#default-vpc-basics)
-in the current region.
+Provides a resource to manage a [default subnet](http://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/default-vpc.html#default-vpc-basics) in the current region.
 
-The `aws_default_subnet` behaves differently from normal resources, in that
-Terraform does not _create_ this resource, but instead "adopts" it
-into management.
+**This is an advanced resource** and has special caveats to be aware of when using it. Please read this document in its entirety before using this resource.
+
+The `aws_default_subnet` resource behaves differently from normal resources in that if a default subnet exists in the specified Availability Zone, Terraform does not _create_ this resource, but instead "adopts" it into management.
+If no default subnet exists, Terraform creates a new default subnet.
+By default, `terraform destroy` does not delete the default subnet but does remove the resource from Terraform state.
+Set the `force_destroy` argument to `true` to delete the default subnet.
 
 ## Example Usage
 
-Basic usage with tags:
-
-```hcl
+```terraform
 resource "aws_default_subnet" "default_az1" {
   availability_zone = "us-west-2a"
 
-	tags {
-		Name = "Default subnet for us-west-2a"
-	}
+  tags = {
+    Name = "Default subnet for us-west-2a"
+  }
 }
 ```
 
 ## Argument Reference
 
-The arguments of an `aws_default_subnet` differ from `aws_subnet` resources.
-Namely, the `availability_zone` argument is required and the `vpc_id`, `cidr_block`, `ipv6_cidr_block`,
-and `assign_ipv6_address_on_creation` arguments are computed.
-The following arguments are still supported:
+The arguments of an `aws_default_subnet` differ slightly from those of [`aws_subnet`](subnet.html):
 
-* `map_public_ip_on_launch` -  (Optional) Specify true to indicate
-    that instances launched into the subnet should be assigned
-    a public IP address.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `availability_zone` is required
+* The `availability_zone_id`, `cidr_block` and `vpc_id` arguments become computed attributes
+* The default value for `map_public_ip_on_launch` is `true`
 
-### Removing `aws_default_subnet` from your configuration
+This resource supports the following additional arguments:
 
-The `aws_default_subnet` resource allows you to manage a region's default VPC subnet,
-but Terraform cannot destroy it. Removing this resource from your configuration
-will remove it from your statefile and management, but will not destroy the subnet.
-You can resume managing the subnet via the AWS Console.
+* `force_destroy` - (Optional) Whether destroying the resource deletes the default subnet. Default: `false`
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The ID of the subnet
-* `availability_zone`- The AZ for the subnet.
-* `cidr_block` - The CIDR block for the subnet.
-* `vpc_id` - The VPC ID.
-* `ipv6_association_id` - The association ID for the IPv6 CIDR block.
-* `ipv6_cidr_block` - The IPv6 CIDR block.
+* `availability_zone_id` - The AZ ID of the subnet
+* `cidr_block` - The IPv4 CIDR block assigned to the subnet
+* `vpc_id` - The ID of the VPC the subnet is in
+
+## Import
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import subnets using the subnet `id`. For example:
+
+```terraform
+import {
+  to = aws_default_subnet.public_subnet
+  id = "subnet-9d4a7b6c"
+}
+```
+
+Using `terraform import`, import subnets using the subnet `id`. For example:
+
+```console
+% terraform import aws_default_subnet.public_subnet subnet-9d4a7b6c
+```

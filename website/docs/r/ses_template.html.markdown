@@ -1,18 +1,18 @@
 ---
+subcategory: "SES (Simple Email)"
 layout: "aws"
 page_title: "AWS: aws_ses_template"
-sidebar_current: "docs-aws-resource-ses-template"
 description: |-
   Provides a resource to create a SES template
 ---
 
-# aws_ses_template
+# Resource: aws_ses_template
 
 Provides a resource to create a SES template.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_ses_template" "MyTemplate" {
   name    = "MyTemplate"
   subject = "Greetings, {{name}}!"
@@ -23,23 +23,33 @@ resource "aws_ses_template" "MyTemplate" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the template. Cannot exceed 64 characters. You will refer to this name when you send email.
 * `html` - (Optional) The HTML body of the email. Must be less than 500KB in size, including both the text and HTML parts.
 * `subject` - (Optional) The subject line of the email.
 * `text` - (Optional) The email body that will be visible to recipients whose email clients do not display HTML. Must be less than 500KB in size, including both the text and HTML parts.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
+* `arn` - The ARN of the SES template
 * `id` - The name of the SES template
 
 ## Import
 
-SES templates can be imported using the template name, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SES templates using the template name. For example:
 
+```terraform
+import {
+  to = aws_ses_template.MyTemplate
+  id = "MyTemplate"
+}
 ```
-$ terraform import aws_ses_template.MyTemplate MyTemplate
+
+Using `terraform import`, import SES templates using the template name. For example:
+
+```console
+% terraform import aws_ses_template.MyTemplate MyTemplate
 ```

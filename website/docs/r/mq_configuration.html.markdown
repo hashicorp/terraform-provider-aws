@@ -1,26 +1,29 @@
 ---
+subcategory: "MQ"
 layout: "aws"
 page_title: "AWS: aws_mq_configuration"
-sidebar_current: "docs-aws-resource-mq-configuration"
 description: |-
   Provides an MQ configuration Resource
 ---
 
-# aws_mq_configuration
+# Resource: aws_mq_configuration
 
-Provides an MQ Configuration Resource. 
+Provides an MQ Configuration Resource.
 
 For more information on Amazon MQ, see [Amazon MQ documentation](https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/welcome.html).
 
 ## Example Usage
 
-```hcl
+### ActiveMQ
+
+```terraform
 resource "aws_mq_configuration" "example" {
   description    = "Example Configuration"
   name           = "example"
   engine_type    = "ActiveMQ"
-  engine_version = "5.15.0"
-  data           = <<DATA
+  engine_version = "5.17.6"
+
+  data = <<DATA
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <broker xmlns="http://activemq.apache.org/schema/core">
   <plugins>
@@ -33,30 +36,59 @@ DATA
 }
 ```
 
+### RabbitMQ
+
+```terraform
+resource "aws_mq_configuration" "example" {
+  description    = "Example Configuration"
+  name           = "example"
+  engine_type    = "RabbitMQ"
+  engine_version = "3.11.20"
+
+  data = <<DATA
+# Default RabbitMQ delivery acknowledgement timeout is 30 minutes in milliseconds
+consumer_timeout = 1800000
+DATA
+}
+```
+
 ## Argument Reference
 
-The following arguments are supported:
+The following arguments are required:
 
-* `data` - (Required) The broker configuration in XML format.
-  See [official docs](https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/amazon-mq-broker-configuration-parameters.html)
-  for supported parameters and format of the XML.
-* `description` - (Optional) The description of the configuration.
-* `engine_type` - (Required) The type of broker engine.
-* `engine_version` - (Required) The version of the broker engine.
-* `name` - (Required) The name of the configuration
+* `data` - (Required) Broker configuration in XML format for `ActiveMQ` or [Cuttlefish](https://github.com/Kyorai/cuttlefish) format for `RabbitMQ`. See [official docs](https://docs.aws.amazon.com/amazon-mq/latest/developer-guide/amazon-mq-broker-configuration-parameters.html) for supported parameters and format of the XML.
+* `engine_type` - (Required) Type of broker engine. Valid values are `ActiveMQ` and `RabbitMQ`.
+* `engine_version` - (Required) Version of the broker engine.
+* `name` - (Required) Name of the configuration.
 
-## Attributes Reference
+The following arguments are optional:
 
-In addition to all arguments above, the following attributes are exported:
+* `authentication_strategy` - (Optional) Authentication strategy associated with the configuration. Valid values are `simple` and `ldap`. `ldap` is not supported for `engine_type` `RabbitMQ`.
+* `description` - (Optional) Description of the configuration.
+* `tags` - (Optional) Map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-* `id` - The unique ID that Amazon MQ generates for the configuration.
-* `arn` - The ARN of the configuration.
-* `latest_revision` - The latest revision of the configuration.
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
+
+* `arn` - ARN of the configuration.
+* `id` - Unique ID that Amazon MQ generates for the configuration.
+* `latest_revision` - Latest revision of the configuration.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-MQ Configurations can be imported using the configuration ID, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import MQ Configurations using the configuration ID. For example:
 
+```terraform
+import {
+  to = aws_mq_configuration.example
+  id = "c-0187d1eb-88c8-475a-9b79-16ef5a10c94f"
+}
 ```
-$ terraform import aws_mq_configuration.example c-0187d1eb-88c8-475a-9b79-16ef5a10c94f
+
+Using `terraform import`, import MQ Configurations using the configuration ID. For example:
+
+```console
+% terraform import aws_mq_configuration.example c-0187d1eb-88c8-475a-9b79-16ef5a10c94f
 ```

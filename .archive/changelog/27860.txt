@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_appconfig_extension
+```
+
+```release-note:new-resource
+aws_appconfig_extension_association
+```

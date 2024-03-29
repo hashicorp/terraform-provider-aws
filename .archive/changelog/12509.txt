@@ -1,0 +1,15 @@
+```release-note:new-resource
+aws_cloudfront_field_level_encryption_profile
+```
+
+```release-note:bug
+resource/aws_cloudfront_cache_policy: The `parameters_in_cache_key_and_forwarded_to_origin` argument is required
+```
+
+```release-note:bug
+resource/aws_cloudfront_cache_policy: Fix assorted crashes
+```
+
+```release-note:bug
+resource/aws_cloudfront_origin_request_policy: Fix assorted crashes
+```

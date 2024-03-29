@@ -1,0 +1,11 @@
+```release-note:enhancement
+provider: Retrieves region from IMDS when credentials retrieved from IMDS.
+```
+
+```release-note:enhancement
+provider: Improves error message when `Profile` and static credential environment variables are set.
+```
+
+```release-note:bug
+provider: Validates names of named profiles before use.
+```

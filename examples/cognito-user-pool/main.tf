@@ -1,3 +1,14 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
+terraform {
+  required_version = ">= 0.12"
+}
+
+provider "aws" {
+  region = var.aws_region
+}
+
 resource "aws_iam_role" "main" {
   name = "terraform-example-lambda"
 
@@ -19,11 +30,11 @@ EOF
 }
 
 resource "aws_lambda_function" "main" {
-  filename      = "lambda.zip"
+  filename      = "lambda_function.zip"
   function_name = "terraform-example"
-  role          = "${aws_iam_role.main.arn}"
+  role          = aws_iam_role.main.arn
   handler       = "exports.example"
-  runtime       = "nodejs4.3"
+  runtime       = "nodejs16.x"
 }
 
 resource "aws_iam_role" "cidp" {
@@ -54,7 +65,7 @@ POLICY
 
 resource "aws_iam_role_policy" "main" {
   name = "terraform-example-cognito-idp"
-  role = "${aws_iam_role.cidp.id}"
+  role = aws_iam_role.cidp.id
 
   policy = <<EOF
 {
@@ -99,16 +110,21 @@ resource "aws_cognito_user_pool" "pool" {
   }
 
   lambda_config {
-    create_auth_challenge          = "${aws_lambda_function.main.arn}"
-    custom_message                 = "${aws_lambda_function.main.arn}"
-    define_auth_challenge          = "${aws_lambda_function.main.arn}"
-    post_authentication            = "${aws_lambda_function.main.arn}"
-    post_confirmation              = "${aws_lambda_function.main.arn}"
-    pre_authentication             = "${aws_lambda_function.main.arn}"
-    pre_sign_up                    = "${aws_lambda_function.main.arn}"
-    pre_token_generation           = "${aws_lambda_function.main.arn}"
-    user_migration                 = "${aws_lambda_function.main.arn}"
-    verify_auth_challenge_response = "${aws_lambda_function.main.arn}"
+    create_auth_challenge          = aws_lambda_function.main.arn
+    custom_message                 = aws_lambda_function.main.arn
+    define_auth_challenge          = aws_lambda_function.main.arn
+    post_authentication            = aws_lambda_function.main.arn
+    post_confirmation              = aws_lambda_function.main.arn
+    pre_authentication             = aws_lambda_function.main.arn
+    pre_sign_up                    = aws_lambda_function.main.arn
+    pre_token_generation           = aws_lambda_function.main.arn # Set this parameter for legacy purposes; for new instances of pre token generation triggers, set the LambdaArn of `pre_token_generation_config`
+    user_migration                 = aws_lambda_function.main.arn
+    verify_auth_challenge_response = aws_lambda_function.main.arn
+
+    pre_token_generation_config {
+      lambda_arn     = aws_lambda_function.main.arn # Should be a identical to the pre_token_generation lambda ARN if used
+      lambda_version = "V2_0"
+    }
   }
 
   schema {
@@ -139,11 +155,11 @@ resource "aws_cognito_user_pool" "pool" {
 
   sms_configuration {
     external_id    = "12345"
-    sns_caller_arn = "${aws_iam_role.cidp.arn}"
+    sns_caller_arn = aws_iam_role.cidp.arn
   }
 
-  tags {
-    "Name"    = "FooBar"
-    "Project" = "Terraform"
+  tags = {
+    Name    = "FooBar"
+    Project = "Terraform"
   }
 }

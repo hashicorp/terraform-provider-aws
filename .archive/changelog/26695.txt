@@ -1,0 +1,11 @@
+```release-note:new-data-source
+aws_appmesh_route
+```
+
+```release-note:bug
+data-source/aws_appmesh_mesh: Don't attempt to list tags if the current AWS account is not the mesh owner
+```
+
+```release-note:bug
+data-source/aws_appmesh_virtual_service: Don't attempt to list tags if the current AWS account is not the mesh owner
+```

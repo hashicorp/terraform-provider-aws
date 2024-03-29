@@ -1,0 +1,19 @@
+```release-note:bug
+resource/aws_ecs_capacity_provider: Fix tagging error preventing use in ISO partitions
+```
+
+```release-note:bug
+resource/aws_ecs_cluster: Fix tagging error preventing use in ISO partitions
+```
+
+```release-note:bug
+resource/aws_ecs_service: Fix tagging error preventing use in ISO partitions
+```
+
+```release-note:bug
+resource/aws_ecs_task_definition: Fix tagging error preventing use in ISO partitions
+```
+
+```release-note:bug
+resource/aws_ecs_task_set: Fix tagging error preventing use in ISO partitions
+```

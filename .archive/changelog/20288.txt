@@ -1,0 +1,7 @@
+```release-note:bug
+aws/resource_aws_appconfig_deployment: Remove internal waiter after start of deployment
+```
+
+```release-note:enhancement
+aws/resource_aws_appconfig_deployment: Add `state` attribute
+```

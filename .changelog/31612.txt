@@ -1,0 +1,7 @@
+```release-note:note
+resource/aws_redshift_cluster: Ignores the parameter `aqua_configuration_status`, since the AWS API ignores it. Now always returns `auto`.
+```
+
+```release-note:bug
+resource/aws_redshift_cluster: No longer errors on deletion when status is `Maintenance`
+```

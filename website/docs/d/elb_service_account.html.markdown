@@ -1,7 +1,7 @@
 ---
+subcategory: "ELB Classic"
 layout: "aws"
 page_title: "AWS: aws_elb_service_account"
-sidebar_current: "docs-aws-datasource-elb-service-account"
 description: |-
   Get AWS Elastic Load Balancing Service Account
 ---
@@ -9,37 +9,41 @@ description: |-
 # Data Source: aws_elb_service_account
 
 Use this data source to get the Account ID of the [AWS Elastic Load Balancing Service Account](http://docs.aws.amazon.com/elasticloadbalancing/latest/classic/enable-access-logs.html#attach-bucket-policy)
-in a given region for the purpose of whitelisting in S3 bucket policy.
+in a given region for the purpose of permitting in S3 bucket policy.
+
+~> **Note:** For AWS Regions opened since Jakarta (`ap-southeast-3`) in December 2021, AWS [documents that](https://docs.aws.amazon.com/elasticloadbalancing/latest/classic/enable-access-logs.html#attach-bucket-policy) a [service principal name](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_principal.html#principal-services) should be used instead of an AWS account ID in any relevant IAM policy.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_elb_service_account" "main" {}
 
 resource "aws_s3_bucket" "elb_logs" {
   bucket = "my-elb-tf-test-bucket"
-  acl    = "private"
-
-  policy = <<POLICY
-{
-  "Id": "Policy",
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": [
-        "s3:PutObject"
-      ],
-      "Effect": "Allow",
-      "Resource": "arn:aws:s3:::my-elb-tf-test-bucket/AWSLogs/*",
-      "Principal": {
-        "AWS": [
-          "${data.aws_elb_service_account.main.arn}"
-        ]
-      }
-    }
-  ]
 }
-POLICY
+
+resource "aws_s3_bucket_acl" "elb_logs_acl" {
+  bucket = aws_s3_bucket.elb_logs.id
+  acl    = "private"
+}
+
+data "aws_iam_policy_document" "allow_elb_logging" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "AWS"
+      identifiers = [data.aws_elb_service_account.main.arn]
+    }
+
+    actions   = ["s3:PutObject"]
+    resources = ["${aws_s3_bucket.elb_logs.arn}/AWSLogs/*"]
+  }
+}
+
+resource "aws_s3_bucket_policy" "allow_elb_logging" {
+  bucket = aws_s3_bucket.elb_logs.id
+  policy = data.aws_iam_policy_document.allow_elb_logging.json
 }
 
 resource "aws_elb" "bar" {
@@ -47,7 +51,7 @@ resource "aws_elb" "bar" {
   availability_zones = ["us-west-2a"]
 
   access_logs {
-    bucket   = "${aws_s3_bucket.elb_logs.bucket}"
+    bucket   = aws_s3_bucket.elb_logs.id
     interval = 5
   }
 
@@ -65,8 +69,9 @@ resource "aws_elb" "bar" {
 * `region` - (Optional) Name of the region whose AWS ELB account ID is desired.
   Defaults to the region from the AWS provider configuration.
 
+## Attribute Reference
 
-## Attributes Reference
+This data source exports the following attributes in addition to the arguments above:
 
-* `id` - The ID of the AWS ELB service account in the selected region.
-* `arn` - The ARN of the AWS ELB service account in the selected region.
+* `id` - ID of the AWS ELB service account in the selected region.
+* `arn` - ARN of the AWS ELB service account in the selected region.

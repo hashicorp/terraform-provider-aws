@@ -1,0 +1,105 @@
+---
+subcategory: "API Gateway V2"
+layout: "aws"
+page_title: "AWS: aws_apigatewayv2_api"
+description: |-
+  Manages an Amazon API Gateway Version 2 API.
+---
+
+# Resource: aws_apigatewayv2_api
+
+Manages an Amazon API Gateway Version 2 API.
+
+-> **Note:** Amazon API Gateway Version 2 resources are used for creating and deploying WebSocket and HTTP APIs. To create and deploy REST APIs, use Amazon API Gateway Version 1 [resources](/docs/providers/aws/r/api_gateway_rest_api.html).
+
+## Example Usage
+
+### Basic WebSocket API
+
+```terraform
+resource "aws_apigatewayv2_api" "example" {
+  name                       = "example-websocket-api"
+  protocol_type              = "WEBSOCKET"
+  route_selection_expression = "$request.body.action"
+}
+```
+
+### Basic HTTP API
+
+```terraform
+resource "aws_apigatewayv2_api" "example" {
+  name          = "example-http-api"
+  protocol_type = "HTTP"
+}
+```
+
+## Argument Reference
+
+This resource supports the following arguments:
+
+* `name` - (Required) Name of the API. Must be less than or equal to 128 characters in length.
+* `protocol_type` - (Required) API protocol. Valid values: `HTTP`, `WEBSOCKET`.
+* `api_key_selection_expression` - (Optional) An [API key selection expression](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-selection-expressions.html#apigateway-websocket-api-apikey-selection-expressions).
+Valid values: `$context.authorizer.usageIdentifierKey`, `$request.header.x-api-key`. Defaults to `$request.header.x-api-key`.
+Applicable for WebSocket APIs.
+* `cors_configuration` - (Optional) Cross-origin resource sharing (CORS) [configuration](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-cors.html). Applicable for HTTP APIs.
+* `credentials_arn` - (Optional) Part of _quick create_. Specifies any credentials required for the integration. Applicable for HTTP APIs.
+* `description` - (Optional) Description of the API. Must be less than or equal to 1024 characters in length.
+* `disable_execute_api_endpoint` - (Optional) Whether clients can invoke the API by using the default `execute-api` endpoint.
+By default, clients can invoke the API with the default `{api_id}.execute-api.{region}.amazonaws.com endpoint`.
+To require that clients use a custom domain name to invoke the API, disable the default endpoint.
+* `route_key` - (Optional) Part of _quick create_. Specifies any [route key](https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-develop-routes.html). Applicable for HTTP APIs.
+* `route_selection_expression` - (Optional) The [route selection expression](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-api-selection-expressions.html#apigateway-websocket-api-route-selection-expressions) for the API.
+Defaults to `$request.method $request.path`.
+* `tags` - (Optional) Map of tags to assign to the API. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `target` - (Optional) Part of _quick create_. Quick create produces an API with an integration, a default catch-all route, and a default stage which is configured to automatically deploy changes.
+For HTTP integrations, specify a fully qualified URL. For Lambda integrations, specify a function ARN.
+The type of the integration will be `HTTP_PROXY` or `AWS_PROXY`, respectively. Applicable for HTTP APIs.
+* `body` - (Optional) An OpenAPI specification that defines the set of routes and integrations to create as part of the HTTP APIs. Supported only for HTTP APIs.
+* `version` - (Optional) Version identifier for the API. Must be between 1 and 64 characters in length.
+* `fail_on_warnings` - (Optional) Whether warnings should return an error while API Gateway is creating or updating the resource using an OpenAPI specification. Defaults to `false`. Applicable for HTTP APIs.
+
+__Note__: If the `body` argument is provided, the OpenAPI specification will be used to configure the integrations and route for the HTTP API. If this argument is provided, the following resources should not be managed as separate ones, as updates may cause manual resource updates to be overwritten:
+
+* `aws_apigatewayv2_integration`
+* `aws_apigatewayv2_route`
+
+Further more, the `name`, `description`, `cors_configuration`, `tags` and `version` fields should be specified in the Terraform configuration and the values will override any values specified in the OpenAPI document.
+
+The `cors_configuration` object supports the following:
+
+* `allow_credentials` - (Optional) Whether credentials are included in the CORS request.
+* `allow_headers` - (Optional) Set of allowed HTTP headers.
+* `allow_methods` - (Optional) Set of allowed HTTP methods.
+* `allow_origins` - (Optional) Set of allowed origins.
+* `expose_headers` - (Optional) Set of exposed HTTP headers.
+* `max_age` - (Optional) Number of seconds that the browser should cache preflight request results.
+
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
+
+* `id` - API identifier.
+* `api_endpoint` - URI of the API, of the form `https://{api-id}.execute-api.{region}.amazonaws.com` for HTTP APIs and `wss://{api-id}.execute-api.{region}.amazonaws.com` for WebSocket APIs.
+* `arn` - ARN of the API.
+* `execution_arn` - ARN prefix to be used in an [`aws_lambda_permission`](/docs/providers/aws/r/lambda_permission.html)'s `source_arn` attribute
+or in an [`aws_iam_policy`](/docs/providers/aws/r/iam_policy.html) to authorize access to the [`@connections` API](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-how-to-call-websocket-api-connections.html).
+See the [Amazon API Gateway Developer Guide](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-websocket-control-access-iam.html) for details.
+* `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+
+## Import
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_apigatewayv2_api` using the API identifier. For example:
+
+```terraform
+import {
+  to = aws_apigatewayv2_api.example
+  id = "aabbccddee"
+}
+```
+
+Using `terraform import`, import `aws_apigatewayv2_api` using the API identifier. For example:
+
+```console
+% terraform import aws_apigatewayv2_api.example aabbccddee
+```

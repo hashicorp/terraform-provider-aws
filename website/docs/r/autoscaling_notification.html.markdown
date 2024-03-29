@@ -1,12 +1,12 @@
 ---
+subcategory: "Auto Scaling"
 layout: "aws"
 page_title: "AWS: aws_autoscaling_notification"
-sidebar_current: "docs-aws-resource-autoscaling-notification"
 description: |-
   Provides an AutoScaling Group with Notification support
 ---
 
-# aws_autoscaling_notification
+# Resource: aws_autoscaling_notification
 
 Provides an AutoScaling Group with Notification support, via SNS Topics. Each of
 the `notifications` map to a [Notification Configuration][2] inside Amazon Web
@@ -16,20 +16,21 @@ Services, and are applied to each AutoScaling Group you supply.
 
 Basic usage:
 
-```hcl
+```terraform
 resource "aws_autoscaling_notification" "example_notifications" {
   group_names = [
-    "${aws_autoscaling_group.bar.name}",
-    "${aws_autoscaling_group.foo.name}",
+    aws_autoscaling_group.bar.name,
+    aws_autoscaling_group.foo.name,
   ]
 
   notifications = [
     "autoscaling:EC2_INSTANCE_LAUNCH",
     "autoscaling:EC2_INSTANCE_TERMINATE",
     "autoscaling:EC2_INSTANCE_LAUNCH_ERROR",
+    "autoscaling:EC2_INSTANCE_TERMINATE_ERROR",
   ]
 
-  topic_arn = "${aws_sns_topic.example.arn}"
+  topic_arn = aws_sns_topic.example.arn
 }
 
 resource "aws_sns_topic" "example" {
@@ -53,21 +54,20 @@ resource "aws_autoscaling_group" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
-* `group_names` - (Required) A list of AutoScaling Group Names
-* `notifications` - (Required) A list of Notification Types that trigger
+* `group_names` - (Required) List of AutoScaling Group Names
+* `notifications` - (Required) List of Notification Types that trigger
 notifications. Acceptable values are documented [in the AWS documentation here][1]
-* `topic_arn` - (Required) The Topic ARN for notifications to be sent through
+* `topic_arn` - (Required) Topic ARN for notifications to be sent through
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `group_names`
 * `notifications`
 * `topic_arn`
-
 
 [1]: https://docs.aws.amazon.com/AutoScaling/latest/APIReference/API_NotificationConfiguration.html
 [2]: https://docs.aws.amazon.com/AutoScaling/latest/APIReference/API_DescribeNotificationConfigurations.html

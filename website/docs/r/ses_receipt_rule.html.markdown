@@ -1,18 +1,18 @@
 ---
+subcategory: "SES (Simple Email)"
 layout: "aws"
-page_title: "AWS: ses_receipt_rule"
-sidebar_current: "docs-aws-resource-ses-receipt-rule"
+page_title: "AWS: aws_ses_receipt_rule"
 description: |-
   Provides an SES receipt rule resource
 ---
 
-# aws_ses_receipt_rule
+# Resource: aws_ses_receipt_rule
 
 Provides an SES receipt rule resource
 
 ## Example Usage
 
-```hcl
+```terraform
 # Add a header to the email and store it in S3
 resource "aws_ses_receipt_rule" "store" {
   name          = "store"
@@ -24,17 +24,19 @@ resource "aws_ses_receipt_rule" "store" {
   add_header_action {
     header_name  = "Custom-Header"
     header_value = "Added by SES"
+    position     = 1
   }
 
   s3_action {
     bucket_name = "emails"
+    position    = 2
   }
 }
 ```
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the rule
 * `rule_set_name` - (Required) The name of the rule set
@@ -42,7 +44,7 @@ The following arguments are supported:
 * `enabled` - (Optional) If true, the rule will be enabled
 * `recipients` - (Optional) A list of email addresses
 * `scan_enabled` - (Optional) If true, incoming emails will be scanned for spam and viruses
-* `tls_policy` - (Optional) Require or Optional
+* `tls_policy` - (Optional) `Require` or `Optional`
 * `add_header_action` - (Optional) A list of Add Header Action blocks. Documented below.
 * `bounce_action` - (Optional) A list of Bounce Action blocks. Documented below.
 * `lambda_action` - (Optional) A list of Lambda Action blocks. Documented below.
@@ -69,7 +71,7 @@ Bounce actions support the following:
 Lambda actions support the following:
 
 * `function_arn` - (Required) The ARN of the Lambda function to invoke
-* `invocation_type` - (Optional) Event or RequestResponse
+* `invocation_type` - (Optional) `Event` or `RequestResponse`
 * `topic_arn` - (Optional) The ARN of an SNS topic to notify
 * `position` - (Required) The position of the action in the receipt rule
 
@@ -85,10 +87,11 @@ SNS actions support the following:
 
 * `topic_arn` - (Required) The ARN of an SNS topic to notify
 * `position` - (Required) The position of the action in the receipt rule
+* `encoding` - (Optional) The encoding to use for the email within the Amazon SNS notification. Default value is `UTF-8`.
 
 Stop actions support the following:
 
-* `scope` - (Required) The scope to apply
+* `scope` - (Required) The scope to apply. The only acceptable value is `RuleSet`.
 * `topic_arn` - (Optional) The ARN of an SNS topic to notify
 * `position` - (Required) The position of the action in the receipt rule
 
@@ -97,3 +100,27 @@ WorkMail actions support the following:
 * `organization_arn` - (Required) The ARN of the WorkMail organization
 * `topic_arn` - (Optional) The ARN of an SNS topic to notify
 * `position` - (Required) The position of the action in the receipt rule
+
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
+
+* `id` - The SES receipt rule name.
+* `arn` - The SES receipt rule ARN.
+
+## Import
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SES receipt rules using the ruleset name and rule name separated by `:`. For example:
+
+```terraform
+import {
+  to = aws_ses_receipt_rule.my_rule
+  id = "my_rule_set:my_rule"
+}
+```
+
+Using `terraform import`, import SES receipt rules using the ruleset name and rule name separated by `:`. For example:
+
+```console
+% terraform import aws_ses_receipt_rule.my_rule my_rule_set:my_rule
+```

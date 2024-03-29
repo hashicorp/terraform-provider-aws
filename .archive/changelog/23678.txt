@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_s3_bucket_acl: Fix resource import for S3 bucket names consisting of uppercase letters, underscores, and a maximum of 255 characters
+```

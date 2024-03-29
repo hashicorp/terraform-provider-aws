@@ -1,24 +1,26 @@
 ---
+subcategory: "WAF Classic Regional"
 layout: "aws"
-page_title: "AWS: wafregional_byte_match_set"
-sidebar_current: "docs-aws-resource-wafregional-bytematchset"
+page_title: "AWS: aws_wafregional_byte_match_set"
 description: |-
   Provides a AWS WAF Regional ByteMatchSet resource for use with ALB.
 ---
 
-# aws_wafregional_byte_match_set
+# Resource: aws_wafregional_byte_match_set
 
 Provides a WAF Regional Byte Match Set Resource for use with Application Load Balancer.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_wafregional_byte_match_set" "byte_set" {
   name = "tf_waf_byte_match_set"
+
   byte_match_tuples {
-    text_transformation = "NONE"
-    target_string = "badrefer1"
+    text_transformation   = "NONE"
+    target_string         = "badrefer1"
     positional_constraint = "CONTAINS"
+
     field_to_match {
       type = "HEADER"
       data = "referer"
@@ -29,12 +31,10 @@ resource "aws_wafregional_byte_match_set" "byte_set" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name or description of the ByteMatchSet.
-* `byte_match_tuple` - **Deprecated**, use `byte_match_tuples` instead.
 * `byte_match_tuples` - (Optional)Settings for the ByteMatchSet, such as the bytes (typically a string that corresponds with ASCII characters) that you want AWS WAF to search for in web requests. ByteMatchTuple documented below.
-
 
 ByteMatchTuples(byte_match_tuples) support the following:
 
@@ -50,8 +50,25 @@ FieldToMatch(field_to_match) support following:
 
 ## Remarks
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the WAF ByteMatchSet.
+
+## Import
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WAF Regional Byte Match Set using the id. For example:
+
+```terraform
+import {
+  to = aws_wafregional_byte_match_set.byte_set
+  id = "a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc"
+}
+```
+
+Using `terraform import`, import WAF Regional Byte Match Set using the id. For example:
+
+```console
+% terraform import aws_wafregional_byte_match_set.byte_set a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
+```

@@ -1,0 +1,11 @@
+```release-note:breaking-change
+resource/aws_efs_mount_target: `ip_address` can no longer be set to `""`; instead, remove or set to `null`
+```
+
+```release-note:breaking-change
+resource/aws_elasticsearch_domain: `ebs_options.0.volume_type` can no longer be set to `""`; instead, remove or set to `null`
+```
+
+```release-note:breaking-change
+resource/aws_cloudwatch_event_target: `ecs_target.0.launch_type` can no longer be set to `""`; instead, remove or set to `null`
+```

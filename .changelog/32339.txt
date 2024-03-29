@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_aws_keyspaces_table: Add `client_side_timestamps` configuration block
+```

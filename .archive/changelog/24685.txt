@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_subnet: Fix `InvalidSubnet.Conflict` errors when associating IPv6 CIDR blocks
+```
+
+```release-note:bug
+resource/aws_default_subnet: Fix `InvalidSubnet.Conflict` errors when associating IPv6 CIDR blocks
+```

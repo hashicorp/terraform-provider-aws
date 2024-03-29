@@ -1,18 +1,18 @@
 ---
+subcategory: "ELB Classic"
 layout: "aws"
 page_title: "AWS: aws_lb_cookie_stickiness_policy"
-sidebar_current: "docs-aws-resource-lb-cookie-stickiness-policy"
 description: |-
   Provides a load balancer cookie stickiness policy, which allows an ELB to control the sticky session lifetime of the browser.
 ---
 
-# aws_lb_cookie_stickiness_policy
+# Resource: aws_lb_cookie_stickiness_policy
 
 Provides a load balancer cookie stickiness policy, which allows an ELB to control the sticky session lifetime of the browser.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_elb" "lb" {
   name               = "test-lb"
   availability_zones = ["us-east-1a"]
@@ -27,7 +27,7 @@ resource "aws_elb" "lb" {
 
 resource "aws_lb_cookie_stickiness_policy" "foo" {
   name                     = "foo-policy"
-  load_balancer            = "${aws_elb.lb.id}"
+  load_balancer            = aws_elb.lb.id
   lb_port                  = 80
   cookie_expiration_period = 600
 }
@@ -35,7 +35,7 @@ resource "aws_lb_cookie_stickiness_policy" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the stickiness policy.
 * `load_balancer` - (Required) The load balancer to which the policy
@@ -46,9 +46,9 @@ balancer.
 * `cookie_expiration_period` - (Optional) The time period after which
   the session cookie should be considered stale, expressed in seconds.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the policy.
 * `name` - The name of the stickiness policy.

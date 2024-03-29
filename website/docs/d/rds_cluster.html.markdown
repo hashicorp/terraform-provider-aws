@@ -1,18 +1,18 @@
 ---
+subcategory: "RDS (Relational Database)"
 layout: "aws"
 page_title: "AWS: aws_rds_cluster"
-sidebar_current: "docs-aws-datasource-rds-cluster"
 description: |-
-  Provides a RDS cluster data source.
+  Provides an RDS cluster data source.
 ---
 
 # Data Source: aws_rds_cluster
 
-Provides information about a RDS cluster.
+Provides information about an RDS cluster.
 
 ## Example Usage
 
-```hcl
+```terraform
 data "aws_rds_cluster" "clusterName" {
   cluster_identifier = "clusterName"
 }
@@ -20,11 +20,13 @@ data "aws_rds_cluster" "clusterName" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
-* `cluster_identifier` - (Required) The cluster identifier of the RDS cluster.
+* `cluster_identifier` - (Required) Cluster identifier of the RDS cluster.
 
-## Attributes Reference
+## Attribute Reference
 
 See the [RDS Cluster Resource](/docs/providers/aws/r/rds_cluster.html) for details on the
-returned attributes - they are identical.
+returned attributes - they are identical for all attributes, except the `tags_all`. If you need to get the tags for this resource, use the attribute `tags` as described below.
+
+* `tags` - A map of tags assigned to the resource.

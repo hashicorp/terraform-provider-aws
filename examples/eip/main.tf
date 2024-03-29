@@ -1,11 +1,17 @@
-# Specify the provider and access details
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
+terraform {
+  required_version = ">= 0.12"
+}
+
 provider "aws" {
-  region = "${var.aws_region}"
+  region = var.aws_region
 }
 
 resource "aws_eip" "default" {
-  instance = "${aws_instance.web.id}"
-  vpc      = true
+  instance = aws_instance.web.id
+  domain   = "vpc"
 }
 
 # Our default security group to access
@@ -44,25 +50,25 @@ resource "aws_instance" "web" {
 
   # Lookup the correct AMI based on the region
   # we specified
-  ami = "${lookup(var.aws_amis, var.aws_region)}"
+  ami = var.aws_amis[var.aws_region]
 
   # The name of our SSH keypair you've created and downloaded
   # from the AWS console.
   #
   # https://console.aws.amazon.com/ec2/v2/home?region=us-west-2#KeyPairs:
   #
-  key_name = "${var.key_name}"
+  key_name = var.key_name
 
   # Our Security group to allow HTTP and SSH access
-  security_groups = ["${aws_security_group.default.name}"]
+  security_groups = [aws_security_group.default.name]
 
   # We run a remote provisioner on the instance after creating it.
   # In this case, we just install nginx and start it. By default,
   # this should be on port 80
-  user_data = "${file("userdata.sh")}"
+  user_data = file("userdata.sh")
 
   #Instance tags
-  tags {
+  tags = {
     Name = "eip-example"
   }
 }

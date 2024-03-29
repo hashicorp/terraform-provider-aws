@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_ecs_task_definition: Add `skip_destroy` argument to optionally prevent overwriting previous revision
+```

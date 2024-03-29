@@ -1,12 +1,12 @@
 ---
+subcategory: "Route 53"
 layout: "aws"
 page_title: "AWS: aws_route53_query_log"
-sidebar_current: "docs-aws-resource-route53-query-log"
 description: |-
   Provides a Route53 query logging configuration resource.
 ---
 
-# aws_route53_query_log
+# Resource: aws_route53_query_log
 
 Provides a Route53 query logging configuration resource.
 
@@ -18,7 +18,7 @@ See [Configuring Logging for DNS Queries](https://docs.aws.amazon.com/Route53/la
 
 ## Example Usage
 
-```hcl
+```terraform
 # Example CloudWatch log group in us-east-1
 
 provider "aws" {
@@ -27,7 +27,7 @@ provider "aws" {
 }
 
 resource "aws_cloudwatch_log_group" "aws_route53_example_com" {
-  provider = "aws.us-east-1"
+  provider = aws.us-east-1
 
   name              = "/aws/route53/${aws_route53_zone.example_com.name}"
   retention_in_days = 30
@@ -53,9 +53,9 @@ data "aws_iam_policy_document" "route53-query-logging-policy" {
 }
 
 resource "aws_cloudwatch_log_resource_policy" "route53-query-logging-policy" {
-  provider = "aws.us-east-1"
+  provider = aws.us-east-1
 
-  policy_document = "${data.aws_iam_policy_document.route53-query-logging-policy.json}"
+  policy_document = data.aws_iam_policy_document.route53-query-logging-policy.json
   policy_name     = "route53-query-logging-policy"
 }
 
@@ -66,30 +66,40 @@ resource "aws_route53_zone" "example_com" {
 }
 
 resource "aws_route53_query_log" "example_com" {
-  depends_on = ["aws_cloudwatch_log_resource_policy.route53-query-logging-policy"]
+  depends_on = [aws_cloudwatch_log_resource_policy.route53-query-logging-policy]
 
-  cloudwatch_log_group_arn = "${aws_cloudwatch_log_group.aws_route53_example_com.arn}"
-  zone_id                  = "${aws_route53_zone.example_com.zone_id}"
+  cloudwatch_log_group_arn = aws_cloudwatch_log_group.aws_route53_example_com.arn
+  zone_id                  = aws_route53_zone.example_com.zone_id
 }
 ```
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `cloudwatch_log_group_arn` - (Required) CloudWatch log group ARN to send query logs.
 * `zone_id` - (Required) Route53 hosted zone ID to enable query logs.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
+* `arn` - The Amazon Resource Name (ARN) of the Query Logging Config.
 * `id` - The query logging configuration ID
 
 ## Import
 
-Route53 query logging configurations can be imported using their ID, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Route53 query logging configurations using their ID. For example:
 
+```terraform
+import {
+  to = aws_route53_query_log.example_com
+  id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+}
 ```
-$ terraform import aws_route53_query_log.example_com xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+
+Using `terraform import`, import Route53 query logging configurations using their ID. For example:
+
+```console
+% terraform import aws_route53_query_log.example_com xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
 ```

@@ -1,0 +1,3 @@
+```release-note:enhancement
+provider: Add validation for the `duration`, `external_id` and `session_name` arguments in the `assume_role` configuration block
+```

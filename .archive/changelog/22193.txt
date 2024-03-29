@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_transfer_access: Fix erroneous diffs in `policy` when no changes made or policies are equivalent
+```
+
+```release-note:bug
+resource/aws_transfer_user: Fix erroneous diffs in `policy` when no changes made or policies are equivalent
+```

@@ -1,0 +1,51 @@
+name: Documentation Checks
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    paths:
+      - .ci/.markdownlinkcheck.json
+      - .markdownlint.yml
+      - .github/workflows/documentation.yml
+      - docs/**
+      - go.mod
+
+jobs:
+  markdown-link-check:
+    runs-on: ubuntu-latest
+    env:
+      UV_THREADPOOL_SIZE: 128
+    steps:
+      - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+      - uses: YakDriver/md-check-links@7450f426b758f0bf97f99ceb1aadcf57640a9ede # v2.0.6
+        with:
+          use-quiet-mode: 'yes'
+          use-verbose-mode: 'yes'
+          config-file: '.ci/.markdownlinkcheck.json'
+          folder-path: 'docs'
+          file-extension: '.md'
+          base-branch: "main"
+          check-modified-files-only: "yes"
+  markdown-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+      - uses: avto-dev/markdown-lint@04d43ee9191307b50935a753da3b775ab695eceb # v1.5.0
+        with:
+          args: 'docs'
+  misspell:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+      - uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
+        with:
+          go-version-file: go.mod
+      - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
+        continue-on-error: true
+        timeout-minutes: 2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
+      - run: cd .ci/tools && go install github.com/client9/misspell/cmd/misspell
+      - run: misspell -error -source text docs/

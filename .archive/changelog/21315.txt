@@ -1,0 +1,3 @@
+```release-note:new-resource
+aws_backup_vault_lock_configuration
+```

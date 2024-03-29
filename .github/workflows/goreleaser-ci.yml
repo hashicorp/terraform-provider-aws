@@ -1,0 +1,73 @@
+# Continuous integration handling for GoReleaser
+name: GoReleaser CI
+
+on:
+  push:
+    branches:
+      - main
+      - 'release/**'
+  pull_request:
+    paths:
+      - .github/workflows/goreleaser-ci.yml
+      - .goreleaser.yml
+      - go.sum
+      - main.go
+      - internal/**
+      - names/**
+      - skaff/**
+      - tools/**
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      goreleaser: ${{ steps.filter.outputs.goreleaser }}
+    steps:
+      - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+      - uses: dorny/paths-filter@de90cc6fb38fc0963ad72b210f1f284cd68cea36 # v3.0.2
+        id: filter
+        with:
+          filters: |
+            goreleaser:
+              - '.github/workflows/goreleaser-ci.yml'
+              - '.goreleaser.yml'
+
+  check:
+    needs: changes
+    if: ${{ needs.changes.outputs.goreleaser == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+      - uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
+        with:
+          go-version-file: go.mod
+      - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
+        continue-on-error: true
+        timeout-minutes: 2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
+      - name: goreleaser check
+        uses: goreleaser/goreleaser-action@7ec5c2b0c6cdda6e8bbb49444bc797dd33d74dd8 # v5.0.0
+        with:
+          args: check
+
+  build-32-bit:
+    # Run a single compiler check for 32-bit architecture (FreeBSD/ARM)
+    # Ref: https://github.com/hashicorp/terraform-provider-aws/issues/8988
+    runs-on: [custom, linux, small]
+    steps:
+      - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+      - uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
+        with:
+          go-version-file: go.mod
+      - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
+        continue-on-error: true
+        timeout-minutes: 2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
+      - name: goreleaser build
+        uses: goreleaser/goreleaser-action@7ec5c2b0c6cdda6e8bbb49444bc797dd33d74dd8 # v5.0.0
+        with:
+          args: build --config .github/goreleaser-cross-compiler-test.yml --id 32-bit-arch --snapshot

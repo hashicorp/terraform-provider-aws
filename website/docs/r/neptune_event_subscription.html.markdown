@@ -1,16 +1,16 @@
 ---
+subcategory: "Neptune"
 layout: "aws"
 page_title: "AWS: aws_neptune_event_subscription"
-sidebar_current: "docs-aws-resource-neptune-event-subscription"
 description: |-
   Provides a Neptune event subscription resource.
 ---
 
-# aws_neptune_event_subscription
+# Resource: aws_neptune_event_subscription
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_neptune_cluster" "default" {
   cluster_identifier                  = "neptune-cluster-demo"
   engine                              = "neptune"
@@ -22,8 +22,7 @@ resource "aws_neptune_cluster" "default" {
 }
 
 resource "aws_neptune_cluster_instance" "example" {
-  count              = 1
-  cluster_identifier = "${aws_neptune_cluster.default.id}"
+  cluster_identifier = aws_neptune_cluster.default.id
   engine             = "neptune"
   instance_class     = "db.r4.large"
   apply_immediately  = "true"
@@ -35,10 +34,10 @@ resource "aws_sns_topic" "default" {
 
 resource "aws_neptune_event_subscription" "default" {
   name          = "neptune-event-sub"
-  sns_topic_arn = "${aws_sns_topic.default.arn}"
+  sns_topic_arn = aws_sns_topic.default.arn
 
   source_type = "db-instance"
-  source_ids  = ["${aws_neptune_cluster_instance.example.id}"]
+  source_ids  = [aws_neptune_cluster_instance.example.id]
 
   event_categories = [
     "maintenance",
@@ -55,15 +54,15 @@ resource "aws_neptune_event_subscription" "default" {
     "read replica",
   ]
 
-  tags {
-    "env" = "test"
+  tags = {
+    env = "test"
   }
 }
 ```
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `enabled` - (Optional) A boolean flag to enable/disable the subscription. Defaults to true.
 * `event_categories` - (Optional) A list of event categories for a `source_type` that you want to subscribe to. Run `aws neptune describe-event-categories` to find all the event categories.
@@ -72,29 +71,38 @@ The following arguments are supported:
 * `sns_topic_arn` - (Required) The ARN of the SNS topic to send events to.
 * `source_ids` - (Optional) A list of identifiers of the event sources for which events will be returned. If not specified, then all sources are included in the response. If specified, a `source_type` must also be specified.
 * `source_type` - (Optional) The type of source that will be generating the events. Valid options are `db-instance`, `db-security-group`, `db-parameter-group`, `db-snapshot`, `db-cluster` or `db-cluster-snapshot`. If not set, all sources will be subscribed to.
-* `tags` - (Optional) A mapping of tags to assign to the resource.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes
+## Attribute Reference
 
-The following additional atttributes are provided:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the Neptune event notification subscription.
 * `arn` - The Amazon Resource Name of the Neptune event notification subscription.
 * `customer_aws_id` - The AWS customer account associated with the Neptune event notification subscription.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
-`aws_neptune_event_subscription` provides the following [Timeouts](/docs/configuration/resources.html#timeouts)
-configuration options:
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `40m`) How long to wait for creating event subscription to become available.
-- `delete` - (Default `40m`) How long to wait for deleting event subscription to become fully deleted.
-- `update` - (Default `40m`) How long to wait for updating event subscription to complete updates.
+- `create` - (Default `40m`)
+- `delete` - (Default `40m`)
+- `update` - (Default `40m`)
 
 ## Import
 
-`aws_neptune_event_subscription` can be imported by using the event subscription name, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_neptune_event_subscription` using the event subscription name. For example:
 
+```terraform
+import {
+  to = aws_neptune_event_subscription.example
+  id = "my-event-subscription"
+}
 ```
-$ terraform import aws_neptune_event_subscription.example my-event-subscription
+
+Using `terraform import`, import `aws_neptune_event_subscription` using the event subscription name. For example:
+
+```console
+% terraform import aws_neptune_event_subscription.example my-event-subscription
 ```

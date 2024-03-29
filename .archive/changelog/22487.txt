@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_appsync_domain_name
+```
+
+```release-note:new-resource
+aws_appsync_domain_name_api_association
+```

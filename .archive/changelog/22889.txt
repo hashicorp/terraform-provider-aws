@@ -1,0 +1,3 @@
+```release-note:note
+resource/aws_ec2_client_vpn_endpoint: The type of the `dns_servers` argument has changed from Set to List
+```

@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_wafv2_web_acl: Add support for `regex_match_statement`
+```
+
+```release-note:enhancement
+resource/aws_wafv2_rule_group: Add support for `regex_match_statement`
+```

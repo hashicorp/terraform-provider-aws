@@ -1,12 +1,12 @@
 ---
+subcategory: "EC2 (Elastic Compute Cloud)"
 layout: "aws"
 page_title: "AWS: aws_eip_association"
-sidebar_current: "docs-aws-resource-eip-association"
 description: |-
   Provides an AWS EIP Association
 ---
 
-# aws_eip_association
+# Resource: aws_eip_association
 
 Provides an AWS EIP Association as a top level resource, to associate and
 disassociate Elastic IPs from AWS Instances and Network Interfaces.
@@ -18,30 +18,30 @@ pre-existing or distributed to customers or users and therefore cannot be change
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_eip_association" "eip_assoc" {
-  instance_id   = "${aws_instance.web.id}"
-  allocation_id = "${aws_eip.example.id}"
+  instance_id   = aws_instance.web.id
+  allocation_id = aws_eip.example.id
 }
 
 resource "aws_instance" "web" {
   ami               = "ami-21f78e11"
   availability_zone = "us-west-2a"
-  instance_type     = "t1.micro"
+  instance_type     = "t2.micro"
 
-  tags {
+  tags = {
     Name = "HelloWorld"
   }
 }
 
 resource "aws_eip" "example" {
-  vpc = true
+  domain = "vpc"
 }
 ```
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `allocation_id` - (Optional) The allocation ID. This is required for EC2-VPC.
 * `allow_reassociation` - (Optional, Boolean) Whether to allow an Elastic IP to
@@ -59,7 +59,9 @@ specified, the Elastic IP address is associated with the primary private IP
 address.
 * `public_ip` - (Optional) The Elastic IP address. This is required for EC2-Classic.
 
-## Attributes Reference
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
 
 * `association_id` - The ID that represents the association of the Elastic IP
 address with an instance.
@@ -71,8 +73,17 @@ address with an instance.
 
 ## Import
 
-EIP Assocations can be imported using their association ID.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EIP Assocations using their association IDs. For example:
 
+```terraform
+import {
+  to = aws_eip_association.test
+  id = "eipassoc-ab12c345"
+}
 ```
-$ terraform import aws_eip_association.test eipassoc-ab12c345
+
+Using `terraform import`, import EIP Assocations using their association IDs. For example:
+
+```console
+% terraform import aws_eip_association.test eipassoc-ab12c345
 ```

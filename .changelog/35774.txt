@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_autoscaling_group: Fix version to computed for inconsistent final plan issue
+```

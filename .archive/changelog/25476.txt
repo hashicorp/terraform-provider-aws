@@ -1,0 +1,7 @@
+```release-note:new-data-source
+aws_outposts_assets
+```
+
+```release-note:new-data-source
+aws_outposts_asset
+```

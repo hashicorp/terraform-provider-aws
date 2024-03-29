@@ -1,0 +1,3 @@
+```release-note:new-resource
+aws_eks_identity_provider_config
+```

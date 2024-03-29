@@ -1,0 +1,7 @@
+```release-note:bug
+provider: No longer silently ignores `assume_role` block when `role_arn` has unknown value.
+```
+
+```release-note:enhancement
+provider: Support `me-central-1` as a valid AWS Region
+```

@@ -1,12 +1,12 @@
 ---
+subcategory: "VPN (Site-to-Site)"
 layout: "aws"
 page_title: "AWS: aws_vpn_gateway_route_propagation"
-sidebar_current: "docs-aws-resource-vpn-gateway-route-propagation"
 description: |-
   Requests automatic route propagation between a VPN gateway and a route table.
 ---
 
-# aws_vpn_gateway_route_propagation
+# Resource: aws_vpn_gateway_route_propagation
 
 Requests automatic route propagation between a VPN gateway and a route table.
 
@@ -16,10 +16,10 @@ propagation not explicitly listed in its value will be removed.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_vpn_gateway_route_propagation" "example" {
-  vpn_gateway_id = "${aws_vpn_gateway.example.id}"
-  route_table_id = "${aws_route_table.example.id}"
+  vpn_gateway_id = aws_vpn_gateway.example.id
+  route_table_id = aws_route_table.example.id
 }
 ```
 
@@ -30,6 +30,13 @@ The following arguments are required:
 * `vpn_gateway_id` - The id of the `aws_vpn_gateway` to propagate routes from.
 * `route_table_id` - The id of the `aws_route_table` to propagate routes into.
 
-## Attributes Reference
+## Attribute Reference
 
-This resource does not export any additional attributes.
+This resource exports no additional attributes.
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `2m`)
+- `delete` - (Default `2m`)

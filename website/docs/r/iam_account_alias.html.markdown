@@ -1,12 +1,12 @@
 ---
+subcategory: "IAM (Identity & Access Management)"
 layout: "aws"
 page_title: "AWS: aws_iam_account_alias"
-sidebar_current: "docs-aws-resource-iam-account-alias"
 description: |-
   Manages the account alias for the AWS Account.
 ---
 
-# aws_iam_account_alias
+# Resource: aws_iam_account_alias
 
 -> **Note:** There is only a single account alias per AWS account.
 
@@ -14,7 +14,7 @@ Manages the account alias for the AWS Account.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_iam_account_alias" "alias" {
   account_alias = "my-account-alias"
 }
@@ -22,14 +22,27 @@ resource "aws_iam_account_alias" "alias" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `account_alias` - (Required) The account alias
 
+## Attribute Reference
+
+This resource exports no additional attributes.
+
 ## Import
 
-The current Account Alias can be imported using the `account_alias`, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the current Account Alias using the `account_alias`. For example:
 
+```terraform
+import {
+  to = aws_iam_account_alias.alias
+  id = "my-account-alias"
+}
 ```
-$ terraform import aws_iam_account_alias.alias my-account-alias
+
+Using `terraform import`, import the current Account Alias using the `account_alias`. For example:
+
+```console
+% terraform import aws_iam_account_alias.alias my-account-alias
 ```

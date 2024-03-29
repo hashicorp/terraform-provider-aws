@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_appstream_fleet: More error validation in waiter
+```
+
+```release-note:bug
+resource/aws_appstream_stack:  More error validation in waiter
+```

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_imagebuilder_image_recipe: Enabled updates without failures due to `aws_imagebuilder_image_pipeline` dependencies.
+```

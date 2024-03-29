@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_route53_resolver_dnssec_config: Increase resource creation and deletion timeouts to 10 minutes
+```

@@ -1,12 +1,12 @@
 ---
+subcategory: "VPC (Virtual Private Cloud)"
 layout: "aws"
 page_title: "AWS: aws_network_acl_rule"
-sidebar_current: "docs-aws-resource-network-acl-rule"
 description: |-
   Provides an network ACL Rule resource.
 ---
 
-# aws_network_acl_rule
+# Resource: aws_network_acl_rule
 
 Creates an entry (a rule) in a network ACL with the specified rule number.
 
@@ -18,18 +18,18 @@ a conflict of rule settings and will overwrite rules.
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_network_acl" "bar" {
-  vpc_id = "${aws_vpc.foo.id}"
+  vpc_id = aws_vpc.foo.id
 }
 
 resource "aws_network_acl_rule" "bar" {
-  network_acl_id = "${aws_network_acl.bar.id}"
+  network_acl_id = aws_network_acl.bar.id
   rule_number    = 200
   egress         = false
   protocol       = "tcp"
   rule_action    = "allow"
-  cidr_block     = "0.0.0.0/0"
+  cidr_block     = aws_vpc.foo.cidr_block
   from_port      = 22
   to_port        = 22
 }
@@ -39,7 +39,7 @@ resource "aws_network_acl_rule" "bar" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `network_acl_id` - (Required) The ID of the network ACL.
 * `rule_number` - (Required) The rule number for the entry (for example, 100). ACL entries are processed in ascending order by rule number.
@@ -50,8 +50,8 @@ The following arguments are supported:
 * `ipv6_cidr_block` - (Optional) The IPv6 CIDR block to allow or deny.
 * `from_port` - (Optional) The from port to match.
 * `to_port` - (Optional) The to port to match.
-* `icmp_type` - (Optional) ICMP protocol: The ICMP type. Required if specifying ICMP for the protocol. e.g. -1
-* `icmp_code` - (Optional) ICMP protocol: The ICMP code. Required if specifying ICMP for the protocol. e.g. -1
+* `icmp_type` - (Optional) ICMP protocol: The ICMP type. Required if specifying ICMP for the protocolE.g., -1
+* `icmp_code` - (Optional) ICMP protocol: The ICMP code. Required if specifying ICMP for the protocolE.g., -1
 
 ~> **NOTE:** If the value of `protocol` is `-1` or `all`, the `from_port` and `to_port` values will be ignored and the rule will apply to all ports.
 
@@ -59,8 +59,46 @@ The following arguments are supported:
 
 ~> Note: For more information on ICMP types and codes, see here: https://www.iana.org/assignments/icmp-parameters/icmp-parameters.xhtml
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the network ACL Rule
+
+## Import
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import individual rules using `NETWORK_ACL_ID:RULE_NUMBER:PROTOCOL:EGRESS`, where `PROTOCOL` can be a decimal (such as "6") or string (such as "tcp") value. For example:
+
+**NOTE:** If importing a rule previously provisioned by Terraform, the `PROTOCOL` must be the input value used at creation time. For more information on protocol numbers and keywords, see here: https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml.
+
+Using the procotol's string value:
+
+```terraform
+import {
+  to = aws_network_acl_rule.my_rule
+  id = "acl-7aaabd18:100:tcp:false"
+}
+```
+
+Using the procotol's decimal value:
+
+```terraform
+import {
+  to = aws_network_acl_rule.my_rule
+  id = "acl-7aaabd18:100:6:false"
+}
+```
+
+**Using `terraform import` to import** individual rules using `NETWORK_ACL_ID:RULE_NUMBER:PROTOCOL:EGRESS`, where `PROTOCOL` can be a decimal (such as "6") or string (such as "tcp") value. For example:
+
+Using the procotol's string value:
+
+```console
+% terraform import aws_network_acl_rule.my_rule acl-7aaabd18:100:tcp:false
+```
+
+Using the procotol's decimal value:
+
+```console
+% terraform import aws_network_acl_rule.my_rule acl-7aaabd18:100:6:false
+```

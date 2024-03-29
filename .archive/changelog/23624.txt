@@ -1,0 +1,5 @@
+```release-note:enhancement
+resource/aws_s3_bucket_replication_configuration: Add `token` field to specify
+x-amz-bucket-object-lock-token for enabling replication on object lock enabled
+buckets or enabling object lock on an existing bucket.
+```

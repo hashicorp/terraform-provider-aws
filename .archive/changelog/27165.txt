@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_vpc: Add `enable_network_address_usage_metrics` argument
+```
+
+```release-note:enhancement
+resource/aws_default_vpc: Add `enable_network_address_usage_metrics` argument
+```
+
+```release-note:enhancement
+data-source/aws_vpc: Add `enable_network_address_usage_metrics` attribute
+```

@@ -1,0 +1,7 @@
+```release-note:bug
+data-source/aws_network_interface: Correctly set `attachment` attribute
+```
+
+```release-note:bug
+resource/aws_internet_gateway: Retry resource read after creation to deal with EC2 API eventual consistency
+```

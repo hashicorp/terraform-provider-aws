@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_cloudwatch_log_group: Restore use of `ListTagsLogGroup`, `TagLogGroup` and `UntagLogGroup` APIs
+```
+
+```release-note:bug
+data-source/aws_cloudwatch_log_group: Restore use of `ListTagsLogGroup` API
+```

@@ -1,0 +1,7 @@
+```release-note:new-resource
+aws_codecommit_approval_rule_template
+```
+
+```release-note:new-data-source
+aws_codecommit_approval_rule_template
+```

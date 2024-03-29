@@ -1,18 +1,18 @@
 ---
+subcategory: "WAF Classic"
 layout: "aws"
-page_title: "AWS: waf_byte_match_set"
-sidebar_current: "docs-aws-resource-waf-bytematchset"
+page_title: "AWS: aws_waf_byte_match_set"
 description: |-
   Provides a AWS WAF Byte Match Set resource.
 ---
 
-# aws_waf_byte_match_set
+# Resource: aws_waf_byte_match_set
 
 Provides a WAF Byte Match Set Resource
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_waf_byte_match_set" "byte_set" {
   name = "tf_waf_byte_match_set"
 
@@ -31,7 +31,7 @@ resource "aws_waf_byte_match_set" "byte_set" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name or description of the Byte Match Set.
 * `byte_match_tuples` - Specifies the bytes (typically a string that corresponds
@@ -47,15 +47,15 @@ The following arguments are supported:
 * `field_to_match` - (Required) The part of a web request that you want to search, such as a specified header or a query string.
 * `positional_constraint` - (Required) Within the portion of a web request that you want to search
   (for example, in the query string, if any), specify where you want to search.
-  e.g. `CONTAINS`, `CONTAINS_WORD` or `EXACTLY`.
+  e.g., `CONTAINS`, `CONTAINS_WORD` or `EXACTLY`.
   See [docs](http://docs.aws.amazon.com/waf/latest/APIReference/API_ByteMatchTuple.html#WAF-Type-ByteMatchTuple-PositionalConstraint)
   for all supported values.
-* `target_string` - (Optional) The value that you want to search for. e.g. `HEADER`, `METHOD` or `BODY`.
-  See [docs](http://docs.aws.amazon.com/waf/latest/APIReference/API_ByteMatchTuple.html#WAF-Type-ByteMatchTuple-TargetString)
+* `target_string` - (Optional) The value that you want to search for within the field specified by `field_to_match`, e.g., `badrefer1`.
+  See [docs](https://docs.aws.amazon.com/waf/latest/APIReference/API_waf_ByteMatchTuple.html)
   for all supported values.
 * `text_transformation` - (Required) Text transformations used to eliminate unusual formatting that attackers use in web requests in an effort to bypass AWS WAF.
   If you specify a transformation, AWS WAF performs the transformation on `target_string` before inspecting a request for a match.
-  e.g. `CMD_LINE`, `HTML_ENTITY_DECODE` or `NONE`.
+  e.g., `CMD_LINE`, `HTML_ENTITY_DECODE` or `NONE`.
   See [docs](http://docs.aws.amazon.com/waf/latest/APIReference/API_ByteMatchTuple.html#WAF-Type-ByteMatchTuple-TextTransformation)
   for all supported values.
 
@@ -63,17 +63,34 @@ The following arguments are supported:
 
 #### Arguments
 
-* `data` - (Optional) When `type` is `HEADER`, enter the name of the header that you want to search, e.g. `User-Agent` or `Referer`.
+* `data` - (Optional) When `type` is `HEADER`, enter the name of the header that you want to search, e.g., `User-Agent` or `Referer`.
   If `type` is any other value, omit this field.
 * `type` - (Required) The part of the web request that you want AWS WAF to search for a specified string.
-  e.g. `HEADER`, `METHOD` or `BODY`.
+  e.g., `HEADER`, `METHOD` or `BODY`.
   See [docs](http://docs.aws.amazon.com/waf/latest/APIReference/API_FieldToMatch.html)
   for all supported values.
 
 ## Remarks
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the WAF Byte Match Set.
+
+## Import
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import WAF Byte Match Set using the id. For example:
+
+```terraform
+import {
+  to = aws_waf_byte_match_set.byte_set
+  id = "a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc"
+}
+```
+
+Using `terraform import`, import WAF Byte Match Set using the id. For example:
+
+```console
+% terraform import aws_waf_byte_match_set.byte_set a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc
+```

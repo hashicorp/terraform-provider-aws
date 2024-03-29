@@ -1,0 +1,198 @@
+## These checks will be superseded by documentation.yml
+## when the provider documentation layout is moved to
+## the Terraform Registry layout.
+name: Website Checks
+on:
+  push:
+    branches:
+      - main
+      - "release/**"
+  pull_request:
+    paths:
+      - .github/workflows/website.yml
+      - .ci/.markdownlinkcheck.json
+      - .ci/.tflint.hcl
+      - .ci/tools/go.mod
+      - .markdownlint.yml
+      - website/docs/**
+
+jobs:
+  markdown-link-check-a-h-markdown:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+      - uses: YakDriver/md-check-links@7450f426b758f0bf97f99ceb1aadcf57640a9ede # v2.0.6
+        name: markdown-link-check website/docs/**/[a-h].markdown
+        with:
+          use-quiet-mode: "yes"
+          use-verbose-mode: "yes"
+          config-file: ".ci/.markdownlinkcheck.json"
+          folder-path: "website/docs/r, website/docs/d"
+          file-prefix: "[a-h]"
+          file-extension: ".markdown"
+          base-branch: "main"
+          check-modified-files-only: "no"
+
+  markdown-link-check-i-z-markdown:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+      - uses: YakDriver/md-check-links@7450f426b758f0bf97f99ceb1aadcf57640a9ede # v2.0.6
+        name: markdown-link-check website/docs/**/[i-z].markdown
+        with:
+          use-quiet-mode: "yes"
+          use-verbose-mode: "yes"
+          config-file: ".ci/.markdownlinkcheck.json"
+          folder-path: "website/docs/r, website/docs/d"
+          file-prefix: "[i-z]"
+          file-extension: ".markdown"
+          base-branch: "main"
+          check-modified-files-only: "no"
+
+  markdown-link-check-md:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+      - uses: YakDriver/md-check-links@7450f426b758f0bf97f99ceb1aadcf57640a9ede # v2.0.6
+        name: markdown-link-check website/docs/**/*.md
+        with:
+          use-quiet-mode: "yes"
+          use-verbose-mode: "yes"
+          config-file: ".ci/.markdownlinkcheck.json"
+          folder-path: "website/docs"
+          # Don't check CDKTF translated guides, e.g. website/docs/cdktf/typescript/guides/version-4-upgrade.html.md.
+          max-depth: 2
+          file-extension: ".md"
+          # Checking only modified files in the PR does not respect 'mex-depth'.
+          # base-branch: "main"
+          # check-modified-files-only: "yes"
+
+  markdown-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+      - uses: avto-dev/markdown-lint@04d43ee9191307b50935a753da3b775ab695eceb # v1.5.0
+        with:
+          args: "website/docs"
+          # Ignore CDKTF translated guides.
+          ignore: "website/docs/cdktf/*/guides/*"
+
+  misspell:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+      - uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
+        with:
+          go-version-file: .ci/tools/go.mod
+      - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
+        continue-on-error: true
+        timeout-minutes: 2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
+      - run: cd .ci/tools && go install github.com/client9/misspell/cmd/misspell
+      - run: misspell -error -source text website/
+
+  terrafmt:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+      - uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
+        with:
+          go-version-file: .ci/tools/go.mod
+      - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
+        continue-on-error: true
+        timeout-minutes: 2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
+      - run: cd .ci/tools && go install github.com/katbyte/terrafmt
+      - run: terrafmt diff ./website --check --pattern '*.markdown'
+
+  tflint:
+    runs-on: [custom, linux, xl]
+    steps:
+      - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
+        with:
+          go-version-file: .ci/tools/go.mod
+      - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
+        continue-on-error: true
+        timeout-minutes: 2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
+
+      - run: cd .ci/tools && go install github.com/katbyte/terrafmt
+      - run: cd .ci/tools && go install github.com/terraform-linters/tflint
+
+      - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
+        name: Cache plugin dir
+        with:
+          path: ~/.tflint.d/plugins
+          key: ${{ runner.os }}-tflint-${{ hashFiles('.ci/.tflint.hcl') }}
+
+      - run: tflint --config .ci/.tflint.hcl --init
+
+      - run: |
+          exit_code=0
+
+          # Configure the rules for tflint.
+          # The *_invalid_* rules disabled here prevent evaluation of expressions.
+          # Do not disable *_invalid_name rules, since these are good checks for e.g. "%s" formatting verbs
+          # being carried over from test cases.
+          shared_rules=(
+              "--enable-rule=terraform_comment_syntax"
+              "--disable-rule=aws_cloudwatch_event_target_invalid_arn"
+              "--disable-rule=aws_db_instance_default_parameter_group"
+              "--disable-rule=aws_elasticache_cluster_default_parameter_group"
+              "--disable-rule=aws_elasticache_replication_group_default_parameter_group"
+              "--disable-rule=aws_iam_policy_sid_invalid_characters"
+              "--disable-rule=aws_iam_saml_provider_invalid_saml_metadata_document"
+              "--disable-rule=aws_iam_server_certificate_invalid_certificate_body"
+              "--disable-rule=aws_iam_server_certificate_invalid_private_key"
+              "--disable-rule=aws_iot_certificate_invalid_csr"
+              "--disable-rule=aws_lb_invalid_load_balancer_type"
+              "--disable-rule=aws_lb_target_group_invalid_protocol"
+              "--disable-rule=aws_networkfirewall_rule_group_invalid_rules"
+              "--disable-rule=aws_s3_object_copy_invalid_source"
+              "--disable-rule=aws_servicecatalog_portfolio_share_invalid_type"
+              "--disable-rule=aws_transfer_ssh_key_invalid_body"
+              "--disable-rule=aws_worklink_website_certificate_authority_association_invalid_certificate"
+              "--disable-rule=terraform_required_providers"
+              "--disable-rule=terraform_unused_declarations"
+              "--disable-rule=terraform_typed_variables"
+          )
+          while read -r filename; do
+            rules=("${shared_rules[@]}")
+            if [[ "$filename" == "./website/docs/guides/version-2-upgrade.html.md" ]]; then
+                # ./website/docs/guides/version-2-upgrade.html.md should still include pre-0.12 syntax,
+                # since v1.0 does not support Terraform 0.12.
+                rules+=(
+                "--disable-rule=terraform_deprecated_index"
+                "--disable-rule=terraform_deprecated_interpolation"
+                )
+            elif [[ "$filename" == "./website/docs/guides/version-3-upgrade.html.md" ]]; then
+                # ./website/docs/guides/version-3-upgrade.html.md has one example showing migration from
+                # pre-0.12 syntax to 0.12 syntax. We can't customize rules per block, and adding a
+                # tflint-ignore directive to documentation is not ideal.
+                rules+=(
+                "--enable-rule=terraform_deprecated_index"
+                "--disable-rule=terraform_deprecated_interpolation"
+                )
+            else
+                rules+=(
+                "--enable-rule=terraform_deprecated_index"
+                "--enable-rule=terraform_deprecated_interpolation"
+                )
+            fi
+
+            # We need to capture the output and error code here. We don't want to exit on the first error
+            set +e
+            ./.ci/scripts/validate-terraform-file.sh "$filename" "${rules[@]}" || exit_code=1
+            set -e
+          done < <(find ./website/docs -type f \( -name '*.md' -o -name '*.markdown' \) | sort -u)
+
+          exit $exit_code

@@ -1,0 +1,3 @@
+```release-note:bug
+aws/resource_aws_lex_slot_type: Correctly determine `version` attribute
+```

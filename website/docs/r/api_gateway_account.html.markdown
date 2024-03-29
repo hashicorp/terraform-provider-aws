@@ -1,12 +1,12 @@
 ---
+subcategory: "API Gateway"
 layout: "aws"
 page_title: "AWS: aws_api_gateway_account"
-sidebar_current: "docs-aws-resource-api-gateway-account"
 description: |-
   Provides a settings of an API Gateway Account.
 ---
 
-# aws_api_gateway_account
+# Resource: aws_api_gateway_account
 
 Provides a settings of an API Gateway Account. Settings is applied region-wide per `provider` block.
 
@@ -14,82 +14,85 @@ Provides a settings of an API Gateway Account. Settings is applied region-wide p
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_api_gateway_account" "demo" {
-  cloudwatch_role_arn = "${aws_iam_role.cloudwatch.arn}"
+  cloudwatch_role_arn = aws_iam_role.cloudwatch.arn
+}
+
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["apigateway.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
+  }
 }
 
 resource "aws_iam_role" "cloudwatch" {
-  name = "api_gateway_cloudwatch_global"
-
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "",
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "apigateway.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-EOF
+  name               = "api_gateway_cloudwatch_global"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 
-resource "aws_iam_role_policy" "cloudwatch" {
-  name = "default"
-  role = "${aws_iam_role.cloudwatch.id}"
+data "aws_iam_policy_document" "cloudwatch" {
+  statement {
+    effect = "Allow"
 
-  policy = <<EOF
-{
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Action": [
-                "logs:CreateLogGroup",
-                "logs:CreateLogStream",
-                "logs:DescribeLogGroups",
-                "logs:DescribeLogStreams",
-                "logs:PutLogEvents",
-                "logs:GetLogEvents",
-                "logs:FilterLogEvents"
-            ],
-            "Resource": "*"
-        }
+    actions = [
+      "logs:CreateLogGroup",
+      "logs:CreateLogStream",
+      "logs:DescribeLogGroups",
+      "logs:DescribeLogStreams",
+      "logs:PutLogEvents",
+      "logs:GetLogEvents",
+      "logs:FilterLogEvents",
     ]
+
+    resources = ["*"]
+  }
 }
-EOF
+resource "aws_iam_role_policy" "cloudwatch" {
+  name   = "default"
+  role   = aws_iam_role.cloudwatch.id
+  policy = data.aws_iam_policy_document.cloudwatch.json
 }
 ```
 
 ## Argument Reference
 
-The following argument is supported:
+This resource supports the following arguments:
 
-* `cloudwatch_role_arn` - (Optional) The ARN of an IAM role for CloudWatch (to allow logging & monitoring).
-	See more [in AWS Docs](https://docs.aws.amazon.com/apigateway/latest/developerguide/how-to-stage-settings.html#how-to-stage-settings-console).
-	Logging & monitoring can be enabled/disabled and otherwise tuned on the API Gateway Stage level.
+* `cloudwatch_role_arn` - (Optional) ARN of an IAM role for CloudWatch (to allow logging & monitoring). See more [in AWS Docs](https://docs.aws.amazon.com/apigateway/latest/developerguide/how-to-stage-settings.html#how-to-stage-settings-console). Logging & monitoring can be enabled/disabled and otherwise tuned on the API Gateway Stage level.
 
 ## Attribute Reference
 
-The following attribute is exported:
+This resource exports the following attributes in addition to the arguments above:
 
+* `api_key_version` - The version of the API keys used for the account.
 * `throttle_settings` - Account-Level throttle settings. See exported fields below.
+* `features` - A list of features supported for the account.
 
 `throttle_settings` block exports the following:
 
-* `burst_limit` - The absolute maximum number of times API Gateway allows the API to be called per second (RPS).
-* `rate_limit` - The number of times API Gateway allows the API to be called per second on average (RPS).
-
+* `burst_limit` - Absolute maximum number of times API Gateway allows the API to be called per second (RPS).
+* `rate_limit` - Number of times API Gateway allows the API to be called per second on average (RPS).
 
 ## Import
 
-API Gateway Accounts can be imported using the word `api-gateway-account`, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import API Gateway Accounts using the word `api-gateway-account`. For example:
 
+```terraform
+import {
+  to = aws_api_gateway_account.demo
+  id = "api-gateway-account"
+}
 ```
-$ terraform import aws_api_gateway_account.demo api-gateway-account
+
+Using `terraform import`, import API Gateway Accounts using the word `api-gateway-account`. For example:
+
+```console
+% terraform import aws_api_gateway_account.demo api-gateway-account
 ```

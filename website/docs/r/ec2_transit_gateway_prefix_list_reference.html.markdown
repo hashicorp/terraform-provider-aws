@@ -1,0 +1,68 @@
+---
+subcategory: "Transit Gateway"
+layout: "aws"
+page_title: "AWS: aws_ec2_transit_gateway_prefix_list_reference"
+description: |-
+  Manages an EC2 Transit Gateway Prefix List Reference
+---
+
+# Resource: aws_ec2_transit_gateway_prefix_list_reference
+
+Manages an EC2 Transit Gateway Prefix List Reference.
+
+## Example Usage
+
+### Attachment Routing
+
+```terraform
+resource "aws_ec2_transit_gateway_prefix_list_reference" "example" {
+  prefix_list_id                 = aws_ec2_managed_prefix_list.example.id
+  transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.example.id
+  transit_gateway_route_table_id = aws_ec2_transit_gateway.example.association_default_route_table_id
+}
+```
+
+### Blackhole Routing
+
+```terraform
+resource "aws_ec2_transit_gateway_prefix_list_reference" "example" {
+  blackhole                      = true
+  prefix_list_id                 = aws_ec2_managed_prefix_list.example.id
+  transit_gateway_route_table_id = aws_ec2_transit_gateway.example.association_default_route_table_id
+}
+```
+
+## Argument Reference
+
+The following arguments are required:
+
+* `prefix_list_id` - (Required) Identifier of EC2 Prefix List.
+* `transit_gateway_route_table_id` - (Required) Identifier of EC2 Transit Gateway Route Table.
+
+The following arguments are optional:
+
+* `blackhole` - (Optional) Indicates whether to drop traffic that matches the Prefix List. Defaults to `false`.
+* `transit_gateway_attachment_id` - (Optional) Identifier of EC2 Transit Gateway Attachment.
+
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
+
+* `id` - EC2 Transit Gateway Route Table identifier and EC2 Prefix List identifier, separated by an underscore (`_`)
+
+## Import
+
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_ec2_transit_gateway_prefix_list_reference` using the EC2 Transit Gateway Route Table identifier and EC2 Prefix List identifier, separated by an underscore (`_`). For example:
+
+```terraform
+import {
+  to = aws_ec2_transit_gateway_prefix_list_reference.example
+  id = "tgw-rtb-12345678_pl-12345678"
+}
+```
+
+Using `terraform import`, import `aws_ec2_transit_gateway_prefix_list_reference` using the EC2 Transit Gateway Route Table identifier and EC2 Prefix List identifier, separated by an underscore (`_`). For example:
+
+```console
+% terraform import aws_ec2_transit_gateway_prefix_list_reference.example tgw-rtb-12345678_pl-12345678
+```

@@ -1,0 +1,7 @@
+```release-note:enhancement
+provider: Add support for Assume Role with Web Identity.
+```
+
+```release-note:bug
+provider: Setting `skip_metadata_api_check = false` now overrides `AWS_EC2_METADATA_DISABLED` environment variable.
+```

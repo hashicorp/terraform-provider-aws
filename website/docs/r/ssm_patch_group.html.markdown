@@ -1,38 +1,38 @@
 ---
+subcategory: "SSM (Systems Manager)"
 layout: "aws"
 page_title: "AWS: aws_ssm_patch_group"
-sidebar_current: "docs-aws-resource-ssm-patch-group"
 description: |-
   Provides an SSM Patch Group resource
 ---
 
-# aws_ssm_patch_group
+# Resource: aws_ssm_patch_group
 
 Provides an SSM Patch Group resource
 
 ## Example Usage
 
-```hcl
+```terraform
 resource "aws_ssm_patch_baseline" "production" {
-  name  = "patch-baseline"
+  name             = "patch-baseline"
   approved_patches = ["KB123456"]
 }
 
 resource "aws_ssm_patch_group" "patchgroup" {
-  baseline_id = "${aws_ssm_patch_baseline.production.id}"
+  baseline_id = aws_ssm_patch_baseline.production.id
   patch_group = "patch-group-name"
 }
 ```
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `baseline_id` - (Required) The ID of the patch baseline to register the patch group with.
 * `patch_group` - (Required) The name of the patch group that should be registered with the patch baseline.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
-* `id` - The ID of the patch baseline.
+* `id` - The name of the patch group and ID of the patch baseline separated by a comma (`,`).

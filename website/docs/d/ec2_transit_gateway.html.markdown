@@ -1,0 +1,70 @@
+---
+subcategory: "Transit Gateway"
+layout: "aws"
+page_title: "AWS: aws_ec2_transit_gateway"
+description: |-
+  Get information on an EC2 Transit Gateway
+---
+
+# Data Source: aws_ec2_transit_gateway
+
+Get information on an EC2 Transit Gateway.
+
+## Example Usage
+
+### By Filter
+
+```terraform
+data "aws_ec2_transit_gateway" "example" {
+  filter {
+    name   = "options.amazon-side-asn"
+    values = ["64512"]
+  }
+}
+```
+
+### By Identifier
+
+```terraform
+data "aws_ec2_transit_gateway" "example" {
+  id = "tgw-12345678"
+}
+```
+
+## Argument Reference
+
+This data source supports the following arguments:
+
+* `filter` - (Optional) One or more configuration blocks containing name-values filters. Detailed below.
+* `id` - (Optional) Identifier of the EC2 Transit Gateway.
+
+### filter Argument Reference
+
+* `name` - (Required) Name of the field to filter by, as defined by the [underlying AWS API](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeTransitGateways.html).
+* `values` - (Required) List of one or more values for the filter.
+
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
+
+* `amazon_side_asn` - Private Autonomous System Number (ASN) for the Amazon side of a BGP session
+* `arn` - EC2 Transit Gateway ARN
+* `association_default_route_table_id` - Identifier of the default association route table
+* `auto_accept_shared_attachments` - Whether resource attachment requests are automatically accepted
+* `default_route_table_association` - Whether resource attachments are automatically associated with the default association route table
+* `default_route_table_propagation` - Whether resource attachments automatically propagate routes to the default propagation route table
+* `description` - Description of the EC2 Transit Gateway
+* `dns_support` - Whether DNS support is enabled
+* `multicast_support` - Whether Multicast support is enabled
+* `id` - EC2 Transit Gateway identifier
+* `owner_id` - Identifier of the AWS account that owns the EC2 Transit Gateway
+* `propagation_default_route_table_id` - Identifier of the default propagation route table
+* `tags` - Key-value tags for the EC2 Transit Gateway
+* `transit_gateway_cidr_blocks` - The list of associated CIDR blocks
+* `vpn_ecmp_support` - Whether VPN Equal Cost Multipath Protocol support is enabled
+
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `read` - (Default `20m`)

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ecs_cluster: Ensure that `setting` attribute is set consistently
+```

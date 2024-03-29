@@ -1,0 +1,2 @@
+```release-note:enhancement
+resource/aws_ram_resource_share: Add `permission_arns` argument.

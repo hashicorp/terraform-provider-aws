@@ -1,0 +1,7 @@
+```release-note:bug
+data-source/aws_vpclattice_service_network: Avoid listing tags when the service network has been shared to the current account via AWS Resource Access Manager (RAM)
+```
+
+```release-note:bug
+data-source/aws_vpclattice_service: Avoid listing tags when the service has been shared to the current account via AWS Resource Access Manager (RAM)
+```

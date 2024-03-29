@@ -1,0 +1,42 @@
+name: 'Process milestone Events'
+
+on:
+  milestone:
+    types: [closed]
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  Comment:
+    name: 'Post-Release Comment'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: bflad/action-milestone-comment@ae6c9fdf5778064d4e09b4632604a16b7289096c # v1.0.2
+        with:
+          body: |
+            This functionality has been released in [${{ github.event.milestone.title }} of the Terraform AWS Provider](https://github.com/${{ github.repository }}/blob/${{ github.event.milestone.title }}/CHANGELOG.md).  Please see the [Terraform documentation on provider versioning](https://www.terraform.io/docs/configuration/providers.html#provider-versions) or reach out if you need any assistance upgrading.
+
+            For further feature requests or bug reports with this functionality, please create a [new GitHub issue](https://github.com/${{ github.repository }}/issues/new/choose) following the template. Thank you!
+
+  archive_and_unlabel:
+    name: 'Archive Project Items & Remove Label on Milestone Closed'
+    runs-on: ubuntu-latest
+    env:
+      MILESTONE: ${{ github.event.milestone.number }}
+    steps:
+      - name: 'Checkout Repo'
+        uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+
+      - name: 'Remove Prioritized Label'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: ./.ci/scripts/unlabel-on-milestone-closed.sh
+
+      - name: 'Archive Project Items'
+        env:
+          GH_TOKEN: ${{ secrets.PROJECT_SCOPED_TOKEN }}
+        shell: bash
+        run: ./.ci/scripts/archive-on-milestone-closed.sh

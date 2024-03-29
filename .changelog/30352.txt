@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_wafv2_ip_set: Fix `DiffSuppress` on `addresses` to detect changes for unknown values
+```

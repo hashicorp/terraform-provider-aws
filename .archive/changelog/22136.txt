@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_codeartifact_domain_permissions_policy: Fix erroneous diffs in `policy` when no changes made or policies are equivalent
+```
+
+```release-note:bug
+resource/aws_codeartifact_repository_permissions_policy: Fix erroneous diffs in `policy` when no changes made or policies are equivalent
+```

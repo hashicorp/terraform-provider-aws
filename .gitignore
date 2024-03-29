@@ -2,9 +2,13 @@
 *.exe
 .DS_Store
 example.tf
+.terraform.lock.hcl
+.terraform.tfstate.lock.info
 terraform.tfplan
 terraform.tfstate
 bin/
+dist/
+vendor/
 modules-dev/
 /pkg/
 website/.vagrant
@@ -20,12 +24,16 @@ website/node_modules
 *~
 .*.swp
 .idea
+.vscode
 *.iml
 *.test
+*.prof
 *.iml
-
-website/vendor
-
+log.txt
+markdown-link-check*.txt
+changelog.tmp
+terraform-provider-aws
+aws/testdata/service/cloudformation/examplecompany-exampleservice-exampleresource/bin/handler
 # Test exclusions
 !command/test-fixtures/**/*.tfstate
 !command/test-fixtures/**/.terraform/
@@ -33,3 +41,6 @@ website/vendor
 # Keep windows files with windows line endings
 *.winfile eol=crlf
 /.vs
+node_modules
+
+.teamcity/target

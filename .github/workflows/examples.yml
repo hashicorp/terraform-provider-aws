@@ -1,0 +1,111 @@
+name: Examples Checks
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    paths:
+      - .github/workflows/examples.yml
+      - .ci/.tflint.hcl
+      - .ci/tools/go.mod
+      - examples/**
+      - go.mod
+
+env:
+  AWS_DEFAULT_REGION: us-west-2
+
+jobs:
+  tflint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+        with:
+          fetch-depth: 0
+      - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
+      - uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
+        with:
+          go-version-file: go.mod
+
+      - name: install tflint
+        run: cd .ci/tools && go install github.com/terraform-linters/tflint
+
+      - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
+        name: Cache plugin dir
+        with:
+          path: ~/.tflint.d/plugins
+          key: ${{ runner.os }}-tflint-${{ hashFiles('.ci/.tflint.hcl') }}
+
+      - run: tflint --config .ci/.tflint.hcl --init
+
+      - name: tflint
+        run: |
+          exit_code=0
+          TFLINT_CONFIG="$(pwd -P)/.ci/.tflint.hcl"
+          for DIR in $(find ./examples -type f -name '*.tf' -exec dirname {} \; | sort -u); do
+            pushd "$DIR"
+            tflint --config="$TFLINT_CONFIG" \
+              --enable-rule=terraform_comment_syntax \
+              --enable-rule=terraform_deprecated_index \
+              --enable-rule=terraform_deprecated_interpolation \
+              --enable-rule=terraform_required_version \
+              --disable-rule=terraform_required_providers \
+              --disable-rule=terraform_typed_variables \
+              || exit_code=1
+            popd
+          done
+          exit $exit_code
+
+  validate-terraform:
+    runs-on: [custom, linux, large]
+    strategy:
+      fail-fast: false
+      matrix:
+        terraform_version: ["0.12.31", "1.0.6"]
+    env:
+      TF_IN_AUTOMATION: "1"
+    steps:
+      - uses: actions/checkout@9bb56186c3b09b4f86b1c65136769dd318469633 # v4.1.2
+        with:
+          fetch-depth: 0
+      - uses: actions/cache@0c45773b623bea8c8e75f6c82b208c3cf94ea4f9 # v4.0.2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-pkg-mod-${{ hashFiles('go.sum') }}
+      - uses: actions/setup-go@0c52d547c9bc32b1aa3301fd7a9cb496313a4491 # v5.0.0
+        with:
+          go-version-file: go.mod
+      - name: go build
+        run: go build -o terraform-plugin-dir/terraform-provider-aws_v99.99.99_x5 .
+      - name: override plugin
+        run: |
+          # For Terraform v0.12
+          mkdir -p ~/.terraform.d/plugins
+          cp terraform-plugin-dir/terraform-provider-aws_v99.99.99_x5 ~/.terraform.d/plugins
+          # For newer versions
+          mkdir -p ~/.terraform.d/plugins/registry.terraform.io/hashicorp/aws/99.99.99/"$(go env GOOS)"_"$(go env GOARCH)"/
+          cp terraform-plugin-dir/terraform-provider-aws_v99.99.99_x5 ~/.terraform.d/plugins/registry.terraform.io/hashicorp/aws/99.99.99/"$(go env GOOS)"_"$(go env GOARCH)"/
+      - uses: hashicorp/setup-terraform@a1502cd9e758c50496cc9ac5308c4843bcd56d36
+        with:
+          terraform_version: ${{ matrix.terraform_version }}
+          # Needed to use the output of `terraform validate -json`
+          terraform_wrapper: false
+
+      - name: terraform
+        run: |
+          for DIR in $(find ./examples -type f -name '*.tf' -exec dirname {} \; | sort -u); do
+            pushd "$DIR"
+            if [ -f terraform.template.tfvars ]; then
+              cp terraform.template.tfvars terraform.tfvars
+            fi
+            echo; echo -e "\e[1;35m===> Initializing Example: $DIR <===\e[0m"; echo
+            terraform init
+            echo; echo -e "\e[1;35m===> Format Checking Example: $DIR <===\e[0m"; echo
+            terraform fmt -check
+            echo; echo -e "\e[1;35m===> Validating Example: $DIR <===\e[0m"; echo
+            # Catch errors
+            terraform validate
+            popd
+          done

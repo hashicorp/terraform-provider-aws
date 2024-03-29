@@ -1,0 +1,3 @@
+```release-note:new-resource
+aws_cognito_identity_pool_provider_principal_tag
+```
