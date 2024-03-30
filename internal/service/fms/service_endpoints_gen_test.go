@@ -235,7 +235,9 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) strin
 
 	client := meta.FMSClient(ctx)
 
-	_, err := client.ListAppsLists(ctx, &fms_sdkv2.ListAppsListsInput{},
+	_, err := client.ListAppsLists(ctx, &fms_sdkv2.ListAppsListsInput{
+		MaxResults: aws_sdkv2.Int32(1),
+	},
 		func(opts *fms_sdkv2.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &endpoint),
