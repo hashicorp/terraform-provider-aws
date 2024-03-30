@@ -4,8 +4,8 @@
 package cloudfront_test
 
 import (
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // testAccRegionProviderConfig is the Terraform provider configuration for CloudFront region testing
@@ -14,10 +14,10 @@ import (
 // are necessary and overwrites the "aws" provider configuration.
 func testAccRegionProviderConfig() string {
 	switch acctest.Partition() {
-	case endpoints.AwsPartitionID:
-		return acctest.ConfigRegionalProvider(endpoints.UsEast1RegionID)
-	case endpoints.AwsCnPartitionID:
-		return acctest.ConfigRegionalProvider(endpoints.CnNorthwest1RegionID)
+	case names.StandardPartitionID:
+		return acctest.ConfigRegionalProvider(names.USEast1RegionID)
+	case names.ChinaPartitionID:
+		return acctest.ConfigRegionalProvider(names.CNNorthwest1RegionID)
 	default:
 		return acctest.ConfigRegionalProvider(acctest.Region())
 	}

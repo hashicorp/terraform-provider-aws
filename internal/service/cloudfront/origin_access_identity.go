@@ -7,15 +7,16 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/cloudfront"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -62,28 +63,28 @@ func ResourceOriginAccessIdentity() *schema.Resource {
 
 func resourceOriginAccessIdentityCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
+	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 	params := &cloudfront.CreateCloudFrontOriginAccessIdentityInput{
 		CloudFrontOriginAccessIdentityConfig: expandOriginAccessIdentityConfig(d),
 	}
 
-	resp, err := conn.CreateCloudFrontOriginAccessIdentityWithContext(ctx, params)
+	resp, err := conn.CreateCloudFrontOriginAccessIdentity(ctx, params)
 	if err != nil {
 		return create.AppendDiagError(diags, names.CloudFront, create.ErrActionReading, ResNameOriginAccessIdentity, d.Id(), err)
 	}
-	d.SetId(aws.StringValue(resp.CloudFrontOriginAccessIdentity.Id))
+	d.SetId(aws.ToString(resp.CloudFrontOriginAccessIdentity.Id))
 	return append(diags, resourceOriginAccessIdentityRead(ctx, d, meta)...)
 }
 
 func resourceOriginAccessIdentityRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
+	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 	params := &cloudfront.GetCloudFrontOriginAccessIdentityInput{
 		Id: aws.String(d.Id()),
 	}
 
-	resp, err := conn.GetCloudFrontOriginAccessIdentityWithContext(ctx, params)
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchCloudFrontOriginAccessIdentity) {
+	resp, err := conn.GetCloudFrontOriginAccessIdentity(ctx, params)
+	if !d.IsNewResource() && errs.IsA[*awstypes.NoSuchCloudFrontOriginAccessIdentity](err) {
 		create.LogNotFoundRemoveState(names.CloudFront, create.ErrActionReading, ResNameOriginAccessIdentity, d.Id())
 		d.SetId("")
 		return diags
@@ -96,7 +97,7 @@ func resourceOriginAccessIdentityRead(ctx context.Context, d *schema.ResourceDat
 	// Update attributes from DistributionConfig
 	flattenOriginAccessIdentityConfig(d, resp.CloudFrontOriginAccessIdentity.CloudFrontOriginAccessIdentityConfig)
 	// Update other attributes outside of DistributionConfig
-	d.SetId(aws.StringValue(resp.CloudFrontOriginAccessIdentity.Id))
+	d.SetId(aws.ToString(resp.CloudFrontOriginAccessIdentity.Id))
 	d.Set("etag", resp.ETag)
 	d.Set("s3_canonical_user_id", resp.CloudFrontOriginAccessIdentity.S3CanonicalUserId)
 	d.Set("cloudfront_access_identity_path", fmt.Sprintf("origin-access-identity/cloudfront/%s", *resp.CloudFrontOriginAccessIdentity.Id))
@@ -112,13 +113,13 @@ func resourceOriginAccessIdentityRead(ctx context.Context, d *schema.ResourceDat
 
 func resourceOriginAccessIdentityUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
+	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 	params := &cloudfront.UpdateCloudFrontOriginAccessIdentityInput{
 		Id:                                   aws.String(d.Id()),
 		CloudFrontOriginAccessIdentityConfig: expandOriginAccessIdentityConfig(d),
 		IfMatch:                              aws.String(d.Get("etag").(string)),
 	}
-	_, err := conn.UpdateCloudFrontOriginAccessIdentityWithContext(ctx, params)
+	_, err := conn.UpdateCloudFrontOriginAccessIdentity(ctx, params)
 	if err != nil {
 		return create.AppendDiagError(diags, names.CloudFront, create.ErrActionUpdating, ResNameOriginAccessIdentity, d.Id(), err)
 	}
@@ -128,20 +129,20 @@ func resourceOriginAccessIdentityUpdate(ctx context.Context, d *schema.ResourceD
 
 func resourceOriginAccessIdentityDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
+	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 	params := &cloudfront.DeleteCloudFrontOriginAccessIdentityInput{
 		Id:      aws.String(d.Id()),
 		IfMatch: aws.String(d.Get("etag").(string)),
 	}
 
-	if _, err := conn.DeleteCloudFrontOriginAccessIdentityWithContext(ctx, params); err != nil {
+	if _, err := conn.DeleteCloudFrontOriginAccessIdentity(ctx, params); err != nil {
 		return create.AppendDiagError(diags, names.CloudFront, create.ErrActionDeleting, ResNameOriginAccessIdentity, d.Id(), err)
 	}
 	return diags
 }
 
-func expandOriginAccessIdentityConfig(d *schema.ResourceData) *cloudfront.OriginAccessIdentityConfig {
-	originAccessIdentityConfig := &cloudfront.OriginAccessIdentityConfig{
+func expandOriginAccessIdentityConfig(d *schema.ResourceData) *awstypes.CloudFrontOriginAccessIdentityConfig {
+	originAccessIdentityConfig := &awstypes.CloudFrontOriginAccessIdentityConfig{
 		Comment: aws.String(d.Get("comment").(string)),
 	}
 	// This sets CallerReference if it's still pending computation (ie: new resource)
@@ -153,7 +154,7 @@ func expandOriginAccessIdentityConfig(d *schema.ResourceData) *cloudfront.Origin
 	return originAccessIdentityConfig
 }
 
-func flattenOriginAccessIdentityConfig(d *schema.ResourceData, originAccessIdentityConfig *cloudfront.OriginAccessIdentityConfig) {
+func flattenOriginAccessIdentityConfig(d *schema.ResourceData, originAccessIdentityConfig *awstypes.CloudFrontOriginAccessIdentityConfig) {
 	d.Set("comment", originAccessIdentityConfig.Comment)
 	d.Set("caller_reference", originAccessIdentityConfig.CallerReference)
 }

@@ -7,12 +7,13 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudfront"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
@@ -58,9 +59,9 @@ func dataSourceFunction() *schema.Resource {
 				Computed: true,
 			},
 			"stage": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(cloudfront.FunctionStage_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.FunctionStage](),
 			},
 			"status": {
 				Type:     schema.TypeString,
@@ -72,7 +73,7 @@ func dataSourceFunction() *schema.Resource {
 
 func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
+	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	name := d.Get("name").(string)
 	stage := d.Get("stage").(string)
@@ -82,7 +83,7 @@ func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading CloudFront Function (%s) %s stage: %s", name, stage, err)
 	}
 
-	d.SetId(aws.StringValue(outputDF.FunctionSummary.Name))
+	d.SetId(aws.ToString(outputDF.FunctionSummary.Name))
 	d.Set("arn", outputDF.FunctionSummary.FunctionMetadata.FunctionARN)
 	d.Set("comment", outputDF.FunctionSummary.FunctionConfig.Comment)
 	d.Set("etag", outputDF.ETag)
@@ -94,9 +95,9 @@ func dataSourceFunctionRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("runtime", outputDF.FunctionSummary.FunctionConfig.Runtime)
 	d.Set("status", outputDF.FunctionSummary.Status)
 
-	outputGF, err := conn.GetFunctionWithContext(ctx, &cloudfront.GetFunctionInput{
+	outputGF, err := conn.GetFunction(ctx, &cloudfront.GetFunctionInput{
 		Name:  aws.String(name),
-		Stage: aws.String(stage),
+		Stage: awstypes.FunctionStage(stage),
 	})
 
 	if err != nil {

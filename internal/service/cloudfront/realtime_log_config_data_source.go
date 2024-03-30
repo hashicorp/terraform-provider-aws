@@ -6,7 +6,7 @@ package cloudfront
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -70,7 +70,7 @@ func DataSourceRealtimeLogConfig() *schema.Resource {
 
 func dataSourceRealtimeLogConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
+	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	name := d.Get("name").(string)
 	logConfig, err := FindRealtimeLogConfigByName(ctx, conn, name)
@@ -78,13 +78,13 @@ func dataSourceRealtimeLogConfigRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "reading CloudFront Real-time Log Config (%s): %s", name, err)
 	}
 	d.SetId(
-		aws.StringValue(logConfig.ARN),
+		aws.ToString(logConfig.ARN),
 	)
 	d.Set("arn", logConfig.ARN)
 	if err := d.Set("endpoint", flattenEndPoints(logConfig.EndPoints)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoint: %s", err)
 	}
-	d.Set("fields", aws.StringValueSlice(logConfig.Fields))
+	d.Set("fields", aws.StringSlice(logConfig.Fields))
 	d.Set("name", logConfig.Name)
 	d.Set("sampling_rate", logConfig.SamplingRate)
 

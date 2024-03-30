@@ -6,8 +6,8 @@ package cloudfront
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudfront"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -119,7 +119,7 @@ func DataSourceOriginRequestPolicy() *schema.Resource {
 
 func dataSourceOriginRequestPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
+	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	var originRequestPolicyID string
 
@@ -129,21 +129,22 @@ func dataSourceOriginRequestPolicyRead(ctx context.Context, d *schema.ResourceDa
 		name := d.Get("name").(string)
 		input := &cloudfront.ListOriginRequestPoliciesInput{}
 
-		err := ListOriginRequestPoliciesPages(ctx, conn, input, func(page *cloudfront.ListOriginRequestPoliciesOutput, lastPage bool) bool {
+		err := ListOriginRequestPoliciesPages(ctx, input, func(page *cloudfront.ListOriginRequestPoliciesOutput, lastPage bool) bool {
+
 			if page == nil {
 				return !lastPage
 			}
 
 			for _, policySummary := range page.OriginRequestPolicyList.Items {
-				if originRequestPolicy := policySummary.OriginRequestPolicy; aws.StringValue(originRequestPolicy.OriginRequestPolicyConfig.Name) == name {
-					originRequestPolicyID = aws.StringValue(originRequestPolicy.Id)
+				if originRequestPolicy := policySummary.OriginRequestPolicy; aws.ToString(originRequestPolicy.OriginRequestPolicyConfig.Name) == name {
+					originRequestPolicyID = aws.ToString(originRequestPolicy.Id)
 
 					return false
 				}
 			}
 
 			return !lastPage
-		})
+		}, meta)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "listing CloudFront Origin Request Policies: %s", err)

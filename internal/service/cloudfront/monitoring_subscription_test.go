@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/cloudfront"
+	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -24,7 +24,7 @@ func TestAccCloudFrontMonitoringSubscription_basic(t *testing.T) {
 	resourceName := "aws_cloudfront_monitoring_subscription.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, cloudfront.ServiceID) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMonitoringSubscriptionDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
@@ -54,7 +54,7 @@ func TestAccCloudFrontMonitoringSubscription_disappears(t *testing.T) {
 	resourceName := "aws_cloudfront_monitoring_subscription.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, cloudfront.ServiceID) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMonitoringSubscriptionDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
@@ -77,7 +77,7 @@ func TestAccCloudFrontMonitoringSubscription_update(t *testing.T) {
 	resourceName := "aws_cloudfront_monitoring_subscription.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, cloudfront.ServiceID) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMonitoringSubscriptionDestroy(ctx),
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
@@ -113,7 +113,7 @@ func TestAccCloudFrontMonitoringSubscription_update(t *testing.T) {
 
 func testAccCheckMonitoringSubscriptionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudfront_monitoring_subscription" {
@@ -148,7 +148,7 @@ func testAccCheckMonitoringSubscriptionExists(ctx context.Context, n string, v *
 			return fmt.Errorf("No CloudFront Monitoring Subscription ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
 
 		output, err := tfcloudfront.FindMonitoringSubscriptionByDistributionID(ctx, conn, rs.Primary.ID)
 

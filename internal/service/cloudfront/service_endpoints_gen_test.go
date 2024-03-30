@@ -15,7 +15,6 @@ import (
 
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	cloudfront_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudfront"
-	cloudfront_sdkv1 "github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/aws/smithy-go/middleware"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"github.com/google/go-cmp/cmp"
@@ -208,7 +207,7 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 			testcase := testcase
 
 			t.Run(name, func(t *testing.T) {
-				testEndpointCase(t, region, testcase, callServiceV1)
+				testEndpointCase(t, region, testcase, callServiceV2)
 			})
 		}
 	})
@@ -261,20 +260,6 @@ func callServiceV2(ctx context.Context, t *testing.T, meta *conns.AWSClient) str
 	} else if !errors.Is(err, errCancelOperation) {
 		t.Fatalf("Unexpected error: %s", err)
 	}
-
-	return endpoint
-}
-
-func callServiceV1(ctx context.Context, t *testing.T, meta *conns.AWSClient) string {
-	t.Helper()
-
-	client := meta.CloudFrontConn(ctx)
-
-	req, _ := client.ListDistributionsRequest(&cloudfront_sdkv1.ListDistributionsInput{})
-
-	req.HTTPRequest.URL.Path = "/"
-
-	endpoint := req.HTTPRequest.URL.String()
 
 	return endpoint
 }

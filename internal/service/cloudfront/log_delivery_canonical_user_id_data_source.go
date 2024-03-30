@@ -6,10 +6,10 @@ package cloudfront
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -43,7 +43,7 @@ func dataSourceLogDeliveryCanonicalUserIDRead(ctx context.Context, d *schema.Res
 		region = v.(string)
 	}
 
-	if v, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), region); ok && v.ID() == endpoints.AwsCnPartitionID {
+	if v := names.PartitionForRegion(region); v == names.ChinaPartitionID {
 		canonicalId = cnLogDeliveryCanonicalUserID
 	}
 

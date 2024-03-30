@@ -15,22 +15,22 @@ import (
 	"fmt"
 	"strconv"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudfront"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
-// Assemble the *cloudfront.DistributionConfig variable. Calls out to various
+// Assemble the *awstypes.DistributionConfig variable. Calls out to various
 // expander functions to convert attributes and sub-attributes to the various
 // complex structures which are necessary to properly build the
 // DistributionConfig structure.
 //
 // Used by the aws_cloudfront_distribution Create and Update functions.
-func expandDistributionConfig(d *schema.ResourceData) *cloudfront.DistributionConfig {
-	distributionConfig := &cloudfront.DistributionConfig{
+func expandDistributionConfig(d *schema.ResourceData) *awstypes.DistributionConfig {
+	distributionConfig := &awstypes.DistributionConfig{
 		CacheBehaviors:               expandCacheBehaviors(d.Get("ordered_cache_behavior").([]interface{})),
 		CallerReference:              aws.String(id.UniqueId()),
 		Comment:                      aws.String(d.Get("comment").(string)),
@@ -40,9 +40,9 @@ func expandDistributionConfig(d *schema.ResourceData) *cloudfront.DistributionCo
 		DefaultRootObject:            aws.String(d.Get("default_root_object").(string)),
 		Enabled:                      aws.Bool(d.Get("enabled").(bool)),
 		IsIPV6Enabled:                aws.Bool(d.Get("is_ipv6_enabled").(bool)),
-		HttpVersion:                  aws.String(d.Get("http_version").(string)),
+		HttpVersion:                  awstypes.HttpVersion(d.Get("http_version").(string)),
 		Origins:                      ExpandOrigins(d.Get("origin").(*schema.Set)),
-		PriceClass:                   aws.String(d.Get("price_class").(string)),
+		PriceClass:                   awstypes.PriceClass(d.Get("price_class").(string)),
 		Staging:                      aws.Bool(d.Get("staging").(bool)),
 		WebACLId:                     aws.String(d.Get("web_acl_id").(string)),
 	}
@@ -74,13 +74,13 @@ func expandDistributionConfig(d *schema.ResourceData) *cloudfront.DistributionCo
 	return distributionConfig
 }
 
-// Unpack the *cloudfront.DistributionConfig variable and set resource data.
+// Unpack the *awstypes.DistributionConfig variable and set resource data.
 // Calls out to flatten functions to convert the DistributionConfig
 // sub-structures to their respective attributes in the
 // aws_cloudfront_distribution resource.
 //
 // Used by the aws_cloudfront_distribution Read function.
-func flattenDistributionConfig(d *schema.ResourceData, distributionConfig *cloudfront.DistributionConfig) error {
+func flattenDistributionConfig(d *schema.ResourceData, distributionConfig *awstypes.DistributionConfig) error {
 	var err error
 
 	d.Set("enabled", distributionConfig.Enabled)
@@ -98,7 +98,7 @@ func flattenDistributionConfig(d *schema.ResourceData, distributionConfig *cloud
 
 	d.Set("caller_reference", distributionConfig.CallerReference)
 	if distributionConfig.Comment != nil {
-		if aws.StringValue(distributionConfig.Comment) != "" {
+		if aws.ToString(distributionConfig.Comment) != "" {
 			d.Set("comment", distributionConfig.Comment)
 		}
 	}
@@ -145,13 +145,13 @@ func flattenDistributionConfig(d *schema.ResourceData, distributionConfig *cloud
 			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
-	if aws.Int64Value(distributionConfig.Origins.Quantity) > 0 {
+	if *aws.Int32(*distributionConfig.Origins.Quantity) > 0 {
 		err = d.Set("origin", FlattenOrigins(distributionConfig.Origins))
 		if err != nil {
 			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
-	if aws.Int64Value(distributionConfig.OriginGroups.Quantity) > 0 {
+	if *aws.Int32(*distributionConfig.OriginGroups.Quantity) > 0 {
 		err = d.Set("origin_group", FlattenOriginGroups(distributionConfig.OriginGroups))
 		if err != nil {
 			return err // nosemgrep:ci.bare-error-returns
@@ -161,36 +161,36 @@ func flattenDistributionConfig(d *schema.ResourceData, distributionConfig *cloud
 	return nil
 }
 
-func expandCacheBehaviors(lst []interface{}) *cloudfront.CacheBehaviors {
-	var qty int64
-	var items []*cloudfront.CacheBehavior
+func expandCacheBehaviors(lst []interface{}) *awstypes.CacheBehaviors {
+	var qty int32
+	var items []awstypes.CacheBehavior
 	for _, v := range lst {
-		items = append(items, expandCacheBehavior(v.(map[string]interface{})))
+		items = append(items, *expandCacheBehavior(v.(map[string]interface{})))
 		qty++
 	}
-	return &cloudfront.CacheBehaviors{
-		Quantity: aws.Int64(qty),
+	return &awstypes.CacheBehaviors{
+		Quantity: aws.Int32(qty),
 		Items:    items,
 	}
 }
 
-func flattenCacheBehaviors(cbs *cloudfront.CacheBehaviors) []interface{} {
+func flattenCacheBehaviors(cbs *awstypes.CacheBehaviors) []interface{} {
 	lst := []interface{}{}
 	for _, v := range cbs.Items {
-		lst = append(lst, flattenCacheBehavior(v))
+		lst = append(lst, flattenCacheBehavior(&v))
 	}
 	return lst
 }
 
-func ExpandDefaultCacheBehavior(m map[string]interface{}) *cloudfront.DefaultCacheBehavior {
-	dcb := &cloudfront.DefaultCacheBehavior{
+func ExpandDefaultCacheBehavior(m map[string]interface{}) *awstypes.DefaultCacheBehavior {
+	dcb := &awstypes.DefaultCacheBehavior{
 		CachePolicyId:           aws.String(m["cache_policy_id"].(string)),
 		Compress:                aws.Bool(m["compress"].(bool)),
 		FieldLevelEncryptionId:  aws.String(m["field_level_encryption_id"].(string)),
 		OriginRequestPolicyId:   aws.String(m["origin_request_policy_id"].(string)),
 		ResponseHeadersPolicyId: aws.String(m["response_headers_policy_id"].(string)),
 		TargetOriginId:          aws.String(m["target_origin_id"].(string)),
-		ViewerProtocolPolicy:    aws.String(m["viewer_protocol_policy"].(string)),
+		ViewerProtocolPolicy:    awstypes.ViewerProtocolPolicy(m["viewer_protocol_policy"].(string)),
 	}
 
 	if forwardedValuesFlat, ok := m["forwarded_values"].([]interface{}); ok && len(forwardedValuesFlat) == 1 {
@@ -239,13 +239,13 @@ func ExpandDefaultCacheBehavior(m map[string]interface{}) *cloudfront.DefaultCac
 	return dcb
 }
 
-func expandCacheBehavior(m map[string]interface{}) *cloudfront.CacheBehavior {
-	var forwardedValues *cloudfront.ForwardedValues
+func expandCacheBehavior(m map[string]interface{}) *awstypes.CacheBehavior {
+	var forwardedValues *awstypes.ForwardedValues
 	if forwardedValuesFlat, ok := m["forwarded_values"].([]interface{}); ok && len(forwardedValuesFlat) == 1 {
 		forwardedValues = ExpandForwardedValues(m["forwarded_values"].([]interface{})[0].(map[string]interface{}))
 	}
 
-	cb := &cloudfront.CacheBehavior{
+	cb := &awstypes.CacheBehavior{
 		CachePolicyId:           aws.String(m["cache_policy_id"].(string)),
 		Compress:                aws.Bool(m["compress"].(bool)),
 		FieldLevelEncryptionId:  aws.String(m["field_level_encryption_id"].(string)),
@@ -253,7 +253,7 @@ func expandCacheBehavior(m map[string]interface{}) *cloudfront.CacheBehavior {
 		OriginRequestPolicyId:   aws.String(m["origin_request_policy_id"].(string)),
 		ResponseHeadersPolicyId: aws.String(m["response_headers_policy_id"].(string)),
 		TargetOriginId:          aws.String(m["target_origin_id"].(string)),
-		ViewerProtocolPolicy:    aws.String(m["viewer_protocol_policy"].(string)),
+		ViewerProtocolPolicy:    awstypes.ViewerProtocolPolicy(m["viewer_protocol_policy"].(string)),
 	}
 
 	if m["cache_policy_id"].(string) == "" {
@@ -301,17 +301,17 @@ func expandCacheBehavior(m map[string]interface{}) *cloudfront.CacheBehavior {
 	return cb
 }
 
-func flattenDefaultCacheBehavior(dcb *cloudfront.DefaultCacheBehavior) map[string]interface{} {
+func flattenDefaultCacheBehavior(dcb *awstypes.DefaultCacheBehavior) map[string]interface{} {
 	m := map[string]interface{}{
-		"cache_policy_id":            aws.StringValue(dcb.CachePolicyId),
-		"compress":                   aws.BoolValue(dcb.Compress),
-		"field_level_encryption_id":  aws.StringValue(dcb.FieldLevelEncryptionId),
-		"viewer_protocol_policy":     aws.StringValue(dcb.ViewerProtocolPolicy),
-		"target_origin_id":           aws.StringValue(dcb.TargetOriginId),
-		"min_ttl":                    aws.Int64Value(dcb.MinTTL),
-		"origin_request_policy_id":   aws.StringValue(dcb.OriginRequestPolicyId),
-		"realtime_log_config_arn":    aws.StringValue(dcb.RealtimeLogConfigArn),
-		"response_headers_policy_id": aws.StringValue(dcb.ResponseHeadersPolicyId),
+		"cache_policy_id":            aws.ToString(dcb.CachePolicyId),
+		"compress":                   aws.Bool(*dcb.Compress),
+		"field_level_encryption_id":  aws.ToString(dcb.FieldLevelEncryptionId),
+		"viewer_protocol_policy":     aws.ToString((*string)(&dcb.ViewerProtocolPolicy)),
+		"target_origin_id":           aws.ToString(dcb.TargetOriginId),
+		"min_ttl":                    aws.Int64(*dcb.MinTTL),
+		"origin_request_policy_id":   aws.ToString(dcb.OriginRequestPolicyId),
+		"realtime_log_config_arn":    aws.ToString(dcb.RealtimeLogConfigArn),
+		"response_headers_policy_id": aws.ToString(dcb.ResponseHeadersPolicyId),
 	}
 
 	if dcb.ForwardedValues != nil {
@@ -330,13 +330,13 @@ func flattenDefaultCacheBehavior(dcb *cloudfront.DefaultCacheBehavior) map[strin
 		m["function_association"] = FlattenFunctionAssociations(dcb.FunctionAssociations)
 	}
 	if dcb.MaxTTL != nil {
-		m["max_ttl"] = aws.Int64Value(dcb.MaxTTL)
+		m["max_ttl"] = aws.Int64(*dcb.MaxTTL)
 	}
 	if dcb.SmoothStreaming != nil {
-		m["smooth_streaming"] = aws.BoolValue(dcb.SmoothStreaming)
+		m["smooth_streaming"] = aws.Bool(*dcb.SmoothStreaming)
 	}
 	if dcb.DefaultTTL != nil {
-		m["default_ttl"] = int(aws.Int64Value(dcb.DefaultTTL))
+		m["default_ttl"] = int(*dcb.DefaultTTL)
 	}
 	if dcb.AllowedMethods != nil {
 		m["allowed_methods"] = FlattenAllowedMethods(dcb.AllowedMethods)
@@ -348,18 +348,18 @@ func flattenDefaultCacheBehavior(dcb *cloudfront.DefaultCacheBehavior) map[strin
 	return m
 }
 
-func flattenCacheBehavior(cb *cloudfront.CacheBehavior) map[string]interface{} {
+func flattenCacheBehavior(cb *awstypes.CacheBehavior) map[string]interface{} {
 	m := make(map[string]interface{})
 
-	m["cache_policy_id"] = aws.StringValue(cb.CachePolicyId)
-	m["compress"] = aws.BoolValue(cb.Compress)
-	m["field_level_encryption_id"] = aws.StringValue(cb.FieldLevelEncryptionId)
-	m["viewer_protocol_policy"] = aws.StringValue(cb.ViewerProtocolPolicy)
-	m["target_origin_id"] = aws.StringValue(cb.TargetOriginId)
-	m["min_ttl"] = int(aws.Int64Value(cb.MinTTL))
-	m["origin_request_policy_id"] = aws.StringValue(cb.OriginRequestPolicyId)
-	m["realtime_log_config_arn"] = aws.StringValue(cb.RealtimeLogConfigArn)
-	m["response_headers_policy_id"] = aws.StringValue(cb.ResponseHeadersPolicyId)
+	m["cache_policy_id"] = aws.ToString(cb.CachePolicyId)
+	m["compress"] = aws.Bool(*cb.Compress)
+	m["field_level_encryption_id"] = aws.ToString(cb.FieldLevelEncryptionId)
+	m["viewer_protocol_policy"] = cb.ViewerProtocolPolicy
+	m["target_origin_id"] = aws.ToString(cb.TargetOriginId)
+	m["min_ttl"] = cb.MinTTL
+	m["origin_request_policy_id"] = aws.ToString(cb.OriginRequestPolicyId)
+	m["realtime_log_config_arn"] = aws.ToString(cb.RealtimeLogConfigArn)
+	m["response_headers_policy_id"] = aws.ToString(cb.ResponseHeadersPolicyId)
 
 	if cb.ForwardedValues != nil {
 		m["forwarded_values"] = []interface{}{FlattenForwardedValues(cb.ForwardedValues)}
@@ -377,13 +377,13 @@ func flattenCacheBehavior(cb *cloudfront.CacheBehavior) map[string]interface{} {
 		m["function_association"] = FlattenFunctionAssociations(cb.FunctionAssociations)
 	}
 	if cb.MaxTTL != nil {
-		m["max_ttl"] = int(aws.Int64Value(cb.MaxTTL))
+		m["max_ttl"] = int(*aws.Int64(*cb.MaxTTL))
 	}
 	if cb.SmoothStreaming != nil {
-		m["smooth_streaming"] = aws.BoolValue(cb.SmoothStreaming)
+		m["smooth_streaming"] = cb.SmoothStreaming
 	}
 	if cb.DefaultTTL != nil {
-		m["default_ttl"] = int(aws.Int64Value(cb.DefaultTTL))
+		m["default_ttl"] = int(*aws.Int64(*cb.DefaultTTL))
 	}
 	if cb.AllowedMethods != nil {
 		m["allowed_methods"] = FlattenAllowedMethods(cb.AllowedMethods)
@@ -392,47 +392,47 @@ func flattenCacheBehavior(cb *cloudfront.CacheBehavior) map[string]interface{} {
 		m["cached_methods"] = FlattenCachedMethods(cb.AllowedMethods.CachedMethods)
 	}
 	if cb.PathPattern != nil {
-		m["path_pattern"] = aws.StringValue(cb.PathPattern)
+		m["path_pattern"] = aws.ToString(cb.PathPattern)
 	}
 	return m
 }
 
-func expandTrustedKeyGroups(s []interface{}) *cloudfront.TrustedKeyGroups {
-	var tkg cloudfront.TrustedKeyGroups
+func expandTrustedKeyGroups(s []interface{}) *awstypes.TrustedKeyGroups {
+	var tkg awstypes.TrustedKeyGroups
 	if len(s) > 0 {
-		tkg.Quantity = aws.Int64(int64(len(s)))
-		tkg.Items = flex.ExpandStringList(s)
+		tkg.Quantity = aws.Int32(int32(len(s)))
+		tkg.Items = flex.ExpandStringValueList(s)
 		tkg.Enabled = aws.Bool(true)
 	} else {
-		tkg.Quantity = aws.Int64(0)
+		tkg.Quantity = aws.Int32(0)
 		tkg.Enabled = aws.Bool(false)
 	}
 	return &tkg
 }
 
-func flattenTrustedKeyGroups(tkg *cloudfront.TrustedKeyGroups) []interface{} {
+func flattenTrustedKeyGroups(tkg *awstypes.TrustedKeyGroups) []interface{} {
 	if tkg.Items != nil {
-		return flex.FlattenStringList(tkg.Items)
+		return flex.FlattenStringValueList(tkg.Items)
 	}
 	return []interface{}{}
 }
 
-func ExpandTrustedSigners(s []interface{}) *cloudfront.TrustedSigners {
-	var ts cloudfront.TrustedSigners
+func ExpandTrustedSigners(s []interface{}) *awstypes.TrustedSigners {
+	var ts awstypes.TrustedSigners
 	if len(s) > 0 {
-		ts.Quantity = aws.Int64(int64(len(s)))
-		ts.Items = flex.ExpandStringList(s)
+		ts.Quantity = aws.Int32(int32(len(s)))
+		ts.Items = flex.ExpandStringValueList(s)
 		ts.Enabled = aws.Bool(true)
 	} else {
-		ts.Quantity = aws.Int64(0)
+		ts.Quantity = aws.Int32(0)
 		ts.Enabled = aws.Bool(false)
 	}
 	return &ts
 }
 
-func FlattenTrustedSigners(ts *cloudfront.TrustedSigners) []interface{} {
+func FlattenTrustedSigners(ts *awstypes.TrustedSigners) []interface{} {
 	if ts.Items != nil {
-		return flex.FlattenStringList(ts.Items)
+		return flex.FlattenStringValueList(ts.Items)
 	}
 	return []interface{}{}
 }
@@ -454,27 +454,27 @@ func FunctionAssociationHash(v interface{}) int {
 	return create.StringHashcode(buf.String())
 }
 
-func ExpandLambdaFunctionAssociations(v interface{}) *cloudfront.LambdaFunctionAssociations {
+func ExpandLambdaFunctionAssociations(v interface{}) *awstypes.LambdaFunctionAssociations {
 	if v == nil {
-		return &cloudfront.LambdaFunctionAssociations{
-			Quantity: aws.Int64(0),
+		return &awstypes.LambdaFunctionAssociations{
+			Quantity: aws.Int32(0),
 		}
 	}
 
 	s := v.([]interface{})
-	var lfa cloudfront.LambdaFunctionAssociations
-	lfa.Quantity = aws.Int64(int64(len(s)))
-	lfa.Items = make([]*cloudfront.LambdaFunctionAssociation, len(s))
+	var lfa awstypes.LambdaFunctionAssociations
+	lfa.Quantity = aws.Int32(int32(len(s)))
+	lfa.Items = make([]awstypes.LambdaFunctionAssociation, len(s))
 	for i, lf := range s {
-		lfa.Items[i] = expandLambdaFunctionAssociation(lf.(map[string]interface{}))
+		lfa.Items[i] = *expandLambdaFunctionAssociation(lf.(map[string]interface{}))
 	}
 	return &lfa
 }
 
-func expandLambdaFunctionAssociation(lf map[string]interface{}) *cloudfront.LambdaFunctionAssociation {
-	var lfa cloudfront.LambdaFunctionAssociation
+func expandLambdaFunctionAssociation(lf map[string]interface{}) *awstypes.LambdaFunctionAssociation {
+	var lfa awstypes.LambdaFunctionAssociation
 	if v, ok := lf["event_type"]; ok {
-		lfa.EventType = aws.String(v.(string))
+		lfa.EventType = awstypes.EventType(v.(string))
 	}
 	if v, ok := lf["lambda_arn"]; ok {
 		lfa.LambdaFunctionARN = aws.String(v.(string))
@@ -485,27 +485,28 @@ func expandLambdaFunctionAssociation(lf map[string]interface{}) *cloudfront.Lamb
 	return &lfa
 }
 
-func ExpandFunctionAssociations(v interface{}) *cloudfront.FunctionAssociations {
+func ExpandFunctionAssociations(v interface{}) *awstypes.FunctionAssociations {
 	if v == nil {
-		return &cloudfront.FunctionAssociations{
-			Quantity: aws.Int64(0),
+		return &awstypes.FunctionAssociations{
+			Quantity: aws.Int32(0),
 		}
 	}
 
 	s := v.([]interface{})
-	var fa cloudfront.FunctionAssociations
-	fa.Quantity = aws.Int64(int64(len(s)))
-	fa.Items = make([]*cloudfront.FunctionAssociation, len(s))
+	var fa awstypes.FunctionAssociations
+	fa.Quantity = aws.Int32(int32(len(s)))
+	fa.Items = make([]awstypes.FunctionAssociation, len(s))
+
 	for i, f := range s {
-		fa.Items[i] = expandFunctionAssociation(f.(map[string]interface{}))
+		fa.Items[i] = *expandFunctionAssociation(f.(map[string]interface{}))
 	}
 	return &fa
 }
 
-func expandFunctionAssociation(f map[string]interface{}) *cloudfront.FunctionAssociation {
-	var fa cloudfront.FunctionAssociation
+func expandFunctionAssociation(f map[string]interface{}) *awstypes.FunctionAssociation {
+	var fa awstypes.FunctionAssociation
 	if v, ok := f["event_type"]; ok {
-		fa.EventType = aws.String(v.(string))
+		fa.EventType = awstypes.EventType(v.(string))
 	}
 	if v, ok := f["function_arn"]; ok {
 		fa.FunctionARN = aws.String(v.(string))
@@ -513,47 +514,48 @@ func expandFunctionAssociation(f map[string]interface{}) *cloudfront.FunctionAss
 	return &fa
 }
 
-func FlattenLambdaFunctionAssociations(lfa *cloudfront.LambdaFunctionAssociations) *schema.Set {
+func FlattenLambdaFunctionAssociations(lfa *awstypes.LambdaFunctionAssociations) *schema.Set {
 	s := schema.NewSet(LambdaFunctionAssociationHash, []interface{}{})
 	for _, v := range lfa.Items {
-		s.Add(flattenLambdaFunctionAssociation(v))
+		s.Add(flattenLambdaFunctionAssociation(&v))
 	}
 	return s
 }
 
-func flattenLambdaFunctionAssociation(lfa *cloudfront.LambdaFunctionAssociation) map[string]interface{} {
+func flattenLambdaFunctionAssociation(lfa *awstypes.LambdaFunctionAssociation) map[string]interface{} {
 	m := map[string]interface{}{}
 	if lfa != nil {
-		m["event_type"] = aws.StringValue(lfa.EventType)
-		m["lambda_arn"] = aws.StringValue(lfa.LambdaFunctionARN)
-		m["include_body"] = aws.BoolValue(lfa.IncludeBody)
+		m["event_type"] = awstypes.EventType(lfa.EventType)
+		m["lambda_arn"] = aws.ToString(lfa.LambdaFunctionARN)
+		m["include_body"] = aws.Bool(*lfa.IncludeBody)
 	}
 	return m
 }
 
-func FlattenFunctionAssociations(fa *cloudfront.FunctionAssociations) *schema.Set {
+func FlattenFunctionAssociations(fa *awstypes.FunctionAssociations) *schema.Set {
 	s := schema.NewSet(FunctionAssociationHash, []interface{}{})
 	for _, v := range fa.Items {
-		s.Add(flattenFunctionAssociation(v))
+		s.Add(flattenFunctionAssociation(&v))
 	}
 	return s
 }
 
-func flattenFunctionAssociation(fa *cloudfront.FunctionAssociation) map[string]interface{} {
+func flattenFunctionAssociation(fa *awstypes.FunctionAssociation) map[string]interface{} {
 	m := map[string]interface{}{}
+	eventType := string(fa.EventType)
 	if fa != nil {
-		m["event_type"] = aws.StringValue(fa.EventType)
-		m["function_arn"] = aws.StringValue(fa.FunctionARN)
+		m["event_type"] = aws.ToString(&eventType)
+		m["function_arn"] = aws.ToString(fa.FunctionARN)
 	}
 	return m
 }
 
-func ExpandForwardedValues(m map[string]interface{}) *cloudfront.ForwardedValues {
+func ExpandForwardedValues(m map[string]interface{}) *awstypes.ForwardedValues {
 	if len(m) < 1 {
 		return nil
 	}
 
-	fv := &cloudfront.ForwardedValues{
+	fv := &awstypes.ForwardedValues{
 		QueryString: aws.Bool(m["query_string"].(bool)),
 	}
 	if v, ok := m["cookies"]; ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -568,9 +570,9 @@ func ExpandForwardedValues(m map[string]interface{}) *cloudfront.ForwardedValues
 	return fv
 }
 
-func FlattenForwardedValues(fv *cloudfront.ForwardedValues) map[string]interface{} {
+func FlattenForwardedValues(fv *awstypes.ForwardedValues) map[string]interface{} {
 	m := make(map[string]interface{})
-	m["query_string"] = aws.BoolValue(fv.QueryString)
+	m["query_string"] = aws.ToBool(fv.QueryString)
 	if fv.Cookies != nil {
 		m["cookies"] = []interface{}{FlattenCookiePreference(fv.Cookies)}
 	}
@@ -583,37 +585,37 @@ func FlattenForwardedValues(fv *cloudfront.ForwardedValues) map[string]interface
 	return m
 }
 
-func ExpandHeaders(d []interface{}) *cloudfront.Headers {
-	return &cloudfront.Headers{
-		Quantity: aws.Int64(int64(len(d))),
-		Items:    flex.ExpandStringList(d),
+func ExpandHeaders(d []interface{}) *awstypes.Headers {
+	return &awstypes.Headers{
+		Quantity: aws.Int32(int32(len(d))),
+		Items:    flex.ExpandStringValueList(d),
 	}
 }
 
-func FlattenHeaders(h *cloudfront.Headers) []interface{} {
+func FlattenHeaders(h *awstypes.Headers) []interface{} {
 	if h.Items != nil {
-		return flex.FlattenStringList(h.Items)
+		return flex.FlattenStringValueList(h.Items)
 	}
 	return []interface{}{}
 }
 
-func ExpandQueryStringCacheKeys(d []interface{}) *cloudfront.QueryStringCacheKeys {
-	return &cloudfront.QueryStringCacheKeys{
-		Quantity: aws.Int64(int64(len(d))),
-		Items:    flex.ExpandStringList(d),
+func ExpandQueryStringCacheKeys(d []interface{}) *awstypes.QueryStringCacheKeys {
+	return &awstypes.QueryStringCacheKeys{
+		Quantity: aws.Int32(int32(len(d))),
+		Items:    flex.ExpandStringValueList(d),
 	}
 }
 
-func FlattenQueryStringCacheKeys(k *cloudfront.QueryStringCacheKeys) []interface{} {
+func FlattenQueryStringCacheKeys(k *awstypes.QueryStringCacheKeys) []interface{} {
 	if k.Items != nil {
-		return flex.FlattenStringList(k.Items)
+		return flex.FlattenStringValueList(k.Items)
 	}
 	return []interface{}{}
 }
 
-func ExpandCookiePreference(m map[string]interface{}) *cloudfront.CookiePreference {
-	cp := &cloudfront.CookiePreference{
-		Forward: aws.String(m["forward"].(string)),
+func ExpandCookiePreference(m map[string]interface{}) *awstypes.CookiePreference {
+	cp := &awstypes.CookiePreference{
+		Forward: awstypes.ItemSelection(m["forward"].(string)),
 	}
 	if v, ok := m["whitelisted_names"]; ok {
 		cp.WhitelistedNames = ExpandCookieNames(v.(*schema.Set).List())
@@ -621,89 +623,100 @@ func ExpandCookiePreference(m map[string]interface{}) *cloudfront.CookiePreferen
 	return cp
 }
 
-func FlattenCookiePreference(cp *cloudfront.CookiePreference) map[string]interface{} {
+func FlattenCookiePreference(cp *awstypes.CookiePreference) map[string]interface{} {
 	m := make(map[string]interface{})
-	m["forward"] = aws.StringValue(cp.Forward)
+	m["forward"] = awstypes.ItemSelection(cp.Forward)
 	if cp.WhitelistedNames != nil {
 		m["whitelisted_names"] = schema.NewSet(schema.HashString, FlattenCookieNames(cp.WhitelistedNames))
 	}
 	return m
 }
 
-func ExpandCookieNames(d []interface{}) *cloudfront.CookieNames {
-	return &cloudfront.CookieNames{
-		Quantity: aws.Int64(int64(len(d))),
-		Items:    flex.ExpandStringList(d),
+func ExpandCookieNames(d []interface{}) *awstypes.CookieNames {
+	return &awstypes.CookieNames{
+		Quantity: aws.Int32(int32(len(d))),
+		Items:    flex.ExpandStringValueList(d),
 	}
 }
 
-func FlattenCookieNames(cn *cloudfront.CookieNames) []interface{} {
+func FlattenCookieNames(cn *awstypes.CookieNames) []interface{} {
 	if cn.Items != nil {
-		return flex.FlattenStringList(cn.Items)
+		return flex.FlattenStringValueList(cn.Items)
 	}
 	return []interface{}{}
 }
 
-func ExpandAllowedMethods(s *schema.Set) *cloudfront.AllowedMethods {
-	return &cloudfront.AllowedMethods{
-		Quantity: aws.Int64(int64(s.Len())),
-		Items:    flex.ExpandStringSet(s),
+func ExpandAllowedMethods(s *schema.Set) *awstypes.AllowedMethods {
+	items := make([]awstypes.Method, 0)
+	for _, v := range flex.ExpandStringSet(s) {
+		items = append(items, awstypes.Method(*v))
 	}
-}
-
-func FlattenAllowedMethods(am *cloudfront.AllowedMethods) *schema.Set {
-	if am.Items != nil {
-		return flex.FlattenStringSet(am.Items)
-	}
-	return nil
-}
-
-func ExpandCachedMethods(s *schema.Set) *cloudfront.CachedMethods {
-	return &cloudfront.CachedMethods{
-		Quantity: aws.Int64(int64(s.Len())),
-		Items:    flex.ExpandStringSet(s),
-	}
-}
-
-func FlattenCachedMethods(cm *cloudfront.CachedMethods) *schema.Set {
-	if cm.Items != nil {
-		return flex.FlattenStringSet(cm.Items)
-	}
-	return nil
-}
-
-func ExpandOrigins(s *schema.Set) *cloudfront.Origins {
-	qty := 0
-	items := []*cloudfront.Origin{}
-	for _, v := range s.List() {
-		items = append(items, ExpandOrigin(v.(map[string]interface{})))
-		qty++
-	}
-	return &cloudfront.Origins{
-		Quantity: aws.Int64(int64(qty)),
+	return &awstypes.AllowedMethods{
+		Quantity: aws.Int32(int32(s.Len())),
 		Items:    items,
 	}
 }
 
-func FlattenOrigins(ors *cloudfront.Origins) *schema.Set {
+func FlattenAllowedMethods(am *awstypes.AllowedMethods) *schema.Set {
+	items := make([]*string, 0)
+	return flex.FlattenStringSet(items)
+}
+
+func ExpandCachedMethods(s *schema.Set) *awstypes.CachedMethods {
+	items := make([]awstypes.Method, 0)
+	for _, v := range flex.ExpandStringSet(s) {
+		items = append(items, awstypes.Method(*v))
+	}
+	return &awstypes.CachedMethods{
+		Quantity: aws.Int32(int32(s.Len())),
+		Items:    items,
+	}
+}
+
+func FlattenCachedMethods(cm *awstypes.CachedMethods) *schema.Set {
+	if cm.Items != nil {
+		cmItems := make([]string, 0)
+		for _, v := range cm.Items {
+			temp := string(v)
+			cmItems = append(cmItems, temp)
+		}
+		return flex.FlattenStringValueSet(cmItems)
+	}
+	return nil
+}
+
+func ExpandOrigins(s *schema.Set) *awstypes.Origins {
+	qty := 0
+	items := []awstypes.Origin{}
+	for _, v := range s.List() {
+		items = append(items, ExpandOrigin(v.(map[string]interface{})))
+		qty++
+	}
+	return &awstypes.Origins{
+		Quantity: aws.Int32(int32(qty)),
+		Items:    items,
+	}
+}
+
+func FlattenOrigins(ors *awstypes.Origins) *schema.Set {
 	s := []interface{}{}
 	for _, v := range ors.Items {
-		s = append(s, FlattenOrigin(v))
+		s = append(s, FlattenOrigin(&v))
 	}
 	return schema.NewSet(OriginHash, s)
 }
 
-func ExpandOrigin(m map[string]interface{}) *cloudfront.Origin {
-	origin := &cloudfront.Origin{
+func ExpandOrigin(m map[string]interface{}) awstypes.Origin {
+	origin := &awstypes.Origin{
 		Id:         aws.String(m["origin_id"].(string)),
 		DomainName: aws.String(m["domain_name"].(string)),
 	}
 
 	if v, ok := m["connection_attempts"]; ok {
-		origin.ConnectionAttempts = aws.Int64(int64(v.(int)))
+		origin.ConnectionAttempts = aws.Int32(int32(v.(int)))
 	}
 	if v, ok := m["connection_timeout"]; ok {
-		origin.ConnectionTimeout = aws.Int64(int64(v.(int)))
+		origin.ConnectionTimeout = aws.Int32(int32(v.(int)))
 	}
 	if v, ok := m["custom_header"]; ok {
 		origin.CustomHeaders = ExpandCustomHeaders(v.(*schema.Set))
@@ -735,23 +748,23 @@ func ExpandOrigin(m map[string]interface{}) *cloudfront.Origin {
 	// if both custom and s3 origin are missing, add an empty s3 origin
 	// One or the other must be specified, but the S3 origin can be "empty"
 	if origin.S3OriginConfig == nil && origin.CustomOriginConfig == nil {
-		origin.S3OriginConfig = &cloudfront.S3OriginConfig{
+		origin.S3OriginConfig = &awstypes.S3OriginConfig{
 			OriginAccessIdentity: aws.String(""),
 		}
 	}
 
-	return origin
+	return *origin
 }
 
-func FlattenOrigin(or *cloudfront.Origin) map[string]interface{} {
+func FlattenOrigin(or *awstypes.Origin) map[string]interface{} {
 	m := make(map[string]interface{})
-	m["origin_id"] = aws.StringValue(or.Id)
-	m["domain_name"] = aws.StringValue(or.DomainName)
+	m["origin_id"] = aws.ToString(or.Id)
+	m["domain_name"] = aws.ToString(or.DomainName)
 	if or.ConnectionAttempts != nil {
-		m["connection_attempts"] = int(aws.Int64Value(or.ConnectionAttempts))
+		m["connection_attempts"] = int(*aws.Int32(*or.ConnectionAttempts))
 	}
 	if or.ConnectionTimeout != nil {
-		m["connection_timeout"] = int(aws.Int64Value(or.ConnectionTimeout))
+		m["connection_timeout"] = int(*aws.Int32(*or.ConnectionTimeout))
 	}
 	if or.CustomHeaders != nil {
 		m["custom_header"] = FlattenCustomHeaders(or.CustomHeaders)
@@ -760,45 +773,45 @@ func FlattenOrigin(or *cloudfront.Origin) map[string]interface{} {
 		m["custom_origin_config"] = []interface{}{FlattenCustomOriginConfig(or.CustomOriginConfig)}
 	}
 	if or.OriginAccessControlId != nil {
-		m["origin_access_control_id"] = aws.StringValue(or.OriginAccessControlId)
+		m["origin_access_control_id"] = aws.ToString(or.OriginAccessControlId)
 	}
 	if or.OriginPath != nil {
-		m["origin_path"] = aws.StringValue(or.OriginPath)
+		m["origin_path"] = aws.ToString(or.OriginPath)
 	}
-	if or.OriginShield != nil && aws.BoolValue(or.OriginShield.Enabled) {
+	if or.OriginShield != nil && aws.ToBool(or.OriginShield.Enabled) {
 		m["origin_shield"] = []interface{}{FlattenOriginShield(or.OriginShield)}
 	}
-	if or.S3OriginConfig != nil && aws.StringValue(or.S3OriginConfig.OriginAccessIdentity) != "" {
+	if or.S3OriginConfig != nil && aws.ToString(or.S3OriginConfig.OriginAccessIdentity) != "" {
 		m["s3_origin_config"] = []interface{}{FlattenS3OriginConfig(or.S3OriginConfig)}
 	}
 	return m
 }
 
-func ExpandOriginGroups(s *schema.Set) *cloudfront.OriginGroups {
+func ExpandOriginGroups(s *schema.Set) *awstypes.OriginGroups {
 	qty := 0
-	items := []*cloudfront.OriginGroup{}
+	items := []awstypes.OriginGroup{}
 	for _, v := range s.List() {
-		items = append(items, expandOriginGroup(v.(map[string]interface{})))
+		items = append(items, *expandOriginGroup(v.(map[string]interface{})))
 		qty++
 	}
-	return &cloudfront.OriginGroups{
-		Quantity: aws.Int64(int64(qty)),
+	return &awstypes.OriginGroups{
+		Quantity: aws.Int32(int32(qty)),
 		Items:    items,
 	}
 }
 
-func FlattenOriginGroups(ogs *cloudfront.OriginGroups) *schema.Set {
+func FlattenOriginGroups(ogs *awstypes.OriginGroups) *schema.Set {
 	s := []interface{}{}
 	for _, v := range ogs.Items {
-		s = append(s, flattenOriginGroup(v))
+		s = append(s, flattenOriginGroup(&v))
 	}
 	return schema.NewSet(OriginGroupHash, s)
 }
 
-func expandOriginGroup(m map[string]interface{}) *cloudfront.OriginGroup {
+func expandOriginGroup(m map[string]interface{}) *awstypes.OriginGroup {
 	failoverCriteria := m["failover_criteria"].([]interface{})[0].(map[string]interface{})
 	members := m["member"].([]interface{})
-	originGroup := &cloudfront.OriginGroup{
+	originGroup := &awstypes.OriginGroup{
 		Id:               aws.String(m["origin_id"].(string)),
 		FailoverCriteria: expandOriginGroupFailoverCriteria(failoverCriteria),
 		Members:          expandMembers(members),
@@ -806,9 +819,9 @@ func expandOriginGroup(m map[string]interface{}) *cloudfront.OriginGroup {
 	return originGroup
 }
 
-func flattenOriginGroup(og *cloudfront.OriginGroup) map[string]interface{} {
+func flattenOriginGroup(og *awstypes.OriginGroup) map[string]interface{} {
 	m := make(map[string]interface{})
-	m["origin_id"] = aws.StringValue(og.Id)
+	m["origin_id"] = aws.ToString(og.Id)
 	if og.FailoverCriteria != nil {
 		m["failover_criteria"] = flattenOriginGroupFailoverCriteria(og.FailoverCriteria)
 	}
@@ -818,61 +831,61 @@ func flattenOriginGroup(og *cloudfront.OriginGroup) map[string]interface{} {
 	return m
 }
 
-func expandOriginGroupFailoverCriteria(m map[string]interface{}) *cloudfront.OriginGroupFailoverCriteria {
-	failoverCriteria := &cloudfront.OriginGroupFailoverCriteria{}
+func expandOriginGroupFailoverCriteria(m map[string]interface{}) *awstypes.OriginGroupFailoverCriteria {
+	failoverCriteria := &awstypes.OriginGroupFailoverCriteria{}
 	if v, ok := m["status_codes"]; ok {
-		codes := []*int64{}
+		codes := []int32{}
 		for _, code := range v.(*schema.Set).List() {
-			codes = append(codes, aws.Int64(int64(code.(int))))
+			codes = append(codes, *aws.Int32(int32(code.(int))))
 		}
-		failoverCriteria.StatusCodes = &cloudfront.StatusCodes{
+		failoverCriteria.StatusCodes = &awstypes.StatusCodes{
 			Items:    codes,
-			Quantity: aws.Int64(int64(len(codes))),
+			Quantity: aws.Int32(int32(len(codes))),
 		}
 	}
 	return failoverCriteria
 }
 
-func flattenOriginGroupFailoverCriteria(ogfc *cloudfront.OriginGroupFailoverCriteria) []interface{} {
+func flattenOriginGroupFailoverCriteria(ogfc *awstypes.OriginGroupFailoverCriteria) []interface{} {
 	m := make(map[string]interface{})
 	if ogfc.StatusCodes.Items != nil {
 		l := []interface{}{}
 		for _, i := range ogfc.StatusCodes.Items {
-			l = append(l, int(aws.Int64Value(i)))
+			l = append(l, int(*aws.Int32(i)))
 		}
 		m["status_codes"] = schema.NewSet(schema.HashInt, l)
 	}
 	return []interface{}{m}
 }
 
-func expandMembers(l []interface{}) *cloudfront.OriginGroupMembers {
+func expandMembers(l []interface{}) *awstypes.OriginGroupMembers {
 	qty := 0
-	items := []*cloudfront.OriginGroupMember{}
+	items := []awstypes.OriginGroupMember{}
 	for _, m := range l {
-		ogm := &cloudfront.OriginGroupMember{
+		ogm := &awstypes.OriginGroupMember{
 			OriginId: aws.String(m.(map[string]interface{})["origin_id"].(string)),
 		}
-		items = append(items, ogm)
+		items = append(items, *ogm)
 		qty++
 	}
-	return &cloudfront.OriginGroupMembers{
-		Quantity: aws.Int64(int64(qty)),
+	return &awstypes.OriginGroupMembers{
+		Quantity: aws.Int32(int32(qty)),
 		Items:    items,
 	}
 }
 
-func flattenOriginGroupMembers(ogm *cloudfront.OriginGroupMembers) []interface{} {
+func flattenOriginGroupMembers(ogm *awstypes.OriginGroupMembers) []interface{} {
 	s := []interface{}{}
 	for _, i := range ogm.Items {
 		m := map[string]interface{}{
-			"origin_id": aws.StringValue(i.OriginId),
+			"origin_id": aws.ToString(i.OriginId),
 		}
 		s = append(s, m)
 	}
 	return s
 }
 
-// Assemble the hash for the aws_cloudfront_distribution origin
+// Assemble the hash for the aws_awstypes_distribution origin
 // TypeSet attribute.
 func OriginHash(v interface{}) int {
 	var buf bytes.Buffer
@@ -916,7 +929,7 @@ func OriginHash(v interface{}) int {
 	return create.StringHashcode(buf.String())
 }
 
-// Assemble the hash for the aws_cloudfront_distribution origin group
+// Assemble the hash for the aws_awstypes_distribution origin group
 // TypeSet attribute.
 func OriginGroupHash(v interface{}) int {
 	var buf bytes.Buffer
@@ -954,43 +967,43 @@ func failoverCriteriaHash(v interface{}) int {
 	return create.StringHashcode(buf.String())
 }
 
-func ExpandCustomHeaders(s *schema.Set) *cloudfront.CustomHeaders {
+func ExpandCustomHeaders(s *schema.Set) *awstypes.CustomHeaders {
 	qty := 0
-	items := []*cloudfront.OriginCustomHeader{}
+	items := []awstypes.OriginCustomHeader{}
 	for _, v := range s.List() {
-		items = append(items, ExpandOriginCustomHeader(v.(map[string]interface{})))
+		items = append(items, *ExpandOriginCustomHeader(v.(map[string]interface{})))
 		qty++
 	}
-	return &cloudfront.CustomHeaders{
-		Quantity: aws.Int64(int64(qty)),
+	return &awstypes.CustomHeaders{
+		Quantity: aws.Int32(int32(qty)),
 		Items:    items,
 	}
 }
 
-func FlattenCustomHeaders(chs *cloudfront.CustomHeaders) *schema.Set {
+func FlattenCustomHeaders(chs *awstypes.CustomHeaders) *schema.Set {
 	s := []interface{}{}
 	for _, v := range chs.Items {
-		s = append(s, FlattenOriginCustomHeader(v))
+		s = append(s, FlattenOriginCustomHeader(&v))
 	}
 	return schema.NewSet(OriginCustomHeaderHash, s)
 }
 
-func ExpandOriginCustomHeader(m map[string]interface{}) *cloudfront.OriginCustomHeader {
-	return &cloudfront.OriginCustomHeader{
+func ExpandOriginCustomHeader(m map[string]interface{}) *awstypes.OriginCustomHeader {
+	return &awstypes.OriginCustomHeader{
 		HeaderName:  aws.String(m["name"].(string)),
 		HeaderValue: aws.String(m["value"].(string)),
 	}
 }
 
-func FlattenOriginCustomHeader(och *cloudfront.OriginCustomHeader) map[string]interface{} {
+func FlattenOriginCustomHeader(och *awstypes.OriginCustomHeader) map[string]interface{} {
 	return map[string]interface{}{
-		"name":  aws.StringValue(och.HeaderName),
-		"value": aws.StringValue(och.HeaderValue),
+		"name":  aws.ToString(och.HeaderName),
+		"value": aws.ToString(och.HeaderValue),
 	}
 }
 
 // Helper function used by OriginHash to get a composite hash for all
-// aws_cloudfront_distribution custom_header attributes.
+// aws_awstypes_distribution custom_header attributes.
 func customHeadersHash(s *schema.Set) int {
 	var buf bytes.Buffer
 	for _, v := range s.List() {
@@ -999,7 +1012,7 @@ func customHeadersHash(s *schema.Set) int {
 	return create.StringHashcode(buf.String())
 }
 
-// Assemble the hash for the aws_cloudfront_distribution custom_header
+// Assemble the hash for the aws_awstypes_distribution custom_header
 // TypeSet attribute.
 func OriginCustomHeaderHash(v interface{}) int {
 	var buf bytes.Buffer
@@ -1009,33 +1022,33 @@ func OriginCustomHeaderHash(v interface{}) int {
 	return create.StringHashcode(buf.String())
 }
 
-func ExpandCustomOriginConfig(m map[string]interface{}) *cloudfront.CustomOriginConfig {
-	customOrigin := &cloudfront.CustomOriginConfig{
-		OriginProtocolPolicy:   aws.String(m["origin_protocol_policy"].(string)),
-		HTTPPort:               aws.Int64(int64(m["http_port"].(int))),
-		HTTPSPort:              aws.Int64(int64(m["https_port"].(int))),
+func ExpandCustomOriginConfig(m map[string]interface{}) *awstypes.CustomOriginConfig {
+	customOrigin := &awstypes.CustomOriginConfig{
+		OriginProtocolPolicy:   awstypes.OriginProtocolPolicy(m["origin_protocol_policy"].(string)),
+		HTTPPort:               aws.Int32(int32(m["http_port"].(int))),
+		HTTPSPort:              aws.Int32(int32(m["https_port"].(int))),
 		OriginSslProtocols:     ExpandCustomOriginConfigSSL(m["origin_ssl_protocols"].(*schema.Set).List()),
-		OriginReadTimeout:      aws.Int64(int64(m["origin_read_timeout"].(int))),
-		OriginKeepaliveTimeout: aws.Int64(int64(m["origin_keepalive_timeout"].(int))),
+		OriginReadTimeout:      aws.Int32(int32(m["origin_read_timeout"].(int))),
+		OriginKeepaliveTimeout: aws.Int32(int32(m["origin_keepalive_timeout"].(int))),
 	}
 
 	return customOrigin
 }
 
-func FlattenCustomOriginConfig(cor *cloudfront.CustomOriginConfig) map[string]interface{} {
+func FlattenCustomOriginConfig(cor *awstypes.CustomOriginConfig) map[string]interface{} {
 	customOrigin := map[string]interface{}{
-		"origin_protocol_policy":   aws.StringValue(cor.OriginProtocolPolicy),
-		"http_port":                int(aws.Int64Value(cor.HTTPPort)),
-		"https_port":               int(aws.Int64Value(cor.HTTPSPort)),
+		"origin_protocol_policy":   awstypes.OriginProtocolPolicy(cor.OriginProtocolPolicy),
+		"http_port":                int(*aws.Int32(*cor.HTTPPort)),
+		"https_port":               int(*aws.Int32(*cor.HTTPSPort)),
 		"origin_ssl_protocols":     FlattenCustomOriginConfigSSL(cor.OriginSslProtocols),
-		"origin_read_timeout":      int(aws.Int64Value(cor.OriginReadTimeout)),
-		"origin_keepalive_timeout": int(aws.Int64Value(cor.OriginKeepaliveTimeout)),
+		"origin_read_timeout":      int(*aws.Int32(*cor.OriginReadTimeout)),
+		"origin_keepalive_timeout": int(*aws.Int32(*cor.OriginKeepaliveTimeout)),
 	}
 
 	return customOrigin
 }
 
-// Assemble the hash for the aws_cloudfront_distribution custom_origin_config
+// Assemble the hash for the aws_awstypes_distribution custom_origin_config
 // TypeSet attribute.
 func customOriginConfigHash(v interface{}) int {
 	var buf bytes.Buffer
@@ -1052,45 +1065,53 @@ func customOriginConfigHash(v interface{}) int {
 	return create.StringHashcode(buf.String())
 }
 
-func ExpandCustomOriginConfigSSL(s []interface{}) *cloudfront.OriginSslProtocols {
+func ExpandCustomOriginConfigSSL(s []interface{}) *awstypes.OriginSslProtocols {
 	items := flex.ExpandStringList(s)
-	return &cloudfront.OriginSslProtocols{
-		Quantity: aws.Int64(int64(len(items))),
-		Items:    items,
+	ospItems := make([]awstypes.SslProtocol, len(items))
+	for _, v := range items {
+		ospItems = append(ospItems, awstypes.SslProtocol(*v))
+	}
+	return &awstypes.OriginSslProtocols{
+		Quantity: aws.Int32(int32(len(items))),
+		Items:    ospItems,
 	}
 }
 
-func FlattenCustomOriginConfigSSL(osp *cloudfront.OriginSslProtocols) *schema.Set {
-	return flex.FlattenStringSet(osp.Items)
+func FlattenCustomOriginConfigSSL(osp *awstypes.OriginSslProtocols) *schema.Set {
+	items := []*string{}
+	for _, v := range osp.Items {
+		items = append(items, aws.String(string(v)))
+	}
+	return flex.FlattenStringSet(items)
 }
 
-func ExpandS3OriginConfig(m map[string]interface{}) *cloudfront.S3OriginConfig {
-	return &cloudfront.S3OriginConfig{
+func ExpandS3OriginConfig(m map[string]interface{}) *awstypes.S3OriginConfig {
+	return &awstypes.S3OriginConfig{
 		OriginAccessIdentity: aws.String(m["origin_access_identity"].(string)),
 	}
 }
 
-func ExpandOriginShield(m map[string]interface{}) *cloudfront.OriginShield {
-	return &cloudfront.OriginShield{
+func ExpandOriginShield(m map[string]interface{}) *awstypes.OriginShield {
+	return &awstypes.OriginShield{
 		Enabled:            aws.Bool(m["enabled"].(bool)),
 		OriginShieldRegion: aws.String(m["origin_shield_region"].(string)),
 	}
 }
 
-func FlattenS3OriginConfig(s3o *cloudfront.S3OriginConfig) map[string]interface{} {
+func FlattenS3OriginConfig(s3o *awstypes.S3OriginConfig) map[string]interface{} {
 	return map[string]interface{}{
-		"origin_access_identity": aws.StringValue(s3o.OriginAccessIdentity),
+		"origin_access_identity": aws.ToString(s3o.OriginAccessIdentity),
 	}
 }
 
-func FlattenOriginShield(o *cloudfront.OriginShield) map[string]interface{} {
+func FlattenOriginShield(o *awstypes.OriginShield) map[string]interface{} {
 	return map[string]interface{}{
-		"origin_shield_region": aws.StringValue(o.OriginShieldRegion),
-		"enabled":              aws.BoolValue(o.Enabled),
+		"origin_shield_region": aws.ToString(o.OriginShieldRegion),
+		"enabled":              aws.Bool(*o.Enabled),
 	}
 }
 
-// Assemble the hash for the aws_cloudfront_distribution s3_origin_config
+// Assemble the hash for the aws_awstypes_distribution s3_origin_config
 // TypeSet attribute.
 func s3OriginConfigHash(v interface{}) int {
 	var buf bytes.Buffer
@@ -1107,30 +1128,30 @@ func originShieldHash(v interface{}) int {
 	return create.StringHashcode(buf.String())
 }
 
-func ExpandCustomErrorResponses(s *schema.Set) *cloudfront.CustomErrorResponses {
+func ExpandCustomErrorResponses(s *schema.Set) *awstypes.CustomErrorResponses {
 	qty := 0
-	items := []*cloudfront.CustomErrorResponse{}
+	items := []awstypes.CustomErrorResponse{}
 	for _, v := range s.List() {
-		items = append(items, ExpandCustomErrorResponse(v.(map[string]interface{})))
+		items = append(items, *ExpandCustomErrorResponse(v.(map[string]interface{})))
 		qty++
 	}
-	return &cloudfront.CustomErrorResponses{
-		Quantity: aws.Int64(int64(qty)),
+	return &awstypes.CustomErrorResponses{
+		Quantity: aws.Int32(int32(qty)),
 		Items:    items,
 	}
 }
 
-func FlattenCustomErrorResponses(ers *cloudfront.CustomErrorResponses) *schema.Set {
+func FlattenCustomErrorResponses(ers *awstypes.CustomErrorResponses) *schema.Set {
 	s := []interface{}{}
 	for _, v := range ers.Items {
-		s = append(s, FlattenCustomErrorResponse(v))
+		s = append(s, FlattenCustomErrorResponse(&v))
 	}
 	return schema.NewSet(CustomErrorResponseHash, s)
 }
 
-func ExpandCustomErrorResponse(m map[string]interface{}) *cloudfront.CustomErrorResponse {
-	er := cloudfront.CustomErrorResponse{
-		ErrorCode: aws.Int64(int64(m["error_code"].(int))),
+func ExpandCustomErrorResponse(m map[string]interface{}) *awstypes.CustomErrorResponse {
+	er := awstypes.CustomErrorResponse{
+		ErrorCode: aws.Int32(int32(m["error_code"].(int))),
 	}
 	if v, ok := m["error_caching_min_ttl"]; ok {
 		er.ErrorCachingMinTTL = aws.Int64(int64(v.(int)))
@@ -1147,22 +1168,22 @@ func ExpandCustomErrorResponse(m map[string]interface{}) *cloudfront.CustomError
 	return &er
 }
 
-func FlattenCustomErrorResponse(er *cloudfront.CustomErrorResponse) map[string]interface{} {
+func FlattenCustomErrorResponse(er *awstypes.CustomErrorResponse) map[string]interface{} {
 	m := make(map[string]interface{})
-	m["error_code"] = int(aws.Int64Value(er.ErrorCode))
+	m["error_code"] = int(*aws.Int32(*er.ErrorCode))
 	if er.ErrorCachingMinTTL != nil {
-		m["error_caching_min_ttl"] = int(aws.Int64Value(er.ErrorCachingMinTTL))
+		m["error_caching_min_ttl"] = int64(*aws.Int64(*er.ErrorCachingMinTTL))
 	}
 	if er.ResponseCode != nil {
-		m["response_code"], _ = strconv.Atoi(aws.StringValue(er.ResponseCode))
+		m["response_code"], _ = strconv.Atoi(aws.ToString(er.ResponseCode))
 	}
 	if er.ResponsePagePath != nil {
-		m["response_page_path"] = aws.StringValue(er.ResponsePagePath)
+		m["response_page_path"] = aws.ToString(er.ResponsePagePath)
 	}
 	return m
 }
 
-// Assemble the hash for the aws_cloudfront_distribution custom_error_response
+// Assemble the hash for the aws_awstypes_distribution custom_error_response
 // TypeSet attribute.
 func CustomErrorResponseHash(v interface{}) int {
 	var buf bytes.Buffer
@@ -1180,8 +1201,8 @@ func CustomErrorResponseHash(v interface{}) int {
 	return create.StringHashcode(buf.String())
 }
 
-func ExpandLoggingConfig(m map[string]interface{}) *cloudfront.LoggingConfig {
-	var lc cloudfront.LoggingConfig
+func ExpandLoggingConfig(m map[string]interface{}) *awstypes.LoggingConfig {
+	var lc awstypes.LoggingConfig
 	if m != nil {
 		lc.Prefix = aws.String(m["prefix"].(string))
 		lc.Bucket = aws.String(m["bucket"].(string))
@@ -1196,29 +1217,29 @@ func ExpandLoggingConfig(m map[string]interface{}) *cloudfront.LoggingConfig {
 	return &lc
 }
 
-func flattenLoggingConfig(lc *cloudfront.LoggingConfig) []interface{} {
+func flattenLoggingConfig(lc *awstypes.LoggingConfig) []interface{} {
 	m := map[string]interface{}{
-		"bucket":          aws.StringValue(lc.Bucket),
-		"include_cookies": aws.BoolValue(lc.IncludeCookies),
-		"prefix":          aws.StringValue(lc.Prefix),
+		"bucket":          aws.ToString(lc.Bucket),
+		"include_cookies": aws.ToBool(lc.IncludeCookies),
+		"prefix":          aws.ToString(lc.Prefix),
 	}
 
 	return []interface{}{m}
 }
 
-func ExpandAliases(s *schema.Set) *cloudfront.Aliases {
-	aliases := cloudfront.Aliases{
-		Quantity: aws.Int64(int64(s.Len())),
+func ExpandAliases(s *schema.Set) *awstypes.Aliases {
+	aliases := awstypes.Aliases{
+		Quantity: aws.Int32(int32(s.Len())),
 	}
 	if s.Len() > 0 {
-		aliases.Items = flex.ExpandStringSet(s)
+		aliases.Items = flex.ExpandStringValueSet(s)
 	}
 	return &aliases
 }
 
-func FlattenAliases(aliases *cloudfront.Aliases) *schema.Set {
+func FlattenAliases(aliases *awstypes.Aliases) *schema.Set {
 	if aliases.Items != nil {
-		return flex.FlattenStringSet(aliases.Items)
+		return flex.FlattenStringValueSet(aliases.Items)
 	}
 	return schema.NewSet(AliasesHash, []interface{}{})
 }
@@ -1229,13 +1250,13 @@ func AliasesHash(v interface{}) int {
 	return create.StringHashcode(v.(string))
 }
 
-func ExpandRestrictions(m map[string]interface{}) *cloudfront.Restrictions {
-	return &cloudfront.Restrictions{
+func ExpandRestrictions(m map[string]interface{}) *awstypes.Restrictions {
+	return &awstypes.Restrictions{
 		GeoRestriction: ExpandGeoRestriction(m["geo_restriction"].([]interface{})[0].(map[string]interface{})),
 	}
 }
 
-func flattenRestrictions(r *cloudfront.Restrictions) []interface{} {
+func flattenRestrictions(r *awstypes.Restrictions) []interface{} {
 	m := map[string]interface{}{
 		"geo_restriction": []interface{}{FlattenGeoRestriction(r.GeoRestriction)},
 	}
@@ -1243,87 +1264,91 @@ func flattenRestrictions(r *cloudfront.Restrictions) []interface{} {
 	return []interface{}{m}
 }
 
-func ExpandGeoRestriction(m map[string]interface{}) *cloudfront.GeoRestriction {
-	gr := &cloudfront.GeoRestriction{
-		Quantity:        aws.Int64(0),
-		RestrictionType: aws.String(m["restriction_type"].(string)),
+func ExpandGeoRestriction(m map[string]interface{}) *awstypes.GeoRestriction {
+	gr := &awstypes.GeoRestriction{
+		Quantity:        aws.Int32(0),
+		RestrictionType: awstypes.GeoRestrictionType(m["restriction_type"].(string)),
 	}
 
 	if v, ok := m["locations"]; ok {
-		gr.Items = flex.ExpandStringSet(v.(*schema.Set))
-		gr.Quantity = aws.Int64(int64(v.(*schema.Set).Len()))
+		gr.Items = flex.ExpandStringValueSet(v.(*schema.Set))
+		gr.Quantity = aws.Int32(int32(v.(*schema.Set).Len()))
 	}
 
 	return gr
 }
 
-func FlattenGeoRestriction(gr *cloudfront.GeoRestriction) map[string]interface{} {
+func FlattenGeoRestriction(gr *awstypes.GeoRestriction) map[string]interface{} {
 	m := make(map[string]interface{})
 
-	m["restriction_type"] = aws.StringValue(gr.RestrictionType)
+	m["restriction_type"] = gr.RestrictionType
 	if gr.Items != nil {
-		m["locations"] = flex.FlattenStringSet(gr.Items)
+		m["locations"] = flex.FlattenStringValueSet(gr.Items)
 	}
 	return m
 }
 
-func ExpandViewerCertificate(m map[string]interface{}) *cloudfront.ViewerCertificate {
-	var vc cloudfront.ViewerCertificate
+func ExpandViewerCertificate(m map[string]interface{}) *awstypes.ViewerCertificate {
+	var vc awstypes.ViewerCertificate
 	if v, ok := m["iam_certificate_id"]; ok && v != "" {
 		vc.IAMCertificateId = aws.String(v.(string))
-		vc.SSLSupportMethod = aws.String(m["ssl_support_method"].(string))
+		vc.SSLSupportMethod = awstypes.SSLSupportMethod(m["ssl_support_method"].(string))
 	} else if v, ok := m["acm_certificate_arn"]; ok && v != "" {
 		vc.ACMCertificateArn = aws.String(v.(string))
-		vc.SSLSupportMethod = aws.String(m["ssl_support_method"].(string))
+		vc.SSLSupportMethod = awstypes.SSLSupportMethod(m["ssl_support_method"].(string))
 	} else {
 		vc.CloudFrontDefaultCertificate = aws.Bool(m["cloudfront_default_certificate"].(bool))
 	}
 	if v, ok := m["minimum_protocol_version"]; ok && v != "" {
-		vc.MinimumProtocolVersion = aws.String(v.(string))
+		vc.MinimumProtocolVersion = awstypes.MinimumProtocolVersion(v.(string))
 	}
 	return &vc
 }
 
-func flattenViewerCertificate(vc *cloudfront.ViewerCertificate) []interface{} {
+func flattenViewerCertificate(vc *awstypes.ViewerCertificate) []interface{} {
 	m := make(map[string]interface{})
 
 	if vc.IAMCertificateId != nil {
-		m["iam_certificate_id"] = aws.StringValue(vc.IAMCertificateId)
-		m["ssl_support_method"] = aws.StringValue(vc.SSLSupportMethod)
+		m["iam_certificate_id"] = aws.ToString(vc.IAMCertificateId)
+		m["ssl_support_method"] = awstypes.SSLSupportMethod(vc.SSLSupportMethod)
 	}
 	if vc.ACMCertificateArn != nil {
-		m["acm_certificate_arn"] = aws.StringValue(vc.ACMCertificateArn)
-		m["ssl_support_method"] = aws.StringValue(vc.SSLSupportMethod)
+		m["acm_certificate_arn"] = aws.ToString(vc.ACMCertificateArn)
+		m["ssl_support_method"] = awstypes.SSLSupportMethod(vc.SSLSupportMethod)
 	}
 	if vc.CloudFrontDefaultCertificate != nil {
-		m["cloudfront_default_certificate"] = aws.BoolValue(vc.CloudFrontDefaultCertificate)
+		m["cloudfront_default_certificate"] = aws.ToBool(vc.CloudFrontDefaultCertificate)
 	}
-	if vc.MinimumProtocolVersion != nil {
-		m["minimum_protocol_version"] = aws.StringValue(vc.MinimumProtocolVersion)
+	if vc.MinimumProtocolVersion != awstypes.MinimumProtocolVersion("") {
+		m["minimum_protocol_version"] = awstypes.MinimumProtocolVersion(vc.MinimumProtocolVersion)
 	}
 	return []interface{}{m}
 }
 
-func flattenActiveTrustedKeyGroups(atkg *cloudfront.ActiveTrustedKeyGroups) []interface{} {
+func flattenActiveTrustedKeyGroups(atkg *awstypes.ActiveTrustedKeyGroups) []interface{} {
 	if atkg == nil {
 		return []interface{}{}
 	}
 
+	items := make([]*awstypes.KGKeyPairIds, 0, len(atkg.Items))
+	for _, v := range atkg.Items {
+		items = append(items, &v)
+	}
 	m := map[string]interface{}{
-		"enabled": aws.BoolValue(atkg.Enabled),
-		"items":   flattenKGKeyPairIds(atkg.Items),
+		"enabled": aws.ToBool(atkg.Enabled),
+		"items":   flattenKGKeyPairIds(items),
 	}
 
 	return []interface{}{m}
 }
 
-func flattenKGKeyPairIds(keyPairIds []*cloudfront.KGKeyPairIds) []interface{} {
+func flattenKGKeyPairIds(keyPairIds []*awstypes.KGKeyPairIds) []interface{} {
 	result := make([]interface{}, 0, len(keyPairIds))
 
 	for _, keyPairId := range keyPairIds {
 		m := map[string]interface{}{
-			"key_group_id": aws.StringValue(keyPairId.KeyGroupId),
-			"key_pair_ids": aws.StringValueSlice(keyPairId.KeyPairIds.Items),
+			"key_group_id": aws.ToString(keyPairId.KeyGroupId),
+			"key_pair_ids": aws.StringSlice(keyPairId.KeyPairIds.Items),
 		}
 
 		result = append(result, m)
@@ -1332,26 +1357,29 @@ func flattenKGKeyPairIds(keyPairIds []*cloudfront.KGKeyPairIds) []interface{} {
 	return result
 }
 
-func flattenActiveTrustedSigners(ats *cloudfront.ActiveTrustedSigners) []interface{} {
+func flattenActiveTrustedSigners(ats *awstypes.ActiveTrustedSigners) []interface{} {
 	if ats == nil {
 		return []interface{}{}
 	}
-
+	items := make([]*awstypes.Signer, 0, len(ats.Items))
+	for _, v := range ats.Items {
+		items = append(items, &v)
+	}
 	m := map[string]interface{}{
-		"enabled": aws.BoolValue(ats.Enabled),
-		"items":   flattenSigners(ats.Items),
+		"enabled": aws.ToBool(ats.Enabled),
+		"items":   flattenSigners(items),
 	}
 
 	return []interface{}{m}
 }
 
-func flattenSigners(signers []*cloudfront.Signer) []interface{} {
+func flattenSigners(signers []*awstypes.Signer) []interface{} {
 	result := make([]interface{}, 0, len(signers))
 
 	for _, signer := range signers {
 		m := map[string]interface{}{
-			"aws_account_number": aws.StringValue(signer.AwsAccountNumber),
-			"key_pair_ids":       aws.StringValueSlice(signer.KeyPairIds.Items),
+			"aws_account_number": aws.ToString(signer.AwsAccountNumber),
+			"key_pair_ids":       aws.StringSlice(signer.KeyPairIds.Items),
 		}
 
 		result = append(result, m)

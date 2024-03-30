@@ -6,8 +6,8 @@ package cloudfront
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudfront"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -297,7 +297,7 @@ func DataSourceResponseHeadersPolicy() *schema.Resource {
 
 func dataSourceResponseHeadersPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
+	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	var responseHeadersPolicyID string
 
@@ -307,21 +307,21 @@ func dataSourceResponseHeadersPolicyRead(ctx context.Context, d *schema.Resource
 		name := d.Get("name").(string)
 		input := &cloudfront.ListResponseHeadersPoliciesInput{}
 
-		err := ListResponseHeadersPoliciesPages(ctx, conn, input, func(page *cloudfront.ListResponseHeadersPoliciesOutput, lastPage bool) bool {
+		err := ListResponseHeadersPoliciesPages(ctx, input, func(page *cloudfront.ListResponseHeadersPoliciesOutput, lastPage bool) bool {
 			if page == nil {
 				return !lastPage
 			}
 
 			for _, policySummary := range page.ResponseHeadersPolicyList.Items {
-				if responseHeadersPolicy := policySummary.ResponseHeadersPolicy; aws.StringValue(responseHeadersPolicy.ResponseHeadersPolicyConfig.Name) == name {
-					responseHeadersPolicyID = aws.StringValue(responseHeadersPolicy.Id)
+				if responseHeadersPolicy := policySummary.ResponseHeadersPolicy; aws.ToString(responseHeadersPolicy.ResponseHeadersPolicyConfig.Name) == name {
+					responseHeadersPolicyID = aws.ToString(responseHeadersPolicy.Id)
 
 					return false
 				}
 			}
 
 			return !lastPage
-		})
+		}, conn)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "listing CloudFront Response Headers Policies: %s", err)
@@ -350,7 +350,7 @@ func dataSourceResponseHeadersPolicyRead(ctx context.Context, d *schema.Resource
 		d.Set("cors_config", nil)
 	}
 	if apiObject.CustomHeadersConfig != nil {
-		if err := d.Set("custom_headers_config", []interface{}{flattenResponseHeadersPolicyCustomHeadersConfig(apiObject.CustomHeadersConfig)}); err != nil {
+		if err := d.Set("custom_headers_config", []interface{}{flattenResponseHeadersPolicyCustomHeadersConfig(*apiObject.CustomHeadersConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting custom_headers_config: %s", err)
 		}
 	} else {

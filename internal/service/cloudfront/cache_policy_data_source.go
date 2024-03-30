@@ -6,8 +6,8 @@ package cloudfront
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudfront"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -146,7 +146,7 @@ func DataSourceCachePolicy() *schema.Resource {
 }
 func dataSourceCachePolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
+	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	var cachePolicyID string
 
@@ -156,21 +156,21 @@ func dataSourceCachePolicyRead(ctx context.Context, d *schema.ResourceData, meta
 		name := d.Get("name").(string)
 		input := &cloudfront.ListCachePoliciesInput{}
 
-		err := ListCachePoliciesPages(ctx, conn, input, func(page *cloudfront.ListCachePoliciesOutput, lastPage bool) bool {
+		err := ListCachePoliciesPages(ctx, input, func(page *cloudfront.ListCachePoliciesOutput, lastPage bool) bool {
 			if page == nil {
 				return !lastPage
 			}
 
 			for _, policySummary := range page.CachePolicyList.Items {
-				if cachePolicy := policySummary.CachePolicy; aws.StringValue(cachePolicy.CachePolicyConfig.Name) == name {
-					cachePolicyID = aws.StringValue(cachePolicy.Id)
+				if cachePolicy := policySummary.CachePolicy; aws.ToString(cachePolicy.CachePolicyConfig.Name) == name {
+					cachePolicyID = aws.ToString(cachePolicy.Id)
 
 					return false
 				}
 			}
 
 			return !lastPage
-		})
+		}, conn)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "listing CloudFront Cache Policies: %s", err)

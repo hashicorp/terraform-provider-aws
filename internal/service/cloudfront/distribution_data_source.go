@@ -6,7 +6,7 @@ package cloudfront
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -72,7 +72,7 @@ func DataSourceDistribution() *schema.Resource {
 
 func dataSourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
+	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	output, err := FindDistributionByID(ctx, conn, d.Get("id").(string))
@@ -81,7 +81,7 @@ func dataSourceDistributionRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "getting CloudFront Distribution (%s): %s", d.Id(), err)
 	}
 
-	d.SetId(aws.StringValue(output.Distribution.Id))
+	d.SetId(aws.ToString(output.Distribution.Id))
 	d.Set("etag", output.ETag)
 	if distribution := output.Distribution; distribution != nil {
 		d.Set("arn", distribution.ARN)

@@ -6,20 +6,22 @@ package cloudfront
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudfront"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 // Custom CloudFront listing functions using similar formatting as other service generated code.
 
-func ListCachePoliciesPages(ctx context.Context, conn *cloudfront.CloudFront, input *cloudfront.ListCachePoliciesInput, fn func(*cloudfront.ListCachePoliciesOutput, bool) bool) error {
+func ListCachePoliciesPages(ctx context.Context, input *cloudfront.ListCachePoliciesInput, fn func(*cloudfront.ListCachePoliciesOutput, bool) bool, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 	for {
-		output, err := conn.ListCachePoliciesWithContext(ctx, input)
+		output, err := conn.ListCachePolicies(ctx, input)
 		if err != nil {
 			return err
 		}
 
-		lastPage := aws.StringValue(output.CachePolicyList.NextMarker) == ""
+		lastPage := aws.ToString(output.CachePolicyList.NextMarker) == ""
 		if !fn(output, lastPage) || lastPage {
 			break
 		}
@@ -29,14 +31,15 @@ func ListCachePoliciesPages(ctx context.Context, conn *cloudfront.CloudFront, in
 	return nil
 }
 
-func ListFieldLevelEncryptionConfigsPages(ctx context.Context, conn *cloudfront.CloudFront, input *cloudfront.ListFieldLevelEncryptionConfigsInput, fn func(*cloudfront.ListFieldLevelEncryptionConfigsOutput, bool) bool) error {
+func ListFieldLevelEncryptionConfigsPages(ctx context.Context, input *cloudfront.ListFieldLevelEncryptionConfigsInput, fn func(*cloudfront.ListFieldLevelEncryptionConfigsOutput, bool) bool, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 	for {
-		output, err := conn.ListFieldLevelEncryptionConfigsWithContext(ctx, input)
+		output, err := conn.ListFieldLevelEncryptionConfigs(ctx, input)
 		if err != nil {
 			return err
 		}
 
-		lastPage := aws.StringValue(output.FieldLevelEncryptionList.NextMarker) == ""
+		lastPage := aws.ToString(output.FieldLevelEncryptionList.NextMarker) == ""
 		if !fn(output, lastPage) || lastPage {
 			break
 		}
@@ -46,14 +49,15 @@ func ListFieldLevelEncryptionConfigsPages(ctx context.Context, conn *cloudfront.
 	return nil
 }
 
-func ListFieldLevelEncryptionProfilesPages(ctx context.Context, conn *cloudfront.CloudFront, input *cloudfront.ListFieldLevelEncryptionProfilesInput, fn func(*cloudfront.ListFieldLevelEncryptionProfilesOutput, bool) bool) error {
+func ListFieldLevelEncryptionProfilesPages(ctx context.Context, input *cloudfront.ListFieldLevelEncryptionProfilesInput, fn func(*cloudfront.ListFieldLevelEncryptionProfilesOutput, bool) bool, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 	for {
-		output, err := conn.ListFieldLevelEncryptionProfilesWithContext(ctx, input)
+		output, err := conn.ListFieldLevelEncryptionProfiles(ctx, input)
 		if err != nil {
 			return err
 		}
 
-		lastPage := aws.StringValue(output.FieldLevelEncryptionProfileList.NextMarker) == ""
+		lastPage := aws.ToString(output.FieldLevelEncryptionProfileList.NextMarker) == ""
 		if !fn(output, lastPage) || lastPage {
 			break
 		}
@@ -63,14 +67,15 @@ func ListFieldLevelEncryptionProfilesPages(ctx context.Context, conn *cloudfront
 	return nil
 }
 
-func ListFunctionsPages(ctx context.Context, conn *cloudfront.CloudFront, input *cloudfront.ListFunctionsInput, fn func(*cloudfront.ListFunctionsOutput, bool) bool) error {
+func ListFunctionsPages(ctx context.Context, input *cloudfront.ListFunctionsInput, fn func(*cloudfront.ListFunctionsOutput, bool) bool, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 	for {
-		output, err := conn.ListFunctionsWithContext(ctx, input)
+		output, err := conn.ListFunctions(ctx, input)
 		if err != nil {
 			return err
 		}
 
-		lastPage := aws.StringValue(output.FunctionList.NextMarker) == ""
+		lastPage := aws.ToString(output.FunctionList.NextMarker) == ""
 		if !fn(output, lastPage) || lastPage {
 			break
 		}
@@ -80,14 +85,15 @@ func ListFunctionsPages(ctx context.Context, conn *cloudfront.CloudFront, input 
 	return nil
 }
 
-func ListOriginRequestPoliciesPages(ctx context.Context, conn *cloudfront.CloudFront, input *cloudfront.ListOriginRequestPoliciesInput, fn func(*cloudfront.ListOriginRequestPoliciesOutput, bool) bool) error {
+func ListOriginRequestPoliciesPages(ctx context.Context, input *cloudfront.ListOriginRequestPoliciesInput, fn func(*cloudfront.ListOriginRequestPoliciesOutput, bool) bool, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 	for {
-		output, err := conn.ListOriginRequestPoliciesWithContext(ctx, input)
+		output, err := conn.ListOriginRequestPolicies(ctx, input)
 		if err != nil {
 			return err
 		}
 
-		lastPage := aws.StringValue(output.OriginRequestPolicyList.NextMarker) == ""
+		lastPage := aws.ToString(output.OriginRequestPolicyList.NextMarker) == ""
 		if !fn(output, lastPage) || lastPage {
 			break
 		}
@@ -97,14 +103,15 @@ func ListOriginRequestPoliciesPages(ctx context.Context, conn *cloudfront.CloudF
 	return nil
 }
 
-func ListResponseHeadersPoliciesPages(ctx context.Context, conn *cloudfront.CloudFront, input *cloudfront.ListResponseHeadersPoliciesInput, fn func(*cloudfront.ListResponseHeadersPoliciesOutput, bool) bool) error {
+func ListResponseHeadersPoliciesPages(ctx context.Context, input *cloudfront.ListResponseHeadersPoliciesInput, fn func(*cloudfront.ListResponseHeadersPoliciesOutput, bool) bool, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 	for {
-		output, err := conn.ListResponseHeadersPoliciesWithContext(ctx, input)
+		output, err := conn.ListResponseHeadersPolicies(ctx, input)
 		if err != nil {
 			return err
 		}
 
-		lastPage := aws.StringValue(output.ResponseHeadersPolicyList.NextMarker) == ""
+		lastPage := aws.ToString(output.ResponseHeadersPolicyList.NextMarker) == ""
 		if !fn(output, lastPage) || lastPage {
 			break
 		}
@@ -114,14 +121,15 @@ func ListResponseHeadersPoliciesPages(ctx context.Context, conn *cloudfront.Clou
 	return nil
 }
 
-func ListOriginAccessControlsPages(ctx context.Context, conn *cloudfront.CloudFront, input *cloudfront.ListOriginAccessControlsInput, fn func(*cloudfront.ListOriginAccessControlsOutput, bool) bool) error {
+func ListOriginAccessControlsPages(ctx context.Context, input *cloudfront.ListOriginAccessControlsInput, fn func(*cloudfront.ListOriginAccessControlsOutput, bool) bool, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 	for {
-		output, err := conn.ListOriginAccessControlsWithContext(ctx, input)
+		output, err := conn.ListOriginAccessControls(ctx, input)
 		if err != nil {
 			return err
 		}
 
-		lastPage := aws.StringValue(output.OriginAccessControlList.NextMarker) == ""
+		lastPage := aws.ToString(output.OriginAccessControlList.NextMarker) == ""
 		if !fn(output, lastPage) || lastPage {
 			break
 		}

@@ -7,8 +7,8 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudfront"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
@@ -309,8 +309,8 @@ func TestStructure_expandDefaultCacheBehavior(t *testing.T) {
 	if !*dcb.Compress {
 		t.Fatalf("Expected Compress to be true, got %v", *dcb.Compress)
 	}
-	if *dcb.ViewerProtocolPolicy != "allow-all" {
-		t.Fatalf("Expected ViewerProtocolPolicy to be allow-all, got %v", *dcb.ViewerProtocolPolicy)
+	if dcb.ViewerProtocolPolicy != "allow-all" {
+		t.Fatalf("Expected ViewerProtocolPolicy to be allow-all, got %v", dcb.ViewerProtocolPolicy)
 	}
 	if *dcb.TargetOriginId != "myS3Origin" {
 		t.Fatalf("Expected TargetOriginId to be allow-all, got %v", *dcb.TargetOriginId)
@@ -402,11 +402,11 @@ func TestStructure_expandLambdaFunctionAssociations(t *testing.T) {
 	if len(lfa.Items) != 2 {
 		t.Fatalf("Expected Items to be len 2, got %v", len(lfa.Items))
 	}
-	if et := "viewer-request"; *lfa.Items[0].EventType != et {
-		t.Fatalf("Expected first Item's EventType to be %q, got %q", et, *lfa.Items[0].EventType)
+	if et := "viewer-request"; lfa.Items[0].EventType != awstypes.EventType(et) {
+		t.Fatalf("Expected first Item's EventType to be %q, got %q", et, lfa.Items[0].EventType)
 	}
-	if et := "origin-response"; *lfa.Items[1].EventType != et {
-		t.Fatalf("Expected second Item's EventType to be %q, got %q", et, *lfa.Items[1].EventType)
+	if et := "origin-response"; lfa.Items[1].EventType != awstypes.EventType(et) {
+		t.Fatalf("Expected second Item's EventType to be %q, got %q", et, lfa.Items[1].EventType)
 	}
 }
 
@@ -433,7 +433,7 @@ func TestStructure_expandlambdaFunctionAssociations_empty(t *testing.T) {
 	if len(lfa.Items) != 0 {
 		t.Fatalf("Expected Items to be len 0, got %v", len(lfa.Items))
 	}
-	if !reflect.DeepEqual(lfa.Items, []*cloudfront.LambdaFunctionAssociation{}) {
+	if !reflect.DeepEqual(lfa.Items, []*awstypes.LambdaFunctionAssociation{}) {
 		t.Fatalf("Expected Items to be empty, got %v", lfa.Items)
 	}
 }
@@ -449,11 +449,11 @@ func TestStructure_expandFunctionAssociations(t *testing.T) {
 	if len(lfa.Items) != 2 {
 		t.Fatalf("Expected Items to be len 2, got %v", len(lfa.Items))
 	}
-	if et := "viewer-response"; *lfa.Items[0].EventType != et {
-		t.Fatalf("Expected first Item's EventType to be %q, got %q", et, *lfa.Items[0].EventType)
+	if et := "viewer-response"; lfa.Items[0].EventType != awstypes.EventType(et) {
+		t.Fatalf("Expected first Item's EventType to be %q, got %q", et, lfa.Items[0].EventType)
 	}
-	if et := "viewer-request"; *lfa.Items[1].EventType != et {
-		t.Fatalf("Expected second Item's EventType to be %q, got %q", et, *lfa.Items[1].EventType)
+	if et := "viewer-request"; lfa.Items[1].EventType != awstypes.EventType(et) {
+		t.Fatalf("Expected second Item's EventType to be %q, got %q", et, lfa.Items[1].EventType)
 	}
 }
 
@@ -480,7 +480,7 @@ func TestStructure_expandFunctionAssociations_empty(t *testing.T) {
 	if len(lfa.Items) != 0 {
 		t.Fatalf("Expected Items to be len 0, got %v", len(lfa.Items))
 	}
-	if !reflect.DeepEqual(lfa.Items, []*cloudfront.FunctionAssociation{}) {
+	if !reflect.DeepEqual(lfa.Items, []*awstypes.FunctionAssociation{}) {
 		t.Fatalf("Expected Items to be empty, got %v", lfa.Items)
 	}
 }
@@ -568,8 +568,8 @@ func TestStructure_expandCookiePreference(t *testing.T) {
 
 	data := cookiePreferenceConf()
 	cp := tfcloudfront.ExpandCookiePreference(data)
-	if *cp.Forward != "whitelist" {
-		t.Fatalf("Expected Forward to be whitelist, got %v", *cp.Forward)
+	if cp.Forward != awstypes.ItemSelection("whitelist") {
+		t.Fatalf("Expected Forward to be whitelist, got %v", cp.Forward)
 	}
 	if !reflect.DeepEqual(cp.WhitelistedNames.Items, flex.ExpandStringSet(cookieNamesConf())) {
 		t.Fatalf("Expected WhitelistedNames.Items to be %v, got %v", cookieNamesConf(), cp.WhitelistedNames.Items)
@@ -707,8 +707,8 @@ func TestStructure_expandOriginGroups(t *testing.T) {
 	}
 	statusCodes := originGroup.FailoverCriteria.StatusCodes.Items
 	for _, code := range statusCodes {
-		if *code != 503 && *code != 504 {
-			t.Fatalf("Expected origin group failover status code to either 503 or 504 got %v", *code)
+		if code != 503 && code != 504 {
+			t.Fatalf("Expected origin group failover status code to either 503 or 504 got %v", code)
 		}
 	}
 
@@ -754,8 +754,8 @@ func TestStructure_expandOrigin(t *testing.T) {
 	if *or.OriginPath != "/" {
 		t.Fatalf("Expected OriginPath to be /, got %v", *or.OriginPath)
 	}
-	if *or.CustomOriginConfig.OriginProtocolPolicy != "http-only" {
-		t.Fatalf("Expected CustomOriginConfig.OriginProtocolPolicy to be http-only, got %v", *or.CustomOriginConfig.OriginProtocolPolicy)
+	if or.CustomOriginConfig.OriginProtocolPolicy != "http-only" {
+		t.Fatalf("Expected CustomOriginConfig.OriginProtocolPolicy to be http-only, got %v", or.CustomOriginConfig.OriginProtocolPolicy)
 	}
 	if *or.CustomHeaders.Items[0].HeaderValue != "samplevalue" {
 		t.Fatalf("Expected CustomHeaders.Items[0].HeaderValue to be samplevalue, got %v", *or.CustomHeaders.Items[0].HeaderValue)
@@ -767,7 +767,7 @@ func TestStructure_flattenOrigin(t *testing.T) {
 
 	in := originWithCustomConf()
 	or := tfcloudfront.ExpandOrigin(in)
-	out := tfcloudfront.FlattenOrigin(or)
+	out := tfcloudfront.FlattenOrigin(&or)
 
 	if out["origin_id"] != "CustomOrigin" {
 		t.Fatalf("Expected out[origin_id] to be CustomOrigin, got %v", out["origin_id"])
@@ -840,8 +840,8 @@ func TestStructure_expandCustomOriginConfig(t *testing.T) {
 
 	data := customOriginConf()
 	co := tfcloudfront.ExpandCustomOriginConfig(data)
-	if *co.OriginProtocolPolicy != "http-only" {
-		t.Fatalf("Expected OriginProtocolPolicy to be http-only, got %v", *co.OriginProtocolPolicy)
+	if co.OriginProtocolPolicy != "http-only" {
+		t.Fatalf("Expected OriginProtocolPolicy to be http-only, got %v", co.OriginProtocolPolicy)
 	}
 	if *co.HTTPPort != 80 {
 		t.Fatalf("Expected HTTPPort to be 80, got %v", *co.HTTPPort)
@@ -1091,8 +1091,8 @@ func TestStructure_expandRestrictions(t *testing.T) {
 
 	data := geoRestrictionsConf()
 	r := tfcloudfront.ExpandRestrictions(data)
-	if *r.GeoRestriction.RestrictionType != "whitelist" {
-		t.Fatalf("Expected GeoRestriction.RestrictionType to be whitelist, got %v", *r.GeoRestriction.RestrictionType)
+	if r.GeoRestriction.RestrictionType != "whitelist" {
+		t.Fatalf("Expected GeoRestriction.RestrictionType to be whitelist, got %v", r.GeoRestriction.RestrictionType)
 	}
 }
 
@@ -1101,14 +1101,14 @@ func TestStructure_expandGeoRestriction_whitelist(t *testing.T) {
 
 	data := geoRestrictionWhitelistConf()
 	gr := tfcloudfront.ExpandGeoRestriction(data)
-	if *gr.RestrictionType != "whitelist" {
-		t.Fatalf("Expected RestrictionType to be whitelist, got %v", *gr.RestrictionType)
+	if gr.RestrictionType != "whitelist" {
+		t.Fatalf("Expected RestrictionType to be whitelist, got %v", gr.RestrictionType)
 	}
 	if *gr.Quantity != 3 {
 		t.Fatalf("Expected Quantity to be 3, got %v", *gr.Quantity)
 	}
-	if !reflect.DeepEqual(aws.StringValueSlice(gr.Items), []string{"GB", "US", "CA"}) {
-		t.Fatalf("Expected Items be [CA, GB, US], got %v", aws.StringValueSlice(gr.Items))
+	if !reflect.DeepEqual(aws.StringSlice(gr.Items), []string{"GB", "US", "CA"}) {
+		t.Fatalf("Expected Items be [CA, GB, US], got %v", aws.StringSlice(gr.Items))
 	}
 }
 
@@ -1132,8 +1132,8 @@ func TestStructure_expandGeoRestriction_no_items(t *testing.T) {
 
 	data := geoRestrictionConfNoItems()
 	gr := tfcloudfront.ExpandGeoRestriction(data)
-	if *gr.RestrictionType != "none" {
-		t.Fatalf("Expected RestrictionType to be none, got %v", *gr.RestrictionType)
+	if gr.RestrictionType != "none" {
+		t.Fatalf("Expected RestrictionType to be none, got %v", gr.RestrictionType)
 	}
 	if *gr.Quantity != 0 {
 		t.Fatalf("Expected Quantity to be 0, got %v", *gr.Quantity)
@@ -1172,11 +1172,11 @@ func TestStructure_expandViewerCertificateDefaultCertificate(t *testing.T) {
 	if vc.IAMCertificateId != nil {
 		t.Fatalf("Expected IAMCertificateId to not be set, got %v", *vc.IAMCertificateId)
 	}
-	if vc.SSLSupportMethod != nil {
-		t.Fatalf("Expected IAMCertificateId to not be set, got %v", *vc.SSLSupportMethod)
+	if vc.SSLSupportMethod != awstypes.SSLSupportMethod("") {
+		t.Fatalf("Expected IAMCertificateId to not be set, got %v", vc.SSLSupportMethod)
 	}
-	if vc.MinimumProtocolVersion != nil {
-		t.Fatalf("Expected IAMCertificateId to not be set, got %v", *vc.MinimumProtocolVersion)
+	if vc.MinimumProtocolVersion != awstypes.MinimumProtocolVersion("") {
+		t.Fatalf("Expected IAMCertificateId to not be set, got %v", vc.MinimumProtocolVersion)
 	}
 }
 
@@ -1194,11 +1194,11 @@ func TestStructure_expandViewerCertificate_iam_certificate_id(t *testing.T) {
 	if *vc.IAMCertificateId != "iamcert-01234567" {
 		t.Fatalf("Expected IAMCertificateId to be iamcert-01234567, got %v", *vc.IAMCertificateId)
 	}
-	if *vc.SSLSupportMethod != "vip" {
-		t.Fatalf("Expected IAMCertificateId to be vip, got %v", *vc.SSLSupportMethod)
+	if vc.SSLSupportMethod != "vip" {
+		t.Fatalf("Expected IAMCertificateId to be vip, got %v", vc.SSLSupportMethod)
 	}
-	if *vc.MinimumProtocolVersion != "TLSv1" {
-		t.Fatalf("Expected IAMCertificateId to be TLSv1, got %v", *vc.MinimumProtocolVersion)
+	if vc.MinimumProtocolVersion != "TLSv1" {
+		t.Fatalf("Expected IAMCertificateId to be TLSv1, got %v", vc.MinimumProtocolVersion)
 	}
 }
 
@@ -1218,10 +1218,10 @@ func TestStructure_expandViewerCertificate_acm_certificate_arn(t *testing.T) {
 	if vc.IAMCertificateId != nil {
 		t.Fatalf("Expected IAMCertificateId to be unset, got %v", *vc.IAMCertificateId)
 	}
-	if *vc.SSLSupportMethod != "sni-only" {
-		t.Fatalf("Expected IAMCertificateId to be sni-only, got %v", *vc.SSLSupportMethod)
+	if vc.SSLSupportMethod != "sni-only" {
+		t.Fatalf("Expected IAMCertificateId to be sni-only, got %v", vc.SSLSupportMethod)
 	}
-	if *vc.MinimumProtocolVersion != "TLSv1" {
-		t.Fatalf("Expected IAMCertificateId to be TLSv1, got %v", *vc.MinimumProtocolVersion)
+	if vc.MinimumProtocolVersion != "TLSv1" {
+		t.Fatalf("Expected IAMCertificateId to be TLSv1, got %v", vc.MinimumProtocolVersion)
 	}
 }
