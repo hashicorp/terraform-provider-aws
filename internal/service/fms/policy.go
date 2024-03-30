@@ -306,7 +306,7 @@ func resourcePolicyDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	log.Printf("[DEBUG] Deleting FMS Policy: %s", d.Id())
 	_, err := conn.DeletePolicy(ctx, &fms.DeletePolicyInput{
 		PolicyId:                 aws.String(d.Id()),
-		DeleteAllPolicyResources: aws.ToBool(d.Get("delete_all_policy_resources").(*bool)),
+		DeleteAllPolicyResources: d.Get("delete_all_policy_resources").(bool),
 	})
 
 	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -353,11 +353,11 @@ func resourcePolicyExpandPolicy(d *schema.ResourceData) *awstypes.Policy {
 	}
 
 	fmsPolicy := &awstypes.Policy{
-		DeleteUnusedFMManagedResources: aws.ToBool(d.Get("delete_unused_fm_managed_resources").(*bool)),
-		ExcludeResourceTags:            aws.ToBool(d.Get("exclude_resource_tags").(*bool)),
+		DeleteUnusedFMManagedResources: d.Get("delete_unused_fm_managed_resources").(bool),
+		ExcludeResourceTags:            d.Get("exclude_resource_tags").(bool),
 		PolicyDescription:              aws.String(d.Get("description").(string)),
 		PolicyName:                     aws.String(d.Get("name").(string)),
-		RemediationEnabled:             aws.ToBool(d.Get("remediation_enabled").(*bool)),
+		RemediationEnabled:             d.Get("remediation_enabled").(bool),
 		ResourceType:                   resourceType,
 		ResourceTypeList:               aws.ToStringSlice(resourceTypeList),
 	}
