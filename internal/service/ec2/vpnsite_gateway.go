@@ -25,7 +25,7 @@ import (
 
 // @SDKResource("aws_vpn_gateway", name="VPN Gateway")
 // @Tags(identifierAttribute="id")
-func ResourceVPNGateway() *schema.Resource {
+func resourceVPNGateway() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPNGatewayCreate,
 		ReadWithoutTimeout:   resourceVPNGatewayRead,

@@ -5,6 +5,7 @@ package datasync
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"strings"
 
@@ -26,7 +27,7 @@ import (
 
 // @SDKResource("aws_datasync_location_azure_blob", name="Location Microsoft Azure Blob Storage")
 // @Tags(identifierAttribute="id")
-func ResourceLocationAzureBlob() *schema.Resource {
+func resourceLocationAzureBlob() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationAzureBlobCreate,
 		ReadWithoutTimeout:   resourceLocationAzureBlobRead,
@@ -154,7 +155,7 @@ func resourceLocationAzureBlobRead(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
-	output, err := FindLocationAzureBlobByARN(ctx, conn, d.Id())
+	output, err := findLocationAzureBlobByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DataSync Location Microsoft Azure Blob Storage (%s) not found, removing from state", d.Id())
@@ -167,19 +168,25 @@ func resourceLocationAzureBlobRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	uri := aws.StringValue(output.LocationUri)
+	accountHostName, err := globalIDFromLocationURI(aws.StringValue(output.LocationUri))
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
 	subdirectory, err := subdirectoryFromLocationURI(uri)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
+	containerName := subdirectory[:strings.IndexAny(subdirectory[1:], "/")+1]
+	containerURL := fmt.Sprintf("https://%s%s", accountHostName, containerName)
 
 	d.Set("access_tier", output.AccessTier)
 	d.Set("agent_arns", aws.StringValueSlice(output.AgentArns))
 	d.Set("arn", output.LocationArn)
 	d.Set("authentication_type", output.AuthenticationType)
 	d.Set("blob_type", output.BlobType)
-	d.Set("container_url", d.Get("container_url"))
+	d.Set("container_url", containerURL)
 	d.Set("sas_configuration", d.Get("sas_configuration"))
-	d.Set("subdirectory", subdirectory)
+	d.Set("subdirectory", subdirectory[strings.IndexAny(subdirectory[1:], "/")+1:])
 	d.Set("uri", uri)
 
 	return diags
@@ -248,7 +255,7 @@ func resourceLocationAzureBlobDelete(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func FindLocationAzureBlobByARN(ctx context.Context, conn *datasync.DataSync, arn string) (*datasync.DescribeLocationAzureBlobOutput, error) {
+func findLocationAzureBlobByARN(ctx context.Context, conn *datasync.DataSync, arn string) (*datasync.DescribeLocationAzureBlobOutput, error) {
 	input := &datasync.DescribeLocationAzureBlobInput{
 		LocationArn: aws.String(arn),
 	}

@@ -21,8 +21,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_securityhub_insight")
-func ResourceInsight() *schema.Resource {
+// @SDKResource("aws_securityhub_insight", name="Insight")
+func resourceInsight() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInsightCreate,
 		ReadWithoutTimeout:   resourceInsightRead,
@@ -174,7 +174,7 @@ func resourceInsightCreate(ctx context.Context, d *schema.ResourceData, meta int
 func resourceInsightRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	insight, err := FindInsightByARN(ctx, conn, d.Id())
+	insight, err := findInsightByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Security Hub Insight (%s) not found, removing from state", d.Id())
@@ -243,29 +243,46 @@ func resourceInsightDelete(ctx context.Context, d *schema.ResourceData, meta int
 	return nil
 }
 
-func FindInsightByARN(ctx context.Context, conn *securityhub.Client, arn string) (*types.Insight, error) {
+func findInsightByARN(ctx context.Context, conn *securityhub.Client, arn string) (*types.Insight, error) {
 	input := &securityhub.GetInsightsInput{
 		InsightArns: []string{arn},
 	}
 
-	output, err := conn.GetInsights(ctx, input)
+	return findInsight(ctx, conn, input)
+}
 
-	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, errCodeInvalidAccessException, "not subscribed to AWS Security Hub") {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
+func findInsight(ctx context.Context, conn *securityhub.Client, input *securityhub.GetInsightsInput) (*types.Insight, error) {
+	output, err := findInsights(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findInsights(ctx context.Context, conn *securityhub.Client, input *securityhub.GetInsightsInput) ([]types.Insight, error) {
+	var output []types.Insight
+
+	pages := securityhub.NewGetInsightsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, errCodeInvalidAccessException, "not subscribed to AWS Security Hub") {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.Insights...)
 	}
 
-	return tfresource.AssertSingleValueResult(output.Insights)
+	return output, nil
 }
 
 func dateFilterSchema() *schema.Schema {

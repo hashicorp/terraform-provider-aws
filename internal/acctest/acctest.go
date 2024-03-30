@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
@@ -19,7 +20,11 @@ import (
 
 	"github.com/YakDriver/regexache"
 	accounttypes "github.com/aws/aws-sdk-go-v2/service/account/types"
+	"github.com/aws/aws-sdk-go-v2/service/acmpca"
+	acmpcatypes "github.com/aws/aws-sdk-go-v2/service/acmpca/types"
 	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/aws/aws-sdk-go-v2/service/inspector2"
 	inspector2types "github.com/aws/aws-sdk-go-v2/service/inspector2/types"
 	"github.com/aws/aws-sdk-go-v2/service/ssoadmin"
@@ -27,10 +32,8 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/directoryservice"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/aws/aws-sdk-go/service/iam"
 	"github.com/aws/aws-sdk-go/service/outposts"
 	"github.com/aws/aws-sdk-go/service/wafv2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -81,6 +84,8 @@ const (
 	ProviderNameThird = "awsthird"
 
 	ResourcePrefix = "tf-acc-test"
+
+	CertificateIssueTimeout = 5 * time.Minute
 )
 
 const RFC3339RegexPattern = `^[0-9]{4}-(0[1-9]|1[012])-(0[1-9]|[12][0-9]|3[01])[Tt]([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9](\.[0-9]+)?([Zz]|([+-]([01][0-9]|2[0-3]):[0-5][0-9]))$`
@@ -111,6 +116,8 @@ var (
 //
 // PreCheck(t) must be called before using this provider instance.
 var Provider *schema.Provider
+
+type ProviderFunc func() *schema.Provider
 
 // testAccProviderConfigure ensures Provider is only configured once
 //
@@ -1043,14 +1050,20 @@ func PreCheckOrganizationsEnabled(ctx context.Context, t *testing.T) {
 
 func PreCheckOrganizationManagementAccount(ctx context.Context, t *testing.T) {
 	t.Helper()
+	PreCheckOrganizationManagementAccountWithProvider(ctx, t, func() *schema.Provider { return Provider })
+}
 
-	organization, err := tforganizations.FindOrganization(ctx, Provider.Meta().(*conns.AWSClient).OrganizationsConn(ctx))
+func PreCheckOrganizationManagementAccountWithProvider(ctx context.Context, t *testing.T, providerF ProviderFunc) {
+	t.Helper()
+
+	awsClient := providerF().Meta().(*conns.AWSClient)
+	organization, err := tforganizations.FindOrganization(ctx, awsClient.OrganizationsConn(ctx))
 
 	if err != nil {
 		t.Fatalf("describing AWS Organization: %s", err)
 	}
 
-	callerIdentity, err := tfsts.FindCallerIdentity(ctx, Provider.Meta().(*conns.AWSClient).STSClient(ctx))
+	callerIdentity, err := tfsts.FindCallerIdentity(ctx, awsClient.STSClient(ctx))
 
 	if err != nil {
 		t.Fatalf("getting current identity: %s", err)
@@ -1063,14 +1076,20 @@ func PreCheckOrganizationManagementAccount(ctx context.Context, t *testing.T) {
 
 func PreCheckOrganizationMemberAccount(ctx context.Context, t *testing.T) {
 	t.Helper()
+	PreCheckOrganizationMemberAccountWithProvider(ctx, t, func() *schema.Provider { return Provider })
+}
 
-	organization, err := tforganizations.FindOrganization(ctx, Provider.Meta().(*conns.AWSClient).OrganizationsConn(ctx))
+func PreCheckOrganizationMemberAccountWithProvider(ctx context.Context, t *testing.T, providerF ProviderFunc) {
+	t.Helper()
+
+	awsClient := providerF().Meta().(*conns.AWSClient)
+	organization, err := tforganizations.FindOrganization(ctx, awsClient.OrganizationsConn(ctx))
 
 	if err != nil {
 		t.Fatalf("describing AWS Organization: %s", err)
 	}
 
-	callerIdentity, err := tfsts.FindCallerIdentity(ctx, Provider.Meta().(*conns.AWSClient).STSClient(ctx))
+	callerIdentity, err := tfsts.FindCallerIdentity(ctx, awsClient.STSClient(ctx))
 
 	if err != nil {
 		t.Fatalf("getting current identity: %s", err)
@@ -1125,7 +1144,7 @@ func PreCheckSSOAdminInstances(ctx context.Context, t *testing.T) {
 func PreCheckHasIAMRole(ctx context.Context, t *testing.T, roleName string) {
 	t.Helper()
 
-	_, err := tfiam.FindRoleByName(ctx, Provider.Meta().(*conns.AWSClient).IAMConn(ctx), roleName)
+	_, err := tfiam.FindRoleByName(ctx, Provider.Meta().(*conns.AWSClient).IAMClient(ctx), roleName)
 
 	if tfresource.NotFound(err) {
 		t.Skipf("skipping acceptance test: required IAM role %q not found", roleName)
@@ -1142,31 +1161,35 @@ func PreCheckHasIAMRole(ctx context.Context, t *testing.T, roleName string) {
 
 func PreCheckIAMServiceLinkedRole(ctx context.Context, t *testing.T, pathPrefix string) {
 	t.Helper()
+	PreCheckIAMServiceLinkedRoleWithProvider(ctx, t, func() *schema.Provider { return Provider }, pathPrefix)
+}
 
-	conn := Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+func PreCheckIAMServiceLinkedRoleWithProvider(ctx context.Context, t *testing.T, providerF ProviderFunc, pathPrefix string) {
+	t.Helper()
+
+	conn := providerF().Meta().(*conns.AWSClient).IAMClient(ctx)
 	input := &iam.ListRolesInput{
 		PathPrefix: aws.String(pathPrefix),
 	}
-	var role *iam.Role
+	var role awstypes.Role
 
-	err := conn.ListRolesPagesWithContext(ctx, input, func(page *iam.ListRolesOutput, lastPage bool) bool {
+	pages := iam.NewListRolesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if PreCheckSkipError(err) {
+			t.Skipf("skipping tests: %s", err)
+		}
+		if err != nil {
+			t.Fatalf("listing IAM roles: %s", err)
+		}
+
 		for _, r := range page.Roles {
 			role = r
 			break
 		}
-
-		return !lastPage
-	})
-
-	if PreCheckSkipError(err) {
-		t.Skipf("skipping tests: %s", err)
 	}
 
-	if err != nil {
-		t.Fatalf("listing IAM roles: %s", err)
-	}
-
-	if role == nil {
+	if reflect.ValueOf(role).IsZero() {
 		t.Skipf("skipping tests; missing IAM service-linked role %s. Please create the role and retry", pathPrefix)
 	}
 }
@@ -1424,7 +1447,7 @@ provider %[1]q {
 `, providerName, os.Getenv(envvar.AlternateAccessKeyId), os.Getenv(envvar.AlternateProfile), AlternateRegion(), os.Getenv(envvar.AlternateSecretAccessKey))
 }
 
-func RegionProviderFunc(region string, providers *[]*schema.Provider) func() *schema.Provider {
+func RegionProviderFunc(region string, providers *[]*schema.Provider) ProviderFunc {
 	return func() *schema.Provider {
 		if region == "" {
 			log.Println("[DEBUG] No region given")
@@ -1463,7 +1486,7 @@ func RegionProviderFunc(region string, providers *[]*schema.Provider) func() *sc
 	}
 }
 
-func NamedProviderFunc(name string, providers map[string]*schema.Provider) func() *schema.Provider {
+func NamedProviderFunc(name string, providers map[string]*schema.Provider) ProviderFunc {
 	return func() *schema.Provider {
 		return NamedProvider(name, providers)
 	}
@@ -1913,17 +1936,17 @@ func ACMCertificateRandomSubDomain(rootDomain string) string {
 		rootDomain)
 }
 
-func CheckACMPCACertificateAuthorityActivateRootCA(ctx context.Context, certificateAuthority *acmpca.CertificateAuthority) resource.TestCheckFunc {
+func CheckACMPCACertificateAuthorityActivateRootCA(ctx context.Context, certificateAuthority *acmpcatypes.CertificateAuthority) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := Provider.Meta().(*conns.AWSClient).ACMPCAConn(ctx)
+		conn := Provider.Meta().(*conns.AWSClient).ACMPCAClient(ctx)
 
-		if v := aws.StringValue(certificateAuthority.Type); v != acmpca.CertificateAuthorityTypeRoot {
+		if v := string(certificateAuthority.Type); v != string(acmpcatypes.CertificateAuthorityTypeRoot) {
 			return fmt.Errorf("attempting to activate ACM PCA %s Certificate Authority", v)
 		}
 
 		arn := aws.StringValue(certificateAuthority.Arn)
 
-		getCsrOutput, err := conn.GetCertificateAuthorityCsrWithContext(ctx, &acmpca.GetCertificateAuthorityCsrInput{
+		getCsrOutput, err := conn.GetCertificateAuthorityCsr(ctx, &acmpca.GetCertificateAuthorityCsrInput{
 			CertificateAuthorityArn: aws.String(arn),
 		})
 
@@ -1931,14 +1954,14 @@ func CheckACMPCACertificateAuthorityActivateRootCA(ctx context.Context, certific
 			return fmt.Errorf("getting ACM PCA Certificate Authority (%s) CSR: %w", arn, err)
 		}
 
-		issueCertOutput, err := conn.IssueCertificateWithContext(ctx, &acmpca.IssueCertificateInput{
+		issueCertOutput, err := conn.IssueCertificate(ctx, &acmpca.IssueCertificateInput{
 			CertificateAuthorityArn: aws.String(arn),
 			Csr:                     []byte(aws.StringValue(getCsrOutput.Csr)),
 			IdempotencyToken:        aws.String(id.UniqueId()),
 			SigningAlgorithm:        certificateAuthority.CertificateAuthorityConfiguration.SigningAlgorithm,
 			TemplateArn:             aws.String(fmt.Sprintf("arn:%s:acm-pca:::template/RootCACertificate/V1", Partition())),
-			Validity: &acmpca.Validity{
-				Type:  aws.String(acmpca.ValidityPeriodTypeYears),
+			Validity: &acmpcatypes.Validity{
+				Type:  acmpcatypes.ValidityPeriodTypeYears,
 				Value: aws.Int64(10),
 			},
 		})
@@ -1948,16 +1971,19 @@ func CheckACMPCACertificateAuthorityActivateRootCA(ctx context.Context, certific
 		}
 
 		// Wait for certificate status to become ISSUED.
-		err = conn.WaitUntilCertificateIssuedWithContext(ctx, &acmpca.GetCertificateInput{
+		waiter := acmpca.NewCertificateIssuedWaiter(conn)
+		params := &acmpca.GetCertificateInput{
 			CertificateAuthorityArn: aws.String(arn),
 			CertificateArn:          issueCertOutput.CertificateArn,
-		})
+		}
+
+		err = waiter.Wait(ctx, params, CertificateIssueTimeout)
 
 		if err != nil {
 			return fmt.Errorf("waiting for ACM PCA Certificate Authority (%s) Root CA certificate to become ISSUED: %w", arn, err)
 		}
 
-		getCertOutput, err := conn.GetCertificateWithContext(ctx, &acmpca.GetCertificateInput{
+		getCertOutput, err := conn.GetCertificate(ctx, &acmpca.GetCertificateInput{
 			CertificateAuthorityArn: aws.String(arn),
 			CertificateArn:          issueCertOutput.CertificateArn,
 		})
@@ -1966,7 +1992,7 @@ func CheckACMPCACertificateAuthorityActivateRootCA(ctx context.Context, certific
 			return fmt.Errorf("getting ACM PCA Certificate Authority (%s) issued Root CA certificate: %w", arn, err)
 		}
 
-		_, err = conn.ImportCertificateAuthorityCertificateWithContext(ctx, &acmpca.ImportCertificateAuthorityCertificateInput{
+		_, err = conn.ImportCertificateAuthorityCertificate(ctx, &acmpca.ImportCertificateAuthorityCertificateInput{
 			CertificateAuthorityArn: aws.String(arn),
 			Certificate:             []byte(aws.StringValue(getCertOutput.Certificate)),
 		})
@@ -1979,17 +2005,17 @@ func CheckACMPCACertificateAuthorityActivateRootCA(ctx context.Context, certific
 	}
 }
 
-func CheckACMPCACertificateAuthorityActivateSubordinateCA(ctx context.Context, rootCertificateAuthority, certificateAuthority *acmpca.CertificateAuthority) resource.TestCheckFunc {
+func CheckACMPCACertificateAuthorityActivateSubordinateCA(ctx context.Context, rootCertificateAuthority, certificateAuthority *acmpcatypes.CertificateAuthority) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := Provider.Meta().(*conns.AWSClient).ACMPCAConn(ctx)
+		conn := Provider.Meta().(*conns.AWSClient).ACMPCAClient(ctx)
 
-		if v := aws.StringValue(certificateAuthority.Type); v != acmpca.CertificateAuthorityTypeSubordinate {
+		if v := string(certificateAuthority.Type); v != string(acmpcatypes.CertificateAuthorityTypeSubordinate) {
 			return fmt.Errorf("attempting to activate ACM PCA %s Certificate Authority", v)
 		}
 
 		arn := aws.StringValue(certificateAuthority.Arn)
 
-		getCsrOutput, err := conn.GetCertificateAuthorityCsrWithContext(ctx, &acmpca.GetCertificateAuthorityCsrInput{
+		getCsrOutput, err := conn.GetCertificateAuthorityCsr(ctx, &acmpca.GetCertificateAuthorityCsrInput{
 			CertificateAuthorityArn: aws.String(arn),
 		})
 
@@ -1999,14 +2025,14 @@ func CheckACMPCACertificateAuthorityActivateSubordinateCA(ctx context.Context, r
 
 		rootCertificateAuthorityArn := aws.StringValue(rootCertificateAuthority.Arn)
 
-		issueCertOutput, err := conn.IssueCertificateWithContext(ctx, &acmpca.IssueCertificateInput{
+		issueCertOutput, err := conn.IssueCertificate(ctx, &acmpca.IssueCertificateInput{
 			CertificateAuthorityArn: aws.String(rootCertificateAuthorityArn),
 			Csr:                     []byte(aws.StringValue(getCsrOutput.Csr)),
 			IdempotencyToken:        aws.String(id.UniqueId()),
 			SigningAlgorithm:        certificateAuthority.CertificateAuthorityConfiguration.SigningAlgorithm,
 			TemplateArn:             aws.String(fmt.Sprintf("arn:%s:acm-pca:::template/SubordinateCACertificate_PathLen0/V1", Partition())),
-			Validity: &acmpca.Validity{
-				Type:  aws.String(acmpca.ValidityPeriodTypeYears),
+			Validity: &acmpcatypes.Validity{
+				Type:  acmpcatypes.ValidityPeriodTypeYears,
 				Value: aws.Int64(3),
 			},
 		})
@@ -2016,16 +2042,19 @@ func CheckACMPCACertificateAuthorityActivateSubordinateCA(ctx context.Context, r
 		}
 
 		// Wait for certificate status to become ISSUED.
-		err = conn.WaitUntilCertificateIssuedWithContext(ctx, &acmpca.GetCertificateInput{
-			CertificateAuthorityArn: aws.String(rootCertificateAuthorityArn),
+		waiter := acmpca.NewCertificateIssuedWaiter(conn)
+		params := &acmpca.GetCertificateInput{
+			CertificateAuthorityArn: aws.String(arn),
 			CertificateArn:          issueCertOutput.CertificateArn,
-		})
+		}
+
+		err = waiter.Wait(ctx, params, CertificateIssueTimeout)
 
 		if err != nil {
 			return fmt.Errorf("waiting for ACM PCA Certificate Authority (%s) Subordinate CA certificate to become ISSUED: %w", arn, err)
 		}
 
-		getCertOutput, err := conn.GetCertificateWithContext(ctx, &acmpca.GetCertificateInput{
+		getCertOutput, err := conn.GetCertificate(ctx, &acmpca.GetCertificateInput{
 			CertificateAuthorityArn: aws.String(rootCertificateAuthorityArn),
 			CertificateArn:          issueCertOutput.CertificateArn,
 		})
@@ -2034,7 +2063,7 @@ func CheckACMPCACertificateAuthorityActivateSubordinateCA(ctx context.Context, r
 			return fmt.Errorf("getting ACM PCA Certificate Authority (%s) issued Subordinate CA certificate: %w", arn, err)
 		}
 
-		_, err = conn.ImportCertificateAuthorityCertificateWithContext(ctx, &acmpca.ImportCertificateAuthorityCertificateInput{
+		_, err = conn.ImportCertificateAuthorityCertificate(ctx, &acmpca.ImportCertificateAuthorityCertificateInput{
 			CertificateAuthorityArn: aws.String(arn),
 			Certificate:             []byte(aws.StringValue(getCertOutput.Certificate)),
 			CertificateChain:        []byte(aws.StringValue(getCertOutput.CertificateChain)),
@@ -2048,20 +2077,20 @@ func CheckACMPCACertificateAuthorityActivateSubordinateCA(ctx context.Context, r
 	}
 }
 
-func CheckACMPCACertificateAuthorityDisableCA(ctx context.Context, certificateAuthority *acmpca.CertificateAuthority) resource.TestCheckFunc {
+func CheckACMPCACertificateAuthorityDisableCA(ctx context.Context, certificateAuthority *acmpcatypes.CertificateAuthority) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := Provider.Meta().(*conns.AWSClient).ACMPCAConn(ctx)
+		conn := Provider.Meta().(*conns.AWSClient).ACMPCAClient(ctx)
 
-		_, err := conn.UpdateCertificateAuthorityWithContext(ctx, &acmpca.UpdateCertificateAuthorityInput{
+		_, err := conn.UpdateCertificateAuthority(ctx, &acmpca.UpdateCertificateAuthorityInput{
 			CertificateAuthorityArn: certificateAuthority.Arn,
-			Status:                  aws.String(acmpca.CertificateAuthorityStatusDisabled),
+			Status:                  acmpcatypes.CertificateAuthorityStatusDisabled,
 		})
 
 		return err
 	}
 }
 
-func CheckACMPCACertificateAuthorityExists(ctx context.Context, n string, certificateAuthority *acmpca.CertificateAuthority) resource.TestCheckFunc {
+func CheckACMPCACertificateAuthorityExists(ctx context.Context, n string, certificateAuthority *acmpcatypes.CertificateAuthority) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -2072,7 +2101,7 @@ func CheckACMPCACertificateAuthorityExists(ctx context.Context, n string, certif
 			return fmt.Errorf("no ACM PCA Certificate Authority ID is set")
 		}
 
-		conn := Provider.Meta().(*conns.AWSClient).ACMPCAConn(ctx)
+		conn := Provider.Meta().(*conns.AWSClient).ACMPCAClient(ctx)
 
 		output, err := tfacmpca.FindCertificateAuthorityByARN(ctx, conn, rs.Primary.ID)
 

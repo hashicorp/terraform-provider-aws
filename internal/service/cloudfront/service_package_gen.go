@@ -45,8 +45,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_cloudfront_distribution",
 		},
 		{
-			Factory:  DataSourceFunction,
+			Factory:  dataSourceFunction,
 			TypeName: "aws_cloudfront_function",
+			Name:     "Function",
 		},
 		{
 			Factory:  DataSourceLogDeliveryCanonicalUserID,
@@ -98,8 +99,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_cloudfront_field_level_encryption_profile",
 		},
 		{
-			Factory:  ResourceFunction,
+			Factory:  resourceFunction,
 			TypeName: "aws_cloudfront_function",
+			Name:     "Function",
 		},
 		{
 			Factory:  ResourceKeyGroup,

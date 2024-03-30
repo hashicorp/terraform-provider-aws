@@ -8,6 +8,7 @@ import (
 
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -274,6 +275,11 @@ func (r tagsResourceInterceptor) run(ctx context.Context, d schemaResourceData, 
 								UpdateTags(context.Context, any, string, string, any, any) error
 							}); ok && r.tags.ResourceType != "" {
 								err = v.UpdateTags(ctx, meta, identifier, r.tags.ResourceType, o, n)
+							} else {
+								tflog.Warn(ctx, "No UpdateTags method found", map[string]interface{}{
+									"ServicePackage": sp.ServicePackageName(),
+									"ResourceType":   r.tags.ResourceType,
+								})
 							}
 
 							// ISO partitions may not support tagging, giving error.
@@ -326,6 +332,11 @@ func (r tagsResourceInterceptor) run(ctx context.Context, d schemaResourceData, 
 							ListTags(context.Context, any, string, string) error
 						}); ok && r.tags.ResourceType != "" {
 							err = v.ListTags(ctx, meta, identifier, r.tags.ResourceType) // Sets tags in Context
+						} else {
+							tflog.Warn(ctx, "No ListTags method found", map[string]interface{}{
+								"ServicePackage": sp.ServicePackageName(),
+								"ResourceType":   r.tags.ResourceType,
+							})
 						}
 
 						// ISO partitions may not support tagging, giving error.

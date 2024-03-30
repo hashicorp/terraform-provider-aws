@@ -19,23 +19,23 @@ import (
 )
 
 // @FrameworkDataSource(name="User Group")
-func newDataSourceDataSourceUserGroup(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceDataSourceUserGroup{}, nil
+func newUserGroupDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &userGroupDataSource{}, nil
 }
 
 const (
 	DSNameUserGroup = "User Group Data Source"
 )
 
-type dataSourceDataSourceUserGroup struct {
+type userGroupDataSource struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceDataSourceUserGroup) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
+func (d *userGroupDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) {
 	response.TypeName = "aws_cognito_user_group"
 }
 
-func (d *dataSourceDataSourceUserGroup) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+func (d *userGroupDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"description": schema.StringAttribute{
@@ -58,7 +58,7 @@ func (d *dataSourceDataSourceUserGroup) Schema(ctx context.Context, request data
 	}
 }
 
-func (d *dataSourceDataSourceUserGroup) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+func (d *userGroupDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
 	var data dataSourceDataSourceUserGroupData
 
 	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)

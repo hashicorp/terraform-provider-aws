@@ -5,6 +5,7 @@ package elasticbeanstalk
 
 import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"slices"
@@ -18,7 +19,6 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk/types"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -692,13 +692,13 @@ func findEnvironmentErrorsByID(ctx context.Context, conn *elasticbeanstalk.Clien
 		return 0
 	})
 
-	var errors *multierror.Error
+	var errs []error
 
 	for _, v := range output {
-		errors = multierror.Append(errors, fmt.Errorf("%s %s", v.EventDate, aws.ToString(v.Message)))
+		errs = append(errs, fmt.Errorf("%s: %s", v.EventDate, aws.ToString(v.Message)))
 	}
 
-	return errors.ErrorOrNil()
+	return errors.Join(errs...)
 }
 
 func findConfigurationSettingsByTwoPartKey(ctx context.Context, conn *elasticbeanstalk.Client, applicationName, environmentName string) (*awstypes.ConfigurationSettingsDescription, error) {

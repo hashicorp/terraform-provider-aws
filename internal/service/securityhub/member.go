@@ -22,8 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_securityhub_member")
-func ResourceMember() *schema.Resource {
+// @SDKResource("aws_securityhub_member", name="Member")
+func resourceMember() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMemberCreate,
 		ReadWithoutTimeout:   resourceMemberRead,
@@ -112,7 +112,7 @@ func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	member, err := FindMemberByAccountID(ctx, conn, d.Id())
+	member, err := findMemberByAccountID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Security Hub Member (%s) not found, removing from state", d.Id())
@@ -179,11 +179,25 @@ func resourceMemberDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func FindMemberByAccountID(ctx context.Context, conn *securityhub.Client, accountID string) (*types.Member, error) {
+func findMemberByAccountID(ctx context.Context, conn *securityhub.Client, accountID string) (*types.Member, error) {
 	input := &securityhub.GetMembersInput{
 		AccountIds: []string{accountID},
 	}
 
+	return findMember(ctx, conn, input)
+}
+
+func findMember(ctx context.Context, conn *securityhub.Client, input *securityhub.GetMembersInput) (*types.Member, error) {
+	output, err := findMembers(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findMembers(ctx context.Context, conn *securityhub.Client, input *securityhub.GetMembersInput) ([]types.Member, error) {
 	output, err := conn.GetMembers(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeResourceNotFoundException) || tfawserr.ErrMessageContains(err, errCodeAccessDeniedException, "The request is rejected since no such resource found") || tfawserr.ErrMessageContains(err, errCodeBadRequestException, "The request is rejected since no such resource found") {
@@ -201,7 +215,7 @@ func FindMemberByAccountID(ctx context.Context, conn *securityhub.Client, accoun
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return tfresource.AssertSingleValueResult(output.Members)
+	return output.Members, nil
 }
 
 func unprocessedAccountError(apiObject types.Result) error {

@@ -1,10 +1,10 @@
 # AWS SDK For Go Migration Guide
 
-AWS has [announced](https://aws.amazon.com/blogs/developer/announcing-end-of-support-for-aws-sdk-for-go-v1-on-july-31-2025/) that V1 of the SDK for Go will enter maintenance mode on July 31, 2024 and reach end-of-life July 31, 2025.
+AWS has [announced](https://aws.amazon.com/blogs/developer/announcing-end-of-support-for-aws-sdk-for-go-v1-on-july-31-2025/) that V1 of the SDK for Go will enter maintenance mode on July 31, 2024 and reach end-of-life on July 31, 2025.
 While the AWS Terraform provider already [requires all net-new services](./aws-go-sdk-versions.md) to use AWS SDK V2 service clients, there remains a substantial number of existing services utilizing V1.
 
 Over time maintainers will be migrating impacted services to adopt AWS SDK for Go V2.
-For community members interested in contributoring to this effort, this guide documents the common patterns required to migrate a service.
+For community members interested in contributing to this effort, this guide documents the common patterns required to migrate a service.
 
 !!! tip
     The list of remaining services which require migration can be found in [this meta issue](https://github.com/hashicorp/terraform-provider-aws/issues/32976).
@@ -23,7 +23,7 @@ go generate ./internal/conns/...
 ### Add an `EndpointID` Constant
 
 When a service is first migrated, a `{ServiceName}EndpointID` constant must be added to [`names/names.go`](https://github.com/hashicorp/terraform-provider-aws/blob/main/names/names.go) manually.
-Be sure to preseve alphabetical order.
+Be sure to preserve alphabetical order.
 
 The AWS SDK for Go V1 previously exposed these as constants, but V2 does not.
 This constant is used in common acceptance testing pre-checks, such as `acctest.PreCheckPartitionHasService`.
@@ -179,7 +179,7 @@ As a starting point, any type reference which isn’t an Input/Output struct can
 awstypes.StatusInProgress
 ```
 
-Individual services vary in which types are moved into the dedicated subpackage, so a programatic replacement of all occurrences may require some manual adjustment afterward.
+Individual services vary in which types are moved into the dedicated subpackage, so a programmatic replacement of all occurrences may require some manual adjustment afterward.
 
 ### Enum Types
 
@@ -259,6 +259,11 @@ ErrorCheck: acctest.ErrorCheck(t, names.SSOAdminServiceID),
 
 V2 of the AWS SDK introduces new [paginator](https://aws.github.io/aws-sdk-go-v2/docs/making-requests/#using-paginators) helpers.
 Any `List*Pages` methods called with V1 of the SDK will need to replace the pagination function argument with the syntax documented in the AWS SDK for Go V2 documentation.
+
+## Waiters
+
+V2 of the AWS SDK introduces new [waiter](https://aws.github.io/aws-sdk-go-v2/docs/making-requests/#using-waiters) helpers.
+Any `Wait*` methods called with V1 of the SDK will need to be replaced with the syntax documented in the AWS SDK for Go V2 documentation.
 
 ## Sweepers
 

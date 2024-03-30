@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -39,7 +40,7 @@ func TestAccVPCRoute_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccVPCRouteConfig_ipv4InternetGateway(rName, destinationCidr),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRouteTableExists(ctx, rtResourceName, &routeTable),
 					testAccCheckRouteTableNumberOfRoutes(&routeTable, 2),
 					testAccCheckRouteExists(ctx, resourceName, &route),
@@ -1572,8 +1573,38 @@ func TestAccVPCRoute_ipv6ToVPCEndpoint(t *testing.T) {
 	})
 }
 
+func TestAccVPCRoute_localRouteCreateError(t *testing.T) {
+	ctx := acctest.Context(t)
+	var routeTable ec2.RouteTable
+	var vpc ec2.Vpc
+	rtResourceName := "aws_route_table.test"
+	vpcResourceName := "aws_vpc.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRouteDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCRouteConfig_ipv4NoRoute(rName),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
+					testAccCheckRouteTableExists(ctx, rtResourceName, &routeTable),
+					testAccCheckRouteTableNumberOfRoutes(&routeTable, 1),
+				),
+			},
+			{
+				Config:      testAccVPCRouteConfig_ipv4Local(rName),
+				ExpectError: regexache.MustCompile("cannot create local Route, use `terraform import` to manage existing local Routes"),
+			},
+		},
+	})
+}
+
 // https://github.com/hashicorp/terraform-provider-aws/issues/11455.
-func TestAccVPCRoute_localRoute(t *testing.T) {
+func TestAccVPCRoute_localRouteImport(t *testing.T) {
 	ctx := acctest.Context(t)
 	var routeTable ec2.RouteTable
 	var vpc ec2.Vpc
@@ -1614,7 +1645,7 @@ func TestAccVPCRoute_localRoute(t *testing.T) {
 }
 
 // https://github.com/hashicorp/terraform-provider-aws/issues/21350.
-func TestAccVPCRoute_localRouteUpdate(t *testing.T) {
+func TestAccVPCRoute_localRouteImportAndUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var routeTable ec2.RouteTable
 	var vpc ec2.Vpc
@@ -2205,6 +2236,25 @@ func TestAccVPCRoute_prefixListToEgressOnlyInternetGateway(t *testing.T) {
 	})
 }
 
+func TestAccVPCRoute_duplicate(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	destinationCidr := "10.3.0.0/16"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRouteDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccVPCRouteConfig_ipv4InternetGatewayDuplicate(rName, destinationCidr),
+				ExpectError: regexache.MustCompile(`RouteAlreadyExists: Route .* already exists`),
+			},
+		},
+	})
+}
+
 func testAccCheckRouteExists(ctx context.Context, n string, v *ec2.Route) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -2324,6 +2374,46 @@ resource "aws_route" "test" {
 `, rName, destinationCidr)
 }
 
+func testAccVPCRouteConfig_ipv4InternetGatewayDuplicate(rName, destinationCidr string) string {
+	return fmt.Sprintf(`
+resource "aws_vpc" "test" {
+  cidr_block = "10.1.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_internet_gateway" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route_table" "test" {
+  vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_route" "test1" {
+  route_table_id         = aws_route_table.test.id
+  destination_cidr_block = %[2]q
+  gateway_id             = aws_internet_gateway.test.id
+}
+
+resource "aws_route" "test2" {
+  route_table_id         = aws_route.test1.route_table_id
+  destination_cidr_block = %[2]q
+  gateway_id             = aws_internet_gateway.test.id
+}
+`, rName, destinationCidr)
+}
+
 func testAccVPCRouteConfig_ipv6InternetGateway(rName, destinationCidr string) string {
 	return fmt.Sprintf(`
 resource "aws_vpc" "test" {
@@ -2417,7 +2507,7 @@ resource "aws_route" "test" {
 
 func testAccVPCRouteConfig_ipv6Instance(rName, destinationCidr string) string {
 	return acctest.ConfigCompose(
-		testAccLatestAmazonNatInstanceAMIConfig(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.ConfigAvailableAZsNoOptIn(),
 		acctest.AvailableEC2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
 		fmt.Sprintf(`
@@ -2442,7 +2532,7 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_instance" "test" {
-  ami           = data.aws_ami.amzn-ami-nat-instance.id
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
   subnet_id     = aws_subnet.test.id
 
@@ -2749,7 +2839,7 @@ resource "aws_route" "test" {
 
 func testAccVPCRouteConfig_ipv4Instance(rName, destinationCidr string) string {
 	return acctest.ConfigCompose(
-		testAccLatestAmazonNatInstanceAMIConfig(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.ConfigAvailableAZsNoOptIn(),
 		acctest.AvailableEC2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
 		fmt.Sprintf(`
@@ -2772,7 +2862,7 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_instance" "test" {
-  ami           = data.aws_ami.amzn-ami-nat-instance.id
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
   subnet_id     = aws_subnet.test.id
 
@@ -2944,7 +3034,7 @@ resource "aws_route" "test" {
 
 func testAccVPCRouteConfig_ipv4NetworkInterfaceAttached(rName, destinationCidr string) string {
 	return acctest.ConfigCompose(
-		testAccLatestAmazonNatInstanceAMIConfig(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.ConfigAvailableAZsNoOptIn(),
 		acctest.AvailableEC2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
 		fmt.Sprintf(`
@@ -2975,7 +3065,7 @@ resource "aws_network_interface" "test" {
 }
 
 resource "aws_instance" "test" {
-  ami           = data.aws_ami.amzn-ami-nat-instance.id
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
 
   network_interface {
@@ -3009,7 +3099,7 @@ resource "aws_route" "test" {
 
 func testAccVPCRouteConfig_ipv4NetworkInterfaceTwoAttachments(rName, destinationCidr, targetResourceName string) string {
 	return acctest.ConfigCompose(
-		testAccLatestAmazonNatInstanceAMIConfig(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.ConfigAvailableAZsNoOptIn(),
 		acctest.AvailableEC2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
 		fmt.Sprintf(`
@@ -3048,7 +3138,7 @@ resource "aws_network_interface" "test2" {
 }
 
 resource "aws_instance" "test" {
-  ami           = data.aws_ami.amzn-ami-nat-instance.id
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
 
   network_interface {
@@ -3923,7 +4013,7 @@ resource "aws_route" "test" {
 
 func testAccVPCRouteConfig_prefixListInstance(rName string) string {
 	return acctest.ConfigCompose(
-		testAccLatestAmazonNatInstanceAMIConfig(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.ConfigAvailableAZsNoOptIn(),
 		acctest.AvailableEC2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
 		fmt.Sprintf(`
@@ -3946,7 +4036,7 @@ resource "aws_subnet" "test" {
 }
 
 resource "aws_instance" "test" {
-  ami           = data.aws_ami.amzn-ami-nat-instance.id
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
   subnet_id     = aws_subnet.test.id
 
@@ -4031,7 +4121,7 @@ resource "aws_route" "test" {
 
 func testAccVPCRouteConfig_prefixListNetworkInterfaceAttached(rName string) string {
 	return acctest.ConfigCompose(
-		testAccLatestAmazonNatInstanceAMIConfig(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.ConfigAvailableAZsNoOptIn(),
 		acctest.AvailableEC2InstanceTypeForAvailabilityZone("data.aws_availability_zones.available.names[0]", "t3.micro", "t2.micro"),
 		fmt.Sprintf(`
@@ -4062,7 +4152,7 @@ resource "aws_network_interface" "test" {
 }
 
 resource "aws_instance" "test" {
-  ami           = data.aws_ami.amzn-ami-nat-instance.id
+  ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
 
   network_interface {
