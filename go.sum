@@ -72,8 +72,8 @@ github.com/aws/aws-sdk-go-v2/service/bedrock v1.7.4 h1:gh0QgCkZyet5JH7FuLPV5FVck
 github.com/aws/aws-sdk-go-v2/service/bedrock v1.7.4/go.mod h1:/D6V245MG0yEqSULoBf/zLdQk8lmsMZXR3d/vc2mOdo=
 github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.5.1 h1:LWEonf7hVyLqY4AK46rjEyNne9tWkQK07TPPfoq1PBI=
 github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.5.1/go.mod h1:6CwV+GE3wrFqkrU2LB8cajHMWJn7jFFhRtxBQiOZ5kw=
-github.com/aws/aws-sdk-go-v2/service/budgets v1.22.3 h1:8/EAWsRzln7yZ8XjKm4eDizPz+SIaZ83CZRsl4hGsgM=
-github.com/aws/aws-sdk-go-v2/service/budgets v1.22.3/go.mod h1:tLE9xTrWczkC/4JKSTmoFMdO+sRVOdc78mSLEDdsMd4=
+github.com/aws/aws-sdk-go-v2/service/budgets v1.22.4 h1:sVv+p2Wo+sUXa8dC1pCMJ/+9ncOriq8EiRWvAkOuaLY=
+github.com/aws/aws-sdk-go-v2/service/budgets v1.22.4/go.mod h1:JFS3MaNoisHXHQm5/xRQjj1tICixIgT8Vv32D0lV5NE=
 github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.15.4 h1:KJ5+G5m4rVZxS1vTUkRsHi+yr7KUTDNICO6nJgTarTw=
 github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.15.4/go.mod h1:Bwt+CNMRVQxCEzfqVJB4eJjedEYzyPk7zIkbzG6uxMw=
 github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.14.3 h1:mEnRQhdLEDhkd8nxv1OQZtVXw3ebWfUOVcPnXyRNKiQ=
