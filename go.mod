@@ -20,7 +20,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/appfabric v1.7.4
 	github.com/aws/aws-sdk-go-v2/service/appflow v1.41.4
 	github.com/aws/aws-sdk-go-v2/service/apprunner v1.28.4
-	github.com/aws/aws-sdk-go-v2/service/athena v1.40.3
+	github.com/aws/aws-sdk-go-v2/service/athena v1.40.4
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.32.3
 	github.com/aws/aws-sdk-go-v2/service/batch v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.7.3
