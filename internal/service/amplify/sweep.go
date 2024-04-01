@@ -37,7 +37,7 @@ func sweepApps(region string) error {
 		}
 
 		for _, app := range page.Apps {
-			r := ResourceApp()
+			r := resourceApp()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(app.AppId))
 

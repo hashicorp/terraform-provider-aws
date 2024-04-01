@@ -10,9 +10,10 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/amplify"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/amplify/types"
+	"github.com/aws/aws-sdk-go-v2/service/amplify/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -28,7 +29,7 @@ import (
 
 // @SDKResource("aws_amplify_app", name="App")
 // @Tags(identifierAttribute="arn")
-func ResourceApp() *schema.Resource {
+func resourceApp() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAppCreate,
 		ReadWithoutTimeout:   resourceAppRead,
@@ -123,7 +124,7 @@ func ResourceApp() *schema.Resource {
 						"stage": {
 							Type:             schema.TypeString,
 							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.Stage](),
+							ValidateDiagFunc: enum.Validate[types.Stage](),
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 								// API returns "NONE" by default.
 								if old == StageNone && new == "" {
@@ -258,8 +259,8 @@ func ResourceApp() *schema.Resource {
 			"platform": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				Default:          awstypes.PlatformWeb,
-				ValidateDiagFunc: enum.Validate[awstypes.Platform](),
+				Default:          types.PlatformWeb,
+				ValidateDiagFunc: enum.Validate[types.Platform](),
 			},
 			"production_branch": {
 				Type:     schema.TypeList,
@@ -301,7 +302,6 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
 	name := d.Get("name").(string)
-
 	input := &amplify.CreateAppInput{
 		Name: aws.String(name),
 		Tags: getTagsIn(ctx),
@@ -368,7 +368,7 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if v, ok := d.GetOk("platform"); ok {
-		input.Platform = awstypes.Platform(v.(string))
+		input.Platform = types.Platform(v.(string))
 	}
 
 	if v, ok := d.GetOk("repository"); ok {
@@ -391,7 +391,7 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
-	app, err := FindAppByID(ctx, conn, d.Id())
+	app, err := findAppByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Amplify App (%s) not found, removing from state", d.Id())
@@ -485,7 +485,7 @@ func resourceAppUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 			if v := d.Get("custom_rule").([]interface{}); len(v) > 0 {
 				input.CustomRules = expandCustomRules(v)
 			} else {
-				input.CustomRules = []awstypes.CustomRule{}
+				input.CustomRules = []types.CustomRule{}
 			}
 		}
 
@@ -530,7 +530,7 @@ func resourceAppUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 		}
 
 		if d.HasChange("platform") {
-			input.Platform = awstypes.Platform(d.Get("platform").(string))
+			input.Platform = types.Platform(d.Get("platform").(string))
 		}
 
 		if d.HasChange("repository") {
@@ -556,7 +556,7 @@ func resourceAppDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 		AppId: aws.String(d.Id()),
 	})
 
-	if errs.IsA[*awstypes.NotFoundException](err) {
+	if errs.IsA[*types.NotFoundException](err) {
 		return diags
 	}
 
@@ -567,12 +567,37 @@ func resourceAppDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
-func expandAutoBranchCreationConfig(tfMap map[string]interface{}) *awstypes.AutoBranchCreationConfig {
+func findAppByID(ctx context.Context, conn *amplify.Client, id string) (*types.App, error) {
+	input := &amplify.GetAppInput{
+		AppId: aws.String(id),
+	}
+
+	output, err := conn.GetApp(ctx, input)
+
+	if errs.IsA[*types.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.App == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.App, nil
+}
+
+func expandAutoBranchCreationConfig(tfMap map[string]interface{}) *types.AutoBranchCreationConfig {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &awstypes.AutoBranchCreationConfig{}
+	apiObject := &types.AutoBranchCreationConfig{}
 
 	if v, ok := tfMap["basic_auth_credentials"].(string); ok && v != "" {
 		apiObject.BasicAuthCredentials = aws.String(v)
@@ -611,13 +636,13 @@ func expandAutoBranchCreationConfig(tfMap map[string]interface{}) *awstypes.Auto
 	}
 
 	if v, ok := tfMap["stage"].(string); ok && v != "" && v != StageNone {
-		apiObject.Stage = awstypes.Stage(v)
+		apiObject.Stage = types.Stage(v)
 	}
 
 	return apiObject
 }
 
-func flattenAutoBranchCreationConfig(apiObject *awstypes.AutoBranchCreationConfig) map[string]interface{} {
+func flattenAutoBranchCreationConfig(apiObject *types.AutoBranchCreationConfig) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -665,12 +690,12 @@ func flattenAutoBranchCreationConfig(apiObject *awstypes.AutoBranchCreationConfi
 	return tfMap
 }
 
-func expandCustomRule(tfMap map[string]interface{}) *awstypes.CustomRule {
+func expandCustomRule(tfMap map[string]interface{}) *types.CustomRule {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &awstypes.CustomRule{}
+	apiObject := &types.CustomRule{}
 
 	if v, ok := tfMap["condition"].(string); ok && v != "" {
 		apiObject.Condition = aws.String(v)
@@ -691,12 +716,12 @@ func expandCustomRule(tfMap map[string]interface{}) *awstypes.CustomRule {
 	return apiObject
 }
 
-func expandCustomRules(tfList []interface{}) []awstypes.CustomRule {
+func expandCustomRules(tfList []interface{}) []types.CustomRule {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []awstypes.CustomRule
+	var apiObjects []types.CustomRule
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -717,7 +742,7 @@ func expandCustomRules(tfList []interface{}) []awstypes.CustomRule {
 	return apiObjects
 }
 
-func flattenCustomRule(apiObject awstypes.CustomRule) map[string]interface{} {
+func flattenCustomRule(apiObject types.CustomRule) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Condition; v != nil {
@@ -739,7 +764,7 @@ func flattenCustomRule(apiObject awstypes.CustomRule) map[string]interface{} {
 	return tfMap
 }
 
-func flattenCustomRules(apiObjects []awstypes.CustomRule) []interface{} {
+func flattenCustomRules(apiObjects []types.CustomRule) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -753,7 +778,7 @@ func flattenCustomRules(apiObjects []awstypes.CustomRule) []interface{} {
 	return tfList
 }
 
-func flattenProductionBranch(apiObject *awstypes.ProductionBranch) map[string]interface{} {
+func flattenProductionBranch(apiObject *types.ProductionBranch) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
