@@ -170,8 +170,8 @@ github.com/aws/aws-sdk-go-v2/service/emrserverless v1.17.5 h1:w7hZ1/CRiKvzAtkzlv
 github.com/aws/aws-sdk-go-v2/service/emrserverless v1.17.5/go.mod h1:TZrahLcSXIN/kO96kvxUzfLNLH8E6t3xodv8Zv5DHGs=
 github.com/aws/aws-sdk-go-v2/service/evidently v1.19.4 h1:DcRQTdvIQs+v+rQJ598v7WmgLSsla9C90mY4J+rccrU=
 github.com/aws/aws-sdk-go-v2/service/evidently v1.19.4/go.mod h1:ajhW/0n1t1jQKd2Kn46/99wcMj41TSPBJ3vSWocTvdE=
-github.com/aws/aws-sdk-go-v2/service/finspace v1.24.0 h1:0QJDLyACLAIk1C0iYw8hJfNbauvQQnrr/8Hq37w2Az8=
-github.com/aws/aws-sdk-go-v2/service/finspace v1.24.0/go.mod h1:jcWNHj8/0TSarVAPO/wMLr4PqVW7wLZ9IklE0JFTgdQ=
+github.com/aws/aws-sdk-go-v2/service/finspace v1.24.1 h1:1syXGgya/121hPyOlzi4RvV1lrtIGEHLlrYUiRsZbXo=
+github.com/aws/aws-sdk-go-v2/service/finspace v1.24.1/go.mod h1:q6Qh/WbCf/lJrYh1i8OLknAT7X7PYDZgl/j5BYzLTGs=
 github.com/aws/aws-sdk-go-v2/service/firehose v1.28.4 h1:Dex1nY+50qE5pYpPGwGV4LfJ7ANNUaQF7S+gl0R3/DA=
 github.com/aws/aws-sdk-go-v2/service/firehose v1.28.4/go.mod h1:lG0iZ1i9pDmHwZzPwt62ek5F+IURxddbra2KWidu11s=
 github.com/aws/aws-sdk-go-v2/service/fis v1.24.1 h1:jXrNT8HEz8Z2DuXq+aToU9gdVDi5Pw4NwVUvfMOzHoM=
