@@ -103,7 +103,7 @@ func sweepStudios(region string) error {
 		}
 
 		for _, studio := range page.Studios {
-			r := ResourceStudio()
+			r := resourceStudio()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(studio.StudioId))
 

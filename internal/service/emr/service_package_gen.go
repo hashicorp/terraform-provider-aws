@@ -76,7 +76,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Security Configuration",
 		},
 		{
-			Factory:  ResourceStudio,
+			Factory:  resourceStudio,
 			TypeName: "aws_emr_studio",
 			Name:     "Studio",
 			Tags: &types.ServicePackageResourceTags{
