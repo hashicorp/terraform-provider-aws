@@ -166,6 +166,7 @@ class MyConvertedCode extends TerraformStack {
   <li><code>dataexchange</code></li>
   <li><code>datapipeline</code></li>
   <li><code>datasync</code></li>
+  <li><code>datazone</code></li>
   <li><code>dax</code></li>
   <li><code>deploy</code> (or <code>codedeploy</code>)</li>
   <li><code>detective</code></li>
@@ -260,6 +261,7 @@ class MyConvertedCode extends TerraformStack {
   <li><code>organizations</code></li>
   <li><code>osis</code> (or <code>opensearchingestion</code>)</li>
   <li><code>outposts</code></li>
+  <li><code>paymentcryptography</code></li>
   <li><code>pcaconnectorad</code></li>
   <li><code>pinpoint</code></li>
   <li><code>pipes</code></li>
@@ -436,4 +438,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-c07ce09718a0c466712ecaf61e2dbc9d141b981471b7621e8f49cae77bc74715 -->
+<!-- cache-key: cdktf-0.20.1 input-9a070f9147e866bd6d08e5e7883ecd780ff379afe650856a852883695747ebd0 -->
