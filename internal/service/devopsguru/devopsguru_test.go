@@ -17,12 +17,25 @@ func TestAccDevOpsGuru_serial(t *testing.T) {
 			"basic":      testAccEventSourcesConfig_basic,
 			"disappears": testAccEventSourcesConfig_disappears,
 		},
+		// A maxiumum of 2 notification channels can be configured at once, so
+		// serialize tests for safety.
+		"NotificationChannel": {
+			"basic":      testAccNotificationChannel_basic,
+			"disappears": testAccNotificationChannel_disappears,
+			"filters":    testAccNotificationChannel_filters,
+		},
+		"NotificationChannelDataSource": {
+			"basic": testAccNotificationChannelDataSource_basic,
+		},
 		"ResourceCollection": {
 			"basic":            testAccResourceCollection_basic,
 			"cloudformation":   testAccResourceCollection_cloudformation,
 			"disappears":       testAccResourceCollection_disappears,
 			"tags":             testAccResourceCollection_tags,
 			"tagsAllResources": testAccResourceCollection_tagsAllResources,
+		},
+		"ResourceCollectionDataSource": {
+			"basic": testAccResourceCollectionDataSource_basic,
 		},
 	}
 

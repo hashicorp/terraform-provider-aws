@@ -1,4 +1,73 @@
-## 5.43.0 (Unreleased)
+## 5.44.0 (Unreleased)
+
+FEATURES:
+
+* **New Data Source:** `aws_devopsguru_notification_channel` ([#36656](https://github.com/hashicorp/terraform-provider-aws/issues/36656))
+* **New Data Source:** `aws_devopsguru_resource_collection` ([#36657](https://github.com/hashicorp/terraform-provider-aws/issues/36657))
+* **New Data Source:** `aws_ecr_lifecycle_policy_document` ([#6133](https://github.com/hashicorp/terraform-provider-aws/issues/6133))
+
+BUG FIXES:
+
+* resource/aws_cognito_user_pool: Correct plan-time validation of `email_verification_message`, `email_verification_subject`, `admin_create_user_config.invite_message_template.email_message`, `admin_create_user_config.invite_message_template.email_subject`, `admin_create_user_config.invite_message_template.sms_message`, `sms_authentication_message`, `sms_verification_message`, `verification_message_template.email_message`, `verification_message_template.email_message_by_link`, `verification_message_template.email_subject`, `verification_message_template.email_subject_by_link`, and `verification_message_template.sms_message` to count UTF-8 characters properly ([#36661](https://github.com/hashicorp/terraform-provider-aws/issues/36661))
+* resource/aws_ecr_lifecycle_policy: Add missing `tagPatternList` change detection in policy JSON ([#35231](https://github.com/hashicorp/terraform-provider-aws/issues/35231))
+* resource/aws_iam_user: When `force_destroy` is used and there are inline or attached policies, allow resource to be destroyed ([#36640](https://github.com/hashicorp/terraform-provider-aws/issues/36640))
+* resource/aws_imagebuilder_distribution_configuration: Fix validation regex for `ami_distribution_configuration.name` ([#36659](https://github.com/hashicorp/terraform-provider-aws/issues/36659))
+* resource/aws_redshift_cluster: Fix error preventing modification of a configured `snapshot_copy` block ([#36655](https://github.com/hashicorp/terraform-provider-aws/issues/36655))
+
+## 5.43.0 (March 28, 2024)
+
+FEATURES:
+
+* **New Data Source:** `aws_resourceexplorer2_search` ([#36560](https://github.com/hashicorp/terraform-provider-aws/issues/36560))
+* **New Data Source:** `aws_servicecatalogappregistry_application` ([#36596](https://github.com/hashicorp/terraform-provider-aws/issues/36596))
+* **New Resource:** `aws_cloudfrontkeyvaluestore_key` ([#36534](https://github.com/hashicorp/terraform-provider-aws/issues/36534))
+* **New Resource:** `aws_devopsguru_notification_channel` ([#36557](https://github.com/hashicorp/terraform-provider-aws/issues/36557))
+* **New Resource:** `aws_dynamodb_resource_policy` ([#36595](https://github.com/hashicorp/terraform-provider-aws/issues/36595))
+* **New Resource:** `aws_ec2_instance_metadata_defaults` ([#36589](https://github.com/hashicorp/terraform-provider-aws/issues/36589))
+* **New Resource:** `aws_lakeformation_resource_lf_tag` ([#36537](https://github.com/hashicorp/terraform-provider-aws/issues/36537))
+* **New Resource:** `aws_m2_application` ([#35399](https://github.com/hashicorp/terraform-provider-aws/issues/35399))
+* **New Resource:** `aws_m2_deployment` ([#35408](https://github.com/hashicorp/terraform-provider-aws/issues/35408))
+* **New Resource:** `aws_m2_environment` ([#35311](https://github.com/hashicorp/terraform-provider-aws/issues/35311))
+* **New Resource:** `aws_redshiftserverless_custom_domain_association` ([#35865](https://github.com/hashicorp/terraform-provider-aws/issues/35865))
+* **New Resource:** `aws_servicecatalogappregistry_application` ([#36277](https://github.com/hashicorp/terraform-provider-aws/issues/36277))
+
+ENHANCEMENTS:
+
+* data-source/aws_cloudfront_function: Add `key_value_store_associations` attribute ([#36585](https://github.com/hashicorp/terraform-provider-aws/issues/36585))
+* data-source/aws_db_snapshot: Add `original_snapshot_create_time` attribute ([#36544](https://github.com/hashicorp/terraform-provider-aws/issues/36544))
+* resource/aws_cloudfront_function: Add `key_value_store_associations` argument ([#36585](https://github.com/hashicorp/terraform-provider-aws/issues/36585))
+* resource/aws_ec2_host: Add user configurable timeouts ([#36538](https://github.com/hashicorp/terraform-provider-aws/issues/36538))
+* resource/aws_glacier_vault_lock: Allow `policy` to have leading whitespace ([#36597](https://github.com/hashicorp/terraform-provider-aws/issues/36597))
+* resource/aws_iam_group_policy: Allow `policy` to have leading whitespace ([#36597](https://github.com/hashicorp/terraform-provider-aws/issues/36597))
+* resource/aws_iam_policy: Allow `policy` to have leading whitespace ([#36597](https://github.com/hashicorp/terraform-provider-aws/issues/36597))
+* resource/aws_iam_role: Allow `assume_role_policy` and `inline_policy.*.policy` to have leading whitespace ([#36597](https://github.com/hashicorp/terraform-provider-aws/issues/36597))
+* resource/aws_iam_role_policy: Allow `policy` to have leading whitespace ([#36597](https://github.com/hashicorp/terraform-provider-aws/issues/36597))
+* resource/aws_iam_user_policy: Allow `policy` to have leading whitespace ([#36597](https://github.com/hashicorp/terraform-provider-aws/issues/36597))
+* resource/aws_kinesisanalyticsv2_application: Add support for `FLINK-1_18` `runtime_environment` value ([#36562](https://github.com/hashicorp/terraform-provider-aws/issues/36562))
+* resource/aws_media_store_container_policy: Allow `policy` to have leading whitespace ([#36597](https://github.com/hashicorp/terraform-provider-aws/issues/36597))
+* resource/aws_ssoadmin_permission_set_inline_policy: Allow `inline_policy` to have leading whitespace ([#36597](https://github.com/hashicorp/terraform-provider-aws/issues/36597))
+* resource/aws_transfer_access: Allow `policy` to have leading whitespace ([#36597](https://github.com/hashicorp/terraform-provider-aws/issues/36597))
+* resource/aws_transfer_user: Allow `policy` to have leading whitespace ([#36597](https://github.com/hashicorp/terraform-provider-aws/issues/36597))
+* resource/aws_vpc_ipam: Add `tier` argument ([#36504](https://github.com/hashicorp/terraform-provider-aws/issues/36504))
+
+BUG FIXES:
+
+* data-source/aws_cur_report_definition: Direct all API calls to the `us-east-1` endpoint as this is the only Region in which AWS Cost and Usage Reports is available ([#36540](https://github.com/hashicorp/terraform-provider-aws/issues/36540))
+* resource/aws_applicationinsights_application: Make `ACTIVE` a valid create target status ([#36615](https://github.com/hashicorp/terraform-provider-aws/issues/36615))
+* resource/aws_autoscaling_group: Don't attempt to remove scale-in protection from instances that don't have the feature enabled ([#36586](https://github.com/hashicorp/terraform-provider-aws/issues/36586))
+* resource/aws_cur_report_definition: Direct all API calls to the `us-east-1` endpoint as this is the only Region in which AWS Cost and Usage Reports is available ([#36540](https://github.com/hashicorp/terraform-provider-aws/issues/36540))
+* resource/aws_elasticsearch_domain_policy: Handle delayed domain status propagation, preventing a `ValidationException`. ([#36592](https://github.com/hashicorp/terraform-provider-aws/issues/36592))
+* resource/aws_iam_instance_profile: Detect when the associated `role` no longer exists ([#34099](https://github.com/hashicorp/terraform-provider-aws/issues/34099))
+* resource/aws_instance: Replace an instance when an `instance_type` change also requires an architecture change, such as x86_64 to arm64 ([#36590](https://github.com/hashicorp/terraform-provider-aws/issues/36590))
+* resource/aws_opensearch_domain_policy: Handle delayed domain status propagation, preventing a `ValidationException`. ([#36592](https://github.com/hashicorp/terraform-provider-aws/issues/36592))
+* resource/aws_quicksight_dashboard: Fix failure when updating a dashboard takes a while ([#34227](https://github.com/hashicorp/terraform-provider-aws/issues/34227))
+* resource/aws_quicksight_template: Fix "Invalid address to set" errors ([#34227](https://github.com/hashicorp/terraform-provider-aws/issues/34227))
+* resource/aws_quicksight_template: Fix "a number is required" errors when state contains an empty string ([#34227](https://github.com/hashicorp/terraform-provider-aws/issues/34227))
+* resource/aws_redshift_cluster: Fix `InvalidParameterCombination` errors when updating only `skip_final_snapshot` ([#36635](https://github.com/hashicorp/terraform-provider-aws/issues/36635))
+* resource/aws_route53_zone: Prevent re-creation when `name` casing changes ([#36563](https://github.com/hashicorp/terraform-provider-aws/issues/36563))
+* resource/aws_secretsmanager_secret_version: Fix to handle versions deleted out-of-band without raising an `InvalidRequestException` ([#36609](https://github.com/hashicorp/terraform-provider-aws/issues/36609))
+* resource/aws_ssm_parameter: force create a new SSM parameter when `data_type` is updated. ([#35960](https://github.com/hashicorp/terraform-provider-aws/issues/35960))
+
 ## 5.42.0 (March 22, 2024)
 
 FEATURES:

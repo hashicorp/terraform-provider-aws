@@ -15,7 +15,16 @@ import (
 type servicePackage struct{}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{}
+	return []*types.ServicePackageFrameworkDataSource{
+		{
+			Factory: newDataSourceNotificationChannel,
+			Name:    "Notification Channel",
+		},
+		{
+			Factory: newDataSourceResourceCollection,
+			Name:    "Resource Collection",
+		},
+	}
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
@@ -23,6 +32,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 		{
 			Factory: newResourceEventSourcesConfig,
 			Name:    "Event Sources Config",
+		},
+		{
+			Factory: newResourceNotificationChannel,
+			Name:    "Notification Channel",
 		},
 		{
 			Factory: newResourceResourceCollection,

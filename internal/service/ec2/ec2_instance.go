@@ -901,6 +901,40 @@ func ResourceInstance() *schema.Resource {
 			customdiff.ForceNewIf("user_data_base64", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
 				return diff.Get("user_data_replace_on_change").(bool)
 			}),
+			customdiff.ForceNewIf("instance_type", func(ctx context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
+				conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+
+				_, ok := diff.GetOk("instance_type")
+
+				if diff.Id() == "" || !diff.HasChange("instance_type") || !ok {
+					return false
+				}
+
+				o, n := diff.GetChange("instance_type")
+				it1, err := FindInstanceTypeByName(ctx, conn, o.(string))
+				if err != nil {
+					return false
+				}
+
+				it2, err := FindInstanceTypeByName(ctx, conn, n.(string))
+				if err != nil {
+					return false
+				}
+
+				if it1 == nil || it2 == nil {
+					return false
+				}
+
+				if aws.StringValue(it1.InstanceType) == aws.StringValue(it2.InstanceType) {
+					return false
+				}
+
+				if hasCommonElement(it1.ProcessorInfo.SupportedArchitectures, it2.ProcessorInfo.SupportedArchitectures) {
+					return false
+				}
+
+				return true
+			}),
 		),
 	}
 }
@@ -3983,4 +4017,15 @@ func ParseInstanceType(s string) (*InstanceType, error) {
 		AdditionalCapabilities: matches[4],
 		Size:                   matches[5],
 	}, nil
+}
+
+func hasCommonElement(slice1 []*string, slice2 []*string) bool {
+	for _, str1 := range slice1 {
+		for _, str2 := range slice2 {
+			if aws.StringValue(str1) == aws.StringValue(str2) {
+				return true
+			}
+		}
+	}
+	return false
 }

@@ -106,7 +106,7 @@ func (r *resourcePolicyResource) Read(ctx context.Context, request resource.Read
 
 	conn := r.Meta().KinesisClient(ctx)
 
-	output, err := findResourcePolicyByResourceARN(ctx, conn, data.ResourceARN.ValueString())
+	output, err := findResourcePolicyByARN(ctx, conn, data.ResourceARN.ValueString())
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -186,7 +186,7 @@ func (r *resourcePolicyResource) Delete(ctx context.Context, request resource.De
 	}
 }
 
-func findResourcePolicyByResourceARN(ctx context.Context, conn *kinesis.Client, resourceARN string) (*kinesis.GetResourcePolicyOutput, error) {
+func findResourcePolicyByARN(ctx context.Context, conn *kinesis.Client, resourceARN string) (*kinesis.GetResourcePolicyOutput, error) {
 	input := &kinesis.GetResourcePolicyInput{
 		ResourceARN: aws.String(resourceARN),
 	}
@@ -218,7 +218,12 @@ type resourcePolicyResourceModel struct {
 }
 
 func (data *resourcePolicyResourceModel) InitFromID() error {
-	data.ResourceARN = fwtypes.ARNValueMust(data.ID.ValueString())
+	v, err := fwdiag.AsError(fwtypes.ARNValue(data.ID.ValueString()))
+	if err != nil {
+		return err
+	}
+
+	data.ResourceARN = v
 
 	return nil
 }
