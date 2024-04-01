@@ -8,6 +8,7 @@ FEATURES:
 
 ENHANCEMENTS:
 
+* resource/aws_emr_cluster: Add `unhealthy_node_replacement` argument ([#36523](https://github.com/hashicorp/terraform-provider-aws/issues/36523))
 * resource/aws_transfer_server: Add `s3_storage_options` configuration block ([#36664](https://github.com/hashicorp/terraform-provider-aws/issues/36664))
 
 BUG FIXES:
