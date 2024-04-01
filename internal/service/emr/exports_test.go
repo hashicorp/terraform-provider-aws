@@ -8,7 +8,9 @@ var (
 	ResourceBlockPublicAccessConfiguration = resourceBlockPublicAccessConfiguration
 	ResourceCluster                        = resourceCluster
 	ResourceInstanceFleet                  = resourceInstanceFleet
+	ResourceInstanceGroup                  = resourceInstanceGroup
 
+	FetchInstanceGroup                 = fetchInstanceGroup
 	FindBlockPublicAccessConfiguration = findBlockPublicAccessConfiguration
 	FindClusterByID                    = findClusterByID
 	FindInstanceFleetByTwoPartKey      = findInstanceFleetByTwoPartKey

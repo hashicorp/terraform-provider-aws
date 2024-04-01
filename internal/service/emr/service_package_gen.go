@@ -60,8 +60,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Instance Fleet",
 		},
 		{
-			Factory:  ResourceInstanceGroup,
+			Factory:  resourceInstanceGroup,
 			TypeName: "aws_emr_instance_group",
+			Name:     "Instance Group",
 		},
 		{
 			Factory:  ResourceManagedScalingPolicy,
