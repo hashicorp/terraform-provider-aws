@@ -42,7 +42,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Backend Environment",
 		},
 		{
-			Factory:  ResourceBranch,
+			Factory:  resourceBranch,
 			TypeName: "aws_amplify_branch",
 			Name:     "Branch",
 			Tags: &types.ServicePackageResourceTags{

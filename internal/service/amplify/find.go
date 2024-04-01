@@ -13,35 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
-func FindBranchByAppIDAndBranchName(ctx context.Context, conn *amplify.Client, appID, branchName string) (*types.Branch, error) {
-	input := &amplify.GetBranchInput{
-		AppId:      aws.String(appID),
-		BranchName: aws.String(branchName),
-	}
-
-	output, err := conn.GetBranch(ctx, input)
-
-	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.Branch == nil {
-		return nil, &retry.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
-	}
-
-	return output.Branch, nil
-}
-
 func FindDomainAssociationByAppIDAndDomainName(ctx context.Context, conn *amplify.Client, appID, domainName string) (*types.DomainAssociation, error) {
 	input := &amplify.GetDomainAssociationInput{
 		AppId:      aws.String(appID),

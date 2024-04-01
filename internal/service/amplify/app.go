@@ -127,7 +127,7 @@ func resourceApp() *schema.Resource {
 							ValidateDiagFunc: enum.Validate[types.Stage](),
 							DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 								// API returns "NONE" by default.
-								if old == StageNone && new == "" {
+								if old == stageNone && new == "" {
 									return true
 								}
 
@@ -634,7 +634,7 @@ func expandAutoBranchCreationConfig(tfMap map[string]interface{}) *types.AutoBra
 		apiObject.PullRequestEnvironmentName = aws.String(v)
 	}
 
-	if v, ok := tfMap["stage"].(string); ok && v != "" && v != StageNone {
+	if v, ok := tfMap["stage"].(string); ok && v != "" && v != stageNone {
 		apiObject.Stage = types.Stage(v)
 	}
 

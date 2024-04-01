@@ -7,7 +7,9 @@ package amplify
 var (
 	ResourceApp                = resourceApp
 	ResourceBackendEnvironment = resourceBackendEnvironment
+	ResourceBranch             = resourceBranch
 
 	FindAppByID                        = findAppByID
 	FindBackendEnvironmentByTwoPartKey = findBackendEnvironmentByTwoPartKey
+	FindBranchByTwoPartKey             = findBranchByTwoPartKey
 )

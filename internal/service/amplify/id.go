@@ -8,25 +8,6 @@ import (
 	"strings"
 )
 
-const branchResourceIDSeparator = "/"
-
-func BranchCreateResourceID(appID, branchName string) string {
-	parts := []string{appID, branchName}
-	id := strings.Join(parts, branchResourceIDSeparator)
-
-	return id
-}
-
-func BranchParseResourceID(id string) (string, string, error) {
-	parts := strings.SplitN(id, branchResourceIDSeparator, 2)
-
-	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
-		return parts[0], parts[1], nil
-	}
-
-	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected APPID%[2]sBRANCHNAME", id, branchResourceIDSeparator)
-}
-
 const domainAssociationResourceIDSeparator = "/"
 
 func DomainAssociationCreateResourceID(appID, domainName string) string {

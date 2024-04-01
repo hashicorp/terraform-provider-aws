@@ -5,13 +5,16 @@ package amplify
 
 import (
 	"context"
+	"fmt"
 	"log"
+	"strings"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/amplify"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/amplify/types"
+	"github.com/aws/aws-sdk-go-v2/service/amplify/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -27,7 +30,7 @@ import (
 
 // @SDKResource("aws_amplify_branch", name="Branch")
 // @Tags(identifierAttribute="arn")
-func ResourceBranch() *schema.Resource {
+func resourceBranch() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBranchCreate,
 		ReadWithoutTimeout:   resourceBranchRead,
@@ -143,16 +146,18 @@ func ResourceBranch() *schema.Resource {
 			"stage": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.Stage](),
+				ValidateDiagFunc: enum.Validate[types.Stage](),
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
 					// API returns "NONE" by default.
-					if old == StageNone && new == "" {
+					if old == stageNone && new == "" {
 						return true
 					}
 
 					return old == new
 				},
 			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"ttl": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -165,8 +170,6 @@ func ResourceBranch() *schema.Resource {
 					return old == new
 				},
 			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -177,7 +180,7 @@ func resourceBranchCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	appID := d.Get("app_id").(string)
 	branchName := d.Get("branch_name").(string)
-	id := BranchCreateResourceID(appID, branchName)
+	id := branchCreateResourceID(appID, branchName)
 	input := &amplify.CreateBranchInput{
 		AppId:           aws.String(appID),
 		BranchName:      aws.String(branchName),
@@ -230,7 +233,7 @@ func resourceBranchCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if v, ok := d.GetOk("stage"); ok {
-		input.Stage = awstypes.Stage(v.(string))
+		input.Stage = types.Stage(v.(string))
 	}
 
 	if v, ok := d.GetOk("ttl"); ok {
@@ -252,12 +255,12 @@ func resourceBranchRead(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
-	appID, branchName, err := BranchParseResourceID(d.Id())
+	appID, branchName, err := branchParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	branch, err := FindBranchByAppIDAndBranchName(ctx, conn, appID, branchName)
+	branch, err := findBranchByTwoPartKey(ctx, conn, appID, branchName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Amplify Branch (%s) not found, removing from state", d.Id())
@@ -301,7 +304,7 @@ func resourceBranchUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
-		appID, branchName, err := BranchParseResourceID(d.Id())
+		appID, branchName, err := branchParseResourceID(d.Id())
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
@@ -364,7 +367,7 @@ func resourceBranchUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 
 		if d.HasChange("stage") {
-			input.Stage = awstypes.Stage(d.Get("stage").(string))
+			input.Stage = types.Stage(d.Get("stage").(string))
 		}
 
 		if d.HasChange("ttl") {
@@ -385,7 +388,7 @@ func resourceBranchDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
-	appID, branchName, err := BranchParseResourceID(d.Id())
+	appID, branchName, err := branchParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -396,7 +399,7 @@ func resourceBranchDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		BranchName: aws.String(branchName),
 	})
 
-	if errs.IsA[*awstypes.NotFoundException](err) {
+	if errs.IsA[*types.NotFoundException](err) {
 		return diags
 	}
 
@@ -405,4 +408,49 @@ func resourceBranchDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	return diags
+}
+
+func findBranchByTwoPartKey(ctx context.Context, conn *amplify.Client, appID, branchName string) (*types.Branch, error) {
+	input := &amplify.GetBranchInput{
+		AppId:      aws.String(appID),
+		BranchName: aws.String(branchName),
+	}
+
+	output, err := conn.GetBranch(ctx, input)
+
+	if errs.IsA[*types.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Branch == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Branch, nil
+}
+
+const branchResourceIDSeparator = "/"
+
+func branchCreateResourceID(appID, branchName string) string {
+	parts := []string{appID, branchName}
+	id := strings.Join(parts, branchResourceIDSeparator)
+
+	return id
+}
+
+func branchParseResourceID(id string) (string, string, error) {
+	parts := strings.SplitN(id, branchResourceIDSeparator, 2)
+
+	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
+		return parts[0], parts[1], nil
+	}
+
+	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected APPID%[2]sBRANCHNAME", id, branchResourceIDSeparator)
 }
