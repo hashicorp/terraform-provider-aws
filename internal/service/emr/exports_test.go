@@ -11,10 +11,12 @@ var (
 	ResourceInstanceGroup                  = resourceInstanceGroup
 	ResourceManagedScalingPolicy           = resourceManagedScalingPolicy
 	ResourceSecurityConfiguration          = resourceSecurityConfiguration
+	ResourceStudioSessionMapping           = resourceStudioSessionMapping
 
 	FetchInstanceGroup                 = fetchInstanceGroup
 	FindBlockPublicAccessConfiguration = findBlockPublicAccessConfiguration
 	FindClusterByID                    = findClusterByID
 	FindInstanceFleetByTwoPartKey      = findInstanceFleetByTwoPartKey
 	FindSecurityConfigurationByName    = findSecurityConfigurationByName
+	FindStudioSessionMappingByIDOrName = findStudioSessionMappingByIDOrName
 )

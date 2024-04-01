@@ -84,8 +84,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceStudioSessionMapping,
+			Factory:  resourceStudioSessionMapping,
 			TypeName: "aws_emr_studio_session_mapping",
+			Name:     "Studio Session Mapping",
 		},
 	}
 }
