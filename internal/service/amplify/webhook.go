@@ -12,8 +12,9 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/amplify"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/amplify/types"
+	"github.com/aws/aws-sdk-go-v2/service/amplify/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,40 +23,37 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_amplify_webhook")
-func ResourceWebhook() *schema.Resource {
+// @SDKResource("aws_amplify_webhook", name="Webhook")
+func resourceWebhook() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceWebhookCreate,
 		ReadWithoutTimeout:   resourceWebhookRead,
 		UpdateWithoutTimeout: resourceWebhookUpdate,
 		DeleteWithoutTimeout: resourceWebhookDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
 			"app_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
 			},
-
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"branch_name": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z/_.-]{1,255}$`), "should be not be more than 255 letters, numbers, and the symbols /_.-"),
 			},
-
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
 			},
-
 			"url": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -77,7 +75,6 @@ func resourceWebhookCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.Description = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating Amplify Webhook: %+v", input)
 	output, err := conn.CreateWebhook(ctx, input)
 
 	if err != nil {
@@ -93,7 +90,7 @@ func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AmplifyClient(ctx)
 
-	webhook, err := FindWebhookByID(ctx, conn, d.Id())
+	webhook, err := findWebhookByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Amplify Webhook (%s) not found, removing from state", d.Id())
@@ -109,7 +106,7 @@ func resourceWebhookRead(ctx context.Context, d *schema.ResourceData, meta inter
 	arn, err := arn.Parse(webhookArn)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "parsing %q: %s", webhookArn, err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	// arn:${Partition}:amplify:${Region}:${Account}:apps/${AppId}/webhooks/${WebhookId}
@@ -144,7 +141,6 @@ func resourceWebhookUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		input.Description = aws.String(d.Get("description").(string))
 	}
 
-	log.Printf("[DEBUG] Updating Amplify Webhook: %+v", input)
 	_, err := conn.UpdateWebhook(ctx, input)
 
 	if err != nil {
@@ -163,7 +159,7 @@ func resourceWebhookDelete(ctx context.Context, d *schema.ResourceData, meta int
 		WebhookId: aws.String(d.Id()),
 	})
 
-	if errs.IsA[*awstypes.NotFoundException](err) {
+	if errs.IsA[*types.NotFoundException](err) {
 		return diags
 	}
 
@@ -172,4 +168,29 @@ func resourceWebhookDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	return diags
+}
+
+func findWebhookByID(ctx context.Context, conn *amplify.Client, id string) (*types.Webhook, error) {
+	input := &amplify.GetWebhookInput{
+		WebhookId: aws.String(id),
+	}
+
+	output, err := conn.GetWebhook(ctx, input)
+
+	if errs.IsA[*types.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Webhook == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Webhook, nil
 }

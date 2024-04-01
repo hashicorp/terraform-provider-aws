@@ -55,8 +55,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Domain Association",
 		},
 		{
-			Factory:  ResourceWebhook,
+			Factory:  resourceWebhook,
 			TypeName: "aws_amplify_webhook",
+			Name:     "Webhook",
 		},
 	}
 }

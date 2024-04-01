@@ -9,9 +9,11 @@ var (
 	ResourceBackendEnvironment = resourceBackendEnvironment
 	ResourceBranch             = resourceBranch
 	ResourceDomainAssociation  = resourceDomainAssociation
+	ResourceWebhook            = resourceWebhook
 
 	FindAppByID                        = findAppByID
 	FindBackendEnvironmentByTwoPartKey = findBackendEnvironmentByTwoPartKey
 	FindBranchByTwoPartKey             = findBranchByTwoPartKey
 	FindDomainAssociationByTwoPartKey  = findDomainAssociationByTwoPartKey
+	FindWebhookByID                    = findWebhookByID
 )

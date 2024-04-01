@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/amplify/types"
+	"github.com/aws/aws-sdk-go-v2/service/amplify/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func testAccWebhook_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var webhook awstypes.Webhook
+	var webhook types.Webhook
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_webhook.test"
 
@@ -53,7 +53,7 @@ func testAccWebhook_basic(t *testing.T) {
 
 func testAccWebhook_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var webhook awstypes.Webhook
+	var webhook types.Webhook
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_webhook.test"
 
@@ -77,7 +77,7 @@ func testAccWebhook_disappears(t *testing.T) {
 
 func testAccWebhook_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var webhook awstypes.Webhook
+	var webhook types.Webhook
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_webhook.test"
 
@@ -112,7 +112,7 @@ func testAccWebhook_update(t *testing.T) {
 	})
 }
 
-func testAccCheckWebhookExists(ctx context.Context, resourceName string, v *awstypes.Webhook) resource.TestCheckFunc {
+func testAccCheckWebhookExists(ctx context.Context, resourceName string, v *types.Webhook) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
