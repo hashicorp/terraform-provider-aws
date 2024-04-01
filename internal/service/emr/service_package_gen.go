@@ -71,8 +71,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Managed Scaling Policy",
 		},
 		{
-			Factory:  ResourceSecurityConfiguration,
+			Factory:  resourceSecurityConfiguration,
 			TypeName: "aws_emr_security_configuration",
+			Name:     "Security Configuration",
 		},
 		{
 			Factory:  ResourceStudio,

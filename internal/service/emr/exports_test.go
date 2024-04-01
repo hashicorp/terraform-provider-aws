@@ -10,9 +10,11 @@ var (
 	ResourceInstanceFleet                  = resourceInstanceFleet
 	ResourceInstanceGroup                  = resourceInstanceGroup
 	ResourceManagedScalingPolicy           = resourceManagedScalingPolicy
+	ResourceSecurityConfiguration          = resourceSecurityConfiguration
 
 	FetchInstanceGroup                 = fetchInstanceGroup
 	FindBlockPublicAccessConfiguration = findBlockPublicAccessConfiguration
 	FindClusterByID                    = findClusterByID
 	FindInstanceFleetByTwoPartKey      = findInstanceFleetByTwoPartKey
+	FindSecurityConfigurationByName    = findSecurityConfigurationByName
 )
