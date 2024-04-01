@@ -9,6 +9,7 @@ var (
 	ResourceCluster                        = resourceCluster
 	ResourceInstanceFleet                  = resourceInstanceFleet
 	ResourceInstanceGroup                  = resourceInstanceGroup
+	ResourceManagedScalingPolicy           = resourceManagedScalingPolicy
 
 	FetchInstanceGroup                 = fetchInstanceGroup
 	FindBlockPublicAccessConfiguration = findBlockPublicAccessConfiguration

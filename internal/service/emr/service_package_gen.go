@@ -65,8 +65,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Instance Group",
 		},
 		{
-			Factory:  ResourceManagedScalingPolicy,
+			Factory:  resourceManagedScalingPolicy,
 			TypeName: "aws_emr_managed_scaling_policy",
+			Name:     "Managed Scaling Policy",
 		},
 		{
 			Factory:  ResourceSecurityConfiguration,
