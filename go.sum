@@ -60,8 +60,8 @@ github.com/aws/aws-sdk-go-v2/service/appfabric v1.7.4 h1:xQyow1kdXLj4kcU9ja1MyZS
 github.com/aws/aws-sdk-go-v2/service/appfabric v1.7.4/go.mod h1:lc5I/jQCLi4eU5RsIe6P+0h/tva09lVpQP17+IpW61w=
 github.com/aws/aws-sdk-go-v2/service/appflow v1.41.4 h1:ARn6qYIxhMRnatsonKQ4y3Wgv9YDjiCIURsPtiuCgIM=
 github.com/aws/aws-sdk-go-v2/service/appflow v1.41.4/go.mod h1:EGStqkGOjo1Mm1IMelC8W3BPq6n3Qiw+aUCgYTwjV/o=
-github.com/aws/aws-sdk-go-v2/service/apprunner v1.28.3 h1:nby4wV20qfVF2yswXCFKL7lTkddNvYUj2P9+k/UbYQc=
-github.com/aws/aws-sdk-go-v2/service/apprunner v1.28.3/go.mod h1:ECUaiPa9O5LwqgVNeBduNwayctvWkc5nb8NdBLmLJ00=
+github.com/aws/aws-sdk-go-v2/service/apprunner v1.28.4 h1:WPPJVRvjvIHeFEqDyjX5yUocKOBAqDOJpvHIaN+LY30=
+github.com/aws/aws-sdk-go-v2/service/apprunner v1.28.4/go.mod h1:HBEDVCiXAhDxrCJ8meNd1ao+PSQkkB02RfXaEuwyp6U=
 github.com/aws/aws-sdk-go-v2/service/athena v1.40.3 h1:Q54tyTwpoEyJNmP4WqwT9hdPHpbpNahvcW9so6lItQw=
 github.com/aws/aws-sdk-go-v2/service/athena v1.40.3/go.mod h1:HP/WmaAcHBNMHa6EwxTMPdqCIbV0uCnWR8WNTp2AG5c=
 github.com/aws/aws-sdk-go-v2/service/auditmanager v1.32.3 h1:Y9Tqv+Pb93GGLpxYoKYdz9ZdwpnT5HP6AFazR3moNlM=
