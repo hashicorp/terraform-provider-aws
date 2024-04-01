@@ -250,10 +250,10 @@ func sweepAPIKeys(region string) error {
 
 		log.Printf("[INFO] API Gateway API Keys: %d", len(page.Items))
 
-		for _, ak := range page.Items {
-			r := ResourceAPIKey()
+		for _, v := range page.Items {
+			r := resourceAPIKey()
 			d := r.Data(nil)
-			d.SetId(aws.ToString(ak.Id))
+			d.SetId(aws.ToString(v.Id))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}

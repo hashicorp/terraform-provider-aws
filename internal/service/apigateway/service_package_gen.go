@@ -71,7 +71,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Account",
 		},
 		{
-			Factory:  ResourceAPIKey,
+			Factory:  resourceAPIKey,
 			TypeName: "aws_api_gateway_api_key",
 			Name:     "API Key",
 			Tags: &types.ServicePackageResourceTags{

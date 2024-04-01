@@ -65,7 +65,7 @@ func dataSourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, meta inte
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	id := d.Get("id").(string)
-	apiKey, err := FindAPIKeyByID(ctx, conn, id)
+	apiKey, err := findAPIKeyByID(ctx, conn, id)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway API Key (%s): %s", id, err)
