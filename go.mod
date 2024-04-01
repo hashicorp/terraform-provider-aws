@@ -60,7 +60,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/datazone v1.6.4
 	github.com/aws/aws-sdk-go-v2/service/devopsguru v1.30.4
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.24.4
-	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.9.2
+	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.9.3
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.31.0
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.155.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.27.3
