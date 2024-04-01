@@ -25,8 +25,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceAPIKey,
+			Factory:  dataSourceAPIKey,
 			TypeName: "aws_api_gateway_api_key",
+			Name:     "API Key",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  DataSourceAuthorizer,

@@ -13,10 +13,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_api_gateway_api_key")
-func DataSourceAPIKey() *schema.Resource {
+// @SDKDataSource("aws_api_gateway_api_key", name="API Key")
+// @Tags
+func dataSourceAPIKey() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAPIKeyRead,
 
@@ -49,7 +51,7 @@ func DataSourceAPIKey() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"value": {
 				Type:      schema.TypeString,
 				Computed:  true,
@@ -62,7 +64,6 @@ func DataSourceAPIKey() *schema.Resource {
 func dataSourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	id := d.Get("id").(string)
 	apiKey, err := findAPIKeyByID(ctx, conn, id)
@@ -80,9 +81,7 @@ func dataSourceAPIKeyRead(ctx context.Context, d *schema.ResourceData, meta inte
 	d.Set("name", apiKey.Name)
 	d.Set("value", apiKey.Value)
 
-	if err := d.Set("tags", KeyValueTags(ctx, apiKey.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOut(ctx, apiKey.Tags)
 
 	return diags
 }
