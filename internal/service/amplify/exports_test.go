@@ -8,8 +8,10 @@ var (
 	ResourceApp                = resourceApp
 	ResourceBackendEnvironment = resourceBackendEnvironment
 	ResourceBranch             = resourceBranch
+	ResourceDomainAssociation  = resourceDomainAssociation
 
 	FindAppByID                        = findAppByID
 	FindBackendEnvironmentByTwoPartKey = findBackendEnvironmentByTwoPartKey
 	FindBranchByTwoPartKey             = findBranchByTwoPartKey
+	FindDomainAssociationByTwoPartKey  = findDomainAssociationByTwoPartKey
 )

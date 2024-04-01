@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/amplify/types"
+	"github.com/aws/aws-sdk-go-v2/service/amplify/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -29,7 +29,7 @@ func testAccDomainAssociation_basic(t *testing.T) {
 		t.Skipf("Environment variable %s is not set", key)
 	}
 
-	var domain awstypes.DomainAssociation
+	var domain types.DomainAssociation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_domain_association.test"
 
@@ -72,7 +72,7 @@ func testAccDomainAssociation_disappears(t *testing.T) {
 		t.Skipf("Environment variable %s is not set", key)
 	}
 
-	var domain awstypes.DomainAssociation
+	var domain types.DomainAssociation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_domain_association.test"
 
@@ -102,7 +102,7 @@ func testAccDomainAssociation_update(t *testing.T) {
 		t.Skipf("Environment variable %s is not set", key)
 	}
 
-	var domain awstypes.DomainAssociation
+	var domain types.DomainAssociation
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_domain_association.test"
 
@@ -156,32 +156,22 @@ func testAccDomainAssociation_update(t *testing.T) {
 	})
 }
 
-func testAccCheckDomainAssociationExists(ctx context.Context, resourceName string, v *awstypes.DomainAssociation) resource.TestCheckFunc {
+func testAccCheckDomainAssociationExists(ctx context.Context, n string, v *types.DomainAssociation) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Amplify Domain Association ID is set")
-		}
-
-		appID, domainName, err := tfamplify.DomainAssociationParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyClient(ctx)
 
-		domainAssociation, err := tfamplify.FindDomainAssociationByAppIDAndDomainName(ctx, conn, appID, domainName)
+		output, err := tfamplify.FindDomainAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["app_id"], rs.Primary.Attributes["domain_name"])
 
 		if err != nil {
 			return err
 		}
 
-		*v = *domainAssociation
+		*v = *output
 
 		return nil
 	}
@@ -196,13 +186,7 @@ func testAccCheckDomainAssociationDestroy(ctx context.Context) resource.TestChec
 				continue
 			}
 
-			appID, domainName, err := tfamplify.DomainAssociationParseResourceID(rs.Primary.ID)
-
-			if err != nil {
-				return err
-			}
-
-			_, err = tfamplify.FindDomainAssociationByAppIDAndDomainName(ctx, conn, appID, domainName)
+			_, err := tfamplify.FindDomainAssociationByTwoPartKey(ctx, conn, rs.Primary.Attributes["app_id"], rs.Primary.Attributes["domain_name"])
 
 			if tfresource.NotFound(err) {
 				continue
