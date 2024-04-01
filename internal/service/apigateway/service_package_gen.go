@@ -66,8 +66,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceAccount,
+			Factory:  resourceAccount,
 			TypeName: "aws_api_gateway_account",
+			Name:     "Account",
 		},
 		{
 			Factory:  ResourceAPIKey,

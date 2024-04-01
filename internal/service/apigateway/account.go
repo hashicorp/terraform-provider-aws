@@ -5,10 +5,11 @@ package apigateway
 
 import (
 	"context"
+	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/apigateway/types"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -18,8 +19,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_api_gateway_account")
-func ResourceAccount() *schema.Resource {
+// @SDKResource("aws_api_gateway_account", name="Account")
+func resourceAccount() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAccountUpdate,
 		ReadWithoutTimeout:   resourceAccountRead,
@@ -72,14 +73,14 @@ func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	input := &apigateway.UpdateAccountInput{}
 
 	if v, ok := d.GetOk("cloudwatch_role_arn"); ok {
-		input.PatchOperations = []awstypes.PatchOperation{{
-			Op:    awstypes.OpReplace,
+		input.PatchOperations = []types.PatchOperation{{
+			Op:    types.OpReplace,
 			Path:  aws.String("/cloudwatchRoleArn"),
 			Value: aws.String(v.(string)),
 		}}
 	} else {
-		input.PatchOperations = []awstypes.PatchOperation{{
-			Op:    awstypes.OpReplace,
+		input.PatchOperations = []types.PatchOperation{{
+			Op:    types.OpReplace,
 			Path:  aws.String("/cloudwatchRoleArn"),
 			Value: aws.String(""),
 		}}
@@ -90,11 +91,11 @@ func resourceAccountUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			return conn.UpdateAccount(ctx, input)
 		},
 		func(err error) (bool, error) {
-			if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "The role ARN does not have required permissions") {
+			if errs.IsAErrorMessageContains[*types.BadRequestException](err, "The role ARN does not have required permissions") {
 				return true, err
 			}
 
-			if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "API Gateway could not successfully write to CloudWatch Logs using the ARN specified") {
+			if errs.IsAErrorMessageContains[*types.BadRequestException](err, "API Gateway could not successfully write to CloudWatch Logs using the ARN specified") {
 				return true, err
 			}
 
@@ -117,7 +118,13 @@ func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	account, err := conn.GetAccount(ctx, &apigateway.GetAccountInput{})
+	account, err := findAccount(ctx, conn)
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] API Gateway Account (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway Account: %s", err)
@@ -131,4 +138,20 @@ func resourceAccountRead(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	return diags
+}
+
+func findAccount(ctx context.Context, conn *apigateway.Client) (*apigateway.GetAccountOutput, error) {
+	input := &apigateway.GetAccountInput{}
+
+	output, err := conn.GetAccount(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
