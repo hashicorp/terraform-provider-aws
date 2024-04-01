@@ -12,7 +12,7 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/amplify/types"
+	"github.com/aws/aws-sdk-go-v2/service/amplify/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -25,7 +25,7 @@ import (
 
 func testAccApp_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var app awstypes.App
+	var app types.App
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_app.test"
 
@@ -74,7 +74,7 @@ func testAccApp_basic(t *testing.T) {
 
 func testAccApp_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var app awstypes.App
+	var app types.App
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_app.test"
 
@@ -98,7 +98,7 @@ func testAccApp_disappears(t *testing.T) {
 
 func testAccApp_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var app awstypes.App
+	var app types.App
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_app.test"
 
@@ -144,7 +144,7 @@ func testAccApp_tags(t *testing.T) {
 
 func testAccApp_AutoBranchCreationConfig(t *testing.T) {
 	ctx := acctest.Context(t)
-	var app awstypes.App
+	var app types.App
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_app.test"
 
@@ -240,7 +240,7 @@ func testAccApp_AutoBranchCreationConfig(t *testing.T) {
 
 func testAccApp_BasicAuthCredentials(t *testing.T) {
 	ctx := acctest.Context(t)
-	var app awstypes.App
+	var app types.App
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_app.test"
 
@@ -289,7 +289,7 @@ func testAccApp_BasicAuthCredentials(t *testing.T) {
 
 func testAccApp_BuildSpec(t *testing.T) {
 	ctx := acctest.Context(t)
-	var app awstypes.App
+	var app types.App
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_app.test"
 
@@ -332,7 +332,7 @@ func testAccApp_BuildSpec(t *testing.T) {
 
 func testAccApp_CustomRules(t *testing.T) {
 	ctx := acctest.Context(t)
-	var app awstypes.App
+	var app types.App
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_app.test"
 
@@ -383,7 +383,7 @@ func testAccApp_CustomRules(t *testing.T) {
 
 func testAccApp_Description(t *testing.T) {
 	ctx := acctest.Context(t)
-	var app1, app2, app3 awstypes.App
+	var app1, app2, app3 types.App
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_app.test"
 
@@ -427,7 +427,7 @@ func testAccApp_Description(t *testing.T) {
 
 func testAccApp_EnvironmentVariables(t *testing.T) {
 	ctx := acctest.Context(t)
-	var app awstypes.App
+	var app types.App
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_app.test"
 
@@ -472,7 +472,7 @@ func testAccApp_EnvironmentVariables(t *testing.T) {
 
 func testAccApp_IAMServiceRole(t *testing.T) {
 	ctx := acctest.Context(t)
-	var app1, app2, app3 awstypes.App
+	var app1, app2, app3 types.App
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_app.test"
 	iamRole1ResourceName := "aws_iam_role.test1"
@@ -517,7 +517,7 @@ func testAccApp_IAMServiceRole(t *testing.T) {
 
 func testAccApp_Name(t *testing.T) {
 	ctx := acctest.Context(t)
-	var app awstypes.App
+	var app types.App
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_app.test"
@@ -565,7 +565,7 @@ func testAccApp_Repository(t *testing.T) {
 		t.Skipf("Environment variable %s is not set", key)
 	}
 
-	var app awstypes.App
+	var app types.App
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_app.test"
 
@@ -595,7 +595,7 @@ func testAccApp_Repository(t *testing.T) {
 	})
 }
 
-func testAccCheckAppExists(ctx context.Context, n string, v *awstypes.App) resource.TestCheckFunc {
+func testAccCheckAppExists(ctx context.Context, n string, v *types.App) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -650,7 +650,7 @@ func testAccPreCheck(t *testing.T) {
 	acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
 }
 
-func testAccCheckAppNotRecreated(before, after *awstypes.App) resource.TestCheckFunc {
+func testAccCheckAppNotRecreated(before, after *types.App) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if before, after := aws.ToString(before.AppId), aws.ToString(after.AppId); before != after {
 			return fmt.Errorf("Amplify App (%s/%s) recreated", before, after)
@@ -660,7 +660,7 @@ func testAccCheckAppNotRecreated(before, after *awstypes.App) resource.TestCheck
 	}
 }
 
-func testAccCheckAppRecreated(before, after *awstypes.App) resource.TestCheckFunc {
+func testAccCheckAppRecreated(before, after *types.App) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if before, after := aws.ToString(before.AppId), aws.ToString(after.AppId); before == after {
 			return fmt.Errorf("Amplify App (%s) not recreated", before)

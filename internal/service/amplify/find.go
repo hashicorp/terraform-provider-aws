@@ -13,35 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
-func FindBackendEnvironmentByAppIDAndEnvironmentName(ctx context.Context, conn *amplify.Client, appID, environmentName string) (*types.BackendEnvironment, error) {
-	input := &amplify.GetBackendEnvironmentInput{
-		AppId:           aws.String(appID),
-		EnvironmentName: aws.String(environmentName),
-	}
-
-	output, err := conn.GetBackendEnvironment(ctx, input)
-
-	if errs.IsA[*types.NotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.BackendEnvironment == nil {
-		return nil, &retry.NotFoundError{
-			Message:     "Empty result",
-			LastRequest: input,
-		}
-	}
-
-	return output.BackendEnvironment, nil
-}
-
 func FindBranchByAppIDAndBranchName(ctx context.Context, conn *amplify.Client, appID, branchName string) (*types.Branch, error) {
 	input := &amplify.GetBranchInput{
 		AppId:      aws.String(appID),

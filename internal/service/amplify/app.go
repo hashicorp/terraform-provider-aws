@@ -375,7 +375,6 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.Repository = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating Amplify App: %+v", input)
 	output, err := conn.CreateApp(ctx, input)
 
 	if err != nil {

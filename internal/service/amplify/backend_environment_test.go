@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/amplify/types"
+	"github.com/aws/aws-sdk-go-v2/service/amplify/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func testAccBackendEnvironment_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var env awstypes.BackendEnvironment
+	var env types.BackendEnvironment
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_backend_environment.test"
 
@@ -55,7 +55,7 @@ func testAccBackendEnvironment_basic(t *testing.T) {
 
 func testAccBackendEnvironment_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var env awstypes.BackendEnvironment
+	var env types.BackendEnvironment
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_backend_environment.test"
 
@@ -81,7 +81,7 @@ func testAccBackendEnvironment_disappears(t *testing.T) {
 
 func testAccBackendEnvironment_DeploymentArtifacts_StackName(t *testing.T) {
 	ctx := acctest.Context(t)
-	var env awstypes.BackendEnvironment
+	var env types.BackendEnvironment
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_amplify_backend_environment.test"
 
@@ -112,32 +112,22 @@ func testAccBackendEnvironment_DeploymentArtifacts_StackName(t *testing.T) {
 	})
 }
 
-func testAccCheckBackendEnvironmentExists(ctx context.Context, resourceName string, v *awstypes.BackendEnvironment) resource.TestCheckFunc {
+func testAccCheckBackendEnvironmentExists(ctx context.Context, resourceName string, v *types.BackendEnvironment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Amplify Backend Environment ID is set")
-		}
-
-		appID, environmentName, err := tfamplify.BackendEnvironmentParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AmplifyClient(ctx)
 
-		backendEnvironment, err := tfamplify.FindBackendEnvironmentByAppIDAndEnvironmentName(ctx, conn, appID, environmentName)
+		output, err := tfamplify.FindBackendEnvironmentByTwoPartKey(ctx, conn, rs.Primary.Attributes["app_id"], rs.Primary.Attributes["environment_name"])
 
 		if err != nil {
 			return err
 		}
 
-		*v = *backendEnvironment
+		*v = *output
 
 		return nil
 	}
@@ -152,13 +142,7 @@ func testAccCheckBackendEnvironmentDestroy(ctx context.Context) resource.TestChe
 				continue
 			}
 
-			appID, environmentName, err := tfamplify.BackendEnvironmentParseResourceID(rs.Primary.ID)
-
-			if err != nil {
-				return err
-			}
-
-			_, err = tfamplify.FindBackendEnvironmentByAppIDAndEnvironmentName(ctx, conn, appID, environmentName)
+			_, err := tfamplify.FindBackendEnvironmentByTwoPartKey(ctx, conn, rs.Primary.Attributes["app_id"], rs.Primary.Attributes["environment_name"])
 
 			if tfresource.NotFound(err) {
 				continue

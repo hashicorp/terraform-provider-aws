@@ -5,7 +5,9 @@ package amplify
 
 // Exports for use in tests only.
 var (
-	ResourceApp = resourceApp
+	ResourceApp                = resourceApp
+	ResourceBackendEnvironment = resourceBackendEnvironment
 
-	FindAppByID = findAppByID
+	FindAppByID                        = findAppByID
+	FindBackendEnvironmentByTwoPartKey = findBackendEnvironmentByTwoPartKey
 )
