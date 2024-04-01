@@ -56,7 +56,7 @@ func sweepClusters(region string) error {
 				log.Printf("[ERROR] unsetting EMR Cluster (%s) termination protection: %s", id, err)
 			}
 
-			r := ResourceCluster()
+			r := resourceCluster()
 			d := r.Data(nil)
 			d.SetId(id)
 

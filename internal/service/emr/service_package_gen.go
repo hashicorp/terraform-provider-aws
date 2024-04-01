@@ -46,7 +46,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_emr_block_public_access_configuration",
 		},
 		{
-			Factory:  ResourceCluster,
+			Factory:  resourceCluster,
 			TypeName: "aws_emr_cluster",
 			Name:     "Cluster",
 			Tags: &types.ServicePackageResourceTags{

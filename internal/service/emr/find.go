@@ -13,55 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindCluster(ctx context.Context, conn *emr.EMR, input *emr.DescribeClusterInput) (*emr.Cluster, error) {
-	output, err := conn.DescribeClusterWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, ErrCodeClusterNotFound) || tfawserr.ErrMessageContains(err, emr.ErrCodeInvalidRequestException, "is not valid") {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.Cluster == nil || output.Cluster.Status == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.Cluster, nil
-}
-
-func FindClusterByID(ctx context.Context, conn *emr.EMR, id string) (*emr.Cluster, error) {
-	input := &emr.DescribeClusterInput{
-		ClusterId: aws.String(id),
-	}
-
-	output, err := FindCluster(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	// Eventual consistency check.
-	if aws.StringValue(output.Id) != id {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
-	}
-
-	if state := aws.StringValue(output.Status.State); state == emr.ClusterStateTerminated || state == emr.ClusterStateTerminatedWithErrors {
-		return nil, &retry.NotFoundError{
-			Message:     state,
-			LastRequest: input,
-		}
-	}
-
-	return output, nil
-}
-
 func FindStudioByID(ctx context.Context, conn *emr.EMR, id string) (*emr.Studio, error) {
 	input := &emr.DescribeStudioInput{
 		StudioId: aws.String(id),
