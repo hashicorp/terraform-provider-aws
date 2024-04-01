@@ -7,7 +7,9 @@ package emr
 var (
 	ResourceBlockPublicAccessConfiguration = resourceBlockPublicAccessConfiguration
 	ResourceCluster                        = resourceCluster
+	ResourceInstanceFleet                  = resourceInstanceFleet
 
 	FindBlockPublicAccessConfiguration = findBlockPublicAccessConfiguration
 	FindClusterByID                    = findClusterByID
+	FindInstanceFleetByTwoPartKey      = findInstanceFleetByTwoPartKey
 )
