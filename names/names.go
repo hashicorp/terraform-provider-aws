@@ -30,6 +30,7 @@ const (
 	AthenaEndpointID                     = "athena"
 	AuditManagerEndpointID               = "auditmanager"
 	BatchEndpointID                      = "batch"
+	BedrockAgentEndpointID               = "bedrockagent"
 	BedrockEndpointID                    = "bedrock"
 	BudgetsEndpointID                    = "budgets"
 	ChimeSDKMediaPipelinesEndpointID     = "media-pipelines-chime"

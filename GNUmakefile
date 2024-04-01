@@ -7,7 +7,7 @@ TEST_COUNT          ?= 1
 ACCTEST_TIMEOUT     ?= 360m
 ACCTEST_PARALLELISM ?= 20
 P                   ?= 20
-GO_VER              ?= $(shell echo go`cat .go-version | xargs`)
+GO_VER              ?= go
 SWEEP_TIMEOUT       ?= 360m
 
 ifneq ($(origin PKG), undefined)
