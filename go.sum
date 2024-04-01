@@ -136,8 +136,8 @@ github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.4.4 h1:gSO6kMlH4cXxB
 github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.4.4/go.mod h1:UkyRWEyu3iT7oPmPri8xwPnKXqJQzSUDK9MOKq7xyZE=
 github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.36.4 h1:UBo3t3uliQIP3f8duZhmJ1Z62bz/j5o7LH8f/BTt1mU=
 github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.36.4/go.mod h1:NGHeOPrlK475HqycL4V02Ubc67Wm+D09Xh4pO6g2c8g=
-github.com/aws/aws-sdk-go-v2/service/datazone v1.6.3 h1:7zfDRW2h/V/3Nx5dh0AG1rIWJYpQ7aeCTgl+QHzpUwM=
-github.com/aws/aws-sdk-go-v2/service/datazone v1.6.3/go.mod h1:IN3onXQrF2ukCZ9/acQlHZvAaAUJXX7BCBALgYFSOPk=
+github.com/aws/aws-sdk-go-v2/service/datazone v1.6.4 h1:raPL/eqQd8MXLO4R7gO/GCU4Jp5DipGgV+/aOFPt4ps=
+github.com/aws/aws-sdk-go-v2/service/datazone v1.6.4/go.mod h1:6UUbvwSg1ADRoK5rYXGDWjwzSyy8mElzIhVSqCXwNYE=
 github.com/aws/aws-sdk-go-v2/service/dax v1.19.3 h1:nBFeHXBmuicno0/3gV/QeKEJL2+PKTOk+ISrk7DNNjU=
 github.com/aws/aws-sdk-go-v2/service/dax v1.19.3/go.mod h1:jPAOa4SFhgbTLdzZ77wuLjXHRjQCobtSZIbAcjttpZ0=
 github.com/aws/aws-sdk-go-v2/service/devopsguru v1.30.3 h1:GdBBQ5f3MFBlwpOHxHKECfLI879O3jwn/yfsJqPH8ds=
