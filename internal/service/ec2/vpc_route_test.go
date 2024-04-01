@@ -1573,8 +1573,38 @@ func TestAccVPCRoute_ipv6ToVPCEndpoint(t *testing.T) {
 	})
 }
 
+func TestAccVPCRoute_localRouteCreateError(t *testing.T) {
+	ctx := acctest.Context(t)
+	var routeTable ec2.RouteTable
+	var vpc ec2.Vpc
+	rtResourceName := "aws_route_table.test"
+	vpcResourceName := "aws_vpc.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckRouteDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCRouteConfig_ipv4NoRoute(rName),
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckVPCExists(ctx, vpcResourceName, &vpc),
+					testAccCheckRouteTableExists(ctx, rtResourceName, &routeTable),
+					testAccCheckRouteTableNumberOfRoutes(&routeTable, 1),
+				),
+			},
+			{
+				Config:      testAccVPCRouteConfig_ipv4Local(rName),
+				ExpectError: regexache.MustCompile("cannot create local Route, use `terraform import` to manage existing local Routes"),
+			},
+		},
+	})
+}
+
 // https://github.com/hashicorp/terraform-provider-aws/issues/11455.
-func TestAccVPCRoute_localRoute(t *testing.T) {
+func TestAccVPCRoute_localRouteImport(t *testing.T) {
 	ctx := acctest.Context(t)
 	var routeTable ec2.RouteTable
 	var vpc ec2.Vpc
@@ -1615,7 +1645,7 @@ func TestAccVPCRoute_localRoute(t *testing.T) {
 }
 
 // https://github.com/hashicorp/terraform-provider-aws/issues/21350.
-func TestAccVPCRoute_localRouteUpdate(t *testing.T) {
+func TestAccVPCRoute_localRouteImportAndUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var routeTable ec2.RouteTable
 	var vpc ec2.Vpc

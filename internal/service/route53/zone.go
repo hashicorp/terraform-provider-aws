@@ -82,7 +82,7 @@ func ResourceZone() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				StateFunc:    TrimTrailingPeriod,
+				StateFunc:    NormalizeZoneName,
 				ValidateFunc: validation.StringLenBetween(1, 1024),
 			},
 			"name_servers": {
@@ -209,7 +209,7 @@ func resourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("delegation_set_id", "")
 	// To be consistent with other AWS services (e.g. ACM) that do not accept a trailing period,
 	// we remove the suffix from the Hosted Zone Name returned from the API
-	d.Set("name", TrimTrailingPeriod(aws.StringValue(output.HostedZone.Name)))
+	d.Set("name", NormalizeZoneName(aws.StringValue(output.HostedZone.Name)))
 	d.Set("zone_id", CleanZoneID(aws.StringValue(output.HostedZone.Id)))
 
 	var nameServers []string
@@ -549,11 +549,14 @@ func CleanZoneID(ID string) string {
 	return strings.TrimPrefix(ID, "/hostedzone/")
 }
 
-// TrimTrailingPeriod is used to remove the trailing period
-// of "name" or "domain name" attributes often returned from
-// the Route53 API or provided as user input.
+// NormalizeZoneName is used to remove the trailing period
+// and apply consistent casing to "name" or "domain name"
+// attributes returned from the Route53 API or provided as
+// user input.
+//
 // The single dot (".") domain name is returned as-is.
-func TrimTrailingPeriod(v interface{}) string {
+// Uppercase letters are converted to lowercase.
+func NormalizeZoneName(v interface{}) string {
 	var str string
 	switch value := v.(type) {
 	case *string:
@@ -568,7 +571,7 @@ func TrimTrailingPeriod(v interface{}) string {
 		return str
 	}
 
-	return strings.TrimSuffix(str, ".")
+	return strings.ToLower(strings.TrimSuffix(str, "."))
 }
 
 func findNameServers(ctx context.Context, conn *route53.Route53, zoneId string, zoneName string) ([]string, error) {

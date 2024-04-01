@@ -1253,7 +1253,7 @@ func buildSpotFleetLaunchSpecification(ctx context.Context, d map[string]interfa
 	}
 
 	if v, ok := d["user_data"]; ok {
-		opts.UserData = aws.String(verify.Base64Encode([]byte(v.(string))))
+		opts.UserData = flex.StringValueToBase64String(v.(string))
 	}
 
 	if v, ok := d["key_name"]; ok && v != "" {

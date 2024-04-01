@@ -24,6 +24,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Factory: newResourceDataCellsFilter,
 			Name:    "Data Cells Filter",
 		},
+		{
+			Factory: newResourceResourceLFTag,
+			Name:    "Resource LF Tag",
+		},
 	}
 }
 

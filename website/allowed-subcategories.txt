@@ -72,6 +72,7 @@ DMS (Database Migration)
 Data Exchange
 Data Pipeline
 DataSync
+DataZone
 Detective
 DevOps Guru
 Device Farm
@@ -164,6 +165,7 @@ OpsWorks
 Organizations
 Outposts
 Outposts (EC2)
+Payment Cryptography Control Plane
 Pinpoint
 Polly
 Pricing Calculator

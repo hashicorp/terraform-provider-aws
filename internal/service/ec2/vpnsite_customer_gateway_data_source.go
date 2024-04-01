@@ -20,8 +20,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKDataSource("aws_customer_gateway")
-func DataSourceCustomerGateway() *schema.Resource {
+// @SDKDataSource("aws_customer_gateway", name="Customer Gateway")
+func dataSourceCustomerGateway() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCustomerGatewayRead,
 

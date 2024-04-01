@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -38,6 +39,12 @@ func ResourceHost() *schema.Resource {
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
+			Update: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(20 * time.Minute),
+		},
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -130,7 +137,7 @@ func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.SetId(aws.StringValue(output.HostIds[0]))
 
-	if _, err := WaitHostCreated(ctx, conn, d.Id()); err != nil {
+	if _, err := WaitHostCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Host (%s) create: %s", d.Id(), err)
 	}
 
@@ -210,7 +217,7 @@ func resourceHostUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			return sdkdiag.AppendErrorf(diags, "modifying EC2 Host (%s): %s", d.Id(), err)
 		}
 
-		if _, err := WaitHostUpdated(ctx, conn, d.Id()); err != nil {
+		if _, err := WaitHostUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for EC2 Host (%s) update: %s", d.Id(), err)
 		}
 	}
@@ -239,7 +246,7 @@ func resourceHostDelete(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "releasing EC2 Host (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitHostDeleted(ctx, conn, d.Id()); err != nil {
+	if _, err := WaitHostDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Host (%s) delete: %s", d.Id(), err)
 	}
 

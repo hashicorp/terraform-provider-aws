@@ -115,7 +115,7 @@ cleantidy: prereq-go ## Clean up tidy
 	@echo "make: Go mods tidied"
 
 clean: cleango cleantidy build tools ## Clean up Go cache, tidy and re-install tools
-	@echo "make: clean complete"	
+	@echo "make: clean complete"
 
 copyright: ## Run copywrite (generate source code headers)
 	@copywrite headers
@@ -317,7 +317,28 @@ sanity: prereq-go ## Run sanity checks with failures allowed
 
 semall: semgrep-validate ## Run semgrep on all files
 	@echo "make: running Semgrep checks locally (must have semgrep installed)..."
-	@semgrep --error --metrics=off \
+	@SEMGREP_TIMEOUT=300 semgrep --error --metrics=off \
+		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
+		--config .ci/.semgrep.yml \
+		--config .ci/.semgrep-caps-aws-ec2.yml \
+		--config .ci/.semgrep-configs.yml \
+		--config .ci/.semgrep-service-name0.yml \
+		--config .ci/.semgrep-service-name1.yml \
+		--config .ci/.semgrep-service-name2.yml \
+		--config .ci/.semgrep-service-name3.yml \
+		--config .ci/semgrep/ \
+		--config 'r/dgryski.semgrep-go.badnilguard' \
+		--config 'r/dgryski.semgrep-go.errnilcheck' \
+		--config 'r/dgryski.semgrep-go.marshaljson' \
+		--config 'r/dgryski.semgrep-go.nilerr' \
+		--config 'r/dgryski.semgrep-go.oddifsequence' \
+		--config 'r/dgryski.semgrep-go.oserrors'
+
+semfix: semgrep-validate ## Run semgrep on all files
+	@echo "make: running Semgrep checks locally (must have semgrep installed)..."
+	@echo "make: applying fixes with --autofix"
+	@echo "make: WARNING: This will not fix rules that don't have autofixes"
+	@SEMGREP_TIMEOUT=300 semgrep --error --metrics=off --autofix \
 		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
 		--config .ci/.semgrep.yml \
 		--config .ci/.semgrep-caps-aws-ec2.yml \
@@ -335,7 +356,7 @@ semall: semgrep-validate ## Run semgrep on all files
 		--config 'r/dgryski.semgrep-go.oserrors'
 
 semgrep-validate: ## Validate semgrep configuration files
-	@semgrep --error --validate \
+	@SEMGREP_TIMEOUT=300 semgrep --error --validate \
 		--config .ci/.semgrep.yml \
 		--config .ci/.semgrep-caps-aws-ec2.yml \
 		--config .ci/.semgrep-configs.yml \
@@ -360,7 +381,7 @@ sweep: prereq-go ## Run sweepers
 
 sweeper: prereq-go ## Run sweepers with failures allowed
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
-	$(GO_VER) test $(SWEEP_DIR) -v -tags=sweep -sweep=$(SWEEP) -sweep-allow-failures -timeout $(SWEEP_TIMEOUT)
+	$(GO_VER) test $(SWEEP_DIR) -v -sweep=$(SWEEP) -sweep-allow-failures -timeout $(SWEEP_TIMEOUT)
 
 t: prereq-go fmtcheck
 	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
@@ -485,6 +506,7 @@ yamllint: ## Lint YAML files (via yamllint)
 	sane \
 	sanity \
 	semall \
+	semfix \
 	semgrep \
 	semgrep-validate \
 	skaff \
