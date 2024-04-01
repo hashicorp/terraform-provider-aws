@@ -56,6 +56,7 @@ This data source exports the following attributes in addition to the arguments a
             * `unit` - Unit of time.
         * `cron_expression_for_recurrence` - Cron expression for an Auto-Tune maintenance schedule.
     * `rollback_on_disable` - Whether the domain is set to roll back to default Auto-Tune settings when disabling Auto-Tune.
+    * `use_off_peak_window` - Whether to schedule Auto-Tune optimizations that require blue/green deployments during the domain's configured daily off-peak window.
 * `cluster_config` - Cluster configuration of the domain.
     * `cold_storage_options` - Configuration block containing cold storage configuration.
         * `enabled` - Indicates  cold storage is enabled.
@@ -116,4 +117,4 @@ This data source exports the following attributes in addition to the arguments a
     * `subnet_ids` - Subnets used by the domain.
     * `vpc_id` - VPC used by the domain.
 
-<!-- cache-key: cdktf-0.20.1 input-01f37a17c598cc10c99e74b9d128dbd7cbef41745f5cf5aaa6e1db32feb9eb3e -->
+<!-- cache-key: cdktf-0.20.1 input-3ece174b178ec49f160e5c18c9b72c0faf4ab9039bc2b4501cc2e402815d2a3e -->

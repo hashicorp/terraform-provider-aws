@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/iam"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func TestAccIAMPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var out iam.Policy
+	var out awstypes.Policy
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_policy.test"
 	expectedPolicyText := `{"Statement":[{"Action":["ec2:Describe*"],"Effect":"Allow","Resource":"*"}],"Version":"2012-10-17"}`
@@ -57,7 +57,7 @@ func TestAccIAMPolicy_basic(t *testing.T) {
 
 func TestAccIAMPolicy_description(t *testing.T) {
 	ctx := acctest.Context(t)
-	var out iam.Policy
+	var out awstypes.Policy
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_policy.test"
 
@@ -83,9 +83,9 @@ func TestAccIAMPolicy_description(t *testing.T) {
 	})
 }
 
-func TestAccIAMPolicy_tags(t *testing.T) {
+func TestAccIAMPolicy_whitespace(t *testing.T) {
 	ctx := acctest.Context(t)
-	var out iam.Policy
+	var out awstypes.Policy
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_policy.test"
 
@@ -96,34 +96,26 @@ func TestAccIAMPolicy_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConfig_tags1(rName, "key1", "value1"),
+				Config: testAccPolicyConfig_whitespace(rName, "", "", ""),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &out),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				Config:   testAccPolicyConfig_whitespace(rName, " ", "", ""),
+				PlanOnly: true,
 			},
 			{
-				Config: testAccPolicyConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName, &out),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
+				Config:   testAccPolicyConfig_whitespace(rName, " ", "\n", ""),
+				PlanOnly: true,
 			},
 			{
-				Config: testAccPolicyConfig_tags1(rName, "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(ctx, resourceName, &out),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
+				Config:   testAccPolicyConfig_whitespace(rName, " ", "\n", " "),
+				PlanOnly: true,
+			},
+			{
+				Config:   testAccPolicyConfig_whitespace(rName, " \n", "\n", "\t "),
+				PlanOnly: true,
 			},
 		},
 	})
@@ -131,7 +123,7 @@ func TestAccIAMPolicy_tags(t *testing.T) {
 
 func TestAccIAMPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var out iam.Policy
+	var out awstypes.Policy
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_policy.test"
 
@@ -155,7 +147,7 @@ func TestAccIAMPolicy_disappears(t *testing.T) {
 
 func TestAccIAMPolicy_namePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
-	var out iam.Policy
+	var out awstypes.Policy
 	resourceName := "aws_iam_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -182,7 +174,7 @@ func TestAccIAMPolicy_namePrefix(t *testing.T) {
 
 func TestAccIAMPolicy_path(t *testing.T) {
 	ctx := acctest.Context(t)
-	var out iam.Policy
+	var out awstypes.Policy
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_policy.test"
 
@@ -210,7 +202,7 @@ func TestAccIAMPolicy_path(t *testing.T) {
 
 func TestAccIAMPolicy_policy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var out iam.Policy
+	var out awstypes.Policy
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_policy.test"
 	policy1 := `{"Statement":[{"Action":["ec2:Describe*"],"Effect":"Allow","Resource":"*"}],"Version":"2012-10-17"}`
@@ -252,7 +244,7 @@ func TestAccIAMPolicy_policy(t *testing.T) {
 // https://github.com/hashicorp/terraform-provider-aws/issues/28833
 func TestAccIAMPolicy_diffs(t *testing.T) {
 	ctx := acctest.Context(t)
-	var out iam.Policy
+	var out awstypes.Policy
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_policy.test"
 
@@ -356,7 +348,7 @@ func TestAccIAMPolicy_policyDuplicateKeys(t *testing.T) {
 	})
 }
 
-func testAccCheckPolicyExists(ctx context.Context, n string, v *iam.Policy) resource.TestCheckFunc {
+func testAccCheckPolicyExists(ctx context.Context, n string, v *awstypes.Policy) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -367,7 +359,7 @@ func testAccCheckPolicyExists(ctx context.Context, n string, v *iam.Policy) reso
 			return fmt.Errorf("No IAM Policy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
 		output, err := tfiam.FindPolicyByARN(ctx, conn, rs.Primary.ID)
 
@@ -383,7 +375,7 @@ func testAccCheckPolicyExists(ctx context.Context, n string, v *iam.Policy) reso
 
 func testAccCheckPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iam_policy" {
@@ -454,6 +446,29 @@ EOF
 `, rName)
 }
 
+func testAccPolicyConfig_whitespace(rName, ws1, ws2, ws3 string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_policy" "test" {
+  name = %[1]q
+
+  policy = <<EOF
+%[2]s{
+  "Version": "2012-10-17",%[3]s
+  "Statement": [
+    {
+      "Action": [
+        "ec2:Describe*"
+      ],
+      "Effect": %[3]s"Allow",
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+`, rName, ws1, ws2, ws3)
+}
+
 func testAccPolicyConfig_namePrefix(namePrefix string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
@@ -510,6 +525,29 @@ resource "aws_iam_policy" "test" {
 `, rName, policy)
 }
 
+func testAccPolicyConfig_tags0(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_policy" "test" {
+  name = %q
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "ec2:Describe*"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+}
+`, rName)
+}
+
 func testAccPolicyConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_policy" "test" {
@@ -563,6 +601,33 @@ EOF
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccPolicyConfig_tagsNull(rName, tagKey1 string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_policy" "test" {
+  name = %q
+
+  policy = <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Action": [
+        "ec2:Describe*"
+      ],
+      "Effect": "Allow",
+      "Resource": "*"
+    }
+  ]
+}
+EOF
+
+  tags = {
+    %[2]q = null
+  }
+}
+`, rName, tagKey1)
 }
 
 func testAccPolicyConfig_diffs(rName string, tags string) string {

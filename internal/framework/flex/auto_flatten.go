@@ -89,6 +89,10 @@ func (flattener autoFlattener) convert(ctx context.Context, vFrom, vTo reflect.V
 	case reflect.Struct:
 		diags.Append(flattener.struct_(ctx, vFrom, false, tTo, vTo)...)
 		return diags
+
+	case reflect.Interface:
+		// Smithy union type handling not yet implemented. Silently skip.
+		return diags
 	}
 
 	tflog.Info(ctx, "AutoFlex Flatten; incompatible types", map[string]interface{}{
@@ -494,6 +498,10 @@ func (flattener autoFlattener) slice(ctx context.Context, vFrom reflect.Value, t
 			diags.Append(flattener.sliceOfStructNestedObjectCollection(ctx, vFrom, tTo, vTo)...)
 			return diags
 		}
+
+	case reflect.Interface:
+		// Smithy union type handling not yet implemented. Silently skip.
+		return diags
 	}
 
 	tflog.Info(ctx, "AutoFlex Flatten; incompatible types", map[string]interface{}{

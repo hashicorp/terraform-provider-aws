@@ -53,6 +53,15 @@ func TestAccRAMResourceShareDataSource_tags(t *testing.T) {
 				Config: testAccResourceShareDataSourceConfig_tags(rName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
+					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
+				),
+			},
+			{
+				Config: testAccResourceShareDataSourceConfig_tagsWithoutName(rName),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(datasourceName, "id", resourceName, "id"),
+					resource.TestCheckResourceAttrPair(datasourceName, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
 				),
 			},
@@ -140,6 +149,27 @@ data "aws_ram_resource_share" "test" {
   filter {
     name   = "Name"
     values = [%[1]q]
+  }
+}
+`, rName)
+}
+
+func testAccResourceShareDataSourceConfig_tagsWithoutName(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ram_resource_share" "test" {
+  name = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+data "aws_ram_resource_share" "test" {
+  resource_owner = "SELF"
+
+  filter {
+    name   = "Name"
+    values = [aws_ram_resource_share.test.tags["Name"]]
   }
 }
 `, rName)

@@ -63,6 +63,7 @@ func ResourceParameter() *schema.Resource {
 					"aws:ssm:integration",
 					"text",
 				}, false),
+				ForceNew: true,
 			},
 			"description": {
 				Type:         schema.TypeString,
