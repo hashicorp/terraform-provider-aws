@@ -5,7 +5,9 @@ package emr
 
 // Exports for use in tests only.
 var (
-	ResourceCluster = resourceCluster
+	ResourceBlockPublicAccessConfiguration = resourceBlockPublicAccessConfiguration
+	ResourceCluster                        = resourceCluster
 
-	FindClusterByID = findClusterByID
+	FindBlockPublicAccessConfiguration = findBlockPublicAccessConfiguration
+	FindClusterByID                    = findClusterByID
 )

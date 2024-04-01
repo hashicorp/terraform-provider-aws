@@ -75,17 +75,3 @@ func FindStudioSessionMappingByIDOrName(ctx context.Context, conn *emr.EMR, id s
 
 	return output.SessionMapping, nil
 }
-
-func FindBlockPublicAccessConfiguration(ctx context.Context, conn *emr.EMR) (*emr.GetBlockPublicAccessConfigurationOutput, error) {
-	input := &emr.GetBlockPublicAccessConfigurationInput{}
-	output, err := conn.GetBlockPublicAccessConfigurationWithContext(ctx, input)
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.BlockPublicAccessConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output, nil
-}
