@@ -78,7 +78,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/fis v1.24.2
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.22.4
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.26.4
-	github.com/aws/aws-sdk-go-v2/service/healthlake v1.23.3
+	github.com/aws/aws-sdk-go-v2/service/healthlake v1.23.4
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.23.4
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.24.3
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.12.3
