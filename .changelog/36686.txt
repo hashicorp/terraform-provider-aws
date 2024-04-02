@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cloudformation_stack_set_instance: Fix `OperationInProgressException: Another Operation on StackSet` while creating resources.
+```
