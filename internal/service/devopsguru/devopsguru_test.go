@@ -37,6 +37,10 @@ func TestAccDevOpsGuru_serial(t *testing.T) {
 		"ResourceCollectionDataSource": {
 			"basic": testAccResourceCollectionDataSource_basic,
 		},
+		"ServiceIntegration": {
+			"basic": testAccServiceIntegration_basic,
+			"kms":   testAccServiceIntegration_kms,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)

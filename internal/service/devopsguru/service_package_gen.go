@@ -41,6 +41,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Factory: newResourceResourceCollection,
 			Name:    "Resource Collection",
 		},
+		{
+			Factory: newResourceServiceIntegration,
+			Name:    "Service Integration",
+		},
 	}
 }
 
