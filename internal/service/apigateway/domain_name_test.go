@@ -12,7 +12,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/apigateway/types"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -213,10 +213,10 @@ func TestAccAPIGatewayDomainName_securityPolicy(t *testing.T) {
 		CheckDestroy:             testAccCheckDomainNameDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDomainNameConfig_securityPolicy(rName, key, certificate, string(awstypes.SecurityPolicyTls12)),
+				Config: testAccDomainNameConfig_securityPolicy(rName, key, certificate, string(types.SecurityPolicyTls12)),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckDomainNameExists(ctx, resourceName, &domainName),
-					resource.TestCheckResourceAttr(resourceName, "security_policy", string(awstypes.SecurityPolicyTls12)),
+					resource.TestCheckResourceAttr(resourceName, "security_policy", string(types.SecurityPolicyTls12)),
 				),
 			},
 			{
@@ -404,13 +404,9 @@ func testAccCheckDomainNameExists(ctx context.Context, n string, v *apigateway.G
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No API Gateway Domain Name ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
-		output, err := tfapigateway.FindDomainName(ctx, conn, rs.Primary.ID)
+		output, err := tfapigateway.FindDomainByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -431,7 +427,7 @@ func testAccCheckDomainNameDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfapigateway.FindDomainName(ctx, conn, rs.Primary.ID)
+			_, err := tfapigateway.FindDomainByName(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue

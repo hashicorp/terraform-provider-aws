@@ -95,7 +95,7 @@ func dataSourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	domainName := d.Get("domain_name").(string)
-	output, err := FindDomainName(ctx, conn, domainName)
+	output, err := findDomainByName(ctx, conn, domainName)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway Domain Name (%s): %s", domainName, err)

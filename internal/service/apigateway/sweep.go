@@ -294,7 +294,7 @@ func sweepDomainNames(region string) error {
 		log.Printf("[INFO] API Gateway Domain Names: %d", len(page.Items))
 
 		for _, dn := range page.Items {
-			r := ResourceDomainName()
+			r := resourceDomainName()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(dn.DomainName))
 

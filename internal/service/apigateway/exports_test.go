@@ -13,6 +13,7 @@ var (
 	ResourceDeployment           = resourceDeployment
 	ResourceDocumentationPart    = resourceDocumentationPart
 	ResourceDocumentationVersion = resourceDocumentationVersion
+	ResourceDomainName           = resourceDomainName
 
 	FindAPIKeyByID                       = findAPIKeyByID
 	FindAuthorizerByTwoPartKey           = findAuthorizerByTwoPartKey
@@ -21,4 +22,5 @@ var (
 	FindDeploymentByTwoPartKey           = findDeploymentByTwoPartKey
 	FindDocumentationPartByTwoPartKey    = findDocumentationPartByTwoPartKey
 	FindDocumentationVersionByTwoPartKey = findDocumentationVersionByTwoPartKey
+	FindDomainByName                     = findDomainByName
 )
