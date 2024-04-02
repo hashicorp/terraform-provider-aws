@@ -36,8 +36,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Authorizer",
 		},
 		{
-			Factory:  DataSourceAuthorizers,
+			Factory:  dataSourceAuthorizers,
 			TypeName: "aws_api_gateway_authorizers",
+			Name:     "Authorizers",
 		},
 		{
 			Factory:  DataSourceDomainName,

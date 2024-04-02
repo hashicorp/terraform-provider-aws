@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// @SDKDataSource("aws_api_gateway_authorizers")
-func DataSourceAuthorizers() *schema.Resource {
+// @SDKDataSource("aws_api_gateway_authorizers", name="Authorizers")
+func dataSourceAuthorizers() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceAuthorizersRead,
 
