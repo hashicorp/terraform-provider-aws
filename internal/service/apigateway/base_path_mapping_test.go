@@ -21,6 +21,7 @@ import (
 func TestAccAPIGatewayBasePathMapping_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf apigateway.GetBasePathMappingOutput
+	resourceName := "aws_api_gateway_base_path_mapping.test"
 	name := acctest.RandomSubdomain()
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, name)
@@ -34,11 +35,11 @@ func TestAccAPIGatewayBasePathMapping_basic(t *testing.T) {
 			{
 				Config: testAccBasePathMappingConfig_basic(name, key, certificate, acctest.ResourcePrefix),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBasePathExists(ctx, "aws_api_gateway_base_path_mapping.test", &conf),
+					testAccCheckBasePathExists(ctx, resourceName, &conf),
 				),
 			},
 			{
-				ResourceName:      "aws_api_gateway_base_path_mapping.test",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
@@ -50,6 +51,7 @@ func TestAccAPIGatewayBasePathMapping_basic(t *testing.T) {
 func TestAccAPIGatewayBasePathMapping_BasePath_empty(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf apigateway.GetBasePathMappingOutput
+	resourceName := "aws_api_gateway_base_path_mapping.test"
 	name := acctest.RandomSubdomain()
 	key := acctest.TLSRSAPrivateKeyPEM(t, 2048)
 	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, key, name)
@@ -63,11 +65,11 @@ func TestAccAPIGatewayBasePathMapping_BasePath_empty(t *testing.T) {
 			{
 				Config: testAccBasePathMappingConfig_basic(name, key, certificate, ""),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBasePathExists(ctx, "aws_api_gateway_base_path_mapping.test", &conf),
+					testAccCheckBasePathExists(ctx, resourceName, &conf),
 				),
 			},
 			{
-				ResourceName:      "aws_api_gateway_base_path_mapping.test",
+				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},

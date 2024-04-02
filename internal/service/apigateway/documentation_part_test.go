@@ -9,28 +9,24 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAPIGatewayDocumentationPart_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf apigateway.GetDocumentationPartOutput
-
 	rString := sdkacctest.RandString(8)
 	apiName := fmt.Sprintf("tf-acc-test_api_doc_part_basic_%s", rString)
 	properties := `{"description":"Terraform Acceptance Test"}`
 	uProperties := `{"description":"Terraform Acceptance Test Updated"}`
-
 	resourceName := "aws_api_gateway_documentation_part.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -71,12 +67,10 @@ func TestAccAPIGatewayDocumentationPart_basic(t *testing.T) {
 func TestAccAPIGatewayDocumentationPart_method(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf apigateway.GetDocumentationPartOutput
-
 	rString := sdkacctest.RandString(8)
 	apiName := fmt.Sprintf("tf-acc-test_api_doc_part_method_%s", rString)
 	properties := `{"description":"Terraform Acceptance Test"}`
 	uProperties := `{"description":"Terraform Acceptance Test Updated"}`
-
 	resourceName := "aws_api_gateway_documentation_part.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -121,12 +115,10 @@ func TestAccAPIGatewayDocumentationPart_method(t *testing.T) {
 func TestAccAPIGatewayDocumentationPart_responseHeader(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf apigateway.GetDocumentationPartOutput
-
 	rString := sdkacctest.RandString(8)
 	apiName := fmt.Sprintf("tf-acc-test_api_doc_part_resp_header_%s", rString)
 	properties := `{"description":"Terraform Acceptance Test"}`
 	uProperties := `{"description":"Terraform Acceptance Test Updated"}`
-
 	resourceName := "aws_api_gateway_documentation_part.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -175,11 +167,9 @@ func TestAccAPIGatewayDocumentationPart_responseHeader(t *testing.T) {
 func TestAccAPIGatewayDocumentationPart_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf apigateway.GetDocumentationPartOutput
-
 	rString := sdkacctest.RandString(8)
 	apiName := fmt.Sprintf("tf-acc-test_api_doc_part_basic_%s", rString)
 	properties := `{"description":"Terraform Acceptance Test"}`
-
 	resourceName := "aws_api_gateway_documentation_part.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -200,34 +190,22 @@ func TestAccAPIGatewayDocumentationPart_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckDocumentationPartExists(ctx context.Context, n string, res *apigateway.GetDocumentationPartOutput) resource.TestCheckFunc {
+func testAccCheckDocumentationPartExists(ctx context.Context, n string, v *apigateway.GetDocumentationPartOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No API Gateway Documentation Part ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
-		apiId, id, err := tfapigateway.DecodeDocumentationPartID(rs.Primary.ID)
+		output, err := tfapigateway.FindDocumentationPartByTwoPartKey(ctx, conn, rs.Primary.Attributes["rest_api_id"], rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		req := &apigateway.GetDocumentationPartInput{
-			DocumentationPartId: aws.String(id),
-			RestApiId:           aws.String(apiId),
-		}
-		docPart, err := conn.GetDocumentationPart(ctx, req)
-		if err != nil {
-			return err
-		}
-
-		*res = *docPart
+		*v = *output
 
 		return nil
 	}
@@ -242,25 +220,19 @@ func testAccCheckDocumentationPartDestroy(ctx context.Context) resource.TestChec
 				continue
 			}
 
-			apiId, id, err := tfapigateway.DecodeDocumentationPartID(rs.Primary.ID)
+			_, err := tfapigateway.FindDocumentationPartByTwoPartKey(ctx, conn, rs.Primary.Attributes["rest_api_id"], rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
 			if err != nil {
 				return err
 			}
 
-			req := &apigateway.GetDocumentationPartInput{
-				DocumentationPartId: aws.String(id),
-				RestApiId:           aws.String(apiId),
-			}
-			_, err = conn.GetDocumentationPart(ctx, req)
-			if err != nil {
-				if errs.IsA[*awstypes.NotFoundException](err) {
-					return nil
-				}
-				return err
-			}
-
-			return fmt.Errorf("API Gateway Documentation Part %q still exists.", rs.Primary.ID)
+			return fmt.Errorf("API Gateway Documentation Part %s still exists", rs.Primary.ID)
 		}
+
 		return nil
 	}
 }
