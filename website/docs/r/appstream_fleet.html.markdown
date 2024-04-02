@@ -67,10 +67,10 @@ The following arguments are optional:
 
 ### `compute_capacity`
 
-You must set either `desired_instances` or `desired_sessions` attribute, based on the type of fleet you create.
+Exactly one of `desired_instances` or `desired_sessions` must be set, based on the type of fleet being created.
 
-* `desired_instances` - (Required) Desired number of streaming instances.
-* `desired_sessions` - (Required) Desired number of user sessions for a multi-session fleet. This is not allowed for single-session fleets.
+* `desired_instances` - (Optional) Desired number of streaming instances.
+* `desired_sessions` - (Optional) Desired number of user sessions for a multi-session fleet. This is not allowed for single-session fleets.
 
 ### `domain_join_info`
 
