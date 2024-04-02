@@ -578,6 +578,7 @@ func TestAccBatchJobDefinition_NodeProperties_basic(t *testing.T) {
 									"vcpus": 1,
 									"volumes": []
 								},
+								"instanceTypes": [],
 								"targetNodes": "0:"
 							},
 							{
@@ -593,6 +594,7 @@ func TestAccBatchJobDefinition_NodeProperties_basic(t *testing.T) {
 									"vcpus": 1,
 									"volumes": []
 								},
+								"instanceTypes": [],
 								"targetNodes": "1:"
 							}
 						],
@@ -655,6 +657,7 @@ func TestAccBatchJobDefinition_NodeProperties_advanced(t *testing.T) {
 									"vcpus": 1,
 									"volumes": [{"host":{"sourcePath":"/tmp"},"name":"tmp"}]
 								},
+								"instanceTypes": [],
 								"targetNodes": "0:"
 							},
 							{
@@ -670,6 +673,7 @@ func TestAccBatchJobDefinition_NodeProperties_advanced(t *testing.T) {
 									"vcpus":1,
 									"volumes": []
 								},
+								"instanceTypes": [],
 								"targetNodes": "1:"
 							}
 						],
@@ -706,6 +710,7 @@ func TestAccBatchJobDefinition_NodeProperties_advanced(t *testing.T) {
 									"vcpus": 1,
 									"volumes": []
 								},
+								"instanceTypes": [],
 								"targetNodes": "0:"
 							},
 							{
@@ -721,6 +726,7 @@ func TestAccBatchJobDefinition_NodeProperties_advanced(t *testing.T) {
 									"vcpus": 1,
 									"volumes": []
 								},
+								"instanceTypes": [],
 								"targetNodes": "1:"
 							}
 						],
