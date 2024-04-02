@@ -146,8 +146,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_api_gateway_method",
 		},
 		{
-			Factory:  ResourceMethodResponse,
+			Factory:  resourceMethodResponse,
 			TypeName: "aws_api_gateway_method_response",
+			Name:     "Method Response",
 		},
 		{
 			Factory:  ResourceMethodSettings,
