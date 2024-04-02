@@ -298,7 +298,7 @@ func resourceMethodUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	// Get current cacheKeyParameters from integration before any request parameters are updated on method.
 	replacedRequestParameters := []string{}
 	var currentCacheKeyParameters []string
-	if integration, err := FindIntegrationByThreePartKey(ctx, conn, d.Get("http_method").(string), d.Get("resource_id").(string), d.Get("rest_api_id").(string)); err == nil {
+	if integration, err := findIntegrationByThreePartKey(ctx, conn, d.Get("http_method").(string), d.Get("resource_id").(string), d.Get("rest_api_id").(string)); err == nil {
 		currentCacheKeyParameters = integration.CacheKeyParameters
 
 		for _, operation := range operations {

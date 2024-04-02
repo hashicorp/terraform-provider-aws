@@ -132,8 +132,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Gateway Response",
 		},
 		{
-			Factory:  ResourceIntegration,
+			Factory:  resourceIntegration,
 			TypeName: "aws_api_gateway_integration",
+			Name:     "Integration",
 		},
 		{
 			Factory:  resourceIntegrationResponse,

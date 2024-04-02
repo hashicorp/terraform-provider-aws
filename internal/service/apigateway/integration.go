@@ -12,7 +12,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/apigateway/types"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -25,8 +25,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_api_gateway_integration")
-func ResourceIntegration() *schema.Resource {
+// @SDKResource("aws_api_gateway_integration", name="Integration")
+func resourceIntegration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIntegrationCreate,
 		ReadWithoutTimeout:   resourceIntegrationRead,
@@ -68,8 +68,8 @@ func ResourceIntegration() *schema.Resource {
 			"connection_type": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				Default:          awstypes.ConnectionTypeInternet,
-				ValidateDiagFunc: enum.Validate[awstypes.ConnectionType](),
+				Default:          types.ConnectionTypeInternet,
+				ValidateDiagFunc: enum.Validate[types.ConnectionType](),
 			},
 			"content_handling": {
 				Type:             schema.TypeString,
@@ -147,7 +147,7 @@ func ResourceIntegration() *schema.Resource {
 				Type:             schema.TypeString,
 				Required:         true,
 				ForceNew:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.IntegrationType](),
+				ValidateDiagFunc: enum.Validate[types.IntegrationType](),
 			},
 			"uri": {
 				Type:     schema.TypeString,
@@ -165,7 +165,7 @@ func resourceIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta
 		HttpMethod: aws.String(d.Get("http_method").(string)),
 		ResourceId: aws.String(d.Get("resource_id").(string)),
 		RestApiId:  aws.String(d.Get("rest_api_id").(string)),
-		Type:       awstypes.IntegrationType(d.Get("type").(string)),
+		Type:       types.IntegrationType(d.Get("type").(string)),
 	}
 
 	if v, ok := d.GetOk("cache_key_parameters"); ok && v.(*schema.Set).Len() > 0 {
@@ -183,11 +183,11 @@ func resourceIntegrationCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("connection_type"); ok {
-		input.ConnectionType = awstypes.ConnectionType(v.(string))
+		input.ConnectionType = types.ConnectionType(v.(string))
 	}
 
 	if v, ok := d.GetOk("content_handling"); ok {
-		input.ContentHandling = awstypes.ContentHandlingStrategy(v.(string))
+		input.ContentHandling = types.ContentHandlingStrategy(v.(string))
 	}
 
 	if v, ok := d.GetOk("credentials"); ok {
@@ -237,7 +237,7 @@ func resourceIntegrationRead(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	integration, err := FindIntegrationByThreePartKey(ctx, conn, d.Get("http_method").(string), d.Get("resource_id").(string), d.Get("rest_api_id").(string))
+	integration, err := findIntegrationByThreePartKey(ctx, conn, d.Get("http_method").(string), d.Get("resource_id").(string), d.Get("rest_api_id").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] API Gateway Integration (%s) not found, removing from state", d.Id())
@@ -252,7 +252,7 @@ func resourceIntegrationRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("cache_key_parameters", integration.CacheKeyParameters)
 	d.Set("cache_namespace", integration.CacheNamespace)
 	d.Set("connection_id", integration.ConnectionId)
-	d.Set("connection_type", awstypes.ConnectionTypeInternet)
+	d.Set("connection_type", types.ConnectionTypeInternet)
 	d.Set("connection_type", integration.ConnectionType)
 	d.Set("content_handling", integration.ContentHandling)
 	d.Set("credentials", integration.Credentials)
@@ -280,7 +280,7 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	operations := make([]awstypes.PatchOperation, 0)
+	operations := make([]types.PatchOperation, 0)
 
 	// https://docs.aws.amazon.com/apigateway/api-reference/link-relation/integration-update/#remarks
 	// According to the above documentation, only a few parts are addable / removable.
@@ -294,8 +294,8 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 		// Handle Removal
 		for k := range os {
 			if _, ok := ns[k]; !ok {
-				operations = append(operations, awstypes.PatchOperation{
-					Op:   awstypes.OpRemove,
+				operations = append(operations, types.PatchOperation{
+					Op:   types.OpRemove,
 					Path: aws.String(fmt.Sprintf("/%s/%s", prefix, strings.Replace(k, "/", "~1", -1))),
 				})
 			}
@@ -304,8 +304,8 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 		for k, v := range ns {
 			// Handle replaces
 			if _, ok := os[k]; ok {
-				operations = append(operations, awstypes.PatchOperation{
-					Op:    awstypes.OpReplace,
+				operations = append(operations, types.PatchOperation{
+					Op:    types.OpReplace,
 					Path:  aws.String(fmt.Sprintf("/%s/%s", prefix, strings.Replace(k, "/", "~1", -1))),
 					Value: aws.String(v.(string)),
 				})
@@ -313,8 +313,8 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 			// Handle additions
 			if _, ok := os[k]; !ok {
-				operations = append(operations, awstypes.PatchOperation{
-					Op:    awstypes.OpAdd,
+				operations = append(operations, types.PatchOperation{
+					Op:    types.OpAdd,
 					Path:  aws.String(fmt.Sprintf("/%s/%s", prefix, strings.Replace(k, "/", "~1", -1))),
 					Value: aws.String(v.(string)),
 				})
@@ -332,8 +332,8 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 		// Handle Removal
 		for k := range os {
 			if _, ok := ns[k]; !ok {
-				operations = append(operations, awstypes.PatchOperation{
-					Op:   awstypes.OpRemove,
+				operations = append(operations, types.PatchOperation{
+					Op:   types.OpRemove,
 					Path: aws.String(fmt.Sprintf("/%s/%s", prefix, strings.Replace(k, "/", "~1", -1))),
 				})
 			}
@@ -342,8 +342,8 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 		for k, v := range ns {
 			// Handle replaces
 			if _, ok := os[k]; ok {
-				operations = append(operations, awstypes.PatchOperation{
-					Op:    awstypes.OpReplace,
+				operations = append(operations, types.PatchOperation{
+					Op:    types.OpReplace,
 					Path:  aws.String(fmt.Sprintf("/%s/%s", prefix, strings.Replace(k, "/", "~1", -1))),
 					Value: aws.String(v.(string)),
 				})
@@ -351,8 +351,8 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 			// Handle additions
 			if _, ok := os[k]; !ok {
-				operations = append(operations, awstypes.PatchOperation{
-					Op:    awstypes.OpAdd,
+				operations = append(operations, types.PatchOperation{
+					Op:    types.OpAdd,
 					Path:  aws.String(fmt.Sprintf("/%s/%s", prefix, strings.Replace(k, "/", "~1", -1))),
 					Value: aws.String(v.(string)),
 				})
@@ -368,8 +368,8 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		removalList := os.Difference(ns)
 		for _, v := range removalList.List() {
-			operations = append(operations, awstypes.PatchOperation{
-				Op:    awstypes.OpRemove,
+			operations = append(operations, types.PatchOperation{
+				Op:    types.OpRemove,
 				Path:  aws.String(fmt.Sprintf("/cacheKeyParameters/%s", v.(string))),
 				Value: aws.String(""),
 			})
@@ -377,8 +377,8 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 		additionList := ns.Difference(os)
 		for _, v := range additionList.List() {
-			operations = append(operations, awstypes.PatchOperation{
-				Op:    awstypes.OpAdd,
+			operations = append(operations, types.PatchOperation{
+				Op:    types.OpAdd,
 				Path:  aws.String(fmt.Sprintf("/cacheKeyParameters/%s", v.(string))),
 				Value: aws.String(""),
 			})
@@ -386,8 +386,8 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if d.HasChange("cache_namespace") {
-		operations = append(operations, awstypes.PatchOperation{
-			Op:    awstypes.OpReplace,
+		operations = append(operations, types.PatchOperation{
+			Op:    types.OpReplace,
 			Path:  aws.String("/cacheNamespace"),
 			Value: aws.String(d.Get("cache_namespace").(string)),
 		})
@@ -397,40 +397,40 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 	// that uri changes are only supported for non-mock types. Because the uri value is not used in mock
 	// resources, it means that the uri can always be updated
 	if d.HasChange("uri") {
-		operations = append(operations, awstypes.PatchOperation{
-			Op:    awstypes.OpReplace,
+		operations = append(operations, types.PatchOperation{
+			Op:    types.OpReplace,
 			Path:  aws.String("/uri"),
 			Value: aws.String(d.Get("uri").(string)),
 		})
 	}
 
 	if d.HasChange("content_handling") {
-		operations = append(operations, awstypes.PatchOperation{
-			Op:    awstypes.OpReplace,
+		operations = append(operations, types.PatchOperation{
+			Op:    types.OpReplace,
 			Path:  aws.String("/contentHandling"),
 			Value: aws.String(d.Get("content_handling").(string)),
 		})
 	}
 
 	if d.HasChange("connection_type") {
-		operations = append(operations, awstypes.PatchOperation{
-			Op:    awstypes.OpReplace,
+		operations = append(operations, types.PatchOperation{
+			Op:    types.OpReplace,
 			Path:  aws.String("/connectionType"),
 			Value: aws.String(d.Get("connection_type").(string)),
 		})
 	}
 
 	if d.HasChange("connection_id") {
-		operations = append(operations, awstypes.PatchOperation{
-			Op:    awstypes.OpReplace,
+		operations = append(operations, types.PatchOperation{
+			Op:    types.OpReplace,
 			Path:  aws.String("/connectionId"),
 			Value: aws.String(d.Get("connection_id").(string)),
 		})
 	}
 
 	if d.HasChange("timeout_milliseconds") {
-		operations = append(operations, awstypes.PatchOperation{
-			Op:    awstypes.OpReplace,
+		operations = append(operations, types.PatchOperation{
+			Op:    types.OpReplace,
 			Path:  aws.String("/timeoutInMillis"),
 			Value: aws.String(strconv.Itoa(d.Get("timeout_milliseconds").(int))),
 		})
@@ -440,8 +440,8 @@ func resourceIntegrationUpdate(ctx context.Context, d *schema.ResourceData, meta
 		if v, ok := d.GetOk("tls_config"); ok && len(v.([]interface{})) > 0 {
 			m := v.([]interface{})[0].(map[string]interface{})
 
-			operations = append(operations, awstypes.PatchOperation{
-				Op:    awstypes.OpReplace,
+			operations = append(operations, types.PatchOperation{
+				Op:    types.OpReplace,
 				Path:  aws.String("/tlsConfig/insecureSkipVerification"),
 				Value: aws.String(strconv.FormatBool(m["insecure_skip_verification"].(bool))),
 			})
@@ -475,7 +475,7 @@ func resourceIntegrationDelete(ctx context.Context, d *schema.ResourceData, meta
 		RestApiId:  aws.String(d.Get("rest_api_id").(string)),
 	})
 
-	if errs.IsA[*awstypes.NotFoundException](err) {
+	if errs.IsA[*types.NotFoundException](err) {
 		return diags
 	}
 
@@ -486,7 +486,7 @@ func resourceIntegrationDelete(ctx context.Context, d *schema.ResourceData, meta
 	return diags
 }
 
-func FindIntegrationByThreePartKey(ctx context.Context, conn *apigateway.Client, httpMethod, resourceID, apiID string) (*apigateway.GetIntegrationOutput, error) {
+func findIntegrationByThreePartKey(ctx context.Context, conn *apigateway.Client, httpMethod, resourceID, apiID string) (*apigateway.GetIntegrationOutput, error) {
 	input := &apigateway.GetIntegrationInput{
 		HttpMethod: aws.String(httpMethod),
 		ResourceId: aws.String(resourceID),
@@ -495,7 +495,7 @@ func FindIntegrationByThreePartKey(ctx context.Context, conn *apigateway.Client,
 
 	output, err := conn.GetIntegration(ctx, input)
 
-	if errs.IsA[*awstypes.NotFoundException](err) {
+	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -513,8 +513,8 @@ func FindIntegrationByThreePartKey(ctx context.Context, conn *apigateway.Client,
 	return output, nil
 }
 
-func expandTLSConfig(vConfig []interface{}) *awstypes.TlsConfig {
-	config := &awstypes.TlsConfig{}
+func expandTLSConfig(vConfig []interface{}) *types.TlsConfig {
+	config := &types.TlsConfig{}
 
 	if len(vConfig) == 0 || vConfig[0] == nil {
 		return config
@@ -527,7 +527,7 @@ func expandTLSConfig(vConfig []interface{}) *awstypes.TlsConfig {
 	return config
 }
 
-func flattenTLSConfig(config *awstypes.TlsConfig) []interface{} {
+func flattenTLSConfig(config *types.TlsConfig) []interface{} {
 	if config == nil {
 		return nil
 	}
