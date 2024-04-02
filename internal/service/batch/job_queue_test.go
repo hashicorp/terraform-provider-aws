@@ -453,7 +453,7 @@ func TestAccBatchJobQueue_tags(t *testing.T) {
 	})
 }
 
-func TestAccBatchJobQueue_JobStateTimeLimitActions(t *testing.T) {
+func TestAccBatchJobQueue_JobStateTimeLimitActionsMultiple(t *testing.T) {
 	ctx := acctest.Context(t)
 	var jobQueue1 batch.JobQueueDetail
 	resourceName := "aws_batch_job_queue.test"
@@ -466,20 +466,85 @@ func TestAccBatchJobQueue_JobStateTimeLimitActions(t *testing.T) {
 		CheckDestroy:             testAccCheckJobQueueDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobQueueConfig_jobStateTimeLimitAction(rName, "CANCEL", 123, "foobar", "RUNNABLE"),
+				Config: acctest.ConfigCompose(
+					testAccJobQueueConfigBase(rName),
+					fmt.Sprintf(`
+resource "aws_batch_job_queue" "test" {
+  compute_environments = [aws_batch_compute_environment.test.arn]
+  name                 = %[1]q
+  priority             = 1
+  state                = "DISABLED"
+
+  job_state_time_limit_action {
+    action           = "CANCEL"
+    max_time_seconds = 600
+    reason           = "MISCONFIGURATION:JOB_RESOURCE_REQUIREMENT"
+    state            = "RUNNABLE"
+  }
+
+  job_state_time_limit_action {
+    action           = "CANCEL"
+    max_time_seconds = 605
+    reason           = "CAPACITY:INSUFFICIENT_INSTANCE_CAPACITY"
+    state            = "RUNNABLE"
+  }
+}
+`, rName)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
-					resource.TestCheckResourceAttr(resourceName, "job_state_time_limit_action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "job_state_time_limit_action.#", "2"),
 					resource.TestCheckResourceAttrPair(resourceName, "job_state_time_limit_action.0", "job_state_time_limit_action.action", "CANCEL"),
-					resource.TestCheckResourceAttrPair(resourceName, "job_state_time_limit_action.0", "job_state_time_limit_action.max_time_seconds", "123"),
-					resource.TestCheckResourceAttrPair(resourceName, "job_state_time_limit_action.0", "job_state_time_limit_action.reason", "foobar"),
+					resource.TestCheckResourceAttrPair(resourceName, "job_state_time_limit_action.0", "job_state_time_limit_action.max_time_seconds", "600"),
+					resource.TestCheckResourceAttrPair(resourceName, "job_state_time_limit_action.0", "job_state_time_limit_action.reason", "MISCONFIGURATION:JOB_RESOURCE_REQUIREMENT"),
 					resource.TestCheckResourceAttrPair(resourceName, "job_state_time_limit_action.0", "job_state_time_limit_action.state", "RUNNABLE"),
+					resource.TestCheckResourceAttrPair(resourceName, "job_state_time_limit_action.1", "job_state_time_limit_action.action", "CANCEL"),
+					resource.TestCheckResourceAttrPair(resourceName, "job_state_time_limit_action.1", "job_state_time_limit_action.max_time_seconds", "605"),
+					resource.TestCheckResourceAttrPair(resourceName, "job_state_time_limit_action.1", "job_state_time_limit_action.reason", "CAPACITY:INSUFFICIENT_INSTANCE_CAPACITY"),
+					resource.TestCheckResourceAttrPair(resourceName, "job_state_time_limit_action.1", "job_state_time_limit_action.state", "RUNNABLE"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+			},
+			{
+				Config: acctest.ConfigCompose(
+					testAccJobQueueConfigBase(rName),
+					fmt.Sprintf(`
+resource "aws_batch_job_queue" "test" {
+  compute_environments = [aws_batch_compute_environment.test.arn]
+  name                 = %[1]q
+  priority             = 1
+  state                = "DISABLED"
+
+  job_state_time_limit_action {
+    action           = "CANCEL"
+    max_time_seconds = 600
+    reason           = "MISCONFIGURATION:JOB_RESOURCE_REQUIREMENT"
+    state            = "RUNNABLE"
+  }
+
+  job_state_time_limit_action {
+    action           = "CANCEL"
+    max_time_seconds = 605
+    reason           = "MISCONFIGURATION:COMPUTE_ENVIRONMENT_MAX_RESOURCE"
+    state            = "RUNNABLE"
+  }
+}
+`, rName)),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
+					resource.TestCheckResourceAttr(resourceName, "job_state_time_limit_action.#", "2"),
+					resource.TestCheckResourceAttrPair(resourceName, "job_state_time_limit_action.0", "job_state_time_limit_action.action", "CANCEL"),
+					resource.TestCheckResourceAttrPair(resourceName, "job_state_time_limit_action.0", "job_state_time_limit_action.max_time_seconds", "600"),
+					resource.TestCheckResourceAttrPair(resourceName, "job_state_time_limit_action.0", "job_state_time_limit_action.reason", "MISCONFIGURATION:JOB_RESOURCE_REQUIREMENT"),
+					resource.TestCheckResourceAttrPair(resourceName, "job_state_time_limit_action.0", "job_state_time_limit_action.state", "RUNNABLE"),
+					resource.TestCheckResourceAttrPair(resourceName, "job_state_time_limit_action.1", "job_state_time_limit_action.action", "CANCEL"),
+					resource.TestCheckResourceAttrPair(resourceName, "job_state_time_limit_action.1", "job_state_time_limit_action.max_time_seconds", "605"),
+					resource.TestCheckResourceAttrPair(resourceName, "job_state_time_limit_action.1", "job_state_time_limit_action.reason", "MISCONFIGURATION:COMPUTE_ENVIRONMENT_MAX_RESOURCE"),
+					resource.TestCheckResourceAttrPair(resourceName, "job_state_time_limit_action.1", "job_state_time_limit_action.state", "RUNNABLE"),
+				),
 			},
 		},
 	})
@@ -876,32 +941,6 @@ resource "aws_batch_compute_environment" "more" {
   depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName, state))
-}
-
-func testAccJobQueueConfig_jobStateTimeLimitAction(
-	rName string,
-	action string,
-	maxTimeSeconds uint64,
-	reason string,
-	state string,
-) string {
-	return acctest.ConfigCompose(
-		testAccJobQueueConfigBase(rName),
-		fmt.Sprintf(`
-resource "aws_batch_job_queue" "test" {
-  compute_environments = [aws_batch_compute_environment.test.arn]
-  name                 = %[1]q
-  priority             = 1
-  state                = "DISABLED"
-
-  job_state_time_limit_action {
-    action           = %[2]q
-    max_time_seconds = %[3]q
-    reason           = %[4]q
-    state            = %[5]q
-  }
-}
-`, rName, action, maxTimeSeconds, reason, state))
 }
 
 func testAccJobQueueConfig_tags1(rName, tagKey1, tagValue1 string) string {
