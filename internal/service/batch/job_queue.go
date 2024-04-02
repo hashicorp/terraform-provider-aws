@@ -139,15 +139,18 @@ func (r *resourceJobQueue) Schema(ctx context.Context, request resource.SchemaRe
 				Attributes: map[string]schema.Attribute{
 					"action": schema.StringAttribute{
 						Required: true,
+						ValidateFunc: validation.StringInSlice(ec2.JobStateTimeLimitActionsAction_Values(), false),
 					},
 					"max_time_seconds": schema.Int64Attribute{
 						Required: true,
+						ValidateFunc: validation.IntBetween(600, 86400),
 					},
 					"reason": schema.StringAttribute{
 						Required: true,
 					},
 					"state": schema.StringAttribute{
 						Required: true,
+						ValidateFunc: validation.StringInSlice(ec2.JobStateTimeLimitActionsState_Values(), false),
 					},
 				},
 			},
