@@ -15,6 +15,7 @@ var (
 	ResourceDocumentationVersion = resourceDocumentationVersion
 	ResourceDomainName           = resourceDomainName
 	ResourceGatewayResponse      = resourceGatewayResponse
+	ResourceIntegrationResponse  = resourceIntegrationResponse
 	ResourceRestAPI              = resourceRestAPI
 
 	FindAPIKeyByID                       = findAPIKeyByID
@@ -26,5 +27,6 @@ var (
 	FindDocumentationVersionByTwoPartKey = findDocumentationVersionByTwoPartKey
 	FindDomainByName                     = findDomainByName
 	FindGatewayResponseByTwoPartKey      = findGatewayResponseByTwoPartKey
+	FindIntegrationResponseByFourPartKey = findIntegrationResponseByFourPartKey
 	FindRestAPIByID                      = findRestAPIByID
 )

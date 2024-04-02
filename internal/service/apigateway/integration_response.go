@@ -11,7 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/apigateway/types"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -22,8 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_api_gateway_integration_response")
-func ResourceIntegrationResponse() *schema.Resource {
+// @SDKResource("aws_api_gateway_integration_response", name="Integration Response")
+func resourceIntegrationResponse() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIntegrationResponsePut,
 		ReadWithoutTimeout:   resourceIntegrationResponseRead,
@@ -105,7 +105,7 @@ func resourceIntegrationResponsePut(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if v, ok := d.GetOk("content_handling"); ok {
-		input.ContentHandling = awstypes.ContentHandlingStrategy(v.(string))
+		input.ContentHandling = types.ContentHandlingStrategy(v.(string))
 	}
 
 	if v, ok := d.GetOk("response_parameters"); ok && len(v.(map[string]interface{})) > 0 {
@@ -137,7 +137,7 @@ func resourceIntegrationResponseRead(ctx context.Context, d *schema.ResourceData
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	integrationResponse, err := FindIntegrationResponseByFourPartKey(ctx, conn, d.Get("http_method").(string), d.Get("resource_id").(string), d.Get("rest_api_id").(string), d.Get("status_code").(string))
+	integrationResponse, err := findIntegrationResponseByFourPartKey(ctx, conn, d.Get("http_method").(string), d.Get("resource_id").(string), d.Get("rest_api_id").(string), d.Get("status_code").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] API Gateway Integration Response (%s) not found, removing from state", d.Id())
@@ -174,7 +174,7 @@ func resourceIntegrationResponseDelete(ctx context.Context, d *schema.ResourceDa
 		StatusCode: aws.String(d.Get("status_code").(string)),
 	})
 
-	if errs.IsA[*awstypes.NotFoundException](err) {
+	if errs.IsA[*types.NotFoundException](err) {
 		return diags
 	}
 
@@ -185,7 +185,7 @@ func resourceIntegrationResponseDelete(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func FindIntegrationResponseByFourPartKey(ctx context.Context, conn *apigateway.Client, httpMethod, resourceID, apiID, statusCode string) (*apigateway.GetIntegrationResponseOutput, error) {
+func findIntegrationResponseByFourPartKey(ctx context.Context, conn *apigateway.Client, httpMethod, resourceID, apiID, statusCode string) (*apigateway.GetIntegrationResponseOutput, error) {
 	input := &apigateway.GetIntegrationResponseInput{
 		HttpMethod: aws.String(httpMethod),
 		ResourceId: aws.String(resourceID),
@@ -195,7 +195,7 @@ func FindIntegrationResponseByFourPartKey(ctx context.Context, conn *apigateway.
 
 	output, err := conn.GetIntegrationResponse(ctx, input)
 
-	if errs.IsA[*awstypes.NotFoundException](err) {
+	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
