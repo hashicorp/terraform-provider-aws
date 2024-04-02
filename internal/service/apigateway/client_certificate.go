@@ -11,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/apigateway/types"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -26,7 +26,7 @@ import (
 
 // @SDKResource("aws_api_gateway_client_certificate", name="Client Certificate")
 // @Tags(identifierAttribute="arn")
-func ResourceClientCertificate() *schema.Resource {
+func resourceClientCertificate() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClientCertificateCreate,
 		ReadWithoutTimeout:   resourceClientCertificateRead,
@@ -93,7 +93,7 @@ func resourceClientCertificateRead(ctx context.Context, d *schema.ResourceData, 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	cert, err := FindClientCertificateByID(ctx, conn, d.Id())
+	cert, err := findClientCertificateByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] API Gateway Client Certificate (%s) not found, removing from state", d.Id())
@@ -129,9 +129,9 @@ func resourceClientCertificateUpdate(ctx context.Context, d *schema.ResourceData
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &apigateway.UpdateClientCertificateInput{
 			ClientCertificateId: aws.String(d.Id()),
-			PatchOperations: []awstypes.PatchOperation{
+			PatchOperations: []types.PatchOperation{
 				{
-					Op:    awstypes.OpReplace,
+					Op:    types.OpReplace,
 					Path:  aws.String("/description"),
 					Value: aws.String(d.Get("description").(string)),
 				},
@@ -164,14 +164,14 @@ func resourceClientCertificateDelete(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func FindClientCertificateByID(ctx context.Context, conn *apigateway.Client, id string) (*apigateway.GetClientCertificateOutput, error) {
+func findClientCertificateByID(ctx context.Context, conn *apigateway.Client, id string) (*apigateway.GetClientCertificateOutput, error) {
 	input := &apigateway.GetClientCertificateInput{
 		ClientCertificateId: aws.String(id),
 	}
 
 	output, err := conn.GetClientCertificate(ctx, input)
 
-	if errs.IsA[*awstypes.NotFoundException](err) {
+	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

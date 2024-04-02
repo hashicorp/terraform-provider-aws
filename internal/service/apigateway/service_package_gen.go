@@ -93,7 +93,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Base Path Mapping",
 		},
 		{
-			Factory:  ResourceClientCertificate,
+			Factory:  resourceClientCertificate,
 			TypeName: "aws_api_gateway_client_certificate",
 			Name:     "Client Certificate",
 			Tags: &types.ServicePackageResourceTags{

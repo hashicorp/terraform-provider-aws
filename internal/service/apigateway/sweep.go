@@ -164,7 +164,7 @@ func sweepClientCertificates(region string) error {
 		}
 
 		for _, clientCertificate := range page.Items {
-			r := ResourceClientCertificate()
+			r := resourceClientCertificate()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(clientCertificate.ClientCertificateId))
 
