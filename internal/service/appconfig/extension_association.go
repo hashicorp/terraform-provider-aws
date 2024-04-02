@@ -10,10 +10,12 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/appconfig"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/appconfig/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -157,6 +159,10 @@ func resourceExtensionAssociationDelete(ctx context.Context, d *schema.ResourceD
 	_, err := conn.DeleteExtensionAssociation(ctx, &appconfig.DeleteExtensionAssociationInput{
 		ExtensionAssociationId: aws.String(d.Id()),
 	})
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
+	}
 
 	if err != nil {
 		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionDeleting, ResExtensionAssociation, d.Id(), err)

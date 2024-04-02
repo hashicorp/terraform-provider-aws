@@ -64,7 +64,7 @@ func ResourceDeploymentStrategy() *schema.Resource {
 			"growth_type": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				Default:          string(awstypes.GrowthTypeLinear),
+				Default:          awstypes.GrowthTypeLinear,
 				ValidateDiagFunc: enum.Validate[awstypes.GrowthType](),
 			},
 			"name": {
@@ -93,7 +93,7 @@ func resourceDeploymentStrategyCreate(ctx context.Context, d *schema.ResourceDat
 	name := d.Get("name").(string)
 	input := &appconfig.CreateDeploymentStrategyInput{
 		DeploymentDurationInMinutes: aws.Int32(int32(d.Get("deployment_duration_in_minutes").(int))),
-		GrowthFactor:                aws.Float32(d.Get("growth_factor").(float32)),
+		GrowthFactor:                aws.Float32(float32(d.Get("growth_factor").(float64))),
 		GrowthType:                  awstypes.GrowthType(d.Get("growth_type").(string)),
 		Name:                        aws.String(name),
 		ReplicateTo:                 awstypes.ReplicateTo(d.Get("replicate_to").(string)),
