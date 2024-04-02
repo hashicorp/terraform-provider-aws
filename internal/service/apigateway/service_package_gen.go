@@ -88,8 +88,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Authorizer",
 		},
 		{
-			Factory:  ResourceBasePathMapping,
+			Factory:  resourceBasePathMapping,
 			TypeName: "aws_api_gateway_base_path_mapping",
+			Name:     "Base Path Mapping",
 		},
 		{
 			Factory:  ResourceClientCertificate,

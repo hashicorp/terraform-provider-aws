@@ -284,10 +284,6 @@ func testAccCheckAPIKeyExists(ctx context.Context, n string, v *apigateway.GetAp
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No API Gateway API Key ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
 		output, err := tfapigateway.FindAPIKeyByID(ctx, conn, rs.Primary.ID)
