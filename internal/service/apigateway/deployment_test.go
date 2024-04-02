@@ -58,6 +58,30 @@ func TestAccAPIGatewayDeployment_basic(t *testing.T) {
 	})
 }
 
+func TestAccAPIGatewayDeployment_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var deployment apigateway.GetDeploymentOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_api_gateway_deployment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDeploymentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDeploymentConfig_required(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDeploymentExists(ctx, resourceName, &deployment),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceDeployment(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccAPIGatewayDeployment_Disappears_restAPI(t *testing.T) {
 	ctx := acctest.Context(t)
 	var deployment apigateway.GetDeploymentOutput
@@ -312,10 +336,6 @@ func testAccCheckDeploymentExists(ctx context.Context, n string, v *apigateway.G
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No API Gateway Deployment ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)

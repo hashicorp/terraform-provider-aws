@@ -101,8 +101,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceDeployment,
+			Factory:  resourceDeployment,
 			TypeName: "aws_api_gateway_deployment",
+			Name:     "Deployment",
 		},
 		{
 			Factory:  ResourceDocumentationPart,

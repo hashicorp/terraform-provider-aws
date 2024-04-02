@@ -10,9 +10,11 @@ var (
 	ResourceAuthorizer        = resourceAuthorizer
 	ResourceBasePathMapping   = resourceBasePathMapping
 	ResourceClientCertificate = resourceClientCertificate
+	ResourceDeployment        = resourceDeployment
 
 	FindAPIKeyByID                  = findAPIKeyByID
 	FindAuthorizerByTwoPartKey      = findAuthorizerByTwoPartKey
 	FindBasePathMappingByTwoPartKey = findBasePathMappingByTwoPartKey
 	FindClientCertificateByID       = findClientCertificateByID
+	FindDeploymentByTwoPartKey      = findDeploymentByTwoPartKey
 )

@@ -13,7 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/apigateway/types"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -24,8 +24,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_api_gateway_deployment")
-func ResourceDeployment() *schema.Resource {
+// @SDKResource("aws_api_gateway_deployment", name="Deployment")
+func resourceDeployment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDeploymentCreate,
 		ReadWithoutTimeout:   resourceDeploymentRead,
@@ -112,7 +112,7 @@ func resourceDeploymentRead(ctx context.Context, d *schema.ResourceData, meta in
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	restAPIID := d.Get("rest_api_id").(string)
-	deployment, err := FindDeploymentByTwoPartKey(ctx, conn, restAPIID, d.Id())
+	deployment, err := findDeploymentByTwoPartKey(ctx, conn, restAPIID, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] API Gateway Deployment (%s) not found, removing from state", d.Id())
@@ -144,11 +144,11 @@ func resourceDeploymentUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	operations := make([]awstypes.PatchOperation, 0)
+	operations := make([]types.PatchOperation, 0)
 
 	if d.HasChange("description") {
-		operations = append(operations, awstypes.PatchOperation{
-			Op:    awstypes.OpReplace,
+		operations = append(operations, types.PatchOperation{
+			Op:    types.OpReplace,
 			Path:  aws.String("/description"),
 			Value: aws.String(d.Get("description").(string)),
 		})
@@ -209,7 +209,7 @@ func resourceDeploymentDelete(ctx context.Context, d *schema.ResourceData, meta 
 		RestApiId:    aws.String(restAPIID),
 	})
 
-	if errs.IsA[*awstypes.NotFoundException](err) {
+	if errs.IsA[*types.NotFoundException](err) {
 		return diags
 	}
 
@@ -235,7 +235,7 @@ func resourceDeploymentImport(_ context.Context, d *schema.ResourceData, meta in
 	return []*schema.ResourceData{d}, nil
 }
 
-func FindDeploymentByTwoPartKey(ctx context.Context, conn *apigateway.Client, restAPIID, deploymentID string) (*apigateway.GetDeploymentOutput, error) {
+func findDeploymentByTwoPartKey(ctx context.Context, conn *apigateway.Client, restAPIID, deploymentID string) (*apigateway.GetDeploymentOutput, error) {
 	input := &apigateway.GetDeploymentInput{
 		DeploymentId: aws.String(deploymentID),
 		RestApiId:    aws.String(restAPIID),
@@ -243,7 +243,7 @@ func FindDeploymentByTwoPartKey(ctx context.Context, conn *apigateway.Client, re
 
 	output, err := conn.GetDeployment(ctx, input)
 
-	if errs.IsA[*awstypes.NotFoundException](err) {
+	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
