@@ -525,6 +525,9 @@ func resourceFleetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	_, err := conn.StopFleetWithContext(ctx, &appstream.StopFleetInput{
 		Name: aws.String(d.Id()),
 	})
+	if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
+		return diags
+	}
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "stopping Appstream Fleet (%s): %s", d.Id(), err)
 	}
