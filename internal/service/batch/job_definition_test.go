@@ -639,7 +639,42 @@ func TestAccBatchJobDefinition_NodeProperties_advanced(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "batch", regexache.MustCompile(fmt.Sprintf(`job-definition/%s:\d+`, rName))),
-					acctest.CheckResourceAttrEquivalentJSON(resourceName, "node_properties", `{"mainNode":1,"nodeRangeProperties":[{"container":{"command":["ls","-la"],"environment":[{"name":"VARNAME","value":"VARVAL"}],"image":"busybox","memory":512,"mountPoints":[{"containerPath":"/tmp","readOnly":false,"sourceVolume":"tmp"}],"resourceRequirements":[],"secrets":[],"ulimits":[{"hardLimit":1024,"name":"nofile","softLimit":1024}],"vcpus":1,"volumes":[{"host":{"sourcePath":"/tmp"},"name":"tmp"}]},"targetNodes":"0:"},{"container":{"command":["echo","test"],"environment":[],"image":"busybox","memory":128,"mountPoints":[],"resourceRequirements":[],"secrets":[],"ulimits":[],"vcpus":1,"volumes":[]},"targetNodes":"1:"}],"numNodes":4}`),
+					acctest.CheckResourceAttrEquivalentJSON(resourceName, "node_properties", `{
+						"mainNode": 1,
+						"nodeRangeProperties": [
+							{
+								"container": {
+									"command": ["ls","-la"],
+									"environment": [{"name":"VARNAME","value":"VARVAL"}],
+									"image": "busybox",
+									"memory": 512,
+									"mountPoints": [{"containerPath":"/tmp","readOnly":false,"sourceVolume":"tmp"}],
+									"resourceRequirements": [],
+									"secrets": [],
+									"ulimits": [{"hardLimit":1024,"name":"nofile","softLimit":1024}],
+									"vcpus": 1,
+									"volumes": [{"host":{"sourcePath":"/tmp"},"name":"tmp"}]
+								},
+								"targetNodes": "0:"
+							},
+							{
+								"container": {
+									"command": ["echo","test"],
+									"environment": [],
+									"image": "busybox",
+									"memory": 128,
+									"mountPoints": [],
+									"resourceRequirements": [],
+									"secrets": [],
+									"ulimits": [],
+									"vcpus":1,
+									"volumes": []
+								},
+								"targetNodes": "1:"
+							}
+						],
+						"numNodes":4
+					}`),
 				),
 			},
 			{
@@ -655,7 +690,42 @@ func TestAccBatchJobDefinition_NodeProperties_advanced(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "batch", regexache.MustCompile(fmt.Sprintf(`job-definition/%s:\d+`, rName))),
-					acctest.CheckResourceAttrEquivalentJSON(resourceName, "node_properties", `{"mainNode":1,"nodeRangeProperties":[{"container":{"command":["ls","-la"],"environment":[],"image":"busybox","memory":512,"mountPoints":[],"resourceRequirements":[],"secrets":[],"ulimits":[],"vcpus":1,"volumes":[]},"targetNodes":"0:"},{"container":{"command":["echo","test"],"environment":[],"image":"busybox","memory":128,"mountPoints":[],"resourceRequirements":[],"secrets":[],"ulimits":[],"vcpus":1,"volumes":[]},"targetNodes":"1:"}],"numNodes":4}`),
+					acctest.CheckResourceAttrEquivalentJSON(resourceName, "node_properties", `{
+						"mainNode": 1,
+						"nodeRangeProperties": [
+							{
+								"container": {
+									"command": ["ls","-la"],
+									"environment": [],
+									"image": "busybox",
+									"memory": 512,
+									"mountPoints": [],
+									"resourceRequirements": [],
+									"secrets": [],
+									"ulimits": [],
+									"vcpus": 1,
+									"volumes": []
+								},
+								"targetNodes": "0:"
+							},
+							{
+								"container": {
+									"command": ["echo","test"],
+									"environment": [],
+									"image": "busybox",
+									"memory": 128,
+									"mountPoints": [],
+									"resourceRequirements": [],
+									"secrets": [],
+									"ulimits": [],
+									"vcpus": 1,
+									"volumes": []
+								},
+								"targetNodes": "1:"
+							}
+						],
+						"numNodes":4
+					}`),
 					testAccCheckJobDefinitionPreviousDeregistered(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "revision", "2"),
 				),
