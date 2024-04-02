@@ -315,8 +315,6 @@ func TestAccAppStreamFleet_multiSession(t *testing.T) {
 	resourceName := "aws_appstream_fleet.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	instanceType := "stream.standard.small"
-	desiredSessions := 1
-	maxSessionsPerInstance := 5
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -328,7 +326,7 @@ func TestAccAppStreamFleet_multiSession(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, names.AppStreamServiceID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccFleetConfig_multiSession(rName, instanceType, desiredSessions, maxSessionsPerInstance),
+				Config: testAccFleetConfig_multiSession(rName, instanceType, 1, 5),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFleetExists(ctx, resourceName, &fleetOutput),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
