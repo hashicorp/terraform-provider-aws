@@ -1359,8 +1359,9 @@ func managedRuleGroupConfigACFPRequestInspectionSchema() *schema.Schema {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"identifiers": {
-								Type:     schema.TypeList,
+								Type:     schema.TypeSet,
 								Required: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
 								MinItems: 1,
 							},
 						},
