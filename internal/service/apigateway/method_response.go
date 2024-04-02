@@ -105,7 +105,7 @@ func resourceMethodResponseCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	if v, ok := d.GetOk("response_parameters"); ok && len(v.(map[string]interface{})) > 0 {
-		input.ResponseParameters = expandBoolValueMap(v.(map[string]interface{}))
+		input.ResponseParameters = flex.ExpandBoolValueMap(v.(map[string]interface{}))
 	}
 
 	resourceMethodResponseMutex.Lock()

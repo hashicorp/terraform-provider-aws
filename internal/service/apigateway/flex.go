@@ -9,13 +9,12 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/apigateway/types"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 )
 
-func expandMethodParametersOperations(d *schema.ResourceData, key string, prefix string) []awstypes.PatchOperation {
-	operations := make([]awstypes.PatchOperation, 0)
+func expandMethodParametersOperations(d *schema.ResourceData, key string, prefix string) []types.PatchOperation {
+	operations := make([]types.PatchOperation, 0)
 
 	oldParameters, newParameters := d.GetChange(key)
 	oldParametersMap := oldParameters.(map[string]interface{})
@@ -23,8 +22,8 @@ func expandMethodParametersOperations(d *schema.ResourceData, key string, prefix
 
 	for k, kV := range oldParametersMap {
 		keyValueUnchanged := false
-		operation := awstypes.PatchOperation{
-			Op:   awstypes.OpRemove,
+		operation := types.PatchOperation{
+			Op:   types.OpRemove,
 			Path: aws.String(fmt.Sprintf("/%s/%s", prefix, k)),
 		}
 
@@ -36,7 +35,7 @@ func expandMethodParametersOperations(d *schema.ResourceData, key string, prefix
 			}
 
 			if (nK == k) && (nV != kV) {
-				operation.Op = awstypes.OpReplace
+				operation.Op = types.OpReplace
 				operation.Value = aws.String(strconv.FormatBool(b))
 			} else if (nK == k) && (nV == kV) {
 				keyValueUnchanged = true
@@ -61,8 +60,8 @@ func expandMethodParametersOperations(d *schema.ResourceData, key string, prefix
 				value, _ := strconv.ParseBool(nV.(string))
 				b = value
 			}
-			operation := awstypes.PatchOperation{
-				Op:    awstypes.OpAdd,
+			operation := types.PatchOperation{
+				Op:    types.OpAdd,
 				Path:  aws.String(fmt.Sprintf("/%s/%s", prefix, nK)),
 				Value: aws.String(strconv.FormatBool(b)),
 			}
@@ -73,22 +72,22 @@ func expandMethodParametersOperations(d *schema.ResourceData, key string, prefix
 	return operations
 }
 
-func expandRequestResponseModelOperations(d *schema.ResourceData, key string, prefix string) []awstypes.PatchOperation {
-	operations := make([]awstypes.PatchOperation, 0)
+func expandRequestResponseModelOperations(d *schema.ResourceData, key string, prefix string) []types.PatchOperation {
+	operations := make([]types.PatchOperation, 0)
 
 	oldModels, newModels := d.GetChange(key)
 	oldModelMap := oldModels.(map[string]interface{})
 	newModelMap := newModels.(map[string]interface{})
 
 	for k := range oldModelMap {
-		operation := awstypes.PatchOperation{
-			Op:   awstypes.OpRemove,
+		operation := types.PatchOperation{
+			Op:   types.OpRemove,
 			Path: aws.String(fmt.Sprintf("/%s/%s", prefix, strings.Replace(k, "/", "~1", -1))),
 		}
 
 		for nK, nV := range newModelMap {
 			if nK == k {
-				operation.Op = awstypes.OpReplace
+				operation.Op = types.OpReplace
 				operation.Value = aws.String(nV.(string))
 			}
 		}
@@ -104,8 +103,8 @@ func expandRequestResponseModelOperations(d *schema.ResourceData, key string, pr
 			}
 		}
 		if !exists {
-			operation := awstypes.PatchOperation{
-				Op:    awstypes.OpAdd,
+			operation := types.PatchOperation{
+				Op:    types.OpAdd,
 				Path:  aws.String(fmt.Sprintf("/%s/%s", prefix, strings.Replace(nK, "/", "~1", -1))),
 				Value: aws.String(nV.(string)),
 			}
@@ -114,11 +113,4 @@ func expandRequestResponseModelOperations(d *schema.ResourceData, key string, pr
 	}
 
 	return operations
-}
-
-// Expands a map of string to interface to a map of string to *bool
-func expandBoolValueMap(m map[string]interface{}) map[string]bool {
-	return tfmaps.ApplyToAllValues(m, func(v any) bool {
-		return v.(bool)
-	})
 }

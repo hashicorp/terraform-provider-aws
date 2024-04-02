@@ -133,7 +133,7 @@ func resourceMethodCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if v, ok := d.GetOk("request_parameters"); ok && len(v.(map[string]interface{})) > 0 {
-		input.RequestParameters = expandBoolValueMap(v.(map[string]interface{}))
+		input.RequestParameters = flex.ExpandBoolValueMap(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("request_validator_id"); ok {
