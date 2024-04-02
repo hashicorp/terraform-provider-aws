@@ -5,18 +5,20 @@ package apigateway
 
 // Exports for use in tests only.
 var (
-	ResourceAccount           = resourceAccount
-	ResourceAPIKey            = resourceAPIKey
-	ResourceAuthorizer        = resourceAuthorizer
-	ResourceBasePathMapping   = resourceBasePathMapping
-	ResourceClientCertificate = resourceClientCertificate
-	ResourceDeployment        = resourceDeployment
-	ResourceDocumentationPart = resourceDocumentationPart
+	ResourceAccount              = resourceAccount
+	ResourceAPIKey               = resourceAPIKey
+	ResourceAuthorizer           = resourceAuthorizer
+	ResourceBasePathMapping      = resourceBasePathMapping
+	ResourceClientCertificate    = resourceClientCertificate
+	ResourceDeployment           = resourceDeployment
+	ResourceDocumentationPart    = resourceDocumentationPart
+	ResourceDocumentationVersion = resourceDocumentationVersion
 
-	FindAPIKeyByID                    = findAPIKeyByID
-	FindAuthorizerByTwoPartKey        = findAuthorizerByTwoPartKey
-	FindBasePathMappingByTwoPartKey   = findBasePathMappingByTwoPartKey
-	FindClientCertificateByID         = findClientCertificateByID
-	FindDeploymentByTwoPartKey        = findDeploymentByTwoPartKey
-	FindDocumentationPartByTwoPartKey = findDocumentationPartByTwoPartKey
+	FindAPIKeyByID                       = findAPIKeyByID
+	FindAuthorizerByTwoPartKey           = findAuthorizerByTwoPartKey
+	FindBasePathMappingByTwoPartKey      = findBasePathMappingByTwoPartKey
+	FindClientCertificateByID            = findClientCertificateByID
+	FindDeploymentByTwoPartKey           = findDeploymentByTwoPartKey
+	FindDocumentationPartByTwoPartKey    = findDocumentationPartByTwoPartKey
+	FindDocumentationVersionByTwoPartKey = findDocumentationVersionByTwoPartKey
 )

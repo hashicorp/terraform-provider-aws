@@ -111,8 +111,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Documentation Part",
 		},
 		{
-			Factory:  ResourceDocumentationVersion,
+			Factory:  resourceDocumentationVersion,
 			TypeName: "aws_api_gateway_documentation_version",
+			Name:     "Documentation Version",
 		},
 		{
 			Factory:  ResourceDomainName,
