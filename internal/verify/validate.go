@@ -165,10 +165,14 @@ func ValidCIDRNetworkAddress(v interface{}, k string) (ws []string, errors []err
 func ValidIAMPolicyJSON(v interface{}, k string) (ws []string, errors []error) {
 	// IAM Policy documents need to be valid JSON, and pass legacy parsing
 	value := v.(string)
+	value = strings.TrimSpace(value)
 	if len(value) < 1 {
 		errors = append(errors, fmt.Errorf("%q is an empty string, which is not a valid JSON value", k))
-	} else if first := value[:1]; first != "{" {
-		switch value[:1] {
+		return //nolint:nakedret // Naked return due to legacy, non-idiomatic Go function, error handling
+	}
+
+	if first := value[:1]; first != "{" {
+		switch first {
 		case " ", "\t", "\r", "\n":
 			errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: leading space characters are not allowed", k))
 		case `"`:
@@ -193,14 +197,21 @@ func ValidIAMPolicyJSON(v interface{}, k string) (ws []string, errors []error) {
 			// Generic error for if we didn't find something more specific to say.
 			errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: not a JSON object", k))
 		}
-	} else if _, err := structure.NormalizeJsonString(v); err != nil {
+		return //nolint:nakedret // Naked return due to legacy, non-idiomatic Go function, error handling
+	}
+
+	if _, err := structure.NormalizeJsonString(v); err != nil {
 		errStr := err.Error()
 		if err, ok := errs.As[*json.SyntaxError](err); ok {
 			errStr = fmt.Sprintf("%s, at byte offset %d", errStr, err.Offset)
 		}
 		errors = append(errors, fmt.Errorf("%q contains an invalid JSON policy: %s", k, errStr))
-	} else if err := basevalidation.JSONNoDuplicateKeys(value); err != nil {
+		return //nolint:nakedret // Naked return due to legacy, non-idiomatic Go function, error handling
+	}
+
+	if err := basevalidation.JSONNoDuplicateKeys(value); err != nil {
 		errors = append(errors, fmt.Errorf("%q contains duplicate JSON keys: %s", k, err))
+		return //nolint:nakedret // Naked return due to legacy, non-idiomatic Go function, error handling
 	}
 
 	return //nolint:nakedret // Just a long function.

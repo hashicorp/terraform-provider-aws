@@ -6,12 +6,13 @@ package iam
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
@@ -21,12 +22,9 @@ func dataSourceUserSSHKey() *schema.Resource {
 		ReadWithoutTimeout: dataSourceUserSSHKeyRead,
 		Schema: map[string]*schema.Schema{
 			"encoding": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.StringInSlice([]string{
-					iam.EncodingTypeSsh,
-					iam.EncodingTypePem,
-				}, false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.EncodingType](),
 			},
 			"fingerprint": {
 				Type:     schema.TypeString,
@@ -54,30 +52,30 @@ func dataSourceUserSSHKey() *schema.Resource {
 
 func dataSourceUserSSHKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	encoding := d.Get("encoding").(string)
 	sshPublicKeyId := d.Get("ssh_public_key_id").(string)
 	username := d.Get("username").(string)
 
 	request := &iam.GetSSHPublicKeyInput{
-		Encoding:       aws.String(encoding),
+		Encoding:       awstypes.EncodingType(encoding),
 		SSHPublicKeyId: aws.String(sshPublicKeyId),
 		UserName:       aws.String(username),
 	}
 
-	response, err := conn.GetSSHPublicKeyWithContext(ctx, request)
+	response, err := conn.GetSSHPublicKey(ctx, request)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading IAM User SSH Key: %s", err)
 	}
 
 	publicKey := response.SSHPublicKey
 	publicKeyBody := publicKey.SSHPublicKeyBody
-	if encoding == iam.EncodingTypeSsh {
-		publicKeyBody = aws.String(cleanSSHKey(aws.StringValue(publicKeyBody)))
+	if encoding == string(awstypes.EncodingTypeSsh) {
+		publicKeyBody = aws.String(cleanSSHKey(aws.ToString(publicKeyBody)))
 	}
 
-	d.SetId(aws.StringValue(publicKey.SSHPublicKeyId))
+	d.SetId(aws.ToString(publicKey.SSHPublicKeyId))
 	d.Set("fingerprint", publicKey.Fingerprint)
 	d.Set("public_key", publicKeyBody)
 	d.Set("status", publicKey.Status)

@@ -12,8 +12,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// @SDKDataSource("aws_redshiftserverless_workgroup")
-func DataSourceWorkgroup() *schema.Resource {
+// @SDKDataSource("aws_redshiftserverless_workgroup", name="Workgroup")
+func dataSourceWorkgroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceWorkgroupRead,
 
