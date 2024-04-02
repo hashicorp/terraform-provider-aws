@@ -14,10 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
-	// "github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-plugin-framework/path"
-	// "github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
@@ -26,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -35,10 +33,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// Function annotations are used for resource registration to the Provider. DO NOT EDIT.
 // @FrameworkResource(name="Knowledge Base")
-func newResourceKnowledgeBase(_ context.Context) (resource.ResourceWithConfigure, error) {
-	r := &resourceKnowledgeBase{}
+// @Tags(identifierAttribute="id")
+func newKnowledgeBaseResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+	r := &knowledgeBaseResource{}
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
 	r.SetDefaultDeleteTimeout(30 * time.Minute)
@@ -50,16 +48,16 @@ const (
 	ResNameKnowledgeBase = "Knowledge Base"
 )
 
-type resourceKnowledgeBase struct {
+type knowledgeBaseResource struct {
 	framework.ResourceWithConfigure
 	framework.WithTimeouts
 }
 
-func (r *resourceKnowledgeBase) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *knowledgeBaseResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = "aws_bedrockagent_knowledge_base"
 }
 
-func (r *resourceKnowledgeBase) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
+func (r *knowledgeBaseResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"arn": framework.ARNAttributeComputedOnly(),
@@ -132,7 +130,7 @@ func (r *resourceKnowledgeBase) Schema(ctx context.Context, req resource.SchemaR
 								Attributes: map[string]schema.Attribute{
 									"collection_arn": schema.StringAttribute{
 										CustomType: fwtypes.ARNType,
-										Required: true,
+										Required:   true,
 									},
 									"vector_index_name": schema.StringAttribute{
 										Required: true,
@@ -172,7 +170,7 @@ func (r *resourceKnowledgeBase) Schema(ctx context.Context, req resource.SchemaR
 										Required: true,
 									},
 									"credentials_secret_arn": schema.StringAttribute{
-										Required: true,
+										Required:   true,
 										CustomType: fwtypes.ARNType,
 									},
 									"namespace": schema.StringAttribute{
@@ -254,7 +252,7 @@ func (r *resourceKnowledgeBase) Schema(ctx context.Context, req resource.SchemaR
 								Attributes: map[string]schema.Attribute{
 									"credentials_secret_arn": schema.StringAttribute{
 										CustomType: fwtypes.ARNType,
-										Required: true,
+										Required:   true,
 									},
 									"endpoint": schema.StringAttribute{
 										Required: true,
@@ -298,7 +296,7 @@ func (r *resourceKnowledgeBase) Schema(ctx context.Context, req resource.SchemaR
 	}
 }
 
-func (r *resourceKnowledgeBase) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+func (r *knowledgeBaseResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	conn := r.Meta().BedrockAgentClient(ctx)
 
 	var data knowledgeBaseResourceModel
@@ -365,7 +363,7 @@ func (r *resourceKnowledgeBase) Create(ctx context.Context, request resource.Cre
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
 
-func (r *resourceKnowledgeBase) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+func (r *knowledgeBaseResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	conn := r.Meta().BedrockAgentClient(ctx)
 
 	var data knowledgeBaseResourceModel
@@ -389,7 +387,7 @@ func (r *resourceKnowledgeBase) Read(ctx context.Context, request resource.ReadR
 	}
 
 	var knowledgeBaseConfiguration knowledgeBaseConfigurationModel
-	response.Diagnostics.Append(fwflex.Flatten(ctx,output.KnowledgeBaseConfiguration, &knowledgeBaseConfiguration)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output.KnowledgeBaseConfiguration, &knowledgeBaseConfiguration)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -409,7 +407,7 @@ func (r *resourceKnowledgeBase) Read(ctx context.Context, request resource.ReadR
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceKnowledgeBase) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+func (r *knowledgeBaseResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	conn := r.Meta().BedrockAgentClient(ctx)
 
 	var old, new knowledgeBaseResourceModel
@@ -456,7 +454,7 @@ func (r *resourceKnowledgeBase) Update(ctx context.Context, request resource.Upd
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *resourceKnowledgeBase) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *knowledgeBaseResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().BedrockAgentClient(ctx)
 
 	var data knowledgeBaseResourceModel
@@ -493,7 +491,7 @@ func (r *resourceKnowledgeBase) Delete(ctx context.Context, req resource.DeleteR
 	}
 }
 
-func (r *resourceKnowledgeBase) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *knowledgeBaseResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
@@ -535,8 +533,8 @@ func waitKnowledgeBaseUpdated(ctx context.Context, conn *bedrockagent.Client, id
 
 func waitKnowledgeBaseDeleted(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.KnowledgeBase, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.KnowledgeBaseStatusActive, awstypes.KnowledgeBaseStatusDeleting),
-		Target:                    []string{},
+		Pending: enum.Slice(awstypes.KnowledgeBaseStatusActive, awstypes.KnowledgeBaseStatusDeleting),
+		Target:  []string{},
 		Refresh: statusKnowledgeBase(ctx, conn, id),
 		Timeout: timeout,
 	}
