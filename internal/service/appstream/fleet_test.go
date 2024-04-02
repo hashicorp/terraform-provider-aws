@@ -586,7 +586,7 @@ resource "aws_subnet" "test" {
 
 resource "aws_appstream_fleet" "test" {
   name      = %[1]q
-  image_arn = "arn:${data.aws_partition.current.partition}:appstream:${data.aws_region.current.name}::image/AppStream-WinServer2019-06-12-2023"
+  image_arn = "arn:${data.aws_partition.current.partition}:appstream:${data.aws_region.current.name}::image/AppStream-WinServer2019-01-26-2024"
 
   compute_capacity {
     desired_sessions = %[3]d
