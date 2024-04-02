@@ -163,7 +163,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_api_gateway_resource",
 		},
 		{
-			Factory:  ResourceRestAPI,
+			Factory:  resourceRestAPI,
 			TypeName: "aws_api_gateway_rest_api",
 			Name:     "REST API",
 			Tags: &types.ServicePackageResourceTags{

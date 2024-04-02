@@ -11,7 +11,7 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/apigateway/types"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -187,12 +187,12 @@ func TestAccAPIGatewayRestAPI_endpoint(t *testing.T) {
 					conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 					output, err := conn.CreateRestApi(ctx, &apigateway.CreateRestApiInput{
 						Name: aws.String(sdkacctest.RandomWithPrefix("tf-acc-test-edge-endpoint-precheck")),
-						EndpointConfiguration: &awstypes.EndpointConfiguration{
-							Types: []awstypes.EndpointType{awstypes.EndpointTypeEdge},
+						EndpointConfiguration: &types.EndpointConfiguration{
+							Types: []types.EndpointType{types.EndpointTypeEdge},
 						},
 					})
 					if err != nil {
-						if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "Endpoint Configuration type EDGE is not supported in this region") {
+						if errs.IsAErrorMessageContains[*types.BadRequestException](err, "Endpoint Configuration type EDGE is not supported in this region") {
 							t.Skip("Region does not support EDGE endpoint type")
 						}
 						t.Fatal(err)
@@ -237,12 +237,12 @@ func TestAccAPIGatewayRestAPI_Endpoint_private(t *testing.T) {
 					conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 					output, err := conn.CreateRestApi(ctx, &apigateway.CreateRestApiInput{
 						Name: aws.String(sdkacctest.RandomWithPrefix("tf-acc-test-private-endpoint-precheck")),
-						EndpointConfiguration: &awstypes.EndpointConfiguration{
-							Types: []awstypes.EndpointType{awstypes.EndpointTypePrivate},
+						EndpointConfiguration: &types.EndpointConfiguration{
+							Types: []types.EndpointType{types.EndpointTypePrivate},
 						},
 					})
 					if err != nil {
-						if errs.IsAErrorMessageContains[*awstypes.BadRequestException](err, "Endpoint Configuration type PRIVATE is not supported in this region") {
+						if errs.IsAErrorMessageContains[*types.BadRequestException](err, "Endpoint Configuration type PRIVATE is not supported in this region") {
 							t.Skip("Region does not support PRIVATE endpoint type")
 						}
 						t.Fatal(err)
@@ -1478,7 +1478,7 @@ func testAccCheckRestAPIExists(ctx context.Context, n string, v *apigateway.GetR
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
-		output, err := tfapigateway.FindRESTAPIByID(ctx, conn, rs.Primary.ID)
+		output, err := tfapigateway.FindRestAPIByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -1499,7 +1499,7 @@ func testAccCheckRestAPIDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfapigateway.FindRESTAPIByID(ctx, conn, rs.Primary.ID)
+			_, err := tfapigateway.FindRestAPIByID(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue

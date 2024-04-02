@@ -8,12 +8,13 @@ import (
 	"fmt"
 	"log"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/apigateway/types"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -34,7 +35,7 @@ import (
 
 // @SDKResource("aws_api_gateway_rest_api", name="REST API")
 // @Tags(identifierAttribute="arn")
-func ResourceRestAPI() *schema.Resource {
+func resourceRestAPI() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRestAPICreate,
 		ReadWithoutTimeout:   resourceRestAPIRead,
@@ -43,7 +44,7 @@ func ResourceRestAPI() *schema.Resource {
 
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
-				d.Set("put_rest_api_mode", awstypes.PutModeOverwrite)
+				d.Set("put_rest_api_mode", types.PutModeOverwrite)
 				return []*schema.ResourceData{d}, nil
 			},
 		},
@@ -53,7 +54,7 @@ func ResourceRestAPI() *schema.Resource {
 				Type:             schema.TypeString,
 				Optional:         true,
 				Computed:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.ApiKeySourceType](),
+				ValidateDiagFunc: enum.Validate[types.ApiKeySourceType](),
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -98,7 +99,7 @@ func ResourceRestAPI() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Schema{
 								Type:             schema.TypeString,
-								ValidateDiagFunc: enum.Validate[awstypes.EndpointType](),
+								ValidateDiagFunc: enum.Validate[types.EndpointType](),
 							},
 						},
 						"vpc_endpoint_ids": {
@@ -155,10 +156,10 @@ func ResourceRestAPI() *schema.Resource {
 			"put_rest_api_mode": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				Default:          awstypes.PutModeOverwrite,
-				ValidateDiagFunc: enum.Validate[awstypes.PutMode](),
+				Default:          types.PutModeOverwrite,
+				ValidateDiagFunc: enum.Validate[types.PutMode](),
 				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					if old == "" && new == string(awstypes.PutModeOverwrite) {
+					if old == "" && new == string(types.PutModeOverwrite) {
 						return true
 					}
 					return false
@@ -187,7 +188,7 @@ func resourceRestAPICreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("api_key_source"); ok {
-		input.ApiKeySource = awstypes.ApiKeySourceType(v.(string))
+		input.ApiKeySource = types.ApiKeySourceType(v.(string))
 	}
 
 	if v, ok := d.GetOk("binary_media_types"); ok {
@@ -217,7 +218,7 @@ func resourceRestAPICreate(ctx context.Context, d *schema.ResourceData, meta int
 	if v, ok := d.GetOk("policy"); ok {
 		policy, err := structure.NormalizeJsonString(v.(string))
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policy, err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		input.Policy = aws.String(policy)
@@ -239,7 +240,7 @@ func resourceRestAPICreate(ctx context.Context, d *schema.ResourceData, meta int
 		// The `merge` mode will not delete literal properties of a RestApi if they’re not explicitly set in the OAS definition.
 		input := &apigateway.PutRestApiInput{
 			Body:      []byte(body.(string)),
-			Mode:      awstypes.PutMode(modeConfigOrDefault(d)),
+			Mode:      types.PutMode(modeConfigOrDefault(d)),
 			RestApiId: aws.String(d.Id()),
 		}
 
@@ -281,9 +282,9 @@ func resourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	api, err := FindRESTAPIByID(ctx, conn, d.Id())
+	api, err := findRestAPIByID(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && errs.IsA[*awstypes.NotFoundException](err) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] API Gateway REST API (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -332,18 +333,17 @@ func resourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta inter
 	// I'm not sure why it needs to be wrapped with double quotes first, but it does
 	normalized_policy, err := structure.NormalizeJsonString(`"` + aws.ToString(api.Policy) + `"`)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "normalizing policy JSON: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	policy, err := strconv.Unquote(normalized_policy)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "unescaping policy: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy").(string), policy)
-
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "while setting policy (%s), encountered: %s", policyToSet, err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	d.Set("policy", policyToSet)
@@ -358,11 +358,11 @@ func resourceRestAPIUpdate(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
-		operations := make([]awstypes.PatchOperation, 0)
+		operations := make([]types.PatchOperation, 0)
 
 		if d.HasChange("api_key_source") {
-			operations = append(operations, awstypes.PatchOperation{
-				Op:    awstypes.OpReplace,
+			operations = append(operations, types.PatchOperation{
+				Op:    types.OpReplace,
 				Path:  aws.String("/apiKeySource"),
 				Value: aws.String(d.Get("api_key_source").(string)),
 			})
@@ -379,8 +379,8 @@ func resourceRestAPIUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			// since there are no replacings.
 			for _, v := range old {
 				if e, ok := v.(string); ok {
-					operations = append(operations, awstypes.PatchOperation{
-						Op:   awstypes.OpRemove,
+					operations = append(operations, types.PatchOperation{
+						Op:   types.OpRemove,
 						Path: aws.String(fmt.Sprintf("/%s/%s", prefix, escapeJSONPointer(e))),
 					})
 				}
@@ -390,8 +390,8 @@ func resourceRestAPIUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			if len(new) > 0 {
 				for _, v := range new {
 					if e, ok := v.(string); ok {
-						operations = append(operations, awstypes.PatchOperation{
-							Op:   awstypes.OpAdd,
+						operations = append(operations, types.PatchOperation{
+							Op:   types.OpAdd,
 							Path: aws.String(fmt.Sprintf("/%s/%s", prefix, escapeJSONPointer(e))),
 						})
 					}
@@ -400,8 +400,8 @@ func resourceRestAPIUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		}
 
 		if d.HasChange("description") {
-			operations = append(operations, awstypes.PatchOperation{
-				Op:    awstypes.OpReplace,
+			operations = append(operations, types.PatchOperation{
+				Op:    types.OpReplace,
 				Path:  aws.String("/description"),
 				Value: aws.String(d.Get("description").(string)),
 			})
@@ -409,8 +409,8 @@ func resourceRestAPIUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if d.HasChange("disable_execute_api_endpoint") {
 			value := strconv.FormatBool(d.Get("disable_execute_api_endpoint").(bool))
-			operations = append(operations, awstypes.PatchOperation{
-				Op:    awstypes.OpReplace,
+			operations = append(operations, types.PatchOperation{
+				Op:    types.OpReplace,
 				Path:  aws.String("/disableExecuteApiEndpoint"),
 				Value: aws.String(value),
 			})
@@ -422,8 +422,8 @@ func resourceRestAPIUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			if v, ok := d.GetOk("endpoint_configuration"); ok && len(v.([]interface{})) > 0 {
 				m := v.([]interface{})[0].(map[string]interface{})
 
-				operations = append(operations, awstypes.PatchOperation{
-					Op:    awstypes.OpReplace,
+				operations = append(operations, types.PatchOperation{
+					Op:    types.OpReplace,
 					Path:  aws.String("/endpointConfiguration/types/0"),
 					Value: aws.String(m["types"].([]interface{})[0].(string)),
 				})
@@ -444,8 +444,8 @@ func resourceRestAPIUpdate(ctx context.Context, d *schema.ResourceData, meta int
 						break
 					}
 				}
-				operations = append(operations, awstypes.PatchOperation{
-					Op:    awstypes.OpRemove,
+				operations = append(operations, types.PatchOperation{
+					Op:    types.OpRemove,
 					Path:  aws.String(prefix),
 					Value: aws.String(v.(string)),
 				})
@@ -457,8 +457,8 @@ func resourceRestAPIUpdate(ctx context.Context, d *schema.ResourceData, meta int
 						break
 					}
 				}
-				operations = append(operations, awstypes.PatchOperation{
-					Op:    awstypes.OpAdd,
+				operations = append(operations, types.PatchOperation{
+					Op:    types.OpAdd,
 					Path:  aws.String(prefix),
 					Value: aws.String(v.(string)),
 				})
@@ -471,16 +471,16 @@ func resourceRestAPIUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			if v == "-1" {
 				value = nil
 			}
-			operations = append(operations, awstypes.PatchOperation{
-				Op:    awstypes.OpReplace,
+			operations = append(operations, types.PatchOperation{
+				Op:    types.OpReplace,
 				Path:  aws.String("/minimumCompressionSize"),
 				Value: value,
 			})
 		}
 
 		if d.HasChange("name") {
-			operations = append(operations, awstypes.PatchOperation{
-				Op:    awstypes.OpReplace,
+			operations = append(operations, types.PatchOperation{
+				Op:    types.OpReplace,
 				Path:  aws.String("/name"),
 				Value: aws.String(d.Get("name").(string)),
 			})
@@ -489,8 +489,8 @@ func resourceRestAPIUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		if d.HasChange("policy") {
 			policy, _ := structure.NormalizeJsonString(d.Get("policy").(string)) // validation covers error
 
-			operations = append(operations, awstypes.PatchOperation{
-				Op:    awstypes.OpReplace,
+			operations = append(operations, types.PatchOperation{
+				Op:    types.OpReplace,
 				Path:  aws.String("/policy"),
 				Value: aws.String(policy),
 			})
@@ -516,7 +516,7 @@ func resourceRestAPIUpdate(ctx context.Context, d *schema.ResourceData, meta int
 				// The `merge` mode will not delete literal properties of a RestApi if they’re not explicitly set in the OAS definition.
 				input := &apigateway.PutRestApiInput{
 					Body:      []byte(body.(string)),
-					Mode:      awstypes.PutMode(modeConfigOrDefault(d)),
+					Mode:      types.PutMode(modeConfigOrDefault(d)),
 					RestApiId: aws.String(d.Id()),
 				}
 
@@ -565,7 +565,7 @@ func resourceRestAPIDelete(ctx context.Context, d *schema.ResourceData, meta int
 		RestApiId: aws.String(d.Id()),
 	})
 
-	if errs.IsA[*awstypes.NotFoundException](err) {
+	if errs.IsA[*types.NotFoundException](err) {
 		return diags
 	}
 
@@ -576,14 +576,14 @@ func resourceRestAPIDelete(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func FindRESTAPIByID(ctx context.Context, conn *apigateway.Client, id string) (*apigateway.GetRestApiOutput, error) {
+func findRestAPIByID(ctx context.Context, conn *apigateway.Client, id string) (*apigateway.GetRestApiOutput, error) {
 	input := &apigateway.GetRestApiInput{
 		RestApiId: aws.String(id),
 	}
 
 	output, err := conn.GetRestApi(ctx, input)
 
-	if errs.IsA[*awstypes.NotFoundException](err) {
+	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -601,12 +601,12 @@ func FindRESTAPIByID(ctx context.Context, conn *apigateway.Client, id string) (*
 	return output, nil
 }
 
-func resourceRestAPIWithBodyUpdateOperations(d *schema.ResourceData, output *apigateway.PutRestApiOutput) []awstypes.PatchOperation {
-	operations := make([]awstypes.PatchOperation, 0)
+func resourceRestAPIWithBodyUpdateOperations(d *schema.ResourceData, output *apigateway.PutRestApiOutput) []types.PatchOperation {
+	operations := make([]types.PatchOperation, 0)
 
 	if v, ok := d.GetOk("api_key_source"); ok && v.(string) != string(output.ApiKeySource) {
-		operations = append(operations, awstypes.PatchOperation{
-			Op:    awstypes.OpReplace,
+		operations = append(operations, types.PatchOperation{
+			Op:    types.OpReplace,
 			Path:  aws.String("/apiKeySource"),
 			Value: aws.String(v.(string)),
 		})
@@ -615,8 +615,8 @@ func resourceRestAPIWithBodyUpdateOperations(d *schema.ResourceData, output *api
 	if v, ok := d.GetOk("binary_media_types"); ok && len(v.([]interface{})) > 0 {
 		if len(output.BinaryMediaTypes) > 0 {
 			for _, elem := range output.BinaryMediaTypes {
-				operations = append(operations, awstypes.PatchOperation{
-					Op:   awstypes.OpRemove,
+				operations = append(operations, types.PatchOperation{
+					Op:   types.OpRemove,
 					Path: aws.String("/binaryMediaTypes/" + escapeJSONPointer(elem)),
 				})
 			}
@@ -624,8 +624,8 @@ func resourceRestAPIWithBodyUpdateOperations(d *schema.ResourceData, output *api
 
 		for _, elem := range v.([]interface{}) {
 			if el, ok := elem.(string); ok {
-				operations = append(operations, awstypes.PatchOperation{
-					Op:   awstypes.OpAdd,
+				operations = append(operations, types.PatchOperation{
+					Op:   types.OpAdd,
 					Path: aws.String("/binaryMediaTypes/" + escapeJSONPointer(el)),
 				})
 			}
@@ -633,16 +633,16 @@ func resourceRestAPIWithBodyUpdateOperations(d *schema.ResourceData, output *api
 	}
 
 	if v, ok := d.GetOk("description"); ok && v.(string) != aws.ToString(output.Description) {
-		operations = append(operations, awstypes.PatchOperation{
-			Op:    awstypes.OpReplace,
+		operations = append(operations, types.PatchOperation{
+			Op:    types.OpReplace,
 			Path:  aws.String("/description"),
 			Value: aws.String(v.(string)),
 		})
 	}
 
 	if v, ok := d.GetOk("disable_execute_api_endpoint"); ok && v.(bool) != output.DisableExecuteApiEndpoint {
-		operations = append(operations, awstypes.PatchOperation{
-			Op:    awstypes.OpReplace,
+		operations = append(operations, types.PatchOperation{
+			Op:    types.OpReplace,
 			Path:  aws.String("/disableExecuteApiEndpoint"),
 			Value: aws.String(strconv.FormatBool(v.(bool))),
 		})
@@ -660,8 +660,8 @@ func resourceRestAPIWithBodyUpdateOperations(d *schema.ResourceData, output *api
 							break
 						}
 					}
-					operations = append(operations, awstypes.PatchOperation{
-						Op:    awstypes.OpRemove,
+					operations = append(operations, types.PatchOperation{
+						Op:    types.OpRemove,
 						Path:  aws.String(prefix),
 						Value: aws.String(v),
 					})
@@ -674,8 +674,8 @@ func resourceRestAPIWithBodyUpdateOperations(d *schema.ResourceData, output *api
 						break
 					}
 				}
-				operations = append(operations, awstypes.PatchOperation{
-					Op:    awstypes.OpAdd,
+				operations = append(operations, types.PatchOperation{
+					Op:    types.OpAdd,
 					Path:  aws.String(prefix),
 					Value: aws.String(v),
 				})
@@ -688,16 +688,16 @@ func resourceRestAPIWithBodyUpdateOperations(d *schema.ResourceData, output *api
 		if v.(string) == "-1" {
 			value = nil
 		}
-		operations = append(operations, awstypes.PatchOperation{
-			Op:    awstypes.OpReplace,
+		operations = append(operations, types.PatchOperation{
+			Op:    types.OpReplace,
 			Path:  aws.String("/minimumCompressionSize"),
 			Value: value,
 		})
 	}
 
 	if v, ok := d.GetOk("name"); ok && v.(string) != aws.ToString(output.Name) {
-		operations = append(operations, awstypes.PatchOperation{
-			Op:    awstypes.OpReplace,
+		operations = append(operations, types.PatchOperation{
+			Op:    types.OpReplace,
 			Path:  aws.String("/name"),
 			Value: aws.String(v.(string)),
 		})
@@ -707,8 +707,8 @@ func resourceRestAPIWithBodyUpdateOperations(d *schema.ResourceData, output *api
 		if equivalent, err := awspolicy.PoliciesAreEquivalent(v.(string), aws.ToString(output.Policy)); err != nil || !equivalent {
 			policy, _ := structure.NormalizeJsonString(v.(string)) // validation covers error
 
-			operations = append(operations, awstypes.PatchOperation{
-				Op:    awstypes.OpReplace,
+			operations = append(operations, types.PatchOperation{
+				Op:    types.OpReplace,
 				Path:  aws.String("/policy"),
 				Value: aws.String(policy),
 			})
@@ -718,23 +718,31 @@ func resourceRestAPIWithBodyUpdateOperations(d *schema.ResourceData, output *api
 	return operations
 }
 
+// escapeJSONPointer escapes string per RFC 6901
+// so it can be used as path in JSON patch operations
+func escapeJSONPointer(path string) string {
+	path = strings.Replace(path, "~", "~0", -1)
+	path = strings.Replace(path, "/", "~1", -1)
+	return path
+}
+
 func modeConfigOrDefault(d *schema.ResourceData) string {
 	if v, ok := d.GetOk("put_rest_api_mode"); ok {
 		return v.(string)
 	} else {
-		return string(awstypes.PutModeOverwrite)
+		return string(types.PutModeOverwrite)
 	}
 }
 
-func expandEndpointConfiguration(l []interface{}) *awstypes.EndpointConfiguration {
+func expandEndpointConfiguration(l []interface{}) *types.EndpointConfiguration {
 	if len(l) == 0 {
 		return nil
 	}
 
 	m := l[0].(map[string]interface{})
 
-	endpointConfiguration := &awstypes.EndpointConfiguration{
-		Types: flex.ExpandStringyValueList[awstypes.EndpointType](m["types"].([]interface{})),
+	endpointConfiguration := &types.EndpointConfiguration{
+		Types: flex.ExpandStringyValueList[types.EndpointType](m["types"].([]interface{})),
 	}
 
 	if endpointIds, ok := m["vpc_endpoint_ids"]; ok {
@@ -744,7 +752,7 @@ func expandEndpointConfiguration(l []interface{}) *awstypes.EndpointConfiguratio
 	return endpointConfiguration
 }
 
-func flattenEndpointConfiguration(endpointConfiguration *awstypes.EndpointConfiguration) []interface{} {
+func flattenEndpointConfiguration(endpointConfiguration *types.EndpointConfiguration) []interface{} {
 	if endpointConfiguration == nil {
 		return []interface{}{}
 	}
