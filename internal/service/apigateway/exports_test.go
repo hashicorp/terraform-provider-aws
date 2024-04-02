@@ -5,8 +5,10 @@ package apigateway
 
 // Exports for use in tests only.
 var (
-	ResourceAccount = resourceAccount
-	ResourceAPIKey  = resourceAPIKey
+	ResourceAccount    = resourceAccount
+	ResourceAPIKey     = resourceAPIKey
+	ResourceAuthorizer = resourceAuthorizer
 
-	FindAPIKeyByID = findAPIKeyByID
+	FindAPIKeyByID             = findAPIKeyByID
+	FindAuthorizerByTwoPartKey = findAuthorizerByTwoPartKey
 )

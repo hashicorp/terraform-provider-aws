@@ -73,7 +73,7 @@ func dataSourceAuthorizerRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	authorizerID := d.Get("authorizer_id").(string)
 	apiID := d.Get("rest_api_id").(string)
-	authorizer, err := FindAuthorizerByTwoPartKey(ctx, conn, authorizerID, apiID)
+	authorizer, err := findAuthorizerByTwoPartKey(ctx, conn, authorizerID, apiID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway Authorizer (%s): %s", authorizerID, err)
