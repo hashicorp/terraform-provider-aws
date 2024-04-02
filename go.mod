@@ -6,7 +6,7 @@ require (
 	github.com/ProtonMail/go-crypto v1.1.0-alpha.2
 	github.com/YakDriver/go-version v0.1.0
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.51.11
+	github.com/aws/aws-sdk-go v1.51.12
 	github.com/aws/aws-sdk-go-v2 v1.26.1
 	github.com/aws/aws-sdk-go-v2/config v1.27.10
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.10
@@ -38,7 +38,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudhsmv2 v1.21.4
 	github.com/aws/aws-sdk-go-v2/service/cloudsearch v1.22.4
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.39.2
-	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.36.4
+	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.37.0
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.35.1
 	github.com/aws/aws-sdk-go-v2/service/codeartifact v1.26.1
 	github.com/aws/aws-sdk-go-v2/service/codebuild v1.33.0
@@ -59,7 +59,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.23.4
 	github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.4.4
 	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.36.4
-	github.com/aws/aws-sdk-go-v2/service/datazone v1.6.4
+	github.com/aws/aws-sdk-go-v2/service/datazone v1.7.0
 	github.com/aws/aws-sdk-go-v2/service/dax v1.19.4
 	github.com/aws/aws-sdk-go-v2/service/devopsguru v1.30.4
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.24.4
@@ -73,7 +73,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.38.1
 	github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.23.4
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.30.5
-	github.com/aws/aws-sdk-go-v2/service/emr v1.39.4
+	github.com/aws/aws-sdk-go-v2/service/emr v1.39.5
 	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.17.5
 	github.com/aws/aws-sdk-go-v2/service/evidently v1.19.4
 	github.com/aws/aws-sdk-go-v2/service/finspace v1.24.1
@@ -95,7 +95,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.53.4
 	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.3.4
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.43.4
-	github.com/aws/aws-sdk-go-v2/service/lightsail v1.36.4
+	github.com/aws/aws-sdk-go-v2/service/lightsail v1.37.0
 	github.com/aws/aws-sdk-go-v2/service/lookoutmetrics v1.27.4
 	github.com/aws/aws-sdk-go-v2/service/m2 v1.12.4
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.28.4
