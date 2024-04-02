@@ -157,8 +157,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Method Settings",
 		},
 		{
-			Factory:  ResourceModel,
+			Factory:  resourceModel,
 			TypeName: "aws_api_gateway_model",
+			Name:     "Model",
 		},
 		{
 			Factory:  ResourceRequestValidator,

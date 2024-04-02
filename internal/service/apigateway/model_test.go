@@ -83,10 +83,6 @@ func testAccCheckModelExists(ctx context.Context, n string, v *apigateway.GetMod
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No API Gateway Model ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
 		output, err := tfapigateway.FindModelByTwoPartKey(ctx, conn, rs.Primary.Attributes["name"], rs.Primary.Attributes["rest_api_id"])

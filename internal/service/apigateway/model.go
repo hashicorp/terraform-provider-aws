@@ -11,7 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/apigateway/types"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -24,8 +24,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_api_gateway_model")
-func ResourceModel() *schema.Resource {
+// @SDKResource("aws_api_gateway_model", name="Model")
+func resourceModel() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceModelCreate,
 		ReadWithoutTimeout:   resourceModelRead,
@@ -38,23 +38,20 @@ func ResourceModel() *schema.Resource {
 				if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
 					return nil, fmt.Errorf("Unexpected format of ID (%q), expected REST-API-ID/NAME", d.Id())
 				}
-				restApiID := idParts[0]
+				apiID := idParts[0]
 				name := idParts[1]
 				d.Set("name", name)
-				d.Set("rest_api_id", restApiID)
+				d.Set("rest_api_id", apiID)
 
 				conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-				output, err := conn.GetModel(ctx, &apigateway.GetModelInput{
-					ModelName: aws.String(name),
-					RestApiId: aws.String(restApiID),
-				})
+				model, err := findModelByTwoPartKey(ctx, conn, name, apiID)
 
 				if err != nil {
 					return nil, err
 				}
 
-				d.SetId(aws.ToString(output.Id))
+				d.SetId(aws.ToString(model.Id))
 
 				return []*schema.ResourceData{d}, nil
 			},
@@ -128,7 +125,7 @@ func resourceModelRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	model, err := FindModelByTwoPartKey(ctx, conn, d.Get("name").(string), d.Get("rest_api_id").(string))
+	model, err := findModelByTwoPartKey(ctx, conn, d.Get("name").(string), d.Get("rest_api_id").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] API Gateway Model (%s) not found, removing from state", d.Id())
@@ -151,19 +148,19 @@ func resourceModelUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	operations := make([]awstypes.PatchOperation, 0)
+	operations := make([]types.PatchOperation, 0)
 
 	if d.HasChange("description") {
-		operations = append(operations, awstypes.PatchOperation{
-			Op:    awstypes.OpReplace,
+		operations = append(operations, types.PatchOperation{
+			Op:    types.OpReplace,
 			Path:  aws.String("/description"),
 			Value: aws.String(d.Get("description").(string)),
 		})
 	}
 
 	if d.HasChange("schema") {
-		operations = append(operations, awstypes.PatchOperation{
-			Op:    awstypes.OpReplace,
+		operations = append(operations, types.PatchOperation{
+			Op:    types.OpReplace,
 			Path:  aws.String("/schema"),
 			Value: aws.String(d.Get("schema").(string)),
 		})
@@ -194,7 +191,7 @@ func resourceModelDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		RestApiId: aws.String(d.Get("rest_api_id").(string)),
 	})
 
-	if errs.IsA[*awstypes.NotFoundException](err) {
+	if errs.IsA[*types.NotFoundException](err) {
 		return diags
 	}
 
@@ -205,7 +202,7 @@ func resourceModelDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func FindModelByTwoPartKey(ctx context.Context, conn *apigateway.Client, name, apiID string) (*apigateway.GetModelOutput, error) {
+func findModelByTwoPartKey(ctx context.Context, conn *apigateway.Client, name, apiID string) (*apigateway.GetModelOutput, error) {
 	input := &apigateway.GetModelInput{
 		ModelName: aws.String(name),
 		RestApiId: aws.String(apiID),
@@ -213,7 +210,7 @@ func FindModelByTwoPartKey(ctx context.Context, conn *apigateway.Client, name, a
 
 	output, err := conn.GetModel(ctx, input)
 
-	if errs.IsA[*awstypes.NotFoundException](err) {
+	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

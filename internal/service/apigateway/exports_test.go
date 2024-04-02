@@ -20,6 +20,7 @@ var (
 	ResourceMethod               = resourceMethod
 	ResourceMethodResponse       = resourceMethodResponse
 	ResourceMethodSettings       = resourceMethodSettings
+	ResourceModel                = resourceModel
 	ResourceRestAPI              = resourceRestAPI
 
 	FindAPIKeyByID                       = findAPIKeyByID
@@ -36,5 +37,6 @@ var (
 	FindMethodByThreePartKey             = findMethodByThreePartKey
 	FindMethodResponseByFourPartKey      = findMethodResponseByFourPartKey
 	FindMethodSettingsByThreePartKey     = findMethodSettingsByThreePartKey
+	FindModelByTwoPartKey                = findModelByTwoPartKey
 	FindRestAPIByID                      = findRestAPIByID
 )
