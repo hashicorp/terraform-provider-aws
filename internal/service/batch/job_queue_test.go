@@ -520,7 +520,7 @@ resource "aws_batch_job_queue" "test" {
 
   job_state_time_limit_action {
     action           = "CANCEL"
-    max_time_seconds = 600
+    max_time_seconds = 610
     reason           = "MISCONFIGURATION:JOB_RESOURCE_REQUIREMENT"
     state            = "RUNNABLE"
   }
@@ -537,7 +537,7 @@ resource "aws_batch_job_queue" "test" {
 					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue1),
 					resource.TestCheckResourceAttr(resourceName, "job_state_time_limit_action.#", "2"),
 					resource.TestCheckResourceAttrPair(resourceName, "job_state_time_limit_action.0", "job_state_time_limit_action.action", "CANCEL"),
-					resource.TestCheckResourceAttrPair(resourceName, "job_state_time_limit_action.0", "job_state_time_limit_action.max_time_seconds", "600"),
+					resource.TestCheckResourceAttrPair(resourceName, "job_state_time_limit_action.0", "job_state_time_limit_action.max_time_seconds", "610"),
 					resource.TestCheckResourceAttrPair(resourceName, "job_state_time_limit_action.0", "job_state_time_limit_action.reason", "MISCONFIGURATION:JOB_RESOURCE_REQUIREMENT"),
 					resource.TestCheckResourceAttrPair(resourceName, "job_state_time_limit_action.0", "job_state_time_limit_action.state", "RUNNABLE"),
 					resource.TestCheckResourceAttrPair(resourceName, "job_state_time_limit_action.1", "job_state_time_limit_action.action", "CANCEL"),
