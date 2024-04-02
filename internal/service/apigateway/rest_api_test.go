@@ -1472,10 +1472,6 @@ func testAccCheckRestAPIExists(ctx context.Context, n string, v *apigateway.GetR
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No API Gateway ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
 		output, err := tfapigateway.FindRestAPIByID(ctx, conn, rs.Primary.ID)

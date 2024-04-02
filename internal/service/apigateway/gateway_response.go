@@ -11,7 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/apigateway/types"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -22,8 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_api_gateway_gateway_response")
-func ResourceGatewayResponse() *schema.Resource {
+// @SDKResource("aws_api_gateway_gateway_response", name="Gateway Response")
+func resourceGatewayResponse() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGatewayResponsePut,
 		ReadWithoutTimeout:   resourceGatewayResponseRead,
@@ -79,7 +79,7 @@ func resourceGatewayResponsePut(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	input := &apigateway.PutGatewayResponseInput{
-		ResponseType: awstypes.GatewayResponseType(d.Get("response_type").(string)),
+		ResponseType: types.GatewayResponseType(d.Get("response_type").(string)),
 		RestApiId:    aws.String(d.Get("rest_api_id").(string)),
 	}
 
@@ -112,7 +112,7 @@ func resourceGatewayResponseRead(ctx context.Context, d *schema.ResourceData, me
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	gatewayResponse, err := FindGatewayResponseByTwoPartKey(ctx, conn, d.Get("response_type").(string), d.Get("rest_api_id").(string))
+	gatewayResponse, err := findGatewayResponseByTwoPartKey(ctx, conn, d.Get("response_type").(string), d.Get("rest_api_id").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] API Gateway Gateway Response (%s) not found, removing from state", d.Id())
@@ -138,11 +138,11 @@ func resourceGatewayResponseDelete(ctx context.Context, d *schema.ResourceData, 
 
 	log.Printf("[DEBUG] Deleting API Gateway Gateway Response: %s", d.Id())
 	_, err := conn.DeleteGatewayResponse(ctx, &apigateway.DeleteGatewayResponseInput{
-		ResponseType: awstypes.GatewayResponseType(d.Get("response_type").(string)),
+		ResponseType: types.GatewayResponseType(d.Get("response_type").(string)),
 		RestApiId:    aws.String(d.Get("rest_api_id").(string)),
 	})
 
-	if errs.IsA[*awstypes.NotFoundException](err) {
+	if errs.IsA[*types.NotFoundException](err) {
 		return diags
 	}
 
@@ -153,15 +153,15 @@ func resourceGatewayResponseDelete(ctx context.Context, d *schema.ResourceData, 
 	return diags
 }
 
-func FindGatewayResponseByTwoPartKey(ctx context.Context, conn *apigateway.Client, responseType, apiID string) (*apigateway.GetGatewayResponseOutput, error) {
+func findGatewayResponseByTwoPartKey(ctx context.Context, conn *apigateway.Client, responseType, apiID string) (*apigateway.GetGatewayResponseOutput, error) {
 	input := &apigateway.GetGatewayResponseInput{
-		ResponseType: awstypes.GatewayResponseType(responseType),
+		ResponseType: types.GatewayResponseType(responseType),
 		RestApiId:    aws.String(apiID),
 	}
 
 	output, err := conn.GetGatewayResponse(ctx, input)
 
-	if errs.IsA[*awstypes.NotFoundException](err) {
+	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
