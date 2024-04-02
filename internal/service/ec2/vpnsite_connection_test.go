@@ -2374,10 +2374,6 @@ resource "aws_vpn_connection" "test" {
 
 func testAccSiteVPNConnectionConfig_tunnel1InsideIPv6CIDR(rName string, rBgpAsn int, tunnel1InsideIpv6Cidr string, tunnel2InsideIpv6Cidr string) string {
 	return fmt.Sprintf(`
-resource "aws_ec2_transit_gateway" "test" {
-  description = %[1]q
-}
-
 resource "aws_customer_gateway" "test" {
   bgp_asn    = %[2]d
   ip_address = "178.0.0.1"
@@ -2390,7 +2386,6 @@ resource "aws_customer_gateway" "test" {
 
 resource "aws_vpn_connection" "test" {
   customer_gateway_id      = aws_customer_gateway.test.id
-  transit_gateway_id       = aws_ec2_transit_gateway.test.id
   tunnel_inside_ip_version = "ipv6"
   tunnel1_inside_ipv6_cidr = %[3]q
   tunnel2_inside_ipv6_cidr = %[4]q

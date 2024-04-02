@@ -1252,6 +1252,51 @@ func TestAccOpenSearchDomain_Policy_basic(t *testing.T) {
 	})
 }
 
+func TestAccOpenSearchDomain_Policy_addPrincipal(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var domain opensearchservice.DomainStatus
+	resourceName := "aws_opensearch_domain.test"
+	rName := testAccRandomDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDomainDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDomainConfig_policyDocument(rName, 1),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateId:     rName,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccDomainConfig_policyDocument(rName, 2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDomainExists(ctx, resourceName, &domain),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateId:           rName,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"access_policies"}, // Principals is a set, and `structure.NormalizeJsonString` doesn't guarantee order
+			},
+		},
+	})
+}
+
 func TestAccOpenSearchDomain_Policy_ignoreEquivalent(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -2822,6 +2867,51 @@ data "aws_iam_policy_document" "test" {
   }
 }
 `, rName)
+}
+
+func testAccDomainConfig_policyDocument(rName string, roleCount int) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_opensearch_domain" "test" {
+  domain_name = %[1]q
+
+  ebs_options {
+    ebs_enabled = true
+    volume_size = 10
+  }
+
+  access_policies = data.aws_iam_policy_document.test.json
+}
+
+data "aws_iam_policy_document" "test" {
+  statement {
+    actions   = ["es:*"]
+    resources = ["arn:${data.aws_partition.current.partition}:es:*"]
+    principals {
+      type        = "AWS"
+      identifiers = aws_iam_role.test[*].arn
+    }
+  }
+}
+
+resource "aws_iam_role" "test" {
+  count              = %[2]d
+  name               = "%[1]s-${count.index}"
+  assume_role_policy = data.aws_iam_policy_document.role.json
+}
+
+data "aws_iam_policy_document" "role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+
+    principals {
+      type        = "Service"
+      identifiers = ["ec2.${data.aws_partition.current.dns_suffix}"]
+    }
+  }
+}
+`, rName, roleCount)
 }
 
 func testAccDomainConfig_encryptAtRestDefaultKey(rName, version string, enabled bool) string {

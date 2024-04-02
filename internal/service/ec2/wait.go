@@ -2160,17 +2160,11 @@ func WaitVPNGatewayDeleted(ctx context.Context, conn *ec2.EC2, id string) (*ec2.
 	return nil, err
 }
 
-const (
-	HostCreatedTimeout = 10 * time.Minute
-	HostUpdatedTimeout = 10 * time.Minute
-	HostDeletedTimeout = 20 * time.Minute
-)
-
-func WaitHostCreated(ctx context.Context, conn *ec2.EC2, id string) (*ec2.Host, error) {
+func WaitHostCreated(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Host, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{ec2.AllocationStatePending},
 		Target:  []string{ec2.AllocationStateAvailable},
-		Timeout: HostCreatedTimeout,
+		Timeout: timeout,
 		Refresh: StatusHostState(ctx, conn, id),
 	}
 
@@ -2183,11 +2177,11 @@ func WaitHostCreated(ctx context.Context, conn *ec2.EC2, id string) (*ec2.Host, 
 	return nil, err
 }
 
-func WaitHostUpdated(ctx context.Context, conn *ec2.EC2, id string) (*ec2.Host, error) {
+func WaitHostUpdated(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Host, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{ec2.AllocationStatePending},
 		Target:  []string{ec2.AllocationStateAvailable},
-		Timeout: HostUpdatedTimeout,
+		Timeout: timeout,
 		Refresh: StatusHostState(ctx, conn, id),
 	}
 
@@ -2200,11 +2194,11 @@ func WaitHostUpdated(ctx context.Context, conn *ec2.EC2, id string) (*ec2.Host, 
 	return nil, err
 }
 
-func WaitHostDeleted(ctx context.Context, conn *ec2.EC2, id string) (*ec2.Host, error) {
+func WaitHostDeleted(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Host, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{ec2.AllocationStateAvailable},
 		Target:  []string{},
-		Timeout: HostDeletedTimeout,
+		Timeout: timeout,
 		Refresh: StatusHostState(ctx, conn, id),
 	}
 

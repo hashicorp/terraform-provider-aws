@@ -2259,7 +2259,7 @@ func TestAccEC2Instance_changeInstanceType(t *testing.T) {
 		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccInstanceConfig_smallType(rName),
+				Config: testAccInstanceConfig_type(rName, "t2.medium"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.medium"),
@@ -2272,11 +2272,43 @@ func TestAccEC2Instance_changeInstanceType(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"user_data_replace_on_change"},
 			},
 			{
-				Config: testAccInstanceConfig_updateType(rName),
+				Config: testAccInstanceConfig_type(rName, "t2.large"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &after),
 					testAccCheckInstanceNotRecreated(&before, &after),
 					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.large"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccEC2Instance_changeInstanceTypeReplace(t *testing.T) {
+	ctx := acctest.Context(t)
+	var before ec2.Instance
+	var after ec2.Instance
+	resourceName := "aws_instance.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_typeReplace(rName, "m5.2xlarge"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &before),
+					resource.TestCheckResourceAttr(resourceName, "instance_type", "m5.2xlarge"),
+				),
+			},
+			{
+				Config: testAccInstanceConfig_typeReplace(rName, "m6g.2xlarge"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckInstanceExists(ctx, resourceName, &after),
+					testAccCheckInstanceRecreated(&before, &after),
+					resource.TestCheckResourceAttr(resourceName, "instance_type", "m6g.2xlarge"),
 				),
 			},
 		},
@@ -6195,7 +6227,7 @@ resource "aws_instance" "test" {
 `, rName, filename))
 }
 
-func testAccInstanceConfig_smallType(rName string) string {
+func testAccInstanceConfig_type(rName, instanceType string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		testAccInstanceVPCConfig(rName, false, 0),
@@ -6204,31 +6236,41 @@ resource "aws_instance" "test" {
   ami       = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   subnet_id = aws_subnet.test.id
 
-  instance_type = "t2.medium"
+  instance_type = %[1]q
 
   tags = {
-    Name = %[1]q
+    Name = %[2]q
   }
 }
-`, rName))
+`, instanceType, rName))
 }
 
-func testAccInstanceConfig_updateType(rName string) string {
+func testAccInstanceConfig_typeReplace(rName, instanceType string) string {
+	arch := acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI()
+	archs := "x86_64"
+	if strings.HasPrefix(instanceType, "m6g.") {
+		arch = acctest.ConfigLatestAmazonLinux2HVMEBSARM64AMI()
+		archs = "arm64"
+	}
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
+		arch,
 		testAccInstanceVPCConfig(rName, false, 0),
 		fmt.Sprintf(`
 resource "aws_instance" "test" {
-  ami       = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
+  ami       = data.aws_ami.amzn2-ami-minimal-hvm-ebs-%[3]s.id
   subnet_id = aws_subnet.test.id
 
-  instance_type = "t2.large"
+  instance_type = %[1]q
 
   tags = {
-    Name = %[1]q
+    Name = %[2]q
+  }
+
+  lifecycle {
+    ignore_changes = [ami]
   }
 }
-`, rName))
+`, instanceType, rName, archs))
 }
 
 func testAccInstanceConfig_typeAndUserData(rName, instanceType, userData string) string {

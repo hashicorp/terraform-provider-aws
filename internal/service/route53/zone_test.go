@@ -60,7 +60,7 @@ func TestCleanChangeID(t *testing.T) {
 	}
 }
 
-func TestTrimTrailingPeriod(t *testing.T) {
+func TestNormalizeZoneName(t *testing.T) {
 	t.Parallel()
 
 	cases := []struct {
@@ -70,17 +70,22 @@ func TestTrimTrailingPeriod(t *testing.T) {
 		{"example.com", "example.com"},
 		{"example.com.", "example.com"},
 		{"www.example.com.", "www.example.com"},
+		{"www.ExAmPlE.COM.", "www.example.com"},
 		{"", ""},
 		{".", "."},
 		{aws.String("example.com"), "example.com"},
 		{aws.String("example.com."), "example.com"},
+		{aws.String("www.example.com."), "www.example.com"},
+		{aws.String("www.ExAmPlE.COM."), "www.example.com"},
+		{aws.String(""), ""},
+		{aws.String("."), "."},
 		{(*string)(nil), ""},
 		{42, ""},
 		{nil, ""},
 	}
 
 	for _, tc := range cases {
-		actual := tfroute53.TrimTrailingPeriod(tc.Input)
+		actual := tfroute53.NormalizeZoneName(tc.Input)
 		if actual != tc.Output {
 			t.Fatalf("input: %s\noutput: %s", tc.Input, actual)
 		}
