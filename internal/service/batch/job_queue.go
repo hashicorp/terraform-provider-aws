@@ -15,6 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go/service/batch"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -139,18 +140,24 @@ func (r *resourceJobQueue) Schema(ctx context.Context, request resource.SchemaRe
 				Attributes: map[string]schema.Attribute{
 					"action": schema.StringAttribute{
 						Required: true,
-						ValidateFunc: validation.StringInSlice(ec2.JobStateTimeLimitActionsAction_Values(), false),
+						Validators: []validator.String{
+							stringvalidator.OneOf(batch.JobStateTimeLimitActionsAction_Values()...),
+						},
 					},
 					"max_time_seconds": schema.Int64Attribute{
 						Required: true,
-						ValidateFunc: validation.IntBetween(600, 86400),
+						Validators: []validator.Int64{
+							int64validator.Between(600, 86400),
+						},
 					},
 					"reason": schema.StringAttribute{
 						Required: true,
 					},
 					"state": schema.StringAttribute{
 						Required: true,
-						ValidateFunc: validation.StringInSlice(ec2.JobStateTimeLimitActionsState_Values(), false),
+						Validators: []validator.String{
+							stringvalidator.OneOf(batch.JobStateTimeLimitActionsState_Values()...),
+						},
 					},
 				},
 			},
