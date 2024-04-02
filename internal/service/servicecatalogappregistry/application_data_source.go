@@ -45,6 +45,10 @@ func (d *dataSourceApplication) Schema(ctx context.Context, req datasource.Schem
 			"name": schema.StringAttribute{
 				Computed: true,
 			},
+			"application_tag": schema.MapAttribute{
+				ElementType: types.StringType,
+				Computed:    true,
+			},
 		},
 	}
 }
@@ -71,8 +75,9 @@ func (d *dataSourceApplication) Read(ctx context.Context, req datasource.ReadReq
 }
 
 type dataSourceApplicationData struct {
-	ARN         types.String `tfsdk:"arn"`
-	Description types.String `tfsdk:"description"`
-	ID          types.String `tfsdk:"id"`
-	Name        types.String `tfsdk:"name"`
+	ARN            types.String `tfsdk:"arn"`
+	Description    types.String `tfsdk:"description"`
+	ID             types.String `tfsdk:"id"`
+	Name           types.String `tfsdk:"name"`
+	ApplicationTag types.Map    `tfsdk:"application_tag"`
 }
