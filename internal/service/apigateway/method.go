@@ -11,7 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/apigateway/types"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -22,8 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_api_gateway_method")
-func ResourceMethod() *schema.Resource {
+// @SDKResource("aws_api_gateway_method", name="Method")
+func resourceMethod() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMethodCreate,
 		ReadWithoutTimeout:   resourceMethodRead,
@@ -155,7 +155,7 @@ func resourceMethodRead(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	method, err := FindMethodByThreePartKey(ctx, conn, d.Get("http_method").(string), d.Get("resource_id").(string), d.Get("rest_api_id").(string))
+	method, err := findMethodByThreePartKey(ctx, conn, d.Get("http_method").(string), d.Get("resource_id").(string), d.Get("rest_api_id").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] API Gateway Method (%s) not found, removing from state", d.Id())
@@ -183,11 +183,11 @@ func resourceMethodUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	operations := make([]awstypes.PatchOperation, 0)
+	operations := make([]types.PatchOperation, 0)
 
 	if d.HasChange("resource_id") {
-		operations = append(operations, awstypes.PatchOperation{
-			Op:    awstypes.OpReplace,
+		operations = append(operations, types.PatchOperation{
+			Op:    types.OpReplace,
 			Path:  aws.String("/resourceId"),
 			Value: aws.String(d.Get("resource_id").(string)),
 		})
@@ -203,16 +203,16 @@ func resourceMethodUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if d.HasChange("authorization") {
-		operations = append(operations, awstypes.PatchOperation{
-			Op:    awstypes.OpReplace,
+		operations = append(operations, types.PatchOperation{
+			Op:    types.OpReplace,
 			Path:  aws.String("/authorizationType"),
 			Value: aws.String(d.Get("authorization").(string)),
 		})
 	}
 
 	if d.HasChange("authorizer_id") {
-		operations = append(operations, awstypes.PatchOperation{
-			Op:    awstypes.OpReplace,
+		operations = append(operations, types.PatchOperation{
+			Op:    types.OpReplace,
 			Path:  aws.String("/authorizerId"),
 			Value: aws.String(d.Get("authorizer_id").(string)),
 		})
@@ -227,8 +227,8 @@ func resourceMethodUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 		additionList := ns.Difference(os)
 		for _, v := range additionList.List() {
-			operations = append(operations, awstypes.PatchOperation{
-				Op:    awstypes.OpAdd,
+			operations = append(operations, types.PatchOperation{
+				Op:    types.OpAdd,
 				Path:  aws.String(path),
 				Value: aws.String(v.(string)),
 			})
@@ -236,8 +236,8 @@ func resourceMethodUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 		removalList := os.Difference(ns)
 		for _, v := range removalList.List() {
-			operations = append(operations, awstypes.PatchOperation{
-				Op:    awstypes.OpRemove,
+			operations = append(operations, types.PatchOperation{
+				Op:    types.OpRemove,
 				Path:  aws.String(path),
 				Value: aws.String(v.(string)),
 			})
@@ -245,8 +245,8 @@ func resourceMethodUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if d.HasChange("api_key_required") {
-		operations = append(operations, awstypes.PatchOperation{
-			Op:    awstypes.OpReplace,
+		operations = append(operations, types.PatchOperation{
+			Op:    types.OpReplace,
 			Path:  aws.String("/apiKeyRequired"),
 			Value: aws.String(fmt.Sprintf("%t", d.Get("api_key_required").(bool))),
 		})
@@ -261,8 +261,8 @@ func resourceMethodUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 				request_validator_id = &s
 			}
 		}
-		operations = append(operations, awstypes.PatchOperation{
-			Op:    awstypes.OpReplace,
+		operations = append(operations, types.PatchOperation{
+			Op:    types.OpReplace,
 			Path:  aws.String("/requestValidatorId"),
 			Value: request_validator_id,
 		})
@@ -275,8 +275,8 @@ func resourceMethodUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 				operation_name = &s
 			}
 		}
-		operations = append(operations, awstypes.PatchOperation{
-			Op:    awstypes.OpReplace,
+		operations = append(operations, types.PatchOperation{
+			Op:    types.OpReplace,
 			Path:  aws.String("/operationName"),
 			Value: operation_name,
 		})
@@ -302,20 +302,20 @@ func resourceMethodUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		currentCacheKeyParameters = integration.CacheKeyParameters
 
 		for _, operation := range operations {
-			if operation.Op == awstypes.OpReplace && strings.HasPrefix(aws.ToString(operation.Path), "/requestParameters") {
+			if operation.Op == types.OpReplace && strings.HasPrefix(aws.ToString(operation.Path), "/requestParameters") {
 				parts := strings.Split(aws.ToString(operation.Path), "/")
 				replacedRequestParameters = append(replacedRequestParameters, parts[2])
 			}
 		}
 
 		// Update integration with cacheKeyParameters for replaced request parameters.
-		integrationOperations := make([]awstypes.PatchOperation, 0)
+		integrationOperations := make([]types.PatchOperation, 0)
 
 		for _, replacedRequestParameter := range replacedRequestParameters {
 			for _, cacheKeyParameter := range currentCacheKeyParameters {
 				if cacheKeyParameter == replacedRequestParameter {
-					integrationOperations = append(integrationOperations, awstypes.PatchOperation{
-						Op:    awstypes.OpAdd,
+					integrationOperations = append(integrationOperations, types.PatchOperation{
+						Op:    types.OpAdd,
 						Path:  aws.String(fmt.Sprintf("/cacheKeyParameters/%s", replacedRequestParameter)),
 						Value: aws.String(""),
 					})
@@ -351,7 +351,7 @@ func resourceMethodDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		RestApiId:  aws.String(d.Get("rest_api_id").(string)),
 	})
 
-	if errs.IsA[*awstypes.NotFoundException](err) {
+	if errs.IsA[*types.NotFoundException](err) {
 		return diags
 	}
 
@@ -362,7 +362,7 @@ func resourceMethodDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func FindMethodByThreePartKey(ctx context.Context, conn *apigateway.Client, httpMethod, resourceID, apiID string) (*apigateway.GetMethodOutput, error) {
+func findMethodByThreePartKey(ctx context.Context, conn *apigateway.Client, httpMethod, resourceID, apiID string) (*apigateway.GetMethodOutput, error) {
 	input := &apigateway.GetMethodInput{
 		HttpMethod: aws.String(httpMethod),
 		ResourceId: aws.String(resourceID),
@@ -371,7 +371,7 @@ func FindMethodByThreePartKey(ctx context.Context, conn *apigateway.Client, http
 
 	output, err := conn.GetMethod(ctx, input)
 
-	if errs.IsA[*awstypes.NotFoundException](err) {
+	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

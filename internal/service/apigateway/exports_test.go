@@ -17,6 +17,7 @@ var (
 	ResourceGatewayResponse      = resourceGatewayResponse
 	ResourceIntegration          = resourceIntegration
 	ResourceIntegrationResponse  = resourceIntegrationResponse
+	ResourceMethod               = resourceMethod
 	ResourceMethodResponse       = resourceMethodResponse
 	ResourceMethodSettings       = resourceMethodSettings
 	ResourceRestAPI              = resourceRestAPI
@@ -32,6 +33,7 @@ var (
 	FindGatewayResponseByTwoPartKey      = findGatewayResponseByTwoPartKey
 	FindIntegrationByThreePartKey        = findIntegrationByThreePartKey
 	FindIntegrationResponseByFourPartKey = findIntegrationResponseByFourPartKey
+	FindMethodByThreePartKey             = findMethodByThreePartKey
 	FindMethodResponseByFourPartKey      = findMethodResponseByFourPartKey
 	FindMethodSettingsByThreePartKey     = findMethodSettingsByThreePartKey
 	FindRestAPIByID                      = findRestAPIByID
