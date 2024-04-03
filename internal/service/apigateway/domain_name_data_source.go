@@ -84,7 +84,7 @@ func dataSourceDomainName() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			names.AttrTags: tftags.TagsSchema(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
