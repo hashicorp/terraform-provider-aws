@@ -162,8 +162,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Model",
 		},
 		{
-			Factory:  ResourceRequestValidator,
+			Factory:  resourceRequestValidator,
 			TypeName: "aws_api_gateway_request_validator",
+			Name:     "Request Validator",
 		},
 		{
 			Factory:  ResourceResource,

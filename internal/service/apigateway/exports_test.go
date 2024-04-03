@@ -21,6 +21,7 @@ var (
 	ResourceMethodResponse       = resourceMethodResponse
 	ResourceMethodSettings       = resourceMethodSettings
 	ResourceModel                = resourceModel
+	ResourceRequestValidator     = resourceRequestValidator
 	ResourceRestAPI              = resourceRestAPI
 
 	FindAPIKeyByID                       = findAPIKeyByID
@@ -38,5 +39,6 @@ var (
 	FindMethodResponseByFourPartKey      = findMethodResponseByFourPartKey
 	FindMethodSettingsByThreePartKey     = findMethodSettingsByThreePartKey
 	FindModelByTwoPartKey                = findModelByTwoPartKey
+	FindRequestValidatorByTwoPartKey     = findRequestValidatorByTwoPartKey
 	FindRestAPIByID                      = findRestAPIByID
 )

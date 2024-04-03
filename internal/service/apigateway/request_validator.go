@@ -11,7 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/apigateway/types"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -21,8 +21,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_api_gateway_request_validator")
-func ResourceRequestValidator() *schema.Resource {
+// @SDKResource("aws_api_gateway_request_validator", name="Request Validator")
+func resourceRequestValidator() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRequestValidatorCreate,
 		ReadWithoutTimeout:   resourceRequestValidatorRead,
@@ -94,7 +94,7 @@ func resourceRequestValidatorRead(ctx context.Context, d *schema.ResourceData, m
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	output, err := FindRequestValidatorByTwoPartKey(ctx, conn, d.Id(), d.Get("rest_api_id").(string))
+	output, err := findRequestValidatorByTwoPartKey(ctx, conn, d.Id(), d.Get("rest_api_id").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] API Gateway Request Validator (%s) not found, removing from state", d.Id())
@@ -117,27 +117,27 @@ func resourceRequestValidatorUpdate(ctx context.Context, d *schema.ResourceData,
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	operations := make([]awstypes.PatchOperation, 0)
+	operations := make([]types.PatchOperation, 0)
 
 	if d.HasChange("name") {
-		operations = append(operations, awstypes.PatchOperation{
-			Op:    awstypes.OpReplace,
+		operations = append(operations, types.PatchOperation{
+			Op:    types.OpReplace,
 			Path:  aws.String("/name"),
 			Value: aws.String(d.Get("name").(string)),
 		})
 	}
 
 	if d.HasChange("validate_request_body") {
-		operations = append(operations, awstypes.PatchOperation{
-			Op:    awstypes.OpReplace,
+		operations = append(operations, types.PatchOperation{
+			Op:    types.OpReplace,
 			Path:  aws.String("/validateRequestBody"),
 			Value: aws.String(fmt.Sprintf("%t", d.Get("validate_request_body").(bool))),
 		})
 	}
 
 	if d.HasChange("validate_request_parameters") {
-		operations = append(operations, awstypes.PatchOperation{
-			Op:    awstypes.OpReplace,
+		operations = append(operations, types.PatchOperation{
+			Op:    types.OpReplace,
 			Path:  aws.String("/validateRequestParameters"),
 			Value: aws.String(fmt.Sprintf("%t", d.Get("validate_request_parameters").(bool))),
 		})
@@ -171,7 +171,7 @@ func resourceRequestValidatorDelete(ctx context.Context, d *schema.ResourceData,
 	if err != nil {
 		// XXX: Figure out a way to delete the method that depends on the request validator first
 		// otherwise the validator will be dangling until the API is deleted
-		if errs.IsA[*awstypes.ConflictException](err) {
+		if errs.IsA[*types.ConflictException](err) {
 			return sdkdiag.AppendErrorf(diags, "deleting API Gateway Request Validator (%s): %s", d.Id(), err)
 		}
 	}
@@ -179,7 +179,7 @@ func resourceRequestValidatorDelete(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func FindRequestValidatorByTwoPartKey(ctx context.Context, conn *apigateway.Client, requestValidatorID, apiID string) (*apigateway.GetRequestValidatorOutput, error) {
+func findRequestValidatorByTwoPartKey(ctx context.Context, conn *apigateway.Client, requestValidatorID, apiID string) (*apigateway.GetRequestValidatorOutput, error) {
 	input := &apigateway.GetRequestValidatorInput{
 		RequestValidatorId: aws.String(requestValidatorID),
 		RestApiId:          aws.String(apiID),
@@ -187,7 +187,7 @@ func FindRequestValidatorByTwoPartKey(ctx context.Context, conn *apigateway.Clie
 
 	output, err := conn.GetRequestValidator(ctx, input)
 
-	if errs.IsA[*awstypes.NotFoundException](err) {
+	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
