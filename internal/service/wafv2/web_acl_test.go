@@ -4277,9 +4277,9 @@ resource "aws_wafv2_web_acl" "test" {
               password_field {
                 identifier = "/password"
               }
-			  phone_number_fields {
-				  identifiers = ["/phone1", "/phone2"]
-			  }
+              phone_number_fields {
+                identifiers = ["/phone1", "/phone2"]
+              }
               payload_type = "JSON"
               username_field {
                 identifier = "/username"
@@ -4410,9 +4410,9 @@ resource "aws_wafv2_web_acl" "test" {
               password_field {
                 identifier = "/pass"
               }
-			  phone_number_fields {
-				identifiers = ["/phone1", "/phone2"]
-			}
+              phone_number_fields {
+                identifiers = ["/phone1", "/phone2"]
+              }
               payload_type = "JSON"
               username_field {
                 identifier = "/user"
