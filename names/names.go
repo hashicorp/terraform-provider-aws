@@ -32,6 +32,7 @@ const (
 	AmplifyEndpointID                    = "amplify"
 	AthenaEndpointID                     = "athena"
 	AuditManagerEndpointID               = "auditmanager"
+	AutoScalingPlansEndpointID           = "autoscaling-plans"
 	BatchEndpointID                      = "batch"
 	BedrockEndpointID                    = "bedrock"
 	BudgetsEndpointID                    = "budgets"
