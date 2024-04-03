@@ -1340,7 +1340,7 @@ func expandRequestInspectionACFP(tfList []interface{}) *wafv2.RequestInspectionA
 		PayloadType:       aws.String(m["payload_type"].(string)),
 		UsernameField:     expandUsernameField(m["username_field"].([]interface{})),
 		PhoneNumberFields: expandPhoneNumberFields(m["phone_number_fields"].([]interface{})),
-		AddressFields:     expandAddressFields(m["primary_address_fields"].([]interface{})),
+		AddressFields:     expandAddressFields(m["address_fields"].([]interface{})),
 	}
 
 	return &out

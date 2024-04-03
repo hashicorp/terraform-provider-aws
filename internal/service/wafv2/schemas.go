@@ -1367,7 +1367,7 @@ func managedRuleGroupConfigACFPRequestInspectionSchema() *schema.Schema {
 						},
 					},
 				},
-				"primary_address_fields": {
+				"adress_fields": {
 					Type:     schema.TypeList,
 					Optional: true,
 					MaxItems: 1,
