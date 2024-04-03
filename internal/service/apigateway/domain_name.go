@@ -250,13 +250,7 @@ func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway Domain Name (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "apigateway",
-		Region:    meta.(*conns.AWSClient).Region,
-		Resource:  fmt.Sprintf("/domainnames/%s", d.Id()),
-	}.String()
-	d.Set("arn", arn)
+	d.Set("arn", domainNameARN(meta.(*conns.AWSClient), d.Id()))
 	d.Set("certificate_arn", domainName.CertificateArn)
 	d.Set("certificate_name", domainName.CertificateName)
 	if domainName.CertificateUploadDate != nil {
@@ -520,4 +514,13 @@ func flattenMutualTLSAuthentication(apiObject *types.MutualTlsAuthentication) []
 	}
 
 	return []interface{}{tfMap}
+}
+
+func domainNameARN(c *conns.AWSClient, domainName string) string {
+	return arn.ARN{
+		Partition: c.Partition,
+		Service:   "apigateway",
+		Region:    c.Region,
+		Resource:  fmt.Sprintf("/domainnames/%s", domainName),
+	}.String()
 }
