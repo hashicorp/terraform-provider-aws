@@ -207,7 +207,7 @@ func sweepUsagePlans(region string) error {
 		log.Printf("[INFO] API Gateway Usage Plans: %d", len(page.Items))
 
 		for _, up := range page.Items {
-			r := ResourceUsagePlan()
+			r := resourceUsagePlan()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(up.Id))
 			d.Set("api_stages", flattenAPIStages(up.ApiStages))

@@ -565,10 +565,6 @@ func testAccCheckUsagePlanExists(ctx context.Context, n string, v *apigateway.Ge
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No API Gateway Usage Plan ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
 		output, err := tfapigateway.FindUsagePlanByID(ctx, conn, rs.Primary.ID)
