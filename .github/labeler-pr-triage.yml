@@ -163,7 +163,7 @@ service/bedrock:
   - 'website/**/bedrock_*'
 service/bedrockagent:
   - 'internal/service/bedrockagent/**/*'
-  - 'website/**/bedrock_agent_*'
+  - 'website/**/bedrockagent_*'
 service/billingconductor:
   - 'internal/service/billingconductor/**/*'
   - 'website/**/billingconductor_*'

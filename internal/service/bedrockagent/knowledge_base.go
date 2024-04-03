@@ -34,9 +34,9 @@ import (
 )
 
 // @FrameworkResource(name="Knowledge Base")
-// @Tags(identifierAttribute="id")
-func newKnowledgeBaseResource(_ context.Context) (resource.ResourceWithConfigure, error) {
+func newKnowledgeBaseResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &knowledgeBaseResource{}
+
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
 	r.SetDefaultDeleteTimeout(30 * time.Minute)
@@ -50,6 +50,7 @@ const (
 
 type knowledgeBaseResource struct {
 	framework.ResourceWithConfigure
+	framework.WithImportByID
 	framework.WithTimeouts
 }
 
@@ -57,8 +58,8 @@ func (r *knowledgeBaseResource) Metadata(_ context.Context, req resource.Metadat
 	resp.TypeName = "aws_bedrockagent_knowledge_base"
 }
 
-func (r *knowledgeBaseResource) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"arn": framework.ARNAttributeComputedOnly(),
 			"description": schema.StringAttribute{
@@ -71,7 +72,7 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, req resource.SchemaR
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"role_name_arn": schema.StringAttribute{
+			"role_arn": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -594,7 +595,6 @@ type knowledgeBaseResourceModel struct {
 	StorageConfiguration       fwtypes.ListNestedObjectValueOf[storageConfigurationModel]       `tfsdk:"storage_configuration"`
 	KnowledgeBaseARN           types.String                                                     `tfsdk:"arn"`
 	KnowledgeBaseId            types.String                                                     `tfsdk:"id"`
-	RoleNameArn                types.String                                                     `tfsdk:"role_name_arn"`
 	Timeouts                   timeouts.Value                                                   `tfsdk:"timeouts"`
 }
 
