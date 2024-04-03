@@ -52,8 +52,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Export",
 		},
 		{
-			Factory:  DataSourceResource,
+			Factory:  dataSourceResource,
 			TypeName: "aws_api_gateway_resource",
+			Name:     "Resource",
 		},
 		{
 			Factory:  DataSourceRestAPI,
