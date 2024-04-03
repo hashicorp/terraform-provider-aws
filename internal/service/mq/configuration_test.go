@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -34,7 +35,15 @@ func TestAccMQConfiguration_basic(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigurationConfig_basic(rName),
+				//Config: testAccConfigurationConfig_basic(rName),
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: map[string]config.Variable{
+					"description":             config.StringVariable("TfAccTest MQ Configuration"),
+					"random_name":             config.StringVariable(rName),
+					"engine_type":             config.StringVariable("ActiveMQ"),
+					"engine_version":          config.StringVariable("5.17.6"),
+					"authentication_strategy": config.StringVariable("simple"),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexache.MustCompile(`configuration:+.`)),
@@ -52,7 +61,14 @@ func TestAccMQConfiguration_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccConfigurationConfig_descriptionUpdated(rName),
+				//Config: testAccConfigurationConfig_descriptionUpdated(rName),
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: map[string]config.Variable{
+					"description":    config.StringVariable("TfAccTest MQ Configuration Updated"),
+					"random_name":    config.StringVariable(rName),
+					"engine_type":    config.StringVariable("ActiveMQ"),
+					"engine_version": config.StringVariable("5.17.6"),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexache.MustCompile(`configuration:+.`)),
@@ -67,7 +83,7 @@ func TestAccMQConfiguration_basic(t *testing.T) {
 	})
 }
 
-func TestAccMQConfiguration_withActiveMQData(t *testing.T) {
+func TestAccMQConfiguration_activeMQData(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_configuration.test"
@@ -83,7 +99,14 @@ func TestAccMQConfiguration_withActiveMQData(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigurationConfig_activeData(rName),
+				//Config: testAccConfigurationConfig_activeData(rName),
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: map[string]config.Variable{
+					"description":    config.StringVariable("TfAccTest MQ Configuration"),
+					"random_name":    config.StringVariable(rName),
+					"engine_type":    config.StringVariable("ActiveMQ"),
+					"engine_version": config.StringVariable("5.17.6"),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexache.MustCompile(`configuration:+.`)),
@@ -103,7 +126,7 @@ func TestAccMQConfiguration_withActiveMQData(t *testing.T) {
 	})
 }
 
-func TestAccMQConfiguration_withActiveMQLdapData(t *testing.T) {
+func TestAccMQConfiguration_activeMQLDAPData(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_configuration.test"
@@ -119,7 +142,15 @@ func TestAccMQConfiguration_withActiveMQLdapData(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigurationConfig_activeLdapData(rName),
+				//Config: testAccConfigurationConfig_activeLdapData(rName),
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: map[string]config.Variable{
+					"description":             config.StringVariable("TfAccTest MQ Configuration"),
+					"random_name":             config.StringVariable(rName),
+					"engine_type":             config.StringVariable("ActiveMQ"),
+					"engine_version":          config.StringVariable("5.17.6"),
+					"authentication_strategy": config.StringVariable("ldap"),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexache.MustCompile(`configuration:+.`)),
@@ -140,7 +171,7 @@ func TestAccMQConfiguration_withActiveMQLdapData(t *testing.T) {
 	})
 }
 
-func TestAccMQConfiguration_withRabbitMQData(t *testing.T) {
+func TestAccMQConfiguration_rabbitMQData(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_configuration.test"
@@ -156,7 +187,14 @@ func TestAccMQConfiguration_withRabbitMQData(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigurationConfig_rabbitData(rName),
+				//Config: testAccConfigurationConfig_rabbitData(rName),
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: map[string]config.Variable{
+					"description":    config.StringVariable("TfAccTest MQ Configuration"),
+					"random_name":    config.StringVariable(rName),
+					"engine_type":    config.StringVariable("RabbitMQ"),
+					"engine_version": config.StringVariable("3.11.16"),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationExists(ctx, resourceName),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexache.MustCompile(`configuration:+.`)),
@@ -193,7 +231,16 @@ func TestAccMQConfiguration_tags(t *testing.T) {
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigurationConfig_tags1(rName, "key1", "value1"),
+				//Config: testAccConfigurationConfig_tags1(rName, "key1", "value1"),
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: map[string]config.Variable{
+					"description":             config.StringVariable("TfAccTest MQ Configuration"),
+					"random_name":             config.StringVariable(rName),
+					"engine_type":             config.StringVariable("ActiveMQ"),
+					"engine_version":          config.StringVariable("5.17.6"),
+					"authentication_strategy": config.StringVariable("simple"),
+					"key1_value":              config.StringVariable("value1"),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -206,7 +253,17 @@ func TestAccMQConfiguration_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccConfigurationConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				//Config: testAccConfigurationConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: map[string]config.Variable{
+					"description":             config.StringVariable("TfAccTest MQ Configuration"),
+					"random_name":             config.StringVariable(rName),
+					"engine_type":             config.StringVariable("ActiveMQ"),
+					"engine_version":          config.StringVariable("5.17.6"),
+					"authentication_strategy": config.StringVariable("simple"),
+					"key1_value":              config.StringVariable("value1updated"),
+					"key2_value":              config.StringVariable("value2"),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -215,7 +272,16 @@ func TestAccMQConfiguration_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccConfigurationConfig_tags1(rName, "key2", "value2"),
+				//Config: testAccConfigurationConfig_tags1(rName, "key2", "value2"),
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: map[string]config.Variable{
+					"description":             config.StringVariable("TfAccTest MQ Configuration"),
+					"random_name":             config.StringVariable(rName),
+					"engine_type":             config.StringVariable("ActiveMQ"),
+					"engine_version":          config.StringVariable("5.17.6"),
+					"authentication_strategy": config.StringVariable("simple"),
+					"key2_value":              config.StringVariable("value2"),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
