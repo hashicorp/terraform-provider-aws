@@ -183,7 +183,7 @@ func resourceDeploymentDelete(ctx context.Context, d *schema.ResourceData, meta 
 	restAPIID := d.Get("rest_api_id").(string)
 	stageName := d.Get("stage_name").(string)
 	if stageName != "" {
-		stage, err := FindStageByTwoPartKey(ctx, conn, restAPIID, stageName)
+		stage, err := findStageByTwoPartKey(ctx, conn, restAPIID, stageName)
 
 		if err == nil {
 			shouldDeleteStage = aws.ToString(stage.DeploymentId) == d.Id()

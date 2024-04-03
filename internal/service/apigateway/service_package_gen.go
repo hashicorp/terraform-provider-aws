@@ -191,7 +191,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "REST API Policy",
 		},
 		{
-			Factory:  ResourceStage,
+			Factory:  resourceStage,
 			TypeName: "aws_api_gateway_stage",
 			Name:     "Stage",
 			Tags: &types.ServicePackageResourceTags{

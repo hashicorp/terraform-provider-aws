@@ -259,7 +259,6 @@ func TestAccAPIGatewayStage_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckStageExists(ctx, resourceName, &stage),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceStage(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigateway.ResourceStage(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -520,10 +519,6 @@ func testAccCheckStageExists(ctx context.Context, n string, v *apigateway.GetSta
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No API Gateway Stage ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)

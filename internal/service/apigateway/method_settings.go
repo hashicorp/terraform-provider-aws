@@ -313,7 +313,7 @@ func resourceMethodSettingsImport(ctx context.Context, d *schema.ResourceData, m
 }
 
 func findMethodSettingsByThreePartKey(ctx context.Context, conn *apigateway.Client, apiID, stageName, methodPath string) (*types.MethodSetting, error) {
-	stage, err := FindStageByTwoPartKey(ctx, conn, apiID, stageName)
+	stage, err := findStageByTwoPartKey(ctx, conn, apiID, stageName)
 
 	if err != nil {
 		return nil, err

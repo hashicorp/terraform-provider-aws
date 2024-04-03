@@ -8,11 +8,12 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/apigateway/types"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -29,7 +30,7 @@ import (
 
 // @SDKResource("aws_api_gateway_stage", name="Stage")
 // @Tags(identifierAttribute="arn")
-func ResourceStage() *schema.Resource {
+func resourceStage() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStageCreate,
 		ReadWithoutTimeout:   resourceStageRead,
@@ -81,7 +82,7 @@ func ResourceStage() *schema.Resource {
 			"cache_cluster_size": {
 				Type:             schema.TypeString,
 				Optional:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.CacheClusterSize](),
+				ValidateDiagFunc: enum.Validate[types.CacheClusterSize](),
 			},
 			"canary_settings": {
 				Type:     schema.TypeList,
@@ -165,11 +166,11 @@ func resourceStageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	restAPIID := d.Get("rest_api_id").(string)
+	apiID := d.Get("rest_api_id").(string)
 	stageName := d.Get("stage_name").(string)
 	deploymentID := d.Get("deployment_id").(string)
 	input := &apigateway.CreateStageInput{
-		RestApiId:    aws.String(restAPIID),
+		RestApiId:    aws.String(apiID),
 		StageName:    aws.String(stageName),
 		DeploymentId: aws.String(deploymentID),
 		Tags:         getTagsIn(ctx),
@@ -182,7 +183,7 @@ func resourceStageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("cache_cluster_size"); ok {
-		input.CacheClusterSize = awstypes.CacheClusterSize(v.(string))
+		input.CacheClusterSize = types.CacheClusterSize(v.(string))
 		waitForCache = true
 	}
 
@@ -212,10 +213,10 @@ func resourceStageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "creating API Gateway Stage (%s): %s", stageName, err)
 	}
 
-	d.SetId(fmt.Sprintf("ags-%s-%s", restAPIID, stageName))
+	d.SetId(fmt.Sprintf("ags-%s-%s", apiID, stageName))
 
-	if waitForCache && output.CacheClusterStatus != awstypes.CacheClusterStatusNotAvailable {
-		if _, err := waitStageCacheAvailable(ctx, conn, restAPIID, stageName); err != nil {
+	if waitForCache && output.CacheClusterStatus != types.CacheClusterStatusNotAvailable {
+		if _, err := waitStageCacheAvailable(ctx, conn, apiID, stageName); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for API Gateway Stage (%s) cache create: %s", d.Id(), err)
 		}
 	}
@@ -234,9 +235,9 @@ func resourceStageRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	restAPIID := d.Get("rest_api_id").(string)
+	apiID := d.Get("rest_api_id").(string)
 	stageName := d.Get("stage_name").(string)
-	stage, err := FindStageByTwoPartKey(ctx, conn, restAPIID, stageName)
+	stage, err := findStageByTwoPartKey(ctx, conn, apiID, stageName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] API Gateway Stage (%s) not found, removing from state", d.Id())
@@ -251,14 +252,8 @@ func resourceStageRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if err := d.Set("access_log_settings", flattenAccessLogSettings(stage.AccessLogSettings)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting access_log_settings: %s", err)
 	}
-	stageARN := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Region:    meta.(*conns.AWSClient).Region,
-		Service:   "apigateway",
-		Resource:  fmt.Sprintf("/restapis/%s/stages/%s", restAPIID, stageName),
-	}.String()
-	d.Set("arn", stageARN)
-	if stage.CacheClusterStatus == awstypes.CacheClusterStatusDeleteInProgress {
+	d.Set("arn", stageARN(meta.(*conns.AWSClient), apiID, stageName))
+	if stage.CacheClusterStatus == types.CacheClusterStatusDeleteInProgress {
 		d.Set("cache_cluster_enabled", false)
 		d.Set("cache_cluster_size", d.Get("cache_cluster_size"))
 	} else {
@@ -277,15 +272,8 @@ func resourceStageRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("deployment_id", stage.DeploymentId)
 	d.Set("description", stage.Description)
 	d.Set("documentation_version", stage.DocumentationVersion)
-	executionARN := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "execute-api",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("%s/%s", restAPIID, stageName),
-	}.String()
-	d.Set("execution_arn", executionARN)
-	d.Set("invoke_url", meta.(*conns.AWSClient).APIGatewayInvokeURL(ctx, restAPIID, stageName))
+	d.Set("execution_arn", stageInvokeARN(meta.(*conns.AWSClient), apiID, stageName))
+	d.Set("invoke_url", meta.(*conns.AWSClient).APIGatewayInvokeURL(ctx, apiID, stageName))
 	if err := d.Set("variables", stage.Variables); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting variables: %s", err)
 	}
@@ -301,31 +289,31 @@ func resourceStageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	restAPIID := d.Get("rest_api_id").(string)
-	stageName := d.Get("stage_name").(string)
-
 	if d.HasChangesExcept("tags", "tags_all") {
-		operations := make([]awstypes.PatchOperation, 0)
+		apiID := d.Get("rest_api_id").(string)
+		stageName := d.Get("stage_name").(string)
+		operations := make([]types.PatchOperation, 0)
 		waitForCache := false
+
 		if d.HasChange("cache_cluster_enabled") {
-			operations = append(operations, awstypes.PatchOperation{
-				Op:    awstypes.OpReplace,
+			operations = append(operations, types.PatchOperation{
+				Op:    types.OpReplace,
 				Path:  aws.String("/cacheClusterEnabled"),
 				Value: aws.String(fmt.Sprintf("%t", d.Get("cache_cluster_enabled").(bool))),
 			})
 			waitForCache = true
 		}
 		if d.HasChange("cache_cluster_size") && d.Get("cache_cluster_enabled").(bool) {
-			operations = append(operations, awstypes.PatchOperation{
-				Op:    awstypes.OpReplace,
+			operations = append(operations, types.PatchOperation{
+				Op:    types.OpReplace,
 				Path:  aws.String("/cacheClusterSize"),
 				Value: aws.String(d.Get("cache_cluster_size").(string)),
 			})
 			waitForCache = true
 		}
 		if d.HasChange("client_certificate_id") {
-			operations = append(operations, awstypes.PatchOperation{
-				Op:    awstypes.OpReplace,
+			operations = append(operations, types.PatchOperation{
+				Op:    types.OpReplace,
 				Path:  aws.String("/clientCertificateId"),
 				Value: aws.String(d.Get("client_certificate_id").(string)),
 			})
@@ -338,37 +326,37 @@ func resourceStageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			)
 		}
 		if d.HasChange("deployment_id") {
-			operations = append(operations, awstypes.PatchOperation{
-				Op:    awstypes.OpReplace,
+			operations = append(operations, types.PatchOperation{
+				Op:    types.OpReplace,
 				Path:  aws.String("/deploymentId"),
 				Value: aws.String(d.Get("deployment_id").(string)),
 			})
 
 			if _, ok := d.GetOk("canary_settings"); ok {
-				operations = append(operations, awstypes.PatchOperation{
-					Op:    awstypes.OpReplace,
+				operations = append(operations, types.PatchOperation{
+					Op:    types.OpReplace,
 					Path:  aws.String("/canarySettings/deploymentId"),
 					Value: aws.String(d.Get("deployment_id").(string)),
 				})
 			}
 		}
 		if d.HasChange("description") {
-			operations = append(operations, awstypes.PatchOperation{
-				Op:    awstypes.OpReplace,
+			operations = append(operations, types.PatchOperation{
+				Op:    types.OpReplace,
 				Path:  aws.String("/description"),
 				Value: aws.String(d.Get("description").(string)),
 			})
 		}
 		if d.HasChange("xray_tracing_enabled") {
-			operations = append(operations, awstypes.PatchOperation{
-				Op:    awstypes.OpReplace,
+			operations = append(operations, types.PatchOperation{
+				Op:    types.OpReplace,
 				Path:  aws.String("/tracingEnabled"),
 				Value: aws.String(fmt.Sprintf("%t", d.Get("xray_tracing_enabled").(bool))),
 			})
 		}
 		if d.HasChange("documentation_version") {
-			operations = append(operations, awstypes.PatchOperation{
-				Op:    awstypes.OpReplace,
+			operations = append(operations, types.PatchOperation{
+				Op:    types.OpReplace,
 				Path:  aws.String("/documentationVersion"),
 				Value: aws.String(d.Get("documentation_version").(string)),
 			})
@@ -383,25 +371,25 @@ func resourceStageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			accessLogSettings := d.Get("access_log_settings").([]interface{})
 			if len(accessLogSettings) == 1 {
 				operations = append(operations,
-					awstypes.PatchOperation{
-						Op:    awstypes.OpReplace,
+					types.PatchOperation{
+						Op:    types.OpReplace,
 						Path:  aws.String("/accessLogSettings/destinationArn"),
 						Value: aws.String(d.Get("access_log_settings.0.destination_arn").(string)),
-					}, awstypes.PatchOperation{
-						Op:    awstypes.OpReplace,
+					}, types.PatchOperation{
+						Op:    types.OpReplace,
 						Path:  aws.String("/accessLogSettings/format"),
 						Value: aws.String(d.Get("access_log_settings.0.format").(string)),
 					})
 			} else if len(accessLogSettings) == 0 {
-				operations = append(operations, awstypes.PatchOperation{
-					Op:   awstypes.OpRemove,
+				operations = append(operations, types.PatchOperation{
+					Op:   types.OpRemove,
 					Path: aws.String("/accessLogSettings"),
 				})
 			}
 		}
 
 		input := &apigateway.UpdateStageInput{
-			RestApiId:       aws.String(restAPIID),
+			RestApiId:       aws.String(apiID),
 			StageName:       aws.String(stageName),
 			PatchOperations: operations,
 		}
@@ -412,10 +400,9 @@ func resourceStageUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			return sdkdiag.AppendErrorf(diags, "updating API Gateway Stage (%s): %s", d.Id(), err)
 		}
 
-		if waitForCache && output.CacheClusterStatus != awstypes.CacheClusterStatusNotAvailable {
-			_, err := waitStageCacheUpdated(ctx, conn, restAPIID, stageName)
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "waiting for API Gateway Stage (%s) to be updated: %s", d.Id(), err)
+		if waitForCache && output.CacheClusterStatus != types.CacheClusterStatusNotAvailable {
+			if _, err := waitStageCacheUpdated(ctx, conn, apiID, stageName); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for API Gateway Stage (%s) cache update: %s", d.Id(), err)
 			}
 		}
 	}
@@ -433,7 +420,7 @@ func resourceStageDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		StageName: aws.String(d.Get("stage_name").(string)),
 	})
 
-	if errs.IsA[*awstypes.NotFoundException](err) {
+	if errs.IsA[*types.NotFoundException](err) {
 		return diags
 	}
 
@@ -444,15 +431,15 @@ func resourceStageDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func FindStageByTwoPartKey(ctx context.Context, conn *apigateway.Client, restAPIID, stageName string) (*apigateway.GetStageOutput, error) {
+func findStageByTwoPartKey(ctx context.Context, conn *apigateway.Client, apiID, stageName string) (*apigateway.GetStageOutput, error) {
 	input := &apigateway.GetStageInput{
-		RestApiId: aws.String(restAPIID),
+		RestApiId: aws.String(apiID),
 		StageName: aws.String(stageName),
 	}
 
 	output, err := conn.GetStage(ctx, input)
 
-	if errs.IsA[*awstypes.NotFoundException](err) {
+	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -470,13 +457,74 @@ func FindStageByTwoPartKey(ctx context.Context, conn *apigateway.Client, restAPI
 	return output, nil
 }
 
-func diffVariablesOps(oldVars, newVars map[string]interface{}, prefix string) []awstypes.PatchOperation {
-	ops := make([]awstypes.PatchOperation, 0)
+func stageCacheStatus(ctx context.Context, conn *apigateway.Client, restApiId, name string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findStageByTwoPartKey(ctx, conn, restApiId, name)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.CacheClusterStatus), nil
+	}
+}
+
+func waitStageCacheAvailable(ctx context.Context, conn *apigateway.Client, apiID, name string) (*types.Stage, error) {
+	const (
+		timeout = 90 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.CacheClusterStatusCreateInProgress, types.CacheClusterStatusDeleteInProgress, types.CacheClusterStatusFlushInProgress),
+		Target:  enum.Slice(types.CacheClusterStatusAvailable),
+		Refresh: stageCacheStatus(ctx, conn, apiID, name),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.Stage); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitStageCacheUpdated(ctx context.Context, conn *apigateway.Client, apiID, name string) (*types.Stage, error) {
+	const (
+		timeout = 30 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.CacheClusterStatusCreateInProgress, types.CacheClusterStatusFlushInProgress),
+		Target: enum.Slice(
+			types.CacheClusterStatusAvailable,
+			// There's an AWS API bug (raised & confirmed in Sep 2016 by support)
+			// which causes the stage to remain in deletion state forever
+			// TODO: Check if this bug still exists in AWS SDK v2
+			types.CacheClusterStatusDeleteInProgress,
+		),
+		Refresh: stageCacheStatus(ctx, conn, apiID, name),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.Stage); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func diffVariablesOps(oldVars, newVars map[string]interface{}, prefix string) []types.PatchOperation {
+	ops := make([]types.PatchOperation, 0)
 
 	for k := range oldVars {
 		if _, ok := newVars[k]; !ok {
-			ops = append(ops, awstypes.PatchOperation{
-				Op:   awstypes.OpRemove,
+			ops = append(ops, types.PatchOperation{
+				Op:   types.OpRemove,
 				Path: aws.String(prefix + k),
 			})
 		}
@@ -491,8 +539,8 @@ func diffVariablesOps(oldVars, newVars map[string]interface{}, prefix string) []
 				continue
 			}
 		}
-		ops = append(ops, awstypes.PatchOperation{
-			Op:    awstypes.OpReplace,
+		ops = append(ops, types.PatchOperation{
+			Op:    types.OpReplace,
 			Path:  aws.String(prefix + k),
 			Value: aws.String(newValue),
 		})
@@ -501,7 +549,7 @@ func diffVariablesOps(oldVars, newVars map[string]interface{}, prefix string) []
 	return ops
 }
 
-func flattenAccessLogSettings(accessLogSettings *awstypes.AccessLogSettings) []map[string]interface{} {
+func flattenAccessLogSettings(accessLogSettings *types.AccessLogSettings) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, 1)
 	if accessLogSettings != nil {
 		result = append(result, map[string]interface{}{
@@ -512,12 +560,12 @@ func flattenAccessLogSettings(accessLogSettings *awstypes.AccessLogSettings) []m
 	return result
 }
 
-func expandCanarySettings(tfMap map[string]interface{}, deploymentId string) *awstypes.CanarySettings {
+func expandCanarySettings(tfMap map[string]interface{}, deploymentId string) *types.CanarySettings {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &awstypes.CanarySettings{
+	apiObject := &types.CanarySettings{
 		DeploymentId: aws.String(deploymentId),
 	}
 
@@ -536,7 +584,7 @@ func expandCanarySettings(tfMap map[string]interface{}, deploymentId string) *aw
 	return apiObject
 }
 
-func flattenCanarySettings(canarySettings *awstypes.CanarySettings) []interface{} {
+func flattenCanarySettings(canarySettings *types.CanarySettings) []interface{} {
 	settings := make(map[string]interface{})
 
 	if canarySettings == nil {
@@ -555,10 +603,10 @@ func flattenCanarySettings(canarySettings *awstypes.CanarySettings) []interface{
 	return []interface{}{settings}
 }
 
-func appendCanarySettingsPatchOperations(operations []awstypes.PatchOperation, oldCanarySettingsRaw, newCanarySettingsRaw []interface{}) []awstypes.PatchOperation {
+func appendCanarySettingsPatchOperations(operations []types.PatchOperation, oldCanarySettingsRaw, newCanarySettingsRaw []interface{}) []types.PatchOperation {
 	if len(newCanarySettingsRaw) == 0 { // Schema guarantees either 0 or 1
-		return append(operations, awstypes.PatchOperation{
-			Op:   awstypes.Op("remove"),
+		return append(operations, types.PatchOperation{
+			Op:   types.Op("remove"),
 			Path: aws.String("/canarySettings"),
 		})
 	}
@@ -582,8 +630,8 @@ func appendCanarySettingsPatchOperations(operations []awstypes.PatchOperation, o
 	oldPercentTraffic := oldSettings["percent_traffic"].(float64)
 	newPercentTraffic := newSettings["percent_traffic"].(float64)
 	if oldPercentTraffic != newPercentTraffic {
-		operations = append(operations, awstypes.PatchOperation{
-			Op:    awstypes.OpReplace,
+		operations = append(operations, types.PatchOperation{
+			Op:    types.OpReplace,
 			Path:  aws.String("/canarySettings/percentTraffic"),
 			Value: aws.String(fmt.Sprintf("%f", newPercentTraffic)),
 		})
@@ -592,12 +640,31 @@ func appendCanarySettingsPatchOperations(operations []awstypes.PatchOperation, o
 	oldUseStageCache := oldSettings["use_stage_cache"].(bool)
 	newUseStageCache := newSettings["use_stage_cache"].(bool)
 	if oldUseStageCache != newUseStageCache {
-		operations = append(operations, awstypes.PatchOperation{
-			Op:    awstypes.OpReplace,
+		operations = append(operations, types.PatchOperation{
+			Op:    types.OpReplace,
 			Path:  aws.String("/canarySettings/useStageCache"),
 			Value: aws.String(fmt.Sprintf("%t", newUseStageCache)),
 		})
 	}
 
 	return operations
+}
+
+func stageARN(c *conns.AWSClient, apiID, stageName string) string {
+	return arn.ARN{
+		Partition: c.Partition,
+		Region:    c.Region,
+		Service:   "apigateway",
+		Resource:  fmt.Sprintf("/restapis/%s/stages/%s", apiID, stageName),
+	}.String()
+}
+
+func stageInvokeARN(c *conns.AWSClient, apiID, stageName string) string {
+	return arn.ARN{
+		Partition: c.Partition,
+		Service:   "execute-api",
+		Region:    c.Region,
+		AccountID: c.AccountID,
+		Resource:  fmt.Sprintf("%s/%s", apiID, stageName),
+	}.String()
 }
