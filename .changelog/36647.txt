@@ -3,5 +3,5 @@ resource/aws_servicecatalogappregistry_application: Add `application_tag` attrib
 ```
 
 ```release-note:enhancement
-data-source//aws_servicecatalogappregistry_application: Add `application_tag` attribute
+data-source/aws_servicecatalogappregistry_application: Add `application_tag` attribute
 ```
