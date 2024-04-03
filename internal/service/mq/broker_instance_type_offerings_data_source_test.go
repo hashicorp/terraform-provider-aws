@@ -6,6 +6,7 @@ package mq_test
 import (
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -19,7 +20,13 @@ func TestAccMQBrokerInstanceTypeOfferingsDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBrokerInstanceTypeOfferingsDataSourceConfig_basic(),
+				//Config: testAccBrokerInstanceTypeOfferingsDataSourceConfig_basic(),
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: map[string]config.Variable{
+					"engine_type":        config.StringVariable("ACTIVEMQ"),
+					"storage_type":       config.StringVariable("EBS"),
+					"host_instance_type": config.StringVariable("mq.m5.large"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrSet("data.aws_mq_broker_instance_type_offerings.empty", "broker_instance_options.#"),
 					resource.TestCheckTypeSetElemNestedAttrs("data.aws_mq_broker_instance_type_offerings.empty", "broker_instance_options.*", map[string]string{
