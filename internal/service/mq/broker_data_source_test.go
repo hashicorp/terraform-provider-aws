@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -31,7 +32,34 @@ func TestAccMQBrokerDataSource_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBrokerDataSourceConfig_byID(rName),
+				//Config: testAccBrokerDataSourceConfig_byID(rName),
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: map[string]config.Variable{
+					"exclude_zone_ids":           config.ListVariable(config.StringVariable("usw2-az4"), config.StringVariable("usgw1-az2")),
+					"state":                      config.StringVariable("available"),
+					"name":                       config.StringVariable("opt-in-status"),
+					"values":                     config.ListVariable(config.StringVariable("opt-in-not-required")),
+					"cidr_block":                 config.StringVariable("10.0.0.0/16"),
+					"random_name":                config.StringVariable(rName),
+					"vcount":                     config.IntegerVariable(2),
+					"cidr_block_2":               config.StringVariable("0.0.0.0/0"),
+					"engine_type":                config.StringVariable("ActiveMQ"),
+					"engine_version":             config.StringVariable("5.17.6"),
+					"auto_minor_version_upgrade": config.BoolVariable(true),
+					"apply_immediately":          config.BoolVariable(true),
+					"deployment_mode":            config.StringVariable("ACTIVE_STANDBY_MULTI_AZ"),
+					"host_instance_type":         config.StringVariable("mq.t2.micro"),
+					"day_of_week":                config.StringVariable("TUESDAY"),
+					"time_of_day":                config.StringVariable("02:00"),
+					"time_zone":                  config.StringVariable("CET"),
+					"publicly_accessible":        config.BoolVariable(true),
+					"username":                   config.StringVariable("Ender"),
+					"password":                   config.StringVariable("AndrewWiggin"),
+					"username_2":                 config.StringVariable("Petra"),
+					"password_2":                 config.StringVariable("PetraArkanian"),
+					"console_access":             config.BoolVariable(true),
+					"groups":                     config.ListVariable(config.StringVariable("dragon"), config.StringVariable("salamander"), config.StringVariable("leopard")),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceByIdName, "arn", resourceName, "arn"),
 					resource.TestCheckResourceAttrPair(dataSourceByIdName, "broker_name", resourceName, "broker_name"),
@@ -56,7 +84,34 @@ func TestAccMQBrokerDataSource_basic(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccBrokerDataSourceConfig_byName(rName),
+				//Config: testAccBrokerDataSourceConfig_byName(rName),
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: map[string]config.Variable{
+					"exclude_zone_ids":           config.ListVariable(config.StringVariable("usw2-az4"), config.StringVariable("usgw1-az2")),
+					"state":                      config.StringVariable("available"),
+					"name":                       config.StringVariable("opt-in-status"),
+					"values":                     config.ListVariable(config.StringVariable("opt-in-not-required")),
+					"cidr_block":                 config.StringVariable("10.0.0.0/16"),
+					"random_name":                config.StringVariable(rName),
+					"vcount":                     config.IntegerVariable(2),
+					"cidr_block_2":               config.StringVariable("0.0.0.0/0"),
+					"engine_type":                config.StringVariable("ActiveMQ"),
+					"engine_version":             config.StringVariable("5.17.6"),
+					"auto_minor_version_upgrade": config.BoolVariable(true),
+					"apply_immediately":          config.BoolVariable(true),
+					"deployment_mode":            config.StringVariable("ACTIVE_STANDBY_MULTI_AZ"),
+					"host_instance_type":         config.StringVariable("mq.t2.micro"),
+					"day_of_week":                config.StringVariable("TUESDAY"),
+					"time_of_day":                config.StringVariable("02:00"),
+					"time_zone":                  config.StringVariable("CET"),
+					"publicly_accessible":        config.BoolVariable(true),
+					"username":                   config.StringVariable("Ender"),
+					"password":                   config.StringVariable("AndrewWiggin"),
+					"username_2":                 config.StringVariable("Petra"),
+					"password_2":                 config.StringVariable("PetraArkanian"),
+					"console_access":             config.BoolVariable(true),
+					"groups":                     config.ListVariable(config.StringVariable("dragon"), config.StringVariable("salamander"), config.StringVariable("leopard")),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceByNameName, "broker_id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceByNameName, "broker_name", resourceName, "broker_name"),
