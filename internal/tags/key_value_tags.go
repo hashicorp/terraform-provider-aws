@@ -6,6 +6,7 @@ package tags
 import (
 	"context"
 	"fmt"
+	"maps"
 	"net/url"
 	"reflect"
 	"sort"
@@ -644,7 +645,11 @@ func New(ctx context.Context, i interface{}) KeyValueTags {
 
 		return kvtm
 	case types.Map:
-		return New(ctx, flex.ExpandFrameworkStringMap(ctx, value))
+		tags := flex.ExpandFrameworkStringMap(ctx, value)
+		maps.DeleteFunc(tags, func(k string, v *string) bool {
+			return v == nil
+		})
+		return New(ctx, tags)
 	default:
 		return make(KeyValueTags)
 	}
