@@ -70,6 +70,11 @@ func ResourceDataCatalogEncryptionSettings() *schema.Resource {
 										Required:     true,
 										ValidateFunc: validation.StringInSlice(glue.CatalogEncryptionMode_Values(), false),
 									},
+									"catalog_encryption_service_role": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: verify.ValidARN,
+									},
 									"sse_aws_kms_key_id": {
 										Type:         schema.TypeString,
 										Optional:     true,
@@ -200,6 +205,10 @@ func expandEncryptionAtRest(tfMap map[string]interface{}) *glue.EncryptionAtRest
 		apiObject.CatalogEncryptionMode = aws.String(v)
 	}
 
+	if v, ok := tfMap["catalog_encryption_service_role"].(string); ok && v != "" {
+		apiObject.CatalogEncryptionServiceRole = aws.String(v)
+	}
+
 	if v, ok := tfMap["sse_aws_kms_key_id"].(string); ok && v != "" {
 		apiObject.SseAwsKmsKeyId = aws.String(v)
 	}
@@ -252,6 +261,10 @@ func flattenEncryptionAtRest(apiObject *glue.EncryptionAtRest) map[string]interf
 
 	if v := apiObject.CatalogEncryptionMode; v != nil {
 		tfMap["catalog_encryption_mode"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.CatalogEncryptionServiceRole; v != nil {
+		tfMap["catalog_encryption_service_role"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.SseAwsKmsKeyId; v != nil {

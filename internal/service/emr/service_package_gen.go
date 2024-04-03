@@ -33,8 +33,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceReleaseLabels,
+			Factory:  dataSourceReleaseLabels,
 			TypeName: "aws_emr_release_labels",
+			Name:     "Release Labels",
 		},
 	}
 }
@@ -42,11 +43,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceBlockPublicAccessConfiguration,
+			Factory:  resourceBlockPublicAccessConfiguration,
 			TypeName: "aws_emr_block_public_access_configuration",
+			Name:     "Block Public Access Configuration",
 		},
 		{
-			Factory:  ResourceCluster,
+			Factory:  resourceCluster,
 			TypeName: "aws_emr_cluster",
 			Name:     "Cluster",
 			Tags: &types.ServicePackageResourceTags{
@@ -54,23 +56,27 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceInstanceFleet,
+			Factory:  resourceInstanceFleet,
 			TypeName: "aws_emr_instance_fleet",
+			Name:     "Instance Fleet",
 		},
 		{
-			Factory:  ResourceInstanceGroup,
+			Factory:  resourceInstanceGroup,
 			TypeName: "aws_emr_instance_group",
+			Name:     "Instance Group",
 		},
 		{
-			Factory:  ResourceManagedScalingPolicy,
+			Factory:  resourceManagedScalingPolicy,
 			TypeName: "aws_emr_managed_scaling_policy",
+			Name:     "Managed Scaling Policy",
 		},
 		{
-			Factory:  ResourceSecurityConfiguration,
+			Factory:  resourceSecurityConfiguration,
 			TypeName: "aws_emr_security_configuration",
+			Name:     "Security Configuration",
 		},
 		{
-			Factory:  ResourceStudio,
+			Factory:  resourceStudio,
 			TypeName: "aws_emr_studio",
 			Name:     "Studio",
 			Tags: &types.ServicePackageResourceTags{
@@ -78,8 +84,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceStudioSessionMapping,
+			Factory:  resourceStudioSessionMapping,
 			TypeName: "aws_emr_studio_session_mapping",
+			Name:     "Studio Session Mapping",
 		},
 	}
 }

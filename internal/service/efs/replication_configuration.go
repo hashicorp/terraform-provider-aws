@@ -176,15 +176,10 @@ func resourceReplicationConfigurationDelete(ctx context.Context, d *schema.Resou
 
 	// Deletion of the replication configuration must be done from the Region in which the destination file system is located.
 	destination := expandDestinationsToCreate(d.Get("destination").([]interface{}))[0]
-	region := aws.StringValue(destination.Region)
-	session, err := conns.NewSessionForRegion(&conn.Config, region, meta.(*conns.AWSClient).TerraformVersion)
-
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating AWS session (%s): %s", region, err)
-	}
+	regionConn := meta.(*conns.AWSClient).EFSConnForRegion(ctx, aws.StringValue(destination.Region))
 
 	log.Printf("[DEBUG] Deleting EFS Replication Configuration: %s", d.Id())
-	if err := deleteReplicationConfiguration(ctx, efs.New(session), d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	if err := deleteReplicationConfiguration(ctx, regionConn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 

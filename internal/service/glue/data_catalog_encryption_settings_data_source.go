@@ -53,6 +53,10 @@ func DataSourceDataCatalogEncryptionSettings() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
+									"catalog_encryption_service_role": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
 									"sse_aws_kms_key_id": {
 										Type:     schema.TypeString,
 										Computed: true,

@@ -9,6 +9,7 @@ import (
 	acm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/acm"
 	acmpca_sdkv2 "github.com/aws/aws-sdk-go-v2/service/acmpca"
 	amp_sdkv2 "github.com/aws/aws-sdk-go-v2/service/amp"
+	amplify_sdkv2 "github.com/aws/aws-sdk-go-v2/service/amplify"
 	appconfig_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appconfig"
 	appfabric_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appfabric"
 	appflow_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appflow"
@@ -149,10 +150,8 @@ import (
 	wellarchitected_sdkv2 "github.com/aws/aws-sdk-go-v2/service/wellarchitected"
 	workspaces_sdkv2 "github.com/aws/aws-sdk-go-v2/service/workspaces"
 	xray_sdkv2 "github.com/aws/aws-sdk-go-v2/service/xray"
-	amplify_sdkv1 "github.com/aws/aws-sdk-go/service/amplify"
 	apigateway_sdkv1 "github.com/aws/aws-sdk-go/service/apigateway"
 	apigatewayv2_sdkv1 "github.com/aws/aws-sdk-go/service/apigatewayv2"
-	appconfig_sdkv1 "github.com/aws/aws-sdk-go/service/appconfig"
 	appintegrationsservice_sdkv1 "github.com/aws/aws-sdk-go/service/appintegrationsservice"
 	applicationautoscaling_sdkv1 "github.com/aws/aws-sdk-go/service/applicationautoscaling"
 	applicationinsights_sdkv1 "github.com/aws/aws-sdk-go/service/applicationinsights"
@@ -181,7 +180,6 @@ import (
 	docdb_sdkv1 "github.com/aws/aws-sdk-go/service/docdb"
 	dynamodb_sdkv1 "github.com/aws/aws-sdk-go/service/dynamodb"
 	ec2_sdkv1 "github.com/aws/aws-sdk-go/service/ec2"
-	ecr_sdkv1 "github.com/aws/aws-sdk-go/service/ecr"
 	ecs_sdkv1 "github.com/aws/aws-sdk-go/service/ecs"
 	efs_sdkv1 "github.com/aws/aws-sdk-go/service/efs"
 	elasticache_sdkv1 "github.com/aws/aws-sdk-go/service/elasticache"
@@ -282,16 +280,12 @@ func (c *AWSClient) AccountClient(ctx context.Context) *account_sdkv2.Client {
 	return errs.Must(client[*account_sdkv2.Client](ctx, c, names.Account, make(map[string]any)))
 }
 
-func (c *AWSClient) AmplifyConn(ctx context.Context) *amplify_sdkv1.Amplify {
-	return errs.Must(conn[*amplify_sdkv1.Amplify](ctx, c, names.Amplify, make(map[string]any)))
+func (c *AWSClient) AmplifyClient(ctx context.Context) *amplify_sdkv2.Client {
+	return errs.Must(client[*amplify_sdkv2.Client](ctx, c, names.Amplify, make(map[string]any)))
 }
 
 func (c *AWSClient) AppAutoScalingConn(ctx context.Context) *applicationautoscaling_sdkv1.ApplicationAutoScaling {
 	return errs.Must(conn[*applicationautoscaling_sdkv1.ApplicationAutoScaling](ctx, c, names.AppAutoScaling, make(map[string]any)))
-}
-
-func (c *AWSClient) AppConfigConn(ctx context.Context) *appconfig_sdkv1.AppConfig {
-	return errs.Must(conn[*appconfig_sdkv1.AppConfig](ctx, c, names.AppConfig, make(map[string]any)))
 }
 
 func (c *AWSClient) AppConfigClient(ctx context.Context) *appconfig_sdkv2.Client {
@@ -588,10 +582,6 @@ func (c *AWSClient) EC2Conn(ctx context.Context) *ec2_sdkv1.EC2 {
 
 func (c *AWSClient) EC2Client(ctx context.Context) *ec2_sdkv2.Client {
 	return errs.Must(client[*ec2_sdkv2.Client](ctx, c, names.EC2, make(map[string]any)))
-}
-
-func (c *AWSClient) ECRConn(ctx context.Context) *ecr_sdkv1.ECR {
-	return errs.Must(conn[*ecr_sdkv1.ECR](ctx, c, names.ECR, make(map[string]any)))
 }
 
 func (c *AWSClient) ECRClient(ctx context.Context) *ecr_sdkv2.Client {
