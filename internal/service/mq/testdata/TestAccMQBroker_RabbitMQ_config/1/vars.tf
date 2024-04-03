@@ -18,11 +18,6 @@ variable "engine_version" {
   default = "3.11.20"
 }
 
-variable "consumer_timeout" {
-  type    = number
-  default = 1800000
-}
-
 variable "host_instance_type" {
   type    = string
   default = "mq.t3.micro"

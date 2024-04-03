@@ -14,7 +14,7 @@ resource "aws_mq_configuration" "test" {
 
   data = <<DATA
   # Default RabbitMQ delivery acknowledgement timeout is 30 minutes
-  consumer_timeout = var.consumer_timeout
+  consumer_timeout = 1800000
   
   DATA
 }
