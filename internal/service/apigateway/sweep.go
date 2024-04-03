@@ -6,17 +6,13 @@ package apigateway
 import (
 	"fmt"
 	"log"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/apigateway/types"
-	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
 func RegisterSweepers() {
@@ -60,40 +56,36 @@ func sweepRestAPIs(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
+	input := &apigateway.GetRestApisInput{}
 	conn := client.APIGatewayClient(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	pages := apigateway.NewGetRestApisPaginator(conn, &apigateway.GetRestApisInput{})
+	pages := apigateway.NewGetRestApisPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-		if err != nil {
-			if awsv1.SkipSweepError(err) {
-				log.Printf("[WARN] Skipping API Gateway REST API sweep for %s: %s", region, err)
-				return nil
-			}
-			return fmt.Errorf("retrieving API Gateway REST APIs: %s", err)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping API Gateway REST API sweep for %s: %s", region, err)
+			return nil
 		}
 
-		for _, item := range page.Items {
-			input := &apigateway.DeleteRestApiInput{
-				RestApiId: item.Id,
-			}
-			log.Printf("[INFO] Deleting API Gateway REST API: %+v", input)
-			// TooManyRequestsException: Too Many Requests can take over a minute to resolve itself
-			err := retry.RetryContext(ctx, 2*time.Minute, func() *retry.RetryError {
-				_, err := conn.DeleteRestApi(ctx, input)
-				if err != nil {
-					if errs.IsA[*awstypes.TooManyRequestsException](err) {
-						return retry.RetryableError(err)
-					}
-					return retry.NonRetryableError(err)
-				}
-				return nil
-			})
-			if err != nil {
-				log.Printf("[ERROR] Failed to delete API Gateway REST API %s: %s", *item.Name, err)
-				continue
-			}
+		if err != nil {
+			return fmt.Errorf("error listing API Gateway REST APIs (%s): %w", region, err)
 		}
+
+		for _, v := range page.Items {
+			r := resourceRestAPI()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.Id))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping API Gateway REST APIs (%s): %w", region, err)
 	}
 
 	return nil
@@ -112,18 +104,20 @@ func sweepVPCLinks(region string) error {
 	pages := apigateway.NewGetVpcLinksPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping API Gateway VPC Link sweep for %s: %s", region, err)
+			return nil
+		}
+
 		if err != nil {
-			if awsv1.SkipSweepError(err) {
-				log.Printf("[WARN] Skipping API Gateway VPC Link sweep for %s: %s", region, err)
-				return nil
-			}
 			return fmt.Errorf("error listing API Gateway VPC Links (%s): %w", region, err)
 		}
 
 		for _, v := range page.Items {
 			id := aws.ToString(v.Id)
 
-			if v.Status == awstypes.VpcLinkStatusFailed {
+			if v.Status == types.VpcLinkStatusFailed {
 				log.Printf("[INFO] Skipping API Gateway VPC Link %s: Status=%s", id, string(v.Status))
 				continue
 			}
@@ -151,37 +145,39 @@ func sweepClientCertificates(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-
 	conn := client.APIGatewayClient(ctx)
+	input := &apigateway.GetClientCertificatesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
 
-	pages := apigateway.NewGetClientCertificatesPaginator(conn, &apigateway.GetClientCertificatesInput{})
+	pages := apigateway.NewGetClientCertificatesPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-		if err != nil {
-			errs = multierror.Append(errs, fmt.Errorf("describing API Gateway Client Certificates for %s: %w", region, err))
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping API Gateway Client Certificate sweep for %s: %s", region, err)
+			return nil
 		}
 
-		for _, clientCertificate := range page.Items {
+		if err != nil {
+			return fmt.Errorf("error listing API Gateway Client Certificates (%s): %w", region, err)
+		}
+
+		for _, v := range page.Items {
 			r := resourceClientCertificate()
 			d := r.Data(nil)
-			d.SetId(aws.ToString(clientCertificate.ClientCertificateId))
+			d.SetId(aws.ToString(v.ClientCertificateId))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 	}
 
-	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("sweeping API Gateway Client Certificates for %s: %w", region, err))
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping API Gateway Client Certificates (%s): %w", region, err)
 	}
 
-	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping API Gateway Client Certificate sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
+	return nil
 }
 
 func sweepUsagePlans(region string) error {
@@ -190,42 +186,40 @@ func sweepUsagePlans(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-
-	log.Printf("[INFO] Sweeping API Gateway Usage Plans for %s", region)
-
 	conn := client.APIGatewayClient(ctx)
+	input := &apigateway.GetUsagePlansInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
 
-	pages := apigateway.NewGetUsagePlansPaginator(conn, &apigateway.GetUsagePlansInput{})
+	pages := apigateway.NewGetUsagePlansPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-		if err != nil {
-			errs = multierror.Append(errs, fmt.Errorf("describing API Gateway Usage Plans for %s: %w", region, err))
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping API Gateway Usage Plan sweep for %s: %s", region, err)
+			return nil
 		}
 
-		log.Printf("[INFO] API Gateway Usage Plans: %d", len(page.Items))
+		if err != nil {
+			return fmt.Errorf("error listing API Gateway Usage Plans (%s): %w", region, err)
+		}
 
-		for _, up := range page.Items {
+		for _, v := range page.Items {
 			r := resourceUsagePlan()
 			d := r.Data(nil)
-			d.SetId(aws.ToString(up.Id))
-			d.Set("api_stages", flattenAPIStages(up.ApiStages))
+			d.SetId(aws.ToString(v.Id))
+			d.Set("api_stages", flattenAPIStages(v.ApiStages))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 	}
 
-	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("sweeping API Gateway Usage Plans for %s: %w", region, err))
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping API Gateway Usage Plans (%s): %w", region, err)
 	}
 
-	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping API Gateway Usage Plan sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
+	return nil
 }
 
 func sweepAPIKeys(region string) error {
@@ -234,21 +228,22 @@ func sweepAPIKeys(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-
-	log.Printf("[INFO] Sweeping API Gateway API Keys for %s", region)
-
 	conn := client.APIGatewayClient(ctx)
+	input := &apigateway.GetApiKeysInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
 
-	pages := apigateway.NewGetApiKeysPaginator(conn, &apigateway.GetApiKeysInput{})
+	pages := apigateway.NewGetApiKeysPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-		if err != nil {
-			errs = multierror.Append(errs, fmt.Errorf("describing API Gateway API Keys for %s: %w", region, err))
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping API Gateway API Key sweep for %s: %s", region, err)
+			return nil
 		}
 
-		log.Printf("[INFO] API Gateway API Keys: %d", len(page.Items))
+		if err != nil {
+			return fmt.Errorf("error listing API Gateway API Keys (%s): %w", region, err)
+		}
 
 		for _, v := range page.Items {
 			r := resourceAPIKey()
@@ -259,16 +254,13 @@ func sweepAPIKeys(region string) error {
 		}
 	}
 
-	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("sweeping API Gateway API Keys for %s: %w", region, err))
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping API Gateway API Keys (%s): %w", region, err)
 	}
 
-	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping API Gateway API Key sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
+	return nil
 }
 
 func sweepDomainNames(region string) error {
@@ -277,39 +269,37 @@ func sweepDomainNames(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-
-	log.Printf("[INFO] Sweeping API Gateway Domain Names for %s", region)
-
 	conn := client.APIGatewayClient(ctx)
+	input := &apigateway.GetDomainNamesInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
 
-	pages := apigateway.NewGetDomainNamesPaginator(conn, &apigateway.GetDomainNamesInput{})
+	pages := apigateway.NewGetDomainNamesPaginator(conn, input)
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-		if err != nil {
-			errs = multierror.Append(errs, fmt.Errorf("describing API Gateway Domain Names for %s: %w", region, err))
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping API Gateway Domain Name sweep for %s: %s", region, err)
+			return nil
 		}
 
-		log.Printf("[INFO] API Gateway Domain Names: %d", len(page.Items))
+		if err != nil {
+			return fmt.Errorf("error listing API Gateway Domain Names (%s): %w", region, err)
+		}
 
-		for _, dn := range page.Items {
+		for _, v := range page.Items {
 			r := resourceDomainName()
 			d := r.Data(nil)
-			d.SetId(aws.ToString(dn.DomainName))
+			d.SetId(aws.ToString(v.DomainName))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 	}
 
-	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("sweeping API Gateway Domain Names for %s: %w", region, err))
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping API Gateway Domain Names (%s): %w", region, err)
 	}
 
-	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping API Gateway Domain Name sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
+	return nil
 }
