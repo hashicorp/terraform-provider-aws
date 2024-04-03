@@ -82,6 +82,7 @@ func (r *resourceLifecyclePolicy) Schema(ctx context.Context, req resource.Schem
 			},
 			"status": schema.StringAttribute{
 				Optional: true,
+				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
@@ -337,6 +338,19 @@ func (r *resourceLifecyclePolicy) Create(ctx context.Context, req resource.Creat
 	plan.ID = flex.StringToFramework(ctx, out.LifecyclePolicyArn)
 	plan.ARN = flex.StringToFramework(ctx, out.LifecyclePolicyArn)
 
+	// Read to retrieve computed arguments not part of the create response
+	readOut, err := findLifecyclePolicyByARN(ctx, conn, plan.ARN.ValueString())
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.ImageBuilder, create.ErrActionCreating, ResNameLifecyclePolicy, plan.Name.String(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	plan.Status = flex.StringValueToFramework(ctx, readOut.Status)
+	plan.ResourceType = flex.StringValueToFramework(ctx, readOut.ResourceType)
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
@@ -349,7 +363,7 @@ func (r *resourceLifecyclePolicy) Read(ctx context.Context, req resource.ReadReq
 		return
 	}
 
-	out, err := findLifecyclePolicyByARN(ctx, conn, state.ID.String())
+	out, err := findLifecyclePolicyByARN(ctx, conn, state.ID.ValueString())
 
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
@@ -580,7 +594,9 @@ func expandPolicyDetailAction(ctx context.Context, tfList []resourceActionData) 
 
 	tfObj := tfList[0]
 
-	apiObject := awstypes.LifecyclePolicyDetailAction{}
+	apiObject := awstypes.LifecyclePolicyDetailAction{
+		Type: awstypes.LifecyclePolicyDetailActionType(tfObj.Type.ValueString()),
+	}
 
 	if !tfObj.IncludeResources.IsNull() {
 		var tfList []resourceIncludeResourcesData
@@ -590,10 +606,6 @@ func expandPolicyDetailAction(ctx context.Context, tfList []resourceActionData) 
 		}
 
 		apiObject.IncludeResources = expandPolicyDetailActionIncludeResources(tfList)
-	}
-
-	if !tfObj.Type.IsNull() {
-		apiObject.Type = awstypes.LifecyclePolicyDetailActionType(tfObj.Type.ValueString())
 	}
 
 	return &apiObject, diags
@@ -784,7 +796,7 @@ func expandResourceSelectionRecipes(tfList []resourceRecipesData) []awstypes.Lif
 
 func flattenPolicyDetails(ctx context.Context, apiObject []awstypes.LifecyclePolicyDetail) (types.Set, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	elemType := types.ObjectType{AttrTypes: resourceActionAttrTypes}
+	elemType := types.ObjectType{AttrTypes: resourcePolicyDetailAttrTypes}
 
 	if apiObject == nil {
 		return types.SetNull(elemType), diags
@@ -828,15 +840,12 @@ func flattenDetailAction(ctx context.Context, apiObject *awstypes.LifecyclePolic
 		return types.ListNull(elemType), diags
 	}
 
+	includeResources, d := flattenIncludeResources(ctx, apiObject.IncludeResources)
+	diags.Append(d...)
+
 	obj := map[string]attr.Value{
-		"type": flex.StringValueToFramework(ctx, apiObject.Type),
-	}
-
-	if apiObject.IncludeResources != nil {
-		includeResources, d := flattenIncludeResources(ctx, apiObject.IncludeResources)
-		diags.Append(d...)
-
-		obj["include_resources"] = includeResources
+		"include_resources": includeResources,
+		"type":              flex.StringValueToFramework(ctx, apiObject.Type),
 	}
 
 	objVal, d := types.ObjectValue(resourceActionAttrTypes, obj)
@@ -903,17 +912,12 @@ func flattenDetailExclusionRules(ctx context.Context, apiObject *awstypes.Lifecy
 		return types.ListNull(elemType), diags
 	}
 
-	obj := map[string]attr.Value{}
+	amis, d := flattenExclusionRulesAMIS(ctx, apiObject.Amis)
+	diags.Append(d...)
 
-	if apiObject.Amis != nil {
-		amis, d := flattenExclusionRulesAMIS(ctx, apiObject.Amis)
-		diags.Append(d...)
-
-		obj["amis"] = amis
-	}
-
-	if apiObject.TagMap != nil {
-		obj["tag_map"] = flex.FlattenFrameworkStringValueMap(ctx, apiObject.TagMap)
+	obj := map[string]attr.Value{
+		"amis":    amis,
+		"tag_map": flex.FlattenFrameworkStringValueMap(ctx, apiObject.TagMap),
 	}
 
 	objVal, d := types.ObjectValue(resourceExclusionRulesAttrTypes, obj)
@@ -933,27 +937,15 @@ func flattenExclusionRulesAMIS(ctx context.Context, apiObject *awstypes.Lifecycl
 		return types.ListNull(elemType), diags
 	}
 
+	lastLaunched, d := flattenExclusionRulesAMISLastLaunched(ctx, apiObject.LastLaunched)
+	diags.Append(d...)
+
 	obj := map[string]attr.Value{
-		"is_public": flex.BoolToFramework(ctx, &apiObject.IsPublic),
-	}
-
-	if apiObject.LastLaunched != nil {
-		lastLaunched, d := flattenExclusionRulesAMISLastLaunched(ctx, apiObject.LastLaunched)
-		diags.Append(d...)
-
-		obj["last_launched"] = lastLaunched
-	}
-
-	if apiObject.Regions != nil {
-		obj["regions"] = flex.FlattenFrameworkStringValueList(ctx, apiObject.Regions)
-	}
-
-	if apiObject.SharedAccounts != nil {
-		obj["shared_accounts"] = flex.FlattenFrameworkStringValueList(ctx, apiObject.SharedAccounts)
-	}
-
-	if apiObject.TagMap != nil {
-		obj["tag_map"] = flex.FlattenFrameworkStringValueMap(ctx, apiObject.TagMap)
+		"is_public":       flex.BoolToFramework(ctx, &apiObject.IsPublic),
+		"regions":         flex.FlattenFrameworkStringValueList(ctx, apiObject.Regions),
+		"shared_accounts": flex.FlattenFrameworkStringValueList(ctx, apiObject.SharedAccounts),
+		"tag_map":         flex.FlattenFrameworkStringValueMap(ctx, apiObject.TagMap),
+		"last_launched":   lastLaunched,
 	}
 
 	objVal, d := types.ObjectValue(resourceAMISAttrTypes, obj)
@@ -995,17 +987,12 @@ func flattenResourceSelection(ctx context.Context, apiObject *awstypes.Lifecycle
 		return types.ListNull(elemType), diags
 	}
 
-	obj := map[string]attr.Value{}
+	recipes, d := flattenResourceSelectionRecipes(ctx, apiObject.Recipes)
+	diags.Append(d...)
 
-	if apiObject.Recipes != nil {
-		recipes, d := flattenResourceSelectionRecipes(ctx, apiObject.Recipes)
-		diags.Append(d...)
-
-		obj["recipes"] = recipes
-	}
-
-	if apiObject.TagMap != nil {
-		obj["tag_map"] = flex.FlattenFrameworkStringValueMap(ctx, apiObject.TagMap)
+	obj := map[string]attr.Value{
+		"recipes": recipes,
+		"tag_map": flex.FlattenFrameworkStringValueMap(ctx, apiObject.TagMap),
 	}
 
 	objVal, d := types.ObjectValue(resourceResourceSelectionAttrTypes, obj)
@@ -1028,7 +1015,6 @@ func flattenResourceSelectionRecipes(ctx context.Context, apiObject []awstypes.L
 	result := []attr.Value{}
 
 	for _, recipe := range apiObject {
-
 		obj := map[string]attr.Value{
 			"name":             flex.StringToFramework(ctx, recipe.Name),
 			"semantic_version": flex.StringToFramework(ctx, recipe.SemanticVersion),
@@ -1040,10 +1026,10 @@ func flattenResourceSelectionRecipes(ctx context.Context, apiObject []awstypes.L
 		result = append(result, objVal)
 	}
 
-	listVal, d := types.SetValue(elemType, result)
+	setVal, d := types.SetValue(elemType, result)
 	diags.Append(d...)
 
-	return listVal, diags
+	return setVal, diags
 }
 
 type resourceLifecyclePolicyData struct {
