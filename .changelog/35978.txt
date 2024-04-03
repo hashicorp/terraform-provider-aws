@@ -1,0 +1,4 @@
+```release-note:enhancement
+resource/aws_glue_data_catalog_encryption_settings: Add `catalog_encryption_service_role` configuration
+data/aws_glue_data_catalog_encryption_settings: Add `catalog_encryption_service_role` attribute
+```
