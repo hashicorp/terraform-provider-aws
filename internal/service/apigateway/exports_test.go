@@ -30,6 +30,7 @@ var (
 	ResourceUsagePlanKey         = resourceUsagePlanKey
 	ResourceVPCLink              = resourceVPCLink
 
+	DefaultAuthorizerTTL                 = defaultAuthorizerTTL
 	FindAPIKeyByID                       = findAPIKeyByID
 	FindAuthorizerByTwoPartKey           = findAuthorizerByTwoPartKey
 	FindBasePathMappingByTwoPartKey      = findBasePathMappingByTwoPartKey
