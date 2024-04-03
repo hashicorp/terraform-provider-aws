@@ -11,7 +11,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/apigateway/types"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -21,8 +21,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_api_gateway_resource")
-func ResourceResource() *schema.Resource {
+// @SDKResource("aws_api_gateway_resource", name="Resource")
+func resourceResource() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceResourceCreate,
 		ReadWithoutTimeout:   resourceResourceRead,
@@ -90,7 +90,7 @@ func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	resource, err := FindResourceByTwoPartKey(ctx, conn, d.Id(), d.Get("rest_api_id").(string))
+	resource, err := findResourceByTwoPartKey(ctx, conn, d.Id(), d.Get("rest_api_id").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] API Gateway Resource (%s) not found, removing from state", d.Id())
@@ -109,19 +109,19 @@ func resourceResourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func resourceResourceUpdateOperations(d *schema.ResourceData) []awstypes.PatchOperation {
-	operations := make([]awstypes.PatchOperation, 0)
+func resourceResourceUpdateOperations(d *schema.ResourceData) []types.PatchOperation {
+	operations := make([]types.PatchOperation, 0)
 	if d.HasChange("path_part") {
-		operations = append(operations, awstypes.PatchOperation{
-			Op:    awstypes.OpReplace,
+		operations = append(operations, types.PatchOperation{
+			Op:    types.OpReplace,
 			Path:  aws.String("/pathPart"),
 			Value: aws.String(d.Get("path_part").(string)),
 		})
 	}
 
 	if d.HasChange("parent_id") {
-		operations = append(operations, awstypes.PatchOperation{
-			Op:    awstypes.OpReplace,
+		operations = append(operations, types.PatchOperation{
+			Op:    types.OpReplace,
 			Path:  aws.String("/parentId"),
 			Value: aws.String(d.Get("parent_id").(string)),
 		})
@@ -158,7 +158,7 @@ func resourceResourceDelete(ctx context.Context, d *schema.ResourceData, meta in
 		RestApiId:  aws.String(d.Get("rest_api_id").(string)),
 	})
 
-	if errs.IsA[*awstypes.NotFoundException](err) {
+	if errs.IsA[*types.NotFoundException](err) {
 		return diags
 	}
 
@@ -169,7 +169,7 @@ func resourceResourceDelete(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func FindResourceByTwoPartKey(ctx context.Context, conn *apigateway.Client, resourceID, apiID string) (*apigateway.GetResourceOutput, error) {
+func findResourceByTwoPartKey(ctx context.Context, conn *apigateway.Client, resourceID, apiID string) (*apigateway.GetResourceOutput, error) {
 	input := &apigateway.GetResourceInput{
 		ResourceId: aws.String(resourceID),
 		RestApiId:  aws.String(apiID),
@@ -177,7 +177,7 @@ func FindResourceByTwoPartKey(ctx context.Context, conn *apigateway.Client, reso
 
 	output, err := conn.GetResource(ctx, input)
 
-	if errs.IsA[*awstypes.NotFoundException](err) {
+	if errs.IsA[*types.NotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
