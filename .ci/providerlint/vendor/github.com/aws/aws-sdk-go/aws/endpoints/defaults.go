@@ -6871,6 +6871,9 @@ var awsPartition = partition{
 					Region: "ap-southeast-3",
 				}: endpoint{},
 				endpointKey{
+					Region: "ap-southeast-4",
+				}: endpoint{},
+				endpointKey{
 					Region: "ca-central-1",
 				}: endpoint{},
 				endpointKey{
@@ -28696,6 +28699,36 @@ var awsPartition = partition{
 					Deprecated: boxedTrue,
 				},
 				endpointKey{
+					Region: "ca-west-1",
+				}: endpoint{},
+				endpointKey{
+					Region:  "ca-west-1",
+					Variant: dualStackVariant,
+				}: endpoint{
+					Hostname: "servicediscovery.ca-west-1.api.aws",
+				},
+				endpointKey{
+					Region:  "ca-west-1",
+					Variant: fipsVariant,
+				}: endpoint{
+					Hostname: "servicediscovery-fips.ca-west-1.amazonaws.com",
+				},
+				endpointKey{
+					Region:  "ca-west-1",
+					Variant: fipsVariant | dualStackVariant,
+				}: endpoint{
+					Hostname: "servicediscovery-fips.ca-west-1.api.aws",
+				},
+				endpointKey{
+					Region: "ca-west-1-fips",
+				}: endpoint{
+					Hostname: "servicediscovery-fips.ca-west-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "ca-west-1",
+					},
+					Deprecated: boxedTrue,
+				},
+				endpointKey{
 					Region: "eu-central-1",
 				}: endpoint{},
 				endpointKey{
@@ -38069,6 +38102,22 @@ var awsusgovPartition = partition{
 		},
 		"bedrock": service{
 			Endpoints: serviceEndpoints{
+				endpointKey{
+					Region: "bedrock-runtime-us-gov-west-1",
+				}: endpoint{
+					Hostname: "bedrock-runtime.us-gov-west-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-gov-west-1",
+					},
+				},
+				endpointKey{
+					Region: "bedrock-us-gov-west-1",
+				}: endpoint{
+					Hostname: "bedrock.us-gov-west-1.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "us-gov-west-1",
+					},
+				},
 				endpointKey{
 					Region: "us-gov-west-1",
 				}: endpoint{},
