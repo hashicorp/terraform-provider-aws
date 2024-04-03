@@ -209,7 +209,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_api_gateway_usage_plan_key",
 		},
 		{
-			Factory:  ResourceVPCLink,
+			Factory:  resourceVPCLink,
 			TypeName: "aws_api_gateway_vpc_link",
 			Name:     "VPC Link",
 			Tags: &types.ServicePackageResourceTags{

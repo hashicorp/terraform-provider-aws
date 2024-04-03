@@ -25,6 +25,7 @@ var (
 	ResourceResource             = resourceResource
 	ResourceRestAPI              = resourceRestAPI
 	ResourceRestAPIPolicy        = resourceRestAPIPolicy
+	ResourceVPCLink              = resourceVPCLink
 
 	FindAPIKeyByID                       = findAPIKeyByID
 	FindAuthorizerByTwoPartKey           = findAuthorizerByTwoPartKey
@@ -44,4 +45,5 @@ var (
 	FindRequestValidatorByTwoPartKey     = findRequestValidatorByTwoPartKey
 	FindResourceByTwoPartKey             = findResourceByTwoPartKey
 	FindRestAPIByID                      = findRestAPIByID
+	FindVPCLinkByID                      = findVPCLinkByID
 )

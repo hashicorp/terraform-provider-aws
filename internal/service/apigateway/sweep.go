@@ -128,7 +128,7 @@ func sweepVPCLinks(region string) error {
 				continue
 			}
 
-			r := ResourceVPCLink()
+			r := resourceVPCLink()
 			d := r.Data(nil)
 			d.SetId(id)
 

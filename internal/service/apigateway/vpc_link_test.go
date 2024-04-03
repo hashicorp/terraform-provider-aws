@@ -9,16 +9,13 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/apigateway"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -68,7 +65,6 @@ func TestAccAPIGatewayVPCLink_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandString(5)
 	resourceName := "aws_api_gateway_vpc_link.test"
-	vpcLinkName := fmt.Sprintf("tf-apigateway-%s", rName)
 	description := "test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -81,9 +77,6 @@ func TestAccAPIGatewayVPCLink_tags(t *testing.T) {
 				Config: testAccVPCLinkConfig_tags1(rName, description, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCLinkExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", vpcLinkName),
-					resource.TestCheckResourceAttr(resourceName, "description", "test"),
-					resource.TestCheckResourceAttr(resourceName, "target_arns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -97,9 +90,6 @@ func TestAccAPIGatewayVPCLink_tags(t *testing.T) {
 				Config: testAccVPCLinkConfig_tags2(rName, description, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCLinkExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", vpcLinkName),
-					resource.TestCheckResourceAttr(resourceName, "description", "test"),
-					resource.TestCheckResourceAttr(resourceName, "target_arns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -109,9 +99,6 @@ func TestAccAPIGatewayVPCLink_tags(t *testing.T) {
 				Config: testAccVPCLinkConfig_tags1(rName, description, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckVPCLinkExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "name", vpcLinkName),
-					resource.TestCheckResourceAttr(resourceName, "description", "test"),
-					resource.TestCheckResourceAttr(resourceName, "target_arns.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -152,39 +139,34 @@ func testAccCheckVPCLinkDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			input := &apigateway.GetVpcLinkInput{
-				VpcLinkId: aws.String(rs.Primary.ID),
+			_, err := tfapigateway.FindVPCLinkByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			_, err := conn.GetVpcLink(ctx, input)
 			if err != nil {
-				if errs.IsA[*awstypes.NotFoundException](err) {
-					return nil
-				}
 				return err
 			}
 
-			return fmt.Errorf("Expected VPC Link to be destroyed, %s found", rs.Primary.ID)
+			return fmt.Errorf("API Gateway VPC Link %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckVPCLinkExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckVPCLinkExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
-		input := &apigateway.GetVpcLinkInput{
-			VpcLinkId: aws.String(rs.Primary.ID),
-		}
+		_, err := tfapigateway.FindVPCLinkByID(ctx, conn, rs.Primary.ID)
 
-		_, err := conn.GetVpcLink(ctx, input)
 		return err
 	}
 }
