@@ -18,6 +18,7 @@ func TestAccAPIGatewayVPCLinkDataSource_basic(t *testing.T) {
 	rName := fmt.Sprintf("tf-acc-test-%s", sdkacctest.RandString(8))
 	resourceName := "aws_api_gateway_vpc_link.vpc_link"
 	dataSourceName := "data.aws_api_gateway_vpc_link.vpc_link"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
