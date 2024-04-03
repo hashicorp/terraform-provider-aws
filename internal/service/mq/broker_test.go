@@ -17,6 +17,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -267,7 +268,19 @@ func TestAccMQBroker_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBrokerConfig_basic(rName, testAccBrokerVersionNewer),
+				//Config: testAccBrokerConfig_basic(rName, testAccBrokerVersionNewer),
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: map[string]config.Variable{
+					"random_name":             config.StringVariable(rName),
+					"engine_type":             config.StringVariable("ActiveMQ"),
+					"engine_version":          config.StringVariable("5.17.6"),
+					"host_instance_type":      config.StringVariable("mq.t2.micro"),
+					"authentication_strategy": config.StringVariable("simple"),
+					"storage_type":            config.StringVariable("efs"),
+					"general":                 config.BoolVariable(true),
+					"username":                config.StringVariable("Test"),
+					"password":                config.StringVariable("TestTest1234"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexache.MustCompile(`broker:+.`)),
@@ -346,7 +359,19 @@ func TestAccMQBroker_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBrokerConfig_basic(rName, testAccBrokerVersionNewer),
+				//Config: testAccBrokerConfig_basic(rName, testAccBrokerVersionNewer),
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: map[string]config.Variable{
+					"random_name":             config.StringVariable(rName),
+					"engine_type":             config.StringVariable("ActiveMQ"),
+					"engine_version":          config.StringVariable("5.17.6"),
+					"host_instance_type":      config.StringVariable("mq.t2.micro"),
+					"authentication_strategy": config.StringVariable("simple"),
+					"storage_type":            config.StringVariable("efs"),
+					"general":                 config.BoolVariable(true),
+					"username":                config.StringVariable("Test"),
+					"password":                config.StringVariable("TestTest1234"),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfmq.ResourceBroker(), resourceName),
@@ -378,7 +403,18 @@ func TestAccMQBroker_tags(t *testing.T) {
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBrokerConfig_tags1(rName, testAccBrokerVersionNewer, "key1", "value1"),
+				//Config: testAccBrokerConfig_tags1(rName, testAccBrokerVersionNewer, "key1", "value1"),
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: map[string]config.Variable{
+					"random_name":        config.StringVariable(rName),
+					"apply_immediately":  config.BoolVariable(true),
+					"engine_type":        config.StringVariable("ActiveMQ"),
+					"engine_version":     config.StringVariable("5.17.6"),
+					"host_instance_type": config.StringVariable("mq.t2.micro"),
+					"username":           config.StringVariable("Test"),
+					"password":           config.StringVariable("TestTest1234"),
+					"key1_value":         config.StringVariable("value1"),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -392,7 +428,19 @@ func TestAccMQBroker_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
 			},
 			{
-				Config: testAccBrokerConfig_tags2(rName, testAccBrokerVersionNewer, "key1", "value1updated", "key2", "value2"),
+				//Config: testAccBrokerConfig_tags2(rName, testAccBrokerVersionNewer, "key1", "value1updated", "key2", "value2"),
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: map[string]config.Variable{
+					"random_name":        config.StringVariable(rName),
+					"apply_immediately":  config.BoolVariable(true),
+					"engine_type":        config.StringVariable("ActiveMQ"),
+					"engine_version":     config.StringVariable("5.17.6"),
+					"host_instance_type": config.StringVariable("mq.t2.micro"),
+					"username":           config.StringVariable("Test"),
+					"password":           config.StringVariable("TestTest1234"),
+					"key1_value":         config.StringVariable("value1updated"),
+					"key2_value":         config.StringVariable("value2"),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -401,7 +449,18 @@ func TestAccMQBroker_tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccBrokerConfig_tags1(rName, testAccBrokerVersionNewer, "key2", "value2"),
+				//Config: testAccBrokerConfig_tags1(rName, testAccBrokerVersionNewer, "key2", "value2"),
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: map[string]config.Variable{
+					"random_name":        config.StringVariable(rName),
+					"apply_immediately":  config.BoolVariable(true),
+					"engine_type":        config.StringVariable("ActiveMQ"),
+					"engine_version":     config.StringVariable("5.17.6"),
+					"host_instance_type": config.StringVariable("mq.t2.micro"),
+					"username":           config.StringVariable("Test"),
+					"password":           config.StringVariable("TestTest1234"),
+					"key2_value":         config.StringVariable("value2"),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -433,7 +492,18 @@ func TestAccMQBroker_throughputOptimized(t *testing.T) {
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBrokerConfig_ebs(rName, testAccBrokerVersionNewer),
+				//Config: testAccBrokerConfig_ebs(rName, testAccBrokerVersionNewer),
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: map[string]config.Variable{
+					"random_name":        config.StringVariable(rName),
+					"engine_type":        config.StringVariable("ActiveMQ"),
+					"engine_version":     config.StringVariable("5.17.6"),
+					"storage_type":       config.StringVariable("ebs"),
+					"host_instance_type": config.StringVariable("mq.m5.large"),
+					"general":            config.BoolVariable(true),
+					"username":           config.StringVariable("Test"),
+					"password":           config.StringVariable("TestTest1234"),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
@@ -491,20 +561,22 @@ func TestAccMQBroker_AllFields_defaultVPC(t *testing.T) {
 
 	var broker mq.DescribeBrokerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rNameUpdated := sdkacctest.RandomWithPrefix("tf-acc-test-updated")
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
 
-	cfgBodyBefore := `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<broker xmlns="http://activemq.apache.org/schema/core">
-</broker>`
-	cfgBodyAfter := `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<broker xmlns="http://activemq.apache.org/schema/core">
-  <plugins>
-    <forcePersistencyModeBrokerPlugin persistenceFlag="true"/>
-    <statisticsBrokerPlugin/>
-    <timeStampingBrokerPlugin ttlCeiling="86400000" zeroExpirationOverride="86400000"/>
-  </plugins>
-</broker>`
+	/*
+			cfgBodyBefore := `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+		<broker xmlns="http://activemq.apache.org/schema/core">
+		</broker>`
+		cfgBodyAfter := `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+		<broker xmlns="http://activemq.apache.org/schema/core">
+		  <plugins>
+		    <forcePersistencyModeBrokerPlugin persistenceFlag="true"/>
+		    <statisticsBrokerPlugin/>
+		    <timeStampingBrokerPlugin ttlCeiling="86400000" zeroExpirationOverride="86400000"/>
+		  </plugins>
+		</broker>`
+	*/
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -517,7 +589,29 @@ func TestAccMQBroker_AllFields_defaultVPC(t *testing.T) {
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBrokerConfig_allFieldsDefaultVPC(rName, testAccBrokerVersionNewer, rName, cfgBodyBefore),
+				//Config: testAccBrokerConfig_allFieldsDefaultVPC(rName, testAccBrokerVersionNewer, rName, cfgBodyBefore),
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: map[string]config.Variable{
+					"vcount":                     config.IntegerVariable(2),
+					"random_name":                config.StringVariable(rName),
+					"engine_type":                config.StringVariable("ActiveMQ"),
+					"engine_version":             config.StringVariable("5.17.6"),
+					"auto_minor_version_upgrade": config.BoolVariable(true),
+					"apply_immediately":          config.BoolVariable(true),
+					"deployment_mode":            config.StringVariable("ACTIVE_STANDBY_MULTI_AZ"),
+					"storage_type":               config.StringVariable("efs"),
+					"host_instance_type":         config.StringVariable("mq.t2.micro"),
+					"day_of_week":                config.StringVariable("TUESDAY"),
+					"time_of_day":                config.StringVariable("02:00"),
+					"time_zone":                  config.StringVariable("CET"),
+					"publicly_accessible":        config.BoolVariable(false),
+					"username":                   config.StringVariable("Test"),
+					"password":                   config.StringVariable("TestTest1234"),
+					"username_2":                 config.StringVariable("SecondTest"),
+					"password_2":                 config.StringVariable("SecondTestTest1234"),
+					"console_access":             config.BoolVariable(true),
+					"groups":                     config.ListVariable(config.StringVariable("first"), config.StringVariable("second"), config.StringVariable("third")),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
@@ -588,7 +682,29 @@ func TestAccMQBroker_AllFields_defaultVPC(t *testing.T) {
 			},
 			{
 				// Update configuration in-place
-				Config: testAccBrokerConfig_allFieldsDefaultVPC(rName, testAccBrokerVersionNewer, rName, cfgBodyAfter),
+				//Config: testAccBrokerConfig_allFieldsDefaultVPC(rName, testAccBrokerVersionNewer, rName, cfgBodyAfter),
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: map[string]config.Variable{
+					"vcount":                     config.IntegerVariable(2),
+					"random_name":                config.StringVariable(rName),
+					"engine_type":                config.StringVariable("ActiveMQ"),
+					"engine_version":             config.StringVariable("5.17.6"),
+					"auto_minor_version_upgrade": config.BoolVariable(true),
+					"apply_immediately":          config.BoolVariable(true),
+					"deployment_mode":            config.StringVariable("ACTIVE_STANDBY_MULTI_AZ"),
+					"storage_type":               config.StringVariable("efs"),
+					"host_instance_type":         config.StringVariable("mq.t2.micro"),
+					"day_of_week":                config.StringVariable("TUESDAY"),
+					"time_of_day":                config.StringVariable("02:00"),
+					"time_zone":                  config.StringVariable("CET"),
+					"publicly_accessible":        config.BoolVariable(false),
+					"username":                   config.StringVariable("Test"),
+					"password":                   config.StringVariable("TestTest1234"),
+					"username_2":                 config.StringVariable("SecondTest"),
+					"password_2":                 config.StringVariable("SecondTestTest1234"),
+					"console_access":             config.BoolVariable(true),
+					"groups":                     config.ListVariable(config.StringVariable("first"), config.StringVariable("second"), config.StringVariable("third")),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "broker_name", rName),
@@ -599,7 +715,30 @@ func TestAccMQBroker_AllFields_defaultVPC(t *testing.T) {
 			},
 			{
 				// Replace configuration
-				Config: testAccBrokerConfig_allFieldsDefaultVPC(rName, testAccBrokerVersionNewer, rNameUpdated, cfgBodyAfter),
+				//Config: testAccBrokerConfig_allFieldsDefaultVPC(rName, testAccBrokerVersionNewer, rNameUpdated, cfgBodyAfter),
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: map[string]config.Variable{
+					"vcount":                     config.IntegerVariable(2),
+					"random_name":                config.StringVariable(rName),
+					"random_name_2":              config.StringVariable(rName2),
+					"engine_type":                config.StringVariable("ActiveMQ"),
+					"engine_version":             config.StringVariable("5.17.6"),
+					"auto_minor_version_upgrade": config.BoolVariable(true),
+					"apply_immediately":          config.BoolVariable(true),
+					"deployment_mode":            config.StringVariable("ACTIVE_STANDBY_MULTI_AZ"),
+					"storage_type":               config.StringVariable("efs"),
+					"host_instance_type":         config.StringVariable("mq.t2.micro"),
+					"day_of_week":                config.StringVariable("TUESDAY"),
+					"time_of_day":                config.StringVariable("02:00"),
+					"time_zone":                  config.StringVariable("CET"),
+					"publicly_accessible":        config.BoolVariable(false),
+					"username":                   config.StringVariable("Test"),
+					"password":                   config.StringVariable("TestTest1234"),
+					"username_2":                 config.StringVariable("SecondTest"),
+					"password_2":                 config.StringVariable("SecondTestTest1234"),
+					"console_access":             config.BoolVariable(true),
+					"groups":                     config.ListVariable(config.StringVariable("first"), config.StringVariable("second"), config.StringVariable("third")),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "broker_name", rName),
@@ -620,20 +759,20 @@ func TestAccMQBroker_AllFields_customVPC(t *testing.T) {
 
 	var broker mq.DescribeBrokerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rNameUpdated := sdkacctest.RandomWithPrefix("tf-acc-test-updated")
+	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
 
-	cfgBodyBefore := `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<broker xmlns="http://activemq.apache.org/schema/core">
-</broker>`
-	cfgBodyAfter := `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<broker xmlns="http://activemq.apache.org/schema/core">
-  <plugins>
-    <forcePersistencyModeBrokerPlugin persistenceFlag="true"/>
-    <statisticsBrokerPlugin/>
-    <timeStampingBrokerPlugin ttlCeiling="86400000" zeroExpirationOverride="86400000"/>
-  </plugins>
-</broker>`
+	/*	cfgBodyBefore := `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+		<broker xmlns="http://activemq.apache.org/schema/core">
+		</broker>`
+		cfgBodyAfter := `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+		<broker xmlns="http://activemq.apache.org/schema/core">
+		<plugins>
+		<forcePersistencyModeBrokerPlugin persistenceFlag="true"/>
+		<statisticsBrokerPlugin/>
+		<timeStampingBrokerPlugin ttlCeiling="86400000" zeroExpirationOverride="86400000"/>
+		</plugins>
+		</broker>`*/
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
@@ -646,7 +785,37 @@ func TestAccMQBroker_AllFields_customVPC(t *testing.T) {
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBrokerConfig_allFieldsCustomVPC(rName, testAccBrokerVersionNewer, rName, cfgBodyBefore, "CET"),
+				//Config: testAccBrokerConfig_allFieldsCustomVPC(rName, testAccBrokerVersionNewer, rName, cfgBodyBefore, "CET"),
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: map[string]config.Variable{
+					"exclude_zone_ids":           config.ListVariable(config.StringVariable("usw2-az4"), config.StringVariable("usgw1-az2")),
+					"state":                      config.StringVariable("available"),
+					"name":                       config.StringVariable("opt-in-status"),
+					"values":                     config.ListVariable(config.StringVariable("opt-in-not-required")),
+					"cidr_block":                 config.StringVariable("10.0.0.0/16"),
+					"random_name":                config.StringVariable(rName),
+					"vcount":                     config.IntegerVariable(2),
+					"cidr_block_2":               config.StringVariable("0.0.0.0/0"),
+					"engine_type":                config.StringVariable("ActiveMQ"),
+					"engine_version":             config.StringVariable("5.17.6"),
+					"auto_minor_version_upgrade": config.BoolVariable(true),
+					"apply_immediately":          config.BoolVariable(true),
+					"deployment_mode":            config.StringVariable("ACTIVE_STANDBY_MULTI_AZ"),
+					"storage_type":               config.StringVariable("efs"),
+					"host_instance_type":         config.StringVariable("mq.t2.micro"),
+					"general":                    config.BoolVariable(true),
+					"audit":                      config.BoolVariable(true),
+					"day_of_week":                config.StringVariable("TUESDAY"),
+					"time_of_day":                config.StringVariable("02:00"),
+					"time_zone":                  config.StringVariable("CET"),
+					"publicly_accessible":        config.BoolVariable(true),
+					"username":                   config.StringVariable("Test"),
+					"password":                   config.StringVariable("TestTest1234"),
+					"username_2":                 config.StringVariable("SecondTest"),
+					"password_2":                 config.StringVariable("SecondTestTest1234"),
+					"console_access":             config.BoolVariable(true),
+					"groups":                     config.ListVariable(config.StringVariable("first"), config.StringVariable("second"), config.StringVariable("third")),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
@@ -717,7 +886,37 @@ func TestAccMQBroker_AllFields_customVPC(t *testing.T) {
 			},
 			{
 				// Update configuration in-place
-				Config: testAccBrokerConfig_allFieldsCustomVPC(rName, testAccBrokerVersionNewer, rName, cfgBodyAfter, "GMT"),
+				//Config: testAccBrokerConfig_allFieldsCustomVPC(rName, testAccBrokerVersionNewer, rName, cfgBodyAfter, "GMT"),
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: map[string]config.Variable{
+					"exclude_zone_ids":           config.ListVariable(config.StringVariable("usw2-az4"), config.StringVariable("usgw1-az2")),
+					"state":                      config.StringVariable("available"),
+					"name":                       config.StringVariable("opt-in-status"),
+					"values":                     config.ListVariable(config.StringVariable("opt-in-not-required")),
+					"cidr_block":                 config.StringVariable("10.0.0.0/16"),
+					"random_name":                config.StringVariable(rName),
+					"vcount":                     config.IntegerVariable(2),
+					"cidr_block_2":               config.StringVariable("0.0.0.0/0"),
+					"engine_type":                config.StringVariable("ActiveMQ"),
+					"engine_version":             config.StringVariable("5.17.6"),
+					"auto_minor_version_upgrade": config.BoolVariable(true),
+					"apply_immediately":          config.BoolVariable(true),
+					"deployment_mode":            config.StringVariable("ACTIVE_STANDBY_MULTI_AZ"),
+					"storage_type":               config.StringVariable("efs"),
+					"host_instance_type":         config.StringVariable("mq.t2.micro"),
+					"general":                    config.BoolVariable(true),
+					"audit":                      config.BoolVariable(true),
+					"day_of_week":                config.StringVariable("TUESDAY"),
+					"time_of_day":                config.StringVariable("02:00"),
+					"time_zone":                  config.StringVariable("GMT"),
+					"publicly_accessible":        config.BoolVariable(true),
+					"username":                   config.StringVariable("Test"),
+					"password":                   config.StringVariable("TestTest1234"),
+					"username_2":                 config.StringVariable("SecondTest"),
+					"password_2":                 config.StringVariable("SecondTestTest1234"),
+					"console_access":             config.BoolVariable(true),
+					"groups":                     config.ListVariable(config.StringVariable("first"), config.StringVariable("second"), config.StringVariable("third")),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "broker_name", rName),
@@ -732,7 +931,38 @@ func TestAccMQBroker_AllFields_customVPC(t *testing.T) {
 			},
 			{
 				// Replace configuration
-				Config: testAccBrokerConfig_allFieldsCustomVPC(rName, testAccBrokerVersionNewer, rNameUpdated, cfgBodyAfter, "GMT"),
+				//Config: testAccBrokerConfig_allFieldsCustomVPC(rName, testAccBrokerVersionNewer, rNameUpdated, cfgBodyAfter, "GMT"),
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: map[string]config.Variable{
+					"exclude_zone_ids":           config.ListVariable(config.StringVariable("usw2-az4"), config.StringVariable("usgw1-az2")),
+					"state":                      config.StringVariable("available"),
+					"name":                       config.StringVariable("opt-in-status"),
+					"values":                     config.ListVariable(config.StringVariable("opt-in-not-required")),
+					"cidr_block":                 config.StringVariable("10.0.0.0/16"),
+					"random_name":                config.StringVariable(rName),
+					"vcount":                     config.IntegerVariable(2),
+					"cidr_block_2":               config.StringVariable("0.0.0.0/0"),
+					"random_name_2":              config.StringVariable(rName2),
+					"engine_type":                config.StringVariable("ActiveMQ"),
+					"engine_version":             config.StringVariable("5.17.6"),
+					"auto_minor_version_upgrade": config.BoolVariable(true),
+					"apply_immediately":          config.BoolVariable(true),
+					"deployment_mode":            config.StringVariable("ACTIVE_STANDBY_MULTI_AZ"),
+					"storage_type":               config.StringVariable("efs"),
+					"host_instance_type":         config.StringVariable("mq.t2.micro"),
+					"general":                    config.BoolVariable(true),
+					"audit":                      config.BoolVariable(true),
+					"day_of_week":                config.StringVariable("TUESDAY"),
+					"time_of_day":                config.StringVariable("02:00"),
+					"time_zone":                  config.StringVariable("GMT"),
+					"publicly_accessible":        config.BoolVariable(true),
+					"username":                   config.StringVariable("Test"),
+					"password":                   config.StringVariable("TestTest1234"),
+					"username_2":                 config.StringVariable("SecondTest"),
+					"password_2":                 config.StringVariable("SecondTestTest1234"),
+					"console_access":             config.BoolVariable(true),
+					"groups":                     config.ListVariable(config.StringVariable("first"), config.StringVariable("second"), config.StringVariable("third")),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "broker_name", rName),
@@ -767,7 +997,19 @@ func TestAccMQBroker_EncryptionOptions_kmsKeyID(t *testing.T) {
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBrokerConfig_encryptionOptionsKMSKeyID(rName, testAccBrokerVersionNewer),
+				//Config: testAccBrokerConfig_encryptionOptionsKMSKeyID(rName, testAccBrokerVersionNewer),
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: map[string]config.Variable{
+					"random_name":             config.StringVariable(rName),
+					"deletion_window_in_days": config.IntegerVariable(7),
+					"engine_type":             config.StringVariable("ActiveMQ"),
+					"engine_version":          config.StringVariable("5.17.6"),
+					"host_instance_type":      config.StringVariable("mq.t2.micro"),
+					"use_aws_owned_key":       config.BoolVariable(false),
+					"general":                 config.BoolVariable(true),
+					"username":                config.StringVariable("Test"),
+					"password":                config.StringVariable("TestTest1234"),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "encryption_options.#", "1"),
@@ -806,7 +1048,18 @@ func TestAccMQBroker_EncryptionOptions_managedKeyDisabled(t *testing.T) {
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBrokerConfig_encryptionOptionsManagedKey(rName, testAccBrokerVersionNewer, false),
+				//Config: testAccBrokerConfig_encryptionOptionsManagedKey(rName, testAccBrokerVersionNewer, false),
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: map[string]config.Variable{
+					"random_name":        config.StringVariable(rName),
+					"engine_type":        config.StringVariable("ActiveMQ"),
+					"engine_version":     config.StringVariable("5.17.6"),
+					"host_instance_type": config.StringVariable("mq.t2.micro"),
+					"use_aws_owned_key":  config.BoolVariable(false),
+					"general":            config.BoolVariable(true),
+					"username":           config.StringVariable("Test"),
+					"password":           config.StringVariable("TestTest1234"),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "encryption_options.#", "1"),
@@ -844,7 +1097,18 @@ func TestAccMQBroker_EncryptionOptions_managedKeyEnabled(t *testing.T) {
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBrokerConfig_encryptionOptionsManagedKey(rName, testAccBrokerVersionNewer, true),
+				//Config: testAccBrokerConfig_encryptionOptionsManagedKey(rName, testAccBrokerVersionNewer, true),
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: map[string]config.Variable{
+					"random_name":        config.StringVariable(rName),
+					"engine_type":        config.StringVariable("ActiveMQ"),
+					"engine_version":     config.StringVariable("5.17.6"),
+					"host_instance_type": config.StringVariable("mq.t2.micro"),
+					"use_aws_owned_key":  config.BoolVariable(true),
+					"general":            config.BoolVariable(true),
+					"username":           config.StringVariable("Test"),
+					"password":           config.StringVariable("TestTest1234"),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "encryption_options.#", "1"),
@@ -882,7 +1146,17 @@ func TestAccMQBroker_Update_users(t *testing.T) {
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBrokerConfig_updateUsers1(rName, testAccBrokerVersionNewer),
+				//Config: testAccBrokerConfig_updateUsers1(rName, testAccBrokerVersionNewer),
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: map[string]config.Variable{
+					"random_name":        config.StringVariable(rName),
+					"apply_immediately":  config.BoolVariable(true),
+					"engine_type":        config.StringVariable("ActiveMQ"),
+					"engine_version":     config.StringVariable("5.17.6"),
+					"host_instance_type": config.StringVariable("mq.t2.micro"),
+					"username":           config.StringVariable("first"),
+					"password":           config.StringVariable("TestTest1111"),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "user.#", "1"),
@@ -902,7 +1176,20 @@ func TestAccMQBroker_Update_users(t *testing.T) {
 			},
 			// Adding new user + modify existing
 			{
-				Config: testAccBrokerConfig_updateUsers2(rName, testAccBrokerVersionNewer),
+				//Config: testAccBrokerConfig_updateUsers2(rName, testAccBrokerVersionNewer),
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: map[string]config.Variable{
+					"random_name":        config.StringVariable(rName),
+					"apply_immediately":  config.BoolVariable(true),
+					"engine_type":        config.StringVariable("ActiveMQ"),
+					"engine_version":     config.StringVariable("5.17.6"),
+					"host_instance_type": config.StringVariable("mq.t2.micro"),
+					"console_access":     config.BoolVariable(true),
+					"username":           config.StringVariable("first"),
+					"password":           config.StringVariable("TestTest1111updated"),
+					"username_2":         config.StringVariable("second"),
+					"password_2":         config.StringVariable("TestTest2222"),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "user.#", "2"),
@@ -922,7 +1209,18 @@ func TestAccMQBroker_Update_users(t *testing.T) {
 			},
 			// Deleting user + modify existing
 			{
-				Config: testAccBrokerConfig_updateUsers3(rName, testAccBrokerVersionNewer),
+				//Config: testAccBrokerConfig_updateUsers3(rName, testAccBrokerVersionNewer),
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: map[string]config.Variable{
+					"random_name":        config.StringVariable(rName),
+					"apply_immediately":  config.BoolVariable(true),
+					"engine_type":        config.StringVariable("ActiveMQ"),
+					"engine_version":     config.StringVariable("5.17.6"),
+					"host_instance_type": config.StringVariable("mq.t2.micro"),
+					"username":           config.StringVariable("second"),
+					"password":           config.StringVariable("TestTest2222"),
+					"groups":             config.ListVariable(config.StringVariable("admin")),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "user.#", "1"),
@@ -960,7 +1258,19 @@ func TestAccMQBroker_Update_securityGroup(t *testing.T) {
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBrokerConfig_basic(rName, testAccBrokerVersionNewer),
+				//Config: testAccBrokerConfig_basic(rName, testAccBrokerVersionNewer),
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: map[string]config.Variable{
+					"random_name":             config.StringVariable(rName),
+					"engine_type":             config.StringVariable("ActiveMQ"),
+					"engine_version":          config.StringVariable("5.17.6"),
+					"host_instance_type":      config.StringVariable("mq.t2.micro"),
+					"authentication_strategy": config.StringVariable("simple"),
+					"storage_type":            config.StringVariable("efs"),
+					"general":                 config.BoolVariable(true),
+					"username":                config.StringVariable("Test"),
+					"password":                config.StringVariable("TestTest1234"),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
@@ -973,7 +1283,18 @@ func TestAccMQBroker_Update_securityGroup(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
 			},
 			{
-				Config: testAccBrokerConfig_updateSecurityGroups(rName, testAccBrokerVersionNewer),
+				//Config: testAccBrokerConfig_updateSecurityGroups(rName, testAccBrokerVersionNewer),
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: map[string]config.Variable{
+					"random_name":        config.StringVariable(rName),
+					"apply_immediately":  config.BoolVariable(true),
+					"engine_type":        config.StringVariable("ActiveMQ"),
+					"engine_version":     config.StringVariable("5.17.6"),
+					"host_instance_type": config.StringVariable("mq.t2.micro"),
+					"general":            config.BoolVariable(true),
+					"username":           config.StringVariable("Test"),
+					"password":           config.StringVariable("TestTest1234"),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "2"),
@@ -982,7 +1303,18 @@ func TestAccMQBroker_Update_securityGroup(t *testing.T) {
 			// Trigger a reboot and ensure the password change was applied
 			// User hashcode can be retrieved by calling resourceUserHash
 			{
-				Config: testAccBrokerConfig_updateUsersSecurityGroups(rName, testAccBrokerVersionNewer),
+				//Config: testAccBrokerConfig_updateUsersSecurityGroups(rName, testAccBrokerVersionNewer),
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: map[string]config.Variable{
+					"random_name":        config.StringVariable(rName),
+					"apply_immediately":  config.BoolVariable(true),
+					"engine_type":        config.StringVariable("ActiveMQ"),
+					"engine_version":     config.StringVariable("5.17.6"),
+					"host_instance_type": config.StringVariable("mq.t2.micro"),
+					"general":            config.BoolVariable(true),
+					"username":           config.StringVariable("Test"),
+					"password":           config.StringVariable("TestTest9999"),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
@@ -1018,7 +1350,19 @@ func TestAccMQBroker_Update_engineVersion(t *testing.T) {
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBrokerConfig_basic(rName, testAccBrokerVersionOlder),
+				//Config: testAccBrokerConfig_basic(rName, testAccBrokerVersionOlder),
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: map[string]config.Variable{
+					"random_name":             config.StringVariable(rName),
+					"engine_type":             config.StringVariable("ActiveMQ"),
+					"engine_version":          config.StringVariable("5.16.7"),
+					"host_instance_type":      config.StringVariable("mq.t2.micro"),
+					"authentication_strategy": config.StringVariable("simple"),
+					"storage_type":            config.StringVariable("efs"),
+					"general":                 config.BoolVariable(true),
+					"username":                config.StringVariable("Test"),
+					"password":                config.StringVariable("TestTest1234"),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", testAccBrokerVersionOlder),
@@ -1031,7 +1375,18 @@ func TestAccMQBroker_Update_engineVersion(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
 			},
 			{
-				Config: testAccBrokerConfig_engineVersionUpdate(rName, testAccBrokerVersionNewer),
+				//Config: testAccBrokerConfig_engineVersionUpdate(rName, testAccBrokerVersionNewer),
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: map[string]config.Variable{
+					"random_name":        config.StringVariable(rName),
+					"apply_immediately":  config.BoolVariable(true),
+					"engine_type":        config.StringVariable("ActiveMQ"),
+					"engine_version":     config.StringVariable("5.17.6"),
+					"host_instance_type": config.StringVariable("mq.t2.micro"),
+					"general":            config.BoolVariable(true),
+					"username":           config.StringVariable("Test"),
+					"password":           config.StringVariable("TestTest1234"),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", testAccBrokerVersionNewer),
@@ -1062,14 +1417,36 @@ func TestAccMQBroker_Update_hostInstanceType(t *testing.T) {
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBrokerConfig_instanceType(rName, testAccBrokerVersionNewer, "mq.t2.micro"),
+				//Config: testAccBrokerConfig_instanceType(rName, testAccBrokerVersionNewer, "mq.t2.micro"),
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: map[string]config.Variable{
+					"random_name":        config.StringVariable(rName),
+					"apply_immediately":  config.BoolVariable(true),
+					"engine_type":        config.StringVariable("ActiveMQ"),
+					"engine_version":     config.StringVariable("5.17.6"),
+					"host_instance_type": config.StringVariable("mq.t2.micro"),
+					"general":            config.BoolVariable(true),
+					"username":           config.StringVariable("Test"),
+					"password":           config.StringVariable("TestTest1234"),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(ctx, resourceName, &broker1),
 					resource.TestCheckResourceAttr(resourceName, "host_instance_type", "mq.t2.micro"),
 				),
 			},
 			{
-				Config: testAccBrokerConfig_instanceType(rName, testAccBrokerVersionNewer, "mq.t3.micro"),
+				//Config: testAccBrokerConfig_instanceType(rName, testAccBrokerVersionNewer, "mq.t3.micro"),
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: map[string]config.Variable{
+					"random_name":        config.StringVariable(rName),
+					"apply_immediately":  config.BoolVariable(true),
+					"engine_type":        config.StringVariable("ActiveMQ"),
+					"engine_version":     config.StringVariable("5.17.6"),
+					"host_instance_type": config.StringVariable("mq.t3.micro"),
+					"general":            config.BoolVariable(true),
+					"username":           config.StringVariable("Test"),
+					"password":           config.StringVariable("TestTest1234"),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(ctx, resourceName, &broker2),
 					testAccCheckBrokerNotRecreated(&broker1, &broker2),
@@ -1101,7 +1478,16 @@ func TestAccMQBroker_RabbitMQ_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBrokerConfig_rabbit(rName, testAccRabbitVersion),
+				//Config: testAccBrokerConfig_rabbit(rName, testAccRabbitVersion),
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: map[string]config.Variable{
+					"random_name":        config.StringVariable(rName),
+					"engine_type":        config.StringVariable("RabbitMQ"),
+					"engine_version":     config.StringVariable("3.11.20"),
+					"host_instance_type": config.StringVariable("mq.t3.micro"),
+					"username":           config.StringVariable("Test"),
+					"password":           config.StringVariable("TestTest1234"),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -1147,7 +1533,18 @@ func TestAccMQBroker_RabbitMQ_config(t *testing.T) {
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBrokerConfig_rabbitConfig(rName, testAccRabbitVersion),
+				//Config: testAccBrokerConfig_rabbitConfig(rName, testAccRabbitVersion),
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: map[string]config.Variable{
+					"random_name":        config.StringVariable(rName),
+					"description":        config.StringVariable("TfAccTest MQ Configuration"),
+					"engine_type":        config.StringVariable("RabbitMQ"),
+					"engine_version":     config.StringVariable("3.11.20"),
+					"consumer_timeout":   config.IntegerVariable(1800000),
+					"host_instance_type": config.StringVariable("mq.t3.micro"),
+					"username":           config.StringVariable("Test"),
+					"password":           config.StringVariable("TestTest1234"),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -1195,7 +1592,17 @@ func TestAccMQBroker_RabbitMQ_logs(t *testing.T) {
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBrokerConfig_rabbitLogs(rName, testAccRabbitVersion),
+				//Config: testAccBrokerConfig_rabbitLogs(rName, testAccRabbitVersion),
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: map[string]config.Variable{
+					"random_name":        config.StringVariable(rName),
+					"engine_type":        config.StringVariable("RabbitMQ"),
+					"engine_version":     config.StringVariable("3.11.20"),
+					"host_instance_type": config.StringVariable("mq.t3.micro"),
+					"general":            config.BoolVariable(true),
+					"username":           config.StringVariable("Test"),
+					"password":           config.StringVariable("TestTest1234"),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
@@ -1241,13 +1648,35 @@ func TestAccMQBroker_RabbitMQ_validationAuditLog(t *testing.T) {
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccBrokerConfig_rabbitAuditLog(rName, testAccRabbitVersion, true),
+				//Config: testAccBrokerConfig_rabbitAuditLog(rName, testAccRabbitVersion, true),
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: map[string]config.Variable{
+					"random_name":        config.StringVariable(rName),
+					"engine_type":        config.StringVariable("RabbitMQ"),
+					"engine_version":     config.StringVariable("3.11.20"),
+					"host_instance_type": config.StringVariable("mq.t3.micro"),
+					"general":            config.BoolVariable(true),
+					"audit":              config.BoolVariable(true),
+					"username":           config.StringVariable("Test"),
+					"password":           config.StringVariable("TestTest1234"),
+				},
 				ExpectError: regexache.MustCompile(`logs.audit: Can not be configured when engine is RabbitMQ`),
 			},
 			{
 				// Special case: allow explicitly setting logs.0.audit to false,
 				// though the AWS API does not accept the parameter.
-				Config: testAccBrokerConfig_rabbitAuditLog(rName, testAccRabbitVersion, false),
+				//Config: testAccBrokerConfig_rabbitAuditLog(rName, testAccRabbitVersion, false),
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: map[string]config.Variable{
+					"random_name":        config.StringVariable(rName),
+					"engine_type":        config.StringVariable("RabbitMQ"),
+					"engine_version":     config.StringVariable("3.11.20"),
+					"host_instance_type": config.StringVariable("mq.t3.micro"),
+					"general":            config.BoolVariable(true),
+					"audit":              config.BoolVariable(false),
+					"username":           config.StringVariable("Test"),
+					"password":           config.StringVariable("TestTest1234"),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "logs.#", "1"),
@@ -1280,7 +1709,20 @@ func TestAccMQBroker_RabbitMQ_cluster(t *testing.T) {
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBrokerConfig_rabbitCluster(rName, testAccRabbitVersion),
+				//Config: testAccBrokerConfig_rabbitCluster(rName, testAccRabbitVersion),
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: map[string]config.Variable{
+					"random_name":        config.StringVariable(rName),
+					"engine_type":        config.StringVariable("RabbitMQ"),
+					"engine_version":     config.StringVariable("3.11.20"),
+					"host_instance_type": config.StringVariable("mq.m5.large"),
+					"storage_type":       config.StringVariable("ebs"),
+					"deployment_mode":    config.StringVariable("CLUSTER_MULTI_AZ"),
+					"username":           config.StringVariable("Test"),
+					"password":           config.StringVariable("TestTest1234"),
+					"name":               config.StringVariable("vpc-id"),
+					"default":            config.BoolVariable(true),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
@@ -1347,7 +1789,30 @@ func TestAccMQBroker_ldap(t *testing.T) {
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBrokerConfig_ldap(rName, testAccBrokerVersionNewer, "anyusername"),
+				//Config: testAccBrokerConfig_ldap(rName, testAccBrokerVersionNewer, "anyusername"),
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: map[string]config.Variable{
+					"random_name":              config.StringVariable(rName),
+					"apply_immediately":        config.BoolVariable(true),
+					"authentication_strategy":  config.StringVariable("ldap"),
+					"engine_type":              config.StringVariable("ActiveMQ"),
+					"engine_version":           config.StringVariable("5.17.6"),
+					"host_instance_type":       config.StringVariable("mq.t2.micro"),
+					"general":                  config.BoolVariable(true),
+					"username":                 config.StringVariable("Test"),
+					"password":                 config.StringVariable("TestTest1234"),
+					"hosts":                    config.ListVariable(config.StringVariable("my.ldap.server-1.com"), config.StringVariable("my.ldap.server-2.com")),
+					"role_base":                config.StringVariable("role.base"),
+					"role_name":                config.StringVariable("role.name"),
+					"role_search_matching":     config.StringVariable("role.search.matching"),
+					"role_search_subtree":      config.BoolVariable(true),
+					"service_account_password": config.StringVariable("supersecret"),
+					"service_account_username": config.StringVariable("anyusername"),
+					"user_base":                config.StringVariable("user.base"),
+					"user_role_name":           config.StringVariable("user.role.name"),
+					"user_search_matching":     config.StringVariable("user.search.matching"),
+					"user_search_subtree":      config.BoolVariable(true),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
@@ -1396,7 +1861,24 @@ func TestAccMQBroker_dataReplicationMode(t *testing.T) {
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBrokerConfig_dataReplicationMode(rName, testAccBrokerVersionNewer, string(types.DataReplicationModeCrdr)),
+				//Config: testAccBrokerConfig_dataReplicationMode(rName, testAccBrokerVersionNewer, string(types.DataReplicationModeCrdr)),
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: map[string]config.Variable{
+					"region":                config.StringVariable("us-east-1"),
+					"random_name":           config.StringVariable(rName),
+					"apply_immediately":     config.BoolVariable(true),
+					"engine_type":           config.StringVariable("ActiveMQ"),
+					"engine_version":        config.StringVariable("5.17.6"),
+					"host_instance_type":    config.StringVariable("mq.m5.large"),
+					"deployment_mode":       config.StringVariable("ACTIVE_STANDBY_MULTI_AZ"),
+					"general":               config.BoolVariable(true),
+					"username":              config.StringVariable("Test"),
+					"password":              config.StringVariable("TestTest1234"),
+					"username_2":            config.StringVariable("Test-ReplicationUser"),
+					"replication_user":      config.BoolVariable(true),
+					"data_replication_mode": config.StringVariable("CRDR"),
+					"username_3":            config.StringVariable("Test-ReplicationUser"),
+				},
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
 					testAccCheckBrokerExistsWithProvider(ctx, primaryBrokerResourceName, &brokerAlternate, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers)),
@@ -1409,7 +1891,24 @@ func TestAccMQBroker_dataReplicationMode(t *testing.T) {
 				),
 			},
 			{
-				Config:                  testAccBrokerConfig_dataReplicationMode(rName, testAccBrokerVersionNewer, string(types.DataReplicationModeCrdr)),
+				//Config: testAccBrokerConfig_dataReplicationMode(rName, testAccBrokerVersionNewer, string(types.DataReplicationModeCrdr)),
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: map[string]config.Variable{
+					"region":                config.StringVariable("us-east-1"),
+					"random_name":           config.StringVariable(rName),
+					"apply_immediately":     config.BoolVariable(true),
+					"engine_type":           config.StringVariable("ActiveMQ"),
+					"engine_version":        config.StringVariable("5.17.6"),
+					"host_instance_type":    config.StringVariable("mq.m5.large"),
+					"deployment_mode":       config.StringVariable("ACTIVE_STANDBY_MULTI_AZ"),
+					"general":               config.BoolVariable(true),
+					"username":              config.StringVariable("Test"),
+					"password":              config.StringVariable("TestTest1234"),
+					"username_2":            config.StringVariable("Test-ReplicationUser"),
+					"replication_user":      config.BoolVariable(true),
+					"data_replication_mode": config.StringVariable("CRDR"),
+					"username_3":            config.StringVariable("Test-ReplicationUser"),
+				},
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
@@ -1429,7 +1928,24 @@ func TestAccMQBroker_dataReplicationMode(t *testing.T) {
 					// in the opposite order, so delete the primary out of band instead.
 					testAccDeleteBrokerWithProvider(ctx, t, &brokerAlternate, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers))
 				},
-				Config:             testAccBrokerConfig_dataReplicationMode(rName, testAccBrokerVersionNewer, string(types.DataReplicationModeNone)),
+				//Config: testAccBrokerConfig_dataReplicationMode(rName, testAccBrokerVersionNewer, string(types.DataReplicationModeNone)),
+				ConfigDirectory: config.TestStepDirectory(),
+				ConfigVariables: map[string]config.Variable{
+					"region":                config.StringVariable("us-east-1"),
+					"random_name":           config.StringVariable(rName),
+					"apply_immediately":     config.BoolVariable(true),
+					"engine_type":           config.StringVariable("ActiveMQ"),
+					"engine_version":        config.StringVariable("5.17.6"),
+					"host_instance_type":    config.StringVariable("mq.m5.large"),
+					"deployment_mode":       config.StringVariable("ACTIVE_STANDBY_MULTI_AZ"),
+					"general":               config.BoolVariable(true),
+					"username":              config.StringVariable("Test"),
+					"password":              config.StringVariable("TestTest1234"),
+					"username_2":            config.StringVariable("Test-ReplicationUser"),
+					"replication_user":      config.BoolVariable(true),
+					"data_replication_mode": config.StringVariable("NONE"),
+					"username_3":            config.StringVariable("Test-ReplicationUser"),
+				},
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: true,
 			},
