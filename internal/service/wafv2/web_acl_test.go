@@ -4285,7 +4285,7 @@ resource "aws_wafv2_web_acl" "test" {
               phone_number_fields {
                 identifiers = ["/phone1", "/phone2"]
               }
-              adress_fields {
+              address_fields {
                 identifiers = ["home", "work"]
               }
               payload_type = "JSON"
@@ -4421,7 +4421,7 @@ resource "aws_wafv2_web_acl" "test" {
               phone_number_fields {
                 identifiers = ["/phone1", "/phone2"]
               }
-              adress_fields {
+              address_fields {
                 identifiers = ["home", "work"]
               }
               payload_type = "JSON"

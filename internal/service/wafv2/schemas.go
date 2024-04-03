@@ -1318,6 +1318,21 @@ func managedRuleGroupConfigACFPRequestInspectionSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
+				"address_fields": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"identifiers": {
+								Type:     schema.TypeSet,
+								Required: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+								MinItems: 1,
+							},
+						},
+					},
+				},
 				"email_field": {
 					Type:     schema.TypeList,
 					Optional: true,
@@ -1353,21 +1368,6 @@ func managedRuleGroupConfigACFPRequestInspectionSchema() *schema.Schema {
 					},
 				},
 				"phone_number_fields": {
-					Type:     schema.TypeList,
-					Optional: true,
-					MaxItems: 1,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"identifiers": {
-								Type:     schema.TypeSet,
-								Required: true,
-								Elem:     &schema.Schema{Type: schema.TypeString},
-								MinItems: 1,
-							},
-						},
-					},
-				},
-				"adress_fields": {
 					Type:     schema.TypeList,
 					Optional: true,
 					MaxItems: 1,

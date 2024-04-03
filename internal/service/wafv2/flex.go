@@ -1184,6 +1184,24 @@ func expandManagedRuleGroupConfigs(tfList []interface{}) []*wafv2.ManagedRuleGro
 	return out
 }
 
+func expandAddressFields(tfList []interface{}) []*wafv2.AddressField {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	out := make([]*wafv2.AddressField, 0)
+	identifiers := tfList[0].(map[string]interface{})
+	for _, identifier := range identifiers["identifiers"].([]string) {
+		r := wafv2.AddressField{
+			Identifier: aws.String(identifier),
+		}
+
+		out = append(out, &r)
+	}
+
+	return out
+}
+
 func expandEmailField(tfList []interface{}) *wafv2.EmailField {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
@@ -1210,6 +1228,24 @@ func expandPasswordField(tfList []interface{}) *wafv2.PasswordField {
 	return &out
 }
 
+func expandPhoneNumberFields(tfList []interface{}) []*wafv2.PhoneNumberField {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	out := make([]*wafv2.PhoneNumberField, 0)
+	identifiers := tfList[0].(map[string]interface{})
+	for _, identifier := range identifiers["identifiers"].([]string) {
+		r := wafv2.PhoneNumberField{
+			Identifier: aws.String(identifier),
+		}
+
+		out = append(out, &r)
+	}
+
+	return out
+}
+
 func expandUsernameField(tfList []interface{}) *wafv2.UsernameField {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
@@ -1221,36 +1257,6 @@ func expandUsernameField(tfList []interface{}) *wafv2.UsernameField {
 	}
 
 	return &out
-}
-
-func expandPhoneNumberFields(tfList []interface{}) []*wafv2.PhoneNumberField {
-	if len(tfList) == 0 || tfList[0] == nil {
-		return nil
-	}
-	out := make([]*wafv2.PhoneNumberField, 0)
-	identifiers := tfList[0].(map[string]interface{})
-	for _, identifier := range identifiers["identifiers"].([]string) {
-		r := wafv2.PhoneNumberField{
-			Identifier: aws.String(identifier),
-		}
-		out = append(out, &r)
-	}
-	return out
-}
-
-func expandAddressFields(tfList []interface{}) []*wafv2.AddressField {
-	if len(tfList) == 0 || tfList[0] == nil {
-		return nil
-	}
-	out := make([]*wafv2.AddressField, 0)
-	identifiers := tfList[0].(map[string]interface{})
-	for _, identifier := range identifiers["identifiers"].([]string) {
-		r := wafv2.AddressField{
-			Identifier: aws.String(identifier),
-		}
-		out = append(out, &r)
-	}
-	return out
 }
 
 func expandManagedRulesBotControlRuleSet(tfList []interface{}) *wafv2.AWSManagedRulesBotControlRuleSet {
@@ -1335,12 +1341,12 @@ func expandRequestInspectionACFP(tfList []interface{}) *wafv2.RequestInspectionA
 
 	m := tfList[0].(map[string]interface{})
 	out := wafv2.RequestInspectionACFP{
+		AddressFields:     expandAddressFields(m["address_fields"].([]interface{})),
 		EmailField:        expandEmailField(m["email_field"].([]interface{})),
 		PasswordField:     expandPasswordField(m["password_field"].([]interface{})),
 		PayloadType:       aws.String(m["payload_type"].(string)),
-		UsernameField:     expandUsernameField(m["username_field"].([]interface{})),
 		PhoneNumberFields: expandPhoneNumberFields(m["phone_number_fields"].([]interface{})),
-		AddressFields:     expandAddressFields(m["address_fields"].([]interface{})),
+		UsernameField:     expandUsernameField(m["username_field"].([]interface{})),
 	}
 
 	return &out
