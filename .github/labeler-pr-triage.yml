@@ -13,6 +13,8 @@ examples:
   - 'examples/**/*'
 flex:
   - 'internal/flex/**/*'
+function:
+  - 'internal/function/**/*'
 generators:
   - 'internal/**/*_gen.go'
   - 'internal/**/*_gen_test.go'
