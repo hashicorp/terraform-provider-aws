@@ -26,6 +26,7 @@ var (
 	ResourceRestAPI              = resourceRestAPI
 	ResourceRestAPIPolicy        = resourceRestAPIPolicy
 	ResourceStage                = resourceStage
+	ResourceUsagePlanKey         = resourceUsagePlanKey
 	ResourceVPCLink              = resourceVPCLink
 
 	FindAPIKeyByID                       = findAPIKeyByID
@@ -47,5 +48,6 @@ var (
 	FindResourceByTwoPartKey             = findResourceByTwoPartKey
 	FindRestAPIByID                      = findRestAPIByID
 	FindStageByTwoPartKey                = findStageByTwoPartKey
+	FindUsagePlanKeyByTwoPartKey         = findUsagePlanKeyByTwoPartKey
 	FindVPCLinkByID                      = findVPCLinkByID
 )

@@ -207,8 +207,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceUsagePlanKey,
+			Factory:  resourceUsagePlanKey,
 			TypeName: "aws_api_gateway_usage_plan_key",
+			Name:     "Usage Plan Key",
 		},
 		{
 			Factory:  resourceVPCLink,
