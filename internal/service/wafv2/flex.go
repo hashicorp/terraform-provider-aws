@@ -1191,9 +1191,9 @@ func expandAddressFields(tfList []interface{}) []*wafv2.AddressField {
 
 	out := make([]*wafv2.AddressField, 0)
 	identifiers := tfList[0].(map[string]interface{})
-	for _, identifier := range identifiers["identifiers"].([]string) {
+	for _, v := range identifiers["identifiers"].([]interface{}) {
 		r := wafv2.AddressField{
-			Identifier: aws.String(identifier),
+			Identifier: aws.String(v.(string)),
 		}
 
 		out = append(out, &r)
@@ -1235,9 +1235,9 @@ func expandPhoneNumberFields(tfList []interface{}) []*wafv2.PhoneNumberField {
 
 	out := make([]*wafv2.PhoneNumberField, 0)
 	identifiers := tfList[0].(map[string]interface{})
-	for _, identifier := range identifiers["identifiers"].([]string) {
+	for _, v := range identifiers["identifiers"].([]interface{}) {
 		r := wafv2.PhoneNumberField{
-			Identifier: aws.String(identifier),
+			Identifier: aws.String(v.(string)),
 		}
 
 		out = append(out, &r)
