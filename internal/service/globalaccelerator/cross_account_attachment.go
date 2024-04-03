@@ -150,7 +150,7 @@ func (r *resourceCrossAccountAttachment) Read(ctx context.Context, req resource.
 	input := &globalaccelerator.DescribeCrossAccountAttachmentInput{
 		AttachmentArn: aws.String(state.ARN.ValueString()),
 	}
-	out, err := conn.DescribeCrossAccountAttachment(input)
+	out, err := conn.DescribeCrossAccountAttachmentWithContext(ctx, input)
 
 	var nfe *globalaccelerator.AttachmentNotFoundException
 	if errors.As(err, &nfe) {
@@ -263,7 +263,7 @@ func (r *resourceCrossAccountAttachment) ImportState(ctx context.Context, req re
 	conn := r.Meta().GlobalAcceleratorConn(ctx)
 	attachmentArn := req.ID
 
-	output, err := conn.DescribeCrossAccountAttachment(&globalaccelerator.DescribeCrossAccountAttachmentInput{
+	output, err := conn.DescribeCrossAccountAttachmentWithContext(ctx, &globalaccelerator.DescribeCrossAccountAttachmentInput{
 		AttachmentArn: aws.String(attachmentArn),
 	})
 	if err != nil {

@@ -411,7 +411,7 @@ func testAccCheckCrossAccountAttachmentDestroy(ctx context.Context) resource.Tes
 				continue
 			}
 
-			_, err := conn.DescribeCrossAccountAttachment(&globalaccelerator.DescribeCrossAccountAttachmentInput{
+			_, err := conn.DescribeCrossAccountAttachmentWithContext(ctx, &globalaccelerator.DescribeCrossAccountAttachmentInput{
 				AttachmentArn: aws.String(rs.Primary.ID),
 			})
 			if err != nil && strings.Contains(err.Error(), "AttachmentNotFoundException") {
@@ -436,7 +436,7 @@ func testAccCheckCrossAccountAttachmentExists(ctx context.Context, resourceName 
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn(ctx)
 
-		output, err := conn.DescribeCrossAccountAttachment(&globalaccelerator.DescribeCrossAccountAttachmentInput{
+		output, err := conn.DescribeCrossAccountAttachmentWithContext(ctx, &globalaccelerator.DescribeCrossAccountAttachmentInput{
 			AttachmentArn: aws.String(rs.Primary.ID),
 		})
 
@@ -457,7 +457,7 @@ func testAccCheckCrossAccountAttachmentExists(ctx context.Context, resourceName 
 func testAccCrossAccountAttachmentConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_globalaccelerator_cross_account_attachment" "test" {
-	  name      = %[1]q
+  name = %[1]q
 }
 `, rName)
 }
@@ -465,7 +465,7 @@ resource "aws_globalaccelerator_cross_account_attachment" "test" {
 func testAccCrossAccountAttachmentConfig_principals(rName string, accountId string) string {
 	return fmt.Sprintf(`
 resource "aws_globalaccelerator_cross_account_attachment" "test" {
-  name      = %[1]q
+  name       = %[1]q
   principals = [%[2]q]
 }
 `, rName, accountId)
