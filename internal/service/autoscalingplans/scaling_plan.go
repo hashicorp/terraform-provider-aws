@@ -177,6 +177,7 @@ func ResourceScalingPlan() *schema.Resource {
 						"predictive_scaling_max_capacity_buffer": {
 							Type:         schema.TypeInt,
 							Optional:     true,
+							Computed:     true,
 							ValidateFunc: validation.IntBetween(1, 100),
 						},
 
