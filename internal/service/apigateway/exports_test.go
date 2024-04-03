@@ -24,6 +24,7 @@ var (
 	ResourceRequestValidator     = resourceRequestValidator
 	ResourceResource             = resourceResource
 	ResourceRestAPI              = resourceRestAPI
+	ResourceRestAPIPolicy        = resourceRestAPIPolicy
 
 	FindAPIKeyByID                       = findAPIKeyByID
 	FindAuthorizerByTwoPartKey           = findAuthorizerByTwoPartKey

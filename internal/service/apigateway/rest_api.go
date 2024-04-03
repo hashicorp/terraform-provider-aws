@@ -294,7 +294,6 @@ func resourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway REST API (%s): %s", d.Id(), err)
 	}
 
-	d.Set("root_resource_id", api.RootResourceId)
 	d.Set("api_key_source", api.ApiKeySource)
 	d.Set("arn", apiARN(meta.(*conns.AWSClient), d.Id()))
 	d.Set("binary_media_types", api.BinaryMediaTypes)
@@ -311,19 +310,9 @@ func resourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta inter
 		d.Set("minimum_compression_size", strconv.FormatInt(int64(aws.ToInt32(api.MinimumCompressionSize)), 10))
 	}
 	d.Set("name", api.Name)
+	d.Set("root_resource_id", api.RootResourceId)
 
-	// The API returns policy as an escaped JSON string
-	// {\\\"Version\\\":\\\"2012-10-17\\\",...}
-	// The string must be normalized before unquoting as it may contain escaped
-	// forward slashes in CIDR blocks, which will break strconv.Unquote
-
-	// I'm not sure why it needs to be wrapped with double quotes first, but it does
-	normalized_policy, err := structure.NormalizeJsonString(`"` + aws.ToString(api.Policy) + `"`)
-	if err != nil {
-		return sdkdiag.AppendFromErr(diags, err)
-	}
-
-	policy, err := strconv.Unquote(normalized_policy)
+	policy, err := flattenAPIPolicy(api.Policy)
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -753,6 +742,26 @@ func flattenEndpointConfiguration(endpointConfiguration *types.EndpointConfigura
 	}
 
 	return []interface{}{m}
+}
+
+func flattenAPIPolicy(apiObject *string) (string, error) {
+	// The API returns policy as an escaped JSON string
+	// {\\\"Version\\\":\\\"2012-10-17\\\",...}
+	// The string must be normalized before unquoting as it may contain escaped
+	// forward slashes in CIDR blocks, which will break strconv.Unquote
+
+	// I'm not sure why it needs to be wrapped with double quotes first, but it does
+	normalizedPolicy, err := structure.NormalizeJsonString(`"` + aws.ToString(apiObject) + `"`)
+	if err != nil {
+		return "", err
+	}
+
+	policy, err := strconv.Unquote(normalizedPolicy)
+	if err != nil {
+		return "", err
+	}
+
+	return policy, nil
 }
 
 func apiARN(c *conns.AWSClient, apiID string) string {
