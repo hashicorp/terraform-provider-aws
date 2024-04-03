@@ -1367,6 +1367,21 @@ func managedRuleGroupConfigACFPRequestInspectionSchema() *schema.Schema {
 						},
 					},
 				},
+				"primary_address_fields": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"identifiers": {
+								Type:     schema.TypeSet,
+								Required: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+								MinItems: 1,
+							},
+						},
+					},
+				},
 				"payload_type": {
 					Type:         schema.TypeString,
 					Required:     true,
