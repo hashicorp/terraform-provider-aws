@@ -399,6 +399,8 @@ func (r *knowledgeBaseResource) Read(ctx context.Context, request resource.ReadR
 		return
 	}
 
+	data.KnowledgeBaseARN = flex.StringToFramework(ctx, output.KnowledgeBaseArn)
+	data.KnowledgeBaseId = flex.StringToFramework(ctx, output.KnowledgeBaseId)
 	data.KnowledgeBaseConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &knowledgeBaseConfiguration)
 	data.StorageConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &storageConfiguration)
 	data.Name = fwflex.StringToFramework(ctx, output.Name)
