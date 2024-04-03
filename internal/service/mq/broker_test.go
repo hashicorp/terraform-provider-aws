@@ -1540,7 +1540,6 @@ func TestAccMQBroker_RabbitMQ_config(t *testing.T) {
 					"description":        config.StringVariable("TfAccTest MQ Configuration"),
 					"engine_type":        config.StringVariable("RabbitMQ"),
 					"engine_version":     config.StringVariable("3.11.20"),
-					"consumer_timeout":   config.IntegerVariable(1800000),
 					"host_instance_type": config.StringVariable("mq.t3.micro"),
 					"username":           config.StringVariable("Test"),
 					"password":           config.StringVariable("TestTest1234"),
