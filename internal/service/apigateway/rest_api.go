@@ -296,13 +296,7 @@ func resourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta inter
 
 	d.Set("root_resource_id", api.RootResourceId)
 	d.Set("api_key_source", api.ApiKeySource)
-	apiARN := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "apigateway",
-		Region:    meta.(*conns.AWSClient).Region,
-		Resource:  fmt.Sprintf("/restapis/%s", d.Id()),
-	}.String()
-	d.Set("arn", apiARN)
+	d.Set("arn", apiARN(meta.(*conns.AWSClient), d.Id()))
 	d.Set("binary_media_types", api.BinaryMediaTypes)
 	d.Set("created_date", api.CreatedDate.Format(time.RFC3339))
 	d.Set("description", api.Description)
@@ -310,14 +304,7 @@ func resourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta inter
 	if err := d.Set("endpoint_configuration", flattenEndpointConfiguration(api.EndpointConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoint_configuration: %s", err)
 	}
-	executionARN := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "execute-api",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  d.Id(),
-	}.String()
-	d.Set("execution_arn", executionARN)
+	d.Set("execution_arn", apiInvokeARN(meta.(*conns.AWSClient), d.Id()))
 	if api.MinimumCompressionSize == nil {
 		d.Set("minimum_compression_size", nil)
 	} else {
@@ -766,4 +753,23 @@ func flattenEndpointConfiguration(endpointConfiguration *types.EndpointConfigura
 	}
 
 	return []interface{}{m}
+}
+
+func apiARN(c *conns.AWSClient, apiID string) string {
+	return arn.ARN{
+		Partition: c.Partition,
+		Service:   "apigateway",
+		Region:    c.Region,
+		Resource:  fmt.Sprintf("/restapis/%s", apiID),
+	}.String()
+}
+
+func apiInvokeARN(c *conns.AWSClient, apiID string) string {
+	return arn.ARN{
+		Partition: c.Partition,
+		Service:   "execute-api",
+		Region:    c.Region,
+		AccountID: c.AccountID,
+		Resource:  apiID,
+	}.String()
 }
