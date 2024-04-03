@@ -6,7 +6,7 @@ require (
 	github.com/ProtonMail/go-crypto v1.1.0-alpha.2
 	github.com/YakDriver/go-version v0.1.0
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.51.12
+	github.com/aws/aws-sdk-go v1.51.13
 	github.com/aws/aws-sdk-go-v2 v1.26.1
 	github.com/aws/aws-sdk-go-v2/config v1.27.10
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.10
@@ -25,7 +25,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/athena v1.40.4
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.32.4
 	github.com/aws/aws-sdk-go-v2/service/batch v1.36.1
-	github.com/aws/aws-sdk-go-v2/service/bedrock v1.7.4
+	github.com/aws/aws-sdk-go-v2/service/bedrock v1.7.5
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.5.1
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.22.4
 	github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.15.5
@@ -50,7 +50,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/codepipeline v1.26.4
 	github.com/aws/aws-sdk-go-v2/service/codestarconnections v1.25.2
 	github.com/aws/aws-sdk-go-v2/service/codestarnotifications v1.22.4
-	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.23.5
+	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.23.6
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.31.4
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.34.1
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.46.4
@@ -68,7 +68,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ec2 v1.155.1
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.27.4
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.23.4
-	github.com/aws/aws-sdk-go-v2/service/ecs v1.41.6
+	github.com/aws/aws-sdk-go-v2/service/ecs v1.41.7
 	github.com/aws/aws-sdk-go-v2/service/eks v1.42.1
 	github.com/aws/aws-sdk-go-v2/service/elasticache v1.38.1
 	github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.23.4
@@ -86,7 +86,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.23.5
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.24.4
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.13.0
-	github.com/aws/aws-sdk-go-v2/service/ivschat v1.12.4
+	github.com/aws/aws-sdk-go-v2/service/ivschat v1.12.5
 	github.com/aws/aws-sdk-go-v2/service/kafka v1.31.2
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.50.1
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.10.4
@@ -125,13 +125,13 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.10.4
 	github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.21.4
 	github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.21.4
-	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.9.1
+	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.10.0
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.23.4
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.53.1
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.44.4
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.8.4
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.28.6
-	github.com/aws/aws-sdk-go-v2/service/securityhub v1.47.1
+	github.com/aws/aws-sdk-go-v2/service/securityhub v1.47.2
 	github.com/aws/aws-sdk-go-v2/service/securitylake v1.13.3
 	github.com/aws/aws-sdk-go-v2/service/servicecatalogappregistry v1.26.4
 	github.com/aws/aws-sdk-go-v2/service/servicequotas v1.21.4
