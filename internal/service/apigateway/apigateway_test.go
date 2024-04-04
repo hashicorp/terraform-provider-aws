@@ -21,3 +21,13 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 		"no matching Route53Zone found",
 	)
 }
+
+func TestAccAPIGateway_serial(t *testing.T) {
+	testCases := map[string]map[string]func(t *testing.T){
+		"Account": {
+			"basic": testAccAccount_basic,
+		},
+	}
+
+	acctest.RunSerialTests2Levels(t, testCases, 0)
+}
