@@ -58,7 +58,7 @@ class Service(name: String, spec: ServiceSpec) {
             if (spec.splitPackageRealPackage != null) {
                 packageName = spec.splitPackageRealPackage
             }
-=
+
             val serviceDir = "./internal/service/$packageName"
             steps {
                 ConfigureGoEnv()
