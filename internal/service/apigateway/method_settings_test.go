@@ -619,7 +619,7 @@ func testAccMethodSettingsImportStateIdFunc(resourceName string) resource.Import
 }
 
 func testAccMethodSettingsConfig_base(rName string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAccountConfig_role0(rName), fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = %[1]q
 }
@@ -666,7 +666,7 @@ resource "aws_api_gateway_deployment" "test" {
   rest_api_id = aws_api_gateway_rest_api.test.id
   stage_name  = "dev"
 }
-`, rName)
+`, rName))
 }
 
 func testAccMethodSettingsConfig_cacheDataEncrypted(rName string, cacheDataEncrypted bool) string {
@@ -735,6 +735,8 @@ resource "aws_api_gateway_method_settings" "test" {
   settings {
     logging_level = %[1]q
   }
+
+  depends_on = [aws_api_gateway_account.test]
 }
 `, loggingLevel))
 }
@@ -764,6 +766,8 @@ resource "aws_api_gateway_method_settings" "test" {
     logging_level   = %[1]q
     metrics_enabled = %[2]t
   }
+
+  depends_on = [aws_api_gateway_account.test]
 }
 `, loggingLevel, metricsEnabled))
 }
