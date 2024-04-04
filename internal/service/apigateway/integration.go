@@ -253,7 +253,9 @@ func resourceIntegrationRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("cache_namespace", integration.CacheNamespace)
 	d.Set("connection_id", integration.ConnectionId)
 	d.Set("connection_type", types.ConnectionTypeInternet)
-	d.Set("connection_type", integration.ConnectionType)
+	if integration.ConnectionType != "" {
+		d.Set("connection_type", integration.ConnectionType)
+	}
 	d.Set("content_handling", integration.ContentHandling)
 	d.Set("credentials", integration.Credentials)
 	d.Set("integration_http_method", integration.HttpMethod)
