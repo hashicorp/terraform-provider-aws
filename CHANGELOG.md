@@ -24,6 +24,7 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* Correctly handles user agents passed using `TF_APPEND_USER_AGENT` which contain `/`,  `(`, `)`, or space. ([#36738](https://github.com/hashicorp/terraform-provider-aws/issues/36738))
 * resource/aws_batch_scheduling_policy: Fixes error where tags could not be updated ([#36517](https://github.com/hashicorp/terraform-provider-aws/issues/36517))
 * resource/aws_cloudfront_key_value_store: Serialize CloudFront KeyValueStore access ([#36734](https://github.com/hashicorp/terraform-provider-aws/issues/36734))
 * resource/aws_cloudfrontkeyvaluestore_key: Serialize CloudFront KeyValueStore access ([#36734](https://github.com/hashicorp/terraform-provider-aws/issues/36734))
