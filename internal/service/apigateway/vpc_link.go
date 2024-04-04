@@ -232,7 +232,7 @@ func vpcLinkStatus(ctx context.Context, conn *apigateway.Client, id string) retr
 	}
 }
 
-func waitVPCLinkAvailable(ctx context.Context, conn *apigateway.Client, id string) (*apigateway.GetVpcLinkOutput, error) {
+func waitVPCLinkAvailable(ctx context.Context, conn *apigateway.Client, id string) (*apigateway.GetVpcLinkOutput, error) { //nolint:unparam
 	const (
 		timeout = 20 * time.Minute
 	)
