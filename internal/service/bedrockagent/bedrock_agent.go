@@ -7,6 +7,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -86,11 +88,9 @@ func (r *bedrockAgentResource) Schema(ctx context.Context, request resource.Sche
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"client_token": schema.StringAttribute{
-				Optional: true,
-			},
 			"created_at": schema.StringAttribute{
-				Computed: true,
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
 			},
 			"customer_encryption_key_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
@@ -128,9 +128,10 @@ func (r *bedrockAgentResource) Schema(ctx context.Context, request resource.Sche
 				Optional: true,
 				Computed: true,
 			},
-			// "prepared_at": schema.StringAttribute{
-			// 	Computed: true,
-			// },
+			"prepared_at": schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
+			},
 			"recommended_actions": schema.ListAttribute{
 				ElementType: types.StringType,
 				Computed:    true,
@@ -139,7 +140,8 @@ func (r *bedrockAgentResource) Schema(ctx context.Context, request resource.Sche
 				},
 			},
 			"updated_at": schema.StringAttribute{
-				Computed: true,
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
@@ -255,7 +257,7 @@ func (r *bedrockAgentResource) Create(ctx context.Context, request resource.Crea
 		return
 	}
 
-	//input.ClientToken = aws.String(id.UniqueId())
+	input.ClientToken = aws.String(id.UniqueId())
 
 	input.Tags = getTagsIn(ctx)
 
@@ -277,21 +279,7 @@ func (r *bedrockAgentResource) Create(ctx context.Context, request resource.Crea
 		return
 	}
 
-	var dataFromCreate bedrockAgentResourceModel
-	//response.Diagnostics.Append(fwflex.Flatten(ctx, output.Agent, &dataFromCreate)...)
-	response.Diagnostics.Append(fwflex.Flatten(ctx, agent.Agent, &dataFromCreate)...)
-	data.CreatedAt = dataFromCreate.CreatedAt
-	data.UpdatedAt = dataFromCreate.UpdatedAt
-	data.ID = dataFromCreate.AgentId
-	data.AgentARN = dataFromCreate.AgentARN
-	data.AgentStatus = dataFromCreate.AgentStatus
-	data.AgentVersion = dataFromCreate.AgentVersion
-	data.AgentId = dataFromCreate.AgentId
-	data.Description = dataFromCreate.Description
-	data.FailureReasons = dataFromCreate.FailureReasons
-	data.Instruction = dataFromCreate.Instruction
-	data.RecommendedActions = dataFromCreate.RecommendedActions
-
+	response.Diagnostics.Append(fwflex.Flatten(ctx, agent.Agent, &data)...)
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
@@ -310,7 +298,6 @@ func (r *bedrockAgentResource) Read(ctx context.Context, request resource.ReadRe
 
 	conn := r.Meta().BedrockAgentClient(ctx)
 
-	//AgentId := data.AgentId.ValueString()
 	AgentId := data.ID.ValueString()
 	output, err := findBedrockAgentByID(ctx, conn, AgentId)
 
@@ -327,23 +314,11 @@ func (r *bedrockAgentResource) Read(ctx context.Context, request resource.ReadRe
 		return
 	}
 
-	var dataFromRead bedrockAgentResourceModel
-	//response.Diagnostics.Append(fwflex.Flatten(ctx, output.Agent, &data)...)
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output.Agent, &dataFromRead)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output.Agent, &data)...)
+
 	if response.Diagnostics.HasError() {
 		return
 	}
-	data.CreatedAt = dataFromRead.CreatedAt
-	data.UpdatedAt = dataFromRead.UpdatedAt
-	data.ID = dataFromRead.AgentId
-	data.AgentId = dataFromRead.AgentId
-	data.AgentARN = dataFromRead.AgentARN
-	data.AgentName = dataFromRead.AgentName
-	data.AgentVersion = dataFromRead.AgentVersion
-	data.AgentStatus = dataFromRead.AgentStatus
-	data.FoundationModel = dataFromRead.FoundationModel
-	data.IdleSessionTTLInSeconds = dataFromRead.IdleSessionTTLInSeconds
-	data.AgentResourceRoleARN = dataFromRead.AgentResourceRoleARN
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -512,28 +487,31 @@ func waitAgentDeleted(ctx context.Context, conn *bedrockagent.Client, id string,
 }
 
 type bedrockAgentResourceModel struct {
-	AgentARN                 types.String `tfsdk:"agent_arn"`
-	AgentId                  types.String `tfsdk:"agent_id"`
-	AgentName                types.String `tfsdk:"agent_name"`
-	AgentResourceRoleARN     fwtypes.ARN  `tfsdk:"agent_resource_role_arn"`
-	AgentVersion             types.String `tfsdk:"agent_version"`
-	AgentStatus              types.String `tfsdk:"agent_status"`
-	ClientToken              types.String `tfsdk:"client_token"`
-	CreatedAt                types.String `tfsdk:"created_at"`
-	CustomerEncryptionKeyARN fwtypes.ARN  `tfsdk:"customer_encryption_key_arn"`
-	Description              types.String `tfsdk:"description"`
-	FailureReasons           types.List   `tfsdk:"failure_reasons"`
-	FoundationModel          types.String `tfsdk:"foundation_model"`
-	ID                       types.String `tfsdk:"id"`
-	IdleSessionTTLInSeconds  types.Int64  `tfsdk:"idle_ttl"`
-	Instruction              types.String `tfsdk:"instruction"`
-	//PreparedAt                  types.String                         `tfsdk:"prepared_at"`
+	AgentARN                    types.String                         `tfsdk:"agent_arn"`
+	AgentId                     types.String                         `tfsdk:"agent_id"`
+	AgentName                   types.String                         `tfsdk:"agent_name"`
+	AgentResourceRoleARN        fwtypes.ARN                          `tfsdk:"agent_resource_role_arn"`
+	AgentVersion                types.String                         `tfsdk:"agent_version"`
+	AgentStatus                 types.String                         `tfsdk:"agent_status"`
+	CreatedAt                   timetypes.RFC3339                    `tfsdk:"created_at"`
+	CustomerEncryptionKeyARN    fwtypes.ARN                          `tfsdk:"customer_encryption_key_arn"`
+	Description                 types.String                         `tfsdk:"description"`
+	FailureReasons              types.List                           `tfsdk:"failure_reasons"`
+	FoundationModel             types.String                         `tfsdk:"foundation_model"`
+	ID                          types.String                         `tfsdk:"id"`
+	IdleSessionTTLInSeconds     types.Int64                          `tfsdk:"idle_ttl"`
+	Instruction                 types.String                         `tfsdk:"instruction"`
+	PreparedAt                  timetypes.RFC3339                    `tfsdk:"prepared_at"`
 	PromptOverrideConfiguration fwtypes.ListNestedObjectValueOf[poc] `tfsdk:"prompt_override_configuration"`
 	RecommendedActions          types.List                           `tfsdk:"recommended_actions"`
-	UpdatedAt                   types.String                         `tfsdk:"updated_at"`
+	UpdatedAt                   timetypes.RFC3339                    `tfsdk:"updated_at"`
 	Tags                        types.Map                            `tfsdk:"tags"`
 	TagsAll                     types.Map                            `tfsdk:"tags_all"`
 	Timeouts                    timeouts.Value                       `tfsdk:"timeouts"`
+}
+
+func (m *bedrockAgentResourceModel) setId() {
+	m.ID = m.AgentId
 }
 
 type poc struct {
