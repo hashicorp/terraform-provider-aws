@@ -219,9 +219,6 @@ func testAccBedrockRole(rName, model string) string {
 resource "aws_iam_role" "test" {
   assume_role_policy = data.aws_iam_policy_document.test_agent_trust.json
   name_prefix               = "AmazonBedrockExecutionRoleForAgents_tf"
-  tags = {
-    foo = "bar2"
-  }
 }
 
 data "aws_iam_policy_document" "test_agent_trust" {
