@@ -334,18 +334,16 @@ func resourceAuthorizerCustomizeDiff(_ context.Context, diff *schema.ResourceDif
 		}
 	}
 
-	if diff.Id() == "" {
-		switch authType := types.AuthorizerType(diff.Get("type").(string)); authType {
-		// authorizer_uri is required for authorizer TOKEN/REQUEST.
-		case types.AuthorizerTypeRequest, types.AuthorizerTypeToken:
-			if v, ok := diff.GetOk("authorizer_uri"); !ok || v.(string) == "" {
-				return fmt.Errorf("authorizer_uri must be set non-empty when authorizer type is %s", authType)
-			}
-			// provider_arns is required for authorizer COGNITO_USER_POOLS.
-		case types.AuthorizerTypeCognitoUserPools:
-			if v, ok := diff.GetOk("provider_arns"); !ok || v.(*schema.Set).Len() == 0 {
-				return fmt.Errorf("provider_arns must be set non-empty when authorizer type is %s", authType)
-			}
+	switch authType, rawConfig := types.AuthorizerType(diff.Get("type").(string)), diff.GetRawConfig(); authType {
+	// authorizer_uri is required for authorizer TOKEN/REQUEST.
+	case types.AuthorizerTypeRequest, types.AuthorizerTypeToken:
+		if v := rawConfig.GetAttr("authorizer_uri"); v.IsKnown() && (v.IsNull() || v.AsString() == "") {
+			return fmt.Errorf("authorizer_uri must be set non-empty when authorizer type is %s", authType)
+		}
+		// provider_arns is required for authorizer COGNITO_USER_POOLS.
+	case types.AuthorizerTypeCognitoUserPools:
+		if v := rawConfig.GetAttr("provider_arns"); v.IsKnown() && (v.IsNull() || v.AsValueSet().Length() == 0) {
+			return fmt.Errorf("provider_arns must be set non-empty when authorizer type is %s", authType)
 		}
 	}
 
