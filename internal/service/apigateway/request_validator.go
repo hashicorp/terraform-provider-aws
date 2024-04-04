@@ -168,12 +168,18 @@ func resourceRequestValidatorDelete(ctx context.Context, d *schema.ResourceData,
 		RestApiId:          aws.String(d.Get("rest_api_id").(string)),
 	})
 
-	if err != nil {
+	if errs.IsA[*types.NotFoundException](err) {
+		return diags
+	}
+
+	if errs.IsA[*types.ConflictException](err) {
 		// XXX: Figure out a way to delete the method that depends on the request validator first
-		// otherwise the validator will be dangling until the API is deleted
-		if errs.IsA[*types.ConflictException](err) {
-			return sdkdiag.AppendErrorf(diags, "deleting API Gateway Request Validator (%s): %s", d.Id(), err)
-		}
+		// otherwise the validator will be dangling until the API is deleted.
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting API Gateway Request Validator (%s): %s", d.Id(), err)
 	}
 
 	return diags
