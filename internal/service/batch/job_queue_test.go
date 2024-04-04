@@ -467,7 +467,7 @@ func TestAccBatchJobQueue_JobStateTimeLimitActionsMultiple(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: acctest.ConfigCompose(
-					testAccJobQueueConfigBase(rName),
+					testAccJobQueueConfig_Base(rName),
 					fmt.Sprintf(`
 resource "aws_batch_job_queue" "test" {
   compute_environments = [aws_batch_compute_environment.test.arn]
@@ -510,7 +510,7 @@ resource "aws_batch_job_queue" "test" {
 			},
 			{
 				Config: acctest.ConfigCompose(
-					testAccJobQueueConfigBase(rName),
+					testAccJobQueueConfig_Base(rName),
 					fmt.Sprintf(`
 resource "aws_batch_job_queue" "test" {
   compute_environments = [aws_batch_compute_environment.test.arn]
