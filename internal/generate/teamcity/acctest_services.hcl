@@ -67,7 +67,14 @@ service "ds" {
 }
 
 service "ec2" {
-  vpc_lock = true
+  vpc_lock         = true
+  pattern_override = "TestAccEC2(?:[^E]|E[^B]|EB[^S])*$"
+}
+
+service "transitgateway" {
+  vpc_lock                   = true
+  pattern_override           = "TestAccTransitGateway"
+  split_package_real_package = "ec2"
 }
 
 service "ecrpublic" {

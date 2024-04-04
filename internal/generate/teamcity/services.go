@@ -22,11 +22,13 @@ import (
 )
 
 type ServiceDatum struct {
-	ProviderPackage string
-	HumanFriendly   string
-	VpcLock         bool
-	Parallelism     int
-	Region          string
+	ProviderPackage         string
+	HumanFriendly           string
+	VpcLock                 bool
+	Parallelism             int
+	Region                  string
+	PatternOverride         string
+	SplitPackageRealPackage string
 }
 
 type TemplateData struct {
@@ -57,13 +59,15 @@ func main() {
 	td := TemplateData{}
 
 	for _, l := range data {
-		if l.Exclude() {
+		if l.Exclude() && l.SplitPackageRealPackage() == "" {
 			continue
 		}
 
 		p := l.ProviderPackage()
 
-		if _, err := os.Stat(fmt.Sprintf("../../service/%s", p)); err != nil || errors.Is(err, fs.ErrNotExist) {
+		_, err := os.Stat(fmt.Sprintf("../../service/%s", p))
+
+		if (err != nil || errors.Is(err, fs.ErrNotExist)) && l.SplitPackageRealPackage() == "" {
 			continue
 		}
 
@@ -76,6 +80,8 @@ func main() {
 			sd.VpcLock = serviceConfig.VpcLock
 			sd.Parallelism = serviceConfig.Parallelism
 			sd.Region = serviceConfig.Region
+			sd.PatternOverride = serviceConfig.PatternOverride
+			sd.SplitPackageRealPackage = serviceConfig.SplitPackageRealPackage
 		}
 
 		if serviceConfig.Skip {
@@ -109,11 +115,13 @@ type acctestConfig struct {
 }
 
 type acctestServiceConfig struct {
-	Service     string `hcl:",label"`
-	VpcLock     bool   `hcl:"vpc_lock,optional"`
-	Parallelism int    `hcl:"parallelism,optional"`
-	Skip        bool   `hcl:"skip,optional"`
-	Region      string `hcl:"region,optional"`
+	Service                 string `hcl:",label"`
+	VpcLock                 bool   `hcl:"vpc_lock,optional"`
+	Parallelism             int    `hcl:"parallelism,optional"`
+	Skip                    bool   `hcl:"skip,optional"`
+	Region                  string `hcl:"region,optional"`
+	PatternOverride         string `hcl:"pattern_override,optional"`
+	SplitPackageRealPackage string `hcl:"split_package_real_package,optional"`
 }
 
 func acctestConfigurations(filename string) (map[string]acctestServiceConfig, error) {
