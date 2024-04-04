@@ -71,7 +71,10 @@ func resourceBasePathMappingCreate(ctx context.Context, d *schema.ResourceData, 
 		Stage:      aws.String(d.Get("stage_name").(string)),
 	}
 
-	_, err := tfresource.RetryWhenIsA[*types.BadRequestException](ctx, 30*time.Second, func() (interface{}, error) {
+	const (
+		timeout = 30 * time.Second
+	)
+	_, err := tfresource.RetryWhenIsA[*types.BadRequestException](ctx, timeout, func() (interface{}, error) {
 		return conn.CreateBasePathMapping(ctx, input)
 	})
 
