@@ -667,8 +667,8 @@ func expandThrottleSettingsList(tfList []interface{}) map[string]types.ThrottleS
 
 		apiObject := types.ThrottleSettings{}
 
-		if v, ok := tfMap["burst_limit"].(int32); ok {
-			apiObject.BurstLimit = v
+		if v, ok := tfMap["burst_limit"].(int); ok {
+			apiObject.BurstLimit = int32(v)
 		}
 
 		if v, ok := tfMap["rate_limit"].(float64); ok {
