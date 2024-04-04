@@ -6,7 +6,7 @@ require (
 	github.com/ProtonMail/go-crypto v1.1.0-alpha.2
 	github.com/YakDriver/go-version v0.1.0
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.51.13
+	github.com/aws/aws-sdk-go v1.51.14
 	github.com/aws/aws-sdk-go-v2 v1.26.1
 	github.com/aws/aws-sdk-go-v2/config v1.27.10
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.10
@@ -60,7 +60,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.23.4
 	github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.4.4
 	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.36.4
-	github.com/aws/aws-sdk-go-v2/service/datazone v1.7.0
+	github.com/aws/aws-sdk-go-v2/service/datazone v1.8.0
 	github.com/aws/aws-sdk-go-v2/service/dax v1.19.4
 	github.com/aws/aws-sdk-go-v2/service/devopsguru v1.30.4
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.24.4
@@ -81,7 +81,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/firehose v1.28.5
 	github.com/aws/aws-sdk-go-v2/service/fis v1.24.2
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.22.4
-	github.com/aws/aws-sdk-go-v2/service/groundstation v1.26.4
+	github.com/aws/aws-sdk-go-v2/service/groundstation v1.27.0
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.23.4
 	github.com/aws/aws-sdk-go-v2/service/iam v1.31.4
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.23.5
@@ -93,7 +93,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.10.4
 	github.com/aws/aws-sdk-go-v2/service/kinesis v1.27.4
 	github.com/aws/aws-sdk-go-v2/service/lakeformation v1.31.5
-	github.com/aws/aws-sdk-go-v2/service/lambda v1.53.4
+	github.com/aws/aws-sdk-go-v2/service/lambda v1.54.0
 	github.com/aws/aws-sdk-go-v2/service/launchwizard v1.3.4
 	github.com/aws/aws-sdk-go-v2/service/lexmodelsv2 v1.43.4
 	github.com/aws/aws-sdk-go-v2/service/lightsail v1.37.0
@@ -101,7 +101,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/m2 v1.12.4
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.28.4
 	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.52.5
-	github.com/aws/aws-sdk-go-v2/service/medialive v1.49.3
+	github.com/aws/aws-sdk-go-v2/service/medialive v1.50.0
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.30.5
 	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.10.2
 	github.com/aws/aws-sdk-go-v2/service/mediastore v1.20.4
@@ -152,8 +152,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/synthetics v1.24.4
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.25.5
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.36.4
-	github.com/aws/aws-sdk-go-v2/service/transfer v1.44.2
-	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.11.3
+	github.com/aws/aws-sdk-go-v2/service/transfer v1.45.0
+	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.11.4
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.7.4
 	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.29.4
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.38.4
