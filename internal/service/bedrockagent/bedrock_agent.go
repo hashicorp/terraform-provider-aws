@@ -340,6 +340,7 @@ func (r *bedrockAgentResource) Read(ctx context.Context, request resource.ReadRe
 	data.AgentARN = dataFromRead.AgentARN
 	data.AgentName = dataFromRead.AgentName
 	data.AgentVersion = dataFromRead.AgentVersion
+	data.AgentStatus = dataFromRead.AgentStatus
 	data.FoundationModel = dataFromRead.FoundationModel
 	data.IdleSessionTTLInSeconds = dataFromRead.IdleSessionTTLInSeconds
 	data.AgentResourceRoleARN = dataFromRead.AgentResourceRoleARN
@@ -515,8 +516,8 @@ type bedrockAgentResourceModel struct {
 	AgentId                  types.String `tfsdk:"agent_id"`
 	AgentName                types.String `tfsdk:"agent_name"`
 	AgentResourceRoleARN     fwtypes.ARN  `tfsdk:"agent_resource_role_arn"`
-	AgentVersion             types.String `tfsdk:"agent_status"`
-	AgentStatus              types.String `tfsdk:"agent_version"`
+	AgentVersion             types.String `tfsdk:"agent_version"`
+	AgentStatus              types.String `tfsdk:"agent_status"`
 	ClientToken              types.String `tfsdk:"client_token"`
 	CreatedAt                types.String `tfsdk:"created_at"`
 	CustomerEncryptionKeyARN fwtypes.ARN  `tfsdk:"customer_encryption_key_arn"`
