@@ -79,33 +79,6 @@ func testAccCheckBedrockAgentDestroy(ctx context.Context) resource.TestCheckFunc
 	}
 }
 
-// func testAccCheckBedrockAgentDestroy(ctx context.Context) resource.TestCheckFunc {
-// 	return func(s *terraform.State) error {
-// 		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentClient(ctx)
-
-// 		for _, rs := range s.RootModule().Resources {
-// 			if rs.Type != "aws_bedrock_agent" {
-// 				continue
-// 			}
-
-// 			_, err := conn.GetAgent(ctx, &bedrockagent.GetAgentInput{
-// 				AgentId: aws.String(rs.Primary.ID),
-// 			})
-
-// 			if errs.IsA[*types.ResourceNotFoundException](err) {
-// 				return nil
-// 			}
-// 			if err != nil {
-// 				return create.Error(names.BedrockAgent, create.ErrActionCheckingDestroyed, "Bedrock Agent", rs.Primary.ID, err)
-// 			}
-
-// 			return create.Error(names.BedrockAgent, create.ErrActionCheckingDestroyed, "Bedrock Agent", rs.Primary.ID, errors.New("not destroyed"))
-// 		}
-
-// 		return nil
-// 	}
-// }
-
 func testAccCheckBedrockAgentExists(ctx context.Context, n string, v *bedrockagent.GetAgentOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -126,29 +99,6 @@ func testAccCheckBedrockAgentExists(ctx context.Context, n string, v *bedrockage
 		return nil
 	}
 }
-
-// func testAccCheckBedrockAgentExists(ctx context.Context, n string, v *bedrockagent.GetAgentOutput) resource.TestCheckFunc {
-// 	return func(s *terraform.State) error {
-// 		rs, ok := s.RootModule().Resources[n]
-// 		if !ok {
-// 			return fmt.Errorf("Not found: %s", n)
-// 		}
-
-// 		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentClient(ctx)
-
-// 		output, err := conn.GetAgent(ctx, &bedrockagent.GetAgentInput{
-// 			AgentId: aws.String(rs.Primary.ID),
-// 		})
-
-// 		if err != nil {
-// 			return err
-// 		}
-
-// 		*v = *output
-
-// 		return nil
-// 	}
-// }
 
 func findBedrockAgentByID(ctx context.Context, conn *bedrockagent.Client, id string) (*bedrockagent.GetAgentOutput, error) {
 	input := &bedrockagent.GetAgentInput{
