@@ -18,12 +18,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccAPIGatewayMethodSettings_basic(t *testing.T) {
+func testAccMethodSettings_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -47,12 +47,12 @@ func TestAccAPIGatewayMethodSettings_basic(t *testing.T) {
 	})
 }
 
-func TestAccAPIGatewayMethodSettings_Settings_cacheDataEncrypted(t *testing.T) {
+func testAccMethodSettings_Settings_cacheDataEncrypted(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -84,12 +84,12 @@ func TestAccAPIGatewayMethodSettings_Settings_cacheDataEncrypted(t *testing.T) {
 	})
 }
 
-func TestAccAPIGatewayMethodSettings_Settings_cacheTTLInSeconds(t *testing.T) {
+func testAccMethodSettings_Settings_cacheTTLInSeconds(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -129,12 +129,12 @@ func TestAccAPIGatewayMethodSettings_Settings_cacheTTLInSeconds(t *testing.T) {
 	})
 }
 
-func TestAccAPIGatewayMethodSettings_Settings_cachingEnabled(t *testing.T) {
+func testAccMethodSettings_Settings_cachingEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -166,12 +166,12 @@ func TestAccAPIGatewayMethodSettings_Settings_cachingEnabled(t *testing.T) {
 	})
 }
 
-func TestAccAPIGatewayMethodSettings_Settings_dataTraceEnabled(t *testing.T) {
+func testAccMethodSettings_Settings_dataTraceEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -203,12 +203,12 @@ func TestAccAPIGatewayMethodSettings_Settings_dataTraceEnabled(t *testing.T) {
 	})
 }
 
-func TestAccAPIGatewayMethodSettings_Settings_loggingLevel(t *testing.T) {
+func testAccMethodSettings_Settings_loggingLevel(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -240,12 +240,12 @@ func TestAccAPIGatewayMethodSettings_Settings_loggingLevel(t *testing.T) {
 	})
 }
 
-func TestAccAPIGatewayMethodSettings_Settings_metricsEnabled(t *testing.T) {
+func testAccMethodSettings_Settings_metricsEnabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -277,12 +277,12 @@ func TestAccAPIGatewayMethodSettings_Settings_metricsEnabled(t *testing.T) {
 	})
 }
 
-func TestAccAPIGatewayMethodSettings_Settings_multiple(t *testing.T) {
+func testAccMethodSettings_Settings_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -315,12 +315,12 @@ func TestAccAPIGatewayMethodSettings_Settings_multiple(t *testing.T) {
 	})
 }
 
-func TestAccAPIGatewayMethodSettings_Settings_requireAuthorizationForCacheControl(t *testing.T) {
+func testAccMethodSettings_Settings_requireAuthorizationForCacheControl(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -352,12 +352,12 @@ func TestAccAPIGatewayMethodSettings_Settings_requireAuthorizationForCacheContro
 	})
 }
 
-func TestAccAPIGatewayMethodSettings_Settings_throttlingBurstLimit(t *testing.T) {
+func testAccMethodSettings_Settings_throttlingBurstLimit(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -390,12 +390,12 @@ func TestAccAPIGatewayMethodSettings_Settings_throttlingBurstLimit(t *testing.T)
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/5690
-func TestAccAPIGatewayMethodSettings_Settings_throttlingBurstLimitDisabledByDefault(t *testing.T) {
+func testAccMethodSettings_Settings_throttlingBurstLimitDisabledByDefault(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -427,12 +427,12 @@ func TestAccAPIGatewayMethodSettings_Settings_throttlingBurstLimitDisabledByDefa
 	})
 }
 
-func TestAccAPIGatewayMethodSettings_Settings_throttlingRateLimit(t *testing.T) {
+func testAccMethodSettings_Settings_throttlingRateLimit(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -465,12 +465,12 @@ func TestAccAPIGatewayMethodSettings_Settings_throttlingRateLimit(t *testing.T) 
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/5690
-func TestAccAPIGatewayMethodSettings_Settings_throttlingRateLimitDisabledByDefault(t *testing.T) {
+func testAccMethodSettings_Settings_throttlingRateLimitDisabledByDefault(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -502,12 +502,12 @@ func TestAccAPIGatewayMethodSettings_Settings_throttlingRateLimitDisabledByDefau
 	})
 }
 
-func TestAccAPIGatewayMethodSettings_Settings_unauthorizedCacheControlHeaderStrategy(t *testing.T) {
+func testAccMethodSettings_Settings_unauthorizedCacheControlHeaderStrategy(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -539,12 +539,12 @@ func TestAccAPIGatewayMethodSettings_Settings_unauthorizedCacheControlHeaderStra
 	})
 }
 
-func TestAccAPIGatewayMethodSettings_disappears(t *testing.T) {
+func testAccMethodSettings_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method_settings.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
