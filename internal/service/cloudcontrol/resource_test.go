@@ -316,7 +316,7 @@ func TestAccCloudControlResource_DesiredState_objectValueAdded(t *testing.T) {
 			{
 				Config: testAccResourceConfig_desiredStateObjectValueRemoved(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "properties", regexache.MustCompile(`"Name":`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexache.MustCompile(`"ClusterName":`)),
 				),
 			},
 			{
@@ -349,7 +349,7 @@ func TestAccCloudControlResource_DesiredState_objectValueRemoved(t *testing.T) {
 			{
 				Config: testAccResourceConfig_desiredStateObjectValueRemoved(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "properties", regexache.MustCompile(`"Name":`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexache.MustCompile(`"ClusterName":`)),
 				),
 			},
 		},
