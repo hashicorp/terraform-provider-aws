@@ -432,7 +432,7 @@ func expandPolicyMemberSecurityHub(tfMap map[string]interface{}) *types.PolicyMe
 		SecurityControlsConfiguration: expandSecurityControlsConfiguration(tfMap["security_controls_configuration"]),
 	}
 
-	if v, ok := tfMap["enabled_standard_arns"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := tfMap["enabled_standard_arns"].(*schema.Set); ok {
 		apiObject.EnabledStandardIdentifiers = flex.ExpandStringValueSet(v)
 	}
 
