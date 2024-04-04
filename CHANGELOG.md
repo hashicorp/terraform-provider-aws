@@ -23,6 +23,9 @@ ENHANCEMENTS:
 
 BUG FIXES:
 
+* resource/aws_batch_scheduling_policy: Fixes error where tags could not be updated ([#36517](https://github.com/hashicorp/terraform-provider-aws/issues/36517))
+* resource/aws_cloudfront_key_value_store: Serialize CloudFront KeyValueStore access ([#36734](https://github.com/hashicorp/terraform-provider-aws/issues/36734))
+* resource/aws_cloudfrontkeyvaluestore_key: Serialize CloudFront KeyValueStore access ([#36734](https://github.com/hashicorp/terraform-provider-aws/issues/36734))
 * resource/aws_cognito_user_pool: Correct plan-time validation of `email_verification_message`, `email_verification_subject`, `admin_create_user_config.invite_message_template.email_message`, `admin_create_user_config.invite_message_template.email_subject`, `admin_create_user_config.invite_message_template.sms_message`, `sms_authentication_message`, `sms_verification_message`, `verification_message_template.email_message`, `verification_message_template.email_message_by_link`, `verification_message_template.email_subject`, `verification_message_template.email_subject_by_link`, and `verification_message_template.sms_message` to count UTF-8 characters properly ([#36661](https://github.com/hashicorp/terraform-provider-aws/issues/36661))
 * resource/aws_ecr_lifecycle_policy: Add missing `tagPatternList` change detection in policy JSON ([#35231](https://github.com/hashicorp/terraform-provider-aws/issues/35231))
 * resource/aws_ecs_service: Correctly set `alarms.rollback` on resource Create and Update ([#36691](https://github.com/hashicorp/terraform-provider-aws/issues/36691))
