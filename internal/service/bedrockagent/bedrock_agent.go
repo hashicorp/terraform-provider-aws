@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"time"
 
@@ -132,6 +133,39 @@ func (r *bedrockAgentResource) Schema(ctx context.Context, request resource.Sche
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 			},
+			"prompt_override_configuration": schema.ListAttribute{ // Limited here by V5 Protocol
+				Computed:   true,
+				Optional:   true,
+				Validators: []validator.List{listvalidator.SizeAtMost(1)},
+				CustomType: fwtypes.NewListNestedObjectTypeOf[poc](ctx),
+				ElementType: types.ObjectType{
+					AttrTypes: map[string]attr.Type{
+						"override_lambda": types.StringType,
+						"prompt_configurations": types.ListType{
+							ElemType: types.ObjectType{
+								AttrTypes: map[string]attr.Type{
+									"base_prompt_template": types.StringType,
+									"parser_mode":          types.StringType,
+									"prompt_creation_mode": types.StringType,
+									"prompt_state":         types.StringType,
+									"prompt_type":          types.StringType,
+									"inference_configuration": types.ObjectType{
+										AttrTypes: map[string]attr.Type{
+											"max_length": types.Int64Type,
+											"stop_sequences": types.ListType{
+												ElemType: types.StringType,
+											},
+											"temperature": types.Float64Type,
+											"topk":        types.Int64Type,
+											"topp":        types.Float64Type,
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 			"recommended_actions": schema.ListAttribute{
 				ElementType: types.StringType,
 				Computed:    true,
@@ -147,92 +181,6 @@ func (r *bedrockAgentResource) Schema(ctx context.Context, request resource.Sche
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"prompt_override_configuration": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[poc](ctx),
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.RequiresReplace(),
-				},
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"override_lambda": schema.StringAttribute{
-							CustomType: fwtypes.ARNType,
-							Required:   true,
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.RequiresReplace(),
-							},
-						},
-					},
-					Blocks: map[string]schema.Block{
-						"prompt_configurations": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[pc](ctx),
-
-							PlanModifiers: []planmodifier.List{
-								listplanmodifier.RequiresReplace(),
-							},
-							Validators: []validator.List{
-								listvalidator.IsRequired(),
-								listvalidator.SizeAtLeast(1),
-								listvalidator.SizeAtMost(10),
-							},
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"base_prompt_template": schema.StringAttribute{
-										Optional: true,
-									},
-									"parser_mode": schema.StringAttribute{
-										Optional: true,
-									},
-									"prompt_creation_mode": schema.StringAttribute{
-										Optional: true,
-									},
-									"prompt_state": schema.StringAttribute{
-										Optional: true,
-									},
-									"prompt_type": schema.StringAttribute{
-										Optional: true,
-									},
-								},
-								Blocks: map[string]schema.Block{
-									"inference_configuration": schema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[ic](ctx),
-										PlanModifiers: []planmodifier.List{
-											listplanmodifier.RequiresReplace(),
-										},
-										Validators: []validator.List{
-											listvalidator.IsRequired(),
-											listvalidator.SizeAtLeast(1),
-											listvalidator.SizeAtMost(1),
-										},
-										NestedObject: schema.NestedBlockObject{
-											Attributes: map[string]schema.Attribute{
-												"max_length": schema.Int64Attribute{
-													Optional: true,
-												},
-												"stop_sequences": schema.ListAttribute{
-													CustomType: fwtypes.ListOfStringType,
-													Optional:   true,
-												},
-												"temperature": schema.Float64Attribute{
-													Optional: true,
-												},
-												"topk": schema.Int64Attribute{
-													Optional: true,
-												},
-												"topp": schema.Float64Attribute{
-													Optional: true,
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
 			"timeouts": timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
