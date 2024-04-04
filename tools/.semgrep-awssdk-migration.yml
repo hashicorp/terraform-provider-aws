@@ -1,0 +1,106 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
+rules:
+  - id: fix-aws-package-import
+    pattern: |
+      import "github.com/aws/aws-sdk-go/aws"
+    fix-regex:
+      regex: "github.com/aws/aws-sdk-go/aws"
+      replacement: "github.com/aws/aws-sdk-go-v2/aws"
+    message: Use aws package from AWS SDK for Go V2
+    languages: [go]
+    severity: WARNING
+    paths:
+      exclude:
+        - "*_gen.go"
+
+  # TODO service package import with types subpackage
+  ####
+  # - id: fix-aws-service-package-import
+  #   patterns:
+  #     - pattern-regex: "github.com/aws/aws-sdk-go/service/[a-z0-9]*"
+  #   # fix not working
+  #   fix-regex:
+  #     regex: "github.com/aws/aws-sdk-go/service/service/[a-z0-9]*"
+  #     replacement: "github.com/aws/aws-sdk-go-v2/service"
+  #   message: Use service package from AWS SDK for Go V2
+  #   languages: [go]
+  #   severity: WARNING
+  #   paths:
+  #     exclude:
+  #       - "*_gen.go"
+  #
+  - id: fix-aws-to-bool-conversion
+    pattern: "aws.BoolValue"
+    fix: "aws.ToBool"
+    message: Use AWS SDK for Go V2 to bool conversion
+    languages: [go]
+    severity: WARNING
+
+  - id: fix-aws-to-int32-conversion
+    pattern: "aws.Int32Value"
+    fix: "aws.ToInt32"
+    message: Use AWS SDK for Go V2 to int32 conversion
+    languages: [go]
+    severity: WARNING
+
+  - id: fix-aws-to-int64-conversion
+    pattern: "aws.Int64Value"
+    fix: "aws.ToInt64"
+    message: Use AWS SDK for Go V2 to int64 conversion
+    languages: [go]
+    severity: WARNING
+
+  - id: fix-aws-to-float32-conversion
+    pattern: "aws.Float32Value"
+    fix: "aws.ToFloat32"
+    message: Use AWS SDK for Go V2 to float32 conversion
+    languages: [go]
+    severity: WARNING
+
+  - id: fix-aws-to-float64-conversion
+    pattern: "aws.Float64Value"
+    fix: "aws.ToFloat64"
+    message: Use AWS SDK for Go V2 to float64 conversion
+    languages: [go]
+    severity: WARNING
+
+  - id: fix-aws-to-string-conversion
+    pattern: "aws.StringValue"
+    fix: "aws.ToString"
+    message: Use AWS SDK for Go V2 to string conversion
+    languages: [go]
+    severity: WARNING
+
+  - id: fix-conn-initialization
+    patterns:
+      - pattern: "meta.(*conns.AWSClient).$CLIENT(ctx)"
+      - metavariable-regex:
+          metavariable: $CLIENT
+          regex: (.*)Conn
+    fix-regex:
+      regex: (.*)Conn
+      replacement: '\1Client'
+    message: Initialize AWS SDK for Go V2 client
+    languages: [go]
+    severity: WARNING
+
+  - id: fix-conn-arguments
+    patterns:
+      - pattern: |
+          func $F(..., conn $CLIENT, ...) {
+            ...
+          }
+      - focus-metavariable: $CLIENT
+      - metavariable-pattern:
+          metavariable: $CLIENT
+          patterns:
+            - pattern-regex: '(.*)\..*'
+    # TODO: replacement isn't functional, though match is found?
+    fix-regex:
+      regex: '(.*)\..*'
+      replacement: 'TODO'
+    message: Use AWS SDK for Go V2 client in function arguments
+    languages: [go]
+    severity: WARNING
