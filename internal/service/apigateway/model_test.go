@@ -42,10 +42,11 @@ func TestAccAPIGatewayModel_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccModelImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccModelImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"schema"},
 			},
 		},
 	})

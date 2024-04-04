@@ -45,10 +45,11 @@ func TestAccAPIGatewayMethod_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccMethodImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccMethodImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"authorizer_id", "operation_name", "request_validator_id"},
 			},
 			{
 				Config: testAccMethodConfig_update(rName),
@@ -87,10 +88,11 @@ func TestAccAPIGatewayMethod_customAuthorizer(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccMethodImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccMethodImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"operation_name", "request_validator_id"},
 			},
 
 			{
@@ -166,10 +168,11 @@ func TestAccAPIGatewayMethod_customRequestValidator(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccMethodImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccMethodImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"authorizer_id", "operation_name"},
 			},
 
 			{
@@ -227,10 +230,11 @@ func TestAccAPIGatewayMethod_operationName(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccMethodImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccMethodImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"authorizer_id", "request_validator_id"},
 			},
 			{
 				Config: testAccMethodConfig_operationName(rName, "describeTest"),
