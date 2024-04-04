@@ -239,7 +239,7 @@ func testAccCheckBasePathBasePathAttribute(conf *apigateway.GetBasePathMappingOu
 	}
 }
 
-func testAccBasePathBaseConfig(domainName, key, certificate string) string {
+func testAccBasePathConfig_base(domainName, key, certificate string) string {
 	return fmt.Sprintf(`
 resource "aws_acm_certificate" "test" {
   certificate_body = "%[2]s"
@@ -294,19 +294,18 @@ resource "aws_api_gateway_deployment" "test" {
 }
 
 func testAccBasePathMappingConfig_basic(domainName, key, certificate, basePath string) string {
-	return testAccBasePathBaseConfig(domainName, key, certificate) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccBasePathConfig_base(domainName, key, certificate), fmt.Sprintf(`
 resource "aws_api_gateway_base_path_mapping" "test" {
   api_id      = aws_api_gateway_rest_api.test.id
   base_path   = %[1]q
   stage_name  = aws_api_gateway_deployment.test.stage_name
   domain_name = aws_api_gateway_domain_name.test.domain_name
 }
-`, basePath)
+`, basePath))
 }
 
 func testAccBasePathMappingConfig_altStageAndAPI(domainName, key, certificate, basePath string) string {
-	return testAccBasePathBaseConfig(domainName, key, certificate) + fmt.Sprintf(`
-
+	return acctest.ConfigCompose(testAccBasePathConfig_base(domainName, key, certificate), fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test2" {
   name        = "tf-acc-apigateway-base-path-mapping-alt"
   description = "Terraform Acceptance Tests"
@@ -361,5 +360,5 @@ resource "aws_api_gateway_base_path_mapping" "test" {
   stage_name  = aws_api_gateway_stage.test2.stage_name
   domain_name = aws_api_gateway_domain_name.test.domain_name
 }
-`, basePath)
+`, basePath))
 }
