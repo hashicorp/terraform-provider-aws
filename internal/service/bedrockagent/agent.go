@@ -115,7 +115,6 @@ func (r *bedrockAgentResource) Schema(ctx context.Context, request resource.Sche
 				},
 			},
 			"foundation_model": schema.StringAttribute{
-				//CustomType: fwtypes.ARNType,
 				Required: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
@@ -219,7 +218,7 @@ func (r *bedrockAgentResource) Create(ctx context.Context, request resource.Crea
 
 	data.AgentARN = fwflex.StringToFramework(ctx, output.Agent.AgentArn)
 	data.AgentId = fwflex.StringToFramework(ctx, output.Agent.AgentId)
-	data.ID = data.AgentId
+	data.setId()
 	agent, err := waitAgentCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent (%s) create", data.ID.ValueString()), err.Error())
