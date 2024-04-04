@@ -753,7 +753,7 @@ resource "aws_cloudcontrolapi_resource" "test" {
   desired_state = jsonencode({
     Role    = aws_iam_role.test.arn
     Handler = "index.main"
-    Runtime = "python3.7"
+    Runtime = "python3.12"
     Timeout = 300
     Code    = { ZipFile = "def main(event, context): pass" }
   })
