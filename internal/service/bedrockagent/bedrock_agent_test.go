@@ -38,7 +38,7 @@ func TestAccBedrockAgent_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckBedrockAgentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBedrockAgentConfig_basic(rName),
+				Config: testAccBedrockAgentConfig_basic(rName, "anthropic.claude-v2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBedrockAgentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "agent_name", rName),
@@ -175,14 +175,64 @@ func findBedrockAgentByID(ctx context.Context, conn *bedrockagent.Client, id str
 	return output, nil
 }
 
-func testAccBedrockAgentConfig_basic(rName string) string {
-	return fmt.Sprintf(`
+func testAccBedrockAgentConfig_basic(rName, model string) string {
+	return acctest.ConfigCompose(testAccBedrockRole(rName, model), fmt.Sprintf(`
 resource "aws_bedrock_agent" "test" {
   agent_name              = %[1]q
-  agent_resource_role_arn = "arn:aws:iam::xxxxxxxxxxxx:role/service-role/AmazonBedrockExecutionRoleForAgents_ADK5I5QWVLW"
+  agent_resource_role_arn = aws_iam_role.test.arn
   idle_ttl                = 500
-  foundation_model        = "anthropic.claude-v2"
-  
+  foundation_model        = %[2]q
 }
-`, rName)
+`, rName, model))
+}
+
+func testAccBedrockRole(rName, model string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  assume_role_policy = data.aws_iam_policy_document.test_agent_trust.json
+  name_prefix               = "AmazonBedrockExecutionRoleForAgents_tf"
+  tags = {
+    foo = "bar2"
+  }
+}
+
+data "aws_iam_policy_document" "test_agent_trust" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      identifiers = ["bedrock.amazonaws.com"]
+      type        = "Service"
+    }
+    condition {
+      test     = "StringEquals"
+      values   = [data.aws_caller_identity.current.account_id]
+      variable = "aws:SourceAccount"
+    }
+
+    condition {
+      test     = "ArnLike"
+      values   = ["arn:aws:bedrock:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:agent/*"]
+      variable = "AWS:SourceArn"
+    }
+  }
+}
+
+data "aws_iam_policy_document" "test_agent_permissions" {
+  statement {
+    actions = ["bedrock:InvokeModel"]
+    resources = [
+        "arn:aws:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s",
+      ]
+  }
+}
+
+resource "aws_iam_role_policy" "test" {
+  policy = data.aws_iam_policy_document.test_agent_permissions.json
+  role   = aws_iam_role.test.id
+}
+
+data "aws_caller_identity" "current" {}
+
+data "aws_region" "current" {}
+`, rName, model)
 }
