@@ -9743,11 +9743,11 @@ func testAccInstanceConfig_ReplicateSourceDB_characterSet_Source(rName string) s
 		testAccInstanceConfig_orderableClassOracleEnterprise(),
 		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
-  identifier           = %[1]q
-  replicate_source_db  = aws_db_instance.source.identifier
-  instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
-  skip_final_snapshot  = true
-  apply_immediately    = true
+  identifier          = %[1]q
+  replicate_source_db = aws_db_instance.source.identifier
+  instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
+  skip_final_snapshot = true
+  apply_immediately   = true
 }
 
 resource "aws_db_instance" "source" {
@@ -9774,11 +9774,11 @@ func testAccInstanceConfig_ReplicateSourceDB_characterSet_Replica(rName string) 
 		testAccInstanceConfig_orderableClassOracleEnterprise(),
 		fmt.Sprintf(`
 resource "aws_db_instance" "test" {
-  identifier           = %[1]q
-  replicate_source_db  = aws_db_instance.source.identifier
-  instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
-  skip_final_snapshot  = true
-  apply_immediately    = true
+  identifier          = %[1]q
+  replicate_source_db = aws_db_instance.source.identifier
+  instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
+  skip_final_snapshot = true
+  apply_immediately   = true
 
   character_set_name = "NE8ISO8859P10"
 }
@@ -9986,11 +9986,11 @@ func testAccInstanceConfig_ReplicateSourceDB_CrossRegion_CharacterSet(rName stri
 resource "aws_db_instance" "test" {
   provider = "aws"
 
-  identifier           = %[1]q
-  replicate_source_db  = aws_db_instance.source.arn
-  instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
-  skip_final_snapshot  = true
-  apply_immediately    = true
+  identifier          = %[1]q
+  replicate_source_db = aws_db_instance.source.arn
+  instance_class      = data.aws_rds_orderable_db_instance.test.instance_class
+  skip_final_snapshot = true
+  apply_immediately   = true
 }
 
 resource "aws_db_instance" "source" {
