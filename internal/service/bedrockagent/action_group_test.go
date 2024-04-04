@@ -25,7 +25,7 @@ import (
 func TestAccBedrockAgentActionGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_bedrock_agent_action_group.test"
+	resourceName := "aws_bedrockagent_action_group.test"
 	var v bedrockagent.GetAgentActionGroupOutput
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -105,7 +105,7 @@ func testAccCheckBedrockAgentActionGroupExists(ctx context.Context, n string, v 
 
 func testAccBedrockAgentActionGroupConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_bedrock_agent_action_group" "test" {
+resource "aws_bedrockagent_action_group" "test" {
   action_group_name = %[1]q
   agent_id          = "TLJ2L6TKGM"
   agent_version     = "DRAFT"

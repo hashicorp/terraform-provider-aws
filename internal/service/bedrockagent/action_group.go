@@ -48,7 +48,7 @@ type agentActionGroupResource struct {
 }
 
 func (r *agentActionGroupResource) Metadata(_ context.Context, request resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_bedrock_agent_action_group"
+	resp.TypeName = "aws_bedrockagent_action_group"
 }
 
 func (r *agentActionGroupResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -185,7 +185,7 @@ func (r *agentActionGroupResource) Schema(ctx context.Context, request resource.
 }
 
 func (r *agentActionGroupResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	var data agentActionGroupResourceModel
+	var data actionGroupResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -254,7 +254,7 @@ func (r *agentActionGroupResource) Create(ctx context.Context, request resource.
 	//data.ActionGroupId = fwflex.StringToFramework(ctx, output.AgentActionGroup.ActionGroupId)
 	//data.ID = data.ActionGroupId
 
-	var dataFromCreate agentActionGroupResourceModel
+	var dataFromCreate actionGroupResourceModel
 	response.Diagnostics.Append(fwflex.Flatten(ctx, output.AgentActionGroup, &dataFromCreate)...)
 	data.CreatedAt = dataFromCreate.CreatedAt
 	data.UpdatedAt = dataFromCreate.UpdatedAt
@@ -270,7 +270,7 @@ func (r *agentActionGroupResource) Create(ctx context.Context, request resource.
 }
 
 func (r *agentActionGroupResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	var data agentActionGroupResourceModel
+	var data actionGroupResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -312,7 +312,7 @@ func (r *agentActionGroupResource) Read(ctx context.Context, request resource.Re
 }
 
 func (r *agentActionGroupResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var old, new agentActionGroupResourceModel
+	var old, new actionGroupResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -359,7 +359,7 @@ func (r *agentActionGroupResource) Update(ctx context.Context, request resource.
 }
 
 func (r *agentActionGroupResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	var data agentActionGroupResourceModel
+	var data actionGroupResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -417,7 +417,7 @@ func findAgentActionGroupByID(ctx context.Context, conn *bedrockagent.Client, gr
 	return output, nil
 }
 
-type agentActionGroupResourceModel struct {
+type actionGroupResourceModel struct {
 	ActionGroupId              types.String                                         `tfsdk:"action_group_id"`
 	ActionGroupExecutor        fwtypes.ListNestedObjectValueOf[actionGroupExecutor] `tfsdk:"action_group_executor"`
 	ActionGroupName            types.String                                         `tfsdk:"action_group_name"`
@@ -448,7 +448,7 @@ type s3 struct {
 	S3ObjectKey  types.String `tfsdk:"s3_object_key"`
 }
 
-func agentActionGroupHasChanges(_ context.Context, plan, state agentActionGroupResourceModel) bool {
+func agentActionGroupHasChanges(_ context.Context, plan, state actionGroupResourceModel) bool {
 	return !plan.ActionGroupName.Equal(state.ActionGroupName) ||
 		!plan.Description.Equal(state.Description)
 }
