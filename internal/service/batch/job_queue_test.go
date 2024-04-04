@@ -630,7 +630,7 @@ func testAccCheckJobQueueComputeEnvironmentOrderUpdate(ctx context.Context, jobQ
 	}
 }
 
-func testAccJobQueueConfigBase(rName string) string {
+func testAccJobQueueConfig_Base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 
