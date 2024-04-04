@@ -54,6 +54,53 @@ func TestAccBedrockAgent_basic(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgent_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagent_agent.test"
+	var agent bedrockagent.GetAgentOutput
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBedrockAgentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBedrockAgentConfig_tags1(rName, "anthropic.claude-v2", "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBedrockAgentExists(ctx, resourceName, &agent),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"agent_version"},
+			},
+			{
+				Config: testAccBedrockAgentConfig_tags2(rName, "anthropic.claude-v2", "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBedrockAgentExists(ctx, resourceName, &agent),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccBedrockAgentConfig_tags1(rName, "anthropic.claude-v2", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBedrockAgentExists(ctx, resourceName, &agent),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckBedrockAgentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentClient(ctx)
@@ -134,6 +181,37 @@ resource "aws_bedrockagent_agent" "test" {
   foundation_model        = %[2]q
 }
 `, rName, model))
+}
+
+func testAccBedrockAgentConfig_tags1(rName, model, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccBedrockRole(rName, model), fmt.Sprintf(`
+resource "aws_bedrockagent_agent" "test" {
+  agent_name              = %[1]q
+  agent_resource_role_arn = aws_iam_role.test.arn
+  idle_ttl                = 500
+  foundation_model        = %[2]q
+  
+  tags = {
+    %[3]q = %[4]q
+  }
+}
+`, rName, model, tagKey1, tagValue1))
+}
+
+func testAccBedrockAgentConfig_tags2(rName, model, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccBedrockRole(rName, model), fmt.Sprintf(`
+resource "aws_bedrockagent_agent" "test" {
+  agent_name              = %[1]q
+  agent_resource_role_arn = aws_iam_role.test.arn
+  idle_ttl                = 500
+  foundation_model        = %[2]q
+  
+  tags = {
+    %[3]q = %[4]q
+    %[5]q = %[6]q
+  }
+}
+`, rName, model, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccBedrockRole(rName, model string) string {
