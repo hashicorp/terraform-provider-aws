@@ -37,8 +37,9 @@ func TestAccAPIGatewayDocumentationPart_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDocumentationPartConfig_basic(apiName, strconv.Quote(properties)),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDocumentationPartExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttrSet(resourceName, "documentation_part_id"),
 					resource.TestCheckResourceAttr(resourceName, "location.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "location.0.type", "API"),
 					resource.TestCheckResourceAttr(resourceName, "properties", properties),
@@ -199,7 +200,7 @@ func testAccCheckDocumentationPartExists(ctx context.Context, n string, v *apiga
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
-		output, err := tfapigateway.FindDocumentationPartByTwoPartKey(ctx, conn, rs.Primary.Attributes["rest_api_id"], rs.Primary.ID)
+		output, err := tfapigateway.FindDocumentationPartByTwoPartKey(ctx, conn, rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes["documentation_part_id"])
 
 		if err != nil {
 			return err
@@ -220,7 +221,7 @@ func testAccCheckDocumentationPartDestroy(ctx context.Context) resource.TestChec
 				continue
 			}
 
-			_, err := tfapigateway.FindDocumentationPartByTwoPartKey(ctx, conn, rs.Primary.Attributes["rest_api_id"], rs.Primary.ID)
+			_, err := tfapigateway.FindDocumentationPartByTwoPartKey(ctx, conn, rs.Primary.Attributes["rest_api_id"], rs.Primary.Attributes["documentation_part_id"])
 
 			if tfresource.NotFound(err) {
 				continue

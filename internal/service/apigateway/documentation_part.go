@@ -34,6 +34,10 @@ func resourceDocumentationPart() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"documentation_part_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"location": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -101,7 +105,7 @@ func resourceDocumentationPartCreate(ctx context.Context, d *schema.ResourceData
 
 	d.SetId(documentationPartCreateResourceID(apiID, aws.ToString(output.Id)))
 
-	return diags
+	return append(diags, resourceDocumentationPartRead(ctx, d, meta)...)
 }
 
 func resourceDocumentationPartRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -125,6 +129,7 @@ func resourceDocumentationPartRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway Documentation Part (%s): %s", d.Id(), err)
 	}
 
+	d.Set("documentation_part_id", docPart.Id)
 	d.Set("location", flattenDocumentationPartLocation(docPart.Location))
 	d.Set("properties", docPart.Properties)
 	d.Set("rest_api_id", apiID)
