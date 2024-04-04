@@ -342,21 +342,15 @@ func (r *knowledgeBaseResource) Create(ctx context.Context, request resource.Cre
 		return
 	}
 
-	var knowledgeBaseConfiguration knowledgeBaseConfigurationModel
-	response.Diagnostics.Append(fwflex.Flatten(ctx, knowledgebase.KnowledgeBaseConfiguration, &knowledgeBaseConfiguration)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	var storageConfiguration storageConfigurationModel
-	response.Diagnostics.Append(fwflex.Flatten(ctx, knowledgebase.StorageConfiguration, &storageConfiguration)...)
+	var knowledgeBase knowledgeBaseResourceModel
+	response.Diagnostics.Append(fwflex.Flatten(ctx, knowledgebase, &knowledgeBase)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	// Set values for unknowns after creation is complete.
-	data.KnowledgeBaseConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &knowledgeBaseConfiguration)
-	data.StorageConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &storageConfiguration)
+	data.KnowledgeBaseConfiguration = knowledgeBase.KnowledgeBaseConfiguration
+	data.StorageConfiguration = knowledgeBase.StorageConfiguration
 	data.Name = fwflex.StringToFramework(ctx, knowledgebase.Name)
 	data.Description = fwflex.StringToFramework(ctx, knowledgebase.Description)
 	data.RoleARN = fwflex.StringToFramework(ctx, knowledgebase.RoleArn)
@@ -373,7 +367,7 @@ func (r *knowledgeBaseResource) Read(ctx context.Context, request resource.ReadR
 		return
 	}
 
-	output, err := findKnowledgeBaseByID(ctx, conn, data.KnowledgeBaseId.ValueString())
+	knowledgebase, err := findKnowledgeBaseByID(ctx, conn, data.KnowledgeBaseId.ValueString())
 
 	if tfresource.NotFound(err) {
 		response.State.RemoveResource(ctx)
@@ -387,25 +381,19 @@ func (r *knowledgeBaseResource) Read(ctx context.Context, request resource.ReadR
 		return
 	}
 
-	var knowledgeBaseConfiguration knowledgeBaseConfigurationModel
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output.KnowledgeBaseConfiguration, &knowledgeBaseConfiguration)...)
+	var knowledgeBase knowledgeBaseResourceModel
+	response.Diagnostics.Append(fwflex.Flatten(ctx, knowledgebase, &knowledgeBase)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	var storageConfiguration storageConfigurationModel
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output.StorageConfiguration, &storageConfiguration)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-
-	data.KnowledgeBaseARN = flex.StringToFramework(ctx, output.KnowledgeBaseArn)
-	data.KnowledgeBaseId = flex.StringToFramework(ctx, output.KnowledgeBaseId)
-	data.KnowledgeBaseConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &knowledgeBaseConfiguration)
-	data.StorageConfiguration = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &storageConfiguration)
-	data.Name = fwflex.StringToFramework(ctx, output.Name)
-	data.Description = fwflex.StringToFramework(ctx, output.Description)
-	data.RoleARN = fwflex.StringToFramework(ctx, output.RoleArn)
+	data.KnowledgeBaseARN = knowledgeBase.KnowledgeBaseARN
+	data.KnowledgeBaseId = knowledgeBase.KnowledgeBaseId
+	data.KnowledgeBaseConfiguration = knowledgeBase.KnowledgeBaseConfiguration
+	data.StorageConfiguration = knowledgeBase.StorageConfiguration
+	data.Name = fwflex.StringToFramework(ctx, knowledgebase.Name)
+	data.Description = fwflex.StringToFramework(ctx, knowledgebase.Description)
+	data.RoleARN = fwflex.StringToFramework(ctx, knowledgebase.RoleArn)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
