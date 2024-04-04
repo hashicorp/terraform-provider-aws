@@ -148,9 +148,14 @@ func resourceDocumentationVersionDelete(ctx context.Context, d *schema.ResourceD
 		RestApiId:            aws.String(apiID),
 	})
 
+	if errs.IsA[*types.NotFoundException](err) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting API Gateway Documentation Version (%s): %s", d.Id(), err)
 	}
+
 	return diags
 }
 

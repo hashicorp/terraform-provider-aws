@@ -157,6 +157,10 @@ func resourceClientCertificateDelete(ctx context.Context, d *schema.ResourceData
 		ClientCertificateId: aws.String(d.Id()),
 	})
 
+	if errs.IsA[*types.NotFoundException](err) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting API Gateway Client Certificate (%s): %s", d.Id(), err)
 	}

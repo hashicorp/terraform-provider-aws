@@ -182,6 +182,10 @@ func resourceDocumentationPartDelete(ctx context.Context, d *schema.ResourceData
 		RestApiId:           aws.String(apiID),
 	})
 
+	if errs.IsA[*types.NotFoundException](err) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting API Gateway Documentation Part (%s): %s", d.Id(), err)
 	}
