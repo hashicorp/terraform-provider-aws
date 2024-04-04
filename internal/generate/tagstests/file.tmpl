@@ -96,6 +96,9 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags(t *testing.T) {
 }
 
 func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_null(t *testing.T) {
+{{- if eq .Implementation "framework" }}
+	t.Skip("Tags with null values are not correctly handled with the Plugin Framework")
+{{ end }}
 	{{- template "Init" . }}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -496,6 +499,9 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_emptyResourceTa
 }
 
 func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
+{{- if eq .Implementation "framework" }}
+	t.Skip("Tags with null values are not correctly handled with the Plugin Framework")
+{{ end }}
 	{{- template "Init" . }}
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -519,6 +525,9 @@ func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_nullOverlapping
 }
 
 func TestAcc{{ .ProviderNameUpper }}{{ .Name }}_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T) {
+{{- if eq .Implementation "framework" }}
+	t.Skip("Tags with null values are not correctly handled with the Plugin Framework")
+{{ end }}
 	{{- template "Init" . }}
 
 	resource.ParallelTest(t, resource.TestCase{

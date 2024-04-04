@@ -417,55 +417,6 @@ func TestAccBatchJobDefinition_ContainerProperties_advanced(t *testing.T) {
 	})
 }
 
-func TestAccBatchJobDefinition_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var jd batch.JobDefinition
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_batch_job_definition.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobDefinitionDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccJobDefinitionConfig_tags1(rName, "key1", "value1"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"deregister_on_new_revision",
-				},
-			},
-			{
-				Config: testAccJobDefinitionConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccJobDefinitionConfig_tags1(rName, "key2", "value2"),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckJobDefinitionExists(ctx, resourceName, &jd),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccBatchJobDefinition_propagateTags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var jd batch.JobDefinition
@@ -1275,6 +1226,21 @@ CONTAINER_PROPERTIES
 `, rName)
 }
 
+func testAccJobDefinitionConfig_tags0(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_batch_job_definition" "test" {
+  container_properties = jsonencode({
+    command = ["echo", "test"]
+    image   = "busybox"
+    memory  = 128
+    vcpus   = 1
+  })
+  name = %[1]q
+  type = "container"
+}
+`, rName)
+}
+
 func testAccJobDefinitionConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_batch_job_definition" "test" {
@@ -1312,6 +1278,25 @@ resource "aws_batch_job_definition" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccJobDefinitionConfig_tagsNull(rName, tagKey1 string) string {
+	return fmt.Sprintf(`
+resource "aws_batch_job_definition" "test" {
+  container_properties = jsonencode({
+    command = ["echo", "test"]
+    image   = "busybox"
+    memory  = 128
+    vcpus   = 1
+  })
+  name = %[1]q
+  type = "container"
+
+  tags = {
+    %[2]q = null
+  }
+}
+`, rName, tagKey1)
 }
 
 func testAccJobDefinitionConfig_propagateTags(rName string) string {
