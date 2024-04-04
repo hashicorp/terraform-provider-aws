@@ -53,7 +53,7 @@ type bedrockAgentResource struct {
 }
 
 func (r *bedrockAgentResource) Metadata(_ context.Context, request resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_bedrock_agent"
+	resp.TypeName = "aws_bedrockagent_agent"
 }
 
 func (r *bedrockAgentResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

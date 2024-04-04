@@ -28,7 +28,7 @@ import (
 func TestAccBedrockAgent_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_bedrock_agent.test"
+	resourceName := "aws_bedrockagent_agent.test"
 	var v bedrockagent.GetAgentOutput
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -177,7 +177,7 @@ func findBedrockAgentByID(ctx context.Context, conn *bedrockagent.Client, id str
 
 func testAccBedrockAgentConfig_basic(rName, model string) string {
 	return acctest.ConfigCompose(testAccBedrockRole(rName, model), fmt.Sprintf(`
-resource "aws_bedrock_agent" "test" {
+resource "aws_bedrockagent_agent" "test" {
   agent_name              = %[1]q
   agent_resource_role_arn = aws_iam_role.test.arn
   idle_ttl                = 500
