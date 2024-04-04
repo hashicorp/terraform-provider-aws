@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
@@ -307,17 +308,18 @@ func resourceAuthorizerDelete(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
 	log.Printf("[INFO] Deleting API Gateway Authorizer: %s", d.Id())
-	_, err := conn.DeleteAuthorizer(ctx, &apigateway.DeleteAuthorizerInput{
-		AuthorizerId: aws.String(d.Id()),
-		RestApiId:    aws.String(d.Get("rest_api_id").(string)),
+	const (
+		timeout = 1 * time.Minute
+	)
+	_, err := tfresource.RetryWhenIsA[*types.ConflictException](ctx, timeout, func() (interface{}, error) {
+		return conn.DeleteAuthorizer(ctx, &apigateway.DeleteAuthorizerInput{
+			AuthorizerId: aws.String(d.Id()),
+			RestApiId:    aws.String(d.Get("rest_api_id").(string)),
+		})
 	})
 
 	if err != nil {
-		// XXX: Figure out a way to delete the method that depends on the authorizer first
-		// otherwise the authorizer will be dangling until the API is deleted
-		if errs.IsA[*types.ConflictException](err) {
-			return sdkdiag.AppendErrorf(diags, "deleting API Gateway Authorizer failed: %s", err)
-		}
+		return sdkdiag.AppendErrorf(diags, "deleting API Gateway Authorizer failed: %s", err)
 	}
 
 	return diags
