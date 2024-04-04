@@ -730,7 +730,7 @@ resource "aws_batch_compute_environment" "test" {
 
 func testAccJobQueueConfig_priority(rName string, priority int) string {
 	return acctest.ConfigCompose(
-		testAccJobQueueConfigBase(rName),
+		testAccJobQueueConfig_Base(rName),
 		fmt.Sprintf(`
 resource "aws_batch_job_queue" "test" {
   compute_environments = [aws_batch_compute_environment.test.arn]
@@ -775,7 +775,7 @@ resource "aws_batch_scheduling_policy" "test2" {
 
 func testAccJobQueueConfig_schedulingPolicy(rName string, schedulingPolicyName1 string, schedulingPolicyName2 string, selectSchedulingPolicy string) string {
 	return acctest.ConfigCompose(
-		testAccJobQueueConfigBase(rName),
+		testAccJobQueueConfig_Base(rName),
 		testAccJobQueueSchedulingPolicy(schedulingPolicyName1, schedulingPolicyName2),
 		fmt.Sprintf(`
 locals {
@@ -794,7 +794,7 @@ resource "aws_batch_job_queue" "test" {
 
 func testAccJobQueueConfig_state(rName string, state string) string {
 	return acctest.ConfigCompose(
-		testAccJobQueueConfigBase(rName),
+		testAccJobQueueConfig_Base(rName),
 		fmt.Sprintf(`
 resource "aws_batch_job_queue" "test" {
   compute_environments = [aws_batch_compute_environment.test.arn]
@@ -808,7 +808,7 @@ resource "aws_batch_job_queue" "test" {
 
 func testAccJobQueueConfig_stateCEO(rName string, state string) string {
 	return acctest.ConfigCompose(
-		testAccJobQueueConfigBase(rName),
+		testAccJobQueueConfig_Base(rName),
 		fmt.Sprintf(`
 resource "aws_batch_job_queue" "test" {
   compute_environment_order {
@@ -825,7 +825,7 @@ resource "aws_batch_job_queue" "test" {
 
 func testAccJobQueueConfig_ComputeEnvironments_multiple(rName string, state string) string {
 	return acctest.ConfigCompose(
-		testAccJobQueueConfigBase(rName),
+		testAccJobQueueConfig_Base(rName),
 		fmt.Sprintf(`
 resource "aws_batch_job_queue" "test" {
   compute_environments = concat(
@@ -861,7 +861,7 @@ resource "aws_batch_compute_environment" "more" {
 
 func testAccJobQueueConfig_ComputeEnvironmentOrder_multiple(rName string, state string, o1 int, o2 int, o3 int) string {
 	return acctest.ConfigCompose(
-		testAccJobQueueConfigBase(rName),
+		testAccJobQueueConfig_Base(rName),
 		fmt.Sprintf(`
 resource "aws_batch_job_queue" "test" {
   compute_environment_order {
@@ -908,7 +908,7 @@ resource "aws_batch_compute_environment" "more" {
 
 func testAccJobQueueConfig_ComputeEnvironments_multipleReorder(rName string, state string) string {
 	return acctest.ConfigCompose(
-		testAccJobQueueConfigBase(rName),
+		testAccJobQueueConfig_Base(rName),
 		fmt.Sprintf(`
 resource "aws_batch_job_queue" "test" {
   compute_environments = [
@@ -945,7 +945,7 @@ resource "aws_batch_compute_environment" "more" {
 
 func testAccJobQueueConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(
-		testAccJobQueueConfigBase(rName),
+		testAccJobQueueConfig_Base(rName),
 		fmt.Sprintf(`
 resource "aws_batch_job_queue" "test" {
   compute_environments = [aws_batch_compute_environment.test.arn]
@@ -962,7 +962,7 @@ resource "aws_batch_job_queue" "test" {
 
 func testAccJobQueueConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(
-		testAccJobQueueConfigBase(rName),
+		testAccJobQueueConfig_Base(rName),
 		fmt.Sprintf(`
 resource "aws_batch_job_queue" "test" {
   compute_environments = [aws_batch_compute_environment.test.arn]
