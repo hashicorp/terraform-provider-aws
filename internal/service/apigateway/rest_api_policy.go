@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -131,6 +132,10 @@ func resourceRestAPIPolicyDelete(ctx context.Context, d *schema.ResourceData, me
 		PatchOperations: operations,
 		RestApiId:       aws.String(d.Id()),
 	})
+
+	if errs.IsA[*types.NotFoundException](err) {
+		return diags
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting API Gateway REST API Policy (%s): %s", d.Id(), err)
