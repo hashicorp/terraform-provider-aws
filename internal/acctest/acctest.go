@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"net"
 	"os"
 	"reflect"
 	"regexp"
@@ -1731,6 +1732,10 @@ func PreCheckSkipError(err error) bool {
 	}
 	// ignore when not authorized to call API from account
 	if tfawserr.ErrCodeEquals(err, "ForbiddenException") {
+		return true
+	}
+	// Ignore missing API endpoints
+	if errs.IsA[*net.DNSError](err) {
 		return true
 	}
 	return false
