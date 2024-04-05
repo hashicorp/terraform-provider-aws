@@ -19,13 +19,14 @@ import (
 	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 )
 
-// @SDKResource("aws_wafregional_geo_match_set")
-func ResourceGeoMatchSet() *schema.Resource {
+// @SDKResource("aws_wafregional_geo_match_set", name="Geo Match Set")
+func resourceGeoMatchSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGeoMatchSetCreate,
 		ReadWithoutTimeout:   resourceGeoMatchSetRead,
 		UpdateWithoutTimeout: resourceGeoMatchSetUpdate,
 		DeleteWithoutTimeout: resourceGeoMatchSetDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -145,9 +146,11 @@ func resourceGeoMatchSetDelete(ctx context.Context, d *schema.ResourceData, meta
 
 		return conn.DeleteGeoMatchSetWithContext(ctx, req)
 	})
+
 	if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
 		return diags
 	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting WAF Regional Geo Match Set (%s): %s", d.Id(), err)
 	}

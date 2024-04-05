@@ -56,8 +56,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Byte Match Set",
 		},
 		{
-			Factory:  ResourceGeoMatchSet,
+			Factory:  resourceGeoMatchSet,
 			TypeName: "aws_wafregional_geo_match_set",
+			Name:     "Geo Match Set",
 		},
 		{
 			Factory:  ResourceIPSet,
