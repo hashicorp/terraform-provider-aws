@@ -1,19 +1,25 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package imagebuilder
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfilters"
 )
 
+// @SDKDataSource("aws_imagebuilder_components", name="Components")
 func DataSourceComponents() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceComponentsRead,
+		ReadWithoutTimeout: dataSourceComponentsRead,
 		Schema: map[string]*schema.Schema{
 			"arns": {
 				Type:     schema.TypeSet,
@@ -29,14 +35,15 @@ func DataSourceComponents() *schema.Resource {
 			"owner": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validation.StringInSlice([]string{"Self", "Shared", "Amazon"}, false),
+				ValidateFunc: validation.StringInSlice(imagebuilder.Ownership_Values(), false),
 			},
 		},
 	}
 }
 
-func dataSourceComponentsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+func dataSourceComponentsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	input := &imagebuilder.ListComponentsInput{}
 
@@ -50,7 +57,7 @@ func dataSourceComponentsRead(d *schema.ResourceData, meta interface{}) error {
 
 	var results []*imagebuilder.ComponentVersion
 
-	err := conn.ListComponentsPages(input, func(page *imagebuilder.ListComponentsOutput, lastPage bool) bool {
+	err := conn.ListComponentsPagesWithContext(ctx, input, func(page *imagebuilder.ListComponentsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -67,7 +74,7 @@ func dataSourceComponentsRead(d *schema.ResourceData, meta interface{}) error {
 	})
 
 	if err != nil {
-		return fmt.Errorf("error reading Image Builder Components: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading Image Builder Components: %s", err)
 	}
 
 	var arns, names []string
@@ -81,5 +88,5 @@ func dataSourceComponentsRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arns", arns)
 	d.Set("names", names)
 
-	return nil
+	return diags
 }

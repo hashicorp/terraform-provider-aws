@@ -20,13 +20,13 @@ for more information.
 
 ```terraform
 resource "aws_lightsail_database" "test" {
-  name                 = "test"
-  availability_zone    = "us-east-1a"
-  master_database_name = "testdatabasename"
-  master_password      = "testdatabasepassword"
-  master_username      = "test"
-  blueprint_id         = "mysql_8_0"
-  bundle_id            = "micro_1_0"
+  relational_database_name = "test"
+  availability_zone        = "us-east-1a"
+  master_database_name     = "testdatabasename"
+  master_password          = "testdatabasepassword"
+  master_username          = "test"
+  blueprint_id             = "mysql_8_0"
+  bundle_id                = "micro_1_0"
 }
 ```
 
@@ -34,13 +34,13 @@ resource "aws_lightsail_database" "test" {
 
 ```terraform
 resource "aws_lightsail_database" "test" {
-  name                 = "test"
-  availability_zone    = "us-east-1a"
-  master_database_name = "testdatabasename"
-  master_password      = "testdatabasepassword"
-  master_username      = "test"
-  blueprint_id         = "postgres_12"
-  bundle_id            = "micro_1_0"
+  relational_database_name = "test"
+  availability_zone        = "us-east-1a"
+  master_database_name     = "testdatabasename"
+  master_password          = "testdatabasepassword"
+  master_username          = "test"
+  blueprint_id             = "postgres_12"
+  bundle_id                = "micro_1_0"
 }
 ```
 
@@ -50,7 +50,7 @@ Below is an example that sets a custom backup and maintenance window. Times are 
 
 ```terraform
 resource "aws_lightsail_database" "test" {
-  name                         = "test"
+  relational_database_name     = "test"
   availability_zone            = "us-east-1a"
   master_database_name         = "testdatabasename"
   master_password              = "testdatabasepassword"
@@ -68,7 +68,7 @@ To enable creating a final snapshot of your database on deletion, use the `final
 
 ```terraform
 resource "aws_lightsail_database" "test" {
-  name                         = "test"
+  relational_database_name     = "test"
   availability_zone            = "us-east-1a"
   master_database_name         = "testdatabasename"
   master_password              = "testdatabasepassword"
@@ -87,24 +87,23 @@ To enable applying changes immediately instead of waiting for a maintiance windo
 
 ```terraform
 resource "aws_lightsail_database" "test" {
-  name                 = "test"
-  availability_zone    = "us-east-1a"
-  master_database_name = "testdatabasename"
-  master_password      = "testdatabasepassword"
-  master_username      = "test"
-  blueprint_id         = "postgres_12"
-  bundle_id            = "micro_1_0"
-  apply_immediately    = true
+  relational_database_name = "test"
+  availability_zone        = "us-east-1a"
+  master_database_name     = "testdatabasename"
+  master_password          = "testdatabasepassword"
+  master_username          = "test"
+  blueprint_id             = "postgres_12"
+  bundle_id                = "micro_1_0"
+  apply_immediately        = true
 }
 ```
 
-
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
-* `name` - (Required) The name to use for your new Lightsail database resource. Names be unique within each AWS Region in your Lightsail account.
-* `availability_zone` - (Required) The Availability Zone in which to create your new database. Use the us-east-2a case-sensitive format.
+* `relational_database_name` - (Required) The name to use for your new Lightsail database resource. Names be unique within each AWS Region in your Lightsail account.
+* `availability_zone` - The Availability Zone in which to create your new database. Use the us-east-2a case-sensitive format.
 * `master_database_name` - (Required) The name of the master database created when the Lightsail database resource is created.
 * `master_password` - (Sensitive) The password for the master user of your new database. The password can include any printable ASCII character except "/", """, or "@".
 * `master_username` - The master user name for your new database.
@@ -118,7 +117,6 @@ The following arguments are supported:
 * `skip_final_snapshot` - Determines whether a final database snapshot is created before your database is deleted. If true is specified, no database snapshot is created. If false is specified, a database snapshot is created before your database is deleted. You must specify the final relational database snapshot name parameter if the skip final snapshot parameter is false.
 * `final_snapshot_name` - (Required unless `skip_final_snapshot = true`) The name of the database snapshot created if skip final snapshot is false, which is the default value for that parameter.
 * `tags` - (Optional) A map of tags to assign to the resource. To create a key-only tag, use an empty string as the value.
-
 
 ## Blueprint Ids
 
@@ -136,7 +134,6 @@ A Blueprint ID starts with a prefix of the engine type.
 ### Suffix
 
 A Blueprint ID has a sufix of the engine version.
-
 
 ## Bundles
 
@@ -168,9 +165,9 @@ A Bundle Id can have the following infix added in order to use the HA option of 
 
 A Bundle ID ends with one of the following suffix: `1_0`
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ARN of the Lightsail instance (matches `arn`).
 * `arn` - The ARN of the Lightsail instance (matches `id`).
@@ -189,8 +186,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Lightsail Databases can be imported using their name, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lightsail Databases using their name. For example:
 
+```terraform
+import {
+  to = aws_lightsail_database.foo
+  id = "bar"
+}
 ```
-$ terraform import aws_lightsail_database.foo 'bar'
+
+Using `terraform import`, import Lightsail Databases using their name. For example:
+
+```console
+% terraform import aws_lightsail_database.foo 'bar'
 ```

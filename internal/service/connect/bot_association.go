@@ -1,8 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -12,14 +14,16 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_connect_bot_association")
 func ResourceBotAssociation() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceBotAssociationCreate,
-		ReadContext:   resourceBotAssociationRead,
-		DeleteContext: resourceBotAssociationDelete,
+		CreateWithoutTimeout: resourceBotAssociationCreate,
+		ReadWithoutTimeout:   resourceBotAssociationRead,
+		DeleteWithoutTimeout: resourceBotAssociationDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -75,7 +79,9 @@ func ResourceBotAssociation() *schema.Resource {
 }
 
 func resourceBotAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceId := d.Get("instance_id").(string)
 
@@ -97,8 +103,7 @@ func resourceBotAssociationCreate(ctx context.Context, d *schema.ResourceData, m
 	}
 	*/
 
-	_, err := tfresource.RetryWhen(
-		botAssociationCreateTimeout,
+	_, err := tfresource.RetryWhen(ctx, botAssociationCreateTimeout,
 		func() (interface{}, error) {
 			return conn.AssociateBotWithContext(ctx, input)
 		},
@@ -114,21 +119,23 @@ func resourceBotAssociationCreate(ctx context.Context, d *schema.ResourceData, m
 	lbaId := BotV1AssociationCreateResourceID(instanceId, aws.StringValue(input.LexBot.Name), aws.StringValue(input.LexBot.LexRegion))
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Connect Bot Association (%s): %w", lbaId, err))
+		return sdkdiag.AppendErrorf(diags, "creating Connect Bot Association (%s): %s", lbaId, err)
 	}
 
 	d.SetId(lbaId)
 
-	return resourceBotAssociationRead(ctx, d, meta)
+	return append(diags, resourceBotAssociationRead(ctx, d, meta)...)
 }
 
 func resourceBotAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceId, name, region, err := BotV1AssociationParseResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	lexBot, err := FindBotAssociationV1ByNameAndRegionWithContext(ctx, conn, instanceId, name, region)
@@ -136,32 +143,34 @@ func resourceBotAssociationRead(ctx context.Context, d *schema.ResourceData, met
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Connect Bot Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading Connect Bot Association (%s): %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "reading Connect Bot Association (%s): %s", d.Id(), err)
 	}
 
 	if lexBot == nil {
-		return diag.FromErr(fmt.Errorf("error reading Connect Bot Association (%s): empty output", d.Id()))
+		return sdkdiag.AppendErrorf(diags, "reading Connect Bot Association (%s): empty output", d.Id())
 	}
 
 	d.Set("instance_id", instanceId)
 	if err := d.Set("lex_bot", flattenLexBot(lexBot)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting lex_bot: %w", err))
+		return sdkdiag.AppendErrorf(diags, "setting lex_bot: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceBotAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, name, region, err := BotV1AssociationParseResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	lexBot := &connect.LexBot{
@@ -177,14 +186,14 @@ func resourceBotAssociationDelete(ctx context.Context, d *schema.ResourceData, m
 	_, err = conn.DisassociateBotWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting Connect Bot Association (%s): %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "deleting Connect Bot Association (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandLexBot(l []interface{}) *connect.LexBot {

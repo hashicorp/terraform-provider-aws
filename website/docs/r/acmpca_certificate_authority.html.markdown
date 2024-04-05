@@ -10,7 +10,7 @@ description: |-
 
 Provides a resource to manage AWS Certificate Manager Private Certificate Authorities (ACM PCA Certificate Authorities).
 
-~> **NOTE:** Creating this resource will leave the certificate authority in a `PENDING_CERTIFICATE` status, which means it cannot yet issue certificates. To complete this setup, you must fully sign the certificate authority CSR available in the `certificate_signing_request` attribute and import the signed certificate outside of Terraform. Terraform can support another resource to manage that workflow automatically in the future.
+~> **NOTE:** Creating this resource will leave the certificate authority in a `PENDING_CERTIFICATE` status, which means it cannot yet issue certificates. To complete this setup, you must fully sign the certificate authority CSR available in the `certificate_signing_request` attribute. The [`aws_acmpca_certificate_authority_certificate`](/docs/providers/aws/r/acmpca_certificate_authority_certificate.html) resource can be used for this purpose.
 
 ## Example Usage
 
@@ -31,11 +31,28 @@ resource "aws_acmpca_certificate_authority" "example" {
 }
 ```
 
+### Short-lived certificate
+
+```terraform
+resource "aws_acmpca_certificate_authority" "example" {
+  usage_mode = "SHORT_LIVED_CERTIFICATE"
+  certificate_authority_configuration {
+    key_algorithm     = "RSA_4096"
+    signing_algorithm = "SHA512WITHRSA"
+
+    subject {
+      common_name = "example.com"
+    }
+  }
+}
+```
+
 ### Enable Certificate Revocation List
 
 ```terraform
 resource "aws_s3_bucket" "example" {
-  bucket = "example"
+  bucket        = "example"
+  force_destroy = true
 }
 
 data "aws_iam_policy_document" "acmpca_bucket_access" {
@@ -80,6 +97,7 @@ resource "aws_acmpca_certificate_authority" "example" {
       enabled            = true
       expiration_in_days = 7
       s3_bucket_name     = aws_s3_bucket.example.id
+      s3_object_acl      = "BUCKET_OWNER_FULL_CONTROL"
     }
   }
 
@@ -89,19 +107,21 @@ resource "aws_acmpca_certificate_authority" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `certificate_authority_configuration` - (Required) Nested argument containing algorithms and certificate subject information. Defined below.
-* `enabled` - (Optional) Whether the certificate authority is enabled or disabled. Defaults to `true`.
+* `enabled` - (Optional) Whether the certificate authority is enabled or disabled. Defaults to `true`. Can only be disabled if the CA is in an `ACTIVE` state.
 * `revocation_configuration` - (Optional) Nested argument containing revocation configuration. Defined below.
+* `usage_mode` - (Optional) Specifies whether the CA issues general-purpose certificates that typically require a revocation mechanism, or short-lived certificates that may optionally omit revocation because they expire quickly. Short-lived certificate validity is limited to seven days. Defaults to `GENERAL_PURPOSE`. Valid values: `GENERAL_PURPOSE` and `SHORT_LIVED_CERTIFICATE`.
 * `tags` - (Optional) Key-value map of user-defined tags that are attached to the certificate authority. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `type` - (Optional) Type of the certificate authority. Defaults to `SUBORDINATE`. Valid values: `ROOT` and `SUBORDINATE`.
+* `key_storage_security_standard` - (Optional) Cryptographic key management compliance standard used for handling CA keys. Defaults to `FIPS_140_2_LEVEL_3_OR_HIGHER`. Valid values: `FIPS_140_2_LEVEL_3_OR_HIGHER` and `FIPS_140_2_LEVEL_2_OR_HIGHER`. Supported standard for each region can be found in the [Storage and security compliance of AWS Private CA private keys Documentation](https://docs.aws.amazon.com/privateca/latest/userguide/data-protection.html#private-keys).
 * `permanent_deletion_time_in_days` - (Optional) Number of days to make a CA restorable after it has been deleted, must be between 7 to 30 days, with default to 30 days.
 
 ### certificate_authority_configuration
 
-* `key_algorithm` - (Required) Type of the public key algorithm and size, in bits, of the key pair that your key pair creates when it issues a certificate. Valid values can be found in the [ACM PCA Documentation](https://docs.aws.amazon.com/acm-pca/latest/APIReference/API_CertificateAuthorityConfiguration.html).
-* `signing_algorithm` - (Required) Name of the algorithm your private CA uses to sign certificate requests. Valid values can be found in the [ACM PCA Documentation](https://docs.aws.amazon.com/acm-pca/latest/APIReference/API_CertificateAuthorityConfiguration.html).
+* `key_algorithm` - (Required) Type of the public key algorithm and size, in bits, of the key pair that your key pair creates when it issues a certificate. Valid values can be found in the [ACM PCA Documentation](https://docs.aws.amazon.com/privateca/latest/APIReference/API_CertificateAuthorityConfiguration.html).
+* `signing_algorithm` - (Required) Name of the algorithm your private CA uses to sign certificate requests. Valid values can be found in the [ACM PCA Documentation](https://docs.aws.amazon.com/privateca/latest/APIReference/API_CertificateAuthorityConfiguration.html).
 * `subject` - (Required) Nested argument that contains X.500 distinguished name information. At least one nested attribute must be specified.
 
 #### subject
@@ -132,8 +152,8 @@ the custom OCSP responder endpoint. Defined below.
 
 * `custom_cname` - (Optional) Name inserted into the certificate CRL Distribution Points extension that enables the use of an alias for the CRL distribution point. Use this value if you don't want the name of your S3 bucket to be public. Must be less than or equal to 253 characters in length.
 * `enabled` - (Optional) Boolean value that specifies whether certificate revocation lists (CRLs) are enabled. Defaults to `false`.
-* `expiration_in_days` - (Required) Number of days until a certificate expires. Must be between 1 and 5000.
-* `s3_bucket_name` - (Optional) Name of the S3 bucket that contains the CRL. If you do not provide a value for the `custom_cname` argument, the name of your S3 bucket is placed into the CRL Distribution Points extension of the issued certificate. You must specify a bucket policy that allows ACM PCA to write the CRL to your bucket. Must be less than or equal to 255 characters in length.
+* `expiration_in_days` - (Optional, Required if `enabled` is `true`) Number of days until a certificate expires. Must be between 1 and 5000.
+* `s3_bucket_name` - (Optional, Required if `enabled` is `true`) Name of the S3 bucket that contains the CRL. If you do not provide a value for the `custom_cname` argument, the name of your S3 bucket is placed into the CRL Distribution Points extension of the issued certificate. You must specify a bucket policy that allows ACM PCA to write the CRL to your bucket. Must be between 3 and 255 characters in length.
 * `s3_object_acl` - (Optional) Determines whether the CRL will be publicly readable or privately held in the CRL Amazon S3 bucket. Defaults to `PUBLIC_READ`.
 
 #### ocsp_configuration
@@ -141,9 +161,9 @@ the custom OCSP responder endpoint. Defined below.
 * `enabled` - (Required) Boolean value that specifies whether a custom OCSP responder is enabled.
 * `ocsp_custom_cname` - (Optional) CNAME specifying a customized OCSP domain. Note: The value of the CNAME must not include a protocol prefix such as "http://" or "https://".
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ARN of the certificate authority.
 * `arn` - ARN of the certificate authority.
@@ -153,19 +173,27 @@ In addition to all arguments above, the following attributes are exported:
 * `not_after` - Date and time after which the certificate authority is not valid. Only available after the certificate authority certificate has been imported.
 * `not_before` - Date and time before which the certificate authority is not valid. Only available after the certificate authority certificate has been imported.
 * `serial` - Serial number of the certificate authority. Only available after the certificate authority certificate has been imported.
-* `status` - (**Deprecated** use the `enabled` attribute instead) Status of the certificate authority.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `1m`)
 
 ## Import
 
-`aws_acmpca_certificate_authority` can be imported by using the certificate authority ARN, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_acmpca_certificate_authority` using the certificate authority ARN. For example:
 
+```terraform
+import {
+  to = aws_acmpca_certificate_authority.example
+  id = "arn:aws:acm-pca:us-east-1:123456789012:certificate-authority/12345678-1234-1234-1234-123456789012"
+}
 ```
-$ terraform import aws_acmpca_certificate_authority.example arn:aws:acm-pca:us-east-1:123456789012:certificate-authority/12345678-1234-1234-1234-123456789012
+
+Using `terraform import`, import `aws_acmpca_certificate_authority` using the certificate authority ARN. For example:
+
+```console
+% terraform import aws_acmpca_certificate_authority.example arn:aws:acm-pca:us-east-1:123456789012:certificate-authority/12345678-1234-1234-1234-123456789012
 ```

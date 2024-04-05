@@ -8,17 +8,18 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/aws/aws-sdk-go/service/transfer/transferiface"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// ListTags lists transfer service tags.
+// listTags lists transfer service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn transferiface.TransferAPI, identifier string) (tftags.KeyValueTags, error) {
-	return ListTagsWithContext(context.Background(), conn, identifier)
-}
-
-func ListTagsWithContext(ctx context.Context, conn transferiface.TransferAPI, identifier string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn transferiface.TransferAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &transfer.ListTagsForResourceInput{
 		Arn: aws.String(identifier),
 	}
@@ -26,10 +27,26 @@ func ListTagsWithContext(ctx context.Context, conn transferiface.TransferAPI, id
 	output, err := conn.ListTagsForResourceWithContext(ctx, input)
 
 	if err != nil {
-		return tftags.New(nil), err
+		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(output.Tags), nil
+	return KeyValueTags(ctx, output.Tags), nil
+}
+
+// ListTags lists transfer service tags and set them in Context.
+// It is called from outside this package.
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).TransferConn(ctx), identifier)
+
+	if err != nil {
+		return err
+	}
+
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = option.Some(tags)
+	}
+
+	return nil
 }
 
 // []*SERVICE.Tag handling
@@ -51,30 +68,50 @@ func Tags(tags tftags.KeyValueTags) []*transfer.Tag {
 }
 
 // KeyValueTags creates tftags.KeyValueTags from transfer service tags.
-func KeyValueTags(tags []*transfer.Tag) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags []*transfer.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
 		m[aws.StringValue(tag.Key)] = tag.Value
 	}
 
-	return tftags.New(m)
+	return tftags.New(ctx, m)
 }
 
-// UpdateTags updates transfer service tags.
+// getTagsIn returns transfer service tags from Context.
+// nil is returned if there are no input tags.
+func getTagsIn(ctx context.Context) []*transfer.Tag {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+			return tags
+		}
+	}
+
+	return nil
+}
+
+// setTagsOut sets transfer service tags in Context.
+func setTagsOut(ctx context.Context, tags []*transfer.Tag) {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags))
+	}
+}
+
+// updateTags updates transfer service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn transferiface.TransferAPI, identifier string, oldTags interface{}, newTags interface{}) error {
-	return UpdateTagsWithContext(context.Background(), conn, identifier, oldTags, newTags)
-}
-func UpdateTagsWithContext(ctx context.Context, conn transferiface.TransferAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := tftags.New(oldTagsMap)
-	newTags := tftags.New(newTagsMap)
+func updateTags(ctx context.Context, conn transferiface.TransferAPI, identifier string, oldTagsMap, newTagsMap any) error {
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	ctx = tflog.SetField(ctx, logging.KeyResourceId, identifier)
+
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.Transfer)
+	if len(removedTags) > 0 {
 		input := &transfer.UntagResourceInput{
 			Arn:     aws.String(identifier),
-			TagKeys: aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+			TagKeys: aws.StringSlice(removedTags.Keys()),
 		}
 
 		_, err := conn.UntagResourceWithContext(ctx, input)
@@ -84,10 +121,12 @@ func UpdateTagsWithContext(ctx context.Context, conn transferiface.TransferAPI, 
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.Transfer)
+	if len(updatedTags) > 0 {
 		input := &transfer.TagResourceInput{
 			Arn:  aws.String(identifier),
-			Tags: Tags(updatedTags.IgnoreAWS()),
+			Tags: Tags(updatedTags),
 		}
 
 		_, err := conn.TagResourceWithContext(ctx, input)
@@ -98,4 +137,10 @@ func UpdateTagsWithContext(ctx context.Context, conn transferiface.TransferAPI, 
 	}
 
 	return nil
+}
+
+// UpdateTags updates transfer service tags.
+// It is called from outside this package.
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
+	return updateTags(ctx, meta.(*conns.AWSClient).TransferConn(ctx), identifier, oldTags, newTags)
 }

@@ -1,22 +1,21 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package kendra
 
 import (
-	"context"
 	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_kendra_index", &resource.Sweeper{
 		Name: "aws_kendra_index",
 		F:    sweepIndex,
@@ -24,14 +23,14 @@ func init() {
 }
 
 func sweepIndex(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("Error getting client: %w", err)
+		return fmt.Errorf("getting client: %w", err)
 	}
 
-	ctx := context.Background()
-	conn := client.(*conns.AWSClient).KendraConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	conn := client.KendraClient(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
 	in := &kendra.ListIndicesInput{}
 	var errs *multierror.Error
 
@@ -40,34 +39,26 @@ func sweepIndex(region string) error {
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if sweep.SkipSweepError(err) {
-			log.Println("[WARN] Skipping Kendra Indices sweep for %s: %s", region, err)
-			return nil
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Kendra Indices sweep for %s: %s", region, err)
+			return errs.ErrorOrNil()
 		}
 
 		if err != nil {
-			return fmt.Errorf("error retrieving Kendra Indices: %w", err)
+			return multierror.Append(errs, fmt.Errorf("retrieving Kendra Indices: %w", err))
 		}
 
 		for _, index := range page.IndexConfigurationSummaryItems {
-			id := aws.ToString(index.Id)
-			log.Printf("[INFO] Deleting Kendra Index: %s", id)
-
 			r := ResourceIndex()
 			d := r.Data(nil)
-			d.SetId(id)
+			d.SetId(aws.ToString(index.Id))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 	}
 
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping Kendra Indices for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Kendra Indices sweep for %s: %s", region, errs)
-		return nil
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("sweeping Kendra Indices for %s: %w", region, err))
 	}
 
 	return errs.ErrorOrNil()

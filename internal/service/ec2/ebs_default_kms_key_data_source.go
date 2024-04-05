@@ -1,17 +1,23 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
-	"fmt"
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_ebs_default_kms_key")
 func DataSourceEBSDefaultKMSKey() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceEBSDefaultKMSKeyRead,
+		ReadWithoutTimeout: dataSourceEBSDefaultKMSKeyRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
@@ -25,16 +31,17 @@ func DataSourceEBSDefaultKMSKey() *schema.Resource {
 		},
 	}
 }
-func dataSourceEBSDefaultKMSKeyRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceEBSDefaultKMSKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	res, err := conn.GetEbsDefaultKmsKeyId(&ec2.GetEbsDefaultKmsKeyIdInput{})
+	res, err := conn.GetEbsDefaultKmsKeyIdWithContext(ctx, &ec2.GetEbsDefaultKmsKeyIdInput{})
 	if err != nil {
-		return fmt.Errorf("Error reading EBS default KMS key: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading EBS default KMS key: %s", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 	d.Set("key_arn", res.KmsKeyId)
 
-	return nil
+	return diags
 }

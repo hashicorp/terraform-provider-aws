@@ -1,26 +1,32 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
-	"fmt"
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_nat_gateways")
 func DataSourceNATGateways() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceNATGatewaysRead,
+		ReadWithoutTimeout: dataSourceNATGatewaysRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
-			"filter": DataSourceFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"ids": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -35,13 +41,15 @@ func DataSourceNATGateways() *schema.Resource {
 	}
 }
 
-func dataSourceNATGatewaysRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceNATGatewaysRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.DescribeNatGatewaysInput{}
 
 	if v, ok := d.GetOk("vpc_id"); ok {
-		input.Filter = append(input.Filter, BuildAttributeFilterList(
+		input.Filter = append(input.Filter, newAttributeFilterList(
 			map[string]string{
 				"vpc-id": v.(string),
 			},
@@ -49,12 +57,12 @@ func dataSourceNATGatewaysRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if tags, ok := d.GetOk("tags"); ok {
-		input.Filter = append(input.Filter, BuildTagFilterList(
-			Tags(tftags.New(tags.(map[string]interface{}))),
+		input.Filter = append(input.Filter, newTagFilterList(
+			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 		)...)
 	}
 
-	input.Filter = append(input.Filter, BuildFiltersDataSource(
+	input.Filter = append(input.Filter, newCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 
@@ -62,10 +70,10 @@ func dataSourceNATGatewaysRead(d *schema.ResourceData, meta interface{}) error {
 		input.Filter = nil
 	}
 
-	output, err := FindNATGateways(conn, input)
+	output, err := FindNATGateways(ctx, conn, input)
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 NAT Gateways: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 NAT Gateways: %s", err)
 	}
 
 	var natGatewayIDs []string
@@ -77,5 +85,5 @@ func dataSourceNATGatewaysRead(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(meta.(*conns.AWSClient).Region)
 	d.Set("ids", natGatewayIDs)
 
-	return nil
+	return diags
 }

@@ -1,26 +1,28 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package eks_test
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/eks"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEKSNodeGroupDataSource_basic(t *testing.T) {
-	var nodeGroup eks.Nodegroup
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceResourceName := "data.aws_eks_node_group.test"
 	resourceName := "aws_eks_node_group.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eks.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EKSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckClusterDestroy,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccNodeGroupConfig_dataSourceName(rName),
@@ -28,28 +30,24 @@ func TestAccEKSNodeGroupDataSource_basic(t *testing.T) {
 			},
 			{
 				Config: testAccNodeGroupDataSourceConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckNodeGroupExists(resourceName, &nodeGroup),
+				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttrPair(resourceName, "ami_type", dataSourceResourceName, "ami_type"),
 					resource.TestCheckResourceAttrPair(resourceName, "arn", dataSourceResourceName, "arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "capacity_type", dataSourceResourceName, "capacity_type"),
 					resource.TestCheckResourceAttrPair(resourceName, "cluster_name", dataSourceResourceName, "cluster_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "disk_size", dataSourceResourceName, "disk_size"),
-					resource.TestCheckResourceAttr(dataSourceResourceName, "instance_types.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_type", dataSourceResourceName, "instance_type"),
+					resource.TestCheckResourceAttrPair(resourceName, "instance_types.#", dataSourceResourceName, "instance_types.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "labels.%", dataSourceResourceName, "labels.%"),
+					resource.TestCheckResourceAttrPair(resourceName, "launch_template.#", dataSourceResourceName, "launch_template.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "node_group_name", dataSourceResourceName, "node_group_name"),
 					resource.TestCheckResourceAttrPair(resourceName, "node_role_arn", dataSourceResourceName, "node_role_arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "release_version", dataSourceResourceName, "release_version"),
-					resource.TestCheckResourceAttr(dataSourceResourceName, "remote_access.#", "0"),
-					resource.TestCheckResourceAttr(dataSourceResourceName, "resources.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "resources", dataSourceResourceName, "resources"),
-					resource.TestCheckResourceAttr(dataSourceResourceName, "scaling_config.#", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "scaling_config", dataSourceResourceName, "scaling_config"),
+					resource.TestCheckResourceAttrPair(resourceName, "remote_access.#", dataSourceResourceName, "remote_access.#"),
+					resource.TestCheckResourceAttrPair(resourceName, "resources.#", dataSourceResourceName, "resources.#"),
+					resource.TestCheckResourceAttrPair(resourceName, "scaling_config.#", dataSourceResourceName, "scaling_config.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "status", dataSourceResourceName, "status"),
 					resource.TestCheckResourceAttrPair(resourceName, "subnet_ids.#", dataSourceResourceName, "subnet_ids.#"),
-					resource.TestCheckResourceAttrPair(resourceName, "subnet_ids", dataSourceResourceName, "subnet_ids"),
-					resource.TestCheckResourceAttr(dataSourceResourceName, "taints.#", "0"),
+					resource.TestCheckResourceAttrPair(resourceName, "taint.#", dataSourceResourceName, "taints.#"),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.%", dataSourceResourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(resourceName, "version", dataSourceResourceName, "version"),
 				),

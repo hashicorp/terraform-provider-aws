@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kafkaconnect
 
 import (
@@ -7,12 +10,12 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kafkaconnect"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 func waitConnectorCreated(ctx context.Context, conn *kafkaconnect.KafkaConnect, arn string, timeout time.Duration) (*kafkaconnect.DescribeConnectorOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{kafkaconnect.ConnectorStateCreating},
 		Target:  []string{kafkaconnect.ConnectorStateRunning},
 		Refresh: statusConnectorState(ctx, conn, arn),
@@ -33,7 +36,7 @@ func waitConnectorCreated(ctx context.Context, conn *kafkaconnect.KafkaConnect, 
 }
 
 func waitConnectorDeleted(ctx context.Context, conn *kafkaconnect.KafkaConnect, arn string, timeout time.Duration) (*kafkaconnect.DescribeConnectorOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{kafkaconnect.ConnectorStateDeleting},
 		Target:  []string{},
 		Refresh: statusConnectorState(ctx, conn, arn),
@@ -54,7 +57,7 @@ func waitConnectorDeleted(ctx context.Context, conn *kafkaconnect.KafkaConnect, 
 }
 
 func waitConnectorUpdated(ctx context.Context, conn *kafkaconnect.KafkaConnect, arn string, timeout time.Duration) (*kafkaconnect.DescribeConnectorOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{kafkaconnect.ConnectorStateUpdating},
 		Target:  []string{kafkaconnect.ConnectorStateRunning},
 		Refresh: statusConnectorState(ctx, conn, arn),
@@ -75,7 +78,7 @@ func waitConnectorUpdated(ctx context.Context, conn *kafkaconnect.KafkaConnect, 
 }
 
 func waitCustomPluginCreated(ctx context.Context, conn *kafkaconnect.KafkaConnect, arn string, timeout time.Duration) (*kafkaconnect.DescribeCustomPluginOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{kafkaconnect.CustomPluginStateCreating},
 		Target:  []string{kafkaconnect.CustomPluginStateActive},
 		Refresh: statusCustomPluginState(ctx, conn, arn),
@@ -96,7 +99,7 @@ func waitCustomPluginCreated(ctx context.Context, conn *kafkaconnect.KafkaConnec
 }
 
 func waitCustomPluginDeleted(ctx context.Context, conn *kafkaconnect.KafkaConnect, arn string, timeout time.Duration) (*kafkaconnect.DescribeCustomPluginOutput, error) {
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{kafkaconnect.CustomPluginStateDeleting},
 		Target:  []string{},
 		Refresh: statusCustomPluginState(ctx, conn, arn),

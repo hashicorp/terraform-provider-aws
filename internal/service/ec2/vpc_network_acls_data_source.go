@@ -1,26 +1,32 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
-	"fmt"
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_network_acls")
 func DataSourceNetworkACLs() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceNetworkACLsRead,
+		ReadWithoutTimeout: dataSourceNetworkACLsRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
-			"filter": DataSourceFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"ids": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -35,24 +41,25 @@ func DataSourceNetworkACLs() *schema.Resource {
 	}
 }
 
-func dataSourceNetworkACLsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceNetworkACLsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.DescribeNetworkAclsInput{}
 
 	if v, ok := d.GetOk("vpc_id"); ok {
-		input.Filters = append(input.Filters, BuildAttributeFilterList(
+		input.Filters = append(input.Filters, newAttributeFilterList(
 			map[string]string{
 				"vpc-id": v.(string),
 			},
 		)...)
 	}
 
-	input.Filters = append(input.Filters, BuildTagFilterList(
-		Tags(tftags.New(d.Get("tags").(map[string]interface{}))),
+	input.Filters = append(input.Filters, newTagFilterList(
+		Tags(tftags.New(ctx, d.Get("tags").(map[string]interface{}))),
 	)...)
 
-	input.Filters = append(input.Filters, BuildFiltersDataSource(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 
@@ -60,10 +67,10 @@ func dataSourceNetworkACLsRead(d *schema.ResourceData, meta interface{}) error {
 		input.Filters = nil
 	}
 
-	output, err := FindNetworkACLs(conn, input)
+	output, err := FindNetworkACLs(ctx, conn, input)
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Network ACLs: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Network ACLs: %s", err)
 	}
 
 	var naclIDs []string
@@ -75,5 +82,5 @@ func dataSourceNetworkACLsRead(d *schema.ResourceData, meta interface{}) error {
 	d.SetId(meta.(*conns.AWSClient).Region)
 	d.Set("ids", naclIDs)
 
-	return nil
+	return diags
 }

@@ -1,33 +1,43 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dms_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfdms "github.com/hashicorp/terraform-provider-aws/internal/service/dms"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDMSReplicationSubnetGroup_basic(t *testing.T) {
-	resourceName := "aws_dms_replication_subnet_group.dms_replication_subnet_group"
-	randId := sdkacctest.RandString(8)
+	ctx := acctest.Context(t)
+	resourceName := "aws_dms_replication_subnet_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, dms.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             replicationSubnetGroupDestroy,
+		CheckDestroy:             testAccCheckReplicationSubnetGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationSubnetGroupConfig_basic(randId),
-				Check: resource.ComposeTestCheckFunc(
-					checkReplicationSubnetGroupExists(resourceName),
+				Config: testAccReplicationSubnetGroupConfig_basic(rName, "desc1"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationSubnetGroupExists(ctx, resourceName),
+					resource.TestCheckResourceAttrSet(resourceName, "replication_subnet_group_arn"),
+					resource.TestCheckResourceAttr(resourceName, "replication_subnet_group_description", "desc1"),
+					resource.TestCheckResourceAttr(resourceName, "replication_subnet_group_id", rName),
+					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "3"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
 				),
 			},
@@ -37,187 +47,160 @@ func TestAccDMSReplicationSubnetGroup_basic(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccReplicationSubnetGroupConfig_update(randId),
+				Config: testAccReplicationSubnetGroupConfig_basic(rName, "desc2"),
 				Check: resource.ComposeTestCheckFunc(
-					checkReplicationSubnetGroupExists(resourceName),
+					testAccCheckReplicationSubnetGroupExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "replication_subnet_group_description", "desc2"),
 				),
 			},
 		},
 	})
 }
 
-func checkReplicationSubnetGroupExists(n string) resource.TestCheckFunc {
-	providers := []*schema.Provider{acctest.Provider}
-	return checkReplicationSubnetGroupExistsProviders(n, &providers)
+func TestAccDMSReplicationSubnetGroup_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dms_replication_subnet_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationSubnetGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationSubnetGroupConfig_basic(rName, "desc1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReplicationSubnetGroupExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdms.ResourceReplicationSubnetGroup(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
 }
 
-func checkReplicationSubnetGroupExistsProviders(n string, providers *[]*schema.Provider) resource.TestCheckFunc {
+func TestAccDMSReplicationSubnetGroup_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_dms_replication_subnet_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationSubnetGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationSubnetGroupConfig_tags1(rName, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReplicationSubnetGroupExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccReplicationSubnetGroupConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReplicationSubnetGroupExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccReplicationSubnetGroupConfig_tags1(rName, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReplicationSubnetGroupExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckReplicationSubnetGroupExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
-		for _, provider := range *providers {
-			// Ignore if Meta is empty, this can happen for validation providers
-			if provider.Meta() == nil {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn(ctx)
+
+		_, err := tfdms.FindReplicationSubnetGroupByID(ctx, conn, rs.Primary.ID)
+
+		return err
+	}
+}
+
+func testAccCheckReplicationSubnetGroupDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_dms_replication_subnet_group" {
 				continue
 			}
 
-			conn := provider.Meta().(*conns.AWSClient).DMSConn
-			_, err := conn.DescribeReplicationSubnetGroups(&dms.DescribeReplicationSubnetGroupsInput{
-				Filters: []*dms.Filter{
-					{
-						Name:   aws.String("replication-subnet-group-id"),
-						Values: []*string{aws.String(rs.Primary.ID)},
-					},
-				},
-			})
+			_, err := tfdms.FindReplicationSubnetGroupByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
 
 			if err != nil {
-				return fmt.Errorf("DMS replication subnet group error: %v", err)
+				return err
 			}
-			return nil
+
+			return fmt.Errorf("DMS Replication Subnet Group %s still exists", rs.Primary.ID)
 		}
 
-		return fmt.Errorf("DMS replication subnet group not found")
+		return nil
 	}
 }
 
-func replicationSubnetGroupDestroy(s *terraform.State) error {
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_dms_replication_subnet_group" {
-			continue
-		}
-
-		err := checkReplicationSubnetGroupExists(rs.Primary.ID)
-		if err == nil {
-			return fmt.Errorf("Found replication subnet group that was not destroyed: %s", rs.Primary.ID)
-		}
-	}
-
-	return nil
+func testAccReplicationSubnetGroupConfig_basic(rName, description string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 3), fmt.Sprintf(`
+resource "aws_dms_replication_subnet_group" "test" {
+  replication_subnet_group_id          = %[1]q
+  replication_subnet_group_description = %[2]q
+  subnet_ids                           = aws_subnet.test[*].id
+}
+`, rName, description))
 }
 
-func testAccReplicationSubnetGroupConfig_basic(randId string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_vpc" "dms_vpc" {
-  cidr_block = "10.1.0.0/16"
+func testAccReplicationSubnetGroupConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 3), fmt.Sprintf(`
+resource "aws_dms_replication_subnet_group" "test" {
+  replication_subnet_group_id          = %[1]q
+  replication_subnet_group_description = "testing"
+  subnet_ids                           = aws_subnet.test[*].id
 
   tags = {
-    Name = "terraform-testacc-dms-replication-subnet-group-%[1]s"
+    %[2]q = %[3]q
   }
 }
+`, rName, tagKey1, tagValue1))
+}
 
-resource "aws_subnet" "dms_subnet_1" {
-  cidr_block        = "10.1.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-  vpc_id            = aws_vpc.dms_vpc.id
+func testAccReplicationSubnetGroupConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 3), fmt.Sprintf(`
+resource "aws_dms_replication_subnet_group" "test" {
+  replication_subnet_group_id          = %[1]q
+  replication_subnet_group_description = "testing"
+  subnet_ids                           = aws_subnet.test[*].id
 
   tags = {
-    Name = "tf-acc-dms-replication-subnet-group-1-%[1]s"
-  }
-
-  depends_on = [aws_vpc.dms_vpc]
-}
-
-resource "aws_subnet" "dms_subnet_2" {
-  cidr_block        = "10.1.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-  vpc_id            = aws_vpc.dms_vpc.id
-
-  tags = {
-    Name = "tf-acc-dms-replication-subnet-group-2-%[1]s"
-  }
-
-  depends_on = [aws_vpc.dms_vpc]
-}
-
-resource "aws_subnet" "dms_subnet_3" {
-  cidr_block        = "10.1.3.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-  vpc_id            = aws_vpc.dms_vpc.id
-
-  tags = {
-    Name = "tf-acc-dms-replication-subnet-group-3-%[1]s"
-  }
-
-  depends_on = [aws_vpc.dms_vpc]
-}
-
-resource "aws_dms_replication_subnet_group" "dms_replication_subnet_group" {
-  replication_subnet_group_id          = "tf-test-dms-replication-subnet-group-%[1]s"
-  replication_subnet_group_description = "terraform test for replication subnet group"
-  subnet_ids                           = [aws_subnet.dms_subnet_1.id, aws_subnet.dms_subnet_2.id]
-
-  tags = {
-    Name   = "tf-test-dms-replication-subnet-group-%[1]s"
-    Update = "to-update"
-    Remove = "to-remove"
+    %[2]q = %[3]q
+    %[4]q = %[5]q
   }
 }
-`, randId))
-}
-
-func testAccReplicationSubnetGroupConfig_update(randId string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
-resource "aws_vpc" "dms_vpc" {
-  cidr_block = "10.1.0.0/16"
-
-  tags = {
-    Name = "terraform-testacc-dms-replication-subnet-group-%[1]s"
-  }
-}
-
-resource "aws_subnet" "dms_subnet_1" {
-  cidr_block        = "10.1.1.0/24"
-  availability_zone = data.aws_availability_zones.available.names[0]
-  vpc_id            = aws_vpc.dms_vpc.id
-
-  tags = {
-    Name = "tf-acc-dms-replication-subnet-group-1-%[1]s"
-  }
-
-  depends_on = [aws_vpc.dms_vpc]
-}
-
-resource "aws_subnet" "dms_subnet_2" {
-  cidr_block        = "10.1.2.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-  vpc_id            = aws_vpc.dms_vpc.id
-
-  tags = {
-    Name = "tf-acc-dms-replication-subnet-group-2-%[1]s"
-  }
-
-  depends_on = [aws_vpc.dms_vpc]
-}
-
-resource "aws_subnet" "dms_subnet_3" {
-  cidr_block        = "10.1.3.0/24"
-  availability_zone = data.aws_availability_zones.available.names[1]
-  vpc_id            = aws_vpc.dms_vpc.id
-
-  tags = {
-    Name = "tf-acc-dms-replication-subnet-group-3-%[1]s"
-  }
-
-  depends_on = [aws_vpc.dms_vpc]
-}
-
-resource "aws_dms_replication_subnet_group" "dms_replication_subnet_group" {
-  replication_subnet_group_id          = "tf-test-dms-replication-subnet-group-%[1]s"
-  replication_subnet_group_description = "terraform test for replication subnet group"
-  subnet_ids                           = [aws_subnet.dms_subnet_1.id, aws_subnet.dms_subnet_3.id]
-
-  tags = {
-    Name   = "tf-test-dms-replication-subnet-group-%[1]s"
-    Update = "updated"
-    Add    = "added"
-  }
-}
-`, randId))
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }

@@ -1,34 +1,40 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package glue_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfglue "github.com/hashicorp/terraform-provider-aws/internal/service/glue"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccGluePartition_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	parValue := sdkacctest.RandString(10)
 	resourceName := "aws_glue_partition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPartitionDestroy,
+		CheckDestroy:             testAccCheckPartitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPartitionConfig_basic(rName, parValue),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPartitionExists(resourceName),
+					testAccCheckPartitionExists(ctx, resourceName),
 					acctest.CheckResourceAttrAccountID(resourceName, "catalog_id"),
 					resource.TestCheckResourceAttr(resourceName, "database_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "partition_values.#", "1"),
@@ -47,21 +53,22 @@ func TestAccGluePartition_basic(t *testing.T) {
 }
 
 func TestAccGluePartition_multipleValues(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	parValue := sdkacctest.RandString(10)
 	parValue2 := sdkacctest.RandString(11)
 	resourceName := "aws_glue_partition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPartitionDestroy,
+		CheckDestroy:             testAccCheckPartitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPartitionConfig_multiplePartValue(rName, parValue, parValue2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPartitionExists(resourceName),
+					testAccCheckPartitionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "partition_values.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "partition_values.0", parValue),
 					resource.TestCheckResourceAttr(resourceName, "partition_values.1", parValue2),
@@ -77,20 +84,21 @@ func TestAccGluePartition_multipleValues(t *testing.T) {
 }
 
 func TestAccGluePartition_parameters(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	parValue := sdkacctest.RandString(10)
 	resourceName := "aws_glue_partition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPartitionDestroy,
+		CheckDestroy:             testAccCheckPartitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPartitionConfig_parameters1(rName, parValue, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPartitionExists(resourceName),
+					testAccCheckPartitionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.key1", "value1"),
 				),
@@ -103,7 +111,7 @@ func TestAccGluePartition_parameters(t *testing.T) {
 			{
 				Config: testAccPartitionConfig_parameters2(rName, parValue, "key1", "valueUpdated1", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPartitionExists(resourceName),
+					testAccCheckPartitionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.key1", "valueUpdated1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.key2", "value2"),
@@ -112,7 +120,7 @@ func TestAccGluePartition_parameters(t *testing.T) {
 			{
 				Config: testAccPartitionConfig_parameters1(rName, parValue, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPartitionExists(resourceName),
+					testAccCheckPartitionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "parameters.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "parameters.key2", "value2"),
 				),
@@ -122,21 +130,22 @@ func TestAccGluePartition_parameters(t *testing.T) {
 }
 
 func TestAccGluePartition_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	parValue := sdkacctest.RandString(10)
 	resourceName := "aws_glue_partition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPartitionDestroy,
+		CheckDestroy:             testAccCheckPartitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPartitionConfig_basic(rName, parValue),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPartitionExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourcePartition(), resourceName),
+					testAccCheckPartitionExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourcePartition(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -145,21 +154,22 @@ func TestAccGluePartition_disappears(t *testing.T) {
 }
 
 func TestAccGluePartition_Disappears_table(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	parValue := sdkacctest.RandString(10)
 	resourceName := "aws_glue_partition.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, glue.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.GlueServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPartitionDestroy,
+		CheckDestroy:             testAccCheckPartitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPartitionConfig_basic(rName, parValue),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPartitionExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfglue.ResourceCatalogTable(), "aws_glue_catalog_table.test"),
+					testAccCheckPartitionExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfglue.ResourceCatalogTable(), "aws_glue_catalog_table.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -167,27 +177,29 @@ func TestAccGluePartition_Disappears_table(t *testing.T) {
 	})
 }
 
-func testAccCheckPartitionDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
+func testAccCheckPartitionDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_glue_partition" {
-			continue
-		}
-
-		if _, err := tfglue.FindPartitionByValues(conn, rs.Primary.ID); err != nil {
-			if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_glue_partition" {
 				continue
 			}
 
-			return err
+			if _, err := tfglue.FindPartitionByValues(ctx, conn, rs.Primary.ID); err != nil {
+				if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+					continue
+				}
+
+				return err
+			}
+			return fmt.Errorf("still exists")
 		}
-		return fmt.Errorf("still exists")
+		return nil
 	}
-	return nil
 }
 
-func testAccCheckPartitionExists(name string) resource.TestCheckFunc {
+func testAccCheckPartitionExists(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -198,8 +210,8 @@ func testAccCheckPartitionExists(name string) resource.TestCheckFunc {
 			return fmt.Errorf("No ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn
-		out, err := tfglue.FindPartitionByValues(conn, rs.Primary.ID)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlueConn(ctx)
+		out, err := tfglue.FindPartitionByValues(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}

@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ec2_transit_gateway_vpc_attachment: Change `transit_gateway_default_route_table_association` and `transit_gateway_default_route_table_propagation` to Computed
+```

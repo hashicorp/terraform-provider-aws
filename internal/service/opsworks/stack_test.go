@@ -1,49 +1,55 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opsworks_test
 
 import (
+	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/opsworks"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfopsworks "github.com/hashicorp/terraform-provider-aws/internal/service/opsworks"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccOpsWorksStack_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_stack.test"
 	var v opsworks.Stack
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t)
-			testAccPreCheckStacks(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID)
+			testAccPreCheckStacks(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStackDestroy,
+		CheckDestroy:             testAccCheckStackDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStackExists(resourceName, &v),
+					testAccCheckStackExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "agent_version"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "opsworks", regexp.MustCompile(`stack/.+/`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "opsworks", regexache.MustCompile(`stack/.+/`)),
 					resource.TestCheckResourceAttr(resourceName, "berkshelf_version", "3.2.0"),
 					resource.TestCheckResourceAttr(resourceName, "color", ""),
 					resource.TestCheckResourceAttr(resourceName, "configuration_manager_name", "Chef"),
 					resource.TestCheckResourceAttr(resourceName, "configuration_manager_version", "11.10"),
 					resource.TestCheckResourceAttr(resourceName, "custom_cookbooks_source.#", "1"),
-					resource.TestCheckNoResourceAttr(resourceName, "custom_json"),
+					resource.TestCheckResourceAttr(resourceName, "custom_json", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "default_availability_zone", "data.aws_availability_zones.available", "names.0"),
 					resource.TestCheckResourceAttrSet(resourceName, "default_instance_profile_arn"),
 					resource.TestCheckResourceAttr(resourceName, "default_os", "Ubuntu 12.04 LTS"),
@@ -72,25 +78,26 @@ func TestAccOpsWorksStack_basic(t *testing.T) {
 }
 
 func TestAccOpsWorksStack_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_stack.test"
 	var v opsworks.Stack
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t)
-			testAccPreCheckStacks(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID)
+			testAccPreCheckStacks(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStackDestroy,
+		CheckDestroy:             testAccCheckStackDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfopsworks.ResourceStack(), resourceName),
+					testAccCheckStackExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfopsworks.ResourceStack(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -98,25 +105,102 @@ func TestAccOpsWorksStack_disappears(t *testing.T) {
 	})
 }
 
-func TestAccOpsWorksStack_tags(t *testing.T) {
+func TestAccOpsWorksStack_noVPC_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_stack.test"
 	var v opsworks.Stack
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t)
-			testAccPreCheckStacks(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID)
+			testAccPreCheckStacks(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStackDestroy,
+		CheckDestroy:             testAccCheckStackDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStackConfig_noVPC(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStackExists(ctx, resourceName, &v),
+					resource.TestMatchResourceAttr(resourceName, "default_availability_zone", regexache.MustCompile(fmt.Sprintf("%s[a-z]", acctest.Region()))),
+					resource.TestMatchResourceAttr(resourceName, "default_subnet_id", regexache.MustCompile("subnet-[[:alnum:]]")),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "data.aws_vpc.default", "id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config:   testAccStackConfig_defaultVPC(rName),
+				PlanOnly: true,
+			},
+			{
+				Config:   testAccStackConfig_noVPC(rName),
+				PlanOnly: true,
+			},
+		},
+	})
+}
+
+func TestAccOpsWorksStack_noVPC_defaultAZ(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_opsworks_stack.test"
+	var v opsworks.Stack
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID)
+			testAccPreCheckStacks(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccStackConfig_noVPCDefaultAZ(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckStackExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttrPair(resourceName, "default_availability_zone", "data.aws_availability_zones.available", "names.1"),
+					resource.TestMatchResourceAttr(resourceName, "default_subnet_id", regexache.MustCompile("subnet-[[:alnum:]]")),
+					resource.TestCheckResourceAttrPair(resourceName, "vpc_id", "data.aws_vpc.default", "id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccOpsWorksStack_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_opsworks_stack.test"
+	var v opsworks.Stack
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID)
+			testAccPreCheckStacks(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckStackDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackExists(resourceName, &v),
+					testAccCheckStackExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -129,7 +213,7 @@ func TestAccOpsWorksStack_tags(t *testing.T) {
 			{
 				Config: testAccStackConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackExists(resourceName, &v),
+					testAccCheckStackExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -138,7 +222,7 @@ func TestAccOpsWorksStack_tags(t *testing.T) {
 			{
 				Config: testAccStackConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackExists(resourceName, &v),
+					testAccCheckStackExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -148,31 +232,32 @@ func TestAccOpsWorksStack_tags(t *testing.T) {
 }
 
 func TestAccOpsWorksStack_tagsAlternateRegion(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_stack.test"
 	var v opsworks.Stack
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t)
-			testAccPreCheckStacks(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID)
+			testAccPreCheckStacks(ctx, t)
 			// This test requires a very particular AWS Region configuration
 			// in order to exercise the OpsWorks classic endpoint functionality.
 			acctest.PreCheckMultipleRegion(t, 2)
 			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
 			acctest.PreCheckAlternateRegionIs(t, endpoints.UsWest1RegionID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(t, 2),
-		CheckDestroy:             testAccCheckStackDestroy,
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
+		CheckDestroy:             testAccCheckStackDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_tags1AlternateRegion(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackExists(resourceName, &v),
+					testAccCheckStackExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrWith(resourceName, "arn", func(value string) error {
-						if !regexp.MustCompile(arn.ARN{
+						if !regexache.MustCompile(arn.ARN{
 							Partition: acctest.Partition(),
 							Service:   opsworks.ServiceName,
 							Region:    acctest.AlternateRegion(),
@@ -199,7 +284,7 @@ func TestAccOpsWorksStack_tagsAlternateRegion(t *testing.T) {
 			{
 				Config: testAccStackConfig_tags2AlternateRegion(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackExists(resourceName, &v),
+					testAccCheckStackExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -208,7 +293,7 @@ func TestAccOpsWorksStack_tagsAlternateRegion(t *testing.T) {
 			{
 				Config: testAccStackConfig_tags1AlternateRegion(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStackExists(resourceName, &v),
+					testAccCheckStackExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -218,26 +303,27 @@ func TestAccOpsWorksStack_tagsAlternateRegion(t *testing.T) {
 }
 
 func TestAccOpsWorksStack_allAttributes(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_stack.test"
 	var v opsworks.Stack
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t)
-			testAccPreCheckStacks(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID)
+			testAccPreCheckStacks(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStackDestroy,
+		CheckDestroy:             testAccCheckStackDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackConfig_allAttributes(rName, "4039-20200430042739", "rgb(186, 65, 50)", "main", testAccCustomJSON1, "test1", "Baked_Goods"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStackExists(resourceName, &v),
+					testAccCheckStackExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "agent_version", "4039-20200430042739"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "opsworks", regexp.MustCompile(`stack/.+/`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "opsworks", regexache.MustCompile(`stack/.+/`)),
 					resource.TestCheckResourceAttr(resourceName, "berkshelf_version", "3.2.0"),
 					resource.TestCheckResourceAttr(resourceName, "color", "rgb(186, 65, 50)"),
 					resource.TestCheckResourceAttr(resourceName, "configuration_manager_name", "Chef"),
@@ -279,9 +365,9 @@ func TestAccOpsWorksStack_allAttributes(t *testing.T) {
 			{
 				Config: testAccStackConfig_allAttributes(rName, "4038-20200305044341", "rgb(186, 65, 50)", "main", testAccCustomJSON1, "test2", "Scottish_Islands"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStackExists(resourceName, &v),
+					testAccCheckStackExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "agent_version", "4038-20200305044341"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "opsworks", regexp.MustCompile(`stack/.+/`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "opsworks", regexache.MustCompile(`stack/.+/`)),
 					resource.TestCheckResourceAttr(resourceName, "berkshelf_version", "3.2.0"),
 					resource.TestCheckResourceAttr(resourceName, "color", "rgb(186, 65, 50)"),
 					resource.TestCheckResourceAttr(resourceName, "configuration_manager_name", "Chef"),
@@ -315,9 +401,9 @@ func TestAccOpsWorksStack_allAttributes(t *testing.T) {
 			{
 				Config: testAccStackConfig_allAttributes(rName, "4038-20200305044341", "rgb(209, 105, 41)", "dev", testAccCustomJSON2, "test2", "Scottish_Islands"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStackExists(resourceName, &v),
+					testAccCheckStackExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "agent_version", "4038-20200305044341"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "opsworks", regexp.MustCompile(`stack/.+/`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "opsworks", regexache.MustCompile(`stack/.+/`)),
 					resource.TestCheckResourceAttr(resourceName, "berkshelf_version", "3.2.0"),
 					resource.TestCheckResourceAttr(resourceName, "color", "rgb(209, 105, 41)"),
 					resource.TestCheckResourceAttr(resourceName, "configuration_manager_name", "Chef"),
@@ -353,28 +439,29 @@ func TestAccOpsWorksStack_allAttributes(t *testing.T) {
 }
 
 func TestAccOpsWorksStack_windows(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_stack.test"
 	var v opsworks.Stack
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t)
-			testAccPreCheckStacks(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID)
+			testAccPreCheckStacks(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStackDestroy,
+		CheckDestroy:             testAccCheckStackDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccStackConfig_windows(rName, "Microsoft Windows Server 2012 R2 Base"),
+				Config: testAccStackConfig_windows(rName, "Microsoft Windows Server 2019 Base"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStackExists(resourceName, &v),
+					testAccCheckStackExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "agent_version"),
 					resource.TestCheckResourceAttr(resourceName, "configuration_manager_name", "Chef"),
 					resource.TestCheckResourceAttr(resourceName, "configuration_manager_version", "12.2"),
-					resource.TestCheckResourceAttr(resourceName, "default_os", "Microsoft Windows Server 2012 R2 Base"),
+					resource.TestCheckResourceAttr(resourceName, "default_os", "Microsoft Windows Server 2019 Base"),
 				),
 			},
 			{
@@ -383,25 +470,25 @@ func TestAccOpsWorksStack_windows(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccStackConfig_windows(rName, "Microsoft Windows Server 2012 R2 with SQL Server Standard"),
+				Config: testAccStackConfig_windows(rName, "Microsoft Windows Server 2022 Base"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckStackExists(resourceName, &v),
+					testAccCheckStackExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "agent_version"),
 					resource.TestCheckResourceAttr(resourceName, "configuration_manager_name", "Chef"),
 					resource.TestCheckResourceAttr(resourceName, "configuration_manager_version", "12.2"),
-					resource.TestCheckResourceAttr(resourceName, "default_os", "Microsoft Windows Server 2012 R2 with SQL Server Standard"),
+					resource.TestCheckResourceAttr(resourceName, "default_os", "Microsoft Windows Server 2022 Base"),
 				),
 			},
 		},
 	})
 }
 
-func testAccPreCheckStacks(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
+func testAccPreCheckStacks(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn(ctx)
 
 	input := &opsworks.DescribeStacksInput{}
 
-	_, err := conn.DescribeStacks(input)
+	_, err := conn.DescribeStacksWithContext(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -412,20 +499,16 @@ func testAccPreCheckStacks(t *testing.T) {
 	}
 }
 
-func testAccCheckStackExists(n string, v *opsworks.Stack) resource.TestCheckFunc {
+func testAccCheckStackExists(ctx context.Context, n string, v *opsworks.Stack) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No OpsWorks Stack ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
-
-		output, err := tfopsworks.FindStackByID(conn, rs.Primary.ID)
+		output, err := tfopsworks.FindStackByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -437,31 +520,33 @@ func testAccCheckStackExists(n string, v *opsworks.Stack) resource.TestCheckFunc
 	}
 }
 
-func testAccCheckStackDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
+func testAccCheckStackDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_opsworks_stack" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_opsworks_stack" {
+				continue
+			}
+
+			_, err := tfopsworks.FindStackByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("OpsWorks Stack %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfopsworks.FindStackByID(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("OpsWorks Stack %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccStackConfig_base(rName string) string {
+func testAccStackConfig_baseIAM(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "opsworks_service" {
   name = "%[1]s-service"
@@ -527,13 +612,16 @@ resource "aws_iam_instance_profile" "opsworks_instance" {
 }
 
 func testAccStackConfig_baseVPC(rName string) string {
-	return acctest.ConfigCompose(testAccStackConfig_base(rName), acctest.ConfigVPCWithSubnets(rName, 2))
+	return acctest.ConfigCompose(
+		testAccStackConfig_baseIAM(rName),
+		acctest.ConfigVPCWithSubnets(rName, 2),
+	)
 }
 
 func testAccStackConfig_baseVPCAlternateRegion(rName string) string {
 	return acctest.ConfigCompose(
 		acctest.ConfigMultipleRegionProvider(2),
-		testAccStackConfig_base(rName),
+		testAccStackConfig_baseIAM(rName),
 		fmt.Sprintf(`
 # The VPC (and subnets) must be in the target (alternate) AWS Region.
 data "aws_availability_zones" "available" {
@@ -583,6 +671,63 @@ resource "aws_opsworks_stack" "test" {
   default_subnet_id            = aws_subnet.test[0].id
   vpc_id                       = aws_vpc.test.id
   use_opsworks_security_groups = false
+}
+`, rName, acctest.Region()))
+}
+
+func testAccStackConfig_noVPC(rName string) string {
+	return acctest.ConfigCompose(
+		testAccStackConfig_baseIAM(rName),
+		fmt.Sprintf(`
+resource "aws_opsworks_stack" "test" {
+  name                         = %[1]q
+  region                       = %[2]q
+  service_role_arn             = aws_iam_role.opsworks_service.arn
+  default_instance_profile_arn = aws_iam_instance_profile.opsworks_instance.arn
+  use_opsworks_security_groups = false
+}
+
+data "aws_vpc" "default" {
+  default = true
+}
+`, rName, acctest.Region()))
+}
+
+func testAccStackConfig_defaultVPC(rName string) string {
+	return acctest.ConfigCompose(
+		testAccStackConfig_baseIAM(rName),
+		fmt.Sprintf(`
+resource "aws_opsworks_stack" "test" {
+  name                         = %[1]q
+  region                       = %[2]q
+  service_role_arn             = aws_iam_role.opsworks_service.arn
+  default_instance_profile_arn = aws_iam_instance_profile.opsworks_instance.arn
+  use_opsworks_security_groups = false
+  vpc_id                       = data.aws_vpc.default.id
+}
+
+data "aws_vpc" "default" {
+  default = true
+}
+`, rName, acctest.Region()))
+}
+
+func testAccStackConfig_noVPCDefaultAZ(rName string) string {
+	return acctest.ConfigCompose(
+		testAccStackConfig_baseIAM(rName),
+		acctest.ConfigAvailableAZsNoOptInDefaultExclude(),
+		fmt.Sprintf(`
+resource "aws_opsworks_stack" "test" {
+  name                         = %[1]q
+  region                       = %[2]q
+  service_role_arn             = aws_iam_role.opsworks_service.arn
+  default_instance_profile_arn = aws_iam_instance_profile.opsworks_instance.arn
+  use_opsworks_security_groups = false
+  default_availability_zone    = data.aws_availability_zones.available.names[1]
+}
+
+data "aws_vpc" "default" {
+  default = true
 }
 `, rName, acctest.Region()))
 }

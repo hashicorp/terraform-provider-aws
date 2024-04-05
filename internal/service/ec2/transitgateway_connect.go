@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -12,11 +15,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_ec2_transit_gateway_connect", name="Transit Gateway Connect")
+// @Tags(identifierAttribute="id")
 func ResourceTransitGatewayConnect() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTransitGatewayConnectCreate,
@@ -25,7 +32,7 @@ func ResourceTransitGatewayConnect() *schema.Resource {
 		DeleteWithoutTimeout: resourceTransitGatewayConnectDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -44,8 +51,8 @@ func ResourceTransitGatewayConnect() *schema.Resource {
 				Default:      ec2.ProtocolValueGre,
 				ValidateFunc: validation.StringInSlice(ec2.ProtocolValue_Values(), false),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"transit_gateway_default_route_table_association": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -73,17 +80,16 @@ func ResourceTransitGatewayConnect() *schema.Resource {
 }
 
 func resourceTransitGatewayConnectCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	transportAttachmentID := d.Get("transport_attachment_id").(string)
-
 	input := &ec2.CreateTransitGatewayConnectInput{
 		Options: &ec2.CreateTransitGatewayConnectRequestOptions{
 			Protocol: aws.String(d.Get("protocol").(string)),
 		},
-		TagSpecifications:                   tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeTransitGatewayAttachment),
+		TagSpecifications:                   getTagSpecificationsIn(ctx, ec2.ResourceTypeTransitGatewayAttachment),
 		TransportTransitGatewayAttachmentId: aws.String(transportAttachmentID),
 	}
 
@@ -91,70 +97,70 @@ func resourceTransitGatewayConnectCreate(ctx context.Context, d *schema.Resource
 	output, err := conn.CreateTransitGatewayConnectWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating EC2 Transit Gateway Connect: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating EC2 Transit Gateway Connect: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.TransitGatewayConnect.TransitGatewayAttachmentId))
 
-	if _, err := WaitTransitGatewayConnectCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for EC2 Transit Gateway Connect (%s) create: %s", d.Id(), err)
+	if _, err := WaitTransitGatewayConnectCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Transit Gateway Connect (%s) create: %s", d.Id(), err)
 	}
 
-	transportAttachment, err := FindTransitGatewayAttachmentByID(conn, transportAttachmentID)
+	transportAttachment, err := FindTransitGatewayAttachmentByID(ctx, conn, transportAttachmentID)
 
 	if err != nil {
-		return diag.Errorf("reading EC2 Transit Gateway Attachment (%s): %s", transportAttachmentID, err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway Attachment (%s): %s", transportAttachmentID, err)
 	}
 
 	transitGatewayID := aws.StringValue(transportAttachment.TransitGatewayId)
-	transitGateway, err := FindTransitGatewayByID(conn, transitGatewayID)
+	transitGateway, err := FindTransitGatewayByID(ctx, conn, transitGatewayID)
 
 	if err != nil {
-		return diag.Errorf("reading EC2 Transit Gateway (%s): %s", transitGatewayID, err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway (%s): %s", transitGatewayID, err)
 	}
 
 	// We cannot modify Transit Gateway Route Tables for Resource Access Manager shared Transit Gateways
 	if aws.StringValue(transitGateway.OwnerId) == aws.StringValue(transportAttachment.ResourceOwnerId) {
-		if err := transitGatewayRouteTableAssociationUpdate(conn, aws.StringValue(transitGateway.Options.AssociationDefaultRouteTableId), d.Id(), d.Get("transit_gateway_default_route_table_association").(bool)); err != nil {
-			return diag.FromErr(err)
+		if err := transitGatewayRouteTableAssociationUpdate(ctx, conn, aws.StringValue(transitGateway.Options.AssociationDefaultRouteTableId), d.Id(), d.Get("transit_gateway_default_route_table_association").(bool)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
-		if err := transitGatewayRouteTablePropagationUpdate(conn, aws.StringValue(transitGateway.Options.PropagationDefaultRouteTableId), d.Id(), d.Get("transit_gateway_default_route_table_propagation").(bool)); err != nil {
-			return diag.FromErr(err)
+		if err := transitGatewayRouteTablePropagationUpdate(ctx, conn, aws.StringValue(transitGateway.Options.PropagationDefaultRouteTableId), d.Id(), d.Get("transit_gateway_default_route_table_propagation").(bool)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
-	return resourceTransitGatewayConnectRead(ctx, d, meta)
+	return append(diags, resourceTransitGatewayConnectRead(ctx, d, meta)...)
 }
 
 func resourceTransitGatewayConnectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	var diags diag.Diagnostics
 
-	transitGatewayConnect, err := FindTransitGatewayConnectByID(conn, d.Id())
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+
+	transitGatewayConnect, err := FindTransitGatewayConnectByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Transit Gateway Connect %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading EC2 Transit Gateway Connect (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway Connect (%s): %s", d.Id(), err)
 	}
 
 	transitGatewayID := aws.StringValue(transitGatewayConnect.TransitGatewayId)
-	transitGateway, err := FindTransitGatewayByID(conn, transitGatewayID)
+	transitGateway, err := FindTransitGatewayByID(ctx, conn, transitGatewayID)
 
 	if err != nil {
-		return diag.Errorf("reading EC2 Transit Gateway (%s): %s", transitGatewayID, err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway (%s): %s", transitGatewayID, err)
 	}
 
-	transitGatewayAttachment, err := FindTransitGatewayAttachmentByID(conn, d.Id())
+	transitGatewayAttachment, err := FindTransitGatewayAttachmentByID(ctx, conn, d.Id())
 
 	if err != nil {
-		return diag.Errorf("reading EC2 Transit Gateway Attachment (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway Attachment (%s): %s", d.Id(), err)
 	}
 
 	// We cannot read Transit Gateway Route Tables for Resource Access Manager shared Transit Gateways
@@ -163,24 +169,24 @@ func resourceTransitGatewayConnectRead(ctx context.Context, d *schema.ResourceDa
 
 	if aws.StringValue(transitGateway.OwnerId) == aws.StringValue(transitGatewayAttachment.ResourceOwnerId) {
 		if transitGatewayRouteTableID := aws.StringValue(transitGateway.Options.AssociationDefaultRouteTableId); transitGatewayRouteTableID != "" {
-			_, err := FindTransitGatewayRouteTableAssociationByTwoPartKey(conn, transitGatewayRouteTableID, d.Id())
+			_, err := FindTransitGatewayRouteTableAssociationByTwoPartKey(ctx, conn, transitGatewayRouteTableID, d.Id())
 
 			if tfresource.NotFound(err) {
 				transitGatewayDefaultRouteTableAssociation = false
 			} else if err != nil {
-				return diag.Errorf("reading EC2 Transit Gateway Route Table Association (%s): %s", TransitGatewayRouteTableAssociationCreateResourceID(transitGatewayRouteTableID, d.Id()), err)
+				return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway Route Table Association (%s): %s", TransitGatewayRouteTableAssociationCreateResourceID(transitGatewayRouteTableID, d.Id()), err)
 			}
 		} else {
 			transitGatewayDefaultRouteTableAssociation = false
 		}
 
 		if transitGatewayRouteTableID := aws.StringValue(transitGateway.Options.PropagationDefaultRouteTableId); transitGatewayRouteTableID != "" {
-			_, err := FindTransitGatewayRouteTablePropagationByTwoPartKey(conn, transitGatewayRouteTableID, d.Id())
+			_, err := FindTransitGatewayRouteTablePropagationByTwoPartKey(ctx, conn, transitGatewayRouteTableID, d.Id())
 
 			if tfresource.NotFound(err) {
 				transitGatewayDefaultRouteTablePropagation = false
 			} else if err != nil {
-				return diag.Errorf("reading EC2 Transit Gateway Route Table Propagation (%s): %s", TransitGatewayRouteTablePropagationCreateResourceID(transitGatewayRouteTableID, d.Id()), err)
+				return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway Route Table Propagation (%s): %s", TransitGatewayRouteTablePropagationCreateResourceID(transitGatewayRouteTableID, d.Id()), err)
 			}
 		} else {
 			transitGatewayDefaultRouteTablePropagation = false
@@ -193,57 +199,44 @@ func resourceTransitGatewayConnectRead(ctx context.Context, d *schema.ResourceDa
 	d.Set("transit_gateway_id", transitGatewayConnect.TransitGatewayId)
 	d.Set("transport_attachment_id", transitGatewayConnect.TransportTransitGatewayAttachmentId)
 
-	tags := KeyValueTags(transitGatewayConnect.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	setTagsOut(ctx, transitGatewayConnect.Tags)
 
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
-
-	return nil
+	return diags
 }
 
 func resourceTransitGatewayConnectUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if d.HasChanges("transit_gateway_default_route_table_association", "transit_gateway_default_route_table_propagation") {
 		transitGatewayID := d.Get("transit_gateway_id").(string)
-		transitGateway, err := FindTransitGatewayByID(conn, transitGatewayID)
+		transitGateway, err := FindTransitGatewayByID(ctx, conn, transitGatewayID)
 
 		if err != nil {
-			return diag.Errorf("reading EC2 Transit Gateway (%s): %s", transitGatewayID, err)
+			return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway (%s): %s", transitGatewayID, err)
 		}
 
 		if d.HasChange("transit_gateway_default_route_table_association") {
-			if err := transitGatewayRouteTableAssociationUpdate(conn, aws.StringValue(transitGateway.Options.AssociationDefaultRouteTableId), d.Id(), d.Get("transit_gateway_default_route_table_association").(bool)); err != nil {
-				return diag.FromErr(err)
+			if err := transitGatewayRouteTableAssociationUpdate(ctx, conn, aws.StringValue(transitGateway.Options.AssociationDefaultRouteTableId), d.Id(), d.Get("transit_gateway_default_route_table_association").(bool)); err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
 
 		if d.HasChange("transit_gateway_default_route_table_propagation") {
-			if err := transitGatewayRouteTablePropagationUpdate(conn, aws.StringValue(transitGateway.Options.PropagationDefaultRouteTableId), d.Id(), d.Get("transit_gateway_default_route_table_propagation").(bool)); err != nil {
-				return diag.FromErr(err)
+			if err := transitGatewayRouteTablePropagationUpdate(ctx, conn, aws.StringValue(transitGateway.Options.PropagationDefaultRouteTableId), d.Id(), d.Get("transit_gateway_default_route_table_propagation").(bool)); err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return diag.Errorf("updating EC2 Transit Gateway Connect (%s) tags: %s", d.Id(), err)
-		}
-	}
-
-	return resourceTransitGatewayConnectRead(ctx, d, meta)
+	return append(diags, resourceTransitGatewayConnectRead(ctx, d, meta)...)
 }
 
 func resourceTransitGatewayConnectDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Connect: %s", d.Id())
 	_, err := conn.DeleteTransitGatewayConnectWithContext(ctx, &ec2.DeleteTransitGatewayConnectInput{
@@ -251,16 +244,16 @@ func resourceTransitGatewayConnectDelete(ctx context.Context, d *schema.Resource
 	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayAttachmentIDNotFound) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting EC2 Transit Gateway Connect (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting EC2 Transit Gateway Connect (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitTransitGatewayConnectDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for EC2 Transit Gateway Connect (%s) delete: %s", d.Id(), err)
+	if _, err := WaitTransitGatewayConnectDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Transit Gateway Connect (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

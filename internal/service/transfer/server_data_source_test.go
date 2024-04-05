@@ -1,22 +1,26 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package transfer_test
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/transfer"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccTransferServerDataSource_basic(t *testing.T) {
+func testAccServerDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_transfer_server.test"
 	datasourceName := "data.aws_transfer_server.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -27,20 +31,22 @@ func TestAccTransferServerDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "endpoint", resourceName, "endpoint"),
 					resource.TestCheckResourceAttrPair(datasourceName, "identity_provider_type", resourceName, "identity_provider_type"),
 					resource.TestCheckResourceAttrPair(datasourceName, "logging_role", resourceName, "logging_role"),
+					resource.TestCheckResourceAttrPair(datasourceName, "structured_log_destinations.#", resourceName, "structured_log_destinations.#"),
 				),
 			},
 		},
 	})
 }
 
-func TestAccTransferServerDataSource_Service_managed(t *testing.T) {
+func testAccServerDataSource_Service_managed(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandString(5)
 	resourceName := "aws_transfer_server.test"
 	datasourceName := "data.aws_transfer_server.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -62,14 +68,15 @@ func TestAccTransferServerDataSource_Service_managed(t *testing.T) {
 	})
 }
 
-func TestAccTransferServerDataSource_apigateway(t *testing.T) {
+func testAccServerDataSource_apigateway(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandString(5)
 	resourceName := "aws_transfer_server.test"
 	datasourceName := "data.aws_transfer_server.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{

@@ -1,21 +1,25 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssm_test
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ssm"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSSMPatchBaselineDataSource_existingBaseline(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ssm_patch_baseline.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -32,6 +36,11 @@ func TestAccSSMPatchBaselineDataSource_existingBaseline(t *testing.T) {
 					resource.TestCheckResourceAttr(dataSourceName, "rejected_patches.#", "0"),
 					resource.TestCheckResourceAttr(dataSourceName, "rejected_patches_action", "ALLOW_AS_DEPENDENCY"),
 					resource.TestCheckResourceAttr(dataSourceName, "source.#", "0"),
+					acctest.CheckResourceAttrJMES(dataSourceName, "json", "ApprovedPatches|length(@)", "0"),
+					acctest.CheckResourceAttrJMESPair(dataSourceName, "json", "Name", dataSourceName, "name"),
+					acctest.CheckResourceAttrJMESPair(dataSourceName, "json", "Description", dataSourceName, "description"),
+					acctest.CheckResourceAttrJMESPair(dataSourceName, "json", "ApprovedPatchesEnableNonSecurity", dataSourceName, "approved_patches_enable_non_security"),
+					acctest.CheckResourceAttrJMESPair(dataSourceName, "json", "OperatingSystem", dataSourceName, "operating_system"),
 				),
 			},
 		},
@@ -39,15 +48,16 @@ func TestAccSSMPatchBaselineDataSource_existingBaseline(t *testing.T) {
 }
 
 func TestAccSSMPatchBaselineDataSource_newBaseline(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ssm_patch_baseline.test"
 	resourceName := "aws_ssm_patch_baseline.test"
 	rName := sdkacctest.RandomWithPrefix("tf-bl-test")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ssm.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPatchBaselineDestroy,
+		CheckDestroy:             testAccCheckPatchBaselineDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPatchBaselineDataSourceConfig_new(rName),

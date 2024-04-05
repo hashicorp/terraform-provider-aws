@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
-	"encoding/base64"
 	"fmt"
 	"strings"
 
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/vault/helper/pgpkeys"
 )
 
@@ -18,7 +21,7 @@ func retrieveGPGKey(pgpKey string) (string, error) {
 	if strings.HasPrefix(pgpKey, keybasePrefix) {
 		publicKeys, err := pgpkeys.FetchKeybasePubkeys([]string{pgpKey})
 		if err != nil {
-			return "", fmt.Errorf("Error retrieving Public Key for %s: %w", pgpKey, err)
+			return "", fmt.Errorf("retrieving Public Key (%s): %w", pgpKey, err)
 		}
 		encryptionKey = publicKeys[pgpKey]
 	}
@@ -32,8 +35,8 @@ func encryptValue(encryptionKey, value, description string) (string, string, err
 	fingerprints, encryptedValue, err :=
 		pgpkeys.EncryptShares([][]byte{[]byte(value)}, []string{encryptionKey})
 	if err != nil {
-		return "", "", fmt.Errorf("Error encrypting %s: %w", description, err)
+		return "", "", fmt.Errorf("encrypting %s: %w", description, err)
 	}
 
-	return fingerprints[0], base64.StdEncoding.EncodeToString(encryptedValue[0]), nil
+	return fingerprints[0], itypes.Base64Encode(encryptedValue[0]), nil
 }

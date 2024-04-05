@@ -1,6 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cognitoidp
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -10,22 +14,27 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceUser() *schema.Resource {
+// @SDKResource("aws_cognito_user", name="User")
+func resourceUser() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceUserCreate,
-		Read:   resourceUserRead,
-		Update: resourceUserUpdate,
-		Delete: resourceUserDelete,
+		CreateWithoutTimeout: resourceUserCreate,
+		ReadWithoutTimeout:   resourceUserRead,
+		UpdateWithoutTimeout: resourceUserUpdate,
+		DeleteWithoutTimeout: resourceUserDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: resourceUserImport,
+			StateContext: resourceUserImport,
 		},
 
 		// https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_AdminCreateUser.html
@@ -134,8 +143,9 @@ func ResourceUser() *schema.Resource {
 	}
 }
 
-func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	username := d.Get("username").(string)
 	userPoolId := d.Get("user_pool_id").(string)
@@ -181,9 +191,9 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 
 	log.Print("[DEBUG] Creating Cognito User")
 
-	resp, err := conn.AdminCreateUser(params)
+	resp, err := conn.AdminCreateUserWithContext(ctx, params)
 	if err != nil {
-		return fmt.Errorf("error creating Cognito User (%s/%s): %w", userPoolId, username, err)
+		return sdkdiag.AppendErrorf(diags, "creating Cognito User (%s/%s): %s", userPoolId, username, err)
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s", aws.StringValue(params.UserPoolId), aws.StringValue(resp.User.Username)))
@@ -194,9 +204,9 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 			UserPoolId: aws.String(d.Get("user_pool_id").(string)),
 		}
 
-		_, err := conn.AdminDisableUser(disableParams)
+		_, err := conn.AdminDisableUserWithContext(ctx, disableParams)
 		if err != nil {
-			return fmt.Errorf("error disabling Cognito User (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "disabling Cognito User (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -208,42 +218,37 @@ func resourceUserCreate(d *schema.ResourceData, meta interface{}) error {
 			Permanent:  aws.Bool(true),
 		}
 
-		_, err := conn.AdminSetUserPassword(setPasswordParams)
+		_, err := conn.AdminSetUserPasswordWithContext(ctx, setPasswordParams)
 		if err != nil {
-			return fmt.Errorf("error setting Cognito User's password (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "setting Cognito User's password (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceUserRead(d, meta)
+	return append(diags, resourceUserRead(ctx, d, meta)...)
 }
 
-func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
-	log.Println("[DEBUG] Reading Cognito User")
+	user, err := findUserByTwoPartKey(ctx, conn, d.Get("user_pool_id").(string), d.Get("username").(string))
 
-	params := &cognitoidentityprovider.AdminGetUserInput{
-		Username:   aws.String(d.Get("username").(string)),
-		UserPoolId: aws.String(d.Get("user_pool_id").(string)),
-	}
-
-	user, err := conn.AdminGetUser(params)
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeUserNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		create.LogNotFoundRemoveState(names.CognitoIDP, create.ErrActionReading, ResNameUser, d.Get("username").(string))
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.Error(names.CognitoIDP, create.ErrActionReading, ResNameUser, d.Get("username").(string), err)
+		return create.AppendDiagError(diags, names.CognitoIDP, create.ErrActionReading, ResNameUser, d.Get("username").(string), err)
 	}
 
 	if err := d.Set("attributes", flattenUserAttributes(user.UserAttributes)); err != nil {
-		return fmt.Errorf("failed setting user attributes (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting user attributes (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("mfa_setting_list", user.UserMFASettingList); err != nil {
-		return fmt.Errorf("failed setting user's mfa settings (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting user's mfa settings (%s): %s", d.Id(), err)
 	}
 
 	d.Set("preferred_mfa_setting", user.PreferredMfaSetting)
@@ -253,11 +258,12 @@ func resourceUserRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("last_modified_date", user.UserLastModifiedDate.Format(time.RFC3339))
 	d.Set("sub", retrieveUserSub(user.UserAttributes))
 
-	return nil
+	return diags
 }
 
-func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
 	log.Println("[DEBUG] Updating Cognito User")
 
@@ -278,9 +284,9 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 				params.ClientMetadata = expandUserClientMetadata(metadata)
 			}
 
-			_, err := conn.AdminUpdateUserAttributes(params)
+			_, err := conn.AdminUpdateUserAttributesWithContext(ctx, params)
 			if err != nil {
-				return fmt.Errorf("error updating Cognito User Attributes (%s): %w", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "updating Cognito User Attributes (%s): %s", d.Id(), err)
 			}
 		}
 		if len(del) > 0 {
@@ -289,9 +295,9 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 				UserPoolId:         aws.String(d.Get("user_pool_id").(string)),
 				UserAttributeNames: expandUserAttributesDelete(del),
 			}
-			_, err := conn.AdminDeleteUserAttributes(params)
+			_, err := conn.AdminDeleteUserAttributesWithContext(ctx, params)
 			if err != nil {
-				return fmt.Errorf("error updating Cognito User Attributes (%s): %w", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "updating Cognito User Attributes (%s): %s", d.Id(), err)
 			}
 		}
 	}
@@ -304,18 +310,18 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 				Username:   aws.String(d.Get("username").(string)),
 				UserPoolId: aws.String(d.Get("user_pool_id").(string)),
 			}
-			_, err := conn.AdminEnableUser(enableParams)
+			_, err := conn.AdminEnableUserWithContext(ctx, enableParams)
 			if err != nil {
-				return fmt.Errorf("error enabling Cognito User (%s): %w", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "enabling Cognito User (%s): %s", d.Id(), err)
 			}
 		} else {
 			disableParams := &cognitoidentityprovider.AdminDisableUserInput{
 				Username:   aws.String(d.Get("username").(string)),
 				UserPoolId: aws.String(d.Get("user_pool_id").(string)),
 			}
-			_, err := conn.AdminDisableUser(disableParams)
+			_, err := conn.AdminDisableUserWithContext(ctx, disableParams)
 			if err != nil {
-				return fmt.Errorf("error disabling Cognito User (%s): %w", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "disabling Cognito User (%s): %s", d.Id(), err)
 			}
 		}
 	}
@@ -331,9 +337,9 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 				Permanent:  aws.Bool(false),
 			}
 
-			_, err := conn.AdminSetUserPassword(setPasswordParams)
+			_, err := conn.AdminSetUserPasswordWithContext(ctx, setPasswordParams)
 			if err != nil {
-				return fmt.Errorf("error changing Cognito User's temporary password (%s): %w", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "changing Cognito User's temporary password (%s): %s", d.Id(), err)
 			}
 		} else {
 			d.Set("temporary_password", nil)
@@ -351,37 +357,40 @@ func resourceUserUpdate(d *schema.ResourceData, meta interface{}) error {
 				Permanent:  aws.Bool(true),
 			}
 
-			_, err := conn.AdminSetUserPassword(setPasswordParams)
+			_, err := conn.AdminSetUserPasswordWithContext(ctx, setPasswordParams)
 			if err != nil {
-				return fmt.Errorf("error changing Cognito User's password (%s): %w", d.Id(), err)
+				return sdkdiag.AppendErrorf(diags, "changing Cognito User's password (%s): %s", d.Id(), err)
 			}
 		} else {
 			d.Set("password", nil)
 		}
 	}
 
-	return resourceUserRead(d, meta)
+	return append(diags, resourceUserRead(ctx, d, meta)...)
 }
 
-func resourceUserDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CognitoIDPConn
+func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
 
-	log.Print("[DEBUG] Deleting Cognito User")
-
-	params := &cognitoidentityprovider.AdminDeleteUserInput{
+	log.Printf("[DEBUG] Deleting Cognito User: %s", d.Id())
+	_, err := conn.AdminDeleteUserWithContext(ctx, &cognitoidentityprovider.AdminDeleteUserInput{
 		Username:   aws.String(d.Get("username").(string)),
 		UserPoolId: aws.String(d.Get("user_pool_id").(string)),
+	})
+
+	if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeUserNotFoundException, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
+		return diags
 	}
 
-	_, err := conn.AdminDeleteUser(params)
 	if err != nil {
-		return fmt.Errorf("error deleting Cognito User (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Cognito User (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceUserImport(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+func resourceUserImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 	idSplit := strings.Split(d.Id(), "/")
 	if len(idSplit) != 2 {
 		return nil, errors.New("error importing Cognito User. Must specify user_pool_id/username")
@@ -391,6 +400,32 @@ func resourceUserImport(d *schema.ResourceData, meta interface{}) ([]*schema.Res
 	d.Set("user_pool_id", userPoolId)
 	d.Set("username", name)
 	return []*schema.ResourceData{d}, nil
+}
+
+func findUserByTwoPartKey(ctx context.Context, conn *cognitoidentityprovider.CognitoIdentityProvider, userPoolID, username string) (*cognitoidentityprovider.AdminGetUserOutput, error) {
+	input := &cognitoidentityprovider.AdminGetUserInput{
+		Username:   aws.String(username),
+		UserPoolId: aws.String(userPoolID),
+	}
+
+	output, err := conn.AdminGetUserWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeUserNotFoundException, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
 
 func expandAttribute(tfMap map[string]interface{}) []*cognitoidentityprovider.AttributeType {

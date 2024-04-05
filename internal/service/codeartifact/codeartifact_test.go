@@ -1,8 +1,17 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codeartifact_test
 
-import "testing"
+import (
+	"testing"
+
+	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+)
 
 func TestAccCodeArtifact_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]map[string]func(t *testing.T){
 		"AuthorizationTokenDataSource": {
 			"basic":    testAccAuthorizationTokenDataSource_basic,
@@ -10,10 +19,11 @@ func TestAccCodeArtifact_serial(t *testing.T) {
 			"owner":    testAccAuthorizationTokenDataSource_owner,
 		},
 		"Domain": {
-			"basic":                testAccDomain_basic,
-			"defaultEncryptionKey": testAccDomain_defaultEncryptionKey,
-			"disappears":           testAccDomain_disappears,
-			"tags":                 testAccDomain_tags,
+			"basic":                         testAccDomain_basic,
+			"defaultEncryptionKey":          testAccDomain_defaultEncryptionKey,
+			"disappears":                    testAccDomain_disappears,
+			"migrateAssetSizeBytesToString": testAccDomain_MigrateAssetSizeBytesToString,
+			"tags":                          testAccDomain_tags,
 		},
 		"DomainPermissionsPolicy": {
 			"basic":            testAccDomainPermissionsPolicy_basic,
@@ -44,15 +54,5 @@ func TestAccCodeArtifact_serial(t *testing.T) {
 		},
 	}
 
-	for group, m := range testCases {
-		m := m
-		t.Run(group, func(t *testing.T) {
-			for name, tc := range m {
-				tc := tc
-				t.Run(name, func(t *testing.T) {
-					tc(t)
-				})
-			}
-		})
-	}
+	acctest.RunSerialTests2Levels(t, testCases, 0)
 }

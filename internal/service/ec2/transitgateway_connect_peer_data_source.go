@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -12,10 +15,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_ec2_transit_gateway_connect_peer")
 func DataSourceTransitGatewayConnectPeer() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTransitGatewayConnectPeerRead,
@@ -33,7 +39,16 @@ func DataSourceTransitGatewayConnectPeer() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"filter": DataSourceFiltersSchema(),
+			"bgp_peer_address": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"bgp_transit_gateway_addresses": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"filter": customFiltersSchema(),
 			"inside_cidr_blocks": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -62,7 +77,9 @@ func DataSourceTransitGatewayConnectPeer() *schema.Resource {
 }
 
 func dataSourceTransitGatewayConnectPeerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeTransitGatewayConnectPeersInput{}
@@ -71,14 +88,14 @@ func dataSourceTransitGatewayConnectPeerRead(ctx context.Context, d *schema.Reso
 		input.TransitGatewayConnectPeerIds = aws.StringSlice([]string{v.(string)})
 	}
 
-	input.Filters = append(input.Filters, BuildFiltersDataSource(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 
-	transitGatewayConnectPeer, err := FindTransitGatewayConnectPeer(conn, input)
+	transitGatewayConnectPeer, err := FindTransitGatewayConnectPeer(ctx, conn, input)
 
 	if err != nil {
-		return diag.FromErr(tfresource.SingularDataSourceFindError("EC2 Transit Gateway Connect Peer", err))
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Transit Gateway Connect Peer", err))
 	}
 
 	d.SetId(aws.StringValue(transitGatewayConnectPeer.TransitGatewayConnectPeerId))
@@ -90,17 +107,22 @@ func dataSourceTransitGatewayConnectPeerRead(ctx context.Context, d *schema.Reso
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("transit-gateway-connect-peer/%s", d.Id()),
 	}.String()
+	bgpConfigurations := transitGatewayConnectPeer.ConnectPeerConfiguration.BgpConfigurations
 	d.Set("arn", arn)
-	d.Set("bgp_asn", strconv.FormatInt(aws.Int64Value(transitGatewayConnectPeer.ConnectPeerConfiguration.BgpConfigurations[0].PeerAsn), 10))
+	d.Set("bgp_asn", strconv.FormatInt(aws.Int64Value(bgpConfigurations[0].PeerAsn), 10))
+	d.Set("bgp_peer_address", bgpConfigurations[0].PeerAddress)
+	d.Set("bgp_transit_gateway_addresses", slices.ApplyToAll(bgpConfigurations, func(v *ec2.TransitGatewayAttachmentBgpConfiguration) string {
+		return aws.StringValue(v.TransitGatewayAddress)
+	}))
 	d.Set("inside_cidr_blocks", aws.StringValueSlice(transitGatewayConnectPeer.ConnectPeerConfiguration.InsideCidrBlocks))
 	d.Set("peer_address", transitGatewayConnectPeer.ConnectPeerConfiguration.PeerAddress)
 	d.Set("transit_gateway_address", transitGatewayConnectPeer.ConnectPeerConfiguration.TransitGatewayAddress)
 	d.Set("transit_gateway_attachment_id", transitGatewayConnectPeer.TransitGatewayAttachmentId)
 	d.Set("transit_gateway_connect_peer_id", transitGatewayConnectPeer.TransitGatewayConnectPeerId)
 
-	if err := d.Set("tags", KeyValueTags(transitGatewayConnectPeer.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
+	if err := d.Set("tags", KeyValueTags(ctx, transitGatewayConnectPeer.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

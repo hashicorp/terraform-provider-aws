@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_eks_cluster: Add `cluster_id` attribute and `outpost_config.control_plane_placement` argument
+```
+
+```release-note:enhancement
+data-source/aws_eks_cluster: Add `cluster_id` attribute
+```

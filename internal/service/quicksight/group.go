@@ -1,68 +1,84 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package quicksight
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+const (
+	DefaultGroupNamespace = "default"
+)
+
+// @SDKResource("aws_quicksight_group", name="Group")
 func ResourceGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceGroupCreate,
-		Read:   resourceGroupRead,
-		Update: resourceGroupUpdate,
-		Delete: resourceGroupDelete,
+		CreateWithoutTimeout: resourceGroupCreate,
+		ReadWithoutTimeout:   resourceGroupRead,
+		UpdateWithoutTimeout: resourceGroupUpdate,
+		DeleteWithoutTimeout: resourceGroupDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			return map[string]*schema.Schema{
+				"arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
 
-			"aws_account_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-			},
+				"aws_account_id": {
+					Type:     schema.TypeString,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+				},
 
-			"description": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
+				"description": {
+					Type:     schema.TypeString,
+					Optional: true,
+				},
 
-			"group_name": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+				"group_name": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
 
-			"namespace": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				Default:  "default",
-				ValidateFunc: validation.StringInSlice([]string{
-					"default",
-				}, false),
-			},
+				"namespace": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+					Default:  DefaultGroupNamespace,
+					ValidateFunc: validation.All(
+						validation.StringLenBetween(1, 63),
+						validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]*$`), "must contain only alphanumeric characters, hyphens, underscores, and periods"),
+					),
+				},
+			}
 		},
 	}
 }
 
-func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).QuickSightConn
+func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountID := meta.(*conns.AWSClient).AccountID
 	namespace := d.Get("namespace").(string)
@@ -81,22 +97,23 @@ func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
 		createOpts.Description = aws.String(v.(string))
 	}
 
-	resp, err := conn.CreateGroup(createOpts)
+	resp, err := conn.CreateGroupWithContext(ctx, createOpts)
 	if err != nil {
-		return fmt.Errorf("Error creating QuickSight Group: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating QuickSight Group: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s/%s", awsAccountID, namespace, aws.StringValue(resp.Group.GroupName)))
 
-	return resourceGroupRead(d, meta)
+	return append(diags, resourceGroupRead(ctx, d, meta)...)
 }
 
-func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).QuickSightConn
+func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountID, namespace, groupName, err := GroupParseID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading QuickSight Group (%s): %s", d.Id(), err)
 	}
 
 	descOpts := &quicksight.DescribeGroupInput{
@@ -105,14 +122,14 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 		GroupName:    aws.String(groupName),
 	}
 
-	resp, err := conn.DescribeGroup(descOpts)
+	resp, err := conn.DescribeGroupWithContext(ctx, descOpts)
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] QuickSight Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 	if err != nil {
-		return fmt.Errorf("Error describing QuickSight Group (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading QuickSight Group (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", resp.Group.Arn)
@@ -121,15 +138,16 @@ func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("description", resp.Group.Description)
 	d.Set("namespace", namespace)
 
-	return nil
+	return diags
 }
 
-func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).QuickSightConn
+func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountID, namespace, groupName, err := GroupParseID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "updating QuickSight Group (%s): %s", d.Id(), err)
 	}
 
 	updateOpts := &quicksight.UpdateGroupInput{
@@ -142,20 +160,21 @@ func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 		updateOpts.Description = aws.String(v.(string))
 	}
 
-	_, err = conn.UpdateGroup(updateOpts)
+	_, err = conn.UpdateGroupWithContext(ctx, updateOpts)
 	if err != nil {
-		return fmt.Errorf("error updating QuickSight Group %s: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating QuickSight Group %s: %s", d.Id(), err)
 	}
 
-	return resourceGroupRead(d, meta)
+	return append(diags, resourceGroupRead(ctx, d, meta)...)
 }
 
-func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).QuickSightConn
+func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).QuickSightConn(ctx)
 
 	awsAccountID, namespace, groupName, err := GroupParseID(d.Id())
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "deleting QuickSight Group (%s): %s", d.Id(), err)
 	}
 
 	deleteOpts := &quicksight.DeleteGroupInput{
@@ -164,14 +183,14 @@ func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
 		GroupName:    aws.String(groupName),
 	}
 
-	if _, err := conn.DeleteGroup(deleteOpts); err != nil {
+	if _, err := conn.DeleteGroupWithContext(ctx, deleteOpts); err != nil {
 		if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
-			return nil
+			return diags
 		}
-		return fmt.Errorf("Error deleting QuickSight Group %s: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting QuickSight Group %s: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func GroupParseID(id string) (string, string, string, error) {

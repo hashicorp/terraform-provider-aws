@@ -1,20 +1,25 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package efs
 
 import (
+	"context"
 	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/efs"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_efs_mount_target")
 func DataSourceMountTarget() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceMountTargetRead,
+		ReadWithoutTimeout: dataSourceMountTargetRead,
 
 		Schema: map[string]*schema.Schema{
 			"access_point_id": {
@@ -76,8 +81,9 @@ func DataSourceMountTarget() *schema.Resource {
 	}
 }
 
-func dataSourceMountTargetRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EFSConn
+func dataSourceMountTargetRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EFSConn(ctx)
 
 	input := &efs.DescribeMountTargetsInput{}
 
@@ -93,51 +99,42 @@ func dataSourceMountTargetRead(d *schema.ResourceData, meta interface{}) error {
 		input.MountTargetId = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Reading EFS Mount Target: %s", input)
-	output, err := conn.DescribeMountTargets(input)
+	mt, err := findMountTarget(ctx, conn, input)
 
 	if err != nil {
-		return fmt.Errorf("Error retrieving EFS Mount Target: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading EFS Mount Target: %s", err)
 	}
-
-	if len(output.MountTargets) != 1 {
-		return fmt.Errorf("Search returned %d results, please revise so only one is returned", len(output.MountTargets))
-	}
-
-	mt := output.MountTargets[0]
 
 	d.SetId(aws.StringValue(mt.MountTargetId))
-
+	fsID := aws.StringValue(mt.FileSystemId)
 	fsARN := arn.ARN{
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Partition: meta.(*conns.AWSClient).Partition,
 		Region:    meta.(*conns.AWSClient).Region,
-		Resource:  fmt.Sprintf("file-system/%s", aws.StringValue(mt.FileSystemId)),
+		Resource:  "file-system/" + fsID,
 		Service:   "elasticfilesystem",
 	}.String()
-
 	d.Set("availability_zone_id", mt.AvailabilityZoneId)
 	d.Set("availability_zone_name", mt.AvailabilityZoneName)
-	d.Set("dns_name", meta.(*conns.AWSClient).RegionalHostname(fmt.Sprintf("%s.efs", aws.StringValue(mt.FileSystemId))))
+	d.Set("dns_name", meta.(*conns.AWSClient).RegionalHostname(ctx, fsID+".efs"))
 	d.Set("file_system_arn", fsARN)
-	d.Set("file_system_id", mt.FileSystemId)
+	d.Set("file_system_id", fsID)
 	d.Set("ip_address", mt.IpAddress)
-	d.Set("mount_target_dns_name", meta.(*conns.AWSClient).RegionalHostname(fmt.Sprintf("%s.%s.efs", aws.StringValue(mt.AvailabilityZoneName), aws.StringValue(mt.FileSystemId))))
+	d.Set("mount_target_dns_name", meta.(*conns.AWSClient).RegionalHostname(ctx, fmt.Sprintf("%s.%s.efs", aws.StringValue(mt.AvailabilityZoneName), aws.StringValue(mt.FileSystemId))))
 	d.Set("mount_target_id", mt.MountTargetId)
 	d.Set("network_interface_id", mt.NetworkInterfaceId)
 	d.Set("owner_id", mt.OwnerId)
 	d.Set("subnet_id", mt.SubnetId)
 
-	sgResp, err := conn.DescribeMountTargetSecurityGroups(&efs.DescribeMountTargetSecurityGroupsInput{
+	output, err := conn.DescribeMountTargetSecurityGroupsWithContext(ctx, &efs.DescribeMountTargetSecurityGroupsInput{
 		MountTargetId: aws.String(d.Id()),
 	})
+
 	if err != nil {
-		return fmt.Errorf("reading EFS Mount Target (%s) security groups: %w", d.Id(), err)
-	}
-	err = d.Set("security_groups", flex.FlattenStringSet(sgResp.SecurityGroups))
-	if err != nil {
-		return fmt.Errorf("setting security_groups: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading EFS Mount Target (%s) security groups: %s", d.Id(), err)
 	}
 
-	return nil
+	d.Set("security_groups", aws.StringValueSlice(output.SecurityGroups))
+
+	return diags
 }

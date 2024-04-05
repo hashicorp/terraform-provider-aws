@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package tfexec
 
 import (
@@ -32,14 +35,14 @@ type printfer interface {
 // but it ignores certain environment variables that are managed within the code and prohibits
 // setting them through SetEnv:
 //
-//  - TF_APPEND_USER_AGENT
-//  - TF_IN_AUTOMATION
-//  - TF_INPUT
-//  - TF_LOG
-//  - TF_LOG_PATH
-//  - TF_REATTACH_PROVIDERS
-//  - TF_DISABLE_PLUGIN_TLS
-//  - TF_SKIP_PROVIDER_VERIFY
+//   - TF_APPEND_USER_AGENT
+//   - TF_IN_AUTOMATION
+//   - TF_INPUT
+//   - TF_LOG
+//   - TF_LOG_PATH
+//   - TF_REATTACH_PROVIDERS
+//   - TF_DISABLE_PLUGIN_TLS
+//   - TF_SKIP_PROVIDER_VERIFY
 type Terraform struct {
 	execPath           string
 	workingDir         string

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ce
 
 import (
@@ -6,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/costexplorer"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -19,7 +22,7 @@ func FindAnomalyMonitorByARN(ctx context.Context, conn *costexplorer.CostExplore
 	out, err := conn.GetAnomalyMonitorsWithContext(ctx, in)
 
 	if tfawserr.ErrCodeEquals(err, costexplorer.ErrCodeUnknownMonitorException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
@@ -45,7 +48,7 @@ func FindAnomalySubscriptionByARN(ctx context.Context, conn *costexplorer.CostEx
 	out, err := conn.GetAnomalySubscriptionsWithContext(ctx, in)
 
 	if tfawserr.ErrCodeEquals(err, costexplorer.ErrCodeUnknownMonitorException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
@@ -71,7 +74,7 @@ func FindCostAllocationTagByKey(ctx context.Context, conn *costexplorer.CostExpl
 	out, err := conn.ListCostAllocationTagsWithContext(ctx, in)
 
 	if tfawserr.ErrCodeEquals(err, costexplorer.ErrCodeUnknownMonitorException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}
@@ -96,7 +99,7 @@ func FindCostCategoryByARN(ctx context.Context, conn *costexplorer.CostExplorer,
 	out, err := conn.DescribeCostCategoryDefinitionWithContext(ctx, in)
 
 	if tfawserr.ErrCodeEquals(err, costexplorer.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
 		}

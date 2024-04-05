@@ -1,15 +1,20 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appsync
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appsync"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func StatusAPICache(conn *appsync.AppSync, name string) resource.StateRefreshFunc {
+func StatusAPICache(ctx context.Context, conn *appsync.AppSync, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindAPICacheByID(conn, name)
+		output, err := FindAPICacheByID(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -23,9 +28,9 @@ func StatusAPICache(conn *appsync.AppSync, name string) resource.StateRefreshFun
 	}
 }
 
-func statusDomainNameAPIAssociation(conn *appsync.AppSync, id string) resource.StateRefreshFunc {
+func statusDomainNameAPIAssociation(ctx context.Context, conn *appsync.AppSync, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindDomainNameAPIAssociationByID(conn, id)
+		output, err := FindDomainNameAPIAssociationByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

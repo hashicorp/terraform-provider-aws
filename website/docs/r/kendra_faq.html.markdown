@@ -20,7 +20,7 @@ resource "aws_kendra_faq" "example" {
   name     = "Example"
   role_arn = aws_iam_role.example.arn
 
-  source_s3_path {
+  s3_path {
     bucket = aws_s3_bucket.example.id
     key    = aws_s3_object.example.key
   }
@@ -40,7 +40,7 @@ resource "aws_kendra_faq" "example" {
   file_format = "CSV"
   role_arn    = aws_iam_role.example.arn
 
-  source_s3_path {
+  s3_path {
     bucket = aws_s3_bucket.example.id
     key    = aws_s3_object.example.key
   }
@@ -56,7 +56,7 @@ resource "aws_kendra_faq" "example" {
   language_code = "en"
   role_arn      = aws_iam_role.example.arn
 
-  source_s3_path {
+  s3_path {
     bucket = aws_s3_bucket.example.id
     key    = aws_s3_object.example.key
   }
@@ -84,9 +84,9 @@ The following arguments are optional:
 * `language_code` - (Optional, Forces new resource) The code for a language. This shows a supported language for the FAQ document. English is supported by default. For more information on supported languages, including their codes, see [Adding documents in languages other than English](https://docs.aws.amazon.com/kendra/latest/dg/in-adding-languages.html).
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the FAQ.
 * `created_at` - The Unix datetime that the FAQ was created.
@@ -99,15 +99,24 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `30m`)
 * `delete` - (Default `30m`)
 
 ## Import
 
-`aws_kendra_faq` can be imported using the unique identifiers of the FAQ and index separated by a slash (`/`), e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_kendra_faq` using the unique identifiers of the FAQ and index separated by a slash (`/`). For example:
 
+```terraform
+import {
+  to = aws_kendra_faq.example
+  id = "faq-123456780/idx-8012925589"
+}
 ```
-$ terraform import aws_kendra_faq.example faq-123456780/idx-8012925589
+
+Using `terraform import`, import `aws_kendra_faq` using the unique identifiers of the FAQ and index separated by a slash (`/`). For example:
+
+```console
+% terraform import aws_kendra_faq.example faq-123456780/idx-8012925589
 ```

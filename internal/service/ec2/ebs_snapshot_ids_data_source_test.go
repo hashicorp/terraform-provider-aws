@@ -1,28 +1,32 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEC2EBSSnapshotIDsDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ebs_snapshot_ids.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEBSSnapshotIdsDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "ids.#", "0"),
+					acctest.CheckResourceAttrGreaterThanValue(dataSourceName, "ids.#", 0),
 					resource.TestCheckTypeSetElemAttrPair(dataSourceName, "ids.*", "aws_ebs_snapshot.test", "id"),
 				),
 			},
@@ -31,14 +35,15 @@ func TestAccEC2EBSSnapshotIDsDataSource_basic(t *testing.T) {
 }
 
 func TestAccEC2EBSSnapshotIDsDataSource_sorted(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ebs_snapshot_ids.test"
 	resource1Name := "aws_ebs_snapshot.a"
 	resource2Name := "aws_ebs_snapshot.b"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -54,9 +59,10 @@ func TestAccEC2EBSSnapshotIDsDataSource_sorted(t *testing.T) {
 }
 
 func TestAccEC2EBSSnapshotIDsDataSource_empty(t *testing.T) {
+	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -110,7 +116,7 @@ resource "aws_ebs_volume" "test" {
 }
 
 resource "aws_ebs_snapshot" "a" {
-  volume_id   = aws_ebs_volume.test.*.id[0]
+  volume_id   = aws_ebs_volume.test[0].id
   description = %[1]q
 
   tags = {
@@ -119,7 +125,7 @@ resource "aws_ebs_snapshot" "a" {
 }
 
 resource "aws_ebs_snapshot" "b" {
-  volume_id   = aws_ebs_volume.test.*.id[1]
+  volume_id   = aws_ebs_volume.test[1].id
   description = %[1]q
 
   # We want to ensure that 'aws_ebs_snapshot.a.creation_date' is less than

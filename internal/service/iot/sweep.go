@@ -1,25 +1,26 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package iot
 
 import (
 	"fmt"
 	"log"
+	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_iot_certificate", &resource.Sweeper{
 		Name: "aws_iot_certificate",
-		F:    sweepCertifcates,
+		F:    sweepCertificates,
 		Dependencies: []string{
 			"aws_iot_policy_attachment",
 			"aws_iot_thing_principal_attachment",
@@ -76,31 +77,47 @@ func init() {
 		Name: "aws_iot_topic_rule_destination",
 		F:    sweepTopicRuleDestinations,
 	})
+
+	resource.AddTestSweepers("aws_iot_authorizer", &resource.Sweeper{
+		Name:         "aws_iot_authorizer",
+		F:            sweepAuthorizers,
+		Dependencies: []string{"aws_iot_domain_configuration"},
+	})
+
+	resource.AddTestSweepers("aws_iot_domain_configuration", &resource.Sweeper{
+		Name: "aws_iot_domain_configuration",
+		F:    sweepDomainConfigurations,
+	})
+
+	resource.AddTestSweepers("aws_iot_ca_certificate", &resource.Sweeper{
+		Name: "aws_iot_ca_certificate",
+		F:    sweepCACertificates,
+		Dependencies: []string{
+			"aws_iot_certificate",
+		},
+	})
 }
 
-func sweepCertifcates(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-
+func sweepCertificates(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-
-	conn := client.(*conns.AWSClient).IoTConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-
+	conn := client.IoTConn(ctx)
 	input := &iot.ListCertificatesInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListCertificatesPages(input, func(page *iot.ListCertificatesOutput, lastPage bool) bool {
+	err = conn.ListCertificatesPagesWithContext(ctx, input, func(page *iot.ListCertificatesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, certificate := range page.Certificates {
+		for _, v := range page.Certificates {
 			r := ResourceCertificate()
 			d := r.Data(nil)
-
-			d.SetId(aws.StringValue(certificate.CertificateId))
+			d.SetId(aws.StringValue(v.CertificateId))
+			d.Set("active", true)
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -108,403 +125,113 @@ func sweepCertifcates(region string) error {
 		return !lastPage
 	})
 
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing IoT Certificate for %s: %w", region, err))
-	}
-
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping IoT Certificate for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping IoT Certificate sweep for %s: %s", region, errs)
+	if awsv1.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping IoT Certificate sweep for %s: %s", region, err)
 		return nil
 	}
 
-	return errs.ErrorOrNil()
+	if err != nil {
+		return fmt.Errorf("error listing IoT Certificates (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping IoT Certificates (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func sweepPolicyAttachments(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-
-	conn := client.(*conns.AWSClient).IoTConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-
+	conn := client.IoTConn(ctx)
 	input := &iot.ListPoliciesInput{}
-
-	err = conn.ListPoliciesPages(input, func(page *iot.ListPoliciesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, policy := range page.Policies {
-			input := &iot.ListTargetsForPolicyInput{
-				PolicyName: policy.PolicyName,
-			}
-
-			err := conn.ListTargetsForPolicyPages(input, func(page *iot.ListTargetsForPolicyOutput, lastPage bool) bool {
-				if page == nil {
-					return !lastPage
-				}
-
-				for _, target := range page.Targets {
-					r := ResourcePolicyAttachment()
-					d := r.Data(nil)
-
-					d.SetId(fmt.Sprintf("%s|%s", aws.StringValue(policy.PolicyName), aws.StringValue(target)))
-					d.Set("policy", policy.PolicyName)
-					d.Set("target", target)
-
-					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-				}
-
-				return !lastPage
-			})
-
-			if err != nil {
-				errs = multierror.Append(errs, fmt.Errorf("error listing IoT Policy Attachment for %s: %w", region, err))
-			}
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing IoT Policy Attachment for %s: %w", region, err))
-	}
-
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping IoT Policy Attachment for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping IoT Policy Attachment sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
-}
-
-func sweepPolicies(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-
-	conn := client.(*conns.AWSClient).IoTConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-
-	input := &iot.ListPoliciesInput{}
-
-	err = conn.ListPoliciesPages(input, func(page *iot.ListPoliciesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, policy := range page.Policies {
-			r := ResourcePolicy()
-			d := r.Data(nil)
-
-			d.SetId(aws.StringValue(policy.PolicyName))
-
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing IoT Policy for %s: %w", region, err))
-	}
-
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping IoT Policy for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping IoT Policy sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
-}
-
-func sweepRoleAliases(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-
-	conn := client.(*conns.AWSClient).IoTConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-
-	input := &iot.ListRoleAliasesInput{}
-
-	err = conn.ListRoleAliasesPages(input, func(page *iot.ListRoleAliasesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, roleAlias := range page.RoleAliases {
-			r := ResourceRoleAlias()
-			d := r.Data(nil)
-
-			d.SetId(aws.StringValue(roleAlias))
-
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing IoT Role Alias for %s: %w", region, err))
-	}
-
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping IoT Role Alias for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping IoT Role Alias sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
-}
-
-func sweepThingPrincipalAttachments(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-
-	conn := client.(*conns.AWSClient).IoTConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-
-	input := &iot.ListThingsInput{}
-
-	err = conn.ListThingsPages(input, func(page *iot.ListThingsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, thing := range page.Things {
-			input := &iot.ListThingPrincipalsInput{
-				ThingName: thing.ThingName,
-			}
-
-			err := conn.ListThingPrincipalsPages(input, func(page *iot.ListThingPrincipalsOutput, lastPage bool) bool {
-				if page == nil {
-					return !lastPage
-				}
-
-				for _, principal := range page.Principals {
-					r := ResourceThingPrincipalAttachment()
-					d := r.Data(nil)
-
-					d.SetId(fmt.Sprintf("%s|%s", aws.StringValue(thing.ThingName), aws.StringValue(principal)))
-					d.Set("principal", principal)
-					d.Set("thing", thing.ThingName)
-
-					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-				}
-
-				return !lastPage
-			})
-
-			if err != nil {
-				errs = multierror.Append(errs, fmt.Errorf("error listing IoT Thing Principal Attachment for %s: %w", region, err))
-			}
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing IoT Thing Principal Attachment for %s: %w", region, err))
-	}
-
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping IoT Thing Principal Attachment for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping IoT Thing Principal Attachment sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
-}
-
-func sweepThings(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-
-	conn := client.(*conns.AWSClient).IoTConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-
-	input := &iot.ListThingsInput{}
-
-	err = conn.ListThingsPages(input, func(page *iot.ListThingsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, thing := range page.Things {
-			r := ResourceThing()
-			d := r.Data(nil)
-
-			d.SetId(aws.StringValue(thing.ThingName))
-
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing IoT Thing for %s: %w", region, err))
-	}
-
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping IoT Thing for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping IoT Thing sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
-}
-
-func sweepThingTypes(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-
-	conn := client.(*conns.AWSClient).IoTConn
-	sweepResources := make([]*sweep.SweepResource, 0)
-	var errs *multierror.Error
-
-	input := &iot.ListThingTypesInput{}
-
-	err = conn.ListThingTypesPages(input, func(page *iot.ListThingTypesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		for _, thingTypes := range page.ThingTypes {
-			r := ResourceThingType()
-			d := r.Data(nil)
-
-			d.SetId(aws.StringValue(thingTypes.ThingTypeName))
-
-			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing IoT Thing Type for %s: %w", region, err))
-	}
-
-	if err := sweep.SweepOrchestrator(sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping IoT Thing Type for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping IoT Thing Type sweep for %s: %s", region, errs)
-		return nil
-	}
-
-	return errs.ErrorOrNil()
-}
-
-func sweepTopicRules(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
-	if err != nil {
-		return fmt.Errorf("error getting client: %w", err)
-	}
-	conn := client.(*conns.AWSClient).IoTConn
-	input := &iot.ListTopicRulesInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 	var sweeperErrs *multierror.Error
 
-	for {
-		output, err := conn.ListTopicRules(input)
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping IoT Topic Rules sweep for %s: %s", region, err)
-			return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
-		}
-		if err != nil {
-			sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error retrieving IoT Topic Rules: %w", err))
-			return sweeperErrs
+	err = conn.ListPoliciesPagesWithContext(ctx, input, func(page *iot.ListPoliciesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
 
-		for _, rule := range output.Rules {
-			name := aws.StringValue(rule.RuleName)
+		for _, v := range page.Policies {
+			policyName := aws.StringValue(v.PolicyName)
+			input := &iot.ListTargetsForPolicyInput{
+				PolicyName: aws.String(policyName),
+			}
 
-			log.Printf("[INFO] Deleting IoT Topic Rule: %s", name)
-			_, err := conn.DeleteTopicRule(&iot.DeleteTopicRuleInput{
-				RuleName: aws.String(name),
+			err := conn.ListTargetsForPolicyPagesWithContext(ctx, input, func(page *iot.ListTargetsForPolicyOutput, lastPage bool) bool {
+				if page == nil {
+					return !lastPage
+				}
+
+				for _, v := range page.Targets {
+					r := ResourcePolicyAttachment()
+					d := r.Data(nil)
+					d.SetId(fmt.Sprintf("%s|%s", policyName, aws.StringValue(v)))
+					d.Set("policy", policyName)
+					d.Set("target", v)
+
+					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+				}
+
+				return !lastPage
 			})
-			if tfawserr.ErrCodeEquals(err, iot.ErrCodeUnauthorizedException) {
+
+			if awsv1.SkipSweepError(err) {
 				continue
 			}
+
 			if err != nil {
-				sweeperErr := fmt.Errorf("error deleting IoT Topic Rule (%s): %w", name, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing IoT Targets For Policy (%s): %w", region, err))
 			}
 		}
 
-		if aws.StringValue(output.NextToken) == "" {
-			break
-		}
-		input.NextToken = output.NextToken
+		return !lastPage
+	})
+
+	if awsv1.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping IoT Policy Attachment sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+	}
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing IoT Policies (%s): %w", region, err))
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping IoT Policy Attachments (%s): %w", region, err))
 	}
 
 	return sweeperErrs.ErrorOrNil()
 }
 
-func sweepThingGroups(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+func sweepPolicies(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
-		return fmt.Errorf("error getting client: %s", err)
+		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).IoTConn
-	input := &iot.ListThingGroupsInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	conn := client.IoTConn(ctx)
+	input := &iot.ListPoliciesInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListThingGroupsPages(input, func(page *iot.ListThingGroupsOutput, lastPage bool) bool {
+	err = conn.ListPoliciesPagesWithContext(ctx, input, func(page *iot.ListPoliciesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
 
-		for _, group := range page.ThingGroups {
-			r := ResourceThingGroup()
+		for _, v := range page.Policies {
+			r := ResourcePolicy()
 			d := r.Data(nil)
-			d.SetId(aws.StringValue(group.GroupName))
+			d.SetId(aws.StringValue(v.PolicyName))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -512,7 +239,297 @@ func sweepThingGroups(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping IoT Policy sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing IoT Policies (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping IoT Policies (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepRoleAliases(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.IoTConn(ctx)
+	input := &iot.ListRoleAliasesInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = conn.ListRoleAliasesPagesWithContext(ctx, input, func(page *iot.ListRoleAliasesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.RoleAliases {
+			r := ResourceRoleAlias()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if awsv1.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping Role Alias sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing Role Aliases (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping IoT Role Aliases (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepThingPrincipalAttachments(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.IoTConn(ctx)
+	input := &iot.ListThingsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+	var sweeperErrs *multierror.Error
+
+	err = conn.ListThingsPagesWithContext(ctx, input, func(page *iot.ListThingsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Things {
+			thingName := aws.StringValue(v.ThingName)
+			input := &iot.ListThingPrincipalsInput{
+				ThingName: aws.String(thingName),
+			}
+
+			err := conn.ListThingPrincipalsPagesWithContext(ctx, input, func(page *iot.ListThingPrincipalsOutput, lastPage bool) bool {
+				if page == nil {
+					return !lastPage
+				}
+
+				for _, v := range page.Principals {
+					r := ResourceThingPrincipalAttachment()
+					d := r.Data(nil)
+					d.SetId(fmt.Sprintf("%s|%s", thingName, aws.StringValue(v)))
+					d.Set("principal", v)
+					d.Set("thing", thingName)
+
+					sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+				}
+
+				return !lastPage
+			})
+
+			if awsv1.SkipSweepError(err) {
+				continue
+			}
+
+			if err != nil {
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing IoT Thing Principals (%s): %w", region, err))
+			}
+		}
+
+		return !lastPage
+	})
+
+	if awsv1.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping IoT Thing Principal Attachment sweep for %s: %s", region, err)
+		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
+	}
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing IoT Things (%s): %w", region, err))
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping IoT Thing Principal Attachments (%s): %w", region, err))
+	}
+
+	return sweeperErrs.ErrorOrNil()
+}
+
+func sweepThings(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.IoTConn(ctx)
+	input := &iot.ListThingsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = conn.ListThingsPagesWithContext(ctx, input, func(page *iot.ListThingsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Things {
+			r := ResourceThing()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.ThingName))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if awsv1.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping IoT Thing sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing IoT Things (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping IoT Things (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepThingTypes(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.IoTConn(ctx)
+	input := &iot.ListThingTypesInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = conn.ListThingTypesPagesWithContext(ctx, input, func(page *iot.ListThingTypesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.ThingTypes {
+			r := ResourceThingType()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.ThingTypeName))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if awsv1.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping IoT Thing Type sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing IoT Thing Types (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping IoT Thing Types (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepTopicRules(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.IoTConn(ctx)
+	input := &iot.ListTopicRulesInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = conn.ListTopicRulesPagesWithContext(ctx, input, func(page *iot.ListTopicRulesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Rules {
+			r := ResourceTopicRule()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.RuleName))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if awsv1.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping IoT Topic Rule sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing IoT Topic Rules (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping IoT Topic Rules (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepThingGroups(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.IoTConn(ctx)
+	input := &iot.ListThingGroupsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = conn.ListThingGroupsPagesWithContext(ctx, input, func(page *iot.ListThingGroupsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.ThingGroups {
+			r := ResourceThingGroup()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.GroupName))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping IoT Thing Group sweep for %s: %s", region, err)
 		return nil
 	}
@@ -521,7 +538,7 @@ func sweepThingGroups(region string) error {
 		return fmt.Errorf("error listing IoT Thing Groups (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping IoT Thing Groups (%s): %w", region, err)
@@ -531,15 +548,16 @@ func sweepThingGroups(region string) error {
 }
 
 func sweepTopicRuleDestinations(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).IoTConn
+	conn := client.IoTConn(ctx)
 	input := &iot.ListTopicRuleDestinationsInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	err = conn.ListTopicRuleDestinationsPages(input, func(page *iot.ListTopicRuleDestinationsOutput, lastPage bool) bool {
+	err = conn.ListTopicRuleDestinationsPagesWithContext(ctx, input, func(page *iot.ListTopicRuleDestinationsOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -555,7 +573,7 @@ func sweepTopicRuleDestinations(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping IoT Topic Rule Destination sweep for %s: %s", region, err)
 		return nil
 	}
@@ -564,10 +582,167 @@ func sweepTopicRuleDestinations(region string) error {
 		return fmt.Errorf("error listing IoT Topic Rule Destinations (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping IoT Topic Rule Destinations (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepAuthorizers(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.IoTConn(ctx)
+	input := &iot.ListAuthorizersInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = conn.ListAuthorizersPagesWithContext(ctx, input, func(page *iot.ListAuthorizersOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Authorizers {
+			r := ResourceAuthorizer()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.AuthorizerName))
+			d.Set("status", iot.AuthorizerStatusActive)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if awsv1.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping IoT Authorizer sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing IoT Authorizers (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping IoT Authorizers (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepDomainConfigurations(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.IoTConn(ctx)
+	input := &iot.ListDomainConfigurationsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = conn.ListDomainConfigurationsPagesWithContext(ctx, input, func(page *iot.ListDomainConfigurationsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.DomainConfigurations {
+			name := aws.StringValue(v.DomainConfigurationName)
+
+			if strings.HasPrefix(name, "iot:") {
+				log.Printf("[INFO] Skipping IoT Domain Configuration %s", name)
+				continue
+			}
+
+			output, err := FindDomainConfigurationByName(ctx, conn, name)
+
+			if err != nil {
+				log.Printf("[WARN] IoT Domain Configuration (%s): %s", name, err)
+				continue
+			}
+
+			if aws.StringValue(output.DomainType) == iot.DomainTypeAwsManaged && aws.StringValue(output.DomainConfigurationStatus) == iot.DomainConfigurationStatusDisabled {
+				// AWS Managed Domain Configuration must be disabled for at least 7 days before it can be deleted.
+				if output.LastStatusChangeDate.After(time.Now().AddDate(0, 0, -7)) {
+					log.Printf("[INFO] Skipping IoT Domain Configuration %s", name)
+					continue
+				}
+			}
+
+			r := ResourceDomainConfiguration()
+			d := r.Data(nil)
+			d.SetId(name)
+			d.Set("status", output.DomainConfigurationStatus)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if awsv1.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping IoT Domain Configuration sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing IoT Domain Configurations (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping IoT Domain Configurations (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepCACertificates(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %w", err)
+	}
+	conn := client.IoTConn(ctx)
+	input := &iot.ListCACertificatesInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = conn.ListCACertificatesPagesWithContext(ctx, input, func(page *iot.ListCACertificatesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Certificates {
+			r := ResourceCACertificate()
+			d := r.Data(nil)
+			d.SetId(aws.StringValue(v.CertificateId))
+			d.Set("active", true)
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if awsv1.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping IoT CA Certificate sweep for %s: %s", region, err)
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("error listing IoT CA Certificates (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping IoT CA Certificates (%s): %w", region, err)
 	}
 
 	return nil

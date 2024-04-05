@@ -1,6 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dms
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -9,21 +13,28 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_dms_event_subscription", name="Event Subscription")
+// @Tags(identifierAttribute="arn")
 func ResourceEventSubscription() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceEventSubscriptionCreate,
-		Read:   resourceEventSubscriptionRead,
-		Update: resourceEventSubscriptionUpdate,
-		Delete: resourceEventSubscriptionDelete,
+		CreateWithoutTimeout: resourceEventSubscriptionCreate,
+		ReadWithoutTimeout:   resourceEventSubscriptionRead,
+		UpdateWithoutTimeout: resourceEventSubscriptionUpdate,
+		DeleteWithoutTimeout: resourceEventSubscriptionDelete,
+
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
 			Delete: schema.DefaultTimeout(10 * time.Minute),
@@ -31,7 +42,7 @@ func ResourceEventSubscription() *schema.Resource {
 		},
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -47,7 +58,6 @@ func ResourceEventSubscription() *schema.Resource {
 			"event_categories": {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
 				Required: true,
 			},
 			"name": {
@@ -64,149 +74,74 @@ func ResourceEventSubscription() *schema.Resource {
 			"source_ids": {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-				ForceNew: true,
 				Optional: true,
+				ForceNew: true,
 			},
 			"source_type": {
 				Type:     schema.TypeString,
-				Optional: true,
-				// The API suppors modification but doing so loses all source_ids
+				Required: true,
 				ForceNew: true,
 				ValidateFunc: validation.StringInSlice([]string{
 					"replication-instance",
 					"replication-task",
 				}, false),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceEventSubscriptionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceEventSubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
-	request := &dms.CreateEventSubscriptionInput{
+	name := d.Get("name").(string)
+	input := &dms.CreateEventSubscriptionInput{
 		Enabled:          aws.Bool(d.Get("enabled").(bool)),
+		EventCategories:  flex.ExpandStringSet(d.Get("event_categories").(*schema.Set)),
 		SnsTopicArn:      aws.String(d.Get("sns_topic_arn").(string)),
-		SubscriptionName: aws.String(d.Get("name").(string)),
 		SourceType:       aws.String(d.Get("source_type").(string)),
-		Tags:             Tags(tags.IgnoreAWS()),
+		SubscriptionName: aws.String(name),
+		Tags:             getTagsIn(ctx),
 	}
 
-	if v, ok := d.GetOk("event_categories"); ok {
-		request.EventCategories = flex.ExpandStringSet(v.(*schema.Set))
+	if v, ok := d.GetOk("source_ids"); ok && v.(*schema.Set).Len() > 0 {
+		input.SourceIds = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
-	if v, ok := d.GetOk("source_ids"); ok {
-		request.SourceIds = flex.ExpandStringSet(v.(*schema.Set))
-	}
-
-	_, err := conn.CreateEventSubscription(request)
+	_, err := conn.CreateEventSubscriptionWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating DMS Event Subscription (%s): %w", d.Get("name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating DMS Event Subscription (%s): %s", name, err)
 	}
 
-	d.SetId(d.Get("name").(string))
+	d.SetId(name)
 
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"creating", "modifying"},
-		Target:     []string{"active"},
-		Refresh:    resourceEventSubscriptionStateRefreshFunc(conn, d.Id()),
-		Timeout:    d.Timeout(schema.TimeoutCreate),
-		MinTimeout: 10 * time.Second,
-		Delay:      10 * time.Second,
+	if _, err := waitEventSubscriptionCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for DMS Event Subscription (%s) create: %s", d.Id(), err)
 	}
 
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return fmt.Errorf("error waiting for DMS Event Subscription (%s) creation: %w", d.Id(), err)
-	}
-
-	return resourceEventSubscriptionRead(d, meta)
+	return append(diags, resourceEventSubscriptionRead(ctx, d, meta)...)
 }
 
-func resourceEventSubscriptionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
+func resourceEventSubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
-	if d.HasChanges("enabled", "event_categories", "sns_topic_arn", "source_type") {
-		request := &dms.ModifyEventSubscriptionInput{
-			Enabled:          aws.Bool(d.Get("enabled").(bool)),
-			SnsTopicArn:      aws.String(d.Get("sns_topic_arn").(string)),
-			SubscriptionName: aws.String(d.Get("name").(string)),
-			SourceType:       aws.String(d.Get("source_type").(string)),
-		}
+	subscription, err := FindEventSubscriptionByName(ctx, conn, d.Id())
 
-		if v, ok := d.GetOk("event_categories"); ok {
-			request.EventCategories = flex.ExpandStringSet(v.(*schema.Set))
-		}
-
-		_, err := conn.ModifyEventSubscription(request)
-
-		if err != nil {
-			return fmt.Errorf("error updating DMS Event Subscription (%s): %w", d.Id(), err)
-		}
-
-		stateConf := &resource.StateChangeConf{
-			Pending:    []string{"modifying"},
-			Target:     []string{"active"},
-			Refresh:    resourceEventSubscriptionStateRefreshFunc(conn, d.Id()),
-			Timeout:    d.Timeout(schema.TimeoutUpdate),
-			MinTimeout: 10 * time.Second,
-			Delay:      10 * time.Second,
-		}
-
-		_, err = stateConf.WaitForState()
-		if err != nil {
-			return fmt.Errorf("error waiting for DMS Event Subscription (%s) modification: %w", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating DMS Event Subscription (%s) tags: %s", d.Get("arn").(string), err)
-		}
-	}
-
-	return resourceEventSubscriptionRead(d, meta)
-}
-
-func resourceEventSubscriptionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-
-	request := &dms.DescribeEventSubscriptionsInput{
-		SubscriptionName: aws.String(d.Id()),
-	}
-
-	response, err := conn.DescribeEventSubscriptions(request)
-
-	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
-		log.Printf("[WARN] DMS event subscription (%s) not found, removing from state", d.Id())
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] DMS Event Subscription (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error reading DMS event subscription: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading DMS Event Subscription (%s): %s", d.Id(), err)
 	}
-
-	if response == nil || len(response.EventSubscriptionsList) == 0 || response.EventSubscriptionsList[0] == nil {
-		log.Printf("[WARN] DMS event subscription (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	subscription := response.EventSubscriptionsList[0]
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
@@ -216,75 +151,121 @@ func resourceEventSubscriptionRead(d *schema.ResourceData, meta interface{}) err
 		Resource:  fmt.Sprintf("es:%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
-
 	d.Set("enabled", subscription.Enabled)
-	d.Set("sns_topic_arn", subscription.SnsTopicArn)
-	d.Set("source_type", subscription.SourceType)
+	d.Set("event_categories", aws.StringValueSlice(subscription.EventCategoriesList))
 	d.Set("name", d.Id())
-	d.Set("event_categories", flex.FlattenStringList(subscription.EventCategoriesList))
-	d.Set("source_ids", flex.FlattenStringList(subscription.SourceIdsList))
+	d.Set("sns_topic_arn", subscription.SnsTopicArn)
+	d.Set("source_ids", aws.StringValueSlice(subscription.SourceIdsList))
+	d.Set("source_type", subscription.SourceType)
 
-	tags, err := ListTags(conn, arn)
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for DMS Event Subscription (%s): %s", arn, err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceEventSubscriptionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DMSConn
+func resourceEventSubscriptionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DMSConn(ctx)
 
-	request := &dms.DeleteEventSubscriptionInput{
-		SubscriptionName: aws.String(d.Id()),
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &dms.ModifyEventSubscriptionInput{
+			Enabled:          aws.Bool(d.Get("enabled").(bool)),
+			EventCategories:  flex.ExpandStringSet(d.Get("event_categories").(*schema.Set)),
+			SnsTopicArn:      aws.String(d.Get("sns_topic_arn").(string)),
+			SourceType:       aws.String(d.Get("source_type").(string)),
+			SubscriptionName: aws.String(d.Id()),
+		}
+
+		_, err := conn.ModifyEventSubscriptionWithContext(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "modifying DMS Event Subscription (%s): %s", d.Id(), err)
+		}
+
+		if _, err := waitEventSubscriptionUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for DMS Event Subscription (%s) update: %s", d.Id(), err)
+		}
 	}
 
-	_, err := conn.DeleteEventSubscription(request)
+	return append(diags, resourceEventSubscriptionRead(ctx, d, meta)...)
+}
+
+func resourceEventSubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DMSConn(ctx)
+
+	log.Printf("[DEBUG] Deleting DMS Event Subscription: %s", d.Id())
+	_, err := conn.DeleteEventSubscriptionWithContext(ctx, &dms.DeleteEventSubscriptionInput{
+		SubscriptionName: aws.String(d.Id()),
+	})
 
 	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting DMS Event Subscription (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting DMS Event Subscription (%s): %s", d.Id(), err)
 	}
 
-	stateConf := &resource.StateChangeConf{
-		Pending:    []string{"deleting"},
-		Target:     []string{},
-		Refresh:    resourceEventSubscriptionStateRefreshFunc(conn, d.Id()),
-		Timeout:    d.Timeout(schema.TimeoutDelete),
-		MinTimeout: 10 * time.Second,
-		Delay:      10 * time.Second,
+	if _, err := waitEventSubscriptionDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for DMS Event Subscription (%s) delete: %s", d.Id(), err)
 	}
 
-	_, err = stateConf.WaitForState()
-	if err != nil {
-		return fmt.Errorf("error waiting for DMS Event Subscription (%s) deletion: %w", d.Id(), err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceEventSubscriptionStateRefreshFunc(conn *dms.DatabaseMigrationService, name string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		v, err := conn.DescribeEventSubscriptions(&dms.DescribeEventSubscriptionsInput{
-			SubscriptionName: aws.String(name),
-		})
+func FindEventSubscriptionByName(ctx context.Context, conn *dms.DatabaseMigrationService, name string) (*dms.EventSubscription, error) {
+	input := &dms.DescribeEventSubscriptionsInput{
+		SubscriptionName: aws.String(name),
+	}
 
-		if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
+	return findEventSubscription(ctx, conn, input)
+}
+
+func findEventSubscription(ctx context.Context, conn *dms.DatabaseMigrationService, input *dms.DescribeEventSubscriptionsInput) (*dms.EventSubscription, error) {
+	output, err := findEventSubscriptions(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findEventSubscriptions(ctx context.Context, conn *dms.DatabaseMigrationService, input *dms.DescribeEventSubscriptionsInput) ([]*dms.EventSubscription, error) {
+	var output []*dms.EventSubscription
+
+	err := conn.DescribeEventSubscriptionsPagesWithContext(ctx, input, func(page *dms.DescribeEventSubscriptionsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.EventSubscriptionsList {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
+
+	if tfawserr.ErrCodeEquals(err, dms.ErrCodeResourceNotFoundFault) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func statusEventSubscription(ctx context.Context, conn *dms.DatabaseMigrationService, name string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindEventSubscriptionByName(ctx, conn, name)
+
+		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
 
@@ -292,10 +273,63 @@ func resourceEventSubscriptionStateRefreshFunc(conn *dms.DatabaseMigrationServic
 			return nil, "", err
 		}
 
-		if v == nil || len(v.EventSubscriptionsList) == 0 || v.EventSubscriptionsList[0] == nil {
-			return nil, "", nil
-		}
-
-		return v, aws.StringValue(v.EventSubscriptionsList[0].Status), nil
+		return output, aws.StringValue(output.Status), nil
 	}
+}
+
+func waitEventSubscriptionCreated(ctx context.Context, conn *dms.DatabaseMigrationService, name string, timeout time.Duration) (*dms.EventSubscription, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{eventSubscriptionStatusCreating, eventSubscriptionStatusModifying},
+		Target:     []string{eventSubscriptionStatusActive},
+		Refresh:    statusEventSubscription(ctx, conn, name),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*dms.EventSubscription); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitEventSubscriptionUpdated(ctx context.Context, conn *dms.DatabaseMigrationService, name string, timeout time.Duration) (*dms.EventSubscription, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{eventSubscriptionStatusModifying},
+		Target:     []string{eventSubscriptionStatusActive},
+		Refresh:    statusEventSubscription(ctx, conn, name),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*dms.EventSubscription); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitEventSubscriptionDeleted(ctx context.Context, conn *dms.DatabaseMigrationService, name string, timeout time.Duration) (*dms.EventSubscription, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{eventSubscriptionStatusDeleting},
+		Target:     []string{},
+		Refresh:    statusEventSubscription(ctx, conn, name),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      10 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*dms.EventSubscription); ok {
+		return output, err
+	}
+
+	return nil, err
 }

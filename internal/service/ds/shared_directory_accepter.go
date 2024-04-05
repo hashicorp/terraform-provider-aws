@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ds
 
 import (
@@ -21,14 +24,15 @@ const (
 	ResNameSharedDirectoryAccepter = "Shared Directory Accepter"
 )
 
+// @SDKResource("aws_directory_service_shared_directory_accepter")
 func ResourceSharedDirectoryAccepter() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceSharedDirectoryAccepterCreate,
-		ReadContext:   resourceSharedDirectoryAccepterRead,
-		DeleteContext: resourceSharedDirectoryAccepterDelete,
+		CreateWithoutTimeout: resourceSharedDirectoryAccepterCreate,
+		ReadWithoutTimeout:   resourceSharedDirectoryAccepterRead,
+		DeleteWithoutTimeout: resourceSharedDirectoryAccepterDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -63,7 +67,9 @@ func ResourceSharedDirectoryAccepter() *schema.Resource {
 }
 
 func resourceSharedDirectoryAccepterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DSConn
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).DSConn(ctx)
 
 	input := directoryservice.AcceptSharedDirectoryInput{
 		SharedDirectoryId: aws.String(d.Get("shared_directory_id").(string)),
@@ -74,11 +80,11 @@ func resourceSharedDirectoryAccepterCreate(ctx context.Context, d *schema.Resour
 	output, err := conn.AcceptSharedDirectoryWithContext(ctx, &input)
 
 	if err != nil {
-		return create.DiagError(names.DS, create.ErrActionCreating, ResNameSharedDirectoryAccepter, d.Get("shared_directory_id").(string), err)
+		return create.AppendDiagError(diags, names.DS, create.ErrActionCreating, ResNameSharedDirectoryAccepter, d.Get("shared_directory_id").(string), err)
 	}
 
 	if output == nil || output.SharedDirectory == nil {
-		return create.DiagError(names.DS, create.ErrActionCreating, ResNameSharedDirectoryAccepter, d.Get("shared_directory_id").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.DS, create.ErrActionCreating, ResNameSharedDirectoryAccepter, d.Get("shared_directory_id").(string), errors.New("empty output"))
 	}
 
 	d.SetId(d.Get("shared_directory_id").(string))
@@ -88,19 +94,21 @@ func resourceSharedDirectoryAccepterCreate(ctx context.Context, d *schema.Resour
 	_, err = waitDirectoryShared(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
-		return create.DiagError(names.DS, create.ErrActionWaitingForCreation, ResNameSharedDirectoryAccepter, d.Id(), err)
+		return create.AppendDiagError(diags, names.DS, create.ErrActionWaitingForCreation, ResNameSharedDirectoryAccepter, d.Id(), err)
 	}
 
-	return resourceSharedDirectoryAccepterRead(ctx, d, meta)
+	return append(diags, resourceSharedDirectoryAccepterRead(ctx, d, meta)...)
 }
 
 func resourceSharedDirectoryAccepterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DSConn
+	var diags diag.Diagnostics
 
-	dir, err := FindDirectoryByID(conn, d.Id())
+	conn := meta.(*conns.AWSClient).DSConn(ctx)
+
+	dir, err := FindDirectoryByID(ctx, conn, d.Id())
 
 	if err != nil {
-		return create.DiagError(names.DS, create.ErrActionReading, ResNameSharedDirectoryAccepter, d.Id(), err)
+		return create.AppendDiagError(diags, names.DS, create.ErrActionReading, ResNameSharedDirectoryAccepter, d.Id(), err)
 	}
 
 	d.Set("method", dir.ShareMethod)
@@ -108,30 +116,32 @@ func resourceSharedDirectoryAccepterRead(ctx context.Context, d *schema.Resource
 	d.Set("owner_directory_id", dir.OwnerDirectoryDescription.DirectoryId)
 	d.Set("shared_directory_id", dir.DirectoryId)
 
-	return nil
+	return diags
 }
 
 func resourceSharedDirectoryAccepterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DSConn
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).DSConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Directory Service Directory: %s", d.Id())
-	_, err := tfresource.RetryWhenAWSErrMessageContains(directoryApplicationDeauthorizedPropagationTimeout, func() (interface{}, error) {
-		return conn.DeleteDirectory(&directoryservice.DeleteDirectoryInput{
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, directoryApplicationDeauthorizedPropagationTimeout, func() (interface{}, error) {
+		return conn.DeleteDirectoryWithContext(ctx, &directoryservice.DeleteDirectoryInput{
 			DirectoryId: aws.String(d.Id()),
 		})
 	}, directoryservice.ErrCodeClientException, "authorized applications")
 
 	if tfawserr.ErrCodeEquals(err, directoryservice.ErrCodeEntityDoesNotExistException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.DS, create.ErrActionDeleting, ResNameSharedDirectoryAccepter, d.Id(), err)
+		return create.AppendDiagError(diags, names.DS, create.ErrActionDeleting, ResNameSharedDirectoryAccepter, d.Id(), err)
 	}
 
-	if _, err := waitDirectoryDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return create.DiagError(names.DS, create.ErrActionWaitingForDeletion, ResNameSharedDirectoryAccepter, d.Id(), err)
+	if _, err := waitDirectoryDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return create.AppendDiagError(diags, names.DS, create.ErrActionWaitingForDeletion, ResNameSharedDirectoryAccepter, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

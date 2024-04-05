@@ -1,15 +1,20 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshiftserverless
 
 import (
+	"context"
+
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshiftserverless"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func statusNamespace(conn *redshiftserverless.RedshiftServerless, name string) resource.StateRefreshFunc {
+func statusNamespace(ctx context.Context, conn *redshiftserverless.RedshiftServerless, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindNamespaceByName(conn, name)
+		output, err := findNamespaceByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -23,25 +28,9 @@ func statusNamespace(conn *redshiftserverless.RedshiftServerless, name string) r
 	}
 }
 
-func statusWorkgroup(conn *redshiftserverless.RedshiftServerless, name string) resource.StateRefreshFunc {
+func statusEndpointAccess(ctx context.Context, conn *redshiftserverless.RedshiftServerless, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindWorkgroupByName(conn, name)
-
-		if tfresource.NotFound(err) {
-			return nil, "", nil
-		}
-
-		if err != nil {
-			return nil, "", err
-		}
-
-		return output, aws.StringValue(output.Status), nil
-	}
-}
-
-func statusEndpointAccess(conn *redshiftserverless.RedshiftServerless, name string) resource.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		output, err := FindEndpointAccessByName(conn, name)
+		output, err := findEndpointAccessByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -52,5 +41,21 @@ func statusEndpointAccess(conn *redshiftserverless.RedshiftServerless, name stri
 		}
 
 		return output, aws.StringValue(output.EndpointStatus), nil
+	}
+}
+
+func statusSnapshot(ctx context.Context, conn *redshiftserverless.RedshiftServerless, name string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findSnapshotByName(ctx, conn, name)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
 	}
 }

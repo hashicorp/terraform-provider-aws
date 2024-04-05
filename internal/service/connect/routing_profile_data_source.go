@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect
 
 import (
@@ -10,12 +13,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_connect_routing_profile")
 func DataSourceRoutingProfile() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceRoutingProfileRead,
+		ReadWithoutTimeout: dataSourceRoutingProfileRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -100,7 +105,9 @@ func DataSourceRoutingProfile() *schema.Resource {
 }
 
 func dataSourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ConnectConn
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	instanceID := d.Get("instance_id").(string)
@@ -116,11 +123,11 @@ func dataSourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, m
 		routingProfileSummary, err := dataSourceGetRoutingProfileSummaryByName(ctx, conn, instanceID, name)
 
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error finding Connect Routing Profile Summary by name (%s): %w", name, err))
+			return sdkdiag.AppendErrorf(diags, "finding Connect Routing Profile Summary by name (%s): %s", name, err)
 		}
 
 		if routingProfileSummary == nil {
-			return diag.FromErr(fmt.Errorf("error finding Connect Routing Profile Summary by name (%s): not found", name))
+			return sdkdiag.AppendErrorf(diags, "finding Connect Routing Profile Summary by name (%s): not found", name)
 		}
 
 		input.RoutingProfileId = routingProfileSummary.Id
@@ -129,17 +136,17 @@ func dataSourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, m
 	resp, err := conn.DescribeRoutingProfileWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect Routing Profile: %w", err))
+		return sdkdiag.AppendErrorf(diags, "getting Connect Routing Profile: %s", err)
 	}
 
 	if resp == nil || resp.RoutingProfile == nil {
-		return diag.FromErr(fmt.Errorf("error getting Connect Routing Profile: empty response"))
+		return sdkdiag.AppendErrorf(diags, "getting Connect Routing Profile: empty response")
 	}
 
 	routingProfile := resp.RoutingProfile
 
 	if err := d.Set("media_concurrencies", flattenRoutingProfileMediaConcurrencies(routingProfile.MediaConcurrencies)); err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	d.Set("arn", routingProfile.RoutingProfileArn)
@@ -153,18 +160,18 @@ func dataSourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, m
 	queueConfigs, err := getRoutingProfileQueueConfigs(ctx, conn, instanceID, *routingProfile.RoutingProfileId)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error finding Connect Routing Profile Queue Configs Summary by Routing Profile ID (%s): %w", *routingProfile.RoutingProfileId, err))
+		return sdkdiag.AppendErrorf(diags, "finding Connect Routing Profile Queue Configs Summary by Routing Profile ID (%s): %s", *routingProfile.RoutingProfileId, err)
 	}
 
 	d.Set("queue_configs", queueConfigs)
 
-	if err := d.Set("tags", KeyValueTags(routingProfile.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting tags: %s", err))
+	if err := d.Set("tags", KeyValueTags(ctx, routingProfile.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(routingProfile.RoutingProfileId)))
 
-	return nil
+	return diags
 }
 
 func dataSourceGetRoutingProfileSummaryByName(ctx context.Context, conn *connect.Connect, instanceID, name string) (*connect.RoutingProfileSummary, error) {

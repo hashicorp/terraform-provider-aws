@@ -1,32 +1,41 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package backup
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/backup"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_backup_report_plan", name="Report Plan")
+// @Tags(identifierAttribute="arn")
 func ResourceReportPlan() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceReportPlanCreate,
-		Read:   resourceReportPlanRead,
-		Update: resourceReportPlanUpdate,
-		Delete: resourceReportPlanDelete,
+		CreateWithoutTimeout: resourceReportPlanCreate,
+		ReadWithoutTimeout:   resourceReportPlanRead,
+		UpdateWithoutTimeout: resourceReportPlanUpdate,
+		DeleteWithoutTimeout: resourceReportPlanDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -84,6 +93,13 @@ func ResourceReportPlan() *schema.Resource {
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"accounts": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
 						"framework_arns": {
 							Type:     schema.TypeSet,
 							Optional: true,
@@ -95,6 +111,20 @@ func ResourceReportPlan() *schema.Resource {
 							Type:     schema.TypeInt,
 							Optional: true,
 						},
+						"organization_units": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
+						"regions": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Elem: &schema.Schema{
+								Type: schema.TypeString,
+							},
+						},
 						// A report plan template cannot be updated
 						"report_template": {
 							Type:         schema.TypeString,
@@ -105,24 +135,24 @@ func ResourceReportPlan() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceReportPlanCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceReportPlanCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &backup.CreateReportPlanInput{
-		IdempotencyToken:      aws.String(resource.UniqueId()),
+		IdempotencyToken:      aws.String(id.UniqueId()),
 		ReportDeliveryChannel: expandReportDeliveryChannel(d.Get("report_delivery_channel").([]interface{})),
 		ReportPlanName:        aws.String(name),
+		ReportPlanTags:        getTagsIn(ctx),
 		ReportSetting:         expandReportSetting(d.Get("report_setting").([]interface{})),
 	}
 
@@ -130,42 +160,36 @@ func resourceReportPlanCreate(d *schema.ResourceData, meta interface{}) error {
 		input.ReportPlanDescription = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		input.ReportPlanTags = Tags(tags.IgnoreAWS())
-	}
-
-	log.Printf("[DEBUG] Creating Backup Report Plan: %s", input)
-	output, err := conn.CreateReportPlan(input)
+	output, err := conn.CreateReportPlanWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Backup Report Plan (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Backup Report Plan (%s): %s", name, err)
 	}
 
 	// Set ID with the name since the name is unique for the report plan.
 	d.SetId(aws.StringValue(output.ReportPlanName))
 
-	if _, err := waitReportPlanCreated(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for Backup Report Plan (%s) create: %w", d.Id(), err)
+	if _, err := waitReportPlanCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Backup Report Plan (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceReportPlanRead(d, meta)
+	return append(diags, resourceReportPlanRead(ctx, d, meta)...)
 }
 
-func resourceReportPlanRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceReportPlanRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
-	reportPlan, err := FindReportPlanByName(conn, d.Id())
+	reportPlan, err := FindReportPlanByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Backup Report Plan %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Backup Report Plan (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Backup Report Plan (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", reportPlan.ReportPlanArn)
@@ -175,39 +199,23 @@ func resourceReportPlanRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", reportPlan.ReportPlanName)
 
 	if err := d.Set("report_delivery_channel", flattenReportDeliveryChannel(reportPlan.ReportDeliveryChannel)); err != nil {
-		return fmt.Errorf("error setting report_delivery_channel: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting report_delivery_channel: %s", err)
 	}
 
 	if err := d.Set("report_setting", flattenReportSetting(reportPlan.ReportSetting)); err != nil {
-		return fmt.Errorf("error setting report_setting: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting report_setting: %s", err)
 	}
 
-	tags, err := ListTags(conn, d.Get("arn").(string))
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for Backup Report Plan (%s): %w", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceReportPlanUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
+func resourceReportPlanUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
-	if d.HasChangesExcept("tags_all", "tags") {
+	if d.HasChangesExcept("tags", "tags_all") {
 		input := &backup.UpdateReportPlanInput{
-			IdempotencyToken:      aws.String(resource.UniqueId()),
+			IdempotencyToken:      aws.String(id.UniqueId()),
 			ReportDeliveryChannel: expandReportDeliveryChannel(d.Get("report_delivery_channel").([]interface{})),
 			ReportPlanDescription: aws.String(d.Get("description").(string)),
 			ReportPlanName:        aws.String(d.Id()),
@@ -215,45 +223,38 @@ func resourceReportPlanUpdate(d *schema.ResourceData, meta interface{}) error {
 		}
 
 		log.Printf("[DEBUG] Updating Backup Report Plan: %s", input)
-		_, err := conn.UpdateReportPlan(input)
+		_, err := conn.UpdateReportPlanWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error updating Backup Report Plan (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Backup Report Plan (%s): %s", d.Id(), err)
 		}
 
-		if _, err := waitReportPlanUpdated(conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return fmt.Errorf("error waiting for Backup Report Plan (%s) update: %w", d.Id(), err)
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags for Backup Report Plan (%s): %w", d.Id(), err)
+		if _, err := waitReportPlanUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Backup Report Plan (%s) update: %s", d.Id(), err)
 		}
 	}
 
-	return resourceReportPlanRead(d, meta)
+	return append(diags, resourceReportPlanRead(ctx, d, meta)...)
 }
 
-func resourceReportPlanDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).BackupConn
+func resourceReportPlanDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).BackupConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Backup Report Plan: %s", d.Id())
-	_, err := conn.DeleteReportPlan(&backup.DeleteReportPlanInput{
+	_, err := conn.DeleteReportPlanWithContext(ctx, &backup.DeleteReportPlanInput{
 		ReportPlanName: aws.String(d.Id()),
 	})
 
 	if err != nil {
-		return fmt.Errorf("error deleting Backup Report Plan (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Backup Report Plan (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitReportPlanDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return fmt.Errorf("error waiting for Backup Report Plan (%s) delete: %w", d.Id(), err)
+	if _, err := waitReportPlanDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Backup Report Plan (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandReportDeliveryChannel(reportDeliveryChannel []interface{}) *backup.ReportDeliveryChannel {
@@ -295,12 +296,24 @@ func expandReportSetting(reportSetting []interface{}) *backup.ReportSetting {
 		ReportTemplate: aws.String(tfMap["report_template"].(string)),
 	}
 
+	if v, ok := tfMap["accounts"]; ok && v.(*schema.Set).Len() > 0 {
+		result.Accounts = flex.ExpandStringSet(v.(*schema.Set))
+	}
+
 	if v, ok := tfMap["framework_arns"]; ok && v.(*schema.Set).Len() > 0 {
 		result.FrameworkArns = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	if v, ok := tfMap["number_of_frameworks"].(int); ok && v > 0 {
 		result.NumberOfFrameworks = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["organization_units"]; ok && v.(*schema.Set).Len() > 0 {
+		result.OrganizationUnits = flex.ExpandStringSet(v.(*schema.Set))
+	}
+
+	if v, ok := tfMap["regions"]; ok && v.(*schema.Set).Len() > 0 {
+		result.Regions = flex.ExpandStringSet(v.(*schema.Set))
 	}
 
 	return result
@@ -335,6 +348,10 @@ func flattenReportSetting(reportSetting *backup.ReportSetting) []interface{} {
 		"report_template": aws.StringValue(reportSetting.ReportTemplate),
 	}
 
+	if reportSetting.Accounts != nil && len(reportSetting.Accounts) > 0 {
+		values["accounts"] = flex.FlattenStringSet(reportSetting.Accounts)
+	}
+
 	if reportSetting.FrameworkArns != nil && len(reportSetting.FrameworkArns) > 0 {
 		values["framework_arns"] = flex.FlattenStringSet(reportSetting.FrameworkArns)
 	}
@@ -343,18 +360,26 @@ func flattenReportSetting(reportSetting *backup.ReportSetting) []interface{} {
 		values["number_of_frameworks"] = aws.Int64Value(reportSetting.NumberOfFrameworks)
 	}
 
+	if reportSetting.OrganizationUnits != nil && len(reportSetting.OrganizationUnits) > 0 {
+		values["organization_units"] = flex.FlattenStringSet(reportSetting.OrganizationUnits)
+	}
+
+	if reportSetting.Regions != nil && len(reportSetting.Regions) > 0 {
+		values["regions"] = flex.FlattenStringSet(reportSetting.Regions)
+	}
+
 	return []interface{}{values}
 }
 
-func FindReportPlanByName(conn *backup.Backup, name string) (*backup.ReportPlan, error) {
+func FindReportPlanByName(ctx context.Context, conn *backup.Backup, name string) (*backup.ReportPlan, error) {
 	input := &backup.DescribeReportPlanInput{
 		ReportPlanName: aws.String(name),
 	}
 
-	output, err := conn.DescribeReportPlan(input)
+	output, err := conn.DescribeReportPlanWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, backup.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
@@ -371,9 +396,9 @@ func FindReportPlanByName(conn *backup.Backup, name string) (*backup.ReportPlan,
 	return output.ReportPlan, nil
 }
 
-func statusReportPlanDeployment(conn *backup.Backup, name string) resource.StateRefreshFunc {
+func statusReportPlanDeployment(ctx context.Context, conn *backup.Backup, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindReportPlanByName(conn, name)
+		output, err := FindReportPlanByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -387,15 +412,15 @@ func statusReportPlanDeployment(conn *backup.Backup, name string) resource.State
 	}
 }
 
-func waitReportPlanCreated(conn *backup.Backup, name string, timeout time.Duration) (*backup.ReportPlan, error) {
-	stateConf := &resource.StateChangeConf{
+func waitReportPlanCreated(ctx context.Context, conn *backup.Backup, name string, timeout time.Duration) (*backup.ReportPlan, error) {
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{reportPlanDeploymentStatusCreateInProgress},
 		Target:  []string{reportPlanDeploymentStatusCompleted},
 		Timeout: timeout,
-		Refresh: statusReportPlanDeployment(conn, name),
+		Refresh: statusReportPlanDeployment(ctx, conn, name),
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*backup.ReportPlan); ok {
 		return output, err
@@ -404,15 +429,15 @@ func waitReportPlanCreated(conn *backup.Backup, name string, timeout time.Durati
 	return nil, err
 }
 
-func waitReportPlanDeleted(conn *backup.Backup, name string, timeout time.Duration) (*backup.ReportPlan, error) {
-	stateConf := &resource.StateChangeConf{
+func waitReportPlanDeleted(ctx context.Context, conn *backup.Backup, name string, timeout time.Duration) (*backup.ReportPlan, error) {
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{reportPlanDeploymentStatusDeleteInProgress},
 		Target:  []string{},
 		Timeout: timeout,
-		Refresh: statusReportPlanDeployment(conn, name),
+		Refresh: statusReportPlanDeployment(ctx, conn, name),
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*backup.ReportPlan); ok {
 		return output, err
@@ -421,15 +446,15 @@ func waitReportPlanDeleted(conn *backup.Backup, name string, timeout time.Durati
 	return nil, err
 }
 
-func waitReportPlanUpdated(conn *backup.Backup, name string, timeout time.Duration) (*backup.ReportPlan, error) {
-	stateConf := &resource.StateChangeConf{
+func waitReportPlanUpdated(ctx context.Context, conn *backup.Backup, name string, timeout time.Duration) (*backup.ReportPlan, error) {
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{reportPlanDeploymentStatusUpdateInProgress},
 		Target:  []string{reportPlanDeploymentStatusCompleted},
 		Timeout: timeout,
-		Refresh: statusReportPlanDeployment(conn, name),
+		Refresh: statusReportPlanDeployment(ctx, conn, name),
 	}
 
-	outputRaw, err := stateConf.WaitForState()
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*backup.ReportPlan); ok {
 		return output, err

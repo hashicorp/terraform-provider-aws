@@ -32,8 +32,7 @@ resource "aws_ebs_snapshot_import" "example" {
 
 ## Argument Reference
 
-
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `client_data` - (Optional) The client-specific data. Detailed below.
 * `description` - (Optional) The description string for the import snapshot task.
@@ -67,14 +66,14 @@ The following arguments are supported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `create` - (Default `60m`)
 - `delete` - (Default `10m`)
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the EBS Snapshot.
 * `id` - The snapshot ID (e.g., snap-59fcb34e).

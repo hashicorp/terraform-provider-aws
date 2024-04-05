@@ -1,23 +1,29 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package events_test
 
 import (
+	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/eventbridge"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfevents "github.com/hashicorp/terraform-provider-aws/internal/service/events"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-const uuidRegex = "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+const uuidRegex = "[0-9A-Fa-f]{8}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}$"
 
 func TestAccEventsAPIDestination_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v1, v2, v3 eventbridge.DescribeApiDestinationOutput
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	invocationEndpoint := "https://example.com/"
@@ -30,10 +36,10 @@ func TestAccEventsAPIDestination_basic(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_api_destination.basic"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAPIDestinationDestroy,
+		CheckDestroy:             testAccCheckAPIDestinationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIDestinationConfig_basic(
@@ -42,9 +48,9 @@ func TestAccEventsAPIDestination_basic(t *testing.T) {
 					httpMethod,
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIDestinationExists(resourceName, &v1),
+					testAccCheckAPIDestinationExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf("api-destination/%s/%s", name, uuidRegex))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexache.MustCompile(fmt.Sprintf("api-destination/%s/%s", name, uuidRegex))),
 					resource.TestCheckResourceAttr(resourceName, "http_method", httpMethod),
 					resource.TestCheckResourceAttr(resourceName, "invocation_endpoint", invocationEndpoint),
 				),
@@ -61,9 +67,9 @@ func TestAccEventsAPIDestination_basic(t *testing.T) {
 					httpMethodModified,
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIDestinationExists(resourceName, &v2),
+					testAccCheckAPIDestinationExists(ctx, resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "name", nameModified),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexp.MustCompile(fmt.Sprintf("api-destination/%s/%s", nameModified, uuidRegex))),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "events", regexache.MustCompile(fmt.Sprintf("api-destination/%s/%s", nameModified, uuidRegex))),
 					testAccCheckAPIDestinationRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "http_method", httpMethodModified),
 					resource.TestCheckResourceAttr(resourceName, "invocation_endpoint", invocationEndpointModified),
@@ -76,7 +82,7 @@ func TestAccEventsAPIDestination_basic(t *testing.T) {
 					httpMethodModified,
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIDestinationExists(resourceName, &v3),
+					testAccCheckAPIDestinationExists(ctx, resourceName, &v3),
 					testAccCheckAPIDestinationNotRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, "http_method", httpMethodModified),
 					resource.TestCheckResourceAttr(resourceName, "invocation_endpoint", invocationEndpointModified),
@@ -87,6 +93,7 @@ func TestAccEventsAPIDestination_basic(t *testing.T) {
 }
 
 func TestAccEventsAPIDestination_optional(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v1, v2, v3 eventbridge.DescribeApiDestinationOutput
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	invocationEndpoint := "https://example.com/"
@@ -103,10 +110,10 @@ func TestAccEventsAPIDestination_optional(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_api_destination.optional"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAPIDestinationDestroy,
+		CheckDestroy:             testAccCheckAPIDestinationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIDestinationConfig_optional(
@@ -117,7 +124,7 @@ func TestAccEventsAPIDestination_optional(t *testing.T) {
 					int64(invocationRateLimitPerSecond),
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIDestinationExists(resourceName, &v1),
+					testAccCheckAPIDestinationExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "name", name),
 					resource.TestCheckResourceAttr(resourceName, "http_method", httpMethod),
 					resource.TestCheckResourceAttr(resourceName, "invocation_endpoint", invocationEndpoint),
@@ -139,7 +146,7 @@ func TestAccEventsAPIDestination_optional(t *testing.T) {
 					int64(invocationRateLimitPerSecondModified),
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIDestinationExists(resourceName, &v2),
+					testAccCheckAPIDestinationExists(ctx, resourceName, &v2),
 					testAccCheckAPIDestinationRecreated(&v1, &v2),
 					resource.TestCheckResourceAttr(resourceName, "name", nameModified),
 					resource.TestCheckResourceAttr(resourceName, "http_method", httpMethodModified),
@@ -157,7 +164,7 @@ func TestAccEventsAPIDestination_optional(t *testing.T) {
 					int64(invocationRateLimitPerSecond),
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIDestinationExists(resourceName, &v3),
+					testAccCheckAPIDestinationExists(ctx, resourceName, &v3),
 					testAccCheckAPIDestinationNotRecreated(&v2, &v3),
 					resource.TestCheckResourceAttr(resourceName, "name", nameModified),
 					resource.TestCheckResourceAttr(resourceName, "http_method", httpMethodModified),
@@ -171,6 +178,7 @@ func TestAccEventsAPIDestination_optional(t *testing.T) {
 }
 
 func TestAccEventsAPIDestination_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v eventbridge.DescribeApiDestinationOutput
 	name := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	invocationEndpoint := "https://example.com/"
@@ -179,10 +187,10 @@ func TestAccEventsAPIDestination_disappears(t *testing.T) {
 	resourceName := "aws_cloudwatch_event_api_destination.basic"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAPIDestinationDestroy,
+		CheckDestroy:             testAccCheckAPIDestinationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAPIDestinationConfig_basic(
@@ -191,8 +199,8 @@ func TestAccEventsAPIDestination_disappears(t *testing.T) {
 					httpMethod,
 				),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAPIDestinationExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfevents.ResourceAPIDestination(), resourceName),
+					testAccCheckAPIDestinationExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfevents.ResourceAPIDestination(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -200,40 +208,42 @@ func TestAccEventsAPIDestination_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAPIDestinationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn
+func testAccCheckAPIDestinationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_cloudwatch_event_api_destination" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_cloudwatch_event_api_destination" {
+				continue
+			}
+
+			params := eventbridge.DescribeApiDestinationInput{
+				Name: aws.String(rs.Primary.ID),
+			}
+
+			resp, err := conn.DescribeApiDestinationWithContext(ctx, &params)
+
+			if err == nil {
+				return fmt.Errorf("EventBridge API Destination (%s) still exists: %s", rs.Primary.ID, resp)
+			}
 		}
 
-		params := eventbridge.DescribeApiDestinationInput{
-			Name: aws.String(rs.Primary.ID),
-		}
-
-		resp, err := conn.DescribeApiDestination(&params)
-
-		if err == nil {
-			return fmt.Errorf("EventBridge API Destination (%s) still exists: %s", rs.Primary.ID, resp)
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckAPIDestinationExists(n string, v *eventbridge.DescribeApiDestinationOutput) resource.TestCheckFunc {
+func testAccCheckAPIDestinationExists(ctx context.Context, n string, v *eventbridge.DescribeApiDestinationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn(ctx)
 		params := eventbridge.DescribeApiDestinationInput{
 			Name: aws.String(rs.Primary.ID),
 		}
-		resp, err := conn.DescribeApiDestination(&params)
+		resp, err := conn.DescribeApiDestinationWithContext(ctx, &params)
 		if err != nil {
 			return err
 		}

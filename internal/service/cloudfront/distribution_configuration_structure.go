@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // CloudFront DistributionConfig structure helpers.
 //
 // These functions assist in pulling in data from Terraform resource
@@ -14,20 +17,11 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
-
-// route53ZoneID defines the route 53 zone ID for CloudFront. This
-// is used to set the zone_id attribute.
-const route53ZoneID = "Z2FDTNDATAQYW2"
-
-// cnRoute53ZoneID defines the route 53 zone ID for CloudFront in AWS CN.
-// This is used to set the zone_id attribute.
-// ref: https://docs.amazonaws.cn/en_us/aws/latest/userguide/route53.html
-const cnRoute53ZoneID = "Z3RFFRIM2A3IF5"
 
 // Assemble the *cloudfront.DistributionConfig variable. Calls out to various
 // expander functions to convert attributes and sub-attributes to the various
@@ -37,18 +31,20 @@ const cnRoute53ZoneID = "Z3RFFRIM2A3IF5"
 // Used by the aws_cloudfront_distribution Create and Update functions.
 func expandDistributionConfig(d *schema.ResourceData) *cloudfront.DistributionConfig {
 	distributionConfig := &cloudfront.DistributionConfig{
-		CacheBehaviors:       expandCacheBehaviors(d.Get("ordered_cache_behavior").([]interface{})),
-		CallerReference:      aws.String(resource.UniqueId()),
-		Comment:              aws.String(d.Get("comment").(string)),
-		CustomErrorResponses: ExpandCustomErrorResponses(d.Get("custom_error_response").(*schema.Set)),
-		DefaultCacheBehavior: ExpandDefaultCacheBehavior(d.Get("default_cache_behavior").([]interface{})[0].(map[string]interface{})),
-		DefaultRootObject:    aws.String(d.Get("default_root_object").(string)),
-		Enabled:              aws.Bool(d.Get("enabled").(bool)),
-		IsIPV6Enabled:        aws.Bool(d.Get("is_ipv6_enabled").(bool)),
-		HttpVersion:          aws.String(d.Get("http_version").(string)),
-		Origins:              ExpandOrigins(d.Get("origin").(*schema.Set)),
-		PriceClass:           aws.String(d.Get("price_class").(string)),
-		WebACLId:             aws.String(d.Get("web_acl_id").(string)),
+		CacheBehaviors:               expandCacheBehaviors(d.Get("ordered_cache_behavior").([]interface{})),
+		CallerReference:              aws.String(id.UniqueId()),
+		Comment:                      aws.String(d.Get("comment").(string)),
+		ContinuousDeploymentPolicyId: aws.String(d.Get("continuous_deployment_policy_id").(string)),
+		CustomErrorResponses:         ExpandCustomErrorResponses(d.Get("custom_error_response").(*schema.Set)),
+		DefaultCacheBehavior:         ExpandDefaultCacheBehavior(d.Get("default_cache_behavior").([]interface{})[0].(map[string]interface{})),
+		DefaultRootObject:            aws.String(d.Get("default_root_object").(string)),
+		Enabled:                      aws.Bool(d.Get("enabled").(bool)),
+		IsIPV6Enabled:                aws.Bool(d.Get("is_ipv6_enabled").(bool)),
+		HttpVersion:                  aws.String(d.Get("http_version").(string)),
+		Origins:                      ExpandOrigins(d.Get("origin").(*schema.Set)),
+		PriceClass:                   aws.String(d.Get("price_class").(string)),
+		Staging:                      aws.Bool(d.Get("staging").(bool)),
+		WebACLId:                     aws.String(d.Get("web_acl_id").(string)),
 	}
 
 	// This sets CallerReference if it's still pending computation (ie: new resource)
@@ -90,44 +86,41 @@ func flattenDistributionConfig(d *schema.ResourceData, distributionConfig *cloud
 	d.Set("enabled", distributionConfig.Enabled)
 	d.Set("is_ipv6_enabled", distributionConfig.IsIPV6Enabled)
 	d.Set("price_class", distributionConfig.PriceClass)
-	d.Set("hosted_zone_id", route53ZoneID)
 
 	err = d.Set("default_cache_behavior", []interface{}{flattenDefaultCacheBehavior(distributionConfig.DefaultCacheBehavior)})
 	if err != nil {
-		return err
+		return err // nosemgrep:ci.bare-error-returns
 	}
 	err = d.Set("viewer_certificate", flattenViewerCertificate(distributionConfig.ViewerCertificate))
 	if err != nil {
-		return err
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
-	if distributionConfig.CallerReference != nil {
-		d.Set("caller_reference", distributionConfig.CallerReference)
-	}
+	d.Set("caller_reference", distributionConfig.CallerReference)
 	if distributionConfig.Comment != nil {
 		if aws.StringValue(distributionConfig.Comment) != "" {
 			d.Set("comment", distributionConfig.Comment)
 		}
 	}
-	if distributionConfig.DefaultRootObject != nil {
-		d.Set("default_root_object", distributionConfig.DefaultRootObject)
-	}
-	if distributionConfig.HttpVersion != nil {
-		d.Set("http_version", distributionConfig.HttpVersion)
-	}
-	if distributionConfig.WebACLId != nil {
-		d.Set("web_acl_id", distributionConfig.WebACLId)
-	}
+	d.Set("default_root_object", distributionConfig.DefaultRootObject)
+	d.Set("http_version", distributionConfig.HttpVersion)
+	d.Set("staging", distributionConfig.Staging)
+	d.Set("web_acl_id", distributionConfig.WebACLId)
+
+	// Not having this set for staging distributions causes IllegalUpdate errors when making updates of any kind.
+	// If this absolutely must not be optional/computed, the policy ID will need to be retrieved and set for each
+	// API call for staging distributions.
+	d.Set("continuous_deployment_policy_id", distributionConfig.ContinuousDeploymentPolicyId)
 
 	if distributionConfig.CustomErrorResponses != nil {
 		err = d.Set("custom_error_response", FlattenCustomErrorResponses(distributionConfig.CustomErrorResponses))
 		if err != nil {
-			return err
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 	if distributionConfig.CacheBehaviors != nil {
 		if err := d.Set("ordered_cache_behavior", flattenCacheBehaviors(distributionConfig.CacheBehaviors)); err != nil {
-			return err
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 
@@ -137,31 +130,31 @@ func flattenDistributionConfig(d *schema.ResourceData, distributionConfig *cloud
 		err = d.Set("logging_config", []interface{}{})
 	}
 	if err != nil {
-		return err
+		return err // nosemgrep:ci.bare-error-returns
 	}
 
 	if distributionConfig.Aliases != nil {
 		err = d.Set("aliases", FlattenAliases(distributionConfig.Aliases))
 		if err != nil {
-			return err
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 	if distributionConfig.Restrictions != nil {
 		err = d.Set("restrictions", flattenRestrictions(distributionConfig.Restrictions))
 		if err != nil {
-			return err
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 	if aws.Int64Value(distributionConfig.Origins.Quantity) > 0 {
 		err = d.Set("origin", FlattenOrigins(distributionConfig.Origins))
 		if err != nil {
-			return err
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 	if aws.Int64Value(distributionConfig.OriginGroups.Quantity) > 0 {
 		err = d.Set("origin_group", FlattenOriginGroups(distributionConfig.OriginGroups))
 		if err != nil {
-			return err
+			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
 
@@ -1017,7 +1010,6 @@ func OriginCustomHeaderHash(v interface{}) int {
 }
 
 func ExpandCustomOriginConfig(m map[string]interface{}) *cloudfront.CustomOriginConfig {
-
 	customOrigin := &cloudfront.CustomOriginConfig{
 		OriginProtocolPolicy:   aws.String(m["origin_protocol_policy"].(string)),
 		HTTPPort:               aws.Int64(int64(m["http_port"].(int))),
@@ -1031,7 +1023,6 @@ func ExpandCustomOriginConfig(m map[string]interface{}) *cloudfront.CustomOrigin
 }
 
 func FlattenCustomOriginConfig(cor *cloudfront.CustomOriginConfig) map[string]interface{} {
-
 	customOrigin := map[string]interface{}{
 		"origin_protocol_policy":   aws.StringValue(cor.OriginProtocolPolicy),
 		"http_port":                int(aws.Int64Value(cor.HTTPPort)),

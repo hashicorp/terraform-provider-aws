@@ -1,34 +1,40 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudfront
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_cloudfront_distribution", name="Distribution")
+// @Tags(identifierAttribute="arn")
 func ResourceDistribution() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
-		Create: resourceDistributionCreate,
-		Read:   resourceDistributionRead,
-		Update: resourceDistributionUpdate,
-		Delete: resourceDistributionDelete,
+		CreateWithoutTimeout: resourceDistributionCreate,
+		ReadWithoutTimeout:   resourceDistributionRead,
+		UpdateWithoutTimeout: resourceDistributionUpdate,
+		DeleteWithoutTimeout: resourceDistributionDelete,
 		Importer: &schema.ResourceImporter{
-			State: func(d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				// Set non API attributes to their Default settings in the schema
 				d.Set("retain_on_delete", false)
 				d.Set("wait_for_deployment", true)
@@ -222,6 +228,11 @@ func ResourceDistribution() *schema.Resource {
 						},
 					},
 				},
+			},
+			"continuous_deployment_policy_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
 			},
 			"comment": {
 				Type:         schema.TypeString,
@@ -542,13 +553,13 @@ func ResourceDistribution() *schema.Resource {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										Default:      5,
-										ValidateFunc: validation.IntBetween(1, 180),
+										ValidateFunc: validation.IntAtLeast(1),
 									},
 									"origin_read_timeout": {
 										Type:         schema.TypeInt,
 										Optional:     true,
 										Default:      30,
-										ValidateFunc: validation.IntBetween(1, 180),
+										ValidateFunc: validation.IntAtLeast(1),
 									},
 									"origin_protocol_policy": {
 										Type:         schema.TypeString,
@@ -615,7 +626,7 @@ func ResourceDistribution() *schema.Resource {
 									},
 									"origin_shield_region": {
 										Type:         schema.TypeString,
-										Required:     true,
+										Optional:     true,
 										ValidateFunc: validation.StringMatch(regionRegexp, "must be a valid AWS Region Code"),
 									},
 								},
@@ -816,408 +827,380 @@ func ResourceDistribution() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"staging": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+				ForceNew: true,
+			},
 
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceDistributionCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceDistributionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
-	params := &cloudfront.CreateDistributionWithTagsInput{
+	input := &cloudfront.CreateDistributionWithTagsInput{
 		DistributionConfigWithTags: &cloudfront.DistributionConfigWithTags{
 			DistributionConfig: expandDistributionConfig(d),
-			Tags:               &cloudfront.Tags{Items: Tags(tags.IgnoreAWS())},
+			Tags:               &cloudfront.Tags{Items: []*cloudfront.Tag{}},
 		},
 	}
 
-	var resp *cloudfront.CreateDistributionWithTagsOutput
-	// Handle eventual consistency issues
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-		var err error
-		resp, err = conn.CreateDistributionWithTags(params)
-
-		// ACM and IAM certificate eventual consistency
-		// InvalidViewerCertificate: The specified SSL certificate doesn't exist, isn't in us-east-1 region, isn't valid, or doesn't include a valid certificate chain.
-		if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeInvalidViewerCertificate) {
-			return resource.RetryableError(err)
-		}
-
-		if err != nil {
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	// Propagate AWS Go SDK retried error, if any
-	if tfresource.TimedOut(err) {
-		resp, err = conn.CreateDistributionWithTags(params)
+	if tags := getTagsIn(ctx); len(tags) > 0 {
+		input.DistributionConfigWithTags.Tags.Items = tags
 	}
+
+	// ACM and IAM certificate eventual consistency.
+	// InvalidViewerCertificate: The specified SSL certificate doesn't exist, isn't in us-east-1 region, isn't valid, or doesn't include a valid certificate chain.
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 1*time.Minute, func() (interface{}, error) {
+		return conn.CreateDistributionWithTagsWithContext(ctx, input)
+	}, cloudfront.ErrCodeInvalidViewerCertificate)
 
 	if err != nil {
-		return fmt.Errorf("error creating CloudFront Distribution: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating CloudFront Distribution: %s", err)
 	}
 
-	d.SetId(aws.StringValue(resp.Distribution.Id))
+	d.SetId(aws.StringValue(outputRaw.(*cloudfront.CreateDistributionWithTagsOutput).Distribution.Id))
 
 	if d.Get("wait_for_deployment").(bool) {
 		log.Printf("[DEBUG] Waiting until CloudFront Distribution (%s) is deployed", d.Id())
-		if err := DistributionWaitUntilDeployed(d.Id(), meta); err != nil {
-			return fmt.Errorf("error waiting until CloudFront Distribution (%s) is deployed: %s", d.Id(), err)
+		if err := WaitDistributionDeployed(ctx, conn, d.Id()); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting until CloudFront Distribution (%s) is deployed: %s", d.Id(), err)
 		}
 	}
 
-	return resourceDistributionRead(d, meta)
+	return append(diags, resourceDistributionRead(ctx, d, meta)...)
 }
 
-func resourceDistributionRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
-	params := &cloudfront.GetDistributionInput{
-		Id: aws.String(d.Id()),
-	}
+	output, err := FindDistributionByID(ctx, conn, d.Id())
 
-	resp, err := conn.GetDistribution(params)
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchDistribution) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		create.LogNotFoundRemoveState(names.CloudFront, create.ErrActionReading, ResNameDistribution, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.Error(names.CloudFront, create.ErrActionReading, ResNameDistribution, d.Id(), err)
+		return create.AppendDiagError(diags, names.CloudFront, create.ErrActionReading, ResNameDistribution, d.Id(), err)
 	}
 
 	// Update attributes from DistributionConfig
-	err = flattenDistributionConfig(d, resp.Distribution.DistributionConfig)
+	err = flattenDistributionConfig(d, output.Distribution.DistributionConfig)
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading CloudFront Distribution (%s): %s", d.Id(), err)
 	}
 
 	// Update other attributes outside of DistributionConfig
-	if err := d.Set("trusted_key_groups", flattenActiveTrustedKeyGroups(resp.Distribution.ActiveTrustedKeyGroups)); err != nil {
-		return fmt.Errorf("error setting trusted_key_groups: %w", err)
+	if err := d.Set("trusted_key_groups", flattenActiveTrustedKeyGroups(output.Distribution.ActiveTrustedKeyGroups)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting trusted_key_groups: %s", err)
 	}
-	if err := d.Set("trusted_signers", flattenActiveTrustedSigners(resp.Distribution.ActiveTrustedSigners)); err != nil {
-		return fmt.Errorf("error setting trusted_signers: %w", err)
+	if err := d.Set("trusted_signers", flattenActiveTrustedSigners(output.Distribution.ActiveTrustedSigners)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting trusted_signers: %s", err)
 	}
-	d.Set("status", resp.Distribution.Status)
-	d.Set("domain_name", resp.Distribution.DomainName)
-	d.Set("last_modified_time", aws.String(resp.Distribution.LastModifiedTime.String()))
-	d.Set("in_progress_validation_batches", resp.Distribution.InProgressInvalidationBatches)
-	d.Set("etag", resp.ETag)
-	d.Set("arn", resp.Distribution.ARN)
+	d.Set("status", output.Distribution.Status)
+	d.Set("domain_name", output.Distribution.DomainName)
+	d.Set("last_modified_time", aws.String(output.Distribution.LastModifiedTime.String()))
+	d.Set("in_progress_validation_batches", output.Distribution.InProgressInvalidationBatches)
+	d.Set("etag", output.ETag)
+	d.Set("arn", output.Distribution.ARN)
+	d.Set("hosted_zone_id", meta.(*conns.AWSClient).CloudFrontDistributionHostedZoneID(ctx))
 
-	// override hosted_zone_id from flattenDistributionConfig
-	region := meta.(*conns.AWSClient).Region
-	if v, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), region); ok && v.ID() == endpoints.AwsCnPartitionID {
-		d.Set("hosted_zone_id", cnRoute53ZoneID)
-	} else {
-		d.Set("hosted_zone_id", route53ZoneID)
-	}
-
-	tags, err := ListTags(conn, d.Get("arn").(string))
-	if err != nil {
-		return fmt.Errorf("error listing tags for CloudFront Distribution (%s): %s", d.Id(), err)
-	}
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceDistributionUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
-	params := &cloudfront.UpdateDistributionInput{
-		Id:                 aws.String(d.Id()),
-		DistributionConfig: expandDistributionConfig(d),
-		IfMatch:            aws.String(d.Get("etag").(string)),
-	}
+func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
-	// Handle eventual consistency issues
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
-		_, err := conn.UpdateDistribution(params)
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &cloudfront.UpdateDistributionInput{
+			Id:                 aws.String(d.Id()),
+			DistributionConfig: expandDistributionConfig(d),
+			IfMatch:            aws.String(d.Get("etag").(string)),
+		}
 
-		// ACM and IAM certificate eventual consistency
+		// ACM and IAM certificate eventual consistency.
 		// InvalidViewerCertificate: The specified SSL certificate doesn't exist, isn't in us-east-1 region, isn't valid, or doesn't include a valid certificate chain.
-		if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeInvalidViewerCertificate) {
-			return resource.RetryableError(err)
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 1*time.Minute, func() (interface{}, error) {
+			return conn.UpdateDistributionWithContext(ctx, input)
+		}, cloudfront.ErrCodeInvalidViewerCertificate)
+
+		// Refresh our ETag if it is out of date and attempt update again.
+		if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodePreconditionFailed) {
+			getDistributionInput := &cloudfront.GetDistributionInput{
+				Id: aws.String(d.Id()),
+			}
+			var getDistributionOutput *cloudfront.GetDistributionOutput
+
+			log.Printf("[DEBUG] Refreshing CloudFront Distribution (%s) ETag", d.Id())
+			getDistributionOutput, err = conn.GetDistributionWithContext(ctx, getDistributionInput)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "refreshing CloudFront Distribution (%s) ETag: %s", d.Id(), err)
+			}
+
+			if getDistributionOutput == nil {
+				return sdkdiag.AppendErrorf(diags, "refreshing CloudFront Distribution (%s) ETag: empty response", d.Id())
+			}
+
+			input.IfMatch = getDistributionOutput.ETag
+
+			_, err = conn.UpdateDistributionWithContext(ctx, input)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return sdkdiag.AppendErrorf(diags, "updating CloudFront Distribution (%s): %s", d.Id(), err)
 		}
 
-		return nil
-	})
-
-	// Refresh our ETag if it is out of date and attempt update again
-	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodePreconditionFailed) {
-		getDistributionInput := &cloudfront.GetDistributionInput{
-			Id: aws.String(d.Id()),
-		}
-		var getDistributionOutput *cloudfront.GetDistributionOutput
-
-		log.Printf("[DEBUG] Refreshing CloudFront Distribution (%s) ETag", d.Id())
-		getDistributionOutput, err = conn.GetDistribution(getDistributionInput)
-
-		if err != nil {
-			return fmt.Errorf("error refreshing CloudFront Distribution (%s) ETag: %s", d.Id(), err)
-		}
-
-		if getDistributionOutput == nil {
-			return fmt.Errorf("error refreshing CloudFront Distribution (%s) ETag: empty response", d.Id())
-		}
-
-		params.IfMatch = getDistributionOutput.ETag
-
-		_, err = conn.UpdateDistribution(params)
-	}
-
-	// Propagate AWS Go SDK retried error, if any
-	if tfresource.TimedOut(err) {
-		_, err = conn.UpdateDistribution(params)
-	}
-
-	if err != nil {
-		return fmt.Errorf("error updating CloudFront Distribution (%s): %s", d.Id(), err)
-	}
-
-	if d.Get("wait_for_deployment").(bool) {
-		log.Printf("[DEBUG] Waiting until CloudFront Distribution (%s) is deployed", d.Id())
-		if err := DistributionWaitUntilDeployed(d.Id(), meta); err != nil {
-			return fmt.Errorf("error waiting until CloudFront Distribution (%s) is deployed: %s", d.Id(), err)
+		if d.Get("wait_for_deployment").(bool) {
+			log.Printf("[DEBUG] Waiting until CloudFront Distribution (%s) is deployed", d.Id())
+			if err := WaitDistributionDeployed(ctx, conn, d.Id()); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting until CloudFront Distribution (%s) is deployed: %s", d.Id(), err)
+			}
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags for CloudFront Distribution (%s): %s", d.Id(), err)
-		}
-	}
-
-	return resourceDistributionRead(d, meta)
+	return append(diags, resourceDistributionRead(ctx, d, meta)...)
 }
 
-func resourceDistributionDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+func resourceDistributionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
+
+	if d.Get("arn").(string) == "" {
+		diags = append(diags, resourceDistributionRead(ctx, d, meta)...)
+	}
+
+	if v := d.Get("continuous_deployment_policy_id").(string); v != "" {
+		if err := disableContinuousDeploymentPolicy(ctx, conn, v); err != nil {
+			return create.AppendDiagError(diags, names.CloudFront, create.ErrActionDeleting, ResNameDistribution, d.Id(), err)
+		}
+
+		if err := WaitDistributionDeployed(ctx, conn, d.Id()); err != nil && !tfresource.NotFound(err) {
+			return sdkdiag.AppendErrorf(diags, "waiting until CloudFront Distribution (%s) is deployed: %s", d.Id(), err)
+		}
+	}
+
+	if err := disableDistribution(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "disabling CloudFront Distribution (%s): %s", d.Id(), err)
+	}
 
 	if d.Get("retain_on_delete").(bool) {
-		// Check if we need to disable first
-		getDistributionInput := &cloudfront.GetDistributionInput{
-			Id: aws.String(d.Id()),
-		}
-
-		log.Printf("[DEBUG] Refreshing CloudFront Distribution (%s) to check if disable is necessary", d.Id())
-		getDistributionOutput, err := conn.GetDistribution(getDistributionInput)
-
-		if err != nil {
-			return fmt.Errorf("error refreshing CloudFront Distribution (%s) to check if disable is necessary: %s", d.Id(), err)
-		}
-
-		if getDistributionOutput == nil || getDistributionOutput.Distribution == nil || getDistributionOutput.Distribution.DistributionConfig == nil {
-			return fmt.Errorf("error refreshing CloudFront Distribution (%s) to check if disable is necessary: empty response", d.Id())
-		}
-
-		if !aws.BoolValue(getDistributionOutput.Distribution.DistributionConfig.Enabled) {
-			log.Printf("[WARN] Removing CloudFront Distribution ID %q with `retain_on_delete` set. Please delete this distribution manually.", d.Id())
-			return nil
-		}
-
-		updateDistributionInput := &cloudfront.UpdateDistributionInput{
-			DistributionConfig: getDistributionOutput.Distribution.DistributionConfig,
-			Id:                 getDistributionInput.Id,
-			IfMatch:            getDistributionOutput.ETag,
-		}
-		updateDistributionInput.DistributionConfig.Enabled = aws.Bool(false)
-
-		log.Printf("[DEBUG] Disabling CloudFront Distribution: %s", d.Id())
-		_, err = conn.UpdateDistribution(updateDistributionInput)
-
-		if err != nil {
-			return fmt.Errorf("error disabling CloudFront Distribution (%s): %s", d.Id(), err)
-		}
-
 		log.Printf("[WARN] Removing CloudFront Distribution ID %q with `retain_on_delete` set. Please delete this distribution manually.", d.Id())
-		return nil
+		return diags
 	}
 
-	deleteDistributionInput := &cloudfront.DeleteDistributionInput{
-		Id:      aws.String(d.Id()),
-		IfMatch: aws.String(d.Get("etag").(string)),
-	}
-
-	log.Printf("[DEBUG] Deleting CloudFront Distribution: %s", d.Id())
-	_, err := conn.DeleteDistribution(deleteDistributionInput)
-
+	err := deleteDistribution(ctx, conn, d.Id())
 	if err == nil || tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchDistribution) {
-		return nil
-	}
-
-	// Refresh our ETag if it is out of date and attempt deletion again.
-	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeInvalidIfMatchVersion) {
-		getDistributionInput := &cloudfront.GetDistributionInput{
-			Id: aws.String(d.Id()),
-		}
-		var getDistributionOutput *cloudfront.GetDistributionOutput
-
-		log.Printf("[DEBUG] Refreshing CloudFront Distribution (%s) ETag", d.Id())
-		getDistributionOutput, err = conn.GetDistribution(getDistributionInput)
-
-		if err != nil {
-			return fmt.Errorf("error refreshing CloudFront Distribution (%s) ETag: %s", d.Id(), err)
-		}
-
-		if getDistributionOutput == nil {
-			return fmt.Errorf("error refreshing CloudFront Distribution (%s) ETag: empty response", d.Id())
-		}
-
-		deleteDistributionInput.IfMatch = getDistributionOutput.ETag
-
-		_, err = conn.DeleteDistribution(deleteDistributionInput)
+		return diags
 	}
 
 	// Disable distribution if it is not yet disabled and attempt deletion again.
 	// Here we update via the deployed configuration to ensure we are not submitting an out of date
 	// configuration from the Terraform configuration, should other changes have occurred manually.
 	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeDistributionNotDisabled) {
-		getDistributionInput := &cloudfront.GetDistributionInput{
-			Id: aws.String(d.Id()),
-		}
-		var getDistributionOutput *cloudfront.GetDistributionOutput
-
-		log.Printf("[DEBUG] Refreshing CloudFront Distribution (%s) to disable", d.Id())
-		getDistributionOutput, err = conn.GetDistribution(getDistributionInput)
-
-		if err != nil {
-			return fmt.Errorf("error refreshing CloudFront Distribution (%s) to disable: %s", d.Id(), err)
+		if err = disableDistribution(ctx, conn, d.Id()); err != nil {
+			return sdkdiag.AppendErrorf(diags, "disabling CloudFront Distribution (%s): %s", d.Id(), err)
 		}
 
-		if getDistributionOutput == nil || getDistributionOutput.Distribution == nil {
-			return fmt.Errorf("error refreshing CloudFront Distribution (%s) to disable: empty response", d.Id())
-		}
+		_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, 3*time.Minute, func() (interface{}, error) {
+			return nil, deleteDistribution(ctx, conn, d.Id())
+		}, cloudfront.ErrCodeDistributionNotDisabled)
+	}
 
-		updateDistributionInput := &cloudfront.UpdateDistributionInput{
-			DistributionConfig: getDistributionOutput.Distribution.DistributionConfig,
-			Id:                 deleteDistributionInput.Id,
-			IfMatch:            getDistributionOutput.ETag,
-		}
-		updateDistributionInput.DistributionConfig.Enabled = aws.Bool(false)
-		var updateDistributionOutput *cloudfront.UpdateDistributionOutput
-
-		log.Printf("[DEBUG] Disabling CloudFront Distribution: %s", d.Id())
-		updateDistributionOutput, err = conn.UpdateDistribution(updateDistributionInput)
-
-		if err != nil {
-			return fmt.Errorf("error disabling CloudFront Distribution (%s): %s", d.Id(), err)
-		}
-
-		log.Printf("[DEBUG] Waiting until CloudFront Distribution (%s) is deployed", d.Id())
-		if err := DistributionWaitUntilDeployed(d.Id(), meta); err != nil {
-			return fmt.Errorf("error waiting until CloudFront Distribution (%s) is deployed: %s", d.Id(), err)
-		}
-
-		deleteDistributionInput.IfMatch = updateDistributionOutput.ETag
-
-		_, err = conn.DeleteDistribution(deleteDistributionInput)
-
-		// CloudFront has eventual consistency issues even for "deployed" state.
-		// Occasionally the DeleteDistribution call will return this error as well, in which retries will succeed:
-		//   * PreconditionFailed: The request failed because it didn't meet the preconditions in one or more request-header fields
-		if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeDistributionNotDisabled) || tfawserr.ErrCodeEquals(err, cloudfront.ErrCodePreconditionFailed) {
-			err = resource.Retry(2*time.Minute, func() *resource.RetryError {
-				_, err := conn.DeleteDistribution(deleteDistributionInput)
-
-				if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeDistributionNotDisabled) {
-					return resource.RetryableError(err)
-				}
-
-				if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchDistribution) {
-					return nil
-				}
-
-				if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodePreconditionFailed) {
-					return resource.RetryableError(err)
-				}
-
-				if err != nil {
-					return resource.NonRetryableError(err)
-				}
-
-				return nil
-			})
-
-			// Propagate AWS Go SDK retried error, if any
-			if tfresource.TimedOut(err) {
-				_, err = conn.DeleteDistribution(deleteDistributionInput)
-			}
-		}
+	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodePreconditionFailed, cloudfront.ErrCodeInvalidIfMatchVersion) {
+		_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, 1*time.Minute, func() (interface{}, error) {
+			return nil, deleteDistribution(ctx, conn, d.Id())
+		}, cloudfront.ErrCodePreconditionFailed, cloudfront.ErrCodeInvalidIfMatchVersion)
 	}
 
 	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchDistribution) {
-		return nil
+		return diags
+	}
+
+	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeDistributionNotDisabled) {
+		if err = disableDistribution(ctx, conn, d.Id()); err != nil {
+			return sdkdiag.AppendErrorf(diags, "disabling CloudFront Distribution (%s): %s", d.Id(), err)
+		}
+
+		err = deleteDistribution(ctx, conn, d.Id())
 	}
 
 	if err != nil {
-		return fmt.Errorf("CloudFront Distribution %s cannot be deleted: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting CloudFront Distribution (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func deleteDistribution(ctx context.Context, conn *cloudfront.CloudFront, id string) error {
+	etag, err := distroETag(ctx, conn, id)
+	if err != nil {
+		return err
+	}
+
+	in := &cloudfront.DeleteDistributionInput{
+		Id:      aws.String(id),
+		IfMatch: aws.String(etag),
+	}
+
+	if _, err := conn.DeleteDistributionWithContext(ctx, in); err != nil {
+		return err
+	}
+
+	if err := WaitDistributionDeleted(ctx, conn, id); err != nil {
+		return err
 	}
 
 	return nil
 }
 
+func distroETag(ctx context.Context, conn *cloudfront.CloudFront, id string) (string, error) {
+	output, err := FindDistributionByID(ctx, conn, id)
+	if err != nil {
+		return "", err
+	}
+
+	return aws.StringValue(output.ETag), nil
+}
+
+func disableDistribution(ctx context.Context, conn *cloudfront.CloudFront, id string) error {
+	out, err := FindDistributionByID(ctx, conn, id)
+	if err != nil {
+		return err
+	}
+
+	if aws.StringValue(out.Distribution.Status) == "InProgress" {
+		if err := WaitDistributionDeployed(ctx, conn, id); err != nil {
+			return err
+		}
+
+		out, err = FindDistributionByID(ctx, conn, id)
+		if err != nil {
+			return err
+		}
+	}
+
+	if !aws.BoolValue(out.Distribution.DistributionConfig.Enabled) {
+		return nil
+	}
+
+	in := &cloudfront.UpdateDistributionInput{
+		DistributionConfig: out.Distribution.DistributionConfig,
+		Id:                 aws.String(id),
+		IfMatch:            out.ETag,
+	}
+	in.DistributionConfig.Enabled = aws.Bool(false)
+
+	_, err = conn.UpdateDistributionWithContext(ctx, in)
+	if err != nil {
+		return err
+	}
+
+	if err := WaitDistributionDeployed(ctx, conn, id); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func FindDistributionByID(ctx context.Context, conn *cloudfront.CloudFront, id string) (*cloudfront.GetDistributionOutput, error) {
+	input := &cloudfront.GetDistributionInput{
+		Id: aws.String(id),
+	}
+
+	output, err := conn.GetDistributionWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchDistribution) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Distribution == nil || output.Distribution.DistributionConfig == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
 // resourceAwsCloudFrontWebDistributionWaitUntilDeployed blocks until the
 // distribution is deployed. It currently takes exactly 15 minutes to deploy
 // but that might change in the future.
-func DistributionWaitUntilDeployed(id string, meta interface{}) error {
-	stateConf := &resource.StateChangeConf{
+func WaitDistributionDeployed(ctx context.Context, conn *cloudfront.CloudFront, id string) error {
+	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"InProgress"},
 		Target:     []string{"Deployed"},
-		Refresh:    resourceWebDistributionStateRefreshFunc(id, meta),
+		Refresh:    distributionDeployRefreshFunc(ctx, conn, id),
 		Timeout:    90 * time.Minute,
 		MinTimeout: 15 * time.Second,
-		Delay:      1 * time.Minute,
+		Delay:      30 * time.Second,
 	}
 
-	_, err := stateConf.WaitForState()
+	_, err := stateConf.WaitForStateContext(ctx)
 	return err
 }
 
-// The refresh function for resourceAwsCloudFrontWebDistributionWaitUntilDeployed.
-func resourceWebDistributionStateRefreshFunc(id string, meta interface{}) resource.StateRefreshFunc {
+func WaitDistributionDeleted(ctx context.Context, conn *cloudfront.CloudFront, id string) error {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{"InProgress", "Deployed"},
+		Target:     []string{},
+		Refresh:    distributionDeleteRefreshFunc(ctx, conn, id),
+		Timeout:    90 * time.Minute,
+		MinTimeout: 15 * time.Second,
+		Delay:      15 * time.Second,
+	}
+
+	_, err := stateConf.WaitForStateContext(ctx)
+	return err
+}
+
+func distributionDeleteRefreshFunc(ctx context.Context, conn *cloudfront.CloudFront, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		conn := meta.(*conns.AWSClient).CloudFrontConn
-		params := &cloudfront.GetDistributionInput{
-			Id: aws.String(id),
-		}
-
-		resp, err := conn.GetDistribution(params)
-		if err != nil {
-			log.Printf("[WARN] Error retrieving CloudFront Distribution %q details: %s", id, err)
-			return nil, "", err
-		}
-
-		if resp == nil {
+		out, err := FindDistributionByID(ctx, conn, id)
+		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
 
-		return resp.Distribution, *resp.Distribution.Status, nil
+		if err != nil {
+			return nil, "", err
+		}
+
+		if out == nil {
+			return nil, "", nil
+		}
+
+		return out.Distribution, aws.StringValue(out.Distribution.Status), nil
+	}
+}
+
+func distributionDeployRefreshFunc(ctx context.Context, conn *cloudfront.CloudFront, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		out, err := FindDistributionByID(ctx, conn, id)
+		if err != nil {
+			return nil, "", err
+		}
+
+		if out == nil {
+			return nil, "", nil
+		}
+
+		return out.Distribution, aws.StringValue(out.Distribution.Status), nil
 	}
 }

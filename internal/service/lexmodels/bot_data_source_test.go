@@ -1,25 +1,30 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lexmodels_test
 
 import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/lexmodelbuildingservice"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccLexModelsBotDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 	dataSourceName := "data.aws_lex_bot.test"
 	resourceName := "aws_lex_bot.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -51,6 +56,7 @@ func TestAccLexModelsBotDataSource_basic(t *testing.T) {
 }
 
 func testAccBotDataSource_withVersion(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandStringFromCharSet(8, sdkacctest.CharSetAlpha)
 	dataSourceName := "data.aws_lex_bot.test"
 	resourceName := "aws_lex_bot.test"
@@ -58,10 +64,10 @@ func testAccBotDataSource_withVersion(t *testing.T) {
 	// If this test runs in parallel with other Lex Bot tests, it loses its description
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(lexmodelbuildingservice.EndpointsID, t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, lexmodelbuildingservice.EndpointsID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, lexmodelbuildingservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{

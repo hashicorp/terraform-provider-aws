@@ -1,35 +1,41 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opsworks_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccOpsWorksInstance_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var opsinst opsworks.Instance
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_instance.test"
 	dataSourceName := "data.aws_availability_zones.available"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_create(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resourceName, &opsinst),
+					testAccCheckInstanceExists(ctx, resourceName, &opsinst),
 					testAccCheckInstanceAttributes(&opsinst),
 					resource.TestCheckResourceAttr(resourceName, "hostname", "tf-acc1"),
 					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.micro"),
@@ -52,7 +58,7 @@ func TestAccOpsWorksInstance_basic(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_update(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resourceName, &opsinst),
+					testAccCheckInstanceExists(ctx, resourceName, &opsinst),
 					testAccCheckInstanceAttributes(&opsinst),
 					resource.TestCheckResourceAttr(resourceName, "hostname", "tf-acc1"),
 					resource.TestCheckResourceAttr(resourceName, "instance_type", "t2.small"),
@@ -66,20 +72,21 @@ func TestAccOpsWorksInstance_basic(t *testing.T) {
 }
 
 func TestAccOpsWorksInstance_updateHostNameForceNew(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_opsworks_instance.test"
 	var before, after opsworks.Instance
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(opsworks.EndpointsID, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opsworks.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, opsworks.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpsWorksServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckInstanceDestroy,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInstanceConfig_create(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resourceName, &before),
+					testAccCheckInstanceExists(ctx, resourceName, &before),
 					resource.TestCheckResourceAttr(resourceName, "hostname", "tf-acc1"),
 				),
 			},
@@ -92,7 +99,7 @@ func TestAccOpsWorksInstance_updateHostNameForceNew(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_updateHostName(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckInstanceExists(resourceName, &after),
+					testAccCheckInstanceExists(ctx, resourceName, &after),
 					resource.TestCheckResourceAttr(resourceName, "hostname", "tf-acc2"),
 					testAccCheckInstanceRecreated(t, &before, &after),
 				),
@@ -111,7 +118,7 @@ func testAccCheckInstanceRecreated(t *testing.T,
 	}
 }
 
-func testAccCheckInstanceExists(
+func testAccCheckInstanceExists(ctx context.Context,
 	n string, opsinst *opsworks.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -123,12 +130,12 @@ func testAccCheckInstanceExists(
 			return fmt.Errorf("No Opsworks Instance is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn(ctx)
 
 		params := &opsworks.DescribeInstancesInput{
 			InstanceIds: []*string{&rs.Primary.ID},
 		}
-		resp, err := conn.DescribeInstances(params)
+		resp, err := conn.DescribeInstancesWithContext(ctx, params)
 
 		if err != nil {
 			return err
@@ -170,37 +177,39 @@ func testAccCheckInstanceAttributes(
 	}
 }
 
-func testAccCheckInstanceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_opsworks_instance" {
-			continue
-		}
-		req := &opsworks.DescribeInstancesInput{
-			InstanceIds: aws.StringSlice([]string{rs.Primary.ID}),
-		}
+func testAccCheckInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).OpsWorksConn(ctx)
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_opsworks_instance" {
+				continue
+			}
+			req := &opsworks.DescribeInstancesInput{
+				InstanceIds: aws.StringSlice([]string{rs.Primary.ID}),
+			}
 
-		output, err := conn.DescribeInstances(req)
+			output, err := conn.DescribeInstancesWithContext(ctx, req)
 
-		if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
-			continue
-		}
+			if tfawserr.ErrCodeEquals(err, opsworks.ErrCodeResourceNotFoundException) {
+				continue
+			}
 
-		if err != nil {
-			return err
-		}
+			if err != nil {
+				return err
+			}
 
-		if output != nil && len(output.Instances) > 0 {
-			for _, instance := range output.Instances {
-				if aws.StringValue(instance.InstanceId) != rs.Primary.ID {
-					continue
+			if output != nil && len(output.Instances) > 0 {
+				for _, instance := range output.Instances {
+					if aws.StringValue(instance.InstanceId) != rs.Primary.ID {
+						continue
+					}
+					return fmt.Errorf("Expected OpsWorks instance (%s) to be gone, but was still found", rs.Primary.ID)
 				}
-				return fmt.Errorf("Expected OpsWorks instance (%s) to be gone, but was still found", rs.Primary.ID)
 			}
 		}
-	}
 
-	return nil
+		return nil
+	}
 }
 
 func testAccInstanceConfig_updateHostName(rName string) string {

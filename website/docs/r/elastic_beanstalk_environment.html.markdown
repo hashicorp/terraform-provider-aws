@@ -32,7 +32,7 @@ resource "aws_elastic_beanstalk_environment" "tfenvtest" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) A unique name for this Environment. This name is used
   in the application URL
@@ -63,7 +63,6 @@ use the default behavior, which is an exponential backoff
 * `version_label` - (Optional) The name of the Elastic Beanstalk Application Version
 to use in deployment.
 * `tags` - (Optional) A set of tags to apply to the Environment. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-
 
 ## Option Settings
 
@@ -104,9 +103,9 @@ resource "aws_elastic_beanstalk_environment" "tfenvtest" {
 }
 ```
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the Elastic Beanstalk Environment.
 * `name` - Name of the Elastic Beanstalk Environment.
@@ -127,16 +126,23 @@ In addition to all arguments above, the following attributes are exported:
 * `triggers` - Autoscaling triggers in use by this Environment.
 * `endpoint_url` - The URL to the Load Balancer for this Environment
 
-
-
 [1]: https://docs.aws.amazon.com/elasticbeanstalk/latest/dg/concepts.platforms.html
 [2]: https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html
 [3]: https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-properties-beanstalk-environment.html#cfn-beanstalk-environment-platformarn
 
 ## Import
 
-Elastic Beanstalk Environments can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Elastic Beanstalk Environments using the `id`. For example:
 
+```terraform
+import {
+  to = aws_elastic_beanstalk_environment.prodenv
+  id = "e-rpqsewtp2j"
+}
 ```
-$ terraform import aws_elastic_beanstalk_environment.prodenv e-rpqsewtp2j
+
+Using `terraform import`, import Elastic Beanstalk Environments using the `id`. For example:
+
+```console
+% terraform import aws_elastic_beanstalk_environment.prodenv e-rpqsewtp2j
 ```

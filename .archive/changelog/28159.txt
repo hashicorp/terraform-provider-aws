@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_sagemaker_endpoint_configuration: Add `shadow_production_variants`, `production_variants.container_startup_health_check_timeout_in_seconds`, `production_variants.core_dump_config`, `production_variants.model_data_download_timeout_in_seconds`, and `production_variants.volume_size_in_gb` arguments
+```

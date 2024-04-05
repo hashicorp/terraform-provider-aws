@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package hclsyntax
 
 import (
@@ -6,7 +9,7 @@ import (
 	"strconv"
 	"unicode/utf8"
 
-	"github.com/apparentlymart/go-textseg/v13/textseg"
+	"github.com/apparentlymart/go-textseg/v15/textseg"
 	"github.com/hashicorp/hcl/v2"
 	"github.com/zclconf/go-cty/cty"
 )
@@ -1174,7 +1177,12 @@ Token:
 			// if there was a parse error in the argument then we've
 			// probably been left in a weird place in the token stream,
 			// so we'll bail out with a partial argument list.
-			p.recover(TokenCParen)
+			recoveredTok := p.recover(TokenCParen)
+
+			// record the recovered token, if one was found
+			if recoveredTok.Type == TokenCParen {
+				closeTok = recoveredTok
+			}
 			break Token
 		}
 

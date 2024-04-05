@@ -38,7 +38,7 @@ resource "aws_vpc_dhcp_options" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `domain_name` - (Optional) the suffix domain name to use by default when resolving non Fully Qualified Domain Names. In other words, this is what ends up being the `search` value in the `/etc/resolv.conf` file.
 * `domain_name_servers` - (Optional) List of name servers to configure in `/etc/resolv.conf`. If you want to use the default AWS nameservers you should set this to `AmazonProvidedDNS`.
@@ -55,9 +55,9 @@ The following arguments are supported:
 * If you delete a DHCP Options Set, all VPCs using it will be associated to AWS's `default` DHCP Option Set.
 * In most cases unless you're configuring your own DNS you'll want to set `domain_name_servers` to `AmazonProvidedDNS`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the DHCP Options Set.
 * `arn` - The ARN of the DHCP Options Set.
@@ -67,11 +67,19 @@ In addition to all arguments above, the following attributes are exported:
 You can find more technical documentation about DHCP Options Set in the
 official [AWS User Guide](https://docs.aws.amazon.com/AmazonVPC/latest/UserGuide/VPC_DHCP_Options.html).
 
-
 ## Import
 
-VPC DHCP Options can be imported using the `dhcp options id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC DHCP Options using the DHCP Options `id`. For example:
 
+```terraform
+import {
+  to = aws_vpc_dhcp_options.my_options
+  id = "dopt-d9070ebb"
+}
 ```
-$ terraform import aws_vpc_dhcp_options.my_options dopt-d9070ebb
+
+Using `terraform import`, import VPC DHCP Options using the DHCP Options `id`. For example:
+
+```console
+% terraform import aws_vpc_dhcp_options.my_options dopt-d9070ebb
 ```

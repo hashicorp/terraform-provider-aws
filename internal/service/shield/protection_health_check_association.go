@@ -1,22 +1,29 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package shield
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/shield"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/shield"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/shield/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKResource("aws_shield_protection_health_check_association")
 func ResourceProtectionHealthCheckAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create: ResourceProtectionHealthCheckAssociationCreate,
-		Read:   ResourceProtectionHealthCheckAssociationRead,
-		Delete: ResourceProtectionHealthCheckAssociationDelete,
+		CreateWithoutTimeout: ResourceProtectionHealthCheckAssociationCreate,
+		ReadWithoutTimeout:   ResourceProtectionHealthCheckAssociationRead,
+		DeleteWithoutTimeout: ResourceProtectionHealthCheckAssociationDelete,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -36,8 +43,9 @@ func ResourceProtectionHealthCheckAssociation() *schema.Resource {
 	}
 }
 
-func ResourceProtectionHealthCheckAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ShieldConn
+func ResourceProtectionHealthCheckAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ShieldClient(ctx)
 
 	protectionId := d.Get("shield_protection_id").(string)
 	healthCheckArn := d.Get("health_check_arn").(string)
@@ -48,40 +56,41 @@ func ResourceProtectionHealthCheckAssociationCreate(d *schema.ResourceData, meta
 		HealthCheckArn: aws.String(healthCheckArn),
 	}
 
-	_, err := conn.AssociateHealthCheck(input)
+	_, err := conn.AssociateHealthCheck(ctx, input)
 	if err != nil {
-		return fmt.Errorf("error associating Route53 Health Check (%s) with Shield Protected resource (%s): %s", d.Get("health_check_arn"), d.Get("shield_protection_id"), err)
+		return sdkdiag.AppendErrorf(diags, "associating Route53 Health Check (%s) with Shield Protected resource (%s): %s", d.Get("health_check_arn"), d.Get("shield_protection_id"), err)
 	}
 	d.SetId(id)
-	return ResourceProtectionHealthCheckAssociationRead(d, meta)
+	return append(diags, ResourceProtectionHealthCheckAssociationRead(ctx, d, meta)...)
 }
 
-func ResourceProtectionHealthCheckAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ShieldConn
+func ResourceProtectionHealthCheckAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ShieldClient(ctx)
 
 	protectionId, healthCheckArn, err := ProtectionHealthCheckAssociationParseResourceID(d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error parsing Shield Protection and Route53 Health Check Association ID: %w", err)
+		return sdkdiag.AppendErrorf(diags, "parsing Shield Protection and Route53 Health Check Association ID: %s", err)
 	}
 
 	input := &shield.DescribeProtectionInput{
 		ProtectionId: aws.String(protectionId),
 	}
 
-	resp, err := conn.DescribeProtection(input)
+	resp, err := conn.DescribeProtection(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, shield.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		log.Printf("[WARN] Shield Protection itself (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Shield Protection Health Check Association (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Shield Protection Health Check Association (%s): %s", d.Id(), err)
 	}
 
-	isHealthCheck := stringInSlice(strings.Split(healthCheckArn, "/")[1], aws.StringValueSlice(resp.Protection.HealthCheckIds))
+	isHealthCheck := stringInSlice(strings.Split(healthCheckArn, "/")[1], resp.Protection.HealthCheckIds)
 	if !isHealthCheck {
 		log.Printf("[WARN] Shield Protection Health Check Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -90,16 +99,17 @@ func ResourceProtectionHealthCheckAssociationRead(d *schema.ResourceData, meta i
 	d.Set("health_check_arn", healthCheckArn)
 	d.Set("shield_protection_id", resp.Protection.Id)
 
-	return nil
+	return diags
 }
 
-func ResourceProtectionHealthCheckAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ShieldConn
+func ResourceProtectionHealthCheckAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ShieldClient(ctx)
 
 	protectionId, healthCheckId, err := ProtectionHealthCheckAssociationParseResourceID(d.Id())
 
 	if err != nil {
-		return fmt.Errorf("error parsing Shield Protection and Route53 Health Check Association ID: %w", err)
+		return sdkdiag.AppendErrorf(diags, "parsing Shield Protection and Route53 Health Check Association ID: %s", err)
 	}
 
 	input := &shield.DisassociateHealthCheckInput{
@@ -107,12 +117,12 @@ func ResourceProtectionHealthCheckAssociationDelete(d *schema.ResourceData, meta
 		HealthCheckArn: aws.String(healthCheckId),
 	}
 
-	_, err = conn.DisassociateHealthCheck(input)
+	_, err = conn.DisassociateHealthCheck(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error disassociating Route53 Health Check (%s) from Shield Protected resource (%s): %s", d.Get("health_check_arn"), d.Get("shield_protection_id"), err)
+		return sdkdiag.AppendErrorf(diags, "disassociating Route53 Health Check (%s) from Shield Protected resource (%s): %s", d.Get("health_check_arn"), d.Get("shield_protection_id"), err)
 	}
-	return nil
+	return diags
 }
 
 func stringInSlice(expected string, list []string) bool {

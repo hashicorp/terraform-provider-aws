@@ -3,66 +3,41 @@ subcategory: "Auto Scaling"
 layout: "aws"
 page_title: "AWS: aws_autoscaling_attachment"
 description: |-
-  Provides an AutoScaling Group Attachment resource.
+  Terraform resource for managing an AWS Auto Scaling Attachment.
 ---
 
 # Resource: aws_autoscaling_attachment
 
-Provides an Auto Scaling Attachment resource.
+Attaches a load balancer to an Auto Scaling group.
 
-~> **NOTE on Auto Scaling Groups and ASG Attachments:** Terraform currently provides
-both a standalone [`aws_autoscaling_attachment`](autoscaling_attachment.html) resource
-(describing an ASG attached to an ELB or ALB), and an [`aws_autoscaling_group`](autoscaling_group.html)
-with `load_balancers` and `target_group_arns` defined in-line. These two methods are not
-mutually-exclusive. If `aws_autoscaling_attachment` resources are used, either alone or with inline
-`load_balancers` or `target_group_arns`, the `aws_autoscaling_group` resource must be configured
-to ignore changes to the `load_balancers` and `target_group_arns` arguments within a
-[`lifecycle` configuration block](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html).
+~> **NOTE on Auto Scaling Groups, Attachments and Traffic Source Attachments:** Terraform provides standalone Attachment (for attaching Classic Load Balancers and Application Load Balancer, Gateway Load Balancer, or Network Load Balancer target groups) and [Traffic Source Attachment](autoscaling_traffic_source_attachment.html) (for attaching Load Balancers and VPC Lattice target groups) resources and an [Auto Scaling Group](autoscaling_group.html) resource with `load_balancers`, `target_group_arns` and `traffic_source` attributes. Do not use the same traffic source in more than one of these resources. Doing so will cause a conflict of attachments. A [`lifecycle` configuration block](https://www.terraform.io/docs/configuration/meta-arguments/lifecycle.html) can be used to suppress differences if necessary.
 
 ## Example Usage
 
 ```terraform
 # Create a new load balancer attachment
-resource "aws_autoscaling_attachment" "asg_attachment_bar" {
-  autoscaling_group_name = aws_autoscaling_group.asg.id
-  elb                    = aws_elb.bar.id
+resource "aws_autoscaling_attachment" "example" {
+  autoscaling_group_name = aws_autoscaling_group.example.id
+  elb                    = aws_elb.example.id
 }
 ```
 
 ```terraform
 # Create a new ALB Target Group attachment
-resource "aws_autoscaling_attachment" "asg_attachment_bar" {
-  autoscaling_group_name = aws_autoscaling_group.asg.id
-  lb_target_group_arn    = aws_lb_target_group.test.arn
-}
-```
-
-## With An AutoScaling Group Resource
-
-```terraform
-resource "aws_autoscaling_group" "asg" {
-  # ... other configuration ...
-
-  lifecycle {
-    ignore_changes = [load_balancers, target_group_arns]
-  }
-}
-
-resource "aws_autoscaling_attachment" "asg_attachment_bar" {
-  autoscaling_group_name = aws_autoscaling_group.asg.id
-  elb                    = aws_elb.test.id
+resource "aws_autoscaling_attachment" "example" {
+  autoscaling_group_name = aws_autoscaling_group.example.id
+  lb_target_group_arn    = aws_lb_target_group.example.arn
 }
 ```
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `autoscaling_group_name` - (Required) Name of ASG to associate with the ELB.
 * `elb` - (Optional) Name of the ELB.
-* `alb_target_group_arn` - (Optional, **Deprecated** use `lb_target_group_arn` instead) ARN of an ALB Target Group.
 * `lb_target_group_arn` - (Optional) ARN of a load balancer target group.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.

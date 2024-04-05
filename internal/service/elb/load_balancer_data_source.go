@@ -1,22 +1,28 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elb
 
 import (
+	"context"
 	"fmt"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/elb"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_elb")
 func DataSourceLoadBalancer() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceLoadBalancerRead,
+		ReadWithoutTimeout: dataSourceLoadBalancerRead,
 		Schema: map[string]*schema.Schema{
 			"name": {
 				Type:     schema.TypeString,
@@ -57,7 +63,6 @@ func DataSourceLoadBalancer() *schema.Resource {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
-				Set:      schema.HashString,
 			},
 
 			"connection_draining": {
@@ -122,7 +127,6 @@ func DataSourceLoadBalancer() *schema.Resource {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
-				Set:      schema.HashString,
 			},
 
 			"internal": {
@@ -168,7 +172,6 @@ func DataSourceLoadBalancer() *schema.Resource {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
-				Set:      schema.HashString,
 			},
 
 			"source_security_group": {
@@ -185,7 +188,6 @@ func DataSourceLoadBalancer() *schema.Resource {
 				Type:     schema.TypeSet,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Computed: true,
-				Set:      schema.HashString,
 			},
 
 			"desync_mitigation_mode": {
@@ -203,48 +205,41 @@ func DataSourceLoadBalancer() *schema.Resource {
 	}
 }
 
-func dataSourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBConn
+func dataSourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ELBConn(ctx)
+	ec2conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	lbName := d.Get("name").(string)
+	lb, err := FindLoadBalancerByName(ctx, conn, lbName)
 
-	input := &elb.DescribeLoadBalancersInput{
-		LoadBalancerNames: aws.StringSlice([]string{lbName}),
-	}
-
-	log.Printf("[DEBUG] Reading ELB: %s", input)
-	resp, err := conn.DescribeLoadBalancers(input)
 	if err != nil {
-		return fmt.Errorf("retrieving LB: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading ELB Classic Load Balancer (%s): %s", lbName, err)
 	}
-	if len(resp.LoadBalancerDescriptions) != 1 {
-		return fmt.Errorf("search returned %d results, please revise so only one is returned", len(resp.LoadBalancerDescriptions))
+
+	d.SetId(aws.StringValue(lb.LoadBalancerName))
+
+	input := &elb.DescribeLoadBalancerAttributesInput{
+		LoadBalancerName: aws.String(d.Id()),
 	}
-	d.SetId(aws.StringValue(resp.LoadBalancerDescriptions[0].LoadBalancerName))
+
+	output, err := conn.DescribeLoadBalancerAttributesWithContext(ctx, input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading ELB Classic Load Balancer (%s) attributes: %s", d.Id(), err)
+	}
+
+	lbAttrs := output.LoadBalancerAttributes
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Region:    meta.(*conns.AWSClient).Region,
 		Service:   "elasticloadbalancing",
 		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  fmt.Sprintf("loadbalancer/%s", aws.StringValue(resp.LoadBalancerDescriptions[0].LoadBalancerName)),
+		Resource:  fmt.Sprintf("loadbalancer/%s", d.Id()),
 	}
 	d.Set("arn", arn.String())
-
-	lb := resp.LoadBalancerDescriptions[0]
-	ec2conn := meta.(*conns.AWSClient).EC2Conn
-
-	describeAttrsOpts := &elb.DescribeLoadBalancerAttributesInput{
-		LoadBalancerName: aws.String(d.Id()),
-	}
-	describeAttrsResp, err := conn.DescribeLoadBalancerAttributes(describeAttrsOpts)
-	if err != nil {
-		return fmt.Errorf("retrieving ELB: %w", err)
-	}
-
-	lbAttrs := describeAttrsResp.LoadBalancerAttributes
-
 	d.Set("name", lb.LoadBalancerName)
 	d.Set("dns_name", lb.DNSName)
 	d.Set("zone_id", lb.CanonicalHostedZoneNameID)
@@ -269,9 +264,9 @@ func dataSourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error 
 		var elbVpc string
 		if lb.VPCId != nil {
 			elbVpc = aws.StringValue(lb.VPCId)
-			sg, err := tfec2.FindSecurityGroupByNameAndVPCID(ec2conn, aws.StringValue(lb.SourceSecurityGroup.GroupName), elbVpc)
+			sg, err := tfec2.FindSecurityGroupByNameAndVPCIDAndOwnerID(ctx, ec2conn, aws.StringValue(lb.SourceSecurityGroup.GroupName), elbVpc, aws.StringValue(lb.SourceSecurityGroup.OwnerAlias))
 			if err != nil {
-				return fmt.Errorf("looking up ELB Security Group ID: %w", err)
+				return sdkdiag.AppendErrorf(diags, "looking up ELB Security Group ID: %s", err)
 			} else {
 				d.Set("source_security_group_id", sg.GroupId)
 			}
@@ -305,7 +300,7 @@ func dataSourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error 
 			elbal = nil
 		}
 		if err := d.Set("access_logs", flattenAccessLog(elbal)); err != nil {
-			return err
+			return sdkdiag.AppendErrorf(diags, "reading ELB Classic Load Balancer (%s): setting access_logs: %s", d.Id(), err)
 		}
 	}
 
@@ -316,14 +311,14 @@ func dataSourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error 
 		}
 	}
 
-	tags, err := ListTags(conn, d.Id())
+	tags, err := listTags(ctx, conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("listing tags for ELB (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for ELB (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
 	// There's only one health check, so save that to state as we
@@ -332,5 +327,5 @@ func dataSourceLoadBalancerRead(d *schema.ResourceData, meta interface{}) error 
 		d.Set("health_check", FlattenHealthCheck(lb.HealthCheck))
 	}
 
-	return nil
+	return diags
 }

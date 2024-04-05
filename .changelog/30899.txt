@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_imagebuilder_image: Add `containers` attribute to the `output_resources` block
+```
+
+```release-note:enhancement
+data-source/aws_imagebuilder_image: Add `containers` attribute to the `output_resources` block
+```

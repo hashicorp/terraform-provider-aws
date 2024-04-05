@@ -1,6 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -8,22 +12,27 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_vpc_dhcp_options", name="DHCP Options")
+// @Tags(identifierAttribute="id")
 func ResourceVPCDHCPOptions() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceVPCDHCPOptionsCreate,
-		Read:   resourceVPCDHCPOptionsRead,
-		Update: resourceVPCDHCPOptionsUpdate,
-		Delete: resourceVPCDHCPOptionsDelete,
+		CreateWithoutTimeout: resourceVPCDHCPOptionsCreate,
+		ReadWithoutTimeout:   resourceVPCDHCPOptionsRead,
+		UpdateWithoutTimeout: resourceVPCDHCPOptionsUpdate,
+		DeleteWithoutTimeout: resourceVPCDHCPOptionsDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		// Keep in sync with aws_default_vpc_dhcp_options' schema.
@@ -70,8 +79,8 @@ func ResourceVPCDHCPOptions() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -88,50 +97,48 @@ var (
 	})
 )
 
-func resourceVPCDHCPOptionsCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceVPCDHCPOptionsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	dhcpConfigurations, err := optionsMap.resourceDataToDHCPConfigurations(d)
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "creating EC2 DHCP Options: %s", err)
 	}
 
 	input := &ec2.CreateDhcpOptionsInput{
 		DhcpConfigurations: dhcpConfigurations,
-		TagSpecifications:  tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeDhcpOptions),
+		TagSpecifications:  getTagSpecificationsIn(ctx, ec2.ResourceTypeDhcpOptions),
 	}
 
-	output, err := conn.CreateDhcpOptions(input)
+	output, err := conn.CreateDhcpOptionsWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating EC2 DHCP Options Set: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating EC2 DHCP Options: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.DhcpOptions.DhcpOptionsId))
 
-	return resourceVPCDHCPOptionsRead(d, meta)
+	return append(diags, resourceVPCDHCPOptionsRead(ctx, d, meta)...)
 }
 
-func resourceVPCDHCPOptionsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceVPCDHCPOptionsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(propagationTimeout, func() (interface{}, error) {
-		return FindDHCPOptionsByID(conn, d.Id())
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
+		return FindDHCPOptionsByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 DHCP Options Set %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 DHCP Options Set (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 DHCP Options (%s): %s", d.Id(), err)
 	}
 
 	opts := outputRaw.(*ec2.DhcpOptions)
@@ -150,55 +157,41 @@ func resourceVPCDHCPOptionsRead(d *schema.ResourceData, meta interface{}) error 
 	err = optionsMap.dhcpConfigurationsToResourceData(opts.DhcpConfigurations, d)
 
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading EC2 DHCP Options (%s): %s", d.Id(), err)
 	}
 
-	tags := KeyValueTags(opts.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	setTagsOut(ctx, opts.Tags)
 
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceVPCDHCPOptionsUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceVPCDHCPOptionsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
+	// Tags only.
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating EC2 DHCP Options Set (%s) tags: %w", d.Id(), err)
-		}
-	}
-
-	return resourceVPCDHCPOptionsRead(d, meta)
+	return append(diags, resourceVPCDHCPOptionsRead(ctx, d, meta)...)
 }
 
-func resourceVPCDHCPOptionsDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceVPCDHCPOptionsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	vpcs, err := FindVPCs(conn, &ec2.DescribeVpcsInput{
-		Filters: BuildAttributeFilterList(map[string]string{
+	vpcs, err := FindVPCs(ctx, conn, &ec2.DescribeVpcsInput{
+		Filters: newAttributeFilterList(map[string]string{
 			"dhcp-options-id": d.Id(),
 		}),
 	})
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 DHCP Options Set (%s) associated VPCs: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 DHCP Options Set (%s) associated VPCs: %s", d.Id(), err)
 	}
 
 	for _, v := range vpcs {
 		vpcID := aws.StringValue(v.VpcId)
 
 		log.Printf("[INFO] Disassociating EC2 DHCP Options Set (%s) from VPC (%s)", d.Id(), vpcID)
-		_, err := conn.AssociateDhcpOptions(&ec2.AssociateDhcpOptionsInput{
+		_, err := conn.AssociateDhcpOptionsWithContext(ctx, &ec2.AssociateDhcpOptionsInput{
 			DhcpOptionsId: aws.String(DefaultDHCPOptionsID),
 			VpcId:         aws.String(vpcID),
 		})
@@ -208,7 +201,7 @@ func resourceVPCDHCPOptionsDelete(d *schema.ResourceData, meta interface{}) erro
 		}
 
 		if err != nil {
-			return fmt.Errorf("error disassociating EC2 DHCP Options Set (%s) from VPC (%s): %w", d.Id(), vpcID, err)
+			return sdkdiag.AppendErrorf(diags, "disassociating EC2 DHCP Options Set (%s) from VPC (%s): %s", d.Id(), vpcID, err)
 		}
 	}
 
@@ -217,19 +210,19 @@ func resourceVPCDHCPOptionsDelete(d *schema.ResourceData, meta interface{}) erro
 	}
 
 	log.Printf("[INFO] Deleting EC2 DHCP Options Set: %s", d.Id())
-	_, err = tfresource.RetryWhenAWSErrCodeEquals(dhcpOptionSetDeletedTimeout, func() (interface{}, error) {
-		return conn.DeleteDhcpOptions(input)
+	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, dhcpOptionSetDeletedTimeout, func() (interface{}, error) {
+		return conn.DeleteDhcpOptionsWithContext(ctx, input)
 	}, errCodeDependencyViolation)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidDHCPOptionIDNotFound) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting EC2 DHCP Options Set (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting EC2 DHCP Options Set (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 // dhcpOptionsMap represents a mapping of Terraform resource attribute name to AWS API DHCP Option name.
@@ -280,7 +273,7 @@ func (m *dhcpOptionsMap) dhcpConfigurationsToResourceData(dhcpConfigurations []*
 	return nil
 }
 
-// resourceDataToNewDhcpConfigurations returns a list of AWS API DHCP configurations from Terraform ResourceData.
+// resourceDataToDHCPConfigurations returns a list of AWS API DHCP configurations from Terraform ResourceData.
 func (m *dhcpOptionsMap) resourceDataToDHCPConfigurations(d *schema.ResourceData) ([]*ec2.NewDhcpConfiguration, error) {
 	var output []*ec2.NewDhcpConfiguration
 

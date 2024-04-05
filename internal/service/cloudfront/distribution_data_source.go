@@ -1,19 +1,23 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudfront
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/cloudfront"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_cloudfront_distribution")
 func DataSourceDistribution() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceDistributionRead,
+		ReadWithoutTimeout: dataSourceDistributionRead,
 
 		Schema: map[string]*schema.Schema{
 			"id": {
@@ -57,28 +61,27 @@ func DataSourceDistribution() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-
+			"web_acl_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"tags": tftags.TagsSchema(),
 		},
 	}
 }
 
-func dataSourceDistributionRead(d *schema.ResourceData, meta interface{}) error {
-	d.SetId(d.Get("id").(string))
-	conn := meta.(*conns.AWSClient).CloudFrontConn
+func dataSourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	input := &cloudfront.GetDistributionInput{
-		Id: aws.String(d.Id()),
+	output, err := FindDistributionByID(ctx, conn, d.Get("id").(string))
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "getting CloudFront Distribution (%s): %s", d.Id(), err)
 	}
 
-	output, err := conn.GetDistribution(input)
-	if err != nil {
-		return fmt.Errorf("error getting CloudFront Distribution (%s): %w", d.Id(), err)
-	}
-	if output == nil {
-		return fmt.Errorf("error getting CloudFront Distribution (%s): empty response", d.Id())
-	}
+	d.SetId(aws.StringValue(output.Distribution.Id))
 	d.Set("etag", output.ETag)
 	if distribution := output.Distribution; distribution != nil {
 		d.Set("arn", distribution.ARN)
@@ -86,26 +89,22 @@ func dataSourceDistributionRead(d *schema.ResourceData, meta interface{}) error 
 		d.Set("in_progress_validation_batches", distribution.InProgressInvalidationBatches)
 		d.Set("last_modified_time", aws.String(distribution.LastModifiedTime.String()))
 		d.Set("status", distribution.Status)
-		region := meta.(*conns.AWSClient).Region
-		if v, ok := endpoints.PartitionForRegion(endpoints.DefaultPartitions(), region); ok && v.ID() == endpoints.AwsCnPartitionID {
-			d.Set("hosted_zone_id", cnRoute53ZoneID)
-		} else {
-			d.Set("hosted_zone_id", route53ZoneID)
-		}
+		d.Set("hosted_zone_id", meta.(*conns.AWSClient).CloudFrontDistributionHostedZoneID(ctx))
 		if distributionConfig := distribution.DistributionConfig; distributionConfig != nil {
 			d.Set("enabled", distributionConfig.Enabled)
+			d.Set("web_acl_id", distributionConfig.WebACLId)
 			if aliases := distributionConfig.Aliases; aliases != nil {
 				d.Set("aliases", aliases.Items)
 			}
 		}
 	}
-	tags, err := ListTags(conn, d.Get("arn").(string))
+	tags, err := listTags(ctx, conn, d.Get("arn").(string))
 	if err != nil {
-		return fmt.Errorf("error listing tags for CloudFront Distribution (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for CloudFront Distribution (%s): %s", d.Id(), err)
 	}
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

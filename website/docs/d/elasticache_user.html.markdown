@@ -8,7 +8,7 @@ description: |-
 
 # Data Source: aws_elasticache_user
 
-Use this data source to get information about an Elasticache User.
+Use this data source to get information about an ElastiCache User.
 
 ## Example Usage
 
@@ -20,13 +20,13 @@ data "aws_elasticache_user" "bar" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `user_id` – (Required) Identifier for the user.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `user_id` - Identifier for the user.
 * `user_name` - User name of the user.

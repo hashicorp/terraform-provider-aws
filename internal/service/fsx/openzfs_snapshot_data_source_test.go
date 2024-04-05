@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package fsx_test
 
 import (
@@ -5,12 +8,14 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/fsx"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccFSxOpenzfsSnapshotDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_fsx_openzfs_snapshot.test"
 	resourceName := "aws_fsx_openzfs_snapshot.test"
 	mostRecentResourceName := "aws_fsx_openzfs_snapshot.latest"
@@ -18,10 +23,10 @@ func TestAccFSxOpenzfsSnapshotDataSource_basic(t *testing.T) {
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckPartitionHasService(fsx.EndpointsID, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, fsx.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, fsx.EndpointsID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.FSxServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckOpenzfsSnapshotDestroy,
+		CheckDestroy:             testAccCheckOpenzfsSnapshotDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOpenzfsSnapshotDataSourceConfig_basic(rName),

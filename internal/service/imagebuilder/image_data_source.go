@@ -1,19 +1,25 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package imagebuilder
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKDataSource("aws_imagebuilder_image")
 func DataSourceImage() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceImageRead,
+		ReadWithoutTimeout: dataSourceImageRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -44,6 +50,37 @@ func DataSourceImage() *schema.Resource {
 			"image_recipe_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"image_scanning_configuration": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"ecr_configuration": {
+							Type:     schema.TypeList,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"container_tags": {
+										Type:     schema.TypeSet,
+										Computed: true,
+										Elem: &schema.Schema{
+											Type: schema.TypeString,
+										},
+									},
+									"repository_name": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
+						"image_scanning_enabled": {
+							Type:     schema.TypeBool,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"image_tests_configuration": {
 				Type:     schema.TypeList,
@@ -106,6 +143,23 @@ func DataSourceImage() *schema.Resource {
 								},
 							},
 						},
+						"containers": {
+							Type:     schema.TypeSet,
+							Computed: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"image_uris": {
+										Type:     schema.TypeSet,
+										Computed: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+									"region": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -122,8 +176,9 @@ func DataSourceImage() *schema.Resource {
 	}
 }
 
-func dataSourceImageRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+func dataSourceImageRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	input := &imagebuilder.GetImageInput{}
 
@@ -131,14 +186,14 @@ func dataSourceImageRead(d *schema.ResourceData, meta interface{}) error {
 		input.ImageBuildVersionArn = aws.String(v.(string))
 	}
 
-	output, err := conn.GetImage(input)
+	output, err := conn.GetImageWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error getting Image Builder Image: %w", err)
+		return sdkdiag.AppendErrorf(diags, "getting Image Builder Image: %s", err)
 	}
 
 	if output == nil || output.Image == nil {
-		return fmt.Errorf("error getting Image Builder Image: empty response")
+		return sdkdiag.AppendErrorf(diags, "getting Image Builder Image: empty response")
 	}
 
 	image := output.Image
@@ -169,6 +224,12 @@ func dataSourceImageRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("image_recipe_arn", image.ImageRecipe.Arn)
 	}
 
+	if image.ImageScanningConfiguration != nil {
+		d.Set("image_scanning_configuration", []interface{}{flattenImageScanningConfiguration(image.ImageScanningConfiguration)})
+	} else {
+		d.Set("image_scanning_configuration", nil)
+	}
+
 	if image.ImageTestsConfiguration != nil {
 		d.Set("image_tests_configuration", []interface{}{flattenImageTestsConfiguration(image.ImageTestsConfiguration)})
 	} else {
@@ -189,8 +250,8 @@ func dataSourceImageRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("output_resources", nil)
 	}
 
-	d.Set("tags", KeyValueTags(image.Tags).IgnoreAWS().IgnoreConfig(meta.(*conns.AWSClient).IgnoreTagsConfig).Map())
+	d.Set("tags", KeyValueTags(ctx, image.Tags).IgnoreAWS().IgnoreConfig(meta.(*conns.AWSClient).IgnoreTagsConfig).Map())
 	d.Set("version", image.Version)
 
-	return nil
+	return diags
 }

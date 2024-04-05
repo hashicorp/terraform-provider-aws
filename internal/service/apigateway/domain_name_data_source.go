@@ -1,24 +1,27 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigateway
 
 import (
+	"context"
 	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
-// cloudFrontRoute53ZoneID defines the route 53 zone ID for CloudFront. This
-// is used to set the zone_id attribute.
-const cloudFrontRoute53ZoneID = "Z2FDTNDATAQYW2"
-
+// @SDKDataSource("aws_api_gateway_domain_name")
 func DataSourceDomainName() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceDomainNameRead,
+		ReadWithoutTimeout: dataSourceDomainNameRead,
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -86,23 +89,19 @@ func DataSourceDomainName() *schema.Resource {
 	}
 }
 
-func dataSourceDomainNameRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).APIGatewayConn
+func dataSourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	input := &apigateway.GetDomainNameInput{}
-
-	if v, ok := d.GetOk("domain_name"); ok {
-		input.DomainName = aws.String(v.(string))
-	}
-
-	domainName, err := conn.GetDomainName(input)
+	domainName := d.Get("domain_name").(string)
+	output, err := FindDomainName(ctx, conn, domainName)
 
 	if err != nil {
-		return fmt.Errorf("error getting API Gateway Domain Name: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading API Gateway Domain Name (%s): %s", domainName, err)
 	}
 
-	d.SetId(aws.StringValue(domainName.DomainName))
+	d.SetId(aws.StringValue(output.DomainName))
 
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
@@ -111,30 +110,26 @@ func dataSourceDomainNameRead(d *schema.ResourceData, meta interface{}) error {
 		Resource:  fmt.Sprintf("/domainnames/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
-	d.Set("certificate_arn", domainName.CertificateArn)
-	d.Set("certificate_name", domainName.CertificateName)
+	d.Set("certificate_arn", output.CertificateArn)
+	d.Set("certificate_name", output.CertificateName)
+	if output.CertificateUploadDate != nil {
+		d.Set("certificate_upload_date", output.CertificateUploadDate.Format(time.RFC3339))
+	}
+	d.Set("cloudfront_domain_name", output.DistributionDomainName)
+	d.Set("cloudfront_zone_id", meta.(*conns.AWSClient).CloudFrontDistributionHostedZoneID(ctx))
+	d.Set("domain_name", output.DomainName)
+	if err := d.Set("endpoint_configuration", flattenEndpointConfiguration(output.EndpointConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting endpoint_configuration: %s", err)
+	}
+	d.Set("regional_certificate_arn", output.RegionalCertificateArn)
+	d.Set("regional_certificate_name", output.RegionalCertificateName)
+	d.Set("regional_domain_name", output.RegionalDomainName)
+	d.Set("regional_zone_id", output.RegionalHostedZoneId)
+	d.Set("security_policy", output.SecurityPolicy)
 
-	if domainName.CertificateUploadDate != nil {
-		d.Set("certificate_upload_date", domainName.CertificateUploadDate.Format(time.RFC3339))
+	if err := d.Set("tags", KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	d.Set("cloudfront_domain_name", domainName.DistributionDomainName)
-	d.Set("cloudfront_zone_id", cloudFrontRoute53ZoneID)
-	d.Set("domain_name", domainName.DomainName)
-
-	if err := d.Set("endpoint_configuration", flattenEndpointConfiguration(domainName.EndpointConfiguration)); err != nil {
-		return fmt.Errorf("error setting endpoint_configuration: %w", err)
-	}
-
-	d.Set("regional_certificate_arn", domainName.RegionalCertificateArn)
-	d.Set("regional_certificate_name", domainName.RegionalCertificateName)
-	d.Set("regional_domain_name", domainName.RegionalDomainName)
-	d.Set("regional_zone_id", domainName.RegionalHostedZoneId)
-	d.Set("security_policy", domainName.SecurityPolicy)
-
-	if err := d.Set("tags", KeyValueTags(domainName.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	return nil
+	return diags
 }

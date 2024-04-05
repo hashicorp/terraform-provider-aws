@@ -48,27 +48,36 @@ resource "aws_guardduty_detector" "member" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `detector_id` - (Required) The detector ID of the member GuardDuty account.
 * `master_account_id` - (Required) AWS account ID for primary account.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - GuardDuty member detector ID
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `create` - (Default `1m`)
 
 ## Import
 
-`aws_guardduty_invite_accepter` can be imported using the the member GuardDuty detector ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_guardduty_invite_accepter` using the member GuardDuty detector ID. For example:
 
+```terraform
+import {
+  to = aws_guardduty_invite_accepter.member
+  id = "00b00fd5aecc0ab60a708659477e9617"
+}
 ```
-$ terraform import aws_guardduty_invite_accepter.member 00b00fd5aecc0ab60a708659477e9617
+
+Using `terraform import`, import `aws_guardduty_invite_accepter` using the member GuardDuty detector ID. For example:
+
+```console
+% terraform import aws_guardduty_invite_accepter.member 00b00fd5aecc0ab60a708659477e9617
 ```

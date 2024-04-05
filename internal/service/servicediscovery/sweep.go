@@ -1,21 +1,20 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package servicediscovery
 
 import (
-	"context"
 	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicediscovery"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_service_discovery_http_namespace", &resource.Sweeper{
 		Name: "aws_service_discovery_http_namespace",
 		F:    sweepHTTPNamespaces,
@@ -47,16 +46,17 @@ func init() {
 }
 
 func sweepHTTPNamespaces(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).ServiceDiscoveryConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	conn := client.ServiceDiscoveryConn(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	namespaces, err := findNamespacesByType(context.Background(), conn, servicediscovery.NamespaceTypeHttp)
+	namespaces, err := findNamespacesByType(ctx, conn, servicediscovery.NamespaceTypeHttp)
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Service Discovery HTTP Namespace sweep for %s: %s", region, err)
 		return nil
 	}
@@ -73,7 +73,7 @@ func sweepHTTPNamespaces(region string) error {
 		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Service Discovery HTTP Namespaces (%s): %w", region, err)
@@ -83,16 +83,17 @@ func sweepHTTPNamespaces(region string) error {
 }
 
 func sweepPrivateDNSNamespaces(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).ServiceDiscoveryConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	conn := client.ServiceDiscoveryConn(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	namespaces, err := findNamespacesByType(context.Background(), conn, servicediscovery.NamespaceTypeDnsPrivate)
+	namespaces, err := findNamespacesByType(ctx, conn, servicediscovery.NamespaceTypeDnsPrivate)
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Service Discovery Private DNS Namespace sweep for %s: %s", region, err)
 		return nil
 	}
@@ -109,7 +110,7 @@ func sweepPrivateDNSNamespaces(region string) error {
 		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Service Discovery Private DNS Namespaces (%s): %w", region, err)
@@ -119,16 +120,17 @@ func sweepPrivateDNSNamespaces(region string) error {
 }
 
 func sweepPublicDNSNamespaces(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).ServiceDiscoveryConn
-	sweepResources := make([]*sweep.SweepResource, 0)
+	conn := client.ServiceDiscoveryConn(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	namespaces, err := findNamespacesByType(context.Background(), conn, servicediscovery.NamespaceTypeDnsPublic)
+	namespaces, err := findNamespacesByType(ctx, conn, servicediscovery.NamespaceTypeDnsPublic)
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Service Discovery Public DNS Namespace sweep for %s: %s", region, err)
 		return nil
 	}
@@ -145,7 +147,7 @@ func sweepPublicDNSNamespaces(region string) error {
 		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Service Discovery Public DNS Namespaces (%s): %w", region, err)
@@ -155,17 +157,18 @@ func sweepPublicDNSNamespaces(region string) error {
 }
 
 func sweepServices(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.(*conns.AWSClient).ServiceDiscoveryConn
+	conn := client.ServiceDiscoveryConn(ctx)
 	input := &servicediscovery.ListServicesInput{}
-	sweepResources := make([]*sweep.SweepResource, 0)
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	services, err := findServices(context.Background(), conn, input)
+	services, err := findServices(ctx, conn, input)
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Service Discovery Service sweep for %s: %s", region, err)
 		return nil
 	}
@@ -183,7 +186,7 @@ func sweepServices(region string) error {
 		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 	}
 
-	err = sweep.SweepOrchestrator(sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Service Discovery Services (%s): %w", region, err)

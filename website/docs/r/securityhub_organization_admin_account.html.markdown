@@ -34,20 +34,29 @@ resource "aws_securityhub_organization_configuration" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `admin_account_id` - (Required) The AWS account identifier of the account to designate as the Security Hub administrator account.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - AWS account identifier.
 
 ## Import
 
-Security Hub Organization Admin Accounts can be imported using the AWS account ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Security Hub Organization Admin Accounts using the AWS account ID. For example:
 
+```terraform
+import {
+  to = aws_securityhub_organization_admin_account.example
+  id = "123456789012"
+}
 ```
-$ terraform import aws_securityhub_organization_admin_account.example 123456789012
+
+Using `terraform import`, import Security Hub Organization Admin Accounts using the AWS account ID. For example:
+
+```console
+% terraform import aws_securityhub_organization_admin_account.example 123456789012
 ```

@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_transfer_workflow: Add `decrypt_step_details` to the `on_exception_steps` and `steps` configuration blocks
+```

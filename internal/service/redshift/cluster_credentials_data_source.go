@@ -1,20 +1,26 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift
 
 import (
-	"fmt"
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshift"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKDataSource("aws_redshift_cluster_credentials")
 func DataSourceClusterCredentials() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceClusterCredentialsRead,
+		ReadWithoutTimeout: dataSourceClusterCredentialsRead,
 
 		Schema: map[string]*schema.Schema{
 			"auto_create": {
@@ -57,8 +63,9 @@ func DataSourceClusterCredentials() *schema.Resource {
 	}
 }
 
-func dataSourceClusterCredentialsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).RedshiftConn
+func dataSourceClusterCredentialsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).RedshiftConn(ctx)
 
 	clusterID := d.Get("cluster_identifier").(string)
 	input := &redshift.GetClusterCredentialsInput{
@@ -76,10 +83,10 @@ func dataSourceClusterCredentialsRead(d *schema.ResourceData, meta interface{}) 
 		input.DbName = aws.String(v.(string))
 	}
 
-	creds, err := conn.GetClusterCredentials(input)
+	creds, err := conn.GetClusterCredentialsWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("reading Redshift Cluster Credentials for Cluster (%s): %w", clusterID, err)
+		return sdkdiag.AppendErrorf(diags, "reading Redshift Cluster Credentials for Cluster (%s): %s", clusterID, err)
 	}
 
 	d.SetId(clusterID)
@@ -88,5 +95,5 @@ func dataSourceClusterCredentialsRead(d *schema.ResourceData, meta interface{}) 
 	d.Set("db_user", creds.DbUser)
 	d.Set("expiration", aws.TimeValue(creds.Expiration).Format(time.RFC3339))
 
-	return nil
+	return diags
 }

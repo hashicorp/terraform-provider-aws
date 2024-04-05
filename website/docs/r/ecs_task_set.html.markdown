@@ -116,9 +116,9 @@ The `scale` configuration block supports the following:
 * `container_port` - (Optional) The port value, already specified in the task definition, to be used for your service discovery service.
 * `container_name` - (Optional) The container name value, already specified in the task definition, to be used for your service discovery service.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The `task_set_id`, `service` and `cluster` separated by commas (`,`).
 * `arn` - The Amazon Resource Name (ARN) that identifies the task set.
@@ -129,8 +129,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-ECS Task Sets can be imported via the `task_set_id`, `service`, and `cluster` separated by commas (`,`) e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ECS Task Sets using the `task_set_id`, `service`, and `cluster` separated by commas (`,`). For example:
 
+```terraform
+import {
+  to = aws_ecs_task_set.example
+  id = "ecs-svc/7177320696926227436,arn:aws:ecs:us-west-2:123456789101:service/example/example-1234567890,arn:aws:ecs:us-west-2:123456789101:cluster/example"
+}
 ```
-$ terraform import aws_ecs_task_set.example ecs-svc/7177320696926227436,arn:aws:ecs:us-west-2:123456789101:service/example/example-1234567890,arn:aws:ecs:us-west-2:123456789101:cluster/example
+
+Using `terraform import`, import ECS Task Sets using the `task_set_id`, `service`, and `cluster` separated by commas (`,`). For example:
+
+```console
+% terraform import aws_ecs_task_set.example ecs-svc/7177320696926227436,arn:aws:ecs:us-west-2:123456789101:service/example/example-1234567890,arn:aws:ecs:us-west-2:123456789101:cluster/example
 ```

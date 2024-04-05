@@ -38,17 +38,29 @@ The following arguments are required:
 The following arguments are optional:
 
 * `user_ids` - (Optional) The list of user IDs that belong to the user group.
+* `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The user group identifier.
+* `arn` - The ARN that identifies the user group.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-ElastiCache user groups can be imported using the `user_group_id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import ElastiCache user groups using the `user_group_id`. For example:
 
+```terraform
+import {
+  to = aws_elasticache_user_group.my_user_group
+  id = "userGoupId1"
+}
 ```
-$ terraform import aws_elasticache_user_group.my_user_group userGoupId1
+
+Using `terraform import`, import ElastiCache user groups using the `user_group_id`. For example:
+
+```console
+% terraform import aws_elasticache_user_group.my_user_group userGoupId1
 ```

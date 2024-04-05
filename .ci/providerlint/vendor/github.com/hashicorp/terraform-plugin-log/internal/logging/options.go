@@ -157,6 +157,47 @@ type LoggerOpts struct {
 	MaskMessageStrings []string
 }
 
+// Copy creates a duplicate LoggerOpts. This should be used to ensure
+// safe LoggerOpts modification when the LoggerOpts could be saved into a
+// new context.Context.
+func (o LoggerOpts) Copy() LoggerOpts {
+	result := LoggerOpts{
+		AdditionalLocationOffset:     o.AdditionalLocationOffset,
+		Fields:                       make(map[string]any, len(o.Fields)),
+		IncludeLocation:              o.IncludeLocation,
+		IncludeRootFields:            o.IncludeRootFields,
+		IncludeTime:                  o.IncludeTime,
+		Level:                        o.Level,
+		MaskAllFieldValuesRegexes:    make([]*regexp.Regexp, len(o.MaskAllFieldValuesRegexes)),
+		MaskAllFieldValuesStrings:    make([]string, len(o.MaskAllFieldValuesStrings)),
+		MaskFieldValuesWithFieldKeys: make([]string, len(o.MaskFieldValuesWithFieldKeys)),
+		MaskMessageRegexes:           make([]*regexp.Regexp, len(o.MaskMessageRegexes)),
+		MaskMessageStrings:           make([]string, len(o.MaskMessageStrings)),
+		Name:                         o.Name,
+		OmitLogWithFieldKeys:         make([]string, len(o.OmitLogWithFieldKeys)),
+		OmitLogWithMessageRegexes:    make([]*regexp.Regexp, len(o.OmitLogWithMessageRegexes)),
+		OmitLogWithMessageStrings:    make([]string, len(o.OmitLogWithMessageStrings)),
+		Output:                       o.Output,
+	}
+
+	// Copy all slice/map contents to prevent leaking memory references
+	// Reference: https://github.com/hashicorp/terraform-plugin-log/issues/131
+	for key, value := range o.Fields {
+		result.Fields[key] = value
+	}
+
+	copy(result.MaskAllFieldValuesRegexes, o.MaskAllFieldValuesRegexes)
+	copy(result.MaskAllFieldValuesStrings, o.MaskAllFieldValuesStrings)
+	copy(result.MaskFieldValuesWithFieldKeys, o.MaskFieldValuesWithFieldKeys)
+	copy(result.MaskMessageRegexes, o.MaskMessageRegexes)
+	copy(result.MaskMessageStrings, o.MaskMessageStrings)
+	copy(result.OmitLogWithFieldKeys, o.OmitLogWithFieldKeys)
+	copy(result.OmitLogWithMessageRegexes, o.OmitLogWithMessageRegexes)
+	copy(result.OmitLogWithMessageStrings, o.OmitLogWithMessageStrings)
+
+	return result
+}
+
 // ApplyLoggerOpts generates a LoggerOpts out of a list of Option
 // implementations. By default, AdditionalLocationOffset is 1, IncludeLocation
 // is true, IncludeTime is true, and Output is os.Stderr.

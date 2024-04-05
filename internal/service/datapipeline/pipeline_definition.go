@@ -1,7 +1,11 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package datapipeline
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strings"
@@ -9,21 +13,22 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datapipeline"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_datapipeline_pipeline_definition")
 func ResourcePipelineDefinition() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourcePipelineDefinitionPut,
-		ReadContext:   resourcePipelineDefinitionRead,
-		UpdateContext: resourcePipelineDefinitionPut,
-		DeleteContext: schema.NoopContext,
+		CreateWithoutTimeout: resourcePipelineDefinitionPut,
+		ReadWithoutTimeout:   resourcePipelineDefinitionRead,
+		UpdateWithoutTimeout: resourcePipelineDefinitionPut,
+		DeleteWithoutTimeout: schema.NoopContext,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -129,7 +134,9 @@ func ResourcePipelineDefinition() *schema.Resource {
 }
 
 func resourcePipelineDefinitionPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DataPipelineConn
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).DataPipelineConn(ctx)
 
 	pipelineID := d.Get("pipeline_id").(string)
 	input := &datapipeline.PutPipelineDefinitionInput{
@@ -147,19 +154,19 @@ func resourcePipelineDefinitionPut(ctx context.Context, d *schema.ResourceData, 
 
 	var err error
 	var output *datapipeline.PutPipelineDefinitionOutput
-	err = resource.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *resource.RetryError {
+	err = retry.RetryContext(ctx, d.Timeout(schema.TimeoutCreate), func() *retry.RetryError {
 		output, err = conn.PutPipelineDefinitionWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, datapipeline.ErrCodeInternalServiceError) {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 		if aws.BoolValue(output.Errored) {
 			errors := getValidationError(output.ValidationErrors)
 			if strings.Contains(errors.Error(), "role") {
-				return resource.RetryableError(fmt.Errorf("error validating after creation DataPipeline Pipeline Definition (%s): %w", pipelineID, errors))
+				return retry.RetryableError(fmt.Errorf("validating after creation DataPipeline Pipeline Definition (%s): %w", pipelineID, errors))
 			}
 		}
 
@@ -171,11 +178,11 @@ func resourcePipelineDefinitionPut(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	if err != nil {
-		return diag.Errorf("error creating DataPipeline Pipeline Definition (%s): %s", pipelineID, err)
+		return sdkdiag.AppendErrorf(diags, "creating DataPipeline Pipeline Definition (%s): %s", pipelineID, err)
 	}
 
 	if aws.BoolValue(output.Errored) {
-		return diag.Errorf("error validating after creation DataPipeline Pipeline Definition (%s): %s", pipelineID, getValidationError(output.ValidationErrors))
+		return sdkdiag.AppendErrorf(diags, "validating after creation DataPipeline Pipeline Definition (%s): %s", pipelineID, getValidationError(output.ValidationErrors))
 	}
 
 	// Activate pipeline if enabled
@@ -185,16 +192,18 @@ func resourcePipelineDefinitionPut(ctx context.Context, d *schema.ResourceData, 
 
 	_, err = conn.ActivatePipelineWithContext(ctx, input2)
 	if err != nil {
-		return diag.Errorf("error activating DataPipeline Pipeline Definition (%s): %s", pipelineID, err)
+		return sdkdiag.AppendErrorf(diags, "activating DataPipeline Pipeline Definition (%s): %s", pipelineID, err)
 	}
 
 	d.SetId(pipelineID)
 
-	return resourcePipelineDefinitionRead(ctx, d, meta)
+	return append(diags, resourcePipelineDefinitionRead(ctx, d, meta)...)
 }
 
 func resourcePipelineDefinitionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).DataPipelineConn
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).DataPipelineConn(ctx)
 	input := &datapipeline.GetPipelineDefinitionInput{
 		PipelineId: aws.String(d.Id()),
 	}
@@ -205,25 +214,25 @@ func resourcePipelineDefinitionRead(ctx context.Context, d *schema.ResourceData,
 		tfawserr.ErrCodeEquals(err, datapipeline.ErrCodePipelineDeletedException) {
 		log.Printf("[WARN] DataPipeline Pipeline Definition (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("error reading DataPipeline Pipeline Definition (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading DataPipeline Pipeline Definition (%s): %s", d.Id(), err)
 	}
 
 	if err = d.Set("parameter_object", flattenPipelineDefinitionParameterObjects(resp.ParameterObjects)); err != nil {
-		return diag.Errorf("error setting `%s` for DataPipeline Pipeline Definition (%s): %s", "parameter_object", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting `%s` for DataPipeline Pipeline Definition (%s): %s", "parameter_object", d.Id(), err)
 	}
 	if err = d.Set("parameter_value", flattenPipelineDefinitionParameterValues(resp.ParameterValues)); err != nil {
-		return diag.Errorf("error setting `%s` for DataPipeline Pipeline Definition (%s): %s", "parameter_object", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting `%s` for DataPipeline Pipeline Definition (%s): %s", "parameter_object", d.Id(), err)
 	}
 	if err = d.Set("pipeline_object", flattenPipelineDefinitionObjects(resp.PipelineObjects)); err != nil {
-		return diag.Errorf("error setting `%s` for DataPipeline Pipeline Definition (%s): %s", "parameter_object", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting `%s` for DataPipeline Pipeline Definition (%s): %s", "parameter_object", d.Id(), err)
 	}
 	d.Set("pipeline_id", d.Id())
 
-	return nil
+	return diags
 }
 
 func expandPipelineDefinitionParameterObject(tfMap map[string]interface{}) *datapipeline.ParameterObject {
@@ -560,11 +569,12 @@ func flattenPipelineDefinitionObjects(apiObjects []*datapipeline.PipelineObject)
 	return tfList
 }
 
-func getValidationError(validationError []*datapipeline.ValidationError) error {
-	var validationErrors error
-	for _, error := range validationError {
-		validationErrors = multierror.Append(validationErrors, fmt.Errorf("id: %s, error: %v", aws.StringValue(error.Id), aws.StringValueSlice(error.Errors)))
+func getValidationError(validationErrors []*datapipeline.ValidationError) error {
+	var errs []error
+
+	for _, err := range validationErrors {
+		errs = append(errs, fmt.Errorf("id: %s, error: %v", aws.StringValue(err.Id), aws.StringValueSlice(err.Errors)))
 	}
 
-	return validationErrors
+	return errors.Join(errs...)
 }

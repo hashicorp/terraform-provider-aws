@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package tftypes
 
 import (
@@ -65,14 +68,19 @@ func jsonUnmarshal(buf []byte, typ Type, p *AttributePath, opts ValueFromJSONOpt
 	case typ.Is(DynamicPseudoType):
 		return jsonUnmarshalDynamicPseudoType(buf, typ, p, opts)
 	case typ.Is(List{}):
+		//nolint:forcetypeassert // Is func above guarantees this type assertion
 		return jsonUnmarshalList(buf, typ.(List).ElementType, p, opts)
 	case typ.Is(Set{}):
+		//nolint:forcetypeassert // Is func above guarantees this type assertion
 		return jsonUnmarshalSet(buf, typ.(Set).ElementType, p, opts)
 	case typ.Is(Map{}):
+		//nolint:forcetypeassert // Is func above guarantees this type assertion
 		return jsonUnmarshalMap(buf, typ.(Map).ElementType, p, opts)
 	case typ.Is(Tuple{}):
+		//nolint:forcetypeassert // Is func above guarantees this type assertion
 		return jsonUnmarshalTuple(buf, typ.(Tuple).ElementTypes, p, opts)
 	case typ.Is(Object{}):
+		//nolint:forcetypeassert // Is func above guarantees this type assertion
 		return jsonUnmarshalObject(buf, typ.(Object).AttributeTypes, p, opts)
 	}
 	return Value{}, p.NewErrorf("unknown type %s", typ)

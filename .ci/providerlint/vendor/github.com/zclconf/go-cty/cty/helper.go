@@ -8,7 +8,7 @@ import (
 // unknowns, for operations that short-circuit to return unknown in that case.
 func anyUnknown(values ...Value) bool {
 	for _, val := range values {
-		if val.v == unknown {
+		if _, unknown := val.v.(*unknownType); unknown {
 			return true
 		}
 	}
@@ -39,7 +39,7 @@ func typeCheck(required Type, ret Type, values ...Value) (shortCircuit *Value, e
 			)
 		}
 
-		if val.v == unknown {
+		if _, unknown := val.v.(*unknownType); unknown {
 			hasUnknown = true
 		}
 	}

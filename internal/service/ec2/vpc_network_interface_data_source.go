@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -8,14 +11,17 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_network_interface")
 func DataSourceNetworkInterface() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceNetworkInterfaceRead,
+		ReadWithoutTimeout: dataSourceNetworkInterfaceRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
@@ -94,7 +100,7 @@ func DataSourceNetworkInterface() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"filter": DataSourceFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -156,24 +162,25 @@ func DataSourceNetworkInterface() *schema.Resource {
 	}
 }
 
-func dataSourceNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeNetworkInterfacesInput{}
 
 	if v, ok := d.GetOk("filter"); ok {
-		input.Filters = BuildFiltersDataSource(v.(*schema.Set))
+		input.Filters = newCustomFilterList(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("id"); ok {
 		input.NetworkInterfaceIds = []*string{aws.String(v.(string))}
 	}
 
-	eni, err := FindNetworkInterfaceWithContext(context.TODO(), conn, input)
+	eni, err := FindNetworkInterface(ctx, conn, input)
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Network Interface: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Network Interface: %s", err)
 	}
 
 	d.SetId(aws.StringValue(eni.NetworkInterfaceId))
@@ -188,14 +195,14 @@ func dataSourceNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("arn", arn)
 	if eni.Association != nil {
 		if err := d.Set("association", []interface{}{flattenNetworkInterfaceAssociation(eni.Association)}); err != nil {
-			return fmt.Errorf("error setting association: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting association: %s", err)
 		}
 	} else {
 		d.Set("association", nil)
 	}
 	if eni.Attachment != nil {
 		if err := d.Set("attachment", []interface{}{flattenNetworkInterfaceAttachmentForDataSource(eni.Attachment)}); err != nil {
-			return fmt.Errorf("error setting attachment: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting attachment: %s", err)
 		}
 	} else {
 		d.Set("attachment", nil)
@@ -215,11 +222,11 @@ func dataSourceNetworkInterfaceRead(d *schema.ResourceData, meta interface{}) er
 	d.Set("subnet_id", eni.SubnetId)
 	d.Set("vpc_id", eni.VpcId)
 
-	if err := d.Set("tags", KeyValueTags(eni.TagSet).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+	if err := d.Set("tags", KeyValueTags(ctx, eni.TagSet).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func flattenNetworkInterfaceAttachmentForDataSource(apiObject *ec2.NetworkInterfaceAttachment) map[string]interface{} {

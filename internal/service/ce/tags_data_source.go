@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ce
 
 import (
@@ -14,9 +17,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKDataSource("aws_ce_tags")
 func DataSourceTags() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceTagsRead,
+		ReadWithoutTimeout: dataSourceTagsRead,
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -88,7 +92,9 @@ func DataSourceTags() *schema.Resource {
 }
 
 func dataSourceTagsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CEConn
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).CEConn(ctx)
 
 	input := &costexplorer.GetTagsInput{
 		TimePeriod: expandTagsTimePeriod(d.Get("time_period").([]interface{})[0].(map[string]interface{})),
@@ -113,14 +119,14 @@ func dataSourceTagsRead(ctx context.Context, d *schema.ResourceData, meta interf
 	resp, err := conn.GetTagsWithContext(ctx, input)
 
 	if err != nil {
-		return create.DiagError(names.CE, create.ErrActionReading, DSNameTags, d.Id(), err)
+		return create.AppendDiagError(diags, names.CE, create.ErrActionReading, DSNameTags, d.Id(), err)
 	}
 
 	d.Set("tags", flex.FlattenStringList(resp.Tags))
 
 	d.SetId(meta.(*conns.AWSClient).AccountID)
 
-	return nil
+	return diags
 }
 
 func expandTagsSortBys(tfList []interface{}) []*costexplorer.SortDefinition {

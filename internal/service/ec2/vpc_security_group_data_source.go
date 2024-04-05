@@ -1,21 +1,28 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
+	"context"
 	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_security_group")
 func DataSourceSecurityGroup() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceSecurityGroupRead,
+		ReadWithoutTimeout: dataSourceSecurityGroupRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
@@ -30,7 +37,7 @@ func DataSourceSecurityGroup() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"filter": CustomFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -51,12 +58,14 @@ func DataSourceSecurityGroup() *schema.Resource {
 	}
 }
 
-func dataSourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceSecurityGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeSecurityGroupsInput{
-		Filters: BuildAttributeFilterList(
+		Filters: newAttributeFilterList(
 			map[string]string{
 				"group-name": d.Get("name").(string),
 				"vpc-id":     d.Get("vpc_id").(string),
@@ -68,11 +77,11 @@ func dataSourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error
 		input.GroupIds = aws.StringSlice([]string{v.(string)})
 	}
 
-	input.Filters = append(input.Filters, BuildTagFilterList(
-		Tags(tftags.New(d.Get("tags").(map[string]interface{}))),
+	input.Filters = append(input.Filters, newTagFilterList(
+		Tags(tftags.New(ctx, d.Get("tags").(map[string]interface{}))),
 	)...)
 
-	input.Filters = append(input.Filters, BuildCustomFilterList(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 
@@ -81,10 +90,10 @@ func dataSourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error
 		input.Filters = nil
 	}
 
-	sg, err := FindSecurityGroup(conn, input)
+	sg, err := FindSecurityGroup(ctx, conn, input)
 
 	if err != nil {
-		return tfresource.SingularDataSourceFindError("EC2 Security Group", err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Security Group", err))
 	}
 
 	d.SetId(aws.StringValue(sg.GroupId))
@@ -101,9 +110,9 @@ func dataSourceSecurityGroupRead(d *schema.ResourceData, meta interface{}) error
 	d.Set("name", sg.GroupName)
 	d.Set("vpc_id", sg.VpcId)
 
-	if err := d.Set("tags", KeyValueTags(sg.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+	if err := d.Set("tags", KeyValueTags(ctx, sg.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

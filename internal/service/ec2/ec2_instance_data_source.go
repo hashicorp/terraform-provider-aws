@@ -1,7 +1,11 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"log"
 	"time"
@@ -10,16 +14,20 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKDataSource("aws_instance")
 func DataSourceInstance() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceInstanceRead,
+		ReadWithoutTimeout: dataSourceInstanceRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
@@ -91,7 +99,7 @@ func DataSourceInstance() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"tags": tftags.TagsSchemaComputed(),
+						names.AttrTags: tftags.TagsSchemaComputed(),
 						"throughput": {
 							Type:     schema.TypeInt,
 							Computed: true,
@@ -155,7 +163,7 @@ func DataSourceInstance() *schema.Resource {
 					},
 				},
 			},
-			"filter": CustomFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"get_password_data": {
 				Type:     schema.TypeBool,
 				Optional: true,
@@ -218,6 +226,10 @@ func DataSourceInstance() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"http_endpoint": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+						"http_protocol_ipv6": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -321,7 +333,7 @@ func DataSourceInstance() *schema.Resource {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
-						"tags": tftags.TagsSchemaComputed(),
+						names.AttrTags: tftags.TagsSchemaComputed(),
 						"throughput": {
 							Type:     schema.TypeInt,
 							Computed: true,
@@ -386,20 +398,20 @@ func DataSourceInstance() *schema.Resource {
 }
 
 // dataSourceInstanceRead performs the instanceID lookup
-func dataSourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func dataSourceInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	// Build up search parameters
 	input := &ec2.DescribeInstancesInput{}
 
 	if tags, tagsOk := d.GetOk("instance_tags"); tagsOk {
-		input.Filters = append(input.Filters, BuildTagFilterList(
-			Tags(tftags.New(tags.(map[string]interface{}))),
+		input.Filters = append(input.Filters, newTagFilterList(
+			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 		)...)
 	}
 
-	input.Filters = append(input.Filters, BuildCustomFilterList(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 	if len(input.Filters) == 0 {
@@ -411,21 +423,21 @@ func dataSourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 		input.InstanceIds = aws.StringSlice([]string{v.(string)})
 	}
 
-	instance, err := FindInstance(conn, input)
+	instance, err := FindInstance(ctx, conn, input)
 
 	if err != nil {
-		return tfresource.SingularDataSourceFindError("EC2 Instance", err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Instance", err))
 	}
 
 	log.Printf("[DEBUG] aws_instance - Single Instance ID found: %s", aws.StringValue(instance.InstanceId))
-	if err := instanceDescriptionAttributes(d, instance, conn, ignoreTagsConfig); err != nil {
-		return err
+	if err := instanceDescriptionAttributes(ctx, d, meta, instance); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", aws.StringValue(instance.InstanceId), err)
 	}
 
 	if d.Get("get_password_data").(bool) {
-		passwordData, err := getInstancePasswordData(aws.StringValue(instance.InstanceId), conn)
+		passwordData, err := getInstancePasswordData(ctx, aws.StringValue(instance.InstanceId), conn, d.Timeout(schema.TimeoutRead))
 		if err != nil {
-			return err
+			return sdkdiag.AppendErrorf(diags, "reading EC2 Instance (%s): %s", aws.StringValue(instance.InstanceId), err)
 		}
 		d.Set("password_data", passwordData)
 	}
@@ -440,15 +452,16 @@ func dataSourceInstanceRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("arn", arn.String())
 
-	return nil
+	return diags
 }
 
 // Populate instance attribute fields with the returned instance
-func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instance, conn *ec2.EC2, ignoreTagsConfig *tftags.IgnoreConfig) error {
+func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, meta interface{}, instance *ec2.Instance) error {
 	d.SetId(aws.StringValue(instance.InstanceId))
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	instanceType := aws.StringValue(instance.InstanceType)
-	instanceTypeInfo, err := FindInstanceTypeByName(conn, instanceType)
+	instanceTypeInfo, err := FindInstanceTypeByName(ctx, conn, instanceType)
 
 	if err != nil {
 		return fmt.Errorf("reading EC2 Instance Type (%s): %w", instanceType, err)
@@ -456,24 +469,12 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 
 	// Set the easy attributes
 	d.Set("instance_state", instance.State.Name)
-	if instance.Placement != nil {
-		d.Set("availability_zone", instance.Placement.AvailabilityZone)
-	}
-	if instance.Placement.GroupName != nil {
-		d.Set("placement_group", instance.Placement.GroupName)
-	}
-	if instance.Placement.PartitionNumber != nil {
-		d.Set("placement_partition_number", instance.Placement.PartitionNumber)
-	}
-	if instance.Placement.Tenancy != nil {
-		d.Set("tenancy", instance.Placement.Tenancy)
-	}
-	if instance.Placement.HostId != nil {
-		d.Set("host_id", instance.Placement.HostId)
-	}
-	if instance.Placement.HostResourceGroupArn != nil {
-		d.Set("host_resource_group_arn", instance.Placement.HostResourceGroupArn)
-	}
+	d.Set("availability_zone", instance.Placement.AvailabilityZone)
+	d.Set("placement_group", instance.Placement.GroupName)
+	d.Set("placement_partition_number", instance.Placement.PartitionNumber)
+	d.Set("tenancy", instance.Placement.Tenancy)
+	d.Set("host_id", instance.Placement.HostId)
+	d.Set("host_resource_group_arn", instance.Placement.HostResourceGroupArn)
 
 	d.Set("ami", instance.ImageId)
 	d.Set("instance_type", instanceType)
@@ -488,7 +489,7 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 		name, err := InstanceProfileARNToName(aws.StringValue(instance.IamInstanceProfile.Arn))
 
 		if err != nil {
-			return fmt.Errorf("error setting iam_instance_profile: %w", err)
+			return fmt.Errorf("setting iam_instance_profile: %w", err)
 		}
 
 		d.Set("iam_instance_profile", name)
@@ -511,7 +512,7 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 					}
 				}
 				if err := d.Set("secondary_private_ips", secondaryIPs); err != nil {
-					return fmt.Errorf("error setting secondary_private_ips: %w", err)
+					return fmt.Errorf("setting secondary_private_ips: %w", err)
 				}
 
 				ipV6Addresses := make([]string, 0, len(ni.Ipv6Addresses))
@@ -519,7 +520,7 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 					ipV6Addresses = append(ipV6Addresses, aws.StringValue(ip.Ipv6Address))
 				}
 				if err := d.Set("ipv6_addresses", ipV6Addresses); err != nil {
-					return fmt.Errorf("error setting ipv6_addresses: %w", err)
+					return fmt.Errorf("setting ipv6_addresses: %w", err)
 				}
 			}
 		}
@@ -538,18 +539,19 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 		d.Set("monitoring", monitoringState == "enabled" || monitoringState == "pending")
 	}
 
-	if err := d.Set("tags", KeyValueTags(instance.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	if err := d.Set("tags", KeyValueTags(ctx, instance.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return fmt.Errorf("setting tags: %w", err)
 	}
 
 	// Security Groups
-	if err := readSecurityGroups(d, instance, conn); err != nil {
-		return err
+	if err := readSecurityGroups(ctx, d, instance, conn); err != nil {
+		return fmt.Errorf("reading EC2 Instance (%s): %w", aws.StringValue(instance.InstanceId), err)
 	}
 
 	// Block devices
-	if err := readBlockDevices(d, instance, conn); err != nil {
-		return err
+	if err := readBlockDevices(ctx, d, meta, instance, true); err != nil {
+		return fmt.Errorf("reading EC2 Instance (%s): %w", aws.StringValue(instance.InstanceId), err)
 	}
 	if _, ok := d.GetOk("ephemeral_block_device"); !ok {
 		d.Set("ephemeral_block_device", []interface{}{})
@@ -557,32 +559,32 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 
 	// Lookup and Set Instance Attributes
 	{
-		attr, err := conn.DescribeInstanceAttribute(&ec2.DescribeInstanceAttributeInput{
+		attr, err := conn.DescribeInstanceAttributeWithContext(ctx, &ec2.DescribeInstanceAttributeInput{
 			Attribute:  aws.String(ec2.InstanceAttributeNameDisableApiStop),
 			InstanceId: aws.String(d.Id()),
 		})
 		if err != nil {
-			return err
+			return fmt.Errorf("getting attribute (%s): %w", ec2.InstanceAttributeNameDisableApiStop, err)
 		}
 		d.Set("disable_api_stop", attr.DisableApiStop.Value)
 	}
 	{
-		attr, err := conn.DescribeInstanceAttribute(&ec2.DescribeInstanceAttributeInput{
+		attr, err := conn.DescribeInstanceAttributeWithContext(ctx, &ec2.DescribeInstanceAttributeInput{
 			Attribute:  aws.String(ec2.InstanceAttributeNameDisableApiTermination),
 			InstanceId: aws.String(d.Id()),
 		})
 		if err != nil {
-			return err
+			return fmt.Errorf("getting attribute (%s): %w", ec2.InstanceAttributeNameDisableApiTermination, err)
 		}
 		d.Set("disable_api_termination", attr.DisableApiTermination.Value)
 	}
 	{
-		attr, err := conn.DescribeInstanceAttribute(&ec2.DescribeInstanceAttributeInput{
+		attr, err := conn.DescribeInstanceAttributeWithContext(ctx, &ec2.DescribeInstanceAttributeInput{
 			Attribute:  aws.String(ec2.InstanceAttributeNameUserData),
 			InstanceId: aws.String(d.Id()),
 		})
 		if err != nil {
-			return err
+			return fmt.Errorf("getting attribute (%s): %w", ec2.InstanceAttributeNameUserData, err)
 		}
 		if attr != nil && attr.UserData != nil && attr.UserData.Value != nil {
 			d.Set("user_data", userDataHashSum(aws.StringValue(attr.UserData.Value)))
@@ -595,7 +597,7 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 	// AWS Standard will return InstanceCreditSpecification.NotSupported errors for EC2 Instance IDs outside T2 and T3 instance types
 	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/8055
 	if aws.BoolValue(instanceTypeInfo.BurstablePerformanceSupported) {
-		instanceCreditSpecification, err := FindInstanceCreditSpecificationByID(conn, d.Id())
+		instanceCreditSpecification, err := FindInstanceCreditSpecificationByID(ctx, conn, d.Id())
 
 		// Ignore UnsupportedOperation errors for AWS China and GovCloud (US).
 		// Reference: https://github.com/hashicorp/terraform-provider-aws/pull/4362.
@@ -609,7 +611,7 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 
 		if instanceCreditSpecification != nil {
 			if err := d.Set("credit_specification", []interface{}{flattenInstanceCreditSpecification(instanceCreditSpecification)}); err != nil {
-				return fmt.Errorf("error setting credit_specification: %w", err)
+				return fmt.Errorf("setting credit_specification: %w", err)
 			}
 		} else {
 			d.Set("credit_specification", nil)
@@ -619,24 +621,24 @@ func instanceDescriptionAttributes(d *schema.ResourceData, instance *ec2.Instanc
 	}
 
 	if err := d.Set("enclave_options", flattenEnclaveOptions(instance.EnclaveOptions)); err != nil {
-		return fmt.Errorf("error setting enclave_options: %w", err)
+		return fmt.Errorf("setting enclave_options: %w", err)
 	}
 
 	if instance.MaintenanceOptions != nil {
 		if err := d.Set("maintenance_options", []interface{}{flattenInstanceMaintenanceOptions(instance.MaintenanceOptions)}); err != nil {
-			return fmt.Errorf("error setting maintenance_options: %w", err)
+			return fmt.Errorf("setting maintenance_options: %w", err)
 		}
 	} else {
 		d.Set("maintenance_options", nil)
 	}
 
 	if err := d.Set("metadata_options", flattenInstanceMetadataOptions(instance.MetadataOptions)); err != nil {
-		return fmt.Errorf("error setting metadata_options: %w", err)
+		return fmt.Errorf("setting metadata_options: %w", err)
 	}
 
 	if instance.PrivateDnsNameOptions != nil {
 		if err := d.Set("private_dns_name_options", []interface{}{flattenPrivateDNSNameOptionsResponse(instance.PrivateDnsNameOptions)}); err != nil {
-			return fmt.Errorf("error setting private_dns_name_options: %w", err)
+			return fmt.Errorf("setting private_dns_name_options: %w", err)
 		}
 	} else {
 		d.Set("private_dns_name_options", nil)

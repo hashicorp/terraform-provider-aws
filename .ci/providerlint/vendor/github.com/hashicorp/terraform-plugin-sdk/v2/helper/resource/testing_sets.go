@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // These test helpers were developed by the AWS provider team at HashiCorp.
 
 package resource

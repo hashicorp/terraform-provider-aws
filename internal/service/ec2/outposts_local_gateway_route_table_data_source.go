@@ -1,20 +1,26 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_ec2_local_gateway_route_table")
 func DataSourceLocalGatewayRouteTable() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceLocalGatewayRouteTableRead,
+		ReadWithoutTimeout: dataSourceLocalGatewayRouteTableRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
@@ -47,13 +53,14 @@ func DataSourceLocalGatewayRouteTable() *schema.Resource {
 
 			"tags": tftags.TagsSchemaComputed(),
 
-			"filter": CustomFiltersSchema(),
+			"filter": customFiltersSchema(),
 		},
 	}
 }
 
-func dataSourceLocalGatewayRouteTableRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceLocalGatewayRouteTableRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	req := &ec2.DescribeLocalGatewayRouteTablesInput{}
@@ -62,7 +69,7 @@ func dataSourceLocalGatewayRouteTableRead(d *schema.ResourceData, meta interface
 		req.LocalGatewayRouteTableIds = []*string{aws.String(v.(string))}
 	}
 
-	req.Filters = BuildAttributeFilterList(
+	req.Filters = newAttributeFilterList(
 		map[string]string{
 			"local-gateway-id": d.Get("local_gateway_id").(string),
 			"outpost-arn":      d.Get("outpost_arn").(string),
@@ -70,11 +77,11 @@ func dataSourceLocalGatewayRouteTableRead(d *schema.ResourceData, meta interface
 		},
 	)
 
-	req.Filters = append(req.Filters, BuildTagFilterList(
-		Tags(tftags.New(d.Get("tags").(map[string]interface{}))),
+	req.Filters = append(req.Filters, newTagFilterList(
+		Tags(tftags.New(ctx, d.Get("tags").(map[string]interface{}))),
 	)...)
 
-	req.Filters = append(req.Filters, BuildCustomFilterList(
+	req.Filters = append(req.Filters, newCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 	if len(req.Filters) == 0 {
@@ -83,15 +90,15 @@ func dataSourceLocalGatewayRouteTableRead(d *schema.ResourceData, meta interface
 	}
 
 	log.Printf("[DEBUG] Reading AWS Local Gateway Route Table: %s", req)
-	resp, err := conn.DescribeLocalGatewayRouteTables(req)
+	resp, err := conn.DescribeLocalGatewayRouteTablesWithContext(ctx, req)
 	if err != nil {
-		return fmt.Errorf("error describing EC2 Local Gateway Route Tables: %w", err)
+		return sdkdiag.AppendErrorf(diags, "describing EC2 Local Gateway Route Tables: %s", err)
 	}
 	if resp == nil || len(resp.LocalGatewayRouteTables) == 0 {
-		return fmt.Errorf("no matching Local Gateway Route Table found")
+		return sdkdiag.AppendErrorf(diags, "no matching Local Gateway Route Table found")
 	}
 	if len(resp.LocalGatewayRouteTables) > 1 {
-		return fmt.Errorf("multiple Local Gateway Route Tables matched; use additional constraints to reduce matches to a single Local Gateway Route Table")
+		return sdkdiag.AppendErrorf(diags, "multiple Local Gateway Route Tables matched; use additional constraints to reduce matches to a single Local Gateway Route Table")
 	}
 
 	localgatewayroutetable := resp.LocalGatewayRouteTables[0]
@@ -102,9 +109,9 @@ func dataSourceLocalGatewayRouteTableRead(d *schema.ResourceData, meta interface
 	d.Set("outpost_arn", localgatewayroutetable.OutpostArn)
 	d.Set("state", localgatewayroutetable.State)
 
-	if err := d.Set("tags", KeyValueTags(localgatewayroutetable.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+	if err := d.Set("tags", KeyValueTags(ctx, localgatewayroutetable.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

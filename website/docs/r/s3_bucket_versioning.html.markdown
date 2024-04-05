@@ -16,6 +16,8 @@ For more information, see [How S3 versioning works](https://docs.aws.amazon.com/
 
 ~> **NOTE:** If you are enabling versioning on the bucket for the first time, AWS recommends that you wait for 15 minutes after enabling versioning before issuing write operations (PUT or DELETE) on objects in the bucket.
 
+-> This resource cannot be used with S3 directory buckets.
+
 ## Example Usage
 
 ### With Versioning Enabled
@@ -80,7 +82,7 @@ resource "aws_s3_bucket_versioning" "example" {
 }
 
 resource "aws_s3_object" "example" {
-  bucket = aws_s3_bucket_versioning.example.bucket
+  bucket = aws_s3_bucket_versioning.example.id
   key    = "droeloe"
   source = "example.txt"
 }
@@ -88,12 +90,12 @@ resource "aws_s3_object" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
-* `bucket` - (Required, Forces new resource) The name of the S3 bucket.
-* `versioning_configuration` - (Required) Configuration block for the versioning parameters [detailed below](#versioning_configuration).
-* `expected_bucket_owner` - (Optional, Forces new resource) The account ID of the expected bucket owner.
-* `mfa` - (Optional, Required if `versioning_configuration` `mfa_delete` is enabled) The concatenation of the authentication device's serial number, a space, and the value that is displayed on your authentication device.
+* `bucket` - (Required, Forces new resource) Name of the S3 bucket.
+* `versioning_configuration` - (Required) Configuration block for the versioning parameters. [See below](#versioning_configuration).
+* `expected_bucket_owner` - (Optional, Forces new resource) Account ID of the expected bucket owner.
+* `mfa` - (Optional, Required if `versioning_configuration` `mfa_delete` is enabled) Concatenation of the authentication device's serial number, a space, and the value that is displayed on your authentication device.
 
 ### versioning_configuration
 
@@ -102,29 +104,47 @@ Updating the value from `Enabled` or `Suspended` to `Disabled` will result in er
 
 The `versioning_configuration` configuration block supports the following arguments:
 
-* `status` - (Required) The versioning state of the bucket. Valid values: `Enabled`, `Suspended`, or `Disabled`. `Disabled` should only be used when creating or importing resources that correspond to unversioned S3 buckets.
+* `status` - (Required) Versioning state of the bucket. Valid values: `Enabled`, `Suspended`, or `Disabled`. `Disabled` should only be used when creating or importing resources that correspond to unversioned S3 buckets.
 * `mfa_delete` - (Optional) Specifies whether MFA delete is enabled in the bucket versioning configuration. Valid values: `Enabled` or `Disabled`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The `bucket` or `bucket` and `expected_bucket_owner` separated by a comma (`,`) if the latter is provided.
 
 ## Import
 
-S3 bucket versioning can be imported in one of two ways.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 bucket versioning using the `bucket` or using the `bucket` and `expected_bucket_owner` separated by a comma (`,`). For example:
 
-If the owner (account ID) of the source bucket is the same account used to configure the Terraform AWS Provider,
-the S3 bucket versioning resource should be imported using the `bucket` e.g.,
+If the owner (account ID) of the source bucket is the same account used to configure the Terraform AWS Provider, import using the `bucket`:
 
+```terraform
+import {
+  to = aws_s3_bucket_versioning.example
+  id = "bucket-name"
+}
 ```
-$ terraform import aws_s3_bucket_versioning.example bucket-name
+
+If the owner (account ID) of the source bucket differs from the account used to configure the Terraform AWS Provider, import using the `bucket` and `expected_bucket_owner` separated by a comma (`,`):
+
+```terraform
+import {
+  to = aws_s3_bucket_versioning.example
+  id = "bucket-name,123456789012"
+}
 ```
 
-If the owner (account ID) of the source bucket differs from the account used to configure the Terraform AWS Provider,
-the S3 bucket versioning resource should be imported using the `bucket` and `expected_bucket_owner` separated by a comma (`,`) e.g.,
+**Using `terraform import` to import** S3 bucket versioning using the `bucket` or using the `bucket` and `expected_bucket_owner` separated by a comma (`,`). For example:
 
+If the owner (account ID) of the source bucket is the same account used to configure the Terraform AWS Provider, import using the `bucket`:
+
+```console
+% terraform import aws_s3_bucket_versioning.example bucket-name
 ```
-$ terraform import aws_s3_bucket_versioning.example bucket-name,123456789012
+
+If the owner (account ID) of the source bucket differs from the account used to configure the Terraform AWS Provider, import using the `bucket` and `expected_bucket_owner` separated by a comma (`,`):
+
+```console
+% terraform import aws_s3_bucket_versioning.example bucket-name,123456789012
 ```

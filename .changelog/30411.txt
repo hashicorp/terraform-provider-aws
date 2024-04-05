@@ -1,0 +1,3 @@
+```release-note:new-resource
+aws_vpclattice_service_network_vpc_association
+```

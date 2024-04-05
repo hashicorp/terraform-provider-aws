@@ -1,34 +1,40 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/sagemaker"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSageMakerStudioLifecycleConfig_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var config sagemaker.DescribeStudioLifecycleConfigOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_studio_lifecycle_config.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStudioLifecycleDestroyConfig,
+		CheckDestroy:             testAccCheckStudioLifecycleDestroyConfig(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStudioLifecycleConfigConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStudioLifecycleExistsConfig(resourceName, &config),
+					testAccCheckStudioLifecycleExistsConfig(ctx, resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "studio_lifecycle_config_name", rName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("studio-lifecycle-config/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "studio_lifecycle_config_app_type", "JupyterServer"),
@@ -46,20 +52,21 @@ func TestAccSageMakerStudioLifecycleConfig_basic(t *testing.T) {
 }
 
 func TestAccSageMakerStudioLifecycleConfig_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var config sagemaker.DescribeStudioLifecycleConfigOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_studio_lifecycle_config.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStudioLifecycleDestroyConfig,
+		CheckDestroy:             testAccCheckStudioLifecycleDestroyConfig(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStudioLifecycleConfigConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStudioLifecycleExistsConfig(resourceName, &config),
+					testAccCheckStudioLifecycleExistsConfig(ctx, resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -72,7 +79,7 @@ func TestAccSageMakerStudioLifecycleConfig_tags(t *testing.T) {
 			{
 				Config: testAccStudioLifecycleConfigConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStudioLifecycleExistsConfig(resourceName, &config),
+					testAccCheckStudioLifecycleExistsConfig(ctx, resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -81,7 +88,7 @@ func TestAccSageMakerStudioLifecycleConfig_tags(t *testing.T) {
 			{
 				Config: testAccStudioLifecycleConfigConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStudioLifecycleExistsConfig(resourceName, &config),
+					testAccCheckStudioLifecycleExistsConfig(ctx, resourceName, &config),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -91,22 +98,23 @@ func TestAccSageMakerStudioLifecycleConfig_tags(t *testing.T) {
 }
 
 func TestAccSageMakerStudioLifecycleConfig_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var config sagemaker.DescribeStudioLifecycleConfigOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_studio_lifecycle_config.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckStudioLifecycleDestroyConfig,
+		CheckDestroy:             testAccCheckStudioLifecycleDestroyConfig(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStudioLifecycleConfigConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckStudioLifecycleExistsConfig(resourceName, &config),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceStudioLifecycleConfig(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceStudioLifecycleConfig(), resourceName),
+					testAccCheckStudioLifecycleExistsConfig(ctx, resourceName, &config),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceStudioLifecycleConfig(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceStudioLifecycleConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -114,31 +122,33 @@ func TestAccSageMakerStudioLifecycleConfig_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckStudioLifecycleDestroyConfig(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
+func testAccCheckStudioLifecycleDestroyConfig(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_sagemaker_studio_lifecycle_config" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_sagemaker_studio_lifecycle_config" {
+				continue
+			}
+
+			_, err := tfsagemaker.FindStudioLifecycleConfigByName(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("SageMaker Studio Lifecycle Config %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfsagemaker.FindStudioLifecycleConfigByName(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("SageMaker Studio Lifecycle Config %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckStudioLifecycleExistsConfig(n string, config *sagemaker.DescribeStudioLifecycleConfigOutput) resource.TestCheckFunc {
+func testAccCheckStudioLifecycleExistsConfig(ctx context.Context, n string, config *sagemaker.DescribeStudioLifecycleConfigOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -149,9 +159,9 @@ func testAccCheckStudioLifecycleExistsConfig(n string, config *sagemaker.Describ
 			return fmt.Errorf("No SageMaker Studio Lifecycle Config ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
 
-		output, err := tfsagemaker.FindStudioLifecycleConfigByName(conn, rs.Primary.ID)
+		output, err := tfsagemaker.FindStudioLifecycleConfigByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

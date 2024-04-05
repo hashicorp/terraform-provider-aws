@@ -1,12 +1,13 @@
-package datasync_test
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
-import (
-	"testing"
+package datasync
 
-	tfdatasync "github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
-)
+import "testing"
 
 func TestSubdirectoryFromLocationURI(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName             string
 		InputURI             string
@@ -153,11 +154,24 @@ func TestSubdirectoryFromLocationURI(t *testing.T) {
 			InputURI:             "fsxz://us-west-2.fs-abcdef012345678901/my-folder-1/my-folder-2", //lintignore:AWSAT003
 			ExpectedSubdirectory: "/my-folder-1/my-folder-2",
 		},
+		{
+			TestName:      "Object storage two levels",
+			InputURI:      "object-storage://192.168.1.1/tf-acc-test-5815577519131245007/tf-acc-test-5815577519131245008/",
+			ExpectedError: true,
+		},
+		{
+			TestName:             "Azure blob URI one level",
+			InputURI:             "azure-blob://example.com/path/",
+			ExpectedSubdirectory: "/path/",
+		},
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
-			got, err := tfdatasync.SubdirectoryFromLocationURI(testCase.InputURI)
+			t.Parallel()
+
+			got, err := subdirectoryFromLocationURI(testCase.InputURI)
 
 			if err == nil && testCase.ExpectedError {
 				t.Fatalf("expected error")
@@ -169,6 +183,80 @@ func TestSubdirectoryFromLocationURI(t *testing.T) {
 
 			if got != testCase.ExpectedSubdirectory {
 				t.Errorf("got %s, expected %s", got, testCase.ExpectedSubdirectory)
+			}
+		})
+	}
+}
+
+func TestDecodeObjectStorageURI(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		TestName             string
+		InputURI             string
+		ExpectedError        bool
+		ExpectedHostname     string
+		ExpectedBucketName   string
+		ExpectedSubdirectory string
+	}{
+		{
+			TestName:      "empty URI",
+			InputURI:      "",
+			ExpectedError: true,
+		},
+		{
+			TestName:      "S3 bucket URI top level",
+			InputURI:      "s3://bucket/",
+			ExpectedError: true,
+		},
+		{
+			TestName:             "Object storage top level",
+			InputURI:             "object-storage://tawn19fp.test/tf-acc-test-6405856757419817388/",
+			ExpectedHostname:     "tawn19fp.test",
+			ExpectedBucketName:   "tf-acc-test-6405856757419817388",
+			ExpectedSubdirectory: "/",
+		},
+		{
+			TestName:             "Object storage one level",
+			InputURI:             "object-storage://tawn19fp.test/tf-acc-test-6405856757419817388/test",
+			ExpectedHostname:     "tawn19fp.test",
+			ExpectedBucketName:   "tf-acc-test-6405856757419817388",
+			ExpectedSubdirectory: "/test",
+		},
+		{
+			TestName:             "Object storage two levels",
+			InputURI:             "object-storage://192.168.1.1/tf-acc-test-5815577519131245007/tf-acc-test-5815577519131245008/tf-acc-test-5815577519131245009/",
+			ExpectedHostname:     "192.168.1.1",
+			ExpectedBucketName:   "tf-acc-test-5815577519131245007",
+			ExpectedSubdirectory: "/tf-acc-test-5815577519131245008/tf-acc-test-5815577519131245009/",
+		},
+	}
+
+	for _, testCase := range testCases {
+		testCase := testCase
+		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
+			gotHostname, gotBucketName, gotSubdirectory, err := decodeObjectStorageURI(testCase.InputURI)
+
+			if err == nil && testCase.ExpectedError {
+				t.Fatalf("expected error")
+			}
+
+			if err != nil && !testCase.ExpectedError {
+				t.Fatalf("unexpected error: %s", err)
+			}
+
+			if gotHostname != testCase.ExpectedHostname {
+				t.Errorf("hostname %s, expected %s", gotHostname, testCase.ExpectedHostname)
+			}
+
+			if gotBucketName != testCase.ExpectedBucketName {
+				t.Errorf("bucketName %s, expected %s", gotBucketName, testCase.ExpectedBucketName)
+			}
+
+			if gotSubdirectory != testCase.ExpectedSubdirectory {
+				t.Errorf("subdirectory %s, expected %s", gotSubdirectory, testCase.ExpectedSubdirectory)
 			}
 		})
 	}

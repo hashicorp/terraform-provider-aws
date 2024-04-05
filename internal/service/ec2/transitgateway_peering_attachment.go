@@ -1,28 +1,36 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceTransitGatewayPeeringAttachment() *schema.Resource {
+// @SDKResource("aws_ec2_transit_gateway_peering_attachment", name="Transit Gateway Peering Attachment")
+// @Tags(identifierAttribute="id")
+func resourceTransitGatewayPeeringAttachment() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceTransitGatewayPeeringAttachmentCreate,
-		Read:   resourceTransitGatewayPeeringAttachmentRead,
-		Update: resourceTransitGatewayPeeringAttachmentUpdate,
-		Delete: resourceTransitGatewayPeeringAttachmentDelete,
+		CreateWithoutTimeout: resourceTransitGatewayPeeringAttachmentCreate,
+		ReadWithoutTimeout:   resourceTransitGatewayPeeringAttachmentRead,
+		UpdateWithoutTimeout: resourceTransitGatewayPeeringAttachmentUpdate,
+		DeleteWithoutTimeout: resourceTransitGatewayPeeringAttachmentDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -45,8 +53,12 @@ func ResourceTransitGatewayPeeringAttachment() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			"state": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"transit_gateway_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -56,10 +68,9 @@ func ResourceTransitGatewayPeeringAttachment() *schema.Resource {
 	}
 }
 
-func resourceTransitGatewayPeeringAttachmentCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceTransitGatewayPeeringAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	peerAccountID := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk("peer_account_id"); ok {
@@ -69,95 +80,81 @@ func resourceTransitGatewayPeeringAttachmentCreate(d *schema.ResourceData, meta 
 		PeerAccountId:        aws.String(peerAccountID),
 		PeerRegion:           aws.String(d.Get("peer_region").(string)),
 		PeerTransitGatewayId: aws.String(d.Get("peer_transit_gateway_id").(string)),
-		TagSpecifications:    tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeTransitGatewayAttachment),
+		TagSpecifications:    getTagSpecificationsIn(ctx, ec2.ResourceTypeTransitGatewayAttachment),
 		TransitGatewayId:     aws.String(d.Get("transit_gateway_id").(string)),
 	}
 
 	log.Printf("[DEBUG] Creating EC2 Transit Gateway Peering Attachment: %s", input)
-	output, err := conn.CreateTransitGatewayPeeringAttachment(input)
+	output, err := conn.CreateTransitGatewayPeeringAttachmentWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("creating EC2 Transit Gateway Peering Attachment: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating EC2 Transit Gateway Peering Attachment: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.TransitGatewayPeeringAttachment.TransitGatewayAttachmentId))
 
-	if _, err := WaitTransitGatewayPeeringAttachmentCreated(conn, d.Id()); err != nil {
-		return fmt.Errorf("waiting for EC2 Transit Gateway Peering Attachment (%s) create: %w", d.Id(), err)
+	if _, err := WaitTransitGatewayPeeringAttachmentCreated(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Transit Gateway Peering Attachment (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceTransitGatewayPeeringAttachmentRead(d, meta)
+	return append(diags, resourceTransitGatewayPeeringAttachmentRead(ctx, d, meta)...)
 }
 
-func resourceTransitGatewayPeeringAttachmentRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceTransitGatewayPeeringAttachmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	transitGatewayPeeringAttachment, err := FindTransitGatewayPeeringAttachmentByID(conn, d.Id())
+	transitGatewayPeeringAttachment, err := FindTransitGatewayPeeringAttachmentByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Transit Gateway Peering Attachment (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("reading EC2 Transit Gateway Peering Attachment (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway Peering Attachment (%s): %s", d.Id(), err)
 	}
 
 	d.Set("peer_account_id", transitGatewayPeeringAttachment.AccepterTgwInfo.OwnerId)
 	d.Set("peer_region", transitGatewayPeeringAttachment.AccepterTgwInfo.Region)
 	d.Set("peer_transit_gateway_id", transitGatewayPeeringAttachment.AccepterTgwInfo.TransitGatewayId)
+	d.Set("state", transitGatewayPeeringAttachment.State)
 	d.Set("transit_gateway_id", transitGatewayPeeringAttachment.RequesterTgwInfo.TransitGatewayId)
 
-	tags := KeyValueTags(transitGatewayPeeringAttachment.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	setTagsOut(ctx, transitGatewayPeeringAttachment.Tags)
 
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceTransitGatewayPeeringAttachmentUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceTransitGatewayPeeringAttachmentUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
+	// Tags only.
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("updating EC2 Transit Gateway Peering Attachment (%s) tags: %w", d.Id(), err)
-		}
-	}
-
-	return nil
+	return append(diags, resourceTransitGatewayPeeringAttachmentRead(ctx, d, meta)...)
 }
 
-func resourceTransitGatewayPeeringAttachmentDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceTransitGatewayPeeringAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Transit Gateway Peering Attachment: %s", d.Id())
-	_, err := conn.DeleteTransitGatewayPeeringAttachment(&ec2.DeleteTransitGatewayPeeringAttachmentInput{
+	_, err := conn.DeleteTransitGatewayPeeringAttachmentWithContext(ctx, &ec2.DeleteTransitGatewayPeeringAttachmentInput{
 		TransitGatewayAttachmentId: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidTransitGatewayAttachmentIDNotFound) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("deleting EC2 Transit Gateway Peering Attachment (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting EC2 Transit Gateway Peering Attachment (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitTransitGatewayPeeringAttachmentDeleted(conn, d.Id()); err != nil {
-		return fmt.Errorf("waiting for EC2 Transit Gateway Peering Attachment (%s) delete: %w", d.Id(), err)
+	if _, err := WaitTransitGatewayPeeringAttachmentDeleted(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Transit Gateway Peering Attachment (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

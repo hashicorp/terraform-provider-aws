@@ -1,8 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package macie2
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
@@ -10,16 +12,21 @@ import (
 	"github.com/aws/aws-sdk-go/service/macie2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_macie2_custom_data_identifier", name="Custom Data Identifier")
+// @Tags
 func ResourceCustomDataIdentifier() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCustomDataIdentifierCreate,
@@ -71,7 +78,7 @@ func ResourceCustomDataIdentifier() *schema.Resource {
 				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
-				ValidateFunc:  validation.StringLenBetween(0, 128-resource.UniqueIDSuffixLength),
+				ValidateFunc:  validation.StringLenBetween(0, 128-id.UniqueIDSuffixLength),
 			},
 			"description": {
 				Type:         schema.TypeString,
@@ -86,8 +93,8 @@ func ResourceCustomDataIdentifier() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.IntBetween(1, 300),
 			},
-			"tags":     tftags.TagsSchemaForceNew(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchemaForceNew(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"created_at": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -101,13 +108,13 @@ func ResourceCustomDataIdentifier() *schema.Resource {
 }
 
 func resourceCustomDataIdentifierCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn
+	var diags diag.Diagnostics
 
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.CreateCustomDataIdentifierInput{
-		ClientToken: aws.String(resource.UniqueId()),
+		ClientToken: aws.String(id.UniqueId()),
+		Tags:        getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("regex"); ok {
@@ -126,20 +133,17 @@ func resourceCustomDataIdentifierCreate(ctx context.Context, d *schema.ResourceD
 	if v, ok := d.GetOk("maximum_match_distance"); ok {
 		input.MaximumMatchDistance = aws.Int64(int64(v.(int)))
 	}
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
 
 	var err error
 	var output *macie2.CreateCustomDataIdentifierOutput
-	err = resource.RetryContext(ctx, 4*time.Minute, func() *resource.RetryError {
+	err = retry.RetryContext(ctx, 4*time.Minute, func() *retry.RetryError {
 		output, err = conn.CreateCustomDataIdentifierWithContext(ctx, input)
 		if err != nil {
 			if tfawserr.ErrCodeEquals(err, macie2.ErrorCodeClientError) {
-				return resource.RetryableError(err)
+				return retry.RetryableError(err)
 			}
 
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -150,56 +154,49 @@ func resourceCustomDataIdentifierCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Macie CustomDataIdentifier: %w", err))
+		return sdkdiag.AppendErrorf(diags, "creating Macie CustomDataIdentifier: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.CustomDataIdentifierId))
 
-	return resourceCustomDataIdentifierRead(ctx, d, meta)
+	return append(diags, resourceCustomDataIdentifierRead(ctx, d, meta)...)
 }
 
 func resourceCustomDataIdentifierRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn
+	var diags diag.Diagnostics
 
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
+
 	input := &macie2.GetCustomDataIdentifierInput{
 		Id: aws.String(d.Id()),
 	}
 
 	resp, err := conn.GetCustomDataIdentifierWithContext(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
-		tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") {
+	if !d.IsNewResource() && (tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
+		tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled")) {
 		log.Printf("[WARN] Macie CustomDataIdentifier (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading Macie CustomDataIdentifier (%s): %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "reading Macie CustomDataIdentifier (%s): %s", d.Id(), err)
 	}
 
 	d.Set("regex", resp.Regex)
 	if err = d.Set("keywords", flex.FlattenStringList(resp.Keywords)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting `%s` for Macie CustomDataIdentifier (%s): %w", "keywords", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "setting `%s` for Macie CustomDataIdentifier (%s): %s", "keywords", d.Id(), err)
 	}
 	if err = d.Set("ignore_words", flex.FlattenStringList(resp.IgnoreWords)); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting `%s` for Macie CustomDataIdentifier (%s): %w", "ignore_words", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "setting `%s` for Macie CustomDataIdentifier (%s): %s", "ignore_words", d.Id(), err)
 	}
 	d.Set("name", resp.Name)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(resp.Name)))
 	d.Set("description", resp.Description)
 	d.Set("maximum_match_distance", resp.MaximumMatchDistance)
-	tags := KeyValueTags(resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
-	if err = d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting `%s` for Macie CustomDataIdentifier (%s): %w", "tags", d.Id(), err))
-	}
-
-	if err = d.Set("tags_all", tags.Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting `%s` for Macie CustomDataIdentifier (%s): %w", "tags_all", d.Id(), err))
-	}
+	setTagsOut(ctx, resp.Tags)
 
 	if aws.BoolValue(resp.Deleted) {
 		log.Printf("[WARN] Macie CustomDataIdentifier (%s) is soft deleted, removing from state", d.Id())
@@ -209,11 +206,13 @@ func resourceCustomDataIdentifierRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("created_at", aws.TimeValue(resp.CreatedAt).Format(time.RFC3339))
 	d.Set("arn", resp.Arn)
 
-	return nil
+	return diags
 }
 
 func resourceCustomDataIdentifierDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.DeleteCustomDataIdentifierInput{
 		Id: aws.String(d.Id()),
@@ -223,9 +222,9 @@ func resourceCustomDataIdentifierDelete(ctx context.Context, d *schema.ResourceD
 	if err != nil {
 		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
 			tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") {
-			return nil
+			return diags
 		}
-		return diag.FromErr(fmt.Errorf("error deleting Macie CustomDataIdentifier (%s): %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "deleting Macie CustomDataIdentifier (%s): %s", d.Id(), err)
 	}
-	return nil
+	return diags
 }

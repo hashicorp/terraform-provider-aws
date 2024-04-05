@@ -1,18 +1,23 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
-	"fmt"
+	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-func DataSourceAccountAlias() *schema.Resource {
+// @SDKDataSource("aws_iam_account_alias", name="Account Alias")
+func dataSourceAccountAlias() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceAccountAliasRead,
+		ReadWithoutTimeout: dataSourceAccountAliasRead,
 
 		Schema: map[string]*schema.Schema{
 			"account_alias": {
@@ -23,26 +28,26 @@ func DataSourceAccountAlias() *schema.Resource {
 	}
 }
 
-func dataSourceAccountAliasRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+func dataSourceAccountAliasRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	log.Printf("[DEBUG] Reading IAM Account Aliases.")
 
 	req := &iam.ListAccountAliasesInput{}
-	resp, err := conn.ListAccountAliases(req)
+	resp, err := conn.ListAccountAliases(ctx, req)
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading IAM Account Alias: %s", err)
 	}
 
 	// 'AccountAliases': [] if there is no alias.
 	if resp == nil || len(resp.AccountAliases) == 0 {
-		return fmt.Errorf("no IAM account alias found")
+		return sdkdiag.AppendErrorf(diags, "reading IAM Account Alias: empty result")
 	}
 
-	alias := aws.StringValue(resp.AccountAliases[0])
+	alias := resp.AccountAliases[0]
 	d.SetId(alias)
-	log.Printf("[DEBUG] Setting AWS IAM Account Alias to %s.", alias)
 	d.Set("account_alias", alias)
 
-	return nil
+	return diags
 }

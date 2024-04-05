@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package waf
 
 import (
@@ -8,7 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/waf"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 func FindSubscribedRuleGroupByNameOrMetricName(ctx context.Context, conn *waf.WAF, name string, metricName string) (*waf.SubscribedRuleGroupSummary, error) {
@@ -28,7 +31,7 @@ func FindSubscribedRuleGroupByNameOrMetricName(ctx context.Context, conn *waf.WA
 		output, err := conn.ListSubscribedRuleGroupsWithContext(ctx, input)
 
 		if tfawserr.ErrCodeContains(err, waf.ErrCodeNonexistentItemException) {
-			return nil, &resource.NotFoundError{
+			return nil, &retry.NotFoundError{
 				LastError:   err,
 				LastRequest: input,
 			}

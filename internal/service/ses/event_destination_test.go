@@ -1,20 +1,26 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ses_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ses"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfses "github.com/hashicorp/terraform-provider-aws/internal/service/ses"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSESEventDestination_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix("tf-acc-test-kinesis")
 	rName3 := sdkacctest.RandomWithPrefix("tf-acc-test-sns")
@@ -25,19 +31,19 @@ func TestAccSESEventDestination_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventDestinationDestroy,
+		CheckDestroy:             testAccCheckEventDestinationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventDestinationConfig_basic(rName1, rName2, rName3),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventDestinationExists(cloudwatchDestinationResourceName, &v1),
-					testAccCheckEventDestinationExists(kinesisDestinationResourceName, &v2),
-					testAccCheckEventDestinationExists(snsDestinationResourceName, &v3),
+					testAccCheckEventDestinationExists(ctx, cloudwatchDestinationResourceName, &v1),
+					testAccCheckEventDestinationExists(ctx, kinesisDestinationResourceName, &v2),
+					testAccCheckEventDestinationExists(ctx, snsDestinationResourceName, &v3),
 					acctest.CheckResourceAttrRegionalARN(cloudwatchDestinationResourceName, "arn", "ses", fmt.Sprintf("configuration-set/%s:event-destination/%s", rName1, rName1)),
 					acctest.CheckResourceAttrRegionalARN(kinesisDestinationResourceName, "arn", "ses", fmt.Sprintf("configuration-set/%s:event-destination/%s", rName1, rName2)),
 					acctest.CheckResourceAttrRegionalARN(snsDestinationResourceName, "arn", "ses", fmt.Sprintf("configuration-set/%s:event-destination/%s", rName1, rName3)),
@@ -69,6 +75,7 @@ func TestAccSESEventDestination_basic(t *testing.T) {
 }
 
 func TestAccSESEventDestination_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix("tf-acc-test-kinesis")
 	rName3 := sdkacctest.RandomWithPrefix("tf-acc-test-sns")
@@ -79,22 +86,22 @@ func TestAccSESEventDestination_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckEventDestinationDestroy,
+		CheckDestroy:             testAccCheckEventDestinationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEventDestinationConfig_basic(rName1, rName2, rName3),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckEventDestinationExists(cloudwatchDestinationResourceName, &v1),
-					testAccCheckEventDestinationExists(kinesisDestinationResourceName, &v2),
-					testAccCheckEventDestinationExists(snsDestinationResourceName, &v3),
-					acctest.CheckResourceDisappears(acctest.Provider, tfses.ResourceEventDestination(), cloudwatchDestinationResourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfses.ResourceEventDestination(), kinesisDestinationResourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfses.ResourceEventDestination(), snsDestinationResourceName),
+					testAccCheckEventDestinationExists(ctx, cloudwatchDestinationResourceName, &v1),
+					testAccCheckEventDestinationExists(ctx, kinesisDestinationResourceName, &v2),
+					testAccCheckEventDestinationExists(ctx, snsDestinationResourceName, &v3),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfses.ResourceEventDestination(), cloudwatchDestinationResourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfses.ResourceEventDestination(), kinesisDestinationResourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfses.ResourceEventDestination(), snsDestinationResourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -102,37 +109,37 @@ func TestAccSESEventDestination_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckEventDestinationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
+func testAccCheckEventDestinationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_ses_configuration_set" {
-			continue
-		}
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_ses_configuration_set" {
+				continue
+			}
 
-		response, err := conn.ListConfigurationSets(&ses.ListConfigurationSetsInput{})
-		if err != nil {
-			return err
-		}
+			response, err := conn.ListConfigurationSetsWithContext(ctx, &ses.ListConfigurationSetsInput{})
+			if err != nil {
+				return err
+			}
 
-		found := false
-		for _, element := range response.ConfigurationSets {
-			if aws.StringValue(element.Name) == rs.Primary.ID {
-				found = true
+			found := false
+			for _, element := range response.ConfigurationSets {
+				if aws.StringValue(element.Name) == rs.Primary.ID {
+					found = true
+				}
+			}
+
+			if found {
+				return fmt.Errorf("The configuration set still exists")
 			}
 		}
 
-		if found {
-			return fmt.Errorf("The configuration set still exists")
-		}
-
+		return nil
 	}
-
-	return nil
-
 }
 
-func testAccCheckEventDestinationExists(n string, v *ses.EventDestination) resource.TestCheckFunc {
+func testAccCheckEventDestinationExists(ctx context.Context, n string, v *ses.EventDestination) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -143,9 +150,9 @@ func testAccCheckEventDestinationExists(n string, v *ses.EventDestination) resou
 			return fmt.Errorf("SES event destination ID not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
 
-		response, err := conn.DescribeConfigurationSet(&ses.DescribeConfigurationSetInput{
+		response, err := conn.DescribeConfigurationSetWithContext(ctx, &ses.DescribeConfigurationSetInput{
 			ConfigurationSetAttributeNames: aws.StringSlice([]string{ses.ConfigurationSetAttributeEventDestinations}),
 			ConfigurationSetName:           aws.String(rs.Primary.Attributes["configuration_set_name"]),
 		})
@@ -168,11 +175,6 @@ func testAccEventDestinationConfig_basic(rName1, rName2, rName3 string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[2]q
-}
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
 }
 
 resource "aws_iam_role" "test" {
@@ -204,9 +206,9 @@ EOF
 
 resource "aws_kinesis_firehose_delivery_stream" "test" {
   name        = %[2]q
-  destination = "s3"
+  destination = "extended_s3"
 
-  s3_configuration {
+  extended_s3_configuration {
     role_arn   = aws_iam_role.test.arn
     bucket_arn = aws_s3_bucket.test.arn
   }

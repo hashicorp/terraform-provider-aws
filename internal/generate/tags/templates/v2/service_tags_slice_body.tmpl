@@ -8,39 +8,15 @@
 // This function strips tag resource identifier and type. Generally, this is
 // the desired behavior so the tag schema does not require those attributes.
 // Use (tftags.KeyValueTags).ListOfMap() for full tag information.
-func ListOfMap(tags tftags.KeyValueTags) []interface{} {
-	var result []interface{}
+func ListOfMap(tags tftags.KeyValueTags) []any {
+	var result []any
 
 	for _, key := range tags.Keys() {
-		m := map[string]interface{}{
+		m := map[string]any{
 			"key":                   key,
 			"value":                 aws.ToString(tags.KeyValue(key)),
 			{{ if .TagTypeAddBoolElem }}
 			"{{ .TagTypeAddBoolElemSnake }}": aws.ToBool(tags.KeyAdditionalBoolValue(key, "{{ .TagTypeAddBoolElem }}")),
-			{{ end }}
-		}
-
-		result = append(result, m)
-	}
-
-	return result
-}
-{{- end }}
-
-{{ if eq .ServicePackage "autoscaling" }}
-// ListOfStringMap returns a list of {{ .ServicePackage }} tags in flattened map of only string values.
-//
-// Compatible with setting Terraform state for legacy []map[string]string schema.
-// Deprecated: Will be removed in a future major version without replacement.
-func ListOfStringMap(tags tftags.KeyValueTags) []interface{} {
-	var result []interface{}
-
-	for _, key := range tags.Keys() {
-		m := map[string]string{
-			"key":                   key,
-			"value":                 aws.ToString(tags.KeyValue(key)),
-			{{ if .TagTypeAddBoolElem }}
-			"{{ .TagTypeAddBoolElemSnake }}": strconv.FormatBool(aws.ToBool(tags.KeyAdditionalBoolValue(key, "{{ .TagTypeAddBoolElem }}"))),
 			{{ end }}
 		}
 
@@ -68,13 +44,13 @@ func TagKeys(tags tftags.KeyValueTags) []*{{ .AWSService }}.{{ .TagKeyType }} {
 }
 {{- end }}
 
-// Tags returns {{ .ServicePackage }} service tags.
-func Tags(tags tftags.KeyValueTags) []types.{{ .TagType }} {
+// {{ .TagsFunc }} returns {{ .ServicePackage }} service tags.
+func {{ .TagsFunc }}(tags tftags.KeyValueTags) []awstypes.{{ .TagType }} {
 	{{- if or ( .TagTypeIDElem ) ( .TagTypeAddBoolElem) }}
-	var result []types.{{ .TagType }}
+	var result []awstypes.{{ .TagType }}
 
 	for _, key := range tags.Keys() {
-		tag := types.{{ .TagType }}{
+		tag := awstypes.{{ .TagType }}{
 			{{ .TagTypeKeyElem }}:        aws.String(key),
 			{{ .TagTypeValElem }}:      tags.KeyValue(key),
 			{{- if ( .TagTypeIDElem ) }}
@@ -91,10 +67,10 @@ func Tags(tags tftags.KeyValueTags) []types.{{ .TagType }} {
 		result = append(result, tag)
 	}
 	{{- else }}
-	result := make([]types.{{ .TagType }}, 0, len(tags))
+	result := make([]awstypes.{{ .TagType }}, 0, len(tags))
 
 	for k, v := range tags.Map() {
-		tag := types.{{ .TagType }}{
+		tag := awstypes.{{ .TagType }}{
 			{{ .TagTypeKeyElem }}:   aws.String(k),
 			{{ .TagTypeValElem }}: aws.String(v),
 		}
@@ -106,21 +82,21 @@ func Tags(tags tftags.KeyValueTags) []types.{{ .TagType }} {
 	return result
 }
 
-// KeyValueTags creates tftags.KeyValueTags from {{ .AWSService }} service tags.
+// {{ .KeyValueTagsFunc }} creates tftags.KeyValueTags from {{ .AWSService }} service tags.
 {{- if or ( .TagType2 ) ( .TagTypeAddBoolElem ) }}
 //
 // Accepts the following types:
-//   - []types.{{ .TagType }}
+//   - []awstypes.{{ .TagType }}
 {{- if .TagType2 }}
-//   - []types.{{ .TagType2 }}
+//   - []awstypes.{{ .TagType2 }}
 {{- end }}
 {{- if .TagTypeAddBoolElem }}
-//   - []interface{} (Terraform TypeList configuration block compatible)
+//   - []any (Terraform TypeList configuration block compatible)
 //   - *schema.Set (Terraform TypeSet configuration block compatible)
 {{- end }}
-func KeyValueTags(tags interface{}{{ if .TagTypeIDElem }}, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }}{{ end }}) tftags.KeyValueTags {
+func {{ .KeyValueTagsFunc }}(ctx context.Context, tags any{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string{{ end }}) tftags.KeyValueTags {
 	switch tags := tags.(type) {
-	case []types.{{ .TagType }}:
+	case []awstypes.{{ .TagType }}:
 		{{- if or ( .TagTypeIDElem ) ( .TagTypeAddBoolElem) }}
 		m := make(map[string]*tftags.TagData, len(tags))
 
@@ -152,8 +128,8 @@ func KeyValueTags(tags interface{}{{ if .TagTypeIDElem }}, identifier string{{ i
 		}
 		{{- end }}
 
-		return tftags.New(m)
-	case []*{{ .AWSService }}.{{ .TagType2 }}:
+		return tftags.New(ctx, m)
+	case []awstypes.{{ .TagType2 }}:
 		{{- if or ( .TagTypeIDElem ) ( .TagTypeAddBoolElem) }}
 		m := make(map[string]*tftags.TagData, len(tags))
 
@@ -185,15 +161,15 @@ func KeyValueTags(tags interface{}{{ if .TagTypeIDElem }}, identifier string{{ i
 		}
 		{{- end }}
 
-		return tftags.New(m)
+		return tftags.New(ctx, m)
 	{{- if .TagTypeAddBoolElem }}
 	case *schema.Set:
-		return KeyValueTags(tags.List(){{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }})
-	case []interface{}:
+		return {{ .KeyValueTagsFunc }}(ctx, tags.List(){{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }})
+	case []any:
 		result := make(map[string]*tftags.TagData)
 
 		for _, tfMapRaw := range tags {
-			tfMap, ok := tfMapRaw.(map[string]interface{})
+			tfMap, ok := tfMapRaw.(map[string]any)
 
 			if !ok {
 				continue
@@ -218,15 +194,6 @@ func KeyValueTags(tags interface{}{{ if .TagTypeIDElem }}, identifier string{{ i
 				tagData.AdditionalBoolFields["{{ .TagTypeAddBoolElem }}"] = &v
 			}
 			{{- end }}
-			{{ if eq .ServicePackage "autoscaling" }}
-			// Deprecated: Legacy map handling
-			{{- if .TagTypeAddBoolElem }}
-			if v, ok := tfMap["{{ .TagTypeAddBoolElemSnake }}"].(string); ok {
-				b, _ := strconv.ParseBool(v)
-				tagData.AdditionalBoolFields["{{ .TagTypeAddBoolElem }}"] = &b
-			}
-			{{- end }}
-			{{- end }}
 			{{- end }}
 
 			{{ if .TagTypeIDElem }}
@@ -240,20 +207,58 @@ func KeyValueTags(tags interface{}{{ if .TagTypeIDElem }}, identifier string{{ i
 			result[key] = tagData
 		}
 
-		return tftags.New(result)
+		return tftags.New(ctx, result)
 	{{- end }}
 	default:
-		return tftags.New(nil)
+		return tftags.New(ctx, nil)
 	}
 }
 {{- else }}
-func KeyValueTags(tags []types.{{ .TagType }}) tftags.KeyValueTags {
+func {{ .KeyValueTagsFunc }}(ctx context.Context, tags []awstypes.{{ .TagType }}) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
 		m[aws.ToString(tag.{{ .TagTypeKeyElem }})] = tag.{{ .TagTypeValElem }}
 	}
 
-	return tftags.New(m)
+	return tftags.New(ctx, m)
+}
+{{- end }}
+
+// {{ .GetTagsInFunc }} returns {{ .ServicePackage }} service tags from Context.
+// nil is returned if there are no input tags.
+func {{ .GetTagsInFunc }}(ctx context.Context) []awstypes.{{ .TagType }} {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		if tags := {{ .TagsFunc }}(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+			return tags
+		}
+	}
+
+	return nil
+}
+
+// {{ .SetTagsOutFunc }} sets {{ .ServicePackage }} service tags in Context.
+{{- if or ( .TagType2 ) ( .TagTypeAddBoolElem ) }}
+func {{ .SetTagsOutFunc }}(ctx context.Context, tags any{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string{{ end }}) {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = option.Some({{ .KeyValueTagsFunc }}(ctx, tags{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }}))
+	}
+}
+{{- else }}
+func {{ .SetTagsOutFunc }}(ctx context.Context, tags []awstypes.{{ .TagType }}) {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = option.Some({{ .KeyValueTagsFunc }}(ctx, tags))
+	}
+}
+{{- end }}
+
+{{- if ne .CreateTagsFunc "" }}
+// {{ .CreateTagsFunc }} creates {{ .ServicePackage }} service tags for new resources.
+func {{ .CreateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string, tags []awstypes.{{ .TagType }}) error {
+	if len(tags) == 0 {
+		return nil
+	}
+
+	return  {{ .UpdateTagsFunc }}(ctx, conn, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}, nil, {{ .KeyValueTagsFunc }}(ctx, tags))
 }
 {{- end }}

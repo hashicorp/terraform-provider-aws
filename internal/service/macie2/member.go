@@ -1,8 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package macie2
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
@@ -10,14 +12,18 @@ import (
 	"github.com/aws/aws-sdk-go/service/macie2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_macie2_member", name="Member")
+// @Tags
 func ResourceMember() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceMemberCreate,
@@ -38,8 +44,8 @@ func ResourceMember() *schema.Resource {
 				Required: true,
 				ForceNew: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchemaForceNew(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -92,10 +98,9 @@ func ResourceMember() *schema.Resource {
 }
 
 func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn
+	var diags diag.Diagnostics
 
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	accountId := d.Get("account_id").(string)
 	input := &macie2.CreateMemberInput{
@@ -103,22 +108,19 @@ func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta inte
 			AccountId: aws.String(accountId),
 			Email:     aws.String(d.Get("email").(string)),
 		},
-	}
-
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
+		Tags: getTagsIn(ctx),
 	}
 
 	var err error
-	err = resource.RetryContext(ctx, 4*time.Minute, func() *resource.RetryError {
+	err = retry.RetryContext(ctx, 4*time.Minute, func() *retry.RetryError {
 		_, err := conn.CreateMemberWithContext(ctx, input)
 
 		if tfawserr.ErrCodeEquals(err, macie2.ErrorCodeClientError) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -129,13 +131,13 @@ func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Macie Member: %w", err))
+		return sdkdiag.AppendErrorf(diags, "creating Macie Member: %s", err)
 	}
 
 	d.SetId(accountId)
 
 	if !d.Get("invite").(bool) {
-		return resourceMemberRead(ctx, d, meta)
+		return append(diags, resourceMemberRead(ctx, d, meta)...)
 	}
 
 	// Invitation workflow
@@ -154,15 +156,15 @@ func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	log.Printf("[INFO] Inviting Macie2 Member: %s", inputInvite)
 
 	var output *macie2.CreateInvitationsOutput
-	err = resource.RetryContext(ctx, 4*time.Minute, func() *resource.RetryError {
+	err = retry.RetryContext(ctx, 4*time.Minute, func() *retry.RetryError {
 		output, err = conn.CreateInvitationsWithContext(ctx, inputInvite)
 
 		if tfawserr.ErrCodeEquals(err, macie2.ErrorCodeClientError) {
-			return resource.RetryableError(err)
+			return retry.RetryableError(err)
 		}
 
 		if err != nil {
-			return resource.NonRetryableError(err)
+			return retry.NonRetryableError(err)
 		}
 
 		return nil
@@ -173,40 +175,42 @@ func resourceMemberCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error inviting Macie Member: %w", err))
+		return sdkdiag.AppendErrorf(diags, "inviting Macie Member: %s", err)
 	}
 
 	if len(output.UnprocessedAccounts) != 0 {
-		return diag.FromErr(fmt.Errorf("error inviting Macie Member: %s: %s", aws.StringValue(output.UnprocessedAccounts[0].ErrorCode), aws.StringValue(output.UnprocessedAccounts[0].ErrorMessage)))
+		return sdkdiag.AppendErrorf(diags, "inviting Macie Member: %s: %s", aws.StringValue(output.UnprocessedAccounts[0].ErrorCode), aws.StringValue(output.UnprocessedAccounts[0].ErrorMessage))
 	}
 
 	if _, err = waitMemberInvited(ctx, conn, d.Id()); err != nil {
-		return diag.FromErr(fmt.Errorf("error waiting for Macie Member (%s) invitation: %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "waiting for Macie Member (%s) invitation: %s", d.Id(), err)
 	}
 
-	return resourceMemberRead(ctx, d, meta)
+	return append(diags, resourceMemberRead(ctx, d, meta)...)
 }
 
 func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn
+	var diags diag.Diagnostics
 
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
+
 	input := &macie2.GetMemberInput{
 		Id: aws.String(d.Id()),
 	}
 
 	resp, err := conn.GetMemberWithContext(ctx, input)
+
+	if !d.IsNewResource() && (tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
+		tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") ||
+		tfawserr.ErrMessageContains(err, macie2.ErrCodeConflictException, "member accounts are associated with your account") ||
+		tfawserr.ErrMessageContains(err, macie2.ErrCodeValidationException, "account is not associated with your account")) {
+		log.Printf("[WARN] Macie Member (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
-			tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") ||
-			tfawserr.ErrMessageContains(err, macie2.ErrCodeConflictException, "member accounts are associated with your account") ||
-			tfawserr.ErrMessageContains(err, macie2.ErrCodeValidationException, "account is not associated with your account") {
-			log.Printf("[WARN] Macie Member (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return diag.FromErr(fmt.Errorf("error reading Macie Member (%s): %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "reading Macie Member (%s): %s", d.Id(), err)
 	}
 
 	d.Set("account_id", resp.AccountId)
@@ -217,15 +221,8 @@ func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("invited_at", aws.TimeValue(resp.InvitedAt).Format(time.RFC3339))
 	d.Set("updated_at", aws.TimeValue(resp.UpdatedAt).Format(time.RFC3339))
 	d.Set("arn", resp.Arn)
-	tags := KeyValueTags(resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
-	if err = d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting `%s` for Macie Member (%s): %w", "tags", d.Id(), err))
-	}
-
-	if err = d.Set("tags_all", tags.Map()); err != nil {
-		return diag.FromErr(fmt.Errorf("error setting `%s` for Macie Member (%s): %w", "tags_all", d.Id(), err))
-	}
+	setTagsOut(ctx, resp.Tags)
 
 	status := aws.StringValue(resp.RelationshipStatus)
 	log.Printf("[DEBUG] print resp.RelationshipStatus: %v", aws.StringValue(resp.RelationshipStatus))
@@ -247,11 +244,13 @@ func resourceMemberRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 	d.Set("status", status)
 
-	return nil
+	return diags
 }
 
 func resourceMemberUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	// Invitation workflow
 
@@ -271,15 +270,15 @@ func resourceMemberUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			log.Printf("[INFO] Inviting Macie2 Member: %s", inputInvite)
 			var output *macie2.CreateInvitationsOutput
 			var err error
-			err = resource.RetryContext(ctx, 4*time.Minute, func() *resource.RetryError {
+			err = retry.RetryContext(ctx, 4*time.Minute, func() *retry.RetryError {
 				output, err = conn.CreateInvitationsWithContext(ctx, inputInvite)
 
 				if tfawserr.ErrCodeEquals(err, macie2.ErrorCodeClientError) {
-					return resource.RetryableError(err)
+					return retry.RetryableError(err)
 				}
 
 				if err != nil {
-					return resource.NonRetryableError(err)
+					return retry.NonRetryableError(err)
 				}
 
 				return nil
@@ -290,15 +289,15 @@ func resourceMemberUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			}
 
 			if err != nil {
-				return diag.FromErr(fmt.Errorf("error inviting Macie Member: %w", err))
+				return sdkdiag.AppendErrorf(diags, "inviting Macie Member: %s", err)
 			}
 
 			if len(output.UnprocessedAccounts) != 0 {
-				return diag.FromErr(fmt.Errorf("error inviting Macie Member: %s: %s", aws.StringValue(output.UnprocessedAccounts[0].ErrorCode), aws.StringValue(output.UnprocessedAccounts[0].ErrorMessage)))
+				return sdkdiag.AppendErrorf(diags, "inviting Macie Member: %s: %s", aws.StringValue(output.UnprocessedAccounts[0].ErrorCode), aws.StringValue(output.UnprocessedAccounts[0].ErrorMessage))
 			}
 
 			if _, err = waitMemberInvited(ctx, conn, d.Id()); err != nil {
-				return diag.FromErr(fmt.Errorf("error waiting for Macie Member (%s) invitation: %w", d.Id(), err))
+				return sdkdiag.AppendErrorf(diags, "waiting for Macie Member (%s) invitation: %s", d.Id(), err)
 			}
 		} else {
 			input := &macie2.DisassociateMemberInput{
@@ -309,9 +308,9 @@ func resourceMemberUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			if err != nil {
 				if tfawserr.ErrCodeEquals(err, macie2.ErrCodeResourceNotFoundException) ||
 					tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") {
-					return nil
+					return diags
 				}
-				return diag.FromErr(fmt.Errorf("error disassociating Macie Member invite (%s): %w", d.Id(), err))
+				return sdkdiag.AppendErrorf(diags, "disassociating Macie Member invite (%s): %s", d.Id(), err)
 			}
 		}
 	}
@@ -326,16 +325,17 @@ func resourceMemberUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 		_, err := conn.UpdateMemberSessionWithContext(ctx, input)
 		if err != nil {
-			return diag.FromErr(fmt.Errorf("error updating Macie Member (%s): %w", d.Id(), err))
+			return sdkdiag.AppendErrorf(diags, "updating Macie Member (%s): %s", d.Id(), err)
 		}
-
 	}
 
-	return resourceMemberRead(ctx, d, meta)
+	return append(diags, resourceMemberRead(ctx, d, meta)...)
 }
 
 func resourceMemberDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).Macie2Conn
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).Macie2Conn(ctx)
 
 	input := &macie2.DeleteMemberInput{
 		Id: aws.String(d.Id()),
@@ -347,9 +347,9 @@ func resourceMemberDelete(ctx context.Context, d *schema.ResourceData, meta inte
 			tfawserr.ErrMessageContains(err, macie2.ErrCodeAccessDeniedException, "Macie is not enabled") ||
 			tfawserr.ErrMessageContains(err, macie2.ErrCodeConflictException, "member accounts are associated with your account") ||
 			tfawserr.ErrMessageContains(err, macie2.ErrCodeValidationException, "account is not associated with your account") {
-			return nil
+			return diags
 		}
-		return diag.FromErr(fmt.Errorf("error deleting Macie Member (%s): %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "deleting Macie Member (%s): %s", d.Id(), err)
 	}
-	return nil
+	return diags
 }

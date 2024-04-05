@@ -1,101 +1,136 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elb_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/service/elb"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfelb "github.com/hashicorp/terraform-provider-aws/internal/service/elb"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccELBBackendServerPolicy_basic(t *testing.T) {
-	privateKey1 := acctest.TLSRSAPrivateKeyPEM(2048)
-	privateKey2 := acctest.TLSRSAPrivateKeyPEM(2048)
-	publicKey1 := acctest.TLSRSAPublicKeyPEM(privateKey1)
-	publicKey2 := acctest.TLSRSAPublicKeyPEM(privateKey2)
-	certificate1 := acctest.TLSRSAX509SelfSignedCertificatePEM(privateKey1, "example.com")
-	rString := sdkacctest.RandString(8)
-	lbName := fmt.Sprintf("tf-acc-lb-bsp-basic-%s", rString)
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	privateKey1 := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	publicKey1 := acctest.TLSRSAPublicKeyPEM(t, privateKey1)
+	privateKey2 := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	publicKey2 := acctest.TLSRSAPublicKeyPEM(t, privateKey2)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKey1, "example.com")
+	resourceName := "aws_load_balancer_backend_server_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elb.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBackendServerPolicyDestroy,
+		CheckDestroy:             testAccCheckBackendServerPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBackendServerPolicyConfig_basic0(lbName, privateKey1, publicKey1, certificate1),
+				Config: testAccBackendServerPolicyConfig_basic(rName, privateKey1, certificate, publicKey1, publicKey2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyState("aws_elb.test-lb", "aws_load_balancer_policy.test-pubkey-policy0"),
-					testAccCheckPolicyState("aws_elb.test-lb", "aws_load_balancer_policy.test-backend-auth-policy0"),
-					testAccCheckBackendServerPolicyState(lbName, "test-backend-auth-policy0", true),
-				),
-			},
-			{
-				Config: testAccBackendServerPolicyConfig_basic1(lbName, privateKey1, publicKey1, certificate1, publicKey2),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyState("aws_elb.test-lb", "aws_load_balancer_policy.test-pubkey-policy0"),
-					testAccCheckPolicyState("aws_elb.test-lb", "aws_load_balancer_policy.test-pubkey-policy1"),
-					testAccCheckPolicyState("aws_elb.test-lb", "aws_load_balancer_policy.test-backend-auth-policy0"),
-					testAccCheckBackendServerPolicyState(lbName, "test-backend-auth-policy0", true),
-				),
-			},
-			{
-				Config: testAccBackendServerPolicyConfig_basic2(lbName, privateKey1, certificate1),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBackendServerPolicyState(lbName, "test-backend-auth-policy0", false),
+					testAccCheckBackendServerPolicyExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "instance_port", "443"),
+					resource.TestCheckResourceAttr(resourceName, "policy_names.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "policy_names.*", "aws_load_balancer_policy.test1", "policy_name"),
 				),
 			},
 		},
 	})
 }
 
-func policyInBackendServerPolicies(str string, list []string) bool {
-	for _, v := range list {
-		if v == str {
-			return true
-		}
-	}
-	return false
+func TestAccELBBackendServerPolicy_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	privateKey1 := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	publicKey1 := acctest.TLSRSAPublicKeyPEM(t, privateKey1)
+	privateKey2 := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	publicKey2 := acctest.TLSRSAPublicKeyPEM(t, privateKey2)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKey1, "example.com")
+	resourceName := "aws_load_balancer_backend_server_policy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBackendServerPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBackendServerPolicyConfig_basic(rName, privateKey1, certificate, publicKey1, publicKey2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBackendServerPolicyExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelb.ResourceBackendServerPolicy(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
 }
 
-func testAccCheckBackendServerPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
+func TestAccELBBackendServerPolicy_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	privateKey1 := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	publicKey1 := acctest.TLSRSAPublicKeyPEM(t, privateKey1)
+	privateKey2 := acctest.TLSRSAPrivateKeyPEM(t, 2048)
+	publicKey2 := acctest.TLSRSAPublicKeyPEM(t, privateKey2)
+	certificate := acctest.TLSRSAX509SelfSignedCertificatePEM(t, privateKey1, "example.com")
+	resourceName := "aws_load_balancer_backend_server_policy.test"
 
-	for _, rs := range s.RootModule().Resources {
-		switch {
-		case rs.Type == "aws_load_balancer_policy":
-			loadBalancerName, policyName := tfelb.BackendServerPoliciesParseID(rs.Primary.ID)
-			out, err := conn.DescribeLoadBalancerPolicies(
-				&elb.DescribeLoadBalancerPoliciesInput{
-					LoadBalancerName: aws.String(loadBalancerName),
-					PolicyNames:      []*string{aws.String(policyName)},
-				})
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBackendServerPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBackendServerPolicyConfig_basic(rName, privateKey1, certificate, publicKey1, publicKey2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBackendServerPolicyExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "instance_port", "443"),
+					resource.TestCheckResourceAttr(resourceName, "policy_names.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "policy_names.*", "aws_load_balancer_policy.test1", "policy_name"),
+				),
+			},
+			{
+				Config: testAccBackendServerPolicyConfig_update(rName, privateKey1, certificate, publicKey1, publicKey2),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBackendServerPolicyExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "instance_port", "443"),
+					resource.TestCheckResourceAttr(resourceName, "policy_names.#", "1"),
+					resource.TestCheckTypeSetElemAttrPair(resourceName, "policy_names.*", "aws_load_balancer_policy.test3", "policy_name"),
+				),
+			},
+		},
+	})
+}
+
+func testAccCheckBackendServerPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_load_balancer_backend_policy" {
+				continue
+			}
+
+			lbName, instancePort, err := tfelb.BackendServerPolicyParseResourceID(rs.Primary.ID)
+
 			if err != nil {
-				if ec2err, ok := err.(awserr.Error); ok && (ec2err.Code() == "PolicyNotFound" || ec2err.Code() == "LoadBalancerNotFound") {
-					continue
-				}
 				return err
 			}
-			if len(out.PolicyDescriptions) > 0 {
-				return fmt.Errorf("Policy still exists")
-			}
-		case rs.Type == "aws_load_balancer_backend_policy":
-			loadBalancerName, policyName := tfelb.BackendServerPoliciesParseID(rs.Primary.ID)
-			out, err := conn.DescribeLoadBalancers(
-				&elb.DescribeLoadBalancersInput{
-					LoadBalancerNames: []*string{aws.String(loadBalancerName)},
-				})
 
-			if tfawserr.ErrCodeEquals(err, elb.ErrCodeAccessPointNotFoundException) {
+			_, err = tfelb.FindLoadBalancerBackendServerPolicyByTwoPartKey(ctx, conn, lbName, instancePort)
+
+			if tfresource.NotFound(err) {
 				continue
 			}
 
@@ -103,70 +138,42 @@ func testAccCheckBackendServerPolicyDestroy(s *terraform.State) error {
 				return err
 			}
 
-			for _, backendServer := range out.LoadBalancerDescriptions[0].BackendServerDescriptions {
-				policyStrings := []string{}
-				for _, pol := range backendServer.PolicyNames {
-					policyStrings = append(policyStrings, *pol)
-				}
-				if policyInBackendServerPolicies(policyName, policyStrings) {
-					return fmt.Errorf("Policy still exists and is assigned")
-				}
-			}
-		default:
-			continue
-		}
-	}
-	return nil
-}
-
-func testAccCheckBackendServerPolicyState(loadBalancerName string, loadBalancerBackendAuthPolicyName string, assigned bool) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
-
-		loadBalancerDescription, err := conn.DescribeLoadBalancers(&elb.DescribeLoadBalancersInput{
-			LoadBalancerNames: []*string{aws.String(loadBalancerName)},
-		})
-		if err != nil {
-			return err
-		}
-
-		for _, backendServer := range loadBalancerDescription.LoadBalancerDescriptions[0].BackendServerDescriptions {
-			policyStrings := []string{}
-			for _, pol := range backendServer.PolicyNames {
-				policyStrings = append(policyStrings, *pol)
-			}
-			if policyInBackendServerPolicies(loadBalancerBackendAuthPolicyName, policyStrings) != assigned {
-				if assigned {
-					return fmt.Errorf("Policy no longer assigned %s not in %+v", loadBalancerBackendAuthPolicyName, policyStrings)
-				} else {
-					return fmt.Errorf("Policy exists and is assigned")
-				}
-			}
+			return fmt.Errorf("ELB Classic Backend Server Policy %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccBackendServerPolicyConfig_basic0(rName, privateKey, publicKey, certificate string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
+func testAccCheckBackendServerPolicyExists(ctx context.Context, n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
 
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
+		if rs.Primary.ID == "" {
+			return fmt.Errorf("No ELB Classic Backend Server Policy ID is set")
+		}
+
+		lbName, instancePort, err := tfelb.BackendServerPolicyParseResourceID(rs.Primary.ID)
+
+		if err != nil {
+			return err
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn(ctx)
+
+		_, err = tfelb.FindLoadBalancerBackendServerPolicyByTwoPartKey(ctx, conn, lbName, instancePort)
+
+		return err
+	}
 }
 
-resource "aws_iam_server_certificate" "test-iam-cert0" {
-  name_prefix      = "test_cert_"
-  certificate_body = "%[2]s"
-  private_key      = "%[3]s"
-}
-
-resource "aws_elb" "test-lb" {
-  name               = "%[1]s"
+func testAccBackendServerPolicyConfig_base(rName, privateKey, certificate, publicKey1, publicKey2 string) string {
+	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+resource "aws_elb" "test" {
+  name               = %[1]q
   availability_zones = [data.aws_availability_zones.available.names[0]]
 
   listener {
@@ -174,157 +181,90 @@ resource "aws_elb" "test-lb" {
     instance_protocol  = "https"
     lb_port            = 443
     lb_protocol        = "https"
-    ssl_certificate_id = aws_iam_server_certificate.test-iam-cert0.arn
-  }
-
-  tags = {
-    Name = "tf-acc-test"
+    ssl_certificate_id = aws_iam_server_certificate.test.arn
   }
 }
 
-resource "aws_load_balancer_policy" "test-pubkey-policy0" {
-  load_balancer_name = aws_elb.test-lb.name
-  policy_name        = "test-pubkey-policy0"
+resource "aws_iam_server_certificate" "test" {
+  name             = %[1]q
+  certificate_body = "%[2]s"
+  private_key      = "%[3]s"
+}
+
+resource "aws_load_balancer_policy" "test0" {
+  load_balancer_name = aws_elb.test.name
+  policy_name        = "%[1]s-0"
   policy_type_name   = "PublicKeyPolicyType"
 
   policy_attribute {
     name  = "PublicKey"
-    value = replace(replace(replace("%[4]s", "\n", ""), "-----BEGIN PUBLIC KEY-----", ""), "-----END PUBLIC KEY-----", "")
+    value = "%[4]s"
   }
 }
 
-resource "aws_load_balancer_policy" "test-backend-auth-policy0" {
-  load_balancer_name = aws_elb.test-lb.name
-  policy_name        = "test-backend-auth-policy0"
+resource "aws_load_balancer_policy" "test1" {
+  load_balancer_name = aws_elb.test.name
+  policy_name        = "%[1]s-1"
   policy_type_name   = "BackendServerAuthenticationPolicyType"
 
   policy_attribute {
     name  = "PublicKeyPolicyName"
-    value = aws_load_balancer_policy.test-pubkey-policy0.policy_name
+    value = aws_load_balancer_policy.test0.policy_name
   }
 }
 
-resource "aws_load_balancer_backend_server_policy" "test-backend-auth-policies-443" {
-  load_balancer_name = aws_elb.test-lb.name
-  instance_port      = 443
-
-  policy_names = [
-    aws_load_balancer_policy.test-backend-auth-policy0.policy_name,
-  ]
-}
-`, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(privateKey), acctest.TLSPEMEscapeNewlines(publicKey))
-}
-
-func testAccBackendServerPolicyConfig_basic1(rName, privateKey1, publicKey1, certificate1, publicKey2 string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_iam_server_certificate" "test-iam-cert0" {
-  name_prefix      = "test_cert_"
-  certificate_body = "%[2]s"
-  private_key      = "%[3]s"
-}
-
-resource "aws_elb" "test-lb" {
-  name               = "%[1]s"
-  availability_zones = [data.aws_availability_zones.available.names[0]]
-
-  listener {
-    instance_port      = 443
-    instance_protocol  = "https"
-    lb_port            = 443
-    lb_protocol        = "https"
-    ssl_certificate_id = aws_iam_server_certificate.test-iam-cert0.arn
-  }
-
-  tags = {
-    Name = "tf-acc-test"
-  }
-}
-
-resource "aws_load_balancer_policy" "test-pubkey-policy0" {
-  load_balancer_name = aws_elb.test-lb.name
-  policy_name        = "test-pubkey-policy0"
+resource "aws_load_balancer_policy" "test2" {
+  load_balancer_name = aws_elb.test.name
+  policy_name        = "%[1]s-2"
   policy_type_name   = "PublicKeyPolicyType"
 
   policy_attribute {
     name  = "PublicKey"
-    value = replace(replace(replace("%[4]s", "\n", ""), "-----BEGIN PUBLIC KEY-----", ""), "-----END PUBLIC KEY-----", "")
+    value = "%[5]s"
   }
 }
 
-resource "aws_load_balancer_policy" "test-pubkey-policy1" {
-  load_balancer_name = aws_elb.test-lb.name
-  policy_name        = "test-pubkey-policy1"
-  policy_type_name   = "PublicKeyPolicyType"
-
-  policy_attribute {
-    name  = "PublicKey"
-    value = replace(replace(replace("%[5]s", "\n", ""), "-----BEGIN PUBLIC KEY-----", ""), "-----END PUBLIC KEY-----", "")
-  }
-}
-
-resource "aws_load_balancer_policy" "test-backend-auth-policy0" {
-  load_balancer_name = aws_elb.test-lb.name
-  policy_name        = "test-backend-auth-policy0"
+resource "aws_load_balancer_policy" "test3" {
+  load_balancer_name = aws_elb.test.name
+  policy_name        = "%[1]s-3"
   policy_type_name   = "BackendServerAuthenticationPolicyType"
 
   policy_attribute {
     name  = "PublicKeyPolicyName"
-    value = aws_load_balancer_policy.test-pubkey-policy1.policy_name
+    value = aws_load_balancer_policy.test2.policy_name
   }
 }
+`,
+		rName,
+		acctest.TLSPEMEscapeNewlines(certificate),
+		acctest.TLSPEMEscapeNewlines(privateKey),
+		acctest.TLSPEMRemovePublicKeyEncapsulationBoundaries(acctest.TLSPEMRemoveNewlines(publicKey1)),
+		acctest.TLSPEMRemovePublicKeyEncapsulationBoundaries(acctest.TLSPEMRemoveNewlines(publicKey2)),
+	))
+}
 
-resource "aws_load_balancer_backend_server_policy" "test-backend-auth-policies-443" {
-  load_balancer_name = aws_elb.test-lb.name
+func testAccBackendServerPolicyConfig_basic(rName, privateKey, certificate, publicKey1, publicKey2 string) string {
+	return acctest.ConfigCompose(testAccBackendServerPolicyConfig_base(rName, privateKey, certificate, publicKey1, publicKey2), `
+resource "aws_load_balancer_backend_server_policy" "test" {
+  load_balancer_name = aws_elb.test.name
   instance_port      = 443
 
   policy_names = [
-    aws_load_balancer_policy.test-backend-auth-policy0.policy_name,
+    aws_load_balancer_policy.test1.policy_name,
   ]
 }
-`, rName, acctest.TLSPEMEscapeNewlines(certificate1), acctest.TLSPEMEscapeNewlines(privateKey1), acctest.TLSPEMEscapeNewlines(publicKey1), acctest.TLSPEMEscapeNewlines(publicKey2))
+`)
 }
 
-func testAccBackendServerPolicyConfig_basic2(rName, privateKey, certificate string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  state = "available"
+func testAccBackendServerPolicyConfig_update(rName, privateKey, certificate, publicKey1, publicKey2 string) string {
+	return acctest.ConfigCompose(testAccBackendServerPolicyConfig_base(rName, privateKey, certificate, publicKey1, publicKey2), `
+resource "aws_load_balancer_backend_server_policy" "test" {
+  load_balancer_name = aws_elb.test.name
+  instance_port      = 443
 
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
+  policy_names = [
+    aws_load_balancer_policy.test3.policy_name,
+  ]
 }
-
-resource "aws_iam_server_certificate" "test-iam-cert0" {
-  name_prefix      = "test_cert_"
-  certificate_body = "%[2]s"
-  private_key      = "%[3]s"
-}
-
-resource "aws_elb" "test-lb" {
-  name               = "%[1]s"
-  availability_zones = [data.aws_availability_zones.available.names[0]]
-
-  listener {
-    instance_port      = 443
-    instance_protocol  = "https"
-    lb_port            = 443
-    lb_protocol        = "https"
-    ssl_certificate_id = aws_iam_server_certificate.test-iam-cert0.arn
-  }
-
-  tags = {
-    Name = "tf-acc-test"
-  }
-}
-`, rName, acctest.TLSPEMEscapeNewlines(certificate), acctest.TLSPEMEscapeNewlines(privateKey))
+`)
 }

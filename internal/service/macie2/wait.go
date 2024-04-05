@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package macie2
 
 import (
@@ -5,7 +8,7 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/macie2"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
 const (
@@ -15,10 +18,10 @@ const (
 
 // waitMemberInvited waits for an AdminAccount to return Invited, Enabled and Paused
 func waitMemberInvited(ctx context.Context, conn *macie2.Macie2, adminAccountID string) (*macie2.Member, error) { //nolint:unparam
-	stateConf := &resource.StateChangeConf{
+	stateConf := &retry.StateChangeConf{
 		Pending: []string{macie2.RelationshipStatusCreated, macie2.RelationshipStatusEmailVerificationInProgress},
 		Target:  []string{macie2.RelationshipStatusInvited, macie2.RelationshipStatusEnabled, macie2.RelationshipStatusPaused},
-		Refresh: statusMemberRelationship(conn, adminAccountID),
+		Refresh: statusMemberRelationship(ctx, conn, adminAccountID),
 		Timeout: memberInvitedTimeout,
 	}
 

@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_keyspaces_keyspace: Correct plan time validation for `name`
+```
+
+```release-note:bug
+resource/aws_keyspaces_table: Correct plan time validation for `keyspace_name`, `table_name` and column names
+```

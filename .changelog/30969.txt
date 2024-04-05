@@ -1,0 +1,11 @@
+```release-note:breaking-change
+resource/aws_api_gateway_rest_api: `minimum_compression_size` is now a string type to allow values set via the `body` attribute to be properly computed.
+```
+
+```release-note:breaking-change
+data-source/aws_api_gateway_rest_api: `minimum_compression_size` is now a string type to allow values set via the `body` attribute to be properly computed.
+```
+
+```release-note:note
+resource/aws_api_gateway_rest_api: Update configurations with `minimum_compression_size` set to pass the value as a string. Valid values remain the same.
+```

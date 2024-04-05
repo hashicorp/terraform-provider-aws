@@ -1,27 +1,32 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iot
 
 import (
-	"fmt"
+	"context"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_iot_certificate", name="Certificate)
 func ResourceCertificate() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceCertificateCreate,
-		Read:   resourceCertificateRead,
-		Update: resourceCertificateUpdate,
-		Delete: resourceCertificateDelete,
+		CreateWithoutTimeout: resourceCertificateCreate,
+		ReadWithoutTimeout:   resourceCertificateRead,
+		UpdateWithoutTimeout: resourceCertificateUpdate,
+		DeleteWithoutTimeout: resourceCertificateDelete,
+
 		Schema: map[string]*schema.Schema{
-			"csr": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
 			"active": {
 				Type:     schema.TypeBool,
 				Required: true,
@@ -30,23 +35,34 @@ func ResourceCertificate() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"certificate_pem": {
-				Type:      schema.TypeString,
-				Optional:  true,
-				Computed:  true,
-				Sensitive: true,
+			"ca_certificate_id": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"ca_pem": {
 				Type:      schema.TypeString,
 				Optional:  true,
+				ForceNew:  true,
 				Sensitive: true,
 			},
-			"public_key": {
+			"certificate_pem": {
+				Type:      schema.TypeString,
+				Optional:  true,
+				Computed:  true,
+				ForceNew:  true,
+				Sensitive: true,
+			},
+			"csr": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
+			"private_key": {
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
 			},
-			"private_key": {
+			"public_key": {
 				Type:      schema.TypeString,
 				Computed:  true,
 				Sensitive: true,
@@ -55,127 +71,181 @@ func ResourceCertificate() *schema.Resource {
 	}
 }
 
-func resourceCertificateCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+func resourceCertificateCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
-	_, okcert := d.GetOk("certificate_pem")
-	_, okCA := d.GetOk("ca_pem")
-
-	cert_status := "INACTIVE"
-	if d.Get("active").(bool) {
-		cert_status = "ACTIVE"
+	active := d.Get("active").(bool)
+	status := iot.CertificateStatusInactive
+	if active {
+		status = iot.CertificateStatusActive
 	}
+	vCert, okCert := d.GetOk("certificate_pem")
+	vCA, okCA := d.GetOk("ca_pem")
 
-	if _, ok := d.GetOk("csr"); ok {
-		log.Printf("[DEBUG] Creating certificate from CSR")
-		out, err := conn.CreateCertificateFromCsr(&iot.CreateCertificateFromCsrInput{
-			CertificateSigningRequest: aws.String(d.Get("csr").(string)),
-			SetAsActive:               aws.Bool(d.Get("active").(bool)),
-		})
-		if err != nil {
-			return fmt.Errorf("error creating certificate from CSR: %v", err)
+	if vCSR, okCSR := d.GetOk("csr"); okCSR {
+		input := &iot.CreateCertificateFromCsrInput{
+			CertificateSigningRequest: aws.String(vCSR.(string)),
+			SetAsActive:               aws.Bool(active),
 		}
-		log.Printf("[DEBUG] Created certificate from CSR")
 
-		d.SetId(aws.StringValue(out.CertificateId))
-	} else if okcert && okCA {
-		log.Printf("[DEBUG] Registering certificate with CA")
-		out, err := conn.RegisterCertificate(&iot.RegisterCertificateInput{
-			CaCertificatePem: aws.String(d.Get("ca_pem").(string)),
-			CertificatePem:   aws.String(d.Get("certificate_pem").(string)),
-			Status:           aws.String(cert_status),
-		})
+		output, err := conn.CreateCertificateFromCsrWithContext(ctx, input)
+
 		if err != nil {
-			return fmt.Errorf("error registering certificate with CA: %v", err)
+			return sdkdiag.AppendErrorf(diags, "creating IoT Certificate from CSR: %s", err)
 		}
-		log.Printf("[DEBUG] Certificate with CA registered")
 
-		d.SetId(aws.StringValue(out.CertificateId))
-	} else if okcert {
-		log.Printf("[DEBUG] Registering certificate without CA")
-		out, err := conn.RegisterCertificateWithoutCA(&iot.RegisterCertificateWithoutCAInput{
-			CertificatePem: aws.String(d.Get("certificate_pem").(string)),
-			Status:         aws.String(cert_status),
-		})
+		d.SetId(aws.StringValue(output.CertificateId))
+	} else if okCert && okCA {
+		input := &iot.RegisterCertificateInput{
+			CaCertificatePem: aws.String(vCA.(string)),
+			CertificatePem:   aws.String(vCert.(string)),
+			Status:           aws.String(status),
+		}
+
+		output, err := conn.RegisterCertificateWithContext(ctx, input)
+
 		if err != nil {
-			return fmt.Errorf("error registering certificate without CA: %v", err)
+			return sdkdiag.AppendErrorf(diags, "registering IoT Certificate with CA: %s", err)
 		}
-		log.Printf("[DEBUG] Certificate without CA registered")
 
-		d.SetId(aws.StringValue(out.CertificateId))
+		d.SetId(aws.StringValue(output.CertificateId))
+	} else if okCert {
+		input := &iot.RegisterCertificateWithoutCAInput{
+			CertificatePem: aws.String(vCert.(string)),
+			Status:         aws.String(status),
+		}
+
+		output, err := conn.RegisterCertificateWithoutCAWithContext(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "registering IoT Certificate without CA: %s", err)
+		}
+
+		d.SetId(aws.StringValue(output.CertificateId))
 	} else {
-		log.Printf("[DEBUG] Creating keys and certificate")
-		out, err := conn.CreateKeysAndCertificate(&iot.CreateKeysAndCertificateInput{
-			SetAsActive: aws.Bool(d.Get("active").(bool)),
-		})
+		input := &iot.CreateKeysAndCertificateInput{
+			SetAsActive: aws.Bool(active),
+		}
+
+		output, err := conn.CreateKeysAndCertificateWithContext(ctx, input)
+
 		if err != nil {
-			return fmt.Errorf("error creating keys and certificate: %v", err)
+			return sdkdiag.AppendErrorf(diags, "creating IoT Certificate: %s", err)
 		}
-		log.Printf("[DEBUG] Created keys and certificate")
 
-		d.SetId(aws.StringValue(out.CertificateId))
-		d.Set("public_key", out.KeyPair.PublicKey)
-		d.Set("private_key", out.KeyPair.PrivateKey)
+		d.SetId(aws.StringValue(output.CertificateId))
+		d.Set("private_key", output.KeyPair.PrivateKey)
+		d.Set("public_key", output.KeyPair.PublicKey)
 	}
 
-	return resourceCertificateRead(d, meta)
+	return append(diags, resourceCertificateRead(ctx, d, meta)...)
 }
 
-func resourceCertificateRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+func resourceCertificateRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
-	out, err := conn.DescribeCertificate(&iot.DescribeCertificateInput{
-		CertificateId: aws.String(d.Id()),
-	})
+	output, err := FindCertificateByID(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] IoT Certificate (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
 	if err != nil {
-		return fmt.Errorf("error reading certificate details: %v", err)
+		return sdkdiag.AppendErrorf(diags, "reading IoT Certificate (%s): %s", d.Id(), err)
 	}
 
-	d.Set("active", aws.Bool(aws.StringValue(out.CertificateDescription.Status) == iot.CertificateStatusActive))
-	d.Set("arn", out.CertificateDescription.CertificateArn)
-	d.Set("certificate_pem", out.CertificateDescription.CertificatePem)
+	certificateDescription := output.CertificateDescription
+	d.Set("active", aws.StringValue(certificateDescription.Status) == iot.CertificateStatusActive)
+	d.Set("arn", certificateDescription.CertificateArn)
+	d.Set("ca_certificate_id", certificateDescription.CaCertificateId)
+	d.Set("certificate_pem", certificateDescription.CertificatePem)
 
-	return nil
+	return diags
 }
 
-func resourceCertificateUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+func resourceCertificateUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
-	if d.HasChange("active") {
-		status := iot.CertificateStatusInactive
-		if d.Get("active").(bool) {
-			status = iot.CertificateStatusActive
-		}
+	status := iot.CertificateStatusInactive
+	if d.Get("active").(bool) {
+		status = iot.CertificateStatusActive
+	}
+	input := &iot.UpdateCertificateInput{
+		CertificateId: aws.String(d.Id()),
+		NewStatus:     aws.String(status),
+	}
 
-		_, err := conn.UpdateCertificate(&iot.UpdateCertificateInput{
+	_, err := conn.UpdateCertificateWithContext(ctx, input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating IoT Certificate (%s): %s", d.Id(), err)
+	}
+
+	return append(diags, resourceCertificateRead(ctx, d, meta)...)
+}
+
+func resourceCertificateDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
+
+	if d.Get("active").(bool) {
+		log.Printf("[DEBUG] Disabling IoT Certificate: %s", d.Id())
+		_, err := conn.UpdateCertificateWithContext(ctx, &iot.UpdateCertificateInput{
 			CertificateId: aws.String(d.Id()),
-			NewStatus:     aws.String(status),
+			NewStatus:     aws.String(iot.CertificateStatusInactive),
 		})
+
+		if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
+			return diags
+		}
+
 		if err != nil {
-			return fmt.Errorf("error updating certificate: %v", err)
+			return sdkdiag.AppendErrorf(diags, "disabling IoT Certificate (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceCertificateRead(d, meta)
+	log.Printf("[DEBUG] Deleting IoT Certificate: %s", d.Id())
+	_, err := conn.DeleteCertificateWithContext(ctx, &iot.DeleteCertificateInput{
+		CertificateId: aws.String(d.Id()),
+	})
+
+	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting IoT Certificate (%s): %s", d.Id(), err)
+	}
+
+	return diags
 }
 
-func resourceCertificateDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
-
-	_, err := conn.UpdateCertificate(&iot.UpdateCertificateInput{
-		CertificateId: aws.String(d.Id()),
-		NewStatus:     aws.String("INACTIVE"),
-	})
-	if err != nil {
-		return fmt.Errorf("error inactivating certificate: %v", err)
+func FindCertificateByID(ctx context.Context, conn *iot.IoT, id string) (*iot.DescribeCertificateOutput, error) {
+	input := &iot.DescribeCertificateInput{
+		CertificateId: aws.String(id),
 	}
 
-	_, err = conn.DeleteCertificate(&iot.DeleteCertificateInput{
-		CertificateId: aws.String(d.Id()),
-	})
-	if err != nil {
-		return fmt.Errorf("error deleting certificate: %v", err)
+	output, err := conn.DescribeCertificateWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
 	}
 
-	return nil
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.CertificateDescription == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }

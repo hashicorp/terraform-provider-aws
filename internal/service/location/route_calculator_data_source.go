@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package location
 
 import (
@@ -9,12 +12,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_location_route_calculator")
 func DataSourceRouteCalculator() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceRouteCalculatorRead,
+		ReadWithoutTimeout: dataSourceRouteCalculatorRead,
 
 		Schema: map[string]*schema.Schema{
 			"calculator_arn": {
@@ -48,15 +53,17 @@ func DataSourceRouteCalculator() *schema.Resource {
 }
 
 func dataSourceRouteCalculatorRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LocationConn
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
 	out, err := findRouteCalculatorByName(ctx, conn, d.Get("calculator_name").(string))
 	if err != nil {
-		return diag.Errorf("reading Location Service Route Calculator (%s): %s", d.Get("calculator_name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "reading Location Service Route Calculator (%s): %s", d.Get("calculator_name").(string), err)
 	}
 
 	if out == nil {
-		return diag.Errorf("reading Location Service Route Calculator (%s): empty response", d.Get("calculator_name").(string))
+		return sdkdiag.AppendErrorf(diags, "reading Location Service Route Calculator (%s): empty response", d.Get("calculator_name").(string))
 	}
 
 	d.SetId(aws.StringValue(out.CalculatorName))
@@ -69,9 +76,9 @@ func dataSourceRouteCalculatorRead(ctx context.Context, d *schema.ResourceData, 
 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	if err := d.Set("tags", KeyValueTags(out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("listing tags for Location Service Route Calculator (%s): %s", d.Id(), err)
+	if err := d.Set("tags", KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "listing tags for Location Service Route Calculator (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

@@ -8,17 +8,18 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/aws/aws-sdk-go/service/ssm/ssmiface"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// ListTags lists ssm service tags.
+// listTags lists ssm service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn ssmiface.SSMAPI, identifier string, resourceType string) (tftags.KeyValueTags, error) {
-	return ListTagsWithContext(context.Background(), conn, identifier, resourceType)
-}
-
-func ListTagsWithContext(ctx context.Context, conn ssmiface.SSMAPI, identifier string, resourceType string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn ssmiface.SSMAPI, identifier, resourceType string) (tftags.KeyValueTags, error) {
 	input := &ssm.ListTagsForResourceInput{
 		ResourceId:   aws.String(identifier),
 		ResourceType: aws.String(resourceType),
@@ -27,10 +28,26 @@ func ListTagsWithContext(ctx context.Context, conn ssmiface.SSMAPI, identifier s
 	output, err := conn.ListTagsForResourceWithContext(ctx, input)
 
 	if err != nil {
-		return tftags.New(nil), err
+		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(output.TagList), nil
+	return KeyValueTags(ctx, output.TagList), nil
+}
+
+// ListTags lists ssm service tags and set them in Context.
+// It is called from outside this package.
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, resourceType string) error {
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).SSMConn(ctx), identifier, resourceType)
+
+	if err != nil {
+		return err
+	}
+
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = option.Some(tags)
+	}
+
+	return nil
 }
 
 // []*SERVICE.Tag handling
@@ -52,31 +69,60 @@ func Tags(tags tftags.KeyValueTags) []*ssm.Tag {
 }
 
 // KeyValueTags creates tftags.KeyValueTags from ssm service tags.
-func KeyValueTags(tags []*ssm.Tag) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags []*ssm.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
 		m[aws.StringValue(tag.Key)] = tag.Value
 	}
 
-	return tftags.New(m)
+	return tftags.New(ctx, m)
 }
 
-// UpdateTags updates ssm service tags.
+// getTagsIn returns ssm service tags from Context.
+// nil is returned if there are no input tags.
+func getTagsIn(ctx context.Context) []*ssm.Tag {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+			return tags
+		}
+	}
+
+	return nil
+}
+
+// setTagsOut sets ssm service tags in Context.
+func setTagsOut(ctx context.Context, tags []*ssm.Tag) {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags))
+	}
+}
+
+// createTags creates ssm service tags for new resources.
+func createTags(ctx context.Context, conn ssmiface.SSMAPI, identifier, resourceType string, tags []*ssm.Tag) error {
+	if len(tags) == 0 {
+		return nil
+	}
+
+	return updateTags(ctx, conn, identifier, resourceType, nil, KeyValueTags(ctx, tags))
+}
+
+// updateTags updates ssm service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn ssmiface.SSMAPI, identifier string, resourceType string, oldTags interface{}, newTags interface{}) error {
-	return UpdateTagsWithContext(context.Background(), conn, identifier, resourceType, oldTags, newTags)
-}
-func UpdateTagsWithContext(ctx context.Context, conn ssmiface.SSMAPI, identifier string, resourceType string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := tftags.New(oldTagsMap)
-	newTags := tftags.New(newTagsMap)
+func updateTags(ctx context.Context, conn ssmiface.SSMAPI, identifier, resourceType string, oldTagsMap, newTagsMap any) error {
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	ctx = tflog.SetField(ctx, logging.KeyResourceId, identifier)
+
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.SSM)
+	if len(removedTags) > 0 {
 		input := &ssm.RemoveTagsFromResourceInput{
 			ResourceId:   aws.String(identifier),
 			ResourceType: aws.String(resourceType),
-			TagKeys:      aws.StringSlice(removedTags.IgnoreAWS().Keys()),
+			TagKeys:      aws.StringSlice(removedTags.Keys()),
 		}
 
 		_, err := conn.RemoveTagsFromResourceWithContext(ctx, input)
@@ -86,11 +132,13 @@ func UpdateTagsWithContext(ctx context.Context, conn ssmiface.SSMAPI, identifier
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.SSM)
+	if len(updatedTags) > 0 {
 		input := &ssm.AddTagsToResourceInput{
 			ResourceId:   aws.String(identifier),
 			ResourceType: aws.String(resourceType),
-			Tags:         Tags(updatedTags.IgnoreAWS()),
+			Tags:         Tags(updatedTags),
 		}
 
 		_, err := conn.AddTagsToResourceWithContext(ctx, input)
@@ -101,4 +149,10 @@ func UpdateTagsWithContext(ctx context.Context, conn ssmiface.SSMAPI, identifier
 	}
 
 	return nil
+}
+
+// UpdateTags updates ssm service tags.
+// It is called from outside this package.
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier, resourceType string, oldTags, newTags any) error {
+	return updateTags(ctx, meta.(*conns.AWSClient).SSMConn(ctx), identifier, resourceType, oldTags, newTags)
 }

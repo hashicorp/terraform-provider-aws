@@ -1,18 +1,22 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudformation
 
 import (
 	"context"
-	"fmt"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_cloudformation_type")
 func DataSourceType() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTypeRead,
@@ -91,7 +95,7 @@ func DataSourceType() *schema.Resource {
 				Computed: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(10, 204),
-					validation.StringMatch(regexp.MustCompile(`[A-Za-z0-9]{2,64}::[A-Za-z0-9]{2,64}::[A-Za-z0-9]{2,64}(::MODULE){0,1}`), "three alphanumeric character sections separated by double colons (::)"),
+					validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z]{2,64}::[0-9A-Za-z]{2,64}::[0-9A-Za-z]{2,64}(::MODULE){0,1}`), "three alphanumeric character sections separated by double colons (::)"),
 				),
 			},
 			"version_id": {
@@ -107,7 +111,9 @@ func DataSourceType() *schema.Resource {
 }
 
 func dataSourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).CloudFormationConn
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
 
 	input := &cloudformation.DescribeTypeInput{}
 
@@ -130,11 +136,11 @@ func dataSourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interf
 	output, err := conn.DescribeTypeWithContext(ctx, input)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading CloudFormation Type: %w", err))
+		return sdkdiag.AppendErrorf(diags, "reading CloudFormation Type: %s", err)
 	}
 
 	if output == nil {
-		return diag.FromErr(fmt.Errorf("error reading CloudFormation Type: empty response"))
+		return sdkdiag.AppendErrorf(diags, "reading CloudFormation Type: empty response")
 	}
 
 	d.SetId(aws.StringValue(output.Arn))
@@ -148,7 +154,7 @@ func dataSourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("is_default_version", output.IsDefaultVersion)
 	if output.LoggingConfig != nil {
 		if err := d.Set("logging_config", []interface{}{flattenLoggingConfig(output.LoggingConfig)}); err != nil {
-			return diag.FromErr(fmt.Errorf("error setting logging_config: %w", err))
+			return sdkdiag.AppendErrorf(diags, "setting logging_config: %s", err)
 		}
 	} else {
 		d.Set("logging_config", nil)
@@ -160,5 +166,5 @@ func dataSourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("type_name", output.TypeName)
 	d.Set("visibility", output.Visibility)
 
-	return nil
+	return diags
 }

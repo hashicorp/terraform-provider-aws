@@ -1,34 +1,40 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/sagemaker"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSageMakerHumanTaskUI_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var humanTaskUi sagemaker.DescribeHumanTaskUiOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_human_task_ui.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckHumanTaskUIDestroy,
+		CheckDestroy:             testAccCheckHumanTaskUIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHumanTaskUIConfig_cognitoBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHumanTaskUIExists(resourceName, &humanTaskUi),
+					testAccCheckHumanTaskUIExists(ctx, resourceName, &humanTaskUi),
 					resource.TestCheckResourceAttr(resourceName, "human_task_ui_name", rName),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "sagemaker", fmt.Sprintf("human-task-ui/%s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "ui_template.#", "1"),
@@ -46,20 +52,21 @@ func TestAccSageMakerHumanTaskUI_basic(t *testing.T) {
 }
 
 func TestAccSageMakerHumanTaskUI_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var humanTaskUi sagemaker.DescribeHumanTaskUiOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_human_task_ui.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckHumanTaskUIDestroy,
+		CheckDestroy:             testAccCheckHumanTaskUIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHumanTaskUIConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHumanTaskUIExists(resourceName, &humanTaskUi),
+					testAccCheckHumanTaskUIExists(ctx, resourceName, &humanTaskUi),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -73,7 +80,7 @@ func TestAccSageMakerHumanTaskUI_tags(t *testing.T) {
 			{
 				Config: testAccHumanTaskUIConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHumanTaskUIExists(resourceName, &humanTaskUi),
+					testAccCheckHumanTaskUIExists(ctx, resourceName, &humanTaskUi),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -82,7 +89,7 @@ func TestAccSageMakerHumanTaskUI_tags(t *testing.T) {
 			{
 				Config: testAccHumanTaskUIConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHumanTaskUIExists(resourceName, &humanTaskUi),
+					testAccCheckHumanTaskUIExists(ctx, resourceName, &humanTaskUi),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -92,21 +99,22 @@ func TestAccSageMakerHumanTaskUI_tags(t *testing.T) {
 }
 
 func TestAccSageMakerHumanTaskUI_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var humanTaskUi sagemaker.DescribeHumanTaskUiOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_sagemaker_human_task_ui.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckHumanTaskUIDestroy,
+		CheckDestroy:             testAccCheckHumanTaskUIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHumanTaskUIConfig_cognitoBasic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHumanTaskUIExists(resourceName, &humanTaskUi),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceHumanTaskUI(), resourceName),
+					testAccCheckHumanTaskUIExists(ctx, resourceName, &humanTaskUi),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceHumanTaskUI(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -114,31 +122,33 @@ func TestAccSageMakerHumanTaskUI_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckHumanTaskUIDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
+func testAccCheckHumanTaskUIDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_sagemaker_human_task_ui" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_sagemaker_human_task_ui" {
+				continue
+			}
+
+			_, err := tfsagemaker.FindHumanTaskUIByName(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("SageMaker HumanTaskUi %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfsagemaker.FindHumanTaskUIByName(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("SageMaker HumanTaskUi %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckHumanTaskUIExists(n string, humanTaskUi *sagemaker.DescribeHumanTaskUiOutput) resource.TestCheckFunc {
+func testAccCheckHumanTaskUIExists(ctx context.Context, n string, humanTaskUi *sagemaker.DescribeHumanTaskUiOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -149,9 +159,9 @@ func testAccCheckHumanTaskUIExists(n string, humanTaskUi *sagemaker.DescribeHuma
 			return fmt.Errorf("No SageMaker HumanTaskUi ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
 
-		output, err := tfsagemaker.FindHumanTaskUIByName(conn, rs.Primary.ID)
+		output, err := tfsagemaker.FindHumanTaskUIByName(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

@@ -8,6 +8,8 @@ description: |-
 
 # Resource: aws_iot_topic_rule
 
+Creates and manages an AWS IoT topic rule.
+
 ## Example Usage
 
 ```terraform
@@ -41,43 +43,36 @@ resource "aws_sns_topic" "myerrortopic" {
   name = "myerrortopic"
 }
 
-resource "aws_iam_role" "role" {
-  name = "myrole"
+data "aws_iam_policy_document" "assume_role" {
+  statement {
+    effect = "Allow"
 
-  assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "iot.amazonaws.com"
-      },
-      "Action": "sts:AssumeRole"
+    principals {
+      type        = "Service"
+      identifiers = ["iot.amazonaws.com"]
     }
-  ]
-}
-EOF
+
+    actions = ["sts:AssumeRole"]
+  }
 }
 
-resource "aws_iam_role_policy" "iam_policy_for_lambda" {
-  name = "mypolicy"
-  role = aws_iam_role.role.id
-
-  policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-        "Effect": "Allow",
-        "Action": [
-            "sns:Publish"
-        ],
-        "Resource": "${aws_sns_topic.mytopic.arn}"
-    }
-  ]
+resource "aws_iam_role" "myrole" {
+  name               = "myrole"
+  assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
-EOF
+
+data "aws_iam_policy_document" "mypolicy" {
+  statement {
+    effect    = "Allow"
+    actions   = ["sns:Publish"]
+    resources = [aws_sns_topic.mytopic.arn]
+  }
+}
+
+resource "aws_iam_role_policy" "mypolicy" {
+  name   = "mypolicy"
+  role   = aws_iam_role.myrole.id
+  policy = data.aws_iam_policy_document.mypolicy.json
 }
 ```
 
@@ -144,6 +139,7 @@ The `firehose` object takes the following arguments:
 * `delivery_stream_name` - (Required) The delivery stream name.
 * `role_arn` - (Required) The IAM role ARN that grants access to the Amazon Kinesis Firehose stream.
 * `separator` - (Optional) A character separator that is used to separate records written to the Firehose stream. Valid values are: '\n' (newline), '\t' (tab), '\r\n' (Windows newline), ',' (comma).
+* `batch_mode` - (Optional) The payload that contains a JSON array of records will be sent to Kinesis Firehose via a batch call.
 
 The `http` object takes the following arguments:
 
@@ -160,17 +156,22 @@ The `iot_analytics` object takes the following arguments:
 
 * `channel_name` - (Required) Name of AWS IOT Analytics channel.
 * `role_arn` - (Required) The ARN of the IAM role that grants access.
+* `batch_mode` - (Optional) The payload that contains a JSON array of records will be sent to IoT Analytics via a batch call.
 
 The `iot_events` object takes the following arguments:
 
 * `input_name` - (Required) The name of the AWS IoT Events input.
 * `role_arn` - (Required) The ARN of the IAM role that grants access.
 * `message_id` - (Optional) Use this to ensure that only one input (message) with a given messageId is processed by an AWS IoT Events detector.
+* `batch_mode` - (Optional) The payload that contains a JSON array of records will be sent to IoT Events via a batch call.
 
 The `kafka` object takes the following arguments:
 
 * `client_properties` - (Required) Properties of the Apache Kafka producer client. For more info, see the [AWS documentation](https://docs.aws.amazon.com/iot/latest/developerguide/apache-kafka-rule-action.html).
-* `destination_arn` - (Required) The ARN of Kafka action's VPC [`aws_iot_topic_rule_destination`](iot_topic_rule_destination.html) .
+* `destination_arn` - (Required) The ARN of Kafka action's VPC [`aws_iot_topic_rule_destination`](iot_topic_rule_destination.html).
+* `header` - (Optional) The list of Kafka headers that you specify. Nested arguments below.
+    * `key` - (Required) The key of the Kafka header.
+    * `value` - (Required) The value of the Kafka header.
 * `key` - (Optional) The Kafka message key.
 * `partition` - (Optional) The Kafka message partition.
 * `topic` - (Optional) The Kafka topic for messages to be sent to the Kafka broker.
@@ -228,9 +229,9 @@ The `timestream` object takes the following arguments:
     * `unit` - (Required) The precision of the timestamp value that results from the expression described in value. Valid values: `SECONDS`, `MILLISECONDS`, `MICROSECONDS`, `NANOSECONDS`.
     * `value` - (Required) An expression that returns a long epoch time value.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the topic rule
 * `arn` - The ARN of the topic rule
@@ -238,8 +239,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-IoT Topic Rules can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import IoT Topic Rules using the `name`. For example:
 
+```terraform
+import {
+  to = aws_iot_topic_rule.rule
+  id = "<name>"
+}
 ```
-$ terraform import aws_iot_topic_rule.rule <name>
+
+Using `terraform import`, import IoT Topic Rules using the `name`. For example:
+
+```console
+% terraform import aws_iot_topic_rule.rule <name>
 ```

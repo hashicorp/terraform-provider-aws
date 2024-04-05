@@ -1,23 +1,31 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package workspaces_test
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"regexp"
+	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/workspaces"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/workspaces"
+	"github.com/aws/aws-sdk-go-v2/service/workspaces/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfworkspaces "github.com/hashicorp/terraform-provider-aws/internal/service/workspaces"
 )
 
 func testAccWorkspace_basic(t *testing.T) {
-	var v workspaces.Workspace
+	ctx := acctest.Context(t)
+	var v types.Workspace
 	rName := sdkacctest.RandString(8)
 	domain := acctest.RandomDomainName()
 
@@ -27,31 +35,31 @@ func testAccWorkspace_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheckDirectory(t)
-			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
-			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDirectory(ctx, t)
+			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
+			acctest.PreCheckHasIAMRole(ctx, t, "workspaces_DefaultRole")
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(workspaces.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkspaceDestroy,
+		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Destroy: false,
 				Config:  testAccWorkspaceConfig_basic(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "directory_id", directoryResourceName, "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "bundle_id", bundleDataSourceName, "id"),
-					resource.TestMatchResourceAttr(resourceName, "ip_address", regexp.MustCompile(`\d+\.\d+\.\d+\.\d+`)),
-					resource.TestCheckResourceAttr(resourceName, "state", workspaces.WorkspaceStateAvailable),
+					resource.TestMatchResourceAttr(resourceName, "ip_address", regexache.MustCompile(`\d+\.\d+\.\d+\.\d+`)),
+					resource.TestCheckResourceAttr(resourceName, "state", string(types.WorkspaceStateAvailable)),
 					resource.TestCheckResourceAttr(resourceName, "root_volume_encryption_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "user_name", "Administrator"),
 					resource.TestCheckResourceAttr(resourceName, "volume_encryption_key", ""),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.compute_type_name", workspaces.ComputeValue),
+					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.compute_type_name", string(types.ComputeValue)),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.root_volume_size_gib", "80"),
-					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.running_mode", workspaces.RunningModeAlwaysOn),
+					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.running_mode", string(types.RunningModeAlwaysOn)),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.running_mode_auto_stop_timeout_in_minutes", "0"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.user_volume_size_gib", "10"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -68,7 +76,8 @@ func testAccWorkspace_basic(t *testing.T) {
 }
 
 func testAccWorkspace_tags(t *testing.T) {
-	var v1, v2, v3 workspaces.Workspace
+	ctx := acctest.Context(t)
+	var v1, v2, v3 types.Workspace
 	rName := sdkacctest.RandString(8)
 	domain := acctest.RandomDomainName()
 
@@ -76,19 +85,19 @@ func testAccWorkspace_tags(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheckDirectory(t)
-			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
-			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDirectory(ctx, t)
+			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
+			acctest.PreCheckHasIAMRole(ctx, t, "workspaces_DefaultRole")
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(workspaces.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkspaceDestroy,
+		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceConfig_tagsA(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(resourceName, &v1),
+					testAccCheckWorkspaceExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", fmt.Sprintf("tf-testacc-workspaces-workspace-%[1]s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "tags.Alpha", "1"),
@@ -102,7 +111,7 @@ func testAccWorkspace_tags(t *testing.T) {
 			{
 				Config: testAccWorkspaceConfig_tagsB(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(resourceName, &v2),
+					testAccCheckWorkspaceExists(ctx, resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", fmt.Sprintf("tf-testacc-workspaces-workspace-%[1]s", rName)),
 					resource.TestCheckResourceAttr(resourceName, "tags.Beta", "2"),
@@ -111,7 +120,7 @@ func testAccWorkspace_tags(t *testing.T) {
 			{
 				Config: testAccWorkspaceConfig_tagsC(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(resourceName, &v3),
+					testAccCheckWorkspaceExists(ctx, resourceName, &v3),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", fmt.Sprintf("tf-testacc-workspaces-workspace-%[1]s", rName)),
 				),
@@ -121,7 +130,8 @@ func testAccWorkspace_tags(t *testing.T) {
 }
 
 func testAccWorkspace_workspaceProperties(t *testing.T) {
-	var v1, v2, v3 workspaces.Workspace
+	ctx := acctest.Context(t)
+	var v1, v2, v3 types.Workspace
 	rName := sdkacctest.RandString(8)
 	domain := acctest.RandomDomainName()
 
@@ -129,24 +139,24 @@ func testAccWorkspace_workspaceProperties(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheckDirectory(t)
-			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
-			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDirectory(ctx, t)
+			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
+			acctest.PreCheckHasIAMRole(ctx, t, "workspaces_DefaultRole")
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(workspaces.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkspaceDestroy,
+		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Destroy: false,
 				Config:  testAccWorkspaceConfig_propertiesA(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(resourceName, &v1),
+					testAccCheckWorkspaceExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.compute_type_name", workspaces.ComputeValue),
+					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.compute_type_name", string(types.ComputeValue)),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.root_volume_size_gib", "80"),
-					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.running_mode", workspaces.RunningModeAutoStop),
+					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.running_mode", string(types.RunningModeAutoStop)),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.running_mode_auto_stop_timeout_in_minutes", "120"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.user_volume_size_gib", "10"),
 				),
@@ -159,11 +169,11 @@ func testAccWorkspace_workspaceProperties(t *testing.T) {
 			{
 				Config: testAccWorkspaceConfig_propertiesB(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(resourceName, &v2),
+					testAccCheckWorkspaceExists(ctx, resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.compute_type_name", workspaces.ComputeValue),
+					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.compute_type_name", string(types.ComputeValue)),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.root_volume_size_gib", "80"),
-					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.running_mode", workspaces.RunningModeAlwaysOn),
+					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.running_mode", string(types.RunningModeAlwaysOn)),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.running_mode_auto_stop_timeout_in_minutes", "0"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.user_volume_size_gib", "10"),
 				),
@@ -171,11 +181,11 @@ func testAccWorkspace_workspaceProperties(t *testing.T) {
 			{
 				Config: testAccWorkspaceConfig_propertiesC(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(resourceName, &v3),
+					testAccCheckWorkspaceExists(ctx, resourceName, &v3),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.compute_type_name", workspaces.ComputeValue),
+					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.compute_type_name", string(types.ComputeValue)),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.root_volume_size_gib", "80"),
-					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.running_mode", workspaces.RunningModeAlwaysOn),
+					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.running_mode", string(types.RunningModeAlwaysOn)),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.running_mode_auto_stop_timeout_in_minutes", "0"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.user_volume_size_gib", "10"),
 				),
@@ -188,30 +198,31 @@ func testAccWorkspace_workspaceProperties(t *testing.T) {
 // validates workspace resource creation/import when workspace_properties.running_mode is set to ALWAYS_ON
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/13558
 func testAccWorkspace_workspaceProperties_runningModeAlwaysOn(t *testing.T) {
-	var v1 workspaces.Workspace
+	ctx := acctest.Context(t)
+	var v1 types.Workspace
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_workspaces_workspace.test"
 	domain := acctest.RandomDomainName()
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheckDirectory(t)
-			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
-			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDirectory(ctx, t)
+			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
+			acctest.PreCheckHasIAMRole(ctx, t, "workspaces_DefaultRole")
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(workspaces.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkspaceDestroy,
+		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceConfig_propertiesB(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(resourceName, &v1),
+					testAccCheckWorkspaceExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.compute_type_name", workspaces.ComputeValue),
+					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.compute_type_name", string(types.ComputeValue)),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.root_volume_size_gib", "80"),
-					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.running_mode", workspaces.RunningModeAlwaysOn),
+					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.running_mode", string(types.RunningModeAlwaysOn)),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.running_mode_auto_stop_timeout_in_minutes", "0"),
 					resource.TestCheckResourceAttr(resourceName, "workspace_properties.0.user_volume_size_gib", "10"),
 				),
@@ -226,43 +237,46 @@ func testAccWorkspace_workspaceProperties_runningModeAlwaysOn(t *testing.T) {
 }
 
 func testAccWorkspace_validateRootVolumeSize(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandString(8)
 	domain := acctest.RandomDomainName()
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(workspaces.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkspaceDestroy,
+		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccWorkspaceConfig_validateRootVolumeSize(rName, domain),
-				ExpectError: regexp.MustCompile(regexp.QuoteMeta("expected workspace_properties.0.root_volume_size_gib to be one of [80], got 90")),
+				ExpectError: regexache.MustCompile(regexp.QuoteMeta("expected workspace_properties.0.root_volume_size_gib to be one of [80], got 90")),
 			},
 		},
 	})
 }
 
 func testAccWorkspace_validateUserVolumeSize(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandString(8)
 	domain := acctest.RandomDomainName()
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(workspaces.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkspaceDestroy,
+		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccWorkspaceConfig_validateUserVolumeSize(rName, domain),
-				ExpectError: regexp.MustCompile(regexp.QuoteMeta("workspace_properties.0.user_volume_size_gib to be one of [10 50], got 60")),
+				ExpectError: regexache.MustCompile(regexp.QuoteMeta("workspace_properties.0.user_volume_size_gib to be one of [10 50], got 60")),
 			},
 		},
 	})
 }
 
 func testAccWorkspace_recreate(t *testing.T) {
-	var v workspaces.Workspace
+	ctx := acctest.Context(t)
+	var v types.Workspace
 	rName := sdkacctest.RandString(8)
 	domain := acctest.RandomDomainName()
 
@@ -270,26 +284,26 @@ func testAccWorkspace_recreate(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheckDirectory(t)
-			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
-			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDirectory(ctx, t)
+			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
+			acctest.PreCheckHasIAMRole(ctx, t, "workspaces_DefaultRole")
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(workspaces.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkspaceDestroy,
+		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccWorkspaceConfig_basic(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, resourceName, &v),
 				),
 			},
 			{
 				Taint:  []string{resourceName}, // Force workspace re-creation
 				Config: testAccWorkspaceConfig_basic(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, resourceName, &v),
 				),
 			},
 		},
@@ -297,7 +311,8 @@ func testAccWorkspace_recreate(t *testing.T) {
 }
 
 func testAccWorkspace_timeout(t *testing.T) {
-	var v workspaces.Workspace
+	ctx := acctest.Context(t)
+	var v types.Workspace
 	rName := sdkacctest.RandString(8)
 	domain := acctest.RandomDomainName()
 
@@ -305,72 +320,74 @@ func testAccWorkspace_timeout(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheckDirectory(t)
-			acctest.PreCheckDirectoryServiceSimpleDirectory(t)
-			acctest.PreCheckHasIAMRole(t, "workspaces_DefaultRole")
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDirectory(ctx, t)
+			acctest.PreCheckDirectoryServiceSimpleDirectory(ctx, t)
+			acctest.PreCheckHasIAMRole(ctx, t, "workspaces_DefaultRole")
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, workspaces.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, strings.ToLower(workspaces.ServiceID)),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckWorkspaceDestroy,
+		CheckDestroy:             testAccCheckWorkspaceDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Destroy: false,
 				Config:  testAccWorkspaceConfig_timeout(rName, domain),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckWorkspaceExists(resourceName, &v),
+					testAccCheckWorkspaceExists(ctx, resourceName, &v),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckWorkspaceDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesConn
+func testAccCheckWorkspaceDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesClient(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_workspaces_workspace" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_workspaces_workspace" {
+				continue
+			}
+
+			resp, err := conn.DescribeWorkspaces(ctx, &workspaces.DescribeWorkspacesInput{
+				WorkspaceIds: []string{rs.Primary.ID},
+			})
+			if err != nil {
+				return err
+			}
+
+			if len(resp.Workspaces) == 0 {
+				return nil
+			}
+			ws := resp.Workspaces[0]
+
+			if ws.State != types.WorkspaceStateTerminating && ws.State != types.WorkspaceStateTerminated {
+				return fmt.Errorf("workspace %q was not terminated", rs.Primary.ID)
+			}
 		}
 
-		resp, err := conn.DescribeWorkspaces(&workspaces.DescribeWorkspacesInput{
-			WorkspaceIds: []*string{aws.String(rs.Primary.ID)},
-		})
-		if err != nil {
-			return err
-		}
-
-		if len(resp.Workspaces) == 0 {
-			return nil
-		}
-		ws := resp.Workspaces[0]
-
-		if *ws.State != workspaces.WorkspaceStateTerminating && *ws.State != workspaces.WorkspaceStateTerminated {
-			return fmt.Errorf("workspace %q was not terminated", rs.Primary.ID)
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckWorkspaceExists(n string, v *workspaces.Workspace) resource.TestCheckFunc {
+func testAccCheckWorkspaceExists(ctx context.Context, n string, v *types.Workspace) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).WorkSpacesClient(ctx)
 
-		output, err := conn.DescribeWorkspaces(&workspaces.DescribeWorkspacesInput{
-			WorkspaceIds: []*string{aws.String(rs.Primary.ID)},
+		output, err := conn.DescribeWorkspaces(ctx, &workspaces.DescribeWorkspacesInput{
+			WorkspaceIds: []string{rs.Primary.ID},
 		})
 		if err != nil {
 			return err
 		}
 
 		if *output.Workspaces[0].WorkspaceId == rs.Primary.ID {
-			*v = *output.Workspaces[0]
+			*v = output.Workspaces[0]
 			return nil
 		}
 
@@ -619,9 +636,11 @@ resource "aws_workspaces_workspace" "test" {
 }
 
 func TestExpandWorkspaceProperties(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
 		input    []interface{}
-		expected *workspaces.WorkspaceProperties
+		expected *types.WorkspaceProperties
 	}{
 		// Empty
 		{
@@ -632,19 +651,19 @@ func TestExpandWorkspaceProperties(t *testing.T) {
 		{
 			input: []interface{}{
 				map[string]interface{}{
-					"compute_type_name":                         workspaces.ComputeValue,
+					"compute_type_name":                         string(types.ComputeValue),
 					"root_volume_size_gib":                      80,
-					"running_mode":                              workspaces.RunningModeAutoStop,
+					"running_mode":                              string(types.RunningModeAutoStop),
 					"running_mode_auto_stop_timeout_in_minutes": 60,
 					"user_volume_size_gib":                      10,
 				},
 			},
-			expected: &workspaces.WorkspaceProperties{
-				ComputeTypeName:                     aws.String(workspaces.ComputeValue),
-				RootVolumeSizeGib:                   aws.Int64(80),
-				RunningMode:                         aws.String(workspaces.RunningModeAutoStop),
-				RunningModeAutoStopTimeoutInMinutes: aws.Int64(60),
-				UserVolumeSizeGib:                   aws.Int64(10),
+			expected: &types.WorkspaceProperties{
+				ComputeTypeName:                     types.ComputeValue,
+				RootVolumeSizeGib:                   aws.Int32(80),
+				RunningMode:                         types.RunningModeAutoStop,
+				RunningModeAutoStopTimeoutInMinutes: aws.Int32(60),
+				UserVolumeSizeGib:                   aws.Int32(10),
 			},
 		},
 	}
@@ -658,8 +677,10 @@ func TestExpandWorkspaceProperties(t *testing.T) {
 }
 
 func TestFlattenWorkspaceProperties(t *testing.T) {
+	t.Parallel()
+
 	cases := []struct {
-		input    *workspaces.WorkspaceProperties
+		input    *types.WorkspaceProperties
 		expected []map[string]interface{}
 	}{
 		// Empty
@@ -669,18 +690,18 @@ func TestFlattenWorkspaceProperties(t *testing.T) {
 		},
 		// Full
 		{
-			input: &workspaces.WorkspaceProperties{
-				ComputeTypeName:                     aws.String(workspaces.ComputeValue),
-				RootVolumeSizeGib:                   aws.Int64(80),
-				RunningMode:                         aws.String(workspaces.RunningModeAutoStop),
-				RunningModeAutoStopTimeoutInMinutes: aws.Int64(60),
-				UserVolumeSizeGib:                   aws.Int64(10),
+			input: &types.WorkspaceProperties{
+				ComputeTypeName:                     types.ComputeValue,
+				RootVolumeSizeGib:                   aws.Int32(80),
+				RunningMode:                         types.RunningModeAutoStop,
+				RunningModeAutoStopTimeoutInMinutes: aws.Int32(60),
+				UserVolumeSizeGib:                   aws.Int32(10),
 			},
 			expected: []map[string]interface{}{
 				{
-					"compute_type_name":                         workspaces.ComputeValue,
+					"compute_type_name":                         string(types.ComputeValue),
 					"root_volume_size_gib":                      80,
-					"running_mode":                              workspaces.RunningModeAutoStop,
+					"running_mode":                              string(types.RunningModeAutoStop),
 					"running_mode_auto_stop_timeout_in_minutes": 60,
 					"user_volume_size_gib":                      10,
 				},

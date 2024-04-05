@@ -1,34 +1,40 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package location_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/locationservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tflocation "github.com/hashicorp/terraform-provider-aws/internal/service/location"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccLocationPlaceIndex_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_location_place_index.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, locationservice.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LocationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlaceIndexDestroy,
+		CheckDestroy:             testAccCheckPlaceIndexDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlaceIndexConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlaceIndexExists(resourceName),
+					testAccCheckPlaceIndexExists(ctx, resourceName),
 					acctest.CheckResourceAttrRFC3339(resourceName, "create_time"),
 					resource.TestCheckResourceAttr(resourceName, "data_source", "Here"),
 					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.#", "1"),
@@ -50,20 +56,21 @@ func TestAccLocationPlaceIndex_basic(t *testing.T) {
 }
 
 func TestAccLocationPlaceIndex_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_location_place_index.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, locationservice.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LocationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlaceIndexDestroy,
+		CheckDestroy:             testAccCheckPlaceIndexDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlaceIndexConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlaceIndexExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tflocation.ResourcePlaceIndex(), resourceName),
+					testAccCheckPlaceIndexExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tflocation.ResourcePlaceIndex(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -72,19 +79,20 @@ func TestAccLocationPlaceIndex_disappears(t *testing.T) {
 }
 
 func TestAccLocationPlaceIndex_dataSourceConfigurationIntendedUse(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_location_place_index.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, locationservice.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LocationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlaceIndexDestroy,
+		CheckDestroy:             testAccCheckPlaceIndexDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlaceIndexConfig_configurationIntendedUse(rName, locationservice.IntendedUseSingleUse),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlaceIndexExists(resourceName),
+					testAccCheckPlaceIndexExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.intended_use", locationservice.IntendedUseSingleUse),
 				),
@@ -97,7 +105,7 @@ func TestAccLocationPlaceIndex_dataSourceConfigurationIntendedUse(t *testing.T) 
 			{
 				Config: testAccPlaceIndexConfig_configurationIntendedUse(rName, locationservice.IntendedUseStorage),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlaceIndexExists(resourceName),
+					testAccCheckPlaceIndexExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "data_source_configuration.0.intended_use", locationservice.IntendedUseStorage),
 				),
@@ -107,19 +115,20 @@ func TestAccLocationPlaceIndex_dataSourceConfigurationIntendedUse(t *testing.T) 
 }
 
 func TestAccLocationPlaceIndex_description(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_location_place_index.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, locationservice.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LocationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlaceIndexDestroy,
+		CheckDestroy:             testAccCheckPlaceIndexDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlaceIndexConfig_description(rName, "description1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlaceIndexExists(resourceName),
+					testAccCheckPlaceIndexExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "description1"),
 				),
 			},
@@ -131,7 +140,7 @@ func TestAccLocationPlaceIndex_description(t *testing.T) {
 			{
 				Config: testAccPlaceIndexConfig_description(rName, "description2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlaceIndexExists(resourceName),
+					testAccCheckPlaceIndexExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "description", "description2"),
 				),
 			},
@@ -140,19 +149,20 @@ func TestAccLocationPlaceIndex_description(t *testing.T) {
 }
 
 func TestAccLocationPlaceIndex_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_location_place_index.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, locationservice.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.LocationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPlaceIndexDestroy,
+		CheckDestroy:             testAccCheckPlaceIndexDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPlaceIndexConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlaceIndexExists(resourceName),
+					testAccCheckPlaceIndexExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -165,7 +175,7 @@ func TestAccLocationPlaceIndex_tags(t *testing.T) {
 			{
 				Config: testAccPlaceIndexConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlaceIndexExists(resourceName),
+					testAccCheckPlaceIndexExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -174,7 +184,7 @@ func TestAccLocationPlaceIndex_tags(t *testing.T) {
 			{
 				Config: testAccPlaceIndexConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPlaceIndexExists(resourceName),
+					testAccCheckPlaceIndexExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -183,37 +193,39 @@ func TestAccLocationPlaceIndex_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckPlaceIndexDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn
+func testAccCheckPlaceIndexDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_location_place_index" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_location_place_index" {
+				continue
+			}
+
+			input := &locationservice.DescribePlaceIndexInput{
+				IndexName: aws.String(rs.Primary.ID),
+			}
+
+			output, err := conn.DescribePlaceIndexWithContext(ctx, input)
+
+			if tfawserr.ErrCodeEquals(err, locationservice.ErrCodeResourceNotFoundException) {
+				continue
+			}
+
+			if err != nil {
+				return fmt.Errorf("error getting Location Service Place Index (%s): %w", rs.Primary.ID, err)
+			}
+
+			if output != nil {
+				return fmt.Errorf("Location Service Place Index (%s) still exists", rs.Primary.ID)
+			}
 		}
 
-		input := &locationservice.DescribePlaceIndexInput{
-			IndexName: aws.String(rs.Primary.ID),
-		}
-
-		output, err := conn.DescribePlaceIndex(input)
-
-		if tfawserr.ErrCodeEquals(err, locationservice.ErrCodeResourceNotFoundException) {
-			continue
-		}
-
-		if err != nil {
-			return fmt.Errorf("error getting Location Service Place Index (%s): %w", rs.Primary.ID, err)
-		}
-
-		if output != nil {
-			return fmt.Errorf("Location Service Place Index (%s) still exists", rs.Primary.ID)
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckPlaceIndexExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckPlaceIndexExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 
@@ -221,13 +233,13 @@ func testAccCheckPlaceIndexExists(resourceName string) resource.TestCheckFunc {
 			return fmt.Errorf("resource not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).LocationConn(ctx)
 
 		input := &locationservice.DescribePlaceIndexInput{
 			IndexName: aws.String(rs.Primary.ID),
 		}
 
-		_, err := conn.DescribePlaceIndex(input)
+		_, err := conn.DescribePlaceIndexWithContext(ctx, input)
 
 		if err != nil {
 			return fmt.Errorf("error getting Location Service Place Index (%s): %w", rs.Primary.ID, err)

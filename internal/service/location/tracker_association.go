@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package location
 
 import (
@@ -12,7 +15,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/locationservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -22,11 +25,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_location_tracker_association")
 func ResourceTrackerAssociation() *schema.Resource {
 	return &schema.Resource{
-		CreateContext: resourceTrackerAssociationCreate,
-		ReadContext:   resourceTrackerAssociationRead,
-		DeleteContext: resourceTrackerAssociationDelete,
+		CreateWithoutTimeout: resourceTrackerAssociationCreate,
+		ReadWithoutTimeout:   resourceTrackerAssociationRead,
+		DeleteWithoutTimeout: resourceTrackerAssociationDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -59,7 +63,9 @@ const (
 )
 
 func resourceTrackerAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LocationConn
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
 	consumerArn := d.Get("consumer_arn").(string)
 	trackerName := d.Get("tracker_name").(string)
@@ -71,24 +77,26 @@ func resourceTrackerAssociationCreate(ctx context.Context, d *schema.ResourceDat
 
 	out, err := conn.AssociateTrackerConsumerWithContext(ctx, in)
 	if err != nil {
-		return create.DiagError(names.Location, create.ErrActionCreating, ResNameTrackerAssociation, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.Location, create.ErrActionCreating, ResNameTrackerAssociation, d.Get("name").(string), err)
 	}
 
 	if out == nil {
-		return create.DiagError(names.Location, create.ErrActionCreating, ResNameTrackerAssociation, d.Get("name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.Location, create.ErrActionCreating, ResNameTrackerAssociation, d.Get("name").(string), errors.New("empty output"))
 	}
 
 	d.SetId(fmt.Sprintf("%s|%s", trackerName, consumerArn))
 
-	return resourceTrackerAssociationRead(ctx, d, meta)
+	return append(diags, resourceTrackerAssociationRead(ctx, d, meta)...)
 }
 
 func resourceTrackerAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LocationConn
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
 	trackerAssociationId, err := TrackerAssociationParseID(d.Id())
 	if err != nil {
-		return create.DiagError(names.Location, create.ErrActionReading, ResNameTrackerAssociation, d.Id(), err)
+		return create.AppendDiagError(diags, names.Location, create.ErrActionReading, ResNameTrackerAssociation, d.Id(), err)
 	}
 
 	err = FindTrackerAssociationByTrackerNameAndConsumerARN(ctx, conn, trackerAssociationId.TrackerName, trackerAssociationId.ConsumerARN)
@@ -96,27 +104,29 @@ func resourceTrackerAssociationRead(ctx context.Context, d *schema.ResourceData,
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Location TrackerAssociation (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Location, create.ErrActionReading, ResNameTrackerAssociation, d.Id(), err)
+		return create.AppendDiagError(diags, names.Location, create.ErrActionReading, ResNameTrackerAssociation, d.Id(), err)
 	}
 
 	d.Set("consumer_arn", trackerAssociationId.ConsumerARN)
 	d.Set("tracker_name", trackerAssociationId.TrackerName)
 
-	return nil
+	return diags
 }
 
 func resourceTrackerAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LocationConn
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
 	log.Printf("[INFO] Deleting Location TrackerAssociation %s", d.Id())
 
 	trackerAssociationId, err := TrackerAssociationParseID(d.Id())
 	if err != nil {
-		return create.DiagError(names.Location, create.ErrActionReading, ResNameTrackerAssociation, d.Id(), err)
+		return create.AppendDiagError(diags, names.Location, create.ErrActionReading, ResNameTrackerAssociation, d.Id(), err)
 	}
 
 	_, err = conn.DisassociateTrackerConsumerWithContext(ctx, &locationservice.DisassociateTrackerConsumerInput{
@@ -125,14 +135,14 @@ func resourceTrackerAssociationDelete(ctx context.Context, d *schema.ResourceDat
 	})
 
 	if tfawserr.ErrCodeEquals(err, locationservice.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Location, create.ErrActionDeleting, ResNameTrackerAssociation, d.Id(), err)
+		return create.AppendDiagError(diags, names.Location, create.ErrActionDeleting, ResNameTrackerAssociation, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 // FindTrackerAssociationByTrackerNameAndConsumerARN returns an error if an association for specified tracker and consumer cannot be found
@@ -163,7 +173,7 @@ func FindTrackerAssociationByTrackerNameAndConsumerARN(ctx context.Context, conn
 	}
 
 	if !found {
-		return &resource.NotFoundError{}
+		return &retry.NotFoundError{}
 	}
 
 	return nil

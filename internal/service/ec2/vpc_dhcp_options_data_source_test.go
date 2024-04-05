@@ -1,28 +1,32 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/YakDriver/regexache"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccVPCDHCPOptionsDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_vpc_dhcp_options.test"
 	datasourceName := "data.aws_vpc_dhcp_options.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccVPCDHCPOptionsDataSourceConfig_missing,
-				ExpectError: regexp.MustCompile(`no matching EC2 DHCP Options Set found`),
+				ExpectError: regexache.MustCompile(`no matching EC2 DHCP Options Set found`),
 			},
 			{
 				Config: testAccVPCDHCPOptionsDataSourceConfig_id,
@@ -48,13 +52,14 @@ func TestAccVPCDHCPOptionsDataSource_basic(t *testing.T) {
 }
 
 func TestAccVPCDHCPOptionsDataSource_filter(t *testing.T) {
+	ctx := acctest.Context(t)
 	rInt := sdkacctest.RandInt()
 	resourceName := "aws_vpc_dhcp_options.test.0"
 	datasourceName := "data.aws_vpc_dhcp_options.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -77,7 +82,7 @@ func TestAccVPCDHCPOptionsDataSource_filter(t *testing.T) {
 			},
 			{
 				Config:      testAccVPCDHCPOptionsDataSourceConfig_filter(rInt, 2),
-				ExpectError: regexp.MustCompile(`multiple EC2 DHCP Options Sets matched`),
+				ExpectError: regexache.MustCompile(`multiple EC2 DHCP Options Sets matched`),
 			},
 			{
 				// We have one last empty step here because otherwise we'll leave the

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkmanager
 
 import (
@@ -21,11 +24,11 @@ func resourceNotFoundExceptionResourceIDEquals(err error, resourceID string) boo
 	return false
 }
 
-// validationExceptionMessageContains returns true if the error matches all these conditions:
+// validationExceptionFieldsMessageContains returns true if the error matches all these conditions:
 //   - err is of type networkmanager.ValidationException
 //   - ValidationException.Reason equals reason
 //   - ValidationException.Fields.Message contains message
-func validationExceptionMessageContains(err error, reason string, message string) bool {
+func validationExceptionFieldsMessageContains(err error, reason string, message string) bool {
 	var validationException *networkmanager.ValidationException
 
 	if errors.As(err, &validationException) && aws.StringValue(validationException.Reason) == reason {

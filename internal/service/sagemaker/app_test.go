@@ -1,22 +1,27 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker_test
 
 import (
+	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccApp_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -26,19 +31,19 @@ func testAccApp_basic(t *testing.T) {
 	resourceName := "aws_sagemaker_app.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAppDestroy,
+		CheckDestroy:             testAccCheckAppDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppExists(resourceName, &app),
+					testAccCheckAppExists(ctx, resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, "app_name", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "domain_id", "aws_sagemaker_domain.test", "id"),
 					resource.TestCheckResourceAttrPair(resourceName, "user_profile_name", "aws_sagemaker_user_profile.test", "user_profile_name"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "sagemaker", regexp.MustCompile(`app/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "sagemaker", regexache.MustCompile(`app/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "resource_spec.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "resource_spec.0.sagemaker_image_arn"),
 					resource.TestCheckResourceAttr(resourceName, "resource_spec.0.instance_type", "system"),
@@ -54,7 +59,8 @@ func testAccApp_basic(t *testing.T) {
 	})
 }
 
-func testAccApp_resourceSpec(t *testing.T) {
+func testAccApp_space(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -64,15 +70,48 @@ func testAccApp_resourceSpec(t *testing.T) {
 	resourceName := "aws_sagemaker_app.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAppDestroy,
+		CheckDestroy:             testAccCheckAppDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAppConfig_space(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAppExists(ctx, resourceName, &app),
+					resource.TestCheckResourceAttr(resourceName, "app_name", rName),
+					resource.TestCheckResourceAttrPair(resourceName, "space_name", "aws_sagemaker_space.test", "space_name"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccApp_resourceSpec(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var app sagemaker.DescribeAppOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_app.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAppDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppConfig_resourceSpec(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppExists(resourceName, &app),
+					testAccCheckAppExists(ctx, resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, "app_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "resource_spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "resource_spec.0.instance_type", "system"),
@@ -89,6 +128,7 @@ func testAccApp_resourceSpec(t *testing.T) {
 }
 
 func testAccApp_resourceSpecLifecycle(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -99,15 +139,15 @@ func testAccApp_resourceSpecLifecycle(t *testing.T) {
 	resourceName := "aws_sagemaker_app.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAppDestroy,
+		CheckDestroy:             testAccCheckAppDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppConfig_resourceSpecLifecycle(rName, uName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppExists(resourceName, &app),
+					testAccCheckAppExists(ctx, resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, "app_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "resource_spec.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "resource_spec.0.instance_type", "system"),
@@ -125,6 +165,7 @@ func testAccApp_resourceSpecLifecycle(t *testing.T) {
 }
 
 func testAccApp_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -134,15 +175,15 @@ func testAccApp_tags(t *testing.T) {
 	resourceName := "aws_sagemaker_app.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAppDestroy,
+		CheckDestroy:             testAccCheckAppDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppExists(resourceName, &app),
+					testAccCheckAppExists(ctx, resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -155,7 +196,7 @@ func testAccApp_tags(t *testing.T) {
 			{
 				Config: testAccAppConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppExists(resourceName, &app),
+					testAccCheckAppExists(ctx, resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -164,7 +205,7 @@ func testAccApp_tags(t *testing.T) {
 			{
 				Config: testAccAppConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppExists(resourceName, &app),
+					testAccCheckAppExists(ctx, resourceName, &app),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -174,6 +215,7 @@ func testAccApp_tags(t *testing.T) {
 }
 
 func testAccApp_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -183,16 +225,16 @@ func testAccApp_disappears(t *testing.T) {
 	resourceName := "aws_sagemaker_app.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAppDestroy,
+		CheckDestroy:             testAccCheckAppDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppExists(resourceName, &app),
-					acctest.CheckResourceDisappears(acctest.Provider, tfsagemaker.ResourceApp(), resourceName),
+					testAccCheckAppExists(ctx, resourceName, &app),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfsagemaker.ResourceApp(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -200,39 +242,45 @@ func testAccApp_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAppDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
+func testAccCheckAppDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_sagemaker_app" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_sagemaker_app" {
+				continue
+			}
+
+			domainID := rs.Primary.Attributes["domain_id"]
+			appType := rs.Primary.Attributes["app_type"]
+			appName := rs.Primary.Attributes["app_name"]
+
+			var userProfileOrSpaceName string
+			if v, ok := rs.Primary.Attributes["user_profile_name"]; ok {
+				userProfileOrSpaceName = v
+			}
+			if v, ok := rs.Primary.Attributes["space_name"]; ok {
+				userProfileOrSpaceName = v
+			}
+
+			_, err := tfsagemaker.FindAppByName(ctx, conn, domainID, userProfileOrSpaceName, appType, appName)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("SageMaker App (%s) still exists", rs.Primary.ID)
 		}
 
-		domainID := rs.Primary.Attributes["domain_id"]
-		userProfileName := rs.Primary.Attributes["user_profile_name"]
-		appType := rs.Primary.Attributes["app_type"]
-		appName := rs.Primary.Attributes["app_name"]
-
-		app, err := tfsagemaker.FindAppByName(conn, domainID, userProfileName, appType, appName)
-
-		if tfawserr.ErrCodeEquals(err, sagemaker.ErrCodeResourceNotFound) {
-			continue
-		}
-
-		if err != nil {
-			return fmt.Errorf("reading SageMaker App (%s): %w", rs.Primary.ID, err)
-		}
-
-		appArn := aws.StringValue(app.AppArn)
-		if appArn == rs.Primary.ID && aws.StringValue(app.Status) != sagemaker.AppStatusDeleted {
-			return fmt.Errorf("SageMaker App %q still exists", rs.Primary.ID)
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckAppExists(n string, app *sagemaker.DescribeAppOutput) resource.TestCheckFunc {
+func testAccCheckAppExists(ctx context.Context, n string, v *sagemaker.DescribeAppOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -243,54 +291,34 @@ func testAccCheckAppExists(n string, app *sagemaker.DescribeAppOutput) resource.
 			return fmt.Errorf("No sagmaker domain ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SageMakerConn(ctx)
+
 		domainID := rs.Primary.Attributes["domain_id"]
-		userProfileName := rs.Primary.Attributes["user_profile_name"]
 		appType := rs.Primary.Attributes["app_type"]
 		appName := rs.Primary.Attributes["app_name"]
 
-		resp, err := tfsagemaker.FindAppByName(conn, domainID, userProfileName, appType, appName)
+		var userProfileOrSpaceName string
+		if v, ok := rs.Primary.Attributes["user_profile_name"]; ok {
+			userProfileOrSpaceName = v
+		}
+		if v, ok := rs.Primary.Attributes["space_name"]; ok {
+			userProfileOrSpaceName = v
+		}
+
+		output, err := tfsagemaker.FindAppByName(ctx, conn, domainID, userProfileOrSpaceName, appType, appName)
+
 		if err != nil {
 			return err
 		}
 
-		*app = *resp
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccAppBaseConfig(rName string) string {
-	return fmt.Sprintf(`
-data "aws_availability_zones" "available" {
-  # SageMaker compute resources are not available at usw2-az4.
-  exclude_zone_ids = ["usw2-az4"]
-  state            = "available"
-
-  filter {
-    name   = "opt-in-status"
-    values = ["opt-in-not-required"]
-  }
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  vpc_id            = aws_vpc.test.id
-  cidr_block        = "10.0.1.0/24"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+func testAccAppConfig_base(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   name               = %[1]q
   path               = "/"
@@ -312,9 +340,13 @@ resource "aws_sagemaker_domain" "test" {
   domain_name = %[1]q
   auth_mode   = "IAM"
   vpc_id      = aws_vpc.test.id
-  subnet_ids  = [aws_subnet.test.id]
+  subnet_ids  = aws_subnet.test[*].id
 
   default_user_settings {
+    execution_role = aws_iam_role.test.arn
+  }
+
+  default_space_settings {
     execution_role = aws_iam_role.test.arn
   }
 
@@ -327,22 +359,38 @@ resource "aws_sagemaker_user_profile" "test" {
   domain_id         = aws_sagemaker_domain.test.id
   user_profile_name = %[1]q
 }
-`, rName)
+`, rName))
 }
 
 func testAccAppConfig_basic(rName string) string {
-	return testAccAppBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAppConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_app" "test" {
   domain_id         = aws_sagemaker_domain.test.id
   user_profile_name = aws_sagemaker_user_profile.test.user_profile_name
   app_name          = %[1]q
   app_type          = "JupyterServer"
 }
-`, rName)
+`, rName))
+}
+
+func testAccAppConfig_space(rName string) string {
+	return acctest.ConfigCompose(testAccAppConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_space" "test" {
+  domain_id  = aws_sagemaker_domain.test.id
+  space_name = "%[1]s-space"
+}
+
+resource "aws_sagemaker_app" "test" {
+  domain_id  = aws_sagemaker_domain.test.id
+  app_name   = %[1]q
+  app_type   = "JupyterServer"
+  space_name = aws_sagemaker_space.test.space_name
+}
+`, rName))
 }
 
 func testAccAppConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return testAccAppBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAppConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_app" "test" {
   domain_id         = aws_sagemaker_domain.test.id
   user_profile_name = aws_sagemaker_user_profile.test.user_profile_name
@@ -353,11 +401,11 @@ resource "aws_sagemaker_app" "test" {
     %[2]q = %[3]q
   }
 }
-`, rName, tagKey1, tagValue1)
+`, rName, tagKey1, tagValue1))
 }
 
 func testAccAppConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccAppBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAppConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_app" "test" {
   domain_id         = aws_sagemaker_domain.test.id
   user_profile_name = aws_sagemaker_user_profile.test.user_profile_name
@@ -369,11 +417,11 @@ resource "aws_sagemaker_app" "test" {
     %[4]q = %[5]q
   }
 }
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
 func testAccAppConfig_resourceSpec(rName string) string {
-	return testAccAppBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAppConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_app" "test" {
   domain_id         = aws_sagemaker_domain.test.id
   user_profile_name = aws_sagemaker_user_profile.test.user_profile_name
@@ -384,11 +432,11 @@ resource "aws_sagemaker_app" "test" {
     instance_type = "system"
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccAppConfig_resourceSpecLifecycle(rName, uName string) string {
-	return testAccAppBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAppConfig_base(rName), fmt.Sprintf(`
 resource "aws_sagemaker_studio_lifecycle_config" "test" {
   studio_lifecycle_config_name     = %[1]q
   studio_lifecycle_config_app_type = "JupyterServer"
@@ -424,5 +472,5 @@ resource "aws_sagemaker_app" "test" {
     lifecycle_config_arn = aws_sagemaker_studio_lifecycle_config.test.arn
   }
 }
-`, rName, uName)
+`, rName, uName))
 }

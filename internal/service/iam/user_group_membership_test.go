@@ -1,21 +1,29 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam_test
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccIAMUserGroupMembership_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	userName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	userName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	groupName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -23,24 +31,24 @@ func TestAccIAMUserGroupMembership_basic(t *testing.T) {
 	groupName3 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccUserGroupMembershipDestroy,
+		CheckDestroy:             testAccCheckUserGroupMembershipDestroy(ctx),
 		Steps: []resource.TestStep{
 			// simplest test
 			{
 				Config: testAccUserGroupMembershipConfig_init(userName1, userName2, groupName1, groupName2, groupName3),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("aws_iam_user_group_membership.user1_test1", "user", userName1),
-					testAccUserGroupMembershipCheckGroupListForUser(userName1, []string{groupName1}, []string{groupName2, groupName3}),
+					testAccUserGroupMembershipCheckGroupListForUser(ctx, userName1, []string{groupName1}, []string{groupName2, groupName3}),
 				),
 			},
 			{
 				ResourceName:      "aws_iam_user_group_membership.user1_test1",
 				ImportState:       true,
 				ImportStateIdFunc: testAccUserGroupMembershipImportStateIdFunc("aws_iam_user_group_membership.user1_test1"),
-				// We do not have a way to align IDs since the Create function uses resource.UniqueId()
+				// We do not have a way to align IDs since the Create function uses id.UniqueId()
 				// Failed state verification, resource with ID USER/GROUP not found
 				//ImportStateVerify: true,
 				ImportStateCheck: func(s []*terraform.InstanceState) error {
@@ -56,7 +64,7 @@ func TestAccIAMUserGroupMembership_basic(t *testing.T) {
 				Config: testAccUserGroupMembershipConfig_addOne(userName1, userName2, groupName1, groupName2, groupName3),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr("aws_iam_user_group_membership.user1_test1", "user", userName1),
-					testAccUserGroupMembershipCheckGroupListForUser(userName1, []string{groupName1, groupName2}, []string{groupName3}),
+					testAccUserGroupMembershipCheckGroupListForUser(ctx, userName1, []string{groupName1, groupName2}, []string{groupName3}),
 				),
 			},
 			// test adding multiple resources for the same user, and resources with the same groups for another user
@@ -67,8 +75,8 @@ func TestAccIAMUserGroupMembership_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_iam_user_group_membership.user1_test2", "user", userName1),
 					resource.TestCheckResourceAttr("aws_iam_user_group_membership.user2_test1", "user", userName2),
 					resource.TestCheckResourceAttr("aws_iam_user_group_membership.user2_test2", "user", userName2),
-					testAccUserGroupMembershipCheckGroupListForUser(userName1, []string{groupName1, groupName2, groupName3}, []string{}),
-					testAccUserGroupMembershipCheckGroupListForUser(userName2, []string{groupName1, groupName2, groupName3}, []string{}),
+					testAccUserGroupMembershipCheckGroupListForUser(ctx, userName1, []string{groupName1, groupName2, groupName3}, []string{}),
+					testAccUserGroupMembershipCheckGroupListForUser(ctx, userName2, []string{groupName1, groupName2, groupName3}, []string{}),
 				),
 			},
 			// test that nothing happens when we apply the same config again
@@ -79,8 +87,8 @@ func TestAccIAMUserGroupMembership_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_iam_user_group_membership.user1_test2", "user", userName1),
 					resource.TestCheckResourceAttr("aws_iam_user_group_membership.user2_test1", "user", userName2),
 					resource.TestCheckResourceAttr("aws_iam_user_group_membership.user2_test2", "user", userName2),
-					testAccUserGroupMembershipCheckGroupListForUser(userName1, []string{groupName1, groupName2, groupName3}, []string{}),
-					testAccUserGroupMembershipCheckGroupListForUser(userName2, []string{groupName1, groupName2, groupName3}, []string{}),
+					testAccUserGroupMembershipCheckGroupListForUser(ctx, userName1, []string{groupName1, groupName2, groupName3}, []string{}),
+					testAccUserGroupMembershipCheckGroupListForUser(ctx, userName2, []string{groupName1, groupName2, groupName3}, []string{}),
 				),
 			},
 			// test removing a group
@@ -91,8 +99,8 @@ func TestAccIAMUserGroupMembership_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_iam_user_group_membership.user1_test2", "user", userName1),
 					resource.TestCheckResourceAttr("aws_iam_user_group_membership.user2_test1", "user", userName2),
 					resource.TestCheckResourceAttr("aws_iam_user_group_membership.user2_test2", "user", userName2),
-					testAccUserGroupMembershipCheckGroupListForUser(userName1, []string{groupName1, groupName3}, []string{groupName2}),
-					testAccUserGroupMembershipCheckGroupListForUser(userName2, []string{groupName1, groupName2}, []string{groupName3}),
+					testAccUserGroupMembershipCheckGroupListForUser(ctx, userName1, []string{groupName1, groupName3}, []string{groupName2}),
+					testAccUserGroupMembershipCheckGroupListForUser(ctx, userName2, []string{groupName1, groupName2}, []string{groupName3}),
 				),
 			},
 			// test removing a resource
@@ -102,50 +110,52 @@ func TestAccIAMUserGroupMembership_basic(t *testing.T) {
 					resource.TestCheckResourceAttr("aws_iam_user_group_membership.user1_test1", "user", userName1),
 					resource.TestCheckResourceAttr("aws_iam_user_group_membership.user1_test2", "user", userName1),
 					resource.TestCheckResourceAttr("aws_iam_user_group_membership.user2_test1", "user", userName2),
-					testAccUserGroupMembershipCheckGroupListForUser(userName1, []string{groupName1, groupName3}, []string{groupName2}),
-					testAccUserGroupMembershipCheckGroupListForUser(userName2, []string{groupName1}, []string{groupName2, groupName3}),
+					testAccUserGroupMembershipCheckGroupListForUser(ctx, userName1, []string{groupName1, groupName3}, []string{groupName2}),
+					testAccUserGroupMembershipCheckGroupListForUser(ctx, userName2, []string{groupName1}, []string{groupName2, groupName3}),
 				),
 			},
 		},
 	})
 }
 
-func testAccUserGroupMembershipDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+func testAccCheckUserGroupMembershipDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type == "aws_iam_user_group_membership" {
-			input := &iam.ListGroupsForUserInput{
-				UserName: aws.String(rs.Primary.Attributes["user"]),
-			}
-			foundGroups := 0
-			err := conn.ListGroupsForUserPages(input, func(page *iam.ListGroupsForUserOutput, lastPage bool) bool {
-				if len(page.Groups) > 0 {
-					foundGroups = foundGroups + len(page.Groups)
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type == "aws_iam_user_group_membership" {
+				input := &iam.ListGroupsForUserInput{
+					UserName: aws.String(rs.Primary.Attributes["user"]),
 				}
-				return !lastPage
-			})
-			if err != nil {
-				if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-					continue
+				foundGroups := 0
+				err := tfiam.ListGroupsForUserPages(ctx, conn, input, func(page *iam.ListGroupsForUserOutput, lastPage bool) bool {
+					if len(page.Groups) > 0 {
+						foundGroups = foundGroups + len(page.Groups)
+					}
+					return !lastPage
+				})
+				if err != nil {
+					if errs.IsA[*awstypes.NoSuchEntityException](err) {
+						continue
+					}
+					return err
 				}
-				return err
-			}
-			if foundGroups > 0 {
-				return fmt.Errorf("Expected all group membership for user to be removed, found: %d", foundGroups)
+				if foundGroups > 0 {
+					return fmt.Errorf("Expected all group membership for user to be removed, found: %d", foundGroups)
+				}
 			}
 		}
-	}
 
-	return nil
+		return nil
+	}
 }
 
-func testAccUserGroupMembershipCheckGroupListForUser(userName string, groups []string, groupsNeg []string) resource.TestCheckFunc {
+func testAccUserGroupMembershipCheckGroupListForUser(ctx context.Context, userName string, groups []string, groupsNeg []string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
 		// get list of groups for user
-		userGroupList, err := conn.ListGroupsForUser(&iam.ListGroupsForUserInput{
+		userGroupList, err := conn.ListGroupsForUser(ctx, &iam.ListGroupsForUserInput{
 			UserName: &userName,
 		})
 		if err != nil {

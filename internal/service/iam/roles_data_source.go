@@ -1,19 +1,27 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
-	"fmt"
-	"regexp"
+	"context"
+	"reflect"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-func DataSourceRoles() *schema.Resource {
+// @SDKDataSource("aws_iam_roles", name="Roles")
+func dataSourceRoles() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceRolesRead,
+		ReadWithoutTimeout: dataSourceRolesRead,
 
 		Schema: map[string]*schema.Schema{
 			"arns": {
@@ -39,8 +47,9 @@ func DataSourceRoles() *schema.Resource {
 	}
 }
 
-func dataSourceRolesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+func dataSourceRolesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	input := &iam.ListRolesInput{}
 
@@ -48,30 +57,26 @@ func dataSourceRolesRead(d *schema.ResourceData, meta interface{}) error {
 		input.PathPrefix = aws.String(v.(string))
 	}
 
-	var results []*iam.Role
+	var results []awstypes.Role
 
-	err := conn.ListRolesPages(input, func(page *iam.ListRolesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := iam.NewListRolesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "reading IAM roles: %s", err)
 		}
 
 		for _, role := range page.Roles {
-			if role == nil {
+			if reflect.ValueOf(role).IsZero() {
 				continue
 			}
 
-			if v, ok := d.GetOk("name_regex"); ok && !regexp.MustCompile(v.(string)).MatchString(aws.StringValue(role.RoleName)) {
+			if v, ok := d.GetOk("name_regex"); ok && !regexache.MustCompile(v.(string)).MatchString(aws.ToString(role.RoleName)) {
 				continue
 			}
 
 			results = append(results, role)
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return fmt.Errorf("error reading IAM roles: %w", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
@@ -79,17 +84,17 @@ func dataSourceRolesRead(d *schema.ResourceData, meta interface{}) error {
 	var arns, names []string
 
 	for _, r := range results {
-		arns = append(arns, aws.StringValue(r.Arn))
-		names = append(names, aws.StringValue(r.RoleName))
+		arns = append(arns, aws.ToString(r.Arn))
+		names = append(names, aws.ToString(r.RoleName))
 	}
 
 	if err := d.Set("arns", arns); err != nil {
-		return fmt.Errorf("error setting arns: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting arns: %s", err)
 	}
 
 	if err := d.Set("names", names); err != nil {
-		return fmt.Errorf("error setting names: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting names: %s", err)
 	}
 
-	return nil
+	return diags
 }

@@ -1,26 +1,38 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kafka
 
 import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/kafka"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/kafka"
+	"github.com/aws/aws-sdk-go-v2/service/kafka/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceCluster() *schema.Resource {
+// @SDKResource("aws_msk_cluster", name="Cluster")
+// @Tags(identifierAttribute="id")
+func resourceCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterCreate,
 		ReadWithoutTimeout:   resourceClusterRead,
@@ -28,7 +40,7 @@ func ResourceCluster() *schema.Resource {
 		DeleteWithoutTimeout: resourceClusterDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -40,12 +52,6 @@ func ResourceCluster() *schema.Resource {
 		CustomizeDiff: customdiff.Sequence(
 			customdiff.ForceNewIfChange("kafka_version", func(_ context.Context, old, new, meta interface{}) bool {
 				return verify.SemVerLessThan(new.(string), old.(string))
-			}),
-			customdiff.ComputedIf("broker_node_group_info.0.storage_info", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
-				return diff.HasChange("broker_node_group_info.0.ebs_volume_size")
-			}),
-			customdiff.ComputedIf("broker_node_group_info.0.ebs_volume_size", func(_ context.Context, diff *schema.ResourceDiff, meta interface{}) bool {
-				return diff.HasChange("broker_node_group_info.0.storage_info")
 			}),
 			verify.SetTagsDiff,
 		),
@@ -83,6 +89,18 @@ func ResourceCluster() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"bootstrap_brokers_vpc_connectivity_sasl_iam": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"bootstrap_brokers_vpc_connectivity_sasl_scram": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"bootstrap_brokers_vpc_connectivity_tls": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"broker_node_group_info": {
 				Type:     schema.TypeList,
 				Required: true,
@@ -91,11 +109,11 @@ func ResourceCluster() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"az_distribution": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ForceNew:     true,
-							Default:      kafka.BrokerAZDistributionDefault,
-							ValidateFunc: validation.StringInSlice(kafka.BrokerAZDistribution_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							ForceNew:         true,
+							Default:          types.BrokerAZDistributionDefault,
+							ValidateDiagFunc: enum.Validate[types.BrokerAZDistribution](),
 						},
 						"client_subnets": {
 							Type:     schema.TypeSet,
@@ -112,6 +130,51 @@ func ResourceCluster() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"vpc_connectivity": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Computed: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"client_authentication": {
+													Type:     schema.TypeList,
+													Optional: true,
+													Computed: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"sasl": {
+																Type:     schema.TypeList,
+																Optional: true,
+																Computed: true,
+																MaxItems: 1,
+																Elem: &schema.Resource{
+																	Schema: map[string]*schema.Schema{
+																		"iam": {
+																			Type:     schema.TypeBool,
+																			Optional: true,
+																			Computed: true,
+																		},
+																		"scram": {
+																			Type:     schema.TypeBool,
+																			Optional: true,
+																			Computed: true,
+																		},
+																	},
+																},
+															},
+															"tls": {
+																Type:     schema.TypeBool,
+																Optional: true,
+																Computed: true,
+															},
+														},
+													},
+												},
+											},
+										},
+									},
 									"public_access": {
 										Type:     schema.TypeList,
 										Optional: true,
@@ -120,24 +183,16 @@ func ResourceCluster() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"type": {
-													Type:         schema.TypeString,
-													Optional:     true,
-													Computed:     true,
-													ValidateFunc: validation.StringInSlice(PublicAccessType_Values(), false),
+													Type:             schema.TypeString,
+													Optional:         true,
+													Computed:         true,
+													ValidateDiagFunc: enum.Validate[publicAccessType](),
 												},
 											},
 										},
 									},
 								},
 							},
-						},
-						"ebs_volume_size": {
-							Type:          schema.TypeInt,
-							Optional:      true,
-							Computed:      true,
-							Deprecated:    "use 'storage_info' argument instead",
-							ValidateFunc:  validation.IntBetween(1, 16384),
-							ConflictsWith: []string{"broker_node_group_info.0.storage_info"},
 						},
 						"instance_type": {
 							Type:     schema.TypeString,
@@ -152,11 +207,10 @@ func ResourceCluster() *schema.Resource {
 							},
 						},
 						"storage_info": {
-							Type:          schema.TypeList,
-							Optional:      true,
-							Computed:      true,
-							MaxItems:      1,
-							ConflictsWith: []string{"broker_node_group_info.0.ebs_volume_size"},
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"ebs_storage_info": {
@@ -256,6 +310,10 @@ func ResourceCluster() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(1, 64),
 			},
+			"cluster_uuid": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"configuration_info": {
 				Type:             schema.TypeList,
 				Optional:         true,
@@ -301,10 +359,10 @@ func ResourceCluster() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"client_broker": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Default:      kafka.ClientBrokerTls,
-										ValidateFunc: validation.StringInSlice(kafka.ClientBroker_Values(), false),
+										Type:             schema.TypeString,
+										Optional:         true,
+										Default:          types.ClientBrokerTls,
+										ValidateDiagFunc: enum.Validate[types.ClientBroker](),
 									},
 									"in_cluster": {
 										Type:     schema.TypeBool,
@@ -321,10 +379,10 @@ func ResourceCluster() *schema.Resource {
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 			},
 			"enhanced_monitoring": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      kafka.EnhancedMonitoringDefault,
-				ValidateFunc: validation.StringInSlice(kafka.EnhancedMonitoring_Values(), true),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          types.EnhancedMonitoringDefault,
+				ValidateDiagFunc: enum.Validate[types.EnhancedMonitoring](),
 			},
 			"kafka_version": {
 				Type:         schema.TypeString,
@@ -459,8 +517,14 @@ func ResourceCluster() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			"storage_mode": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[types.StorageMode](),
+			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"zookeeper_connect_string": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -474,20 +538,25 @@ func ResourceCluster() *schema.Resource {
 }
 
 func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KafkaConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
 	name := d.Get("cluster_name").(string)
 	input := &kafka.CreateClusterInput{
 		ClusterName:         aws.String(name),
 		KafkaVersion:        aws.String(d.Get("kafka_version").(string)),
-		NumberOfBrokerNodes: aws.Int64(int64(d.Get("number_of_broker_nodes").(int))),
-		Tags:                Tags(tags.IgnoreAWS()),
+		NumberOfBrokerNodes: aws.Int32(int32(d.Get("number_of_broker_nodes").(int))),
+		Tags:                getTagsIn(ctx),
 	}
 
+	var vpcConnectivity *types.VpcConnectivity
 	if v, ok := d.GetOk("broker_node_group_info"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		input.BrokerNodeGroupInfo = expandBrokerNodeGroupInfo(v.([]interface{})[0].(map[string]interface{}))
+		// "BadRequestException: When creating a cluster, all vpcConnectivity auth schemes must be disabled (‘enabled’ : false). You can enable auth schemes after the cluster is created"
+		if input.BrokerNodeGroupInfo != nil && input.BrokerNodeGroupInfo.ConnectivityInfo != nil {
+			vpcConnectivity = input.BrokerNodeGroupInfo.ConnectivityInfo.VpcConnectivity
+			input.BrokerNodeGroupInfo.ConnectivityInfo.VpcConnectivity = nil
+		}
 	}
 
 	if v, ok := d.GetOk("client_authentication"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -503,7 +572,7 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	if v, ok := d.GetOk("enhanced_monitoring"); ok {
-		input.EnhancedMonitoring = aws.String(v.(string))
+		input.EnhancedMonitoring = types.EnhancedMonitoring(v.(string))
 	}
 
 	if v, ok := d.GetOk("logging_info"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -514,214 +583,144 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 		input.OpenMonitoring = expandOpenMonitoringInfo(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	output, err := conn.CreateClusterWithContext(ctx, input)
-
-	if err != nil {
-		return diag.Errorf("creating MSK Cluster (%s): %s", name, err)
+	if v, ok := d.GetOk("storage_mode"); ok {
+		input.StorageMode = types.StorageMode(v.(string))
 	}
 
-	d.SetId(aws.StringValue(output.ClusterArn))
-
-	_, err = waitClusterCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+	output, err := conn.CreateCluster(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("waiting for MSK Cluster (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "creating MSK Cluster (%s): %s", name, err)
 	}
 
-	return resourceClusterRead(ctx, d, meta)
+	d.SetId(aws.ToString(output.ClusterArn))
+
+	cluster, err := waitClusterCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for MSK Cluster (%s) create: %s", d.Id(), err)
+	}
+
+	if vpcConnectivity != nil {
+		input := &kafka.UpdateConnectivityInput{
+			ClusterArn: aws.String(d.Id()),
+			ConnectivityInfo: &types.ConnectivityInfo{
+				VpcConnectivity: vpcConnectivity,
+			},
+			CurrentVersion: cluster.CurrentVersion,
+		}
+
+		output, err := conn.UpdateConnectivity(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating MSK Cluster (%s) broker connectivity: %s", d.Id(), err)
+		}
+
+		clusterOperationARN := aws.ToString(output.ClusterOperationArn)
+
+		if _, err := waitClusterOperationCompleted(ctx, conn, clusterOperationARN, d.Timeout(schema.TimeoutCreate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for MSK Cluster (%s) operation (%s) complete: %s", d.Id(), clusterOperationARN, err)
+		}
+	}
+
+	return append(diags, resourceClusterRead(ctx, d, meta)...)
 }
 
 func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KafkaConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
-	cluster, err := FindClusterByARN(ctx, conn, d.Id())
+	cluster, err := findClusterByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] MSK Cluster (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading MSK Cluster (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading MSK Cluster (%s): %s", d.Id(), err)
 	}
 
-	output, err := conn.GetBootstrapBrokersWithContext(ctx, &kafka.GetBootstrapBrokersInput{
-		ClusterArn: aws.String(d.Id()),
-	})
+	output, err := findBootstrapBrokersByARN(ctx, conn, d.Id())
 
 	if err != nil {
-		return diag.Errorf("reading MSK Cluster (%s) bootstrap brokers: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading MSK Cluster (%s) bootstrap brokers: %s", d.Id(), err)
 	}
 
-	d.Set("arn", cluster.ClusterArn)
-	d.Set("bootstrap_brokers", SortEndpointsString(aws.StringValue(output.BootstrapBrokerString)))
-	d.Set("bootstrap_brokers_public_sasl_iam", SortEndpointsString(aws.StringValue(output.BootstrapBrokerStringPublicSaslIam)))
-	d.Set("bootstrap_brokers_public_sasl_scram", SortEndpointsString(aws.StringValue(output.BootstrapBrokerStringPublicSaslScram)))
-	d.Set("bootstrap_brokers_public_tls", SortEndpointsString(aws.StringValue(output.BootstrapBrokerStringPublicTls)))
-	d.Set("bootstrap_brokers_sasl_iam", SortEndpointsString(aws.StringValue(output.BootstrapBrokerStringSaslIam)))
-	d.Set("bootstrap_brokers_sasl_scram", SortEndpointsString(aws.StringValue(output.BootstrapBrokerStringSaslScram)))
-	d.Set("bootstrap_brokers_tls", SortEndpointsString(aws.StringValue(output.BootstrapBrokerStringTls)))
-
+	clusterARN := aws.ToString(cluster.ClusterArn)
+	d.Set("arn", clusterARN)
+	d.Set("bootstrap_brokers", SortEndpointsString(aws.ToString(output.BootstrapBrokerString)))
+	d.Set("bootstrap_brokers_public_sasl_iam", SortEndpointsString(aws.ToString(output.BootstrapBrokerStringPublicSaslIam)))
+	d.Set("bootstrap_brokers_public_sasl_scram", SortEndpointsString(aws.ToString(output.BootstrapBrokerStringPublicSaslScram)))
+	d.Set("bootstrap_brokers_public_tls", SortEndpointsString(aws.ToString(output.BootstrapBrokerStringPublicTls)))
+	d.Set("bootstrap_brokers_sasl_iam", SortEndpointsString(aws.ToString(output.BootstrapBrokerStringSaslIam)))
+	d.Set("bootstrap_brokers_sasl_scram", SortEndpointsString(aws.ToString(output.BootstrapBrokerStringSaslScram)))
+	d.Set("bootstrap_brokers_tls", SortEndpointsString(aws.ToString(output.BootstrapBrokerStringTls)))
+	d.Set("bootstrap_brokers_vpc_connectivity_sasl_iam", SortEndpointsString(aws.ToString(output.BootstrapBrokerStringVpcConnectivitySaslIam)))
+	d.Set("bootstrap_brokers_vpc_connectivity_sasl_scram", SortEndpointsString(aws.ToString(output.BootstrapBrokerStringVpcConnectivitySaslScram)))
+	d.Set("bootstrap_brokers_vpc_connectivity_tls", SortEndpointsString(aws.ToString(output.BootstrapBrokerStringVpcConnectivityTls)))
 	if cluster.BrokerNodeGroupInfo != nil {
 		if err := d.Set("broker_node_group_info", []interface{}{flattenBrokerNodeGroupInfo(cluster.BrokerNodeGroupInfo)}); err != nil {
-			return diag.Errorf("setting broker_node_group_info: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting broker_node_group_info: %s", err)
 		}
 	} else {
 		d.Set("broker_node_group_info", nil)
 	}
-
 	if cluster.ClientAuthentication != nil {
 		if err := d.Set("client_authentication", []interface{}{flattenClientAuthentication(cluster.ClientAuthentication)}); err != nil {
-			return diag.Errorf("setting client_authentication: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting client_authentication: %s", err)
 		}
 	} else {
 		d.Set("client_authentication", nil)
 	}
-
 	d.Set("cluster_name", cluster.ClusterName)
-
+	clusterUUID, _ := clusterUUIDFromARN(clusterARN)
+	d.Set("cluster_uuid", clusterUUID)
 	if cluster.CurrentBrokerSoftwareInfo != nil {
 		if err := d.Set("configuration_info", []interface{}{flattenBrokerSoftwareInfo(cluster.CurrentBrokerSoftwareInfo)}); err != nil {
-			return diag.Errorf("setting configuration_info: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting configuration_info: %s", err)
 		}
 	} else {
 		d.Set("configuration_info", nil)
 	}
-
 	d.Set("current_version", cluster.CurrentVersion)
 	d.Set("enhanced_monitoring", cluster.EnhancedMonitoring)
-
 	if cluster.EncryptionInfo != nil {
 		if err := d.Set("encryption_info", []interface{}{flattenEncryptionInfo(cluster.EncryptionInfo)}); err != nil {
-			return diag.Errorf("setting encryption_info: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting encryption_info: %s", err)
 		}
 	} else {
 		d.Set("encryption_info", nil)
 	}
-
 	d.Set("kafka_version", cluster.CurrentBrokerSoftwareInfo.KafkaVersion)
-
 	if cluster.LoggingInfo != nil {
 		if err := d.Set("logging_info", []interface{}{flattenLoggingInfo(cluster.LoggingInfo)}); err != nil {
-			return diag.Errorf("setting logging_info: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting logging_info: %s", err)
 		}
 	} else {
 		d.Set("logging_info", nil)
 	}
-
 	d.Set("number_of_broker_nodes", cluster.NumberOfBrokerNodes)
-
 	if cluster.OpenMonitoring != nil {
 		if err := d.Set("open_monitoring", []interface{}{flattenOpenMonitoring(cluster.OpenMonitoring)}); err != nil {
-			return diag.Errorf("setting open_monitoring: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting open_monitoring: %s", err)
 		}
 	} else {
 		d.Set("open_monitoring", nil)
 	}
+	d.Set("storage_mode", cluster.StorageMode)
+	d.Set("zookeeper_connect_string", SortEndpointsString(aws.ToString(cluster.ZookeeperConnectString)))
+	d.Set("zookeeper_connect_string_tls", SortEndpointsString(aws.ToString(cluster.ZookeeperConnectStringTls)))
 
-	d.Set("zookeeper_connect_string", SortEndpointsString(aws.StringValue(cluster.ZookeeperConnectString)))
-	d.Set("zookeeper_connect_string_tls", SortEndpointsString(aws.StringValue(cluster.ZookeeperConnectStringTls)))
+	setTagsOut(ctx, cluster.Tags)
 
-	tags := KeyValueTags(cluster.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return diag.Errorf("setting tags_all: %s", err)
-	}
-
-	return nil
+	return diags
 }
 
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KafkaConn
-
-	if d.HasChange("broker_node_group_info.0.instance_type") {
-		input := &kafka.UpdateBrokerTypeInput{
-			ClusterArn:         aws.String(d.Id()),
-			CurrentVersion:     aws.String(d.Get("current_version").(string)),
-			TargetInstanceType: aws.String(d.Get("broker_node_group_info.0.instance_type").(string)),
-		}
-
-		output, err := conn.UpdateBrokerTypeWithContext(ctx, input)
-
-		if err != nil {
-			return diag.Errorf("updating MSK Cluster (%s) broker type: %s", d.Id(), err)
-		}
-
-		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
-
-		_, err = waitClusterOperationCompleted(ctx, conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate))
-
-		if err != nil {
-			return diag.Errorf("waiting for MSK Cluster (%s) operation (%s): %s", d.Id(), clusterOperationARN, err)
-		}
-
-		// refresh the current_version attribute after each update
-		if err := refreshClusterVersion(ctx, d, meta); err != nil {
-			return diag.FromErr(err)
-		}
-	}
-
-	if d.HasChanges("broker_node_group_info.0.ebs_volume_size", "broker_node_group_info.0.storage_info") {
-		input := &kafka.UpdateBrokerStorageInput{
-			ClusterArn:     aws.String(d.Id()),
-			CurrentVersion: aws.String(d.Get("current_version").(string)),
-		}
-		if d.HasChange("broker_node_group_info.0.storage_info") {
-			// case 1: deprecated ebs_volume_size replaced with storage_info
-			// case 2: regular update of storage_info
-			ebsVolumeInfo := &kafka.BrokerEBSVolumeInfo{
-				KafkaBrokerNodeId: aws.String("All"),
-				VolumeSizeGB:      aws.Int64(int64(d.Get("broker_node_group_info.0.storage_info.0.ebs_storage_info.0.volume_size").(int))),
-			}
-			if v, ok := d.GetOk("broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				ebsVolumeInfo.ProvisionedThroughput = expandProvisionedThroughput(v.([]interface{})[0].(map[string]interface{}))
-			}
-			input.TargetBrokerEBSVolumeInfo = []*kafka.BrokerEBSVolumeInfo{ebsVolumeInfo}
-		} else {
-			// case 3: regular update of deprecated ebs_volume_size
-			input.TargetBrokerEBSVolumeInfo = []*kafka.BrokerEBSVolumeInfo{
-				{
-					KafkaBrokerNodeId: aws.String("All"),
-					VolumeSizeGB:      aws.Int64(int64(d.Get("broker_node_group_info.0.ebs_volume_size").(int))),
-				},
-			}
-		}
-
-		output, err := conn.UpdateBrokerStorageWithContext(ctx, input)
-
-		// the following error is thrown if previous ebs_volume_size and new storage_info.ebs_storage_info.volume_size have the same value:
-		// BadRequestException: The request does not include any updates to the EBS volumes of the cluster. Verify the request, then try again
-		// ignore this error to allow users to replace deprecated ebs_volume_size with storage_info - Address case 1
-		if err != nil && !tfawserr.ErrMessageContains(err, kafka.ErrCodeBadRequestException, "The request does not include any updates to the EBS volumes of the cluster") {
-			return diag.Errorf("updating MSK Cluster (%s) broker storage: %s", d.Id(), err)
-		}
-
-		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
-
-		// when there are no changes, output.ClusterOperationArn is not returned leading to
-		// InvalidParameter: 1 validation error(s) found. - minimum field size of 1, DescribeClusterOperationInput.ClusterOperationArn.
-		// skip the wait if the EBS volume size is unchanged
-		if !tfawserr.ErrMessageContains(err, kafka.ErrCodeBadRequestException, "The request does not include any updates to the EBS volumes of the cluster") {
-			_, err = waitClusterOperationCompleted(ctx, conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate))
-
-			if err != nil {
-				return diag.Errorf("waiting for MSK Cluster (%s) operation (%s): %s", d.Id(), clusterOperationARN, err)
-			}
-		}
-
-		// refresh the current_version attribute after each update
-		if err := refreshClusterVersion(ctx, d, meta); err != nil {
-			return diag.FromErr(err)
-		}
-	}
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
 	if d.HasChange("broker_node_group_info.0.connectivity_info") {
 		input := &kafka.UpdateConnectivityInput{
@@ -733,23 +732,78 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.ConnectivityInfo = expandConnectivityInfo(v.([]interface{})[0].(map[string]interface{}))
 		}
 
-		output, err := conn.UpdateConnectivityWithContext(ctx, input)
+		output, err := conn.UpdateConnectivity(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating MSK Cluster (%s) broker connectivity: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating MSK Cluster (%s) broker connectivity: %s", d.Id(), err)
 		}
 
-		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
+		clusterOperationARN := aws.ToString(output.ClusterOperationArn)
 
-		_, err = waitClusterOperationCompleted(ctx, conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate))
-
-		if err != nil {
-			return diag.Errorf("waiting for MSK Cluster (%s) operation (%s): %s", d.Id(), clusterOperationARN, err)
+		if _, err := waitClusterOperationCompleted(ctx, conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for MSK Cluster (%s) operation (%s) complete: %s", d.Id(), clusterOperationARN, err)
 		}
 
 		// refresh the current_version attribute after each update
 		if err := refreshClusterVersion(ctx, d, meta); err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
+	if d.HasChange("broker_node_group_info.0.instance_type") {
+		input := &kafka.UpdateBrokerTypeInput{
+			ClusterArn:         aws.String(d.Id()),
+			CurrentVersion:     aws.String(d.Get("current_version").(string)),
+			TargetInstanceType: aws.String(d.Get("broker_node_group_info.0.instance_type").(string)),
+		}
+
+		output, err := conn.UpdateBrokerType(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating MSK Cluster (%s) broker type: %s", d.Id(), err)
+		}
+
+		clusterOperationARN := aws.ToString(output.ClusterOperationArn)
+
+		if _, err := waitClusterOperationCompleted(ctx, conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for MSK Cluster (%s) operation (%s) complete: %s", d.Id(), clusterOperationARN, err)
+		}
+
+		// refresh the current_version attribute after each update
+		if err := refreshClusterVersion(ctx, d, meta); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
+	if d.HasChanges("broker_node_group_info.0.storage_info") {
+		input := &kafka.UpdateBrokerStorageInput{
+			ClusterArn:     aws.String(d.Id()),
+			CurrentVersion: aws.String(d.Get("current_version").(string)),
+			TargetBrokerEBSVolumeInfo: []types.BrokerEBSVolumeInfo{{
+				KafkaBrokerNodeId: aws.String("All"),
+				VolumeSizeGB:      aws.Int32(int32(d.Get("broker_node_group_info.0.storage_info.0.ebs_storage_info.0.volume_size").(int))),
+			}},
+		}
+
+		if v, ok := d.GetOk("broker_node_group_info.0.storage_info.0.ebs_storage_info.0.provisioned_throughput"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.TargetBrokerEBSVolumeInfo[0].ProvisionedThroughput = expandProvisionedThroughput(v.([]interface{})[0].(map[string]interface{}))
+		}
+
+		output, err := conn.UpdateBrokerStorage(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating MSK Cluster (%s) broker storage: %s", d.Id(), err)
+		}
+
+		clusterOperationARN := aws.ToString(output.ClusterOperationArn)
+
+		if _, err := waitClusterOperationCompleted(ctx, conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for MSK Cluster (%s) operation (%s) complete: %s", d.Id(), clusterOperationARN, err)
+		}
+
+		// refresh the current_version attribute after each update
+		if err := refreshClusterVersion(ctx, d, meta); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
@@ -757,26 +811,24 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		input := &kafka.UpdateBrokerCountInput{
 			ClusterArn:                aws.String(d.Id()),
 			CurrentVersion:            aws.String(d.Get("current_version").(string)),
-			TargetNumberOfBrokerNodes: aws.Int64(int64(d.Get("number_of_broker_nodes").(int))),
+			TargetNumberOfBrokerNodes: aws.Int32(int32(d.Get("number_of_broker_nodes").(int))),
 		}
 
-		output, err := conn.UpdateBrokerCountWithContext(ctx, input)
+		output, err := conn.UpdateBrokerCount(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating MSK Cluster (%s) broker count: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating MSK Cluster (%s) broker count: %s", d.Id(), err)
 		}
 
-		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
+		clusterOperationARN := aws.ToString(output.ClusterOperationArn)
 
-		_, err = waitClusterOperationCompleted(ctx, conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate))
-
-		if err != nil {
-			return diag.Errorf("waiting for MSK Cluster (%s) operation (%s): %s", d.Id(), clusterOperationARN, err)
+		if _, err := waitClusterOperationCompleted(ctx, conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for MSK Cluster (%s) operation (%s) complete: %s", d.Id(), clusterOperationARN, err)
 		}
 
 		// refresh the current_version attribute after each update
 		if err := refreshClusterVersion(ctx, d, meta); err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
@@ -784,7 +836,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		input := &kafka.UpdateMonitoringInput{
 			ClusterArn:         aws.String(d.Id()),
 			CurrentVersion:     aws.String(d.Get("current_version").(string)),
-			EnhancedMonitoring: aws.String(d.Get("enhanced_monitoring").(string)),
+			EnhancedMonitoring: types.EnhancedMonitoring(d.Get("enhanced_monitoring").(string)),
 		}
 
 		if v, ok := d.GetOk("logging_info"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -795,23 +847,21 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.OpenMonitoring = expandOpenMonitoringInfo(v.([]interface{})[0].(map[string]interface{}))
 		}
 
-		output, err := conn.UpdateMonitoringWithContext(ctx, input)
+		output, err := conn.UpdateMonitoring(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating MSK Cluster (%s) monitoring: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating MSK Cluster (%s) monitoring: %s", d.Id(), err)
 		}
 
-		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
+		clusterOperationARN := aws.ToString(output.ClusterOperationArn)
 
-		_, err = waitClusterOperationCompleted(ctx, conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate))
-
-		if err != nil {
-			return diag.Errorf("waiting for MSK Cluster (%s) operation (%s): %s", d.Id(), clusterOperationARN, err)
+		if _, err := waitClusterOperationCompleted(ctx, conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for MSK Cluster (%s) operation (%s) complete: %s", d.Id(), clusterOperationARN, err)
 		}
 
 		// refresh the current_version attribute after each update
 		if err := refreshClusterVersion(ctx, d, meta); err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
@@ -825,23 +875,21 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			input.ConfigurationInfo = expandConfigurationInfo(v.([]interface{})[0].(map[string]interface{}))
 		}
 
-		output, err := conn.UpdateClusterConfigurationWithContext(ctx, input)
+		output, err := conn.UpdateClusterConfiguration(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating MSK Cluster (%s) configuration: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating MSK Cluster (%s) configuration: %s", d.Id(), err)
 		}
 
-		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
+		clusterOperationARN := aws.ToString(output.ClusterOperationArn)
 
-		_, err = waitClusterOperationCompleted(ctx, conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate))
-
-		if err != nil {
-			return diag.Errorf("waiting for MSK Cluster (%s) operation (%s): %s", d.Id(), clusterOperationARN, err)
+		if _, err := waitClusterOperationCompleted(ctx, conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for MSK Cluster (%s) operation (%s) complete: %s", d.Id(), clusterOperationARN, err)
 		}
 
 		// refresh the current_version attribute after each update
 		if err := refreshClusterVersion(ctx, d, meta); err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
@@ -858,23 +906,21 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			}
 		}
 
-		output, err := conn.UpdateClusterKafkaVersionWithContext(ctx, input)
+		output, err := conn.UpdateClusterKafkaVersion(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating MSK Cluster (%s) Kafka version: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating MSK Cluster (%s) Kafka version: %s", d.Id(), err)
 		}
 
-		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
+		clusterOperationARN := aws.ToString(output.ClusterOperationArn)
 
-		_, err = waitClusterOperationCompleted(ctx, conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate))
-
-		if err != nil {
-			return diag.Errorf("waiting for MSK Cluster (%s) operation (%s): %s", d.Id(), clusterOperationARN, err)
+		if _, err := waitClusterOperationCompleted(ctx, conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for MSK Cluster (%s) operation (%s): %s", d.Id(), clusterOperationARN, err)
 		}
 
 		// refresh the current_version attribute after each update
 		if err := refreshClusterVersion(ctx, d, meta); err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
@@ -902,75 +948,287 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 			}
 		}
 
-		output, err := conn.UpdateSecurityWithContext(ctx, input)
+		output, err := conn.UpdateSecurity(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating MSK Cluster (%s) security: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating MSK Cluster (%s) security: %s", d.Id(), err)
 		}
 
-		clusterOperationARN := aws.StringValue(output.ClusterOperationArn)
+		clusterOperationARN := aws.ToString(output.ClusterOperationArn)
 
-		_, err = waitClusterOperationCompleted(ctx, conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate))
-
-		if err != nil {
-			return diag.Errorf("waiting for MSK Cluster (%s) operation (%s): %s", d.Id(), clusterOperationARN, err)
+		if _, err := waitClusterOperationCompleted(ctx, conn, clusterOperationARN, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for MSK Cluster (%s) operation (%s): %s", d.Id(), clusterOperationARN, err)
 		}
 
 		// refresh the current_version attribute after each update
 		if err := refreshClusterVersion(ctx, d, meta); err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTagsWithContext(ctx, conn, d.Id(), o, n); err != nil {
-			return diag.Errorf("updating MSK Cluster (%s) tags: %s", d.Id(), err)
-		}
-	}
-
-	return resourceClusterRead(ctx, d, meta)
+	return append(diags, resourceClusterRead(ctx, d, meta)...)
 }
 
 func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KafkaConn
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
 
 	log.Printf("[DEBUG] Deleting MSK Cluster: %s", d.Id())
-	_, err := conn.DeleteClusterWithContext(ctx, &kafka.DeleteClusterInput{
+	_, err := conn.DeleteCluster(ctx, &kafka.DeleteClusterInput{
 		ClusterArn: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, kafka.ErrCodeNotFoundException) {
-		return nil
+	if errs.IsA[*types.NotFoundException](err) {
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting MSK Cluster (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting MSK Cluster (%s): %s", d.Id(), err)
 	}
 
-	_, err = waitClusterDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete))
+	if _, err := waitClusterDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for MSK Cluster (%s) delete: %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func refreshClusterVersion(ctx context.Context, d *schema.ResourceData, meta interface{}) error {
+	conn := meta.(*conns.AWSClient).KafkaClient(ctx)
+
+	cluster, err := findClusterByARN(ctx, conn, d.Id())
 
 	if err != nil {
-		return diag.Errorf("waiting for MSK Cluster (%s) delete: %s", d.Id(), err)
+		return fmt.Errorf("reading MSK Cluster (%s): %w", d.Id(), err)
 	}
+
+	d.Set("current_version", cluster.CurrentVersion)
 
 	return nil
 }
 
-func expandBrokerNodeGroupInfo(tfMap map[string]interface{}) *kafka.BrokerNodeGroupInfo {
+func findClusterByARN(ctx context.Context, conn *kafka.Client, arn string) (*types.ClusterInfo, error) {
+	input := &kafka.DescribeClusterInput{
+		ClusterArn: aws.String(arn),
+	}
+
+	output, err := conn.DescribeCluster(ctx, input)
+
+	if errs.IsA[*types.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.ClusterInfo == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.ClusterInfo, nil
+}
+
+func findClusterV2ByARN(ctx context.Context, conn *kafka.Client, arn string) (*types.Cluster, error) {
+	input := &kafka.DescribeClusterV2Input{
+		ClusterArn: aws.String(arn),
+	}
+
+	output, err := conn.DescribeClusterV2(ctx, input)
+
+	if errs.IsA[*types.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.ClusterInfo == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.ClusterInfo, nil
+}
+
+func findClusterOperationByARN(ctx context.Context, conn *kafka.Client, arn string) (*types.ClusterOperationInfo, error) {
+	input := &kafka.DescribeClusterOperationInput{
+		ClusterOperationArn: aws.String(arn),
+	}
+
+	output, err := conn.DescribeClusterOperation(ctx, input)
+
+	if errs.IsA[*types.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.ClusterOperationInfo == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.ClusterOperationInfo, nil
+}
+
+func findBootstrapBrokersByARN(ctx context.Context, conn *kafka.Client, arn string) (*kafka.GetBootstrapBrokersOutput, error) {
+	input := &kafka.GetBootstrapBrokersInput{
+		ClusterArn: aws.String(arn),
+	}
+
+	output, err := conn.GetBootstrapBrokers(ctx, input)
+
+	if errs.IsA[*types.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func statusClusterState(ctx context.Context, conn *kafka.Client, arn string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findClusterV2ByARN(ctx, conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}
+
+func statusClusterOperationState(ctx context.Context, conn *kafka.Client, arn string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findClusterOperationByARN(ctx, conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.ToString(output.OperationState), nil
+	}
+}
+
+func waitClusterCreated(ctx context.Context, conn *kafka.Client, arn string, timeout time.Duration) (*types.Cluster, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.ClusterStateCreating),
+		Target:  enum.Slice(types.ClusterStateActive),
+		Refresh: statusClusterState(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.Cluster); ok {
+		if state, stateInfo := output.State, output.StateInfo; state == types.ClusterStateFailed && stateInfo != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(stateInfo.Code), aws.ToString(stateInfo.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitClusterDeleted(ctx context.Context, conn *kafka.Client, arn string, timeout time.Duration) (*types.Cluster, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.ClusterStateDeleting),
+		Target:  []string{},
+		Refresh: statusClusterState(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.Cluster); ok {
+		if state, stateInfo := output.State, output.StateInfo; state == types.ClusterStateFailed && stateInfo != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(stateInfo.Code), aws.ToString(stateInfo.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitClusterOperationCompleted(ctx context.Context, conn *kafka.Client, arn string, timeout time.Duration) (*types.ClusterOperationInfo, error) { //nolint:unparam
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{clusterOperationStatePending, clusterOperationStateUpdateInProgress},
+		Target:  []string{clusterOperationStateUpdateComplete},
+		Refresh: statusClusterOperationState(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.ClusterOperationInfo); ok {
+		if state, errorInfo := aws.ToString(output.OperationState), output.ErrorInfo; state == clusterOperationStateUpdateFailed && errorInfo != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.ToString(errorInfo.ErrorCode), aws.ToString(errorInfo.ErrorString)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func clusterUUIDFromARN(clusterARN string) (string, error) {
+	parsedARN, err := arn.Parse(clusterARN)
+	if err != nil {
+		return "", err
+	}
+
+	// arn:${Partition}:kafka:${Region}:${Account}:cluster/${ClusterName}/${Uuid}
+	parts := strings.Split(parsedARN.Resource, "/")
+	if len(parts) != 3 || parts[0] != "cluster" || parts[1] == "" || parts[2] == "" {
+		return "", fmt.Errorf("invalid MSK Cluster ARN (%s)", clusterARN)
+	}
+	return parts[2], nil
+}
+
+func expandBrokerNodeGroupInfo(tfMap map[string]interface{}) *types.BrokerNodeGroupInfo {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &kafka.BrokerNodeGroupInfo{}
+	apiObject := &types.BrokerNodeGroupInfo{}
 
 	if v, ok := tfMap["az_distribution"].(string); ok && v != "" {
-		apiObject.BrokerAZDistribution = aws.String(v)
+		apiObject.BrokerAZDistribution = types.BrokerAZDistribution(v)
 	}
 
 	if v, ok := tfMap["client_subnets"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.ClientSubnets = flex.ExpandStringSet(v)
+		apiObject.ClientSubnets = flex.ExpandStringValueSet(v)
 	}
 
 	if v, ok := tfMap["connectivity_info"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
@@ -982,15 +1240,7 @@ func expandBrokerNodeGroupInfo(tfMap map[string]interface{}) *kafka.BrokerNodeGr
 	}
 
 	if v, ok := tfMap["security_groups"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.SecurityGroups = flex.ExpandStringSet(v)
-	}
-
-	if v, ok := tfMap["ebs_volume_size"].(int); ok && v != 0 {
-		apiObject.StorageInfo = &kafka.StorageInfo{
-			EbsStorageInfo: &kafka.EBSStorageInfo{
-				VolumeSize: aws.Int64(int64(v)),
-			},
-		}
+		apiObject.SecurityGroups = flex.ExpandStringValueSet(v)
 	}
 
 	if v, ok := tfMap["storage_info"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
@@ -1000,26 +1250,30 @@ func expandBrokerNodeGroupInfo(tfMap map[string]interface{}) *kafka.BrokerNodeGr
 	return apiObject
 }
 
-func expandConnectivityInfo(tfMap map[string]interface{}) *kafka.ConnectivityInfo {
+func expandConnectivityInfo(tfMap map[string]interface{}) *types.ConnectivityInfo {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &kafka.ConnectivityInfo{}
+	apiObject := &types.ConnectivityInfo{}
 
 	if v, ok := tfMap["public_access"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.PublicAccess = expandPublicAccess(v[0].(map[string]interface{}))
 	}
 
+	if v, ok := tfMap["vpc_connectivity"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.VpcConnectivity = expandVPCConnectivity(v[0].(map[string]interface{}))
+	}
+
 	return apiObject
 }
 
-func expandStorageInfo(tfMap map[string]interface{}) *kafka.StorageInfo {
+func expandStorageInfo(tfMap map[string]interface{}) *types.StorageInfo {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &kafka.StorageInfo{}
+	apiObject := &types.StorageInfo{}
 
 	if v, ok := tfMap["ebs_storage_info"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.EbsStorageInfo = expandEBSStorageInfo(v[0].(map[string]interface{}))
@@ -1028,48 +1282,48 @@ func expandStorageInfo(tfMap map[string]interface{}) *kafka.StorageInfo {
 	return apiObject
 }
 
-func expandEBSStorageInfo(tfMap map[string]interface{}) *kafka.EBSStorageInfo {
+func expandEBSStorageInfo(tfMap map[string]interface{}) *types.EBSStorageInfo {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &kafka.EBSStorageInfo{}
+	apiObject := &types.EBSStorageInfo{}
 
 	if v, ok := tfMap["provisioned_throughput"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.ProvisionedThroughput = expandProvisionedThroughput(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["volume_size"].(int); ok && v != 0 {
-		apiObject.VolumeSize = aws.Int64(int64(v))
+		apiObject.VolumeSize = aws.Int32(int32(v))
 	}
 
 	return apiObject
 }
 
-func expandProvisionedThroughput(tfMap map[string]interface{}) *kafka.ProvisionedThroughput {
+func expandProvisionedThroughput(tfMap map[string]interface{}) *types.ProvisionedThroughput {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &kafka.ProvisionedThroughput{}
+	apiObject := &types.ProvisionedThroughput{}
 
 	if v, ok := tfMap["enabled"].(bool); ok {
 		apiObject.Enabled = aws.Bool(v)
 	}
 
 	if v, ok := tfMap["volume_throughput"].(int); ok && v != 0 {
-		apiObject.VolumeThroughput = aws.Int64(int64(v))
+		apiObject.VolumeThroughput = aws.Int32(int32(v))
 	}
 
 	return apiObject
 }
 
-func expandPublicAccess(tfMap map[string]interface{}) *kafka.PublicAccess {
+func expandPublicAccess(tfMap map[string]interface{}) *types.PublicAccess {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &kafka.PublicAccess{}
+	apiObject := &types.PublicAccess{}
 
 	if v, ok := tfMap["type"].(string); ok && v != "" {
 		apiObject.Type = aws.String(v)
@@ -1078,12 +1332,68 @@ func expandPublicAccess(tfMap map[string]interface{}) *kafka.PublicAccess {
 	return apiObject
 }
 
-func expandClientAuthentication(tfMap map[string]interface{}) *kafka.ClientAuthentication {
+func expandVPCConnectivity(tfMap map[string]interface{}) *types.VpcConnectivity {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &kafka.ClientAuthentication{}
+	apiObject := &types.VpcConnectivity{}
+
+	if v, ok := tfMap["client_authentication"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.ClientAuthentication = expandVPCConnectivityClientAuthentication(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
+}
+
+func expandVPCConnectivityClientAuthentication(tfMap map[string]interface{}) *types.VpcConnectivityClientAuthentication {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.VpcConnectivityClientAuthentication{}
+
+	if v, ok := tfMap["sasl"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Sasl = expandVPCConnectivitySASL(v[0].(map[string]interface{}))
+	}
+
+	if v, ok := tfMap["tls"].(bool); ok {
+		apiObject.Tls = &types.VpcConnectivityTls{
+			Enabled: aws.Bool(v),
+		}
+	}
+
+	return apiObject
+}
+
+func expandVPCConnectivitySASL(tfMap map[string]interface{}) *types.VpcConnectivitySasl {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.VpcConnectivitySasl{}
+
+	if v, ok := tfMap["iam"].(bool); ok {
+		apiObject.Iam = &types.VpcConnectivityIam{
+			Enabled: aws.Bool(v),
+		}
+	}
+
+	if v, ok := tfMap["scram"].(bool); ok {
+		apiObject.Scram = &types.VpcConnectivityScram{
+			Enabled: aws.Bool(v),
+		}
+	}
+
+	return apiObject
+}
+
+func expandClientAuthentication(tfMap map[string]interface{}) *types.ClientAuthentication {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &types.ClientAuthentication{}
 
 	if v, ok := tfMap["sasl"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.Sasl = expandSASL(v[0].(map[string]interface{}))
@@ -1094,7 +1404,7 @@ func expandClientAuthentication(tfMap map[string]interface{}) *kafka.ClientAuthe
 	}
 
 	if v, ok := tfMap["unauthenticated"].(bool); ok {
-		apiObject.Unauthenticated = &kafka.Unauthenticated{
+		apiObject.Unauthenticated = &types.Unauthenticated{
 			Enabled: aws.Bool(v),
 		}
 	}
@@ -1102,21 +1412,21 @@ func expandClientAuthentication(tfMap map[string]interface{}) *kafka.ClientAuthe
 	return apiObject
 }
 
-func expandSASL(tfMap map[string]interface{}) *kafka.Sasl {
+func expandSASL(tfMap map[string]interface{}) *types.Sasl {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &kafka.Sasl{}
+	apiObject := &types.Sasl{}
 
 	if v, ok := tfMap["iam"].(bool); ok {
-		apiObject.Iam = &kafka.Iam{
+		apiObject.Iam = &types.Iam{
 			Enabled: aws.Bool(v),
 		}
 	}
 
 	if v, ok := tfMap["scram"].(bool); ok {
-		apiObject.Scram = &kafka.Scram{
+		apiObject.Scram = &types.Scram{
 			Enabled: aws.Bool(v),
 		}
 	}
@@ -1124,15 +1434,15 @@ func expandSASL(tfMap map[string]interface{}) *kafka.Sasl {
 	return apiObject
 }
 
-func expandTLS(tfMap map[string]interface{}) *kafka.Tls {
+func expandTLS(tfMap map[string]interface{}) *types.Tls {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &kafka.Tls{}
+	apiObject := &types.Tls{}
 
 	if v, ok := tfMap["certificate_authority_arns"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.CertificateAuthorityArnList = flex.ExpandStringSet(v)
+		apiObject.CertificateAuthorityArnList = flex.ExpandStringValueSet(v)
 		apiObject.Enabled = aws.Bool(true)
 	} else {
 		apiObject.Enabled = aws.Bool(false)
@@ -1141,12 +1451,12 @@ func expandTLS(tfMap map[string]interface{}) *kafka.Tls {
 	return apiObject
 }
 
-func expandConfigurationInfo(tfMap map[string]interface{}) *kafka.ConfigurationInfo {
+func expandConfigurationInfo(tfMap map[string]interface{}) *types.ConfigurationInfo {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &kafka.ConfigurationInfo{}
+	apiObject := &types.ConfigurationInfo{}
 
 	if v, ok := tfMap["arn"].(string); ok && v != "" {
 		apiObject.Arn = aws.String(v)
@@ -1159,19 +1469,19 @@ func expandConfigurationInfo(tfMap map[string]interface{}) *kafka.ConfigurationI
 	return apiObject
 }
 
-func expandEncryptionInfo(tfMap map[string]interface{}) *kafka.EncryptionInfo {
+func expandEncryptionInfo(tfMap map[string]interface{}) *types.EncryptionInfo {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &kafka.EncryptionInfo{}
+	apiObject := &types.EncryptionInfo{}
 
 	if v, ok := tfMap["encryption_in_transit"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.EncryptionInTransit = expandEncryptionInTransit(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["encryption_at_rest_kms_key_arn"].(string); ok && v != "" {
-		apiObject.EncryptionAtRest = &kafka.EncryptionAtRest{
+		apiObject.EncryptionAtRest = &types.EncryptionAtRest{
 			DataVolumeKMSKeyId: aws.String(v),
 		}
 	}
@@ -1179,15 +1489,15 @@ func expandEncryptionInfo(tfMap map[string]interface{}) *kafka.EncryptionInfo {
 	return apiObject
 }
 
-func expandEncryptionInTransit(tfMap map[string]interface{}) *kafka.EncryptionInTransit {
+func expandEncryptionInTransit(tfMap map[string]interface{}) *types.EncryptionInTransit {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &kafka.EncryptionInTransit{}
+	apiObject := &types.EncryptionInTransit{}
 
 	if v, ok := tfMap["client_broker"].(string); ok && v != "" {
-		apiObject.ClientBroker = aws.String(v)
+		apiObject.ClientBroker = types.ClientBroker(v)
 	}
 
 	if v, ok := tfMap["in_cluster"].(bool); ok {
@@ -1197,12 +1507,12 @@ func expandEncryptionInTransit(tfMap map[string]interface{}) *kafka.EncryptionIn
 	return apiObject
 }
 
-func expandLoggingInfo(tfMap map[string]interface{}) *kafka.LoggingInfo {
+func expandLoggingInfo(tfMap map[string]interface{}) *types.LoggingInfo {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &kafka.LoggingInfo{}
+	apiObject := &types.LoggingInfo{}
 
 	if v, ok := tfMap["broker_logs"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.BrokerLogs = expandBrokerLogs(v[0].(map[string]interface{}))
@@ -1211,12 +1521,12 @@ func expandLoggingInfo(tfMap map[string]interface{}) *kafka.LoggingInfo {
 	return apiObject
 }
 
-func expandBrokerLogs(tfMap map[string]interface{}) *kafka.BrokerLogs {
+func expandBrokerLogs(tfMap map[string]interface{}) *types.BrokerLogs {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &kafka.BrokerLogs{}
+	apiObject := &types.BrokerLogs{}
 
 	if v, ok := tfMap["cloudwatch_logs"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.CloudWatchLogs = expandCloudWatchLogs(v[0].(map[string]interface{}))
@@ -1233,12 +1543,12 @@ func expandBrokerLogs(tfMap map[string]interface{}) *kafka.BrokerLogs {
 	return apiObject
 }
 
-func expandCloudWatchLogs(tfMap map[string]interface{}) *kafka.CloudWatchLogs {
+func expandCloudWatchLogs(tfMap map[string]interface{}) *types.CloudWatchLogs {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &kafka.CloudWatchLogs{}
+	apiObject := &types.CloudWatchLogs{}
 
 	if v, ok := tfMap["enabled"].(bool); ok {
 		apiObject.Enabled = aws.Bool(v)
@@ -1251,12 +1561,12 @@ func expandCloudWatchLogs(tfMap map[string]interface{}) *kafka.CloudWatchLogs {
 	return apiObject
 }
 
-func expandFirehose(tfMap map[string]interface{}) *kafka.Firehose {
+func expandFirehose(tfMap map[string]interface{}) *types.Firehose {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &kafka.Firehose{}
+	apiObject := &types.Firehose{}
 
 	if v, ok := tfMap["delivery_stream"].(string); ok && v != "" {
 		apiObject.DeliveryStream = aws.String(v)
@@ -1269,12 +1579,12 @@ func expandFirehose(tfMap map[string]interface{}) *kafka.Firehose {
 	return apiObject
 }
 
-func expandS3(tfMap map[string]interface{}) *kafka.S3 {
+func expandS3(tfMap map[string]interface{}) *types.S3 {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &kafka.S3{}
+	apiObject := &types.S3{}
 
 	if v, ok := tfMap["bucket"].(string); ok && v != "" {
 		apiObject.Bucket = aws.String(v)
@@ -1291,12 +1601,12 @@ func expandS3(tfMap map[string]interface{}) *kafka.S3 {
 	return apiObject
 }
 
-func expandOpenMonitoringInfo(tfMap map[string]interface{}) *kafka.OpenMonitoringInfo {
+func expandOpenMonitoringInfo(tfMap map[string]interface{}) *types.OpenMonitoringInfo {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &kafka.OpenMonitoringInfo{}
+	apiObject := &types.OpenMonitoringInfo{}
 
 	if v, ok := tfMap["prometheus"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.Prometheus = expandPrometheusInfo(v[0].(map[string]interface{}))
@@ -1305,12 +1615,12 @@ func expandOpenMonitoringInfo(tfMap map[string]interface{}) *kafka.OpenMonitorin
 	return apiObject
 }
 
-func expandPrometheusInfo(tfMap map[string]interface{}) *kafka.PrometheusInfo {
+func expandPrometheusInfo(tfMap map[string]interface{}) *types.PrometheusInfo {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &kafka.PrometheusInfo{}
+	apiObject := &types.PrometheusInfo{}
 
 	if v, ok := tfMap["jmx_exporter"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.JmxExporter = expandJmxExporterInfo(v[0].(map[string]interface{}))
@@ -1323,12 +1633,12 @@ func expandPrometheusInfo(tfMap map[string]interface{}) *kafka.PrometheusInfo {
 	return apiObject
 }
 
-func expandJmxExporterInfo(tfMap map[string]interface{}) *kafka.JmxExporterInfo {
+func expandJmxExporterInfo(tfMap map[string]interface{}) *types.JmxExporterInfo {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &kafka.JmxExporterInfo{}
+	apiObject := &types.JmxExporterInfo{}
 
 	if v, ok := tfMap["enabled_in_broker"].(bool); ok {
 		apiObject.EnabledInBroker = aws.Bool(v)
@@ -1337,12 +1647,12 @@ func expandJmxExporterInfo(tfMap map[string]interface{}) *kafka.JmxExporterInfo 
 	return apiObject
 }
 
-func expandNodeExporterInfo(tfMap map[string]interface{}) *kafka.NodeExporterInfo {
+func expandNodeExporterInfo(tfMap map[string]interface{}) *types.NodeExporterInfo {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &kafka.NodeExporterInfo{}
+	apiObject := &types.NodeExporterInfo{}
 
 	if v, ok := tfMap["enabled_in_broker"].(bool); ok {
 		apiObject.EnabledInBroker = aws.Bool(v)
@@ -1351,19 +1661,17 @@ func expandNodeExporterInfo(tfMap map[string]interface{}) *kafka.NodeExporterInf
 	return apiObject
 }
 
-func flattenBrokerNodeGroupInfo(apiObject *kafka.BrokerNodeGroupInfo) map[string]interface{} {
+func flattenBrokerNodeGroupInfo(apiObject *types.BrokerNodeGroupInfo) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.BrokerAZDistribution; v != nil {
-		tfMap["az_distribution"] = aws.StringValue(v)
+	tfMap := map[string]interface{}{
+		"az_distribution": apiObject.BrokerAZDistribution,
 	}
 
 	if v := apiObject.ClientSubnets; v != nil {
-		tfMap["client_subnets"] = aws.StringValueSlice(v)
+		tfMap["client_subnets"] = v
 	}
 
 	if v := apiObject.ConnectivityInfo; v != nil {
@@ -1371,29 +1679,21 @@ func flattenBrokerNodeGroupInfo(apiObject *kafka.BrokerNodeGroupInfo) map[string
 	}
 
 	if v := apiObject.InstanceType; v != nil {
-		tfMap["instance_type"] = aws.StringValue(v)
+		tfMap["instance_type"] = aws.ToString(v)
 	}
 
 	if v := apiObject.SecurityGroups; v != nil {
-		tfMap["security_groups"] = aws.StringValueSlice(v)
+		tfMap["security_groups"] = v
 	}
 
 	if v := apiObject.StorageInfo; v != nil {
 		tfMap["storage_info"] = flattenStorageInfo(v)
 	}
 
-	if v := apiObject.StorageInfo; v != nil {
-		if v := v.EbsStorageInfo; v != nil {
-			if v := v.VolumeSize; v != nil {
-				tfMap["ebs_volume_size"] = aws.Int64Value(v)
-			}
-		}
-	}
-
 	return tfMap
 }
 
-func flattenConnectivityInfo(apiObject *kafka.ConnectivityInfo) map[string]interface{} {
+func flattenConnectivityInfo(apiObject *types.ConnectivityInfo) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1404,10 +1704,14 @@ func flattenConnectivityInfo(apiObject *kafka.ConnectivityInfo) map[string]inter
 		tfMap["public_access"] = []interface{}{flattenPublicAccess(v)}
 	}
 
+	if v := apiObject.VpcConnectivity; v != nil {
+		tfMap["vpc_connectivity"] = []interface{}{flattenVPCConnectivity(v)}
+	}
+
 	return tfMap
 }
 
-func flattenStorageInfo(apiObject *kafka.StorageInfo) []interface{} {
+func flattenStorageInfo(apiObject *types.StorageInfo) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1421,7 +1725,7 @@ func flattenStorageInfo(apiObject *kafka.StorageInfo) []interface{} {
 	return []interface{}{tfMap}
 }
 
-func flattenEBSStorageInfo(apiObject *kafka.EBSStorageInfo) []interface{} {
+func flattenEBSStorageInfo(apiObject *types.EBSStorageInfo) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1433,13 +1737,13 @@ func flattenEBSStorageInfo(apiObject *kafka.EBSStorageInfo) []interface{} {
 	}
 
 	if v := apiObject.VolumeSize; v != nil {
-		tfMap["volume_size"] = aws.Int64Value(v)
+		tfMap["volume_size"] = aws.ToInt32(v)
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenProvisionedThroughput(apiObject *kafka.ProvisionedThroughput) []interface{} {
+func flattenProvisionedThroughput(apiObject *types.ProvisionedThroughput) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1447,17 +1751,17 @@ func flattenProvisionedThroughput(apiObject *kafka.ProvisionedThroughput) []inte
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Enabled; v != nil {
-		tfMap["enabled"] = aws.BoolValue(v)
+		tfMap["enabled"] = aws.ToBool(v)
 	}
 
 	if v := apiObject.VolumeThroughput; v != nil {
-		tfMap["volume_throughput"] = aws.Int64Value(v)
+		tfMap["volume_throughput"] = aws.ToInt32(v)
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenPublicAccess(apiObject *kafka.PublicAccess) map[string]interface{} {
+func flattenPublicAccess(apiObject *types.PublicAccess) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1465,13 +1769,68 @@ func flattenPublicAccess(apiObject *kafka.PublicAccess) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Type; v != nil {
-		tfMap["type"] = aws.StringValue(v)
+		tfMap["type"] = aws.ToString(v)
 	}
 
 	return tfMap
 }
 
-func flattenClientAuthentication(apiObject *kafka.ClientAuthentication) map[string]interface{} {
+func flattenVPCConnectivity(apiObject *types.VpcConnectivity) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if v := apiObject.ClientAuthentication; v != nil {
+		tfMap["client_authentication"] = []interface{}{flattenVPCConnectivityClientAuthentication(v)}
+	}
+
+	return tfMap
+}
+
+func flattenVPCConnectivityClientAuthentication(apiObject *types.VpcConnectivityClientAuthentication) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Sasl; v != nil {
+		tfMap["sasl"] = []interface{}{(flattenVPCConnectivitySASL(v))}
+	}
+
+	if v := apiObject.Tls; v != nil {
+		if v := v.Enabled; v != nil {
+			tfMap["tls"] = aws.ToBool(v)
+		}
+	}
+
+	return tfMap
+}
+
+func flattenVPCConnectivitySASL(apiObject *types.VpcConnectivitySasl) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Iam; v != nil {
+		if v := v.Enabled; v != nil {
+			tfMap["iam"] = aws.ToBool(v)
+		}
+	}
+
+	if v := apiObject.Scram; v != nil {
+		if v := v.Enabled; v != nil {
+			tfMap["scram"] = aws.ToBool(v)
+		}
+	}
+
+	return tfMap
+}
+
+func flattenClientAuthentication(apiObject *types.ClientAuthentication) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1488,14 +1847,14 @@ func flattenClientAuthentication(apiObject *kafka.ClientAuthentication) map[stri
 
 	if v := apiObject.Unauthenticated; v != nil {
 		if v := v.Enabled; v != nil {
-			tfMap["unauthenticated"] = aws.BoolValue(v)
+			tfMap["unauthenticated"] = aws.ToBool(v)
 		}
 	}
 
 	return tfMap
 }
 
-func flattenSASL(apiObject *kafka.Sasl) map[string]interface{} {
+func flattenSASL(apiObject *types.Sasl) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1504,34 +1863,34 @@ func flattenSASL(apiObject *kafka.Sasl) map[string]interface{} {
 
 	if v := apiObject.Iam; v != nil {
 		if v := v.Enabled; v != nil {
-			tfMap["iam"] = aws.BoolValue(v)
+			tfMap["iam"] = aws.ToBool(v)
 		}
 	}
 
 	if v := apiObject.Scram; v != nil {
 		if v := v.Enabled; v != nil {
-			tfMap["scram"] = aws.BoolValue(v)
+			tfMap["scram"] = aws.ToBool(v)
 		}
 	}
 
 	return tfMap
 }
 
-func flattenTLS(apiObject *kafka.Tls) map[string]interface{} {
+func flattenTLS(apiObject *types.Tls) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 
-	if v := apiObject.CertificateAuthorityArnList; v != nil && aws.BoolValue(apiObject.Enabled) {
-		tfMap["certificate_authority_arns"] = aws.StringValueSlice(v)
+	if v := apiObject.CertificateAuthorityArnList; v != nil && aws.ToBool(apiObject.Enabled) {
+		tfMap["certificate_authority_arns"] = v
 	}
 
 	return tfMap
 }
 
-func flattenBrokerSoftwareInfo(apiObject *kafka.BrokerSoftwareInfo) map[string]interface{} {
+func flattenBrokerSoftwareInfo(apiObject *types.BrokerSoftwareInfo) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1539,17 +1898,17 @@ func flattenBrokerSoftwareInfo(apiObject *kafka.BrokerSoftwareInfo) map[string]i
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.ConfigurationArn; v != nil {
-		tfMap["arn"] = aws.StringValue(v)
+		tfMap["arn"] = aws.ToString(v)
 	}
 
 	if v := apiObject.ConfigurationRevision; v != nil {
-		tfMap["revision"] = aws.Int64Value(v)
+		tfMap["revision"] = aws.ToInt64(v)
 	}
 
 	return tfMap
 }
 
-func flattenEncryptionInfo(apiObject *kafka.EncryptionInfo) map[string]interface{} {
+func flattenEncryptionInfo(apiObject *types.EncryptionInfo) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1558,7 +1917,7 @@ func flattenEncryptionInfo(apiObject *kafka.EncryptionInfo) map[string]interface
 
 	if v := apiObject.EncryptionAtRest; v != nil {
 		if v := v.DataVolumeKMSKeyId; v != nil {
-			tfMap["encryption_at_rest_kms_key_arn"] = aws.StringValue(v)
+			tfMap["encryption_at_rest_kms_key_arn"] = aws.ToString(v)
 		}
 	}
 
@@ -1569,25 +1928,23 @@ func flattenEncryptionInfo(apiObject *kafka.EncryptionInfo) map[string]interface
 	return tfMap
 }
 
-func flattenEncryptionInTransit(apiObject *kafka.EncryptionInTransit) map[string]interface{} {
+func flattenEncryptionInTransit(apiObject *types.EncryptionInTransit) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.ClientBroker; v != nil {
-		tfMap["client_broker"] = aws.StringValue(v)
+	tfMap := map[string]interface{}{
+		"client_broker": apiObject.ClientBroker,
 	}
 
 	if v := apiObject.InCluster; v != nil {
-		tfMap["in_cluster"] = aws.BoolValue(v)
+		tfMap["in_cluster"] = aws.ToBool(v)
 	}
 
 	return tfMap
 }
 
-func flattenLoggingInfo(apiObject *kafka.LoggingInfo) map[string]interface{} {
+func flattenLoggingInfo(apiObject *types.LoggingInfo) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1601,7 +1958,7 @@ func flattenLoggingInfo(apiObject *kafka.LoggingInfo) map[string]interface{} {
 	return tfMap
 }
 
-func flattenBrokerLogs(apiObject *kafka.BrokerLogs) map[string]interface{} {
+func flattenBrokerLogs(apiObject *types.BrokerLogs) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1623,7 +1980,7 @@ func flattenBrokerLogs(apiObject *kafka.BrokerLogs) map[string]interface{} {
 	return tfMap
 }
 
-func flattenCloudWatchLogs(apiObject *kafka.CloudWatchLogs) map[string]interface{} {
+func flattenCloudWatchLogs(apiObject *types.CloudWatchLogs) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1631,17 +1988,17 @@ func flattenCloudWatchLogs(apiObject *kafka.CloudWatchLogs) map[string]interface
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Enabled; v != nil {
-		tfMap["enabled"] = aws.BoolValue(v)
+		tfMap["enabled"] = aws.ToBool(v)
 	}
 
 	if v := apiObject.LogGroup; v != nil {
-		tfMap["log_group"] = aws.StringValue(v)
+		tfMap["log_group"] = aws.ToString(v)
 	}
 
 	return tfMap
 }
 
-func flattenFirehose(apiObject *kafka.Firehose) map[string]interface{} {
+func flattenFirehose(apiObject *types.Firehose) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1649,17 +2006,17 @@ func flattenFirehose(apiObject *kafka.Firehose) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.DeliveryStream; v != nil {
-		tfMap["delivery_stream"] = aws.StringValue(v)
+		tfMap["delivery_stream"] = aws.ToString(v)
 	}
 
 	if v := apiObject.Enabled; v != nil {
-		tfMap["enabled"] = aws.BoolValue(v)
+		tfMap["enabled"] = aws.ToBool(v)
 	}
 
 	return tfMap
 }
 
-func flattenS3(apiObject *kafka.S3) map[string]interface{} {
+func flattenS3(apiObject *types.S3) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1667,21 +2024,21 @@ func flattenS3(apiObject *kafka.S3) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Bucket; v != nil {
-		tfMap["bucket"] = aws.StringValue(v)
+		tfMap["bucket"] = aws.ToString(v)
 	}
 
 	if v := apiObject.Enabled; v != nil {
-		tfMap["enabled"] = aws.BoolValue(v)
+		tfMap["enabled"] = aws.ToBool(v)
 	}
 
 	if v := apiObject.Prefix; v != nil {
-		tfMap["prefix"] = aws.StringValue(v)
+		tfMap["prefix"] = aws.ToString(v)
 	}
 
 	return tfMap
 }
 
-func flattenOpenMonitoring(apiObject *kafka.OpenMonitoring) map[string]interface{} {
+func flattenOpenMonitoring(apiObject *types.OpenMonitoring) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1695,7 +2052,7 @@ func flattenOpenMonitoring(apiObject *kafka.OpenMonitoring) map[string]interface
 	return tfMap
 }
 
-func flattenPrometheus(apiObject *kafka.Prometheus) map[string]interface{} {
+func flattenPrometheus(apiObject *types.Prometheus) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1713,7 +2070,7 @@ func flattenPrometheus(apiObject *kafka.Prometheus) map[string]interface{} {
 	return tfMap
 }
 
-func flattenJmxExporter(apiObject *kafka.JmxExporter) map[string]interface{} {
+func flattenJmxExporter(apiObject *types.JmxExporter) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1721,13 +2078,13 @@ func flattenJmxExporter(apiObject *kafka.JmxExporter) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.EnabledInBroker; v != nil {
-		tfMap["enabled_in_broker"] = aws.BoolValue(v)
+		tfMap["enabled_in_broker"] = aws.ToBool(v)
 	}
 
 	return tfMap
 }
 
-func flattenNodeExporter(apiObject *kafka.NodeExporter) map[string]interface{} {
+func flattenNodeExporter(apiObject *types.NodeExporter) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1735,22 +2092,8 @@ func flattenNodeExporter(apiObject *kafka.NodeExporter) map[string]interface{} {
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.EnabledInBroker; v != nil {
-		tfMap["enabled_in_broker"] = aws.BoolValue(v)
+		tfMap["enabled_in_broker"] = aws.ToBool(v)
 	}
 
 	return tfMap
-}
-
-func refreshClusterVersion(ctx context.Context, d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).KafkaConn
-
-	cluster, err := FindClusterByARN(ctx, conn, d.Id())
-
-	if err != nil {
-		return fmt.Errorf("reading MSK Cluster (%s): %w", d.Id(), err)
-	}
-
-	d.Set("current_version", cluster.CurrentVersion)
-
-	return nil
 }

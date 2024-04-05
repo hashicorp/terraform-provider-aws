@@ -1,36 +1,42 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package deploy_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/codedeploy"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/codedeploy/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcodedeploy "github.com/hashicorp/terraform-provider-aws/internal/service/deploy"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDeployApp_basic(t *testing.T) {
-	var application1 codedeploy.ApplicationInfo
+	ctx := acctest.Context(t)
+	var application1 types.ApplicationInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codedeploy_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAppDestroy,
+		CheckDestroy:             testAccCheckAppDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppExists(resourceName, &application1),
+					testAccCheckAppExists(ctx, resourceName, &application1),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "codedeploy", fmt.Sprintf(`application:%s`, rName)),
 					resource.TestCheckResourceAttr(resourceName, "compute_platform", "Server"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -57,27 +63,28 @@ func TestAccDeployApp_basic(t *testing.T) {
 }
 
 func TestAccDeployApp_computePlatform(t *testing.T) {
-	var application1, application2 codedeploy.ApplicationInfo
+	ctx := acctest.Context(t)
+	var application1, application2 types.ApplicationInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codedeploy_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAppDestroy,
+		CheckDestroy:             testAccCheckAppDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppConfig_computePlatform(rName, "Lambda"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppExists(resourceName, &application1),
+					testAccCheckAppExists(ctx, resourceName, &application1),
 					resource.TestCheckResourceAttr(resourceName, "compute_platform", "Lambda"),
 				),
 			},
 			{
 				Config: testAccAppConfig_computePlatform(rName, "Server"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppExists(resourceName, &application2),
+					testAccCheckAppExists(ctx, resourceName, &application2),
 					testAccCheckAppRecreated(&application1, &application2),
 					resource.TestCheckResourceAttr(resourceName, "compute_platform", "Server"),
 				),
@@ -87,20 +94,21 @@ func TestAccDeployApp_computePlatform(t *testing.T) {
 }
 
 func TestAccDeployApp_ComputePlatform_ecs(t *testing.T) {
-	var application1 codedeploy.ApplicationInfo
+	ctx := acctest.Context(t)
+	var application1 types.ApplicationInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codedeploy_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAppDestroy,
+		CheckDestroy:             testAccCheckAppDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppConfig_computePlatform(rName, "ECS"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppExists(resourceName, &application1),
+					testAccCheckAppExists(ctx, resourceName, &application1),
 					resource.TestCheckResourceAttr(resourceName, "compute_platform", "ECS"),
 				),
 			},
@@ -114,20 +122,21 @@ func TestAccDeployApp_ComputePlatform_ecs(t *testing.T) {
 }
 
 func TestAccDeployApp_ComputePlatform_lambda(t *testing.T) {
-	var application1 codedeploy.ApplicationInfo
+	ctx := acctest.Context(t)
+	var application1 types.ApplicationInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codedeploy_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAppDestroy,
+		CheckDestroy:             testAccCheckAppDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppConfig_computePlatform(rName, "Lambda"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppExists(resourceName, &application1),
+					testAccCheckAppExists(ctx, resourceName, &application1),
 					resource.TestCheckResourceAttr(resourceName, "compute_platform", "Lambda"),
 				),
 			},
@@ -141,28 +150,29 @@ func TestAccDeployApp_ComputePlatform_lambda(t *testing.T) {
 }
 
 func TestAccDeployApp_name(t *testing.T) {
-	var application1, application2 codedeploy.ApplicationInfo
+	ctx := acctest.Context(t)
+	var application1, application2 types.ApplicationInfo
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codedeploy_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAppDestroy,
+		CheckDestroy:             testAccCheckAppDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppConfig_name(rName1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppExists(resourceName, &application1),
+					testAccCheckAppExists(ctx, resourceName, &application1),
 					resource.TestCheckResourceAttr(resourceName, "name", rName1),
 				),
 			},
 			{
 				Config: testAccAppConfig_name(rName2),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppExists(resourceName, &application2),
+					testAccCheckAppExists(ctx, resourceName, &application2),
 					resource.TestCheckResourceAttr(resourceName, "name", rName2),
 				),
 			},
@@ -176,20 +186,21 @@ func TestAccDeployApp_name(t *testing.T) {
 }
 
 func TestAccDeployApp_tags(t *testing.T) {
-	var application codedeploy.ApplicationInfo
+	ctx := acctest.Context(t)
+	var application types.ApplicationInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codedeploy_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAppDestroy,
+		CheckDestroy:             testAccCheckAppDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppExists(resourceName, &application),
+					testAccCheckAppExists(ctx, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -202,7 +213,7 @@ func TestAccDeployApp_tags(t *testing.T) {
 			{
 				Config: testAccAppConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppExists(resourceName, &application),
+					testAccCheckAppExists(ctx, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -211,7 +222,7 @@ func TestAccDeployApp_tags(t *testing.T) {
 			{
 				Config: testAccAppConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppExists(resourceName, &application),
+					testAccCheckAppExists(ctx, resourceName, &application),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -221,21 +232,22 @@ func TestAccDeployApp_tags(t *testing.T) {
 }
 
 func TestAccDeployApp_disappears(t *testing.T) {
-	var application1 codedeploy.ApplicationInfo
+	ctx := acctest.Context(t)
+	var application1 types.ApplicationInfo
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_codedeploy_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, codedeploy.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DeployServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAppDestroy,
+		CheckDestroy:             testAccCheckAppDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAppConfig_name(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckAppExists(resourceName, &application1),
-					acctest.CheckResourceDisappears(acctest.Provider, tfcodedeploy.ResourceApp(), resourceName),
+					testAccCheckAppExists(ctx, resourceName, &application1),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcodedeploy.ResourceApp(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -243,64 +255,56 @@ func TestAccDeployApp_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAppDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DeployConn
-
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_codedeploy_app" {
-			continue
-		}
-
-		_, err := conn.GetApplication(&codedeploy.GetApplicationInput{
-			ApplicationName: aws.String(rs.Primary.Attributes["name"]),
-		})
-
-		if tfawserr.ErrCodeEquals(err, codedeploy.ErrCodeApplicationDoesNotExistException) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("still exists")
-	}
-
-	return nil
-}
-
-func testAccCheckAppExists(name string, application *codedeploy.ApplicationInfo) resource.TestCheckFunc {
+func testAccCheckAppDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
-		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DeployClient(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_codedeploy_app" {
+				continue
+			}
+
+			_, err := tfcodedeploy.FindApplicationByName(ctx, conn, rs.Primary.Attributes["name"])
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("CodeDeploy Application %s still exists", rs.Primary.ID)
 		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DeployConn
-
-		input := &codedeploy.GetApplicationInput{
-			ApplicationName: aws.String(rs.Primary.Attributes["name"]),
-		}
-
-		output, err := conn.GetApplication(input)
-
-		if err != nil {
-			return err
-		}
-
-		if output == nil || output.Application == nil {
-			return fmt.Errorf("error reading CodeDeploy Application (%s): empty response", rs.Primary.ID)
-		}
-
-		*application = *output.Application
 
 		return nil
 	}
 }
 
-func testAccCheckAppRecreated(i, j *codedeploy.ApplicationInfo) resource.TestCheckFunc {
+func testAccCheckAppExists(ctx context.Context, n string, v *types.ApplicationInfo) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.TimeValue(i.CreateTime).Equal(aws.TimeValue(j.CreateTime)) {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DeployClient(ctx)
+
+		output, err := tfcodedeploy.FindApplicationByName(ctx, conn, rs.Primary.Attributes["name"])
+
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
+	}
+}
+
+func testAccCheckAppRecreated(i, j *types.ApplicationInfo) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if aws.ToTime(i.CreateTime).Equal(aws.ToTime(j.CreateTime)) {
 			return errors.New("CodeDeploy Application was not recreated")
 		}
 
@@ -311,8 +315,8 @@ func testAccCheckAppRecreated(i, j *codedeploy.ApplicationInfo) resource.TestChe
 func testAccAppConfig_computePlatform(rName string, computePlatform string) string {
 	return fmt.Sprintf(`
 resource "aws_codedeploy_app" "test" {
-  compute_platform = %q
-  name             = %q
+  compute_platform = %[1]q
+  name             = %[2]q
 }
 `, computePlatform, rName)
 }
@@ -320,7 +324,7 @@ resource "aws_codedeploy_app" "test" {
 func testAccAppConfig_name(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_codedeploy_app" "test" {
-  name = %q
+  name = %[1]q
 }
 `, rName)
 }

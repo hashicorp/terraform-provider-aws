@@ -1,15 +1,18 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker_test
 
 import (
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/sagemaker"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(sagemaker.EndpointsID, testAccErrorCheckSkip)
+	acctest.RegisterServiceErrorCheckFunc(names.SageMakerServiceID, testAccErrorCheckSkip)
 }
 
 func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
@@ -23,6 +26,8 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 // SageMaker UserProfile and App depend on the Domain resources and as such are also part of the serialized test suite.
 // SageMaker Workteam tests must also be serialized
 func TestAccSageMaker_serial(t *testing.T) {
+	t.Parallel()
+
 	testCases := map[string]map[string]func(t *testing.T){
 		"App": {
 			"basic":                 testAccApp_basic,
@@ -30,6 +35,7 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"tags":                  testAccApp_tags,
 			"resourceSpec":          testAccApp_resourceSpec,
 			"resourceSpecLifecycle": testAccApp_resourceSpecLifecycle,
+			"space":                 testAccApp_space,
 		},
 		"Domain": {
 			"basic":                                    testAccDomain_basic,
@@ -42,17 +48,46 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"kernelGatewayAppSettings_lifecycleConfig": testAccDomain_kernelGatewayAppSettings_lifecycleConfig,
 			"kernelGatewayAppSettings_defaultResourceAndCustomImage": testAccDomain_kernelGatewayAppSettings_defaultResourceSpecAndCustomImage,
 			"jupyterServerAppSettings":                               testAccDomain_jupyterServerAppSettings,
+			"codeEditorAppSettings":                                  testAccDomain_codeEditorAppSettings,
+			"jupyterLabAppSettings":                                  testAccDomain_jupyterLabAppSettings,
 			"kms":                                                    testAccDomain_kms,
 			"securityGroup":                                          testAccDomain_securityGroup,
 			"sharingSettings":                                        testAccDomain_sharingSettings,
 			"defaultUserSettingsUpdated":                             testAccDomain_defaultUserSettingsUpdated,
+			"canvas":                                                 testAccDomain_canvasAppSettings,
+			"modelRegisterSettings":                                  testAccDomain_modelRegisterSettings,
+			"identityProviderOauthSettings":                          testAccDomain_identityProviderOAuthSettings,
+			"directDeploySettings":                                   testAccDomain_directDeploySettings,
+			"kendraSettings":                                         testAccDomain_kendraSettings,
+			"workspaceSettings":                                      testAccDomain_workspaceSettings,
+			"domainSettings":                                         testAccDomain_domainSettings,
+			"rSessionAppSettings":                                    testAccDomain_rSessionAppSettings,
+			"rStudioServerProAppSettings":                            testAccDomain_rStudioServerProAppSettings,
+			"spaceSettingsKernelGatewayAppSettings":                  testAccDomain_spaceSettingsKernelGatewayAppSettings,
+			"code":                                                   testAccDomain_jupyterServerAppSettings_code,
+			"efs":                                                    testAccDomain_efs,
+			"posix":                                                  testAccDomain_posix,
+			"spaceStorageSettings":                                   testAccDomain_spaceStorageSettings,
 		},
 		"FlowDefinition": {
 			"basic":                          testAccFlowDefinition_basic,
 			"disappears":                     testAccFlowDefinition_disappears,
+			"tags":                           testAccFlowDefinition_tags,
 			"HumanLoopConfigPublicWorkforce": testAccFlowDefinition_humanLoopConfig_publicWorkforce,
 			"HumanLoopRequestSource":         testAccFlowDefinition_humanLoopRequestSource,
-			"Tags":                           testAccFlowDefinition_tags,
+		},
+		"Space": {
+			"basic":                    testAccSpace_basic,
+			"disappears":               testAccSpace_tags,
+			"tags":                     testAccSpace_disappears,
+			"kernelGatewayAppSettings": testAccSpace_kernelGatewayAppSettings,
+			"kernelGatewayAppSettings_lifecycleConfig": testAccSpace_kernelGatewayAppSettings_lifecycleconfig,
+			"kernelGatewayAppSettings_imageConfig":     testAccSpace_kernelGatewayAppSettings_imageconfig,
+			"jupyterServerAppSettings":                 testAccSpace_jupyterServerAppSettings,
+			"jupyterLabAppSettings":                    testAccSpace_jupyterLabAppSettings,
+			"codeEditorAppSettings":                    testAccSpace_codeEditorAppSettings,
+			"storageSettings":                          testAccSpace_storageSettings,
+			"customFileSystem":                         testAccSpace_customFileSystem,
 		},
 		"UserProfile": {
 			"basic":                           testAccUserProfile_basic,
@@ -70,25 +105,19 @@ func TestAccSageMaker_serial(t *testing.T) {
 			"CognitoConfig":  testAccWorkforce_cognitoConfig,
 			"OidcConfig":     testAccWorkforce_oidcConfig,
 			"SourceIpConfig": testAccWorkforce_sourceIPConfig,
+			"VPC":            testAccWorkforce_vpc,
 		},
 		"Workteam": {
 			"disappears":         testAccWorkteam_disappears,
+			"tags":               testAccWorkteam_tags,
 			"CognitoConfig":      testAccWorkteam_cognitoConfig,
 			"NotificationConfig": testAccWorkteam_notificationConfig,
 			"OidcConfig":         testAccWorkteam_oidcConfig,
-			"Tags":               testAccWorkteam_tags,
+		},
+		"Servicecatalog": {
+			"basic": testAccServicecatalogPortfolioStatus_basic,
 		},
 	}
 
-	for group, m := range testCases {
-		m := m
-		t.Run(group, func(t *testing.T) {
-			for name, tc := range m {
-				tc := tc
-				t.Run(name, func(t *testing.T) {
-					tc(t)
-				})
-			}
-		})
-	}
+	acctest.RunSerialTests2Levels(t, testCases, 0)
 }
