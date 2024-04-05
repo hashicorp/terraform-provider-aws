@@ -26,12 +26,13 @@ import (
 
 // @SDKResource("aws_wafregional_rule", name="Rule")
 // @Tags(identifierAttribute="arn")
-func ResourceRule() *schema.Resource {
+func resourceRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRuleCreate,
 		ReadWithoutTimeout:   resourceRuleRead,
 		UpdateWithoutTimeout: resourceRuleUpdate,
 		DeleteWithoutTimeout: resourceRuleDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -187,8 +188,13 @@ func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta interf
 		log.Printf("[INFO] Deleting WAF Rule")
 		return conn.DeleteRuleWithContext(ctx, req)
 	})
+
+	if tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
+		return diags
+	}
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting WAF Rule: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting WAF Regional Rule (%s): %s", d.Id(), err)
 	}
 
 	return diags
