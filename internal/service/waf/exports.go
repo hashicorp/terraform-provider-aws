@@ -5,5 +5,6 @@ package waf
 
 // Exports for use in other packages.
 var (
+	ListRegexMatchSetsPages   = listRegexMatchSetsPages
 	ListRegexPatternSetsPages = listRegexPatternSetsPages
 )
