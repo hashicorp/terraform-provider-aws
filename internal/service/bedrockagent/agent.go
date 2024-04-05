@@ -124,6 +124,9 @@ func (r *bedrockAgentResource) Schema(ctx context.Context, request resource.Sche
 				Computed:   true,
 				Optional:   true,
 				Validators: []validator.List{listvalidator.SizeAtMost(1)},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
 				CustomType: fwtypes.NewListNestedObjectTypeOf[poc](ctx),
 				ElementType: types.ObjectType{
 					AttrTypes: map[string]attr.Type{
@@ -271,12 +274,48 @@ func (r *bedrockAgentResource) Update(ctx context.Context, request resource.Upda
 
 	conn := r.Meta().BedrockAgentClient(ctx)
 
+	update := false
 	input := &bedrockagent.UpdateAgentInput{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
-	if response.Diagnostics.HasError() {
-		return
+
+	input.AgentId = fwflex.StringFromFramework(ctx, old.AgentId)
+	input.AgentResourceRoleArn = fwflex.StringFromFramework(ctx, new.AgentResourceRoleARN)
+	input.IdleSessionTTLInSeconds = fwflex.Int32FromFramework(ctx, new.IdleSessionTTLInSeconds)
+
+	if !old.AgentName.Equal(new.AgentName) {
+		input.AgentName = fwflex.StringFromFramework(ctx, new.AgentName)
+		update = true
 	}
 
+	if !old.CustomerEncryptionKeyARN.Equal(new.CustomerEncryptionKeyARN) {
+		input.CustomerEncryptionKeyArn = fwflex.StringFromFramework(ctx, new.CustomerEncryptionKeyARN)
+		update = true
+	}
+
+	if !old.Description.Equal(new.Description) {
+		input.Description = fwflex.StringFromFramework(ctx, new.Description)
+		update = true
+	}
+
+	if old.FoundationModel.Equal(new.FoundationModel) {
+		input.FoundationModel = fwflex.StringFromFramework(ctx, old.FoundationModel)
+	} else {
+		input.FoundationModel = fwflex.StringFromFramework(ctx, new.FoundationModel)
+		update = true
+	}
+
+	if !new.PromptOverrideConfiguration.Equal(old.PromptOverrideConfiguration) {
+		poc := []awstypes.PromptOverrideConfiguration{}
+		response.Diagnostics.Append(fwflex.Expand(ctx, new.PromptOverrideConfiguration, &poc)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		input.PromptOverrideConfiguration = &poc[0]
+		update = true
+	}
+	if !update {
+		return
+	}
 	_, err := conn.UpdateAgent(ctx, input)
 
 	if err != nil {
@@ -287,7 +326,7 @@ func (r *bedrockAgentResource) Update(ctx context.Context, request resource.Upda
 		return
 	}
 
-	out, err := findBedrockAgentByID(ctx, conn, old.ID.ValueString())
+	out, err := waitAgentUpdated(ctx, conn, new.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
 	if err != nil {
 		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionUpdating, "Bedrock Agent", old.AgentId.ValueString(), err),
@@ -384,6 +423,25 @@ func statusAgent(ctx context.Context, conn *bedrockagent.Client, id string) retr
 func waitAgentCreated(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*bedrockagent.GetAgentOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AgentStatusCreating),
+		Target:  enum.Slice(awstypes.AgentStatusNotPrepared),
+		Refresh: statusAgent(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*bedrockagent.GetAgentOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString((*string)(&output.Agent.AgentStatus))))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitAgentUpdated(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*bedrockagent.GetAgentOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.AgentAliasStatusUpdating),
 		Target:  enum.Slice(awstypes.AgentStatusNotPrepared),
 		Refresh: statusAgent(ctx, conn, id),
 		Timeout: timeout,

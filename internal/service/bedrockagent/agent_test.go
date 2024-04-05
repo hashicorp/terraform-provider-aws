@@ -38,11 +38,12 @@ func TestAccBedrockAgent_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckBedrockAgentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBedrockAgentConfig_basic(rName, "anthropic.claude-v2"),
+				Config: testAccBedrockAgentConfig_basic(rName, "anthropic.claude-v2", "basic claude"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBedrockAgentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "agent_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "prompt_override_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "description", "basic claude"),
 				),
 			},
 			{
@@ -67,19 +68,21 @@ func TestAccBedrockAgent_update(t *testing.T) {
 		CheckDestroy:             testAccCheckBedrockAgentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBedrockAgentConfig_basic(rName+"-1", "anthropic.claude-v2"),
+				Config: testAccBedrockAgentConfig_basic(rName+"-1", "anthropic.claude-v2", "basic claude"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBedrockAgentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "agent_name", rName+"-1"),
 					resource.TestCheckResourceAttr(resourceName, "prompt_override_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "description", "basic claude"),
 				),
 			},
 			{
-				Config: testAccBedrockAgentConfig_basic(rName+"-2", "anthropic.claude-v2"),
+				Config: testAccBedrockAgentConfig_basic(rName+"-2", "anthropic.claude-v2", "basic claude again"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBedrockAgentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "agent_name", rName+"-2"),
 					resource.TestCheckResourceAttr(resourceName, "prompt_override_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "description", "basic claude again"),
 				),
 			},
 			{
@@ -208,15 +211,16 @@ func findBedrockAgentByID(ctx context.Context, conn *bedrockagent.Client, id str
 	return output, nil
 }
 
-func testAccBedrockAgentConfig_basic(rName, model string) string {
+func testAccBedrockAgentConfig_basic(rName, model, description string) string {
 	return acctest.ConfigCompose(testAccBedrockRole(rName, model), fmt.Sprintf(`
 resource "aws_bedrockagent_agent" "test" {
   agent_name              = %[1]q
   agent_resource_role_arn = aws_iam_role.test.arn
+  description             = %[3]q
   idle_ttl                = 500
   foundation_model        = %[2]q
 }
-`, rName, model))
+`, rName, model, description))
 }
 
 func testAccBedrockAgentConfig_tags1(rName, model, tagKey1, tagValue1 string) string {
