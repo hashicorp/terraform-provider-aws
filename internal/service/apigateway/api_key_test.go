@@ -238,10 +238,10 @@ func TestAccAPIGatewayAPIKey_value(t *testing.T) {
 		CheckDestroy:             testAccCheckAPIKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAPIKeyConfig_value(rName, `MyCustomToken#@&\"'(§!ç)-_*$€¨^£%ù+=/:.;?,|`),
+				Config: testAccAPIKeyConfig_value(rName, `8bjqPK0BkA5N32bwYj4no2aw3eqsSM1o67eXFTNU`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIKeyExists(ctx, resourceName, &apiKey1),
-					resource.TestCheckResourceAttr(resourceName, "value", `MyCustomToken#@&\"'(§!ç)-_*$€¨^£%ù+=/:.;?,|`),
+					resource.TestCheckResourceAttr(resourceName, "value", `8bjqPK0BkA5N32bwYj4no2aw3eqsSM1o67eXFTNU`),
 				),
 			},
 			{
