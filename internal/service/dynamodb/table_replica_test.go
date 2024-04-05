@@ -367,12 +367,7 @@ func testAccCheckTableReplicaDestroy(ctx context.Context) resource.TestCheckFunc
 				return create.Error(names.DynamoDB, create.ErrActionCheckingDestroyed, tfdynamodb.ResNameTableReplica, rs.Primary.ID, err)
 			}
 
-			session, err := conns.NewSessionForRegion(&conn.Config, mainRegion, acctest.Provider.Meta().(*conns.AWSClient).TerraformVersion)
-			if err != nil {
-				return create.Error(names.DynamoDB, create.ErrActionCheckingDestroyed, tfdynamodb.ResNameTableReplica, rs.Primary.ID, fmt.Errorf("region %s: %w", mainRegion, err))
-			}
-
-			conn = dynamodb.New(session) // now global table region
+			conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConnForRegion(ctx, mainRegion)
 
 			params := &dynamodb.DescribeTableInput{
 				TableName: aws.String(tableName),
@@ -415,19 +410,12 @@ func testAccCheckTableReplicaExists(ctx context.Context, n string) resource.Test
 			return create.Error(names.DynamoDB, create.ErrActionCheckingExistence, tfdynamodb.ResNameTableReplica, rs.Primary.ID, errors.New("no ID"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn(ctx)
-
 		tableName, mainRegion, err := tfdynamodb.TableReplicaParseID(rs.Primary.ID)
 		if err != nil {
 			return create.Error(names.DynamoDB, create.ErrActionCheckingExistence, tfdynamodb.ResNameTableReplica, rs.Primary.ID, err)
 		}
 
-		session, err := conns.NewSessionForRegion(&conn.Config, mainRegion, acctest.Provider.Meta().(*conns.AWSClient).TerraformVersion)
-		if err != nil {
-			return create.Error(names.DynamoDB, create.ErrActionCheckingExistence, tfdynamodb.ResNameTableReplica, rs.Primary.ID, fmt.Errorf("region %s: %w", mainRegion, err))
-		}
-
-		conn = dynamodb.New(session) // now global table region
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConnForRegion(ctx, mainRegion)
 
 		params := &dynamodb.DescribeTableInput{
 			TableName: aws.String(tableName),

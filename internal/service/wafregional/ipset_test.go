@@ -73,7 +73,7 @@ func TestAccWAFRegionalIPSet_disappears(t *testing.T) {
 				Config: testAccIPSetConfig_basic(ipsetName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPSetExists(ctx, resourceName, &v),
-					testAccCheckIPSetDisappears(ctx, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfwafregional.ResourceIPSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -354,49 +354,6 @@ func TestDiffIPSetDescriptors(t *testing.T) {
 					updates, tc.ExpectedUpdates)
 			}
 		})
-	}
-}
-
-func testAccCheckIPSetDisappears(ctx context.Context, v *waf.IPSet) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn(ctx)
-		region := acctest.Provider.Meta().(*conns.AWSClient).Region
-
-		wr := tfwafregional.NewRetryer(conn, region)
-		_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
-			req := &waf.UpdateIPSetInput{
-				ChangeToken: token,
-				IPSetId:     v.IPSetId,
-			}
-
-			for _, IPSetDescriptor := range v.IPSetDescriptors {
-				IPSetUpdate := &waf.IPSetUpdate{
-					Action: aws.String("DELETE"),
-					IPSetDescriptor: &waf.IPSetDescriptor{
-						Type:  IPSetDescriptor.Type,
-						Value: IPSetDescriptor.Value,
-					},
-				}
-				req.Updates = append(req.Updates, IPSetUpdate)
-			}
-
-			return conn.UpdateIPSetWithContext(ctx, req)
-		})
-		if err != nil {
-			return fmt.Errorf("Error Updating WAF IPSet: %s", err)
-		}
-
-		_, err = wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
-			opts := &waf.DeleteIPSetInput{
-				ChangeToken: token,
-				IPSetId:     v.IPSetId,
-			}
-			return conn.DeleteIPSetWithContext(ctx, opts)
-		})
-		if err != nil {
-			return fmt.Errorf("Error Deleting WAF IPSet: %s", err)
-		}
-		return nil
 	}
 }
 

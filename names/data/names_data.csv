@@ -2,21 +2,21 @@ AWSCLIV2Command,AWSCLIV2CommandNoDashes,GoV1Package,GoV2Package,ProviderPackageA
 accessanalyzer,accessanalyzer,accessanalyzer,accessanalyzer,,accessanalyzer,,,AccessAnalyzer,AccessAnalyzer,,,2,,aws_accessanalyzer_,,accessanalyzer_,IAM Access Analyzer,AWS,,,,,,,AccessAnalyzer,ListAnalyzers,,
 account,account,account,account,,account,,,Account,Account,,,2,,aws_account_,,account_,Account Management,AWS,,,,,,,Account,ListRegions,,
 acm,acm,acm,acm,,acm,,,ACM,ACM,,,2,,aws_acm_,,acm_,ACM (Certificate Manager),AWS,,,,,,,ACM,ListCertificates,,
-acm-pca,acmpca,acmpca,acmpca,,acmpca,,,ACMPCA,ACMPCA,,1,,,aws_acmpca_,,acmpca_,ACM PCA (Certificate Manager Private Certificate Authority),AWS,,,,,,,ACM PCA,ListCertificateAuthorities,,
+acm-pca,acmpca,acmpca,acmpca,,acmpca,,,ACMPCA,ACMPCA,,,2,,aws_acmpca_,,acmpca_,ACM PCA (Certificate Manager Private Certificate Authority),AWS,,,,,,,ACM PCA,ListCertificateAuthorities,,
 alexaforbusiness,alexaforbusiness,alexaforbusiness,alexaforbusiness,,alexaforbusiness,,,AlexaForBusiness,AlexaForBusiness,,1,,,aws_alexaforbusiness_,,alexaforbusiness_,Alexa for Business,,,x,,,,,Alexa For Business,,,
 amp,amp,prometheusservice,amp,,amp,,prometheus;prometheusservice,AMP,PrometheusService,,,2,aws_prometheus_,aws_amp_,,prometheus_,AMP (Managed Prometheus),Amazon,,,,,,,amp,ListScrapers,,
-amplify,amplify,amplify,amplify,,amplify,,,Amplify,Amplify,,1,,,aws_amplify_,,amplify_,Amplify,AWS,,,,,,,Amplify,ListApps,,
+amplify,amplify,amplify,amplify,,amplify,,,Amplify,Amplify,,,2,,aws_amplify_,,amplify_,Amplify,AWS,,,,,,,Amplify,ListApps,,
 amplifybackend,amplifybackend,amplifybackend,amplifybackend,,amplifybackend,,,AmplifyBackend,AmplifyBackend,,1,,,aws_amplifybackend_,,amplifybackend_,Amplify Backend,AWS,,x,,,,,AmplifyBackend,,,
 amplifyuibuilder,amplifyuibuilder,amplifyuibuilder,amplifyuibuilder,,amplifyuibuilder,,,AmplifyUIBuilder,AmplifyUIBuilder,,1,,,aws_amplifyuibuilder_,,amplifyuibuilder_,Amplify UI Builder,AWS,,x,,,,,AmplifyUIBuilder,,,
 ,,,,,,,,,,,,,,,,,Apache MXNet on AWS,AWS,x,,,,,,,,,Documentation
-apigateway,apigateway,apigateway,apigateway,,apigateway,,,APIGateway,APIGateway,,1,,aws_api_gateway_,aws_apigateway_,,api_gateway_,API Gateway,Amazon,,,,,,,API Gateway,GetAccount,,
+apigateway,apigateway,apigateway,apigateway,,apigateway,,,APIGateway,APIGateway,x,,2,aws_api_gateway_,aws_apigateway_,,api_gateway_,API Gateway,Amazon,,,,,,,API Gateway,GetAccount,,
 apigatewaymanagementapi,apigatewaymanagementapi,apigatewaymanagementapi,apigatewaymanagementapi,,apigatewaymanagementapi,,,APIGatewayManagementAPI,ApiGatewayManagementApi,,1,,,aws_apigatewaymanagementapi_,,apigatewaymanagementapi_,API Gateway Management API,Amazon,,x,,,,,ApiGatewayManagementApi,,,
 apigatewayv2,apigatewayv2,apigatewayv2,apigatewayv2,,apigatewayv2,,,APIGatewayV2,ApiGatewayV2,,,2,,aws_apigatewayv2_,,apigatewayv2_,API Gateway V2,Amazon,,,,,,,ApiGatewayV2,GetApis,,
 appfabric,appfabric,appfabric,appfabric,,appfabric,,,AppFabric,AppFabric,,,2,,aws_appfabric_,,appfabric_,AppFabric,AWS,,,,,,,AppFabric,ListAppBundles,,
 appmesh,appmesh,appmesh,appmesh,,appmesh,,,AppMesh,AppMesh,,1,,,aws_appmesh_,,appmesh_,App Mesh,AWS,,,,,,,App Mesh,ListMeshes,,
 apprunner,apprunner,apprunner,apprunner,,apprunner,,,AppRunner,AppRunner,,,2,,aws_apprunner_,,apprunner_,App Runner,AWS,,,,,,,AppRunner,ListConnections,,
 ,,,,,,,,,,,,,,,,,App2Container,AWS,x,,,,,,,,,No SDK support
-appconfig,appconfig,appconfig,appconfig,,appconfig,,,AppConfig,AppConfig,,1,2,,aws_appconfig_,,appconfig_,AppConfig,AWS,,,,,,,AppConfig,ListApplications,,
+appconfig,appconfig,appconfig,appconfig,,appconfig,,,AppConfig,AppConfig,x,,2,,aws_appconfig_,,appconfig_,AppConfig,AWS,,,,,,,AppConfig,ListApplications,,
 appconfigdata,appconfigdata,appconfigdata,appconfigdata,,appconfigdata,,,AppConfigData,AppConfigData,,1,,,aws_appconfigdata_,,appconfigdata_,AppConfig Data,AWS,,x,,,,,AppConfigData,,,
 appflow,appflow,appflow,appflow,,appflow,,,AppFlow,Appflow,,,2,,aws_appflow_,,appflow_,AppFlow,Amazon,,,,,,,Appflow,ListFlows,,
 appintegrations,appintegrations,appintegrationsservice,appintegrations,,appintegrations,,appintegrationsservice,AppIntegrations,AppIntegrationsService,,1,,,aws_appintegrations_,,appintegrations_,AppIntegrations,Amazon,,,,,,,AppIntegrations,ListApplications,,
@@ -30,7 +30,7 @@ appsync,appsync,appsync,appsync,,appsync,,,AppSync,AppSync,,1,,,aws_appsync_,,ap
 athena,athena,athena,athena,,athena,,,Athena,Athena,,,2,,aws_athena_,,athena_,Athena,Amazon,,,,,,,Athena,ListDataCatalogs,,
 auditmanager,auditmanager,auditmanager,auditmanager,,auditmanager,,,AuditManager,AuditManager,,,2,,aws_auditmanager_,,auditmanager_,Audit Manager,AWS,,,,,,,AuditManager,GetAccountStatus,,
 autoscaling,autoscaling,autoscaling,autoscaling,,autoscaling,,,AutoScaling,AutoScaling,,1,,aws_(autoscaling_|launch_configuration),aws_autoscaling_,,autoscaling_;launch_configuration,Auto Scaling,,,,,,,,Auto Scaling,DescribeAutoScalingGroups,,
-autoscaling-plans,autoscalingplans,autoscalingplans,autoscalingplans,,autoscalingplans,,,AutoScalingPlans,AutoScalingPlans,,1,,,aws_autoscalingplans_,,autoscalingplans_,Auto Scaling Plans,,,,,,,,Auto Scaling Plans,DescribeScalingPlans,,
+autoscaling-plans,autoscalingplans,autoscalingplans,autoscalingplans,,autoscalingplans,,,AutoScalingPlans,AutoScalingPlans,,,2,,aws_autoscalingplans_,,autoscalingplans_,Auto Scaling Plans,,,,,,,,Auto Scaling Plans,DescribeScalingPlans,,
 ,,,,,,,,,,,,,,,,,Backint Agent for SAP HANA,AWS,x,,,,,,,,,No SDK support
 backup,backup,backup,backup,,backup,,,Backup,Backup,,1,,,aws_backup_,,backup_,Backup,AWS,,,,,,,Backup,ListBackupPlans,,
 backup-gateway,backupgateway,backupgateway,backupgateway,,backupgateway,,,BackupGateway,BackupGateway,,1,,,aws_backupgateway_,,backupgateway_,Backup Gateway,AWS,,x,,,,,Backup Gateway,,,
@@ -62,7 +62,7 @@ servicediscovery,servicediscovery,servicediscovery,servicediscovery,,servicedisc
 cloud9,cloud9,cloud9,cloud9,,cloud9,,,Cloud9,Cloud9,,,2,,aws_cloud9_,,cloud9_,Cloud9,AWS,,,,,,,Cloud9,ListEnvironments,,
 cloudformation,cloudformation,cloudformation,cloudformation,,cloudformation,,,CloudFormation,CloudFormation,,1,,,aws_cloudformation_,,cloudformation_,CloudFormation,AWS,,,,,,,CloudFormation,ListStackInstances,,
 cloudfront,cloudfront,cloudfront,cloudfront,,cloudfront,,,CloudFront,CloudFront,,1,2,,aws_cloudfront_,,cloudfront_,CloudFront,Amazon,,,,,,,CloudFront,ListDistributions,,
-cloudfront-keyvaluestore,cloudfrontkeyvaluestore,,cloudfrontkeyvaluestore,,cloudfrontkeyvaluestore,,,CloudFrontKeyValueStore,CloudFrontKeyValueStore,,,2,,aws_cloudfrontkeyvaluestore_,,cloudfront_keyvaluestore_,CloudFront KeyValueStore,Amazon,,,,,,,CloudFront KeyValueStore,ListKeys,"KvsARN: aws_sdkv2.String(""arn:aws:cloudfront::111122223333:key-value-store/MaxAge"")",
+cloudfront-keyvaluestore,cloudfrontkeyvaluestore,,cloudfrontkeyvaluestore,,cloudfrontkeyvaluestore,,,CloudFrontKeyValueStore,CloudFrontKeyValueStore,,,2,,aws_cloudfrontkeyvaluestore_,,cloudfrontkeyvaluestore_,CloudFront KeyValueStore,Amazon,,,,,,,CloudFront KeyValueStore,ListKeys,"KvsARN: aws_sdkv2.String(""arn:aws:cloudfront::111122223333:key-value-store/MaxAge"")",
 cloudhsm,cloudhsm,cloudhsm,cloudhsm,,,,,,,,,,,,,,CloudHSM,AWS,x,,,,,,,,,Legacy
 cloudhsmv2,cloudhsmv2,cloudhsmv2,cloudhsmv2,,cloudhsmv2,,cloudhsm,CloudHSMV2,CloudHSMV2,x,,2,aws_cloudhsm_v2_,aws_cloudhsmv2_,,cloudhsm,CloudHSM,AWS,,,,,,,CloudHSM V2,DescribeClusters,,
 cloudsearch,cloudsearch,cloudsearch,cloudsearch,,cloudsearch,,,CloudSearch,CloudSearch,,,2,,aws_cloudsearch_,,cloudsearch_,CloudSearch,Amazon,,,,,,,CloudSearch,ListDomainNames,,
@@ -103,12 +103,13 @@ wisdom,wisdom,connectwisdomservice,wisdom,,wisdom,,connectwisdomservice,Wisdom,C
 ,,,,,,,,,,,,,,,,,Console Mobile Application,AWS,x,,,,,,,,,No SDK support
 controltower,controltower,controltower,controltower,,controltower,,,ControlTower,ControlTower,,,2,,aws_controltower_,,controltower_,Control Tower,AWS,,,,,,,ControlTower,ListLandingZones,,
 cost-optimization-hub,costoptimizationhub,costoptimizationhub,costoptimizationhub,,costoptimizationhub,,,CostOptimizationHub,CostOptimizationHub,x,,2,,aws_costoptimizationhub_,,costoptimizationhub_,Cost Optimization Hub,AWS,,,,,,,Cost Optimization Hub,GetPreferences,,
-cur,cur,costandusagereportservice,costandusagereportservice,,cur,,costandusagereportservice,CUR,CostandUsageReportService,,1,,,aws_cur_,,cur_,Cost and Usage Report,AWS,,,,,,,Cost and Usage Report Service,DescribeReportDefinitions,,
+cur,cur,costandusagereportservice,costandusagereportservice,,cur,,costandusagereportservice,CUR,CostandUsageReportService,x,,2,,aws_cur_,,cur_,Cost and Usage Report,AWS,,,,,,,Cost and Usage Report Service,DescribeReportDefinitions,,
 ,,,,,,,,,,,,,,,,,Crypto Tools,AWS,x,,,,,,,,,No SDK support
 ,,,,,,,,,,,,,,,,,Cryptographic Services Overview,AWS,x,,,,,,,,,No SDK support
 dataexchange,dataexchange,dataexchange,dataexchange,,dataexchange,,,DataExchange,DataExchange,,1,,,aws_dataexchange_,,dataexchange_,Data Exchange,AWS,,,,,,,DataExchange,ListDataSets,,
 datapipeline,datapipeline,datapipeline,datapipeline,,datapipeline,,,DataPipeline,DataPipeline,,1,,,aws_datapipeline_,,datapipeline_,Data Pipeline,AWS,,,,,,,Data Pipeline,ListPipelines,,
 datasync,datasync,datasync,datasync,,datasync,,,DataSync,DataSync,,1,,,aws_datasync_,,datasync_,DataSync,AWS,,,,,,,DataSync,ListAgents,,
+datazone,datazone,datazone,datazone,,datazone,,,DataZone,DataZone,,,2,,aws_datazone_,,datazone_,DataZone,Amazon,,,,,,,DataZone,ListDomains,,
 ,,,,,,,,,,,,,,,,,Deep Learning AMIs,AWS,x,,,,,,,,,No SDK support
 ,,,,,,,,,,,,,,,,,Deep Learning Containers,AWS,x,,,,,,,,,No SDK support
 ,,,,,,,,,,,,,,,,,DeepComposer,AWS,x,,,,,,,,,No SDK support
@@ -132,7 +133,7 @@ ebs,ebs,ebs,ebs,,ebs,,,EBS,EBS,,1,,,aws_ebs_,,changewhenimplemented,EBS (Elastic
 ec2,ec2,ec2,ec2,,ec2,ec2,,EC2,EC2,,1,2,aws_(ami|availability_zone|ec2_(availability|capacity|fleet|host|instance|public_ipv4_pool|serial|spot|tag)|eip|instance|key_pair|launch_template|placement_group|spot),aws_ec2_,ec2_,ami;availability_zone;ec2_availability_;ec2_capacity_;ec2_fleet;ec2_host;ec2_image_;ec2_instance_;ec2_public_ipv4_pool;ec2_serial_;ec2_spot_;ec2_tag;eip;instance;key_pair;launch_template;placement_group;spot_,EC2 (Elastic Compute Cloud),Amazon,,,,,,,EC2,DescribeVpcs,,
 imagebuilder,imagebuilder,imagebuilder,imagebuilder,,imagebuilder,,,ImageBuilder,Imagebuilder,,1,,,aws_imagebuilder_,,imagebuilder_,EC2 Image Builder,Amazon,,,,,,,imagebuilder,ListImages,,
 ec2-instance-connect,ec2instanceconnect,ec2instanceconnect,ec2instanceconnect,,ec2instanceconnect,,,EC2InstanceConnect,EC2InstanceConnect,,1,,,aws_ec2instanceconnect_,,ec2instanceconnect_,EC2 Instance Connect,AWS,,x,,,,,EC2 Instance Connect,,,
-ecr,ecr,ecr,ecr,,ecr,,,ECR,ECR,,1,2,,aws_ecr_,,ecr_,ECR (Elastic Container Registry),Amazon,,,,,,,ECR,DescribeRepositories,,
+ecr,ecr,ecr,ecr,,ecr,,,ECR,ECR,,,2,,aws_ecr_,,ecr_,ECR (Elastic Container Registry),Amazon,,,,,,,ECR,DescribeRepositories,,
 ecr-public,ecrpublic,ecrpublic,ecrpublic,,ecrpublic,,,ECRPublic,ECRPublic,,,2,,aws_ecrpublic_,,ecrpublic_,ECR Public,Amazon,,,,,,,ECR PUBLIC,DescribeRepositories,,
 ecs,ecs,ecs,ecs,,ecs,,,ECS,ECS,,1,2,,aws_ecs_,,ecs_,ECS (Elastic Container),Amazon,,,,,,,ECS,ListClusters,,
 efs,efs,efs,efs,,efs,,,EFS,EFS,,1,,,aws_efs_,,efs_,EFS (Elastic File System),Amazon,,,,,,,EFS,DescribeFileSystems,,
@@ -177,7 +178,7 @@ guardduty,guardduty,guardduty,guardduty,,guardduty,,,GuardDuty,GuardDuty,,1,,,aw
 health,health,health,health,,health,,,Health,Health,,1,,,aws_health_,,health_,Health,AWS,,x,,,,,Health,,,
 healthlake,healthlake,healthlake,healthlake,,healthlake,,,HealthLake,HealthLake,,,2,,aws_healthlake_,,healthlake_,HealthLake,Amazon,,,,,,,HealthLake,ListFHIRDatastores,,
 honeycode,honeycode,honeycode,honeycode,,honeycode,,,Honeycode,Honeycode,,1,,,aws_honeycode_,,honeycode_,Honeycode,Amazon,,x,,,,,Honeycode,,,
-iam,iam,iam,iam,,iam,,,IAM,IAM,,1,,,aws_iam_,,iam_,IAM (Identity & Access Management),AWS,,,,,AWS_IAM_ENDPOINT,TF_AWS_IAM_ENDPOINT,IAM,ListRoles,,
+iam,iam,iam,iam,,iam,,,IAM,IAM,,,2,,aws_iam_,,iam_,IAM (Identity & Access Management),AWS,,,,,AWS_IAM_ENDPOINT,TF_AWS_IAM_ENDPOINT,IAM,ListRoles,,
 inspector,inspector,inspector,inspector,,inspector,,,Inspector,Inspector,,1,,,aws_inspector_,,inspector_,Inspector Classic,Amazon,,,,,,,Inspector,ListRulesPackages,,
 inspector2,inspector2,inspector2,inspector2,,inspector2,,inspectorv2,Inspector2,Inspector2,,,2,,aws_inspector2_,,inspector2_,Inspector,Amazon,,,,,,,Inspector2,ListAccountPermissions,,
 iot1click-devices,iot1clickdevices,iot1clickdevicesservice,iot1clickdevicesservice,,iot1clickdevices,,iot1clickdevicesservice,IoT1ClickDevices,IoT1ClickDevicesService,,1,,,aws_iot1clickdevices_,,iot1clickdevices_,IoT 1-Click Devices,AWS,,x,,,,,IoT 1Click Devices Service,,,
@@ -273,6 +274,7 @@ outposts,outposts,outposts,outposts,,outposts,,,Outposts,Outposts,,1,,,aws_outpo
 ,,,,,ec2outposts,ec2,,EC2Outposts,,,,,aws_ec2_(coip_pool|local_gateway),aws_ec2outposts_,outposts_,ec2_coip_pool;ec2_local_gateway,Outposts (EC2),AWS,x,,,x,,,,,,Part of EC2
 panorama,panorama,panorama,panorama,,panorama,,,Panorama,Panorama,,1,,,aws_panorama_,,panorama_,Panorama,AWS,,x,,,,,Panorama,,,
 ,,,,,,,,,,,,,,,,,ParallelCluster,AWS,x,,,,,,,,,No SDK support
+payment-cryptography,paymentcryptography,paymentcryptography,paymentcryptography,,paymentcryptography,,,PaymentCryptography,PaymentCryptography,,,2,,aws_paymentcryptography_,,paymentcryptography_,Payment Cryptography Control Plane,AWS,,,,,,,PaymentCryptography,ListKeys,,
 pca-connector-ad,pcaconnectorad,pcaconnectorad,pcaconnectorad,,pcaconnectorad,,,PCAConnectorAD,PcaConnectorAd,,,2,,aws_pcaconnectorad_,,pcaconnectorad_,Private CA Connector for Active Directory,AWS,,,,,,,Pca Connector Ad,ListConnectors,,
 personalize,personalize,personalize,personalize,,personalize,,,Personalize,Personalize,,1,,,aws_personalize_,,personalize_,Personalize,Amazon,,x,,,,,Personalize,,,
 personalize-events,personalizeevents,personalizeevents,personalizeevents,,personalizeevents,,,PersonalizeEvents,PersonalizeEvents,,1,,,aws_personalizeevents_,,personalizeevents_,Personalize Events,Amazon,,x,,,,,Personalize Events,,,
