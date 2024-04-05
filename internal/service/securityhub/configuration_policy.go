@@ -184,7 +184,7 @@ func resourceConfigurationPolicy() *schema.Resource {
 						Schema: map[string]*schema.Schema{
 							"enabled_standard_arns": {
 								Type:     schema.TypeSet,
-								Required: true,
+								Optional: true,
 								Elem: &schema.Schema{
 									Type:         schema.TypeString,
 									ValidateFunc: verify.ValidARN,
@@ -432,12 +432,14 @@ func expandPolicyMemberSecurityHub(tfMap map[string]interface{}) *types.PolicyMe
 		SecurityControlsConfiguration: expandSecurityControlsConfiguration(tfMap["security_controls_configuration"]),
 	}
 
-	if v, ok := tfMap["enabled_standard_arns"].(*schema.Set); ok {
-		apiObject.EnabledStandardIdentifiers = flex.ExpandStringValueSet(v)
-	}
-
 	if v, ok := tfMap["service_enabled"].(bool); ok {
 		apiObject.ServiceEnabled = aws.Bool(v)
+
+		if v {
+			if v, ok := tfMap["enabled_standard_arns"].(*schema.Set); ok {
+				apiObject.EnabledStandardIdentifiers = flex.ExpandStringValueSet(v)
+			}
+		}
 	}
 
 	return &types.PolicyMemberSecurityHub{
