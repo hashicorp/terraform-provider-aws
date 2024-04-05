@@ -31,8 +31,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceAPIs,
+			Factory:  dataSourceAPIs,
 			TypeName: "aws_apigatewayv2_apis",
+			Name:     "APIs",
 		},
 		{
 			Factory:  DataSourceExport,
