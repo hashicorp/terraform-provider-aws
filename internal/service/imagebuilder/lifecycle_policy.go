@@ -319,7 +319,20 @@ func (r *resourceLifecyclePolicy) Create(ctx context.Context, req resource.Creat
 		in.Status = awstypes.LifecyclePolicyStatus(plan.Status.ValueString())
 	}
 
-	out, err := conn.CreateLifecyclePolicy(ctx, in)
+	// Include retry handling to allow for IAM propagation
+	var out *imagebuilder.CreateLifecyclePolicyOutput
+	err := tfresource.Retry(ctx, propagationTimeout, func() *retry.RetryError {
+		var err error
+		out, err = conn.CreateLifecyclePolicy(ctx, in)
+		if err != nil {
+			if errs.MessageContains(err, InvalidParameterValueException, "The provided role does not exist or does not have sufficient permissions") {
+				return retry.RetryableError(err)
+			}
+			return retry.NonRetryableError(err)
+		}
+		return nil
+	})
+
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.ImageBuilder, create.ErrActionCreating, ResNameLifecyclePolicy, plan.Name.String(), err),
@@ -452,7 +465,20 @@ func (r *resourceLifecyclePolicy) Update(ctx context.Context, req resource.Updat
 			in.ResourceSelection = resourceSelection
 		}
 
-		out, err := conn.UpdateLifecyclePolicy(ctx, in)
+		// Include retry handling to allow for IAM propagation
+		var out *imagebuilder.UpdateLifecyclePolicyOutput
+		err := tfresource.Retry(ctx, propagationTimeout, func() *retry.RetryError {
+			var err error
+			out, err = conn.UpdateLifecyclePolicy(ctx, in)
+			if err != nil {
+				if errs.MessageContains(err, InvalidParameterValueException, "The provided role does not exist or does not have sufficient permissions") {
+					return retry.RetryableError(err)
+				}
+				return retry.NonRetryableError(err)
+			}
+			return nil
+		})
+
 		if err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.ImageBuilder, create.ErrActionUpdating, ResNameLifecyclePolicy, plan.ID.String(), err),
