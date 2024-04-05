@@ -1,4 +1,9 @@
 ## 5.45.0 (Unreleased)
+
+BUG FIXES:
+
+* resource/aws_securityhub_configuration_policy: Mark `configuration_policy.enabled_standard_arns` as Optional, fixing `InvalidInputException: Invalid semantics: Enabled standards and security control configurations must be configured when Security Hub is enabled` errors ([#36740](https://github.com/hashicorp/terraform-provider-aws/issues/36740))
+
 ## 5.44.0 (April  4, 2024)
 
 FEATURES:
