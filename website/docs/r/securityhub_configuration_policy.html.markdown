@@ -59,7 +59,6 @@ resource "aws_securityhub_configuration_policy" "disabled" {
 
   configuration_policy {
     service_enabled       = false
-    enabled_standard_arns = []
   }
 
   depends_on = [aws_securityhub_organization_configuration.example]
@@ -130,7 +129,7 @@ This resource supports the following arguments:
 
 The `configuration_policy` block supports the following:
 
-* `enabled_standard_arns` - (Required) A list that defines which security standards are enabled in the configuration policy.
+* `enabled_standard_arns` - (Optional) A list that defines which security standards are enabled in the configuration policy. It must be defined if `service_enabled` is set to true.
 * `security_controls_configuration` - (Optional) Defines which security controls are enabled in the configuration policy and any customizations to parameters affecting them. See [below](#security_controls_configuration).
 * `service_enabled` - (Required) Indicates whether Security Hub is enabled in the policy.
 
