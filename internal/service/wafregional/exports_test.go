@@ -5,12 +5,13 @@ package wafregional
 
 // Exports for use in tests only.
 var (
-	ResourceByteMatchSet    = resourceByteMatchSet
-	ResourceGeoMatchSet     = resourceGeoMatchSet
-	ResourceIPSet           = resourceIPSet
-	ResourceRateBasedRule   = resourceRateBasedRule
-	ResourceRegexMatchSet   = resourceRegexMatchSet
-	ResourceRegexPatternSet = resourceRegexPatternSet
-	ResourceRule            = resourceRule
-	ResourceRuleGroup       = resourceRuleGroup
+	ResourceByteMatchSet      = resourceByteMatchSet
+	ResourceGeoMatchSet       = resourceGeoMatchSet
+	ResourceIPSet             = resourceIPSet
+	ResourceRateBasedRule     = resourceRateBasedRule
+	ResourceRegexMatchSet     = resourceRegexMatchSet
+	ResourceRegexPatternSet   = resourceRegexPatternSet
+	ResourceRule              = resourceRule
+	ResourceRuleGroup         = resourceRuleGroup
+	ResourceSizeConstraintSet = resourceSizeConstraintSet
 )
