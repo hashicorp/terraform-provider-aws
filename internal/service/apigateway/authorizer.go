@@ -312,13 +312,9 @@ func resourceAuthorizerDelete(ctx context.Context, d *schema.ResourceData, meta 
 		RestApiId:    aws.String(d.Get("rest_api_id").(string)),
 	})
 
-	if errs.IsA[*types.NotFoundException](err) {
-		return diags
-	}
-
 	// XXX: Figure out a way to delete the method that depends on the authorizer first
 	// otherwise the authorizer will be dangling until the API is deleted.
-	if errs.IsA[*types.ConflictException](err) {
+	if errs.IsA[*types.ConflictException](err) || errs.IsA[*types.NotFoundException](err) {
 		return diags
 	}
 
