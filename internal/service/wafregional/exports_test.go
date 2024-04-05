@@ -17,4 +17,5 @@ var (
 	ResourceSQLInjectionMatchSet = resourceSQLInjectionMatchSet
 	ResourceWebACL               = resourceWebACL
 	ResourceWebACLAssociation    = resourceWebACLAssociation
+	ResourceXSSMatchSet          = resourceXSSMatchSet
 )

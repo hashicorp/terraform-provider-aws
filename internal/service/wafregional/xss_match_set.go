@@ -20,13 +20,14 @@ import (
 	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 )
 
-// @SDKResource("aws_wafregional_xss_match_set")
-func ResourceXSSMatchSet() *schema.Resource {
+// @SDKResource("aws_wafregional_xss_match_set", name="XSS Match Set")
+func resourceXSSMatchSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceXSSMatchSetCreate,
 		ReadWithoutTimeout:   resourceXSSMatchSetRead,
 		UpdateWithoutTimeout: resourceXSSMatchSetUpdate,
 		DeleteWithoutTimeout: resourceXSSMatchSetDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -176,8 +177,13 @@ func resourceXSSMatchSetDelete(ctx context.Context, d *schema.ResourceData, meta
 
 		return conn.DeleteXssMatchSetWithContext(ctx, req)
 	})
+
+	if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
+		return diags
+	}
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting regional WAF XSS Match Set: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting WAF Regional XSS Match Set (%s): %s", d.Id(), err)
 	}
 
 	return diags
