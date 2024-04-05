@@ -3910,3 +3910,32 @@ rules:
             - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
     severity: WARNING
+  - id: iot-in-test-name
+    languages:
+      - go
+    message: Include "IoT" in test name
+    paths:
+      include:
+        - internal/service/iot/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccIoT"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: iot-in-const-name
+    languages:
+      - go
+    message: Do not use "IoT" in const name inside iot package
+    paths:
+      include:
+        - internal/service/iot
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)IoT"
+    severity: WARNING
