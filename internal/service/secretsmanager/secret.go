@@ -28,6 +28,7 @@ import (
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -145,6 +146,19 @@ func resourceSecret() *schema.Resource {
 					},
 				},
 			},
+			"secret_binary": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Sensitive:     true,
+				ConflictsWith: []string{"secret_string"},
+				ValidateFunc:  verify.ValidBase64String,
+			},
+			"secret_string": {
+				Type:          schema.TypeString,
+				Optional:      true,
+				Sensitive:     true,
+				ConflictsWith: []string{"secret_binary"},
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
@@ -172,6 +186,16 @@ func resourceSecretCreate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if v, ok := d.GetOk("replica"); ok && v.(*schema.Set).Len() > 0 {
 		input.AddReplicaRegions = expandReplicaRegionTypes(v.(*schema.Set).List())
+	}
+
+	if v, ok := d.GetOk("secret_binary"); ok {
+		var err error
+		input.SecretBinary, err = itypes.Base64Decode(v.(string))
+		if err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	} else if v, ok := d.GetOk("secret_string"); ok {
+		input.SecretString = aws.String(v.(string))
 	}
 
 	// Retry for secret recreation after deletion.
@@ -309,7 +333,7 @@ func resourceSecretUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	if d.HasChanges("description", "kms_key_id") {
+	if d.HasChanges("description", "kms_key_id", "secret_string", "secret_binary") {
 		input := &secretsmanager.UpdateSecretInput{
 			ClientRequestToken: aws.String(id.UniqueId()), // Needed because we're handling our own retries
 			Description:        aws.String(d.Get("description").(string)),
@@ -318,6 +342,16 @@ func resourceSecretUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 		if v, ok := d.GetOk("kms_key_id"); ok {
 			input.KmsKeyId = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("secret_binary"); ok {
+			var err error
+			input.SecretBinary, err = itypes.Base64Decode(v.(string))
+			if err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
+		} else if v, ok := d.GetOk("secret_string"); ok {
+			input.SecretString = aws.String(v.(string))
 		}
 
 		_, err := conn.UpdateSecret(ctx, input)
