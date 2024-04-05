@@ -45,7 +45,6 @@ generators:
               - 'internal/**/generate.go'
               - 'internal/generate/**/*'
 github_actions:
-- any:
   - any:
       - changed-files:
           - any-glob-to-any-file:
