@@ -19,13 +19,14 @@ import (
 	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 )
 
-// @SDKResource("aws_wafregional_byte_match_set")
-func ResourceByteMatchSet() *schema.Resource {
+// @SDKResource("aws_wafregional_byte_match_set", name="Byte Match Set")
+func resourceByteMatchSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceByteMatchSetCreate,
 		ReadWithoutTimeout:   resourceByteMatchSetRead,
 		UpdateWithoutTimeout: resourceByteMatchSetUpdate,
 		DeleteWithoutTimeout: resourceByteMatchSetDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -205,8 +206,13 @@ func resourceByteMatchSetDelete(ctx context.Context, d *schema.ResourceData, met
 		}
 		return conn.DeleteByteMatchSetWithContext(ctx, req)
 	})
+
+	if tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
+		return diags
+	}
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting ByteMatchSet: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting WAF Regional Byte Match Set (%s): %s", d.Id(), err)
 	}
 
 	return diags
