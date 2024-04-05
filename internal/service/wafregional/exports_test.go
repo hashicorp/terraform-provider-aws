@@ -9,4 +9,5 @@ var (
 	ResourceGeoMatchSet   = resourceGeoMatchSet
 	ResourceIPSet         = resourceIPSet
 	ResourceRateBasedRule = resourceRateBasedRule
+	ResourceRegexMatchSet = resourceRegexMatchSet
 )

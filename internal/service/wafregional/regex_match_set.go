@@ -20,13 +20,14 @@ import (
 	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 )
 
-// @SDKResource("aws_wafregional_regex_match_set")
-func ResourceRegexMatchSet() *schema.Resource {
+// @SDKResource("aws_wafregional_regex_match_set", name="Regex Match Set")
+func resourceRegexMatchSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRegexMatchSetCreate,
 		ReadWithoutTimeout:   resourceRegexMatchSetRead,
 		UpdateWithoutTimeout: resourceRegexMatchSetUpdate,
 		DeleteWithoutTimeout: resourceRegexMatchSetDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
