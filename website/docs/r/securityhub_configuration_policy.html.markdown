@@ -58,7 +58,7 @@ resource "aws_securityhub_configuration_policy" "disabled" {
   description = "This is an example of disabled configuration policy"
 
   configuration_policy {
-    service_enabled       = false
+    service_enabled = false
   }
 
   depends_on = [aws_securityhub_organization_configuration.example]
