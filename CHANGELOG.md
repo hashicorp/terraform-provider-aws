@@ -19,6 +19,8 @@ ENHANCEMENTS:
 * resource/aws_db_instance: Adds warning when setting `character_set_name` when `replicate_source_db`, `restore_to_point_in_time`, or `snapshot_identifier` is set ([#36518](https://github.com/hashicorp/terraform-provider-aws/issues/36518))
 * resource/aws_emr_cluster: Add `unhealthy_node_replacement` argument ([#36523](https://github.com/hashicorp/terraform-provider-aws/issues/36523))
 * resource/aws_glue_data_catalog_encryption_settings: Add `data_catalog_encryption_settings.encryption_at_rest.catalog_encryption_service_role` argument ([#35978](https://github.com/hashicorp/terraform-provider-aws/issues/35978))
+* resource/aws_lambda_function: Add support for `ruby3.3` `runtime` value ([#xxxxx](https://github.com/hashicorp/terraform-provider-aws/issues/xxxxx))
+* resource/aws_lambda_layer_version: Add support for `ruby3.3` `compatible_runtimes` value ([#xxxxx](https://github.com/hashicorp/terraform-provider-aws/issues/xxxxx))
 * resource/aws_servicecatalogappregistry_application: Add `application_tag` attribute ([#36647](https://github.com/hashicorp/terraform-provider-aws/issues/36647))
 * resource/aws_transfer_server: Add `s3_storage_options` configuration block ([#36664](https://github.com/hashicorp/terraform-provider-aws/issues/36664))
 * resource/aws_wafv2_web_acl: Add `address_fields` and `phone_number_fields` to `statement.managed_rule_group_statement.managed_rule_group_configs.aws_managed_rules_acfp_rule_set.request_inspection` ([#36685](https://github.com/hashicorp/terraform-provider-aws/issues/36685))
