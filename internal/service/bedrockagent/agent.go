@@ -131,7 +131,7 @@ func (r *bedrockAgentResource) Schema(ctx context.Context, request resource.Sche
 				ElementType: types.ObjectType{
 					AttrTypes: map[string]attr.Type{
 						"override_lambda": types.StringType,
-						"prompt_configurations": types.ListType{
+						"prompt_configurations": types.SetType{
 							ElemType: types.ObjectType{
 								AttrTypes: map[string]attr.Type{
 									"base_prompt_template": types.StringType,
@@ -280,19 +280,19 @@ func (r *bedrockAgentResource) Update(ctx context.Context, request resource.Upda
 	input.AgentId = fwflex.StringFromFramework(ctx, old.AgentId)
 	input.AgentResourceRoleArn = fwflex.StringFromFramework(ctx, new.AgentResourceRoleARN)
 	input.IdleSessionTTLInSeconds = fwflex.Int32FromFramework(ctx, new.IdleSessionTTLInSeconds)
+	input.AgentName = fwflex.StringFromFramework(ctx, new.AgentName)
+	input.Description = fwflex.StringFromFramework(ctx, new.Description)
 
 	if !old.AgentName.Equal(new.AgentName) {
-		input.AgentName = fwflex.StringFromFramework(ctx, new.AgentName)
+		update = true
+	}
+
+	if !old.Description.Equal(new.Description) {
 		update = true
 	}
 
 	if !old.CustomerEncryptionKeyARN.Equal(new.CustomerEncryptionKeyARN) {
 		input.CustomerEncryptionKeyArn = fwflex.StringFromFramework(ctx, new.CustomerEncryptionKeyARN)
-		update = true
-	}
-
-	if !old.Description.Equal(new.Description) {
-		input.Description = fwflex.StringFromFramework(ctx, new.Description)
 		update = true
 	}
 
