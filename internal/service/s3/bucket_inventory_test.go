@@ -1,43 +1,45 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3_test
 
 import (
+	"context"
 	"fmt"
-	"log"
-	"regexp"
 	"testing"
-	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/service/s3/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfs3 "github.com/hashicorp/terraform-provider-aws/internal/service/s3"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccS3BucketInventory_basic(t *testing.T) {
-	var conf s3.InventoryConfiguration
-	rString := sdkacctest.RandString(8)
+	ctx := acctest.Context(t)
+	var conf types.InventoryConfiguration
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_inventory.test"
-
-	bucketName := fmt.Sprintf("tf-acc-bucket-inventory-%s", rString)
 	inventoryName := t.Name()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketInventoryDestroy,
+		CheckDestroy:             testAccCheckBucketInventoryDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketInventoryConfig_basic(bucketName, inventoryName),
+				Config: testAccBucketInventoryConfig_basic(rName, inventoryName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketInventoryExistsConfig(resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "bucket", bucketName),
-					resource.TestCheckNoResourceAttr(resourceName, "filter"),
+					testAccCheckBucketInventoryExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "bucket", rName),
+					resource.TestCheckResourceAttr(resourceName, "filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "filter.0.prefix", "documents/"),
 					resource.TestCheckResourceAttr(resourceName, "name", inventoryName),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "included_object_versions", "All"),
@@ -49,7 +51,7 @@ func TestAccS3BucketInventory_basic(t *testing.T) {
 
 					resource.TestCheckResourceAttr(resourceName, "destination.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "destination.0.bucket.#", "1"),
-					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, "destination.0.bucket.0.bucket_arn", "s3", bucketName),
+					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, "destination.0.bucket.0.bucket_arn", "s3", rName),
 					acctest.CheckResourceAttrAccountID(resourceName, "destination.0.bucket.0.account_id"),
 					resource.TestCheckResourceAttr(resourceName, "destination.0.bucket.0.format", "ORC"),
 					resource.TestCheckResourceAttr(resourceName, "destination.0.bucket.0.prefix", "inventory"),
@@ -65,23 +67,22 @@ func TestAccS3BucketInventory_basic(t *testing.T) {
 }
 
 func TestAccS3BucketInventory_encryptWithSSES3(t *testing.T) {
-	var conf s3.InventoryConfiguration
-	rString := sdkacctest.RandString(8)
+	ctx := acctest.Context(t)
+	var conf types.InventoryConfiguration
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_inventory.test"
-
-	bucketName := fmt.Sprintf("tf-acc-bucket-inventory-%s", rString)
 	inventoryName := t.Name()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketInventoryDestroy,
+		CheckDestroy:             testAccCheckBucketInventoryDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketInventoryConfig_encryptSSE(bucketName, inventoryName),
+				Config: testAccBucketInventoryConfig_encryptSSE(rName, inventoryName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketInventoryExistsConfig(resourceName, &conf),
+					testAccCheckBucketInventoryExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "destination.0.bucket.0.encryption.0.sse_s3.#", "1"),
 				),
 			},
@@ -95,25 +96,24 @@ func TestAccS3BucketInventory_encryptWithSSES3(t *testing.T) {
 }
 
 func TestAccS3BucketInventory_encryptWithSSEKMS(t *testing.T) {
-	var conf s3.InventoryConfiguration
-	rString := sdkacctest.RandString(8)
+	ctx := acctest.Context(t)
+	var conf types.InventoryConfiguration
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_s3_bucket_inventory.test"
-
-	bucketName := fmt.Sprintf("tf-acc-bucket-inventory-%s", rString)
 	inventoryName := t.Name()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBucketInventoryDestroy,
+		CheckDestroy:             testAccCheckBucketInventoryDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBucketInventoryConfig_encryptSSEKMS(bucketName, inventoryName),
+				Config: testAccBucketInventoryConfig_encryptSSEKMS(rName, inventoryName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBucketInventoryExistsConfig(resourceName, &conf),
+					testAccCheckBucketInventoryExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "destination.0.bucket.0.encryption.0.sse_kms.#", "1"),
-					resource.TestMatchResourceAttr(resourceName, "destination.0.bucket.0.encryption.0.sse_kms.0.key_id", regexp.MustCompile(fmt.Sprintf("^arn:%s:kms:", acctest.Partition()))),
+					resource.TestMatchResourceAttr(resourceName, "destination.0.bucket.0.encryption.0.sse_kms.0.key_id", regexache.MustCompile(fmt.Sprintf("^arn:%s:kms:", acctest.Partition()))),
 				),
 			},
 			{
@@ -125,92 +125,92 @@ func TestAccS3BucketInventory_encryptWithSSEKMS(t *testing.T) {
 	})
 }
 
-func testAccCheckBucketInventoryExistsConfig(n string, res *s3.InventoryConfiguration) resource.TestCheckFunc {
+func TestAccS3BucketInventory_directoryBucket(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	inventoryName := t.Name()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBucketInventoryDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccBucketInventoryConfig_directoryBucket(rName, inventoryName),
+				ExpectError: regexache.MustCompile(`directory buckets are not supported`),
+			},
+		},
+	})
+}
+
+func testAccCheckBucketInventoryExists(ctx context.Context, n string, v *types.InventoryConfiguration) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No S3 bucket inventory configuration ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
 		bucket, name, err := tfs3.BucketInventoryParseID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		input := &s3.GetBucketInventoryConfigurationInput{
-			Bucket: aws.String(bucket),
-			Id:     aws.String(name),
-		}
-		log.Printf("[DEBUG] Reading S3 bucket inventory configuration: %s", input)
-		output, err := conn.GetBucketInventoryConfiguration(input)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+
+		output, err := tfs3.FindInventoryConfiguration(ctx, conn, bucket, name)
+
 		if err != nil {
 			return err
 		}
 
-		*res = *output.InventoryConfiguration
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccCheckBucketInventoryDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).S3Conn
+func testAccCheckBucketInventoryDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_s3_bucket_inventory" {
-			continue
-		}
-
-		bucket, name, err := tfs3.BucketInventoryParseID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		err = resource.Retry(1*time.Minute, func() *resource.RetryError {
-			input := &s3.GetBucketInventoryConfigurationInput{
-				Bucket: aws.String(bucket),
-				Id:     aws.String(name),
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_s3_bucket_inventory" {
+				continue
 			}
-			log.Printf("[DEBUG] Reading S3 bucket inventory configuration: %s", input)
-			output, err := conn.GetBucketInventoryConfiguration(input)
+
+			bucket, name, err := tfs3.BucketInventoryParseID(rs.Primary.ID)
 			if err != nil {
-				if tfawserr.ErrCodeEquals(err, s3.ErrCodeNoSuchBucket) || tfawserr.ErrMessageContains(err, "NoSuchConfiguration", "The specified configuration does not exist.") {
-					return nil
-				}
-				return resource.NonRetryableError(err)
+				return err
 			}
-			if output.InventoryConfiguration != nil {
-				return resource.RetryableError(fmt.Errorf("S3 bucket inventory configuration exists: %v", output))
+
+			_, err = tfs3.FindInventoryConfiguration(ctx, conn, bucket, name)
+
+			if tfresource.NotFound(err) {
+				continue
 			}
-			return nil
-		})
-		if err != nil {
-			return err
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("S3 Bucket Inventory %s still exists", rs.Primary.ID)
 		}
+
+		return nil
 	}
-	return nil
 }
 
-func testAccBucketInventoryBucketConfig(name string) string {
+func testAccBucketInventoryConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
-
-resource "aws_s3_bucket_acl" "test" {
-  bucket = aws_s3_bucket.test.id
-  acl    = "private"
-}
-`, name)
+`, rName)
 }
 
 func testAccBucketInventoryConfig_basic(bucketName, inventoryName string) string {
-	return testAccBucketInventoryBucketConfig(bucketName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccBucketInventoryConfig_base(bucketName), fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
 
 resource "aws_s3_bucket_inventory" "test" {
@@ -241,11 +241,11 @@ resource "aws_s3_bucket_inventory" "test" {
     }
   }
 }
-`, inventoryName)
+`, inventoryName))
 }
 
 func testAccBucketInventoryConfig_encryptSSE(bucketName, inventoryName string) string {
-	return testAccBucketInventoryBucketConfig(bucketName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccBucketInventoryConfig_base(bucketName), fmt.Sprintf(`
 resource "aws_s3_bucket_inventory" "test" {
   bucket = aws_s3_bucket.test.id
   name   = %[1]q
@@ -267,13 +267,13 @@ resource "aws_s3_bucket_inventory" "test" {
     }
   }
 }
-`, inventoryName)
+`, inventoryName))
 }
 
 func testAccBucketInventoryConfig_encryptSSEKMS(bucketName, inventoryName string) string {
-	return testAccBucketInventoryBucketConfig(bucketName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccBucketInventoryConfig_base(bucketName), fmt.Sprintf(`
 resource "aws_kms_key" "test" {
-  description             = "Terraform acc test S3 inventory SSE-KMS encryption: %[1]s"
+  description             = %[1]q
   deletion_window_in_days = 7
 }
 
@@ -300,5 +300,48 @@ resource "aws_s3_bucket_inventory" "test" {
     }
   }
 }
-`, bucketName, inventoryName)
+`, bucketName, inventoryName))
+}
+
+func testAccBucketInventoryConfig_directoryBucket(bucketName, inventoryName string) string {
+	return acctest.ConfigCompose(testAccDirectoryBucketConfig_base(bucketName), fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_s3_directory_bucket" "test" {
+  bucket = local.bucket
+
+  location {
+    name = local.location_name
+  }
+}
+
+resource "aws_s3_bucket_inventory" "test" {
+  bucket = aws_s3_directory_bucket.test.id
+  name   = %[1]q
+
+  included_object_versions = "All"
+
+  optional_fields = [
+    "Size",
+    "LastModifiedDate",
+  ]
+
+  filter {
+    prefix = "documents/"
+  }
+
+  schedule {
+    frequency = "Weekly"
+  }
+
+  destination {
+    bucket {
+      format     = "ORC"
+      bucket_arn = aws_s3_directory_bucket.test.arn
+      account_id = data.aws_caller_identity.current.account_id
+      prefix     = "inventory"
+    }
+  }
+}
+`, inventoryName))
 }

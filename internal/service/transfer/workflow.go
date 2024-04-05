@@ -1,30 +1,39 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package transfer
 
 import (
-	"fmt"
+	"context"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_transfer_workflow", name="Workflow")
+// @Tags(identifierAttribute="arn")
 func ResourceWorkflow() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceWorkflowCreate,
-		Read:   resourceWorkflowRead,
-		Update: resourceWorkflowUpdate,
-		Delete: resourceWorkflowDelete,
+		CreateWithoutTimeout: resourceWorkflowCreate,
+		ReadWithoutTimeout:   resourceWorkflowRead,
+		UpdateWithoutTimeout: resourceWorkflowUpdate,
+		DeleteWithoutTimeout: resourceWorkflowDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -51,28 +60,160 @@ func ResourceWorkflow() *schema.Resource {
 						"copy_step_details": {
 							Type:     schema.TypeList,
 							Optional: true,
+							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"destination_file_location": {
 										Type:     schema.TypeList,
 										Optional: true,
+										ForceNew: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"efs_file_location": {
 													Type:     schema.TypeList,
 													Optional: true,
+													ForceNew: true,
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"file_system_id": {
 																Type:     schema.TypeString,
 																Optional: true,
+																ForceNew: true,
 															},
 															"path": {
 																Type:         schema.TypeString,
 																Optional:     true,
+																ForceNew:     true,
+																ValidateFunc: validation.StringLenBetween(1, 65536),
+															},
+														},
+													},
+												},
+												"s3_file_location": {
+													Type:     schema.TypeList,
+													Optional: true,
+													ForceNew: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"bucket": {
+																Type:     schema.TypeString,
+																Optional: true,
+																ForceNew: true,
+															},
+															"key": {
+																Type:         schema.TypeString,
+																Optional:     true,
+																ForceNew:     true,
+																ValidateFunc: validation.StringLenBetween(0, 1024),
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"name": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ForceNew: true,
+										ValidateFunc: validation.All(
+											validation.StringLenBetween(0, 30),
+											validation.StringMatch(regexache.MustCompile(`^[\w-]*$`), "Must be of the pattern ^[\\w-]*$"),
+										),
+									},
+									"overwrite_existing": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ForceNew:     true,
+										Default:      transfer.OverwriteExistingFalse,
+										ValidateFunc: validation.StringInSlice(transfer.OverwriteExisting_Values(), false),
+									},
+									"source_file_location": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ForceNew: true,
+										ValidateFunc: validation.All(
+											validation.StringLenBetween(0, 256),
+											validation.StringMatch(regexache.MustCompile(`^\$\{(\w+.)+\w+\}$`), "Must be of the pattern ^\\$\\{(\\w+.)+\\w+\\}$"),
+										),
+									},
+								},
+							},
+						},
+						"custom_step_details": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"name": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ForceNew: true,
+										ValidateFunc: validation.All(
+											validation.StringLenBetween(0, 30),
+											validation.StringMatch(regexache.MustCompile(`^[\w-]*$`), "Must be of the pattern ^[\\w-]*$"),
+										),
+									},
+									"source_file_location": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ForceNew: true,
+										ValidateFunc: validation.All(
+											validation.StringLenBetween(0, 256),
+											validation.StringMatch(regexache.MustCompile(`^\$\{(\w+.)+\w+\}$`), "Must be of the pattern ^\\$\\{(\\w+.)+\\w+\\}$"),
+										),
+									},
+									"target": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ForceNew:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+									"timeout_seconds": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.IntBetween(1, 1800),
+									},
+								},
+							},
+						},
+						"decrypt_step_details": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"destination_file_location": {
+										Type:     schema.TypeList,
+										Optional: true,
+										ForceNew: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"efs_file_location": {
+													Type:     schema.TypeList,
+													Optional: true,
+													ForceNew: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"file_system_id": {
+																Type:     schema.TypeString,
+																Optional: true,
+																ForceNew: true,
+															},
+															"path": {
+																Type:         schema.TypeString,
+																Optional:     true,
+																ForceNew:     true,
 																ValidateFunc: validation.StringLenBetween(1, 65536),
 															},
 														},
@@ -87,10 +228,12 @@ func ResourceWorkflow() *schema.Resource {
 															"bucket": {
 																Type:     schema.TypeString,
 																Optional: true,
+																ForceNew: true,
 															},
 															"key": {
 																Type:         schema.TypeString,
 																Optional:     true,
+																ForceNew:     true,
 																ValidateFunc: validation.StringLenBetween(0, 1024),
 															},
 														},
@@ -102,59 +245,33 @@ func ResourceWorkflow() *schema.Resource {
 									"name": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ForceNew: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(0, 30),
-											validation.StringMatch(regexp.MustCompile(`^[\w-]*$`), "Must be of the pattern ^[\\w-]*$"),
+											validation.StringMatch(regexache.MustCompile(`^[\w-]*$`), "Must be of the pattern ^[\\w-]*$"),
 										),
 									},
 									"overwrite_existing": {
 										Type:         schema.TypeString,
 										Optional:     true,
+										ForceNew:     true,
 										Default:      transfer.OverwriteExistingFalse,
 										ValidateFunc: validation.StringInSlice(transfer.OverwriteExisting_Values(), false),
 									},
 									"source_file_location": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ForceNew: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(0, 256),
-											validation.StringMatch(regexp.MustCompile(`^\$\{(\w+.)+\w+\}$`), "Must be of the pattern ^\\$\\{(\\w+.)+\\w+\\}$"),
+											validation.StringMatch(regexache.MustCompile(`^\$\{(\w+.)+\w+\}$`), "Must be of the pattern ^\\$\\{(\\w+.)+\\w+\\}$"),
 										),
 									},
-								},
-							},
-						},
-						"custom_step_details": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"name": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(0, 30),
-											validation.StringMatch(regexp.MustCompile(`^[\w-]*$`), "Must be of the pattern ^[\\w-]*$"),
-										),
-									},
-									"source_file_location": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ValidateFunc: validation.All(
-											validation.StringLenBetween(0, 256),
-											validation.StringMatch(regexp.MustCompile(`^\$\{(\w+.)+\w+\}$`), "Must be of the pattern ^\\$\\{(\\w+.)+\\w+\\}$"),
-										),
-									},
-									"target": {
+									"type": {
 										Type:         schema.TypeString,
-										Optional:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"timeout_seconds": {
-										Type:         schema.TypeInt,
-										Optional:     true,
-										ValidateFunc: validation.IntBetween(1, 1800),
+										Required:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.StringInSlice(transfer.EncryptionType_Values(), false),
 									},
 								},
 							},
@@ -162,23 +279,26 @@ func ResourceWorkflow() *schema.Resource {
 						"delete_step_details": {
 							Type:     schema.TypeList,
 							Optional: true,
+							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"name": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ForceNew: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(0, 30),
-											validation.StringMatch(regexp.MustCompile(`^[\w-]*$`), "Must be of the pattern ^[\\w-]*$"),
+											validation.StringMatch(regexache.MustCompile(`^[\w-]*$`), "Must be of the pattern ^[\\w-]*$"),
 										),
 									},
 									"source_file_location": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ForceNew: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(0, 256),
-											validation.StringMatch(regexp.MustCompile(`^\$\{(\w+.)+\w+\}$`), "Must be of the pattern ^\\$\\{(\\w+.)+\\w+\\}$"),
+											validation.StringMatch(regexache.MustCompile(`^\$\{(\w+.)+\w+\}$`), "Must be of the pattern ^\\$\\{(\\w+.)+\\w+\\}$"),
 										),
 									},
 								},
@@ -187,39 +307,45 @@ func ResourceWorkflow() *schema.Resource {
 						"tag_step_details": {
 							Type:     schema.TypeList,
 							Optional: true,
+							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"name": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ForceNew: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(0, 30),
-											validation.StringMatch(regexp.MustCompile(`^[\w-]*$`), "Must be of the pattern ^[\\w-]*$"),
+											validation.StringMatch(regexache.MustCompile(`^[\w-]*$`), "Must be of the pattern ^[\\w-]*$"),
 										),
 									},
 									"source_file_location": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ForceNew: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(0, 256),
-											validation.StringMatch(regexp.MustCompile(`^\$\{(\w+.)+\w+\}$`), "Must be of the pattern ^\\$\\{(\\w+.)+\\w+\\}$"),
+											validation.StringMatch(regexache.MustCompile(`^\$\{(\w+.)+\w+\}$`), "Must be of the pattern ^\\$\\{(\\w+.)+\\w+\\}$"),
 										),
 									},
 									"tags": {
 										Type:     schema.TypeList,
 										Optional: true,
+										ForceNew: true,
 										MaxItems: 10,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"key": {
 													Type:         schema.TypeString,
 													Required:     true,
+													ForceNew:     true,
 													ValidateFunc: validation.StringLenBetween(0, 128),
 												},
 												"value": {
 													Type:         schema.TypeString,
 													Required:     true,
+													ForceNew:     true,
 													ValidateFunc: validation.StringLenBetween(0, 256),
 												},
 											},
@@ -231,6 +357,7 @@ func ResourceWorkflow() *schema.Resource {
 						"type": {
 							Type:         schema.TypeString,
 							Required:     true,
+							ForceNew:     true,
 							ValidateFunc: validation.StringInSlice(transfer.WorkflowStepType_Values(), false),
 						},
 					},
@@ -246,28 +373,33 @@ func ResourceWorkflow() *schema.Resource {
 						"copy_step_details": {
 							Type:     schema.TypeList,
 							Optional: true,
+							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"destination_file_location": {
 										Type:     schema.TypeList,
 										Optional: true,
+										ForceNew: true,
 										MaxItems: 1,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"efs_file_location": {
 													Type:     schema.TypeList,
 													Optional: true,
+													ForceNew: true,
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"file_system_id": {
 																Type:     schema.TypeString,
 																Optional: true,
+																ForceNew: true,
 															},
 															"path": {
 																Type:         schema.TypeString,
 																Optional:     true,
+																ForceNew:     true,
 																ValidateFunc: validation.StringLenBetween(1, 65536),
 															},
 														},
@@ -276,16 +408,19 @@ func ResourceWorkflow() *schema.Resource {
 												"s3_file_location": {
 													Type:     schema.TypeList,
 													Optional: true,
+													ForceNew: true,
 													MaxItems: 1,
 													Elem: &schema.Resource{
 														Schema: map[string]*schema.Schema{
 															"bucket": {
 																Type:     schema.TypeString,
 																Optional: true,
+																ForceNew: true,
 															},
 															"key": {
 																Type:         schema.TypeString,
 																Optional:     true,
+																ForceNew:     true,
 																ValidateFunc: validation.StringLenBetween(0, 1024),
 															},
 														},
@@ -297,23 +432,26 @@ func ResourceWorkflow() *schema.Resource {
 									"name": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ForceNew: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(0, 30),
-											validation.StringMatch(regexp.MustCompile(`^[\w-]*$`), "Must be of the pattern ^[\\w-]*$"),
+											validation.StringMatch(regexache.MustCompile(`^[\w-]*$`), "Must be of the pattern ^[\\w-]*$"),
 										),
 									},
 									"overwrite_existing": {
 										Type:         schema.TypeString,
 										Optional:     true,
+										ForceNew:     true,
 										Default:      transfer.OverwriteExistingFalse,
 										ValidateFunc: validation.StringInSlice(transfer.OverwriteExisting_Values(), false),
 									},
 									"source_file_location": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ForceNew: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(0, 256),
-											validation.StringMatch(regexp.MustCompile(`^\$\{(\w+.)+\w+\}$`), "Must be of the pattern ^\\$\\{(\\w+.)+\\w+\\}$"),
+											validation.StringMatch(regexache.MustCompile(`^\$\{(\w+.)+\w+\}$`), "Must be of the pattern ^\\$\\{(\\w+.)+\\w+\\}$"),
 										),
 									},
 								},
@@ -322,34 +460,132 @@ func ResourceWorkflow() *schema.Resource {
 						"custom_step_details": {
 							Type:     schema.TypeList,
 							Optional: true,
+							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"name": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ForceNew: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(0, 30),
-											validation.StringMatch(regexp.MustCompile(`^[\w-]*$`), "Must be of the pattern ^[\\w-]*$"),
+											validation.StringMatch(regexache.MustCompile(`^[\w-]*$`), "Must be of the pattern ^[\\w-]*$"),
 										),
 									},
 									"source_file_location": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ForceNew: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(0, 256),
-											validation.StringMatch(regexp.MustCompile(`^\$\{(\w+.)+\w+\}$`), "Must be of the pattern ^\\$\\{(\\w+.)+\\w+\\}$"),
+											validation.StringMatch(regexache.MustCompile(`^\$\{(\w+.)+\w+\}$`), "Must be of the pattern ^\\$\\{(\\w+.)+\\w+\\}$"),
 										),
 									},
 									"target": {
 										Type:         schema.TypeString,
 										Optional:     true,
+										ForceNew:     true,
 										ValidateFunc: verify.ValidARN,
 									},
 									"timeout_seconds": {
 										Type:         schema.TypeInt,
 										Optional:     true,
+										ForceNew:     true,
 										ValidateFunc: validation.IntBetween(1, 1800),
+									},
+								},
+							},
+						},
+						"decrypt_step_details": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"destination_file_location": {
+										Type:     schema.TypeList,
+										Optional: true,
+										ForceNew: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"efs_file_location": {
+													Type:     schema.TypeList,
+													Optional: true,
+													ForceNew: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"file_system_id": {
+																Type:     schema.TypeString,
+																Optional: true,
+																ForceNew: true,
+															},
+															"path": {
+																Type:         schema.TypeString,
+																Optional:     true,
+																ForceNew:     true,
+																ValidateFunc: validation.StringLenBetween(1, 65536),
+															},
+														},
+													},
+												},
+												"s3_file_location": {
+													Type:     schema.TypeList,
+													Optional: true,
+													ForceNew: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"bucket": {
+																Type:     schema.TypeString,
+																Optional: true,
+																ForceNew: true,
+															},
+															"key": {
+																Type:         schema.TypeString,
+																Optional:     true,
+																ForceNew:     true,
+																ValidateFunc: validation.StringLenBetween(0, 1024),
+															},
+														},
+													},
+												},
+											},
+										},
+									},
+									"name": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ForceNew: true,
+										ValidateFunc: validation.All(
+											validation.StringLenBetween(0, 30),
+											validation.StringMatch(regexache.MustCompile(`^[\w-]*$`), "Must be of the pattern ^[\\w-]*$"),
+										),
+									},
+									"overwrite_existing": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ForceNew:     true,
+										Default:      transfer.OverwriteExistingFalse,
+										ValidateFunc: validation.StringInSlice(transfer.OverwriteExisting_Values(), false),
+									},
+									"source_file_location": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ForceNew: true,
+										ValidateFunc: validation.All(
+											validation.StringLenBetween(0, 256),
+											validation.StringMatch(regexache.MustCompile(`^\$\{(\w+.)+\w+\}$`), "Must be of the pattern ^\\$\\{(\\w+.)+\\w+\\}$"),
+										),
+									},
+									"type": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.StringInSlice(transfer.EncryptionType_Values(), false),
 									},
 								},
 							},
@@ -357,23 +593,26 @@ func ResourceWorkflow() *schema.Resource {
 						"delete_step_details": {
 							Type:     schema.TypeList,
 							Optional: true,
+							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"name": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ForceNew: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(0, 30),
-											validation.StringMatch(regexp.MustCompile(`^[\w-]*$`), "Must be of the pattern ^[\\w-]*$"),
+											validation.StringMatch(regexache.MustCompile(`^[\w-]*$`), "Must be of the pattern ^[\\w-]*$"),
 										),
 									},
 									"source_file_location": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ForceNew: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(0, 256),
-											validation.StringMatch(regexp.MustCompile(`^\$\{(\w+.)+\w+\}$`), "Must be of the pattern ^\\$\\{(\\w+.)+\\w+\\}$"),
+											validation.StringMatch(regexache.MustCompile(`^\$\{(\w+.)+\w+\}$`), "Must be of the pattern ^\\$\\{(\\w+.)+\\w+\\}$"),
 										),
 									},
 								},
@@ -382,39 +621,45 @@ func ResourceWorkflow() *schema.Resource {
 						"tag_step_details": {
 							Type:     schema.TypeList,
 							Optional: true,
+							ForceNew: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"name": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ForceNew: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(0, 30),
-											validation.StringMatch(regexp.MustCompile(`^[\w-]*$`), "Must be of the pattern ^[\\w-]*$"),
+											validation.StringMatch(regexache.MustCompile(`^[\w-]*$`), "Must be of the pattern ^[\\w-]*$"),
 										),
 									},
 									"source_file_location": {
 										Type:     schema.TypeString,
 										Optional: true,
+										ForceNew: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(0, 256),
-											validation.StringMatch(regexp.MustCompile(`^\$\{(\w+.)+\w+\}$`), "Must be of the pattern ^\\$\\{(\\w+.)+\\w+\\}$"),
+											validation.StringMatch(regexache.MustCompile(`^\$\{(\w+.)+\w+\}$`), "Must be of the pattern ^\\$\\{(\\w+.)+\\w+\\}$"),
 										),
 									},
 									"tags": {
 										Type:     schema.TypeList,
 										Optional: true,
+										ForceNew: true,
 										MaxItems: 10,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"key": {
 													Type:         schema.TypeString,
 													Required:     true,
+													ForceNew:     true,
 													ValidateFunc: validation.StringLenBetween(0, 128),
 												},
 												"value": {
 													Type:         schema.TypeString,
 													Required:     true,
+													ForceNew:     true,
 													ValidateFunc: validation.StringLenBetween(0, 256),
 												},
 											},
@@ -426,23 +671,25 @@ func ResourceWorkflow() *schema.Resource {
 						"type": {
 							Type:         schema.TypeString,
 							Required:     true,
+							ForceNew:     true,
 							ValidateFunc: validation.StringInSlice(transfer.WorkflowStepType_Values(), false),
 						},
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
-func resourceWorkflowCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).TransferConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceWorkflowCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
-	input := &transfer.CreateWorkflowInput{}
+	input := &transfer.CreateWorkflowInput{
+		Tags: getTagsIn(ctx),
+	}
 
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
@@ -456,94 +703,72 @@ func resourceWorkflowCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Steps = expandWorkflows(v.([]interface{}))
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	log.Printf("[DEBUG] Creating Transfer Workflow: %s", input)
-	output, err := conn.CreateWorkflow(input)
+	output, err := conn.CreateWorkflowWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Transfer Workflow: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating Transfer Workflow: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.WorkflowId))
 
-	return resourceWorkflowRead(d, meta)
+	return append(diags, resourceWorkflowRead(ctx, d, meta)...)
 }
 
-func resourceWorkflowRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).TransferConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
-
-	output, err := FindWorkflowByID(conn, d.Id())
+func resourceWorkflowRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).TransferConn(ctx)
+	output, err := FindWorkflowByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Transfer Workflow (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Transfer Workflow (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Transfer Workflow (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", output.Arn)
 	d.Set("description", output.Description)
-
 	if err := d.Set("on_exception_steps", flattenWorkflows(output.OnExceptionSteps)); err != nil {
-		return fmt.Errorf("error setting on_exception_steps: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting on_exception_steps: %s", err)
 	}
-
 	if err := d.Set("steps", flattenWorkflows(output.Steps)); err != nil {
-		return fmt.Errorf("error setting steps: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting steps: %s", err)
 	}
 
-	tags := KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	setTagsOut(ctx, output.Tags)
 
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceWorkflowUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).TransferConn
+func resourceWorkflowUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %w", err)
-		}
-	}
+	// Tags only.
 
-	return resourceWorkflowRead(d, meta)
+	return append(diags, resourceWorkflowRead(ctx, d, meta)...)
 }
 
-func resourceWorkflowDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).TransferConn
+func resourceWorkflowDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).TransferConn(ctx)
 
-	log.Printf("[DEBUG] Deleting Transfer Workflow: (%s)", d.Id())
-	_, err := conn.DeleteWorkflow(&transfer.DeleteWorkflowInput{
+	log.Printf("[DEBUG] Deleting Transfer Workflow: %s", d.Id())
+	_, err := conn.DeleteWorkflowWithContext(ctx, &transfer.DeleteWorkflowInput{
 		WorkflowId: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrCodeEquals(err, transfer.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Transfer Workflow (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Transfer Workflow (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandWorkflows(tfList []interface{}) []*transfer.WorkflowStep {
@@ -560,16 +785,20 @@ func expandWorkflows(tfList []interface{}) []*transfer.WorkflowStep {
 			Type: aws.String(tfMap["type"].(string)),
 		}
 
-		if v, ok := tfMap["delete_step_details"].([]interface{}); ok && len(v) > 0 {
-			apiObject.DeleteStepDetails = expandDeleteStepDetails(v)
-		}
-
 		if v, ok := tfMap["copy_step_details"].([]interface{}); ok && len(v) > 0 {
 			apiObject.CopyStepDetails = expandCopyStepDetails(v)
 		}
 
 		if v, ok := tfMap["custom_step_details"].([]interface{}); ok && len(v) > 0 {
 			apiObject.CustomStepDetails = expandCustomStepDetails(v)
+		}
+
+		if v, ok := tfMap["decrypt_step_details"].([]interface{}); ok && len(v) > 0 {
+			apiObject.DecryptStepDetails = expandDecryptStepDetails(v)
+		}
+
+		if v, ok := tfMap["delete_step_details"].([]interface{}); ok && len(v) > 0 {
+			apiObject.DeleteStepDetails = expandDeleteStepDetails(v)
 		}
 
 		if v, ok := tfMap["tag_step_details"].([]interface{}); ok && len(v) > 0 {
@@ -598,16 +827,20 @@ func flattenWorkflows(apiObjects []*transfer.WorkflowStep) []interface{} {
 			"type": aws.StringValue(apiObject.Type),
 		}
 
-		if apiObject.DeleteStepDetails != nil {
-			flattenedObject["delete_step_details"] = flattenDeleteStepDetails(apiObject.DeleteStepDetails)
-		}
-
-		if apiObject.DeleteStepDetails != nil {
+		if apiObject.CopyStepDetails != nil {
 			flattenedObject["copy_step_details"] = flattenCopyStepDetails(apiObject.CopyStepDetails)
 		}
 
 		if apiObject.CustomStepDetails != nil {
 			flattenedObject["custom_step_details"] = flattenCustomStepDetails(apiObject.CustomStepDetails)
+		}
+
+		if apiObject.DecryptStepDetails != nil {
+			flattenedObject["decrypt_step_details"] = flattenDecryptStepDetails(apiObject.DecryptStepDetails)
+		}
+
+		if apiObject.DeleteStepDetails != nil {
+			flattenedObject["delete_step_details"] = flattenDeleteStepDetails(apiObject.DeleteStepDetails)
 		}
 
 		if apiObject.TagStepDetails != nil {
@@ -620,44 +853,6 @@ func flattenWorkflows(apiObjects []*transfer.WorkflowStep) []interface{} {
 	return tfList
 }
 
-func expandDeleteStepDetails(tfMap []interface{}) *transfer.DeleteStepDetails {
-	if tfMap == nil {
-		return nil
-	}
-
-	tfMapRaw := tfMap[0].(map[string]interface{})
-
-	apiObject := &transfer.DeleteStepDetails{}
-
-	if v, ok := tfMapRaw["name"].(string); ok && v != "" {
-		apiObject.Name = aws.String(v)
-	}
-
-	if v, ok := tfMapRaw["source_file_location"].(string); ok && v != "" {
-		apiObject.SourceFileLocation = aws.String(v)
-	}
-
-	return apiObject
-}
-
-func flattenDeleteStepDetails(apiObject *transfer.DeleteStepDetails) []interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-
-	if v := apiObject.Name; v != nil {
-		tfMap["name"] = aws.StringValue(v)
-	}
-
-	if v := apiObject.SourceFileLocation; v != nil {
-		tfMap["source_file_location"] = aws.StringValue(v)
-	}
-
-	return []interface{}{tfMap}
-}
-
 func expandCopyStepDetails(tfMap []interface{}) *transfer.CopyStepDetails {
 	if tfMap == nil {
 		return nil
@@ -666,6 +861,10 @@ func expandCopyStepDetails(tfMap []interface{}) *transfer.CopyStepDetails {
 	tfMapRaw := tfMap[0].(map[string]interface{})
 
 	apiObject := &transfer.CopyStepDetails{}
+
+	if v, ok := tfMapRaw["destination_file_location"].([]interface{}); ok && len(v) > 0 {
+		apiObject.DestinationFileLocation = expandDestinationFileLocation(v)
+	}
 
 	if v, ok := tfMapRaw["name"].(string); ok && v != "" {
 		apiObject.Name = aws.String(v)
@@ -679,10 +878,6 @@ func expandCopyStepDetails(tfMap []interface{}) *transfer.CopyStepDetails {
 		apiObject.SourceFileLocation = aws.String(v)
 	}
 
-	if v, ok := tfMapRaw["destination_file_location"].([]interface{}); ok && len(v) > 0 {
-		apiObject.DestinationFileLocation = expandDestinationFileLocation(v)
-	}
-
 	return apiObject
 }
 
@@ -692,6 +887,10 @@ func flattenCopyStepDetails(apiObject *transfer.CopyStepDetails) []interface{} {
 	}
 
 	tfMap := map[string]interface{}{}
+
+	if v := apiObject.DestinationFileLocation; v != nil {
+		tfMap["destination_file_location"] = flattenDestinationFileLocation(v)
+	}
 
 	if v := apiObject.Name; v != nil {
 		tfMap["name"] = aws.StringValue(v)
@@ -703,10 +902,6 @@ func flattenCopyStepDetails(apiObject *transfer.CopyStepDetails) []interface{} {
 
 	if v := apiObject.SourceFileLocation; v != nil {
 		tfMap["source_file_location"] = aws.StringValue(v)
-	}
-
-	if v := apiObject.DestinationFileLocation; v != nil {
-		tfMap["destination_file_location"] = flattenDestinationFileLocation(v)
 	}
 
 	return []interface{}{tfMap}
@@ -761,6 +956,106 @@ func flattenCustomStepDetails(apiObject *transfer.CustomStepDetails) []interface
 
 	if v := apiObject.TimeoutSeconds; v != nil {
 		tfMap["timeout_seconds"] = aws.Int64Value(v)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func expandDecryptStepDetails(tfMap []interface{}) *transfer.DecryptStepDetails {
+	if tfMap == nil {
+		return nil
+	}
+
+	tfMapRaw := tfMap[0].(map[string]interface{})
+
+	apiObject := &transfer.DecryptStepDetails{}
+
+	if v, ok := tfMapRaw["destination_file_location"].([]interface{}); ok && len(v) > 0 {
+		apiObject.DestinationFileLocation = expandDestinationFileLocation(v)
+	}
+
+	if v, ok := tfMapRaw["name"].(string); ok && v != "" {
+		apiObject.Name = aws.String(v)
+	}
+
+	if v, ok := tfMapRaw["overwrite_existing"].(string); ok && v != "" {
+		apiObject.OverwriteExisting = aws.String(v)
+	}
+
+	if v, ok := tfMapRaw["source_file_location"].(string); ok && v != "" {
+		apiObject.SourceFileLocation = aws.String(v)
+	}
+
+	if v, ok := tfMapRaw["type"].(string); ok && v != "" {
+		apiObject.Type = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenDecryptStepDetails(apiObject *transfer.DecryptStepDetails) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.DestinationFileLocation; v != nil {
+		tfMap["destination_file_location"] = flattenDestinationFileLocation(v)
+	}
+
+	if v := apiObject.Name; v != nil {
+		tfMap["name"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.OverwriteExisting; v != nil {
+		tfMap["overwrite_existing"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.SourceFileLocation; v != nil {
+		tfMap["source_file_location"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Type; v != nil {
+		tfMap["type"] = aws.StringValue(v)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func expandDeleteStepDetails(tfMap []interface{}) *transfer.DeleteStepDetails {
+	if tfMap == nil {
+		return nil
+	}
+
+	tfMapRaw := tfMap[0].(map[string]interface{})
+
+	apiObject := &transfer.DeleteStepDetails{}
+
+	if v, ok := tfMapRaw["name"].(string); ok && v != "" {
+		apiObject.Name = aws.String(v)
+	}
+
+	if v, ok := tfMapRaw["source_file_location"].(string); ok && v != "" {
+		apiObject.SourceFileLocation = aws.String(v)
+	}
+
+	return apiObject
+}
+
+func flattenDeleteStepDetails(apiObject *transfer.DeleteStepDetails) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Name; v != nil {
+		tfMap["name"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.SourceFileLocation; v != nil {
+		tfMap["source_file_location"] = aws.StringValue(v)
 	}
 
 	return []interface{}{tfMap}

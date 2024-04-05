@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package accessanalyzer
 
 import (
@@ -8,18 +11,22 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go/service/accessanalyzer"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/service/accessanalyzer"
+	"github.com/aws/aws-sdk-go-v2/service/accessanalyzer/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 )
 
-func ResourceArchiveRule() *schema.Resource {
+// @SDKResource("aws_accessanalyzer_archive_rule")
+func resourceArchiveRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceArchiveRuleCreate,
 		ReadWithoutTimeout:   resourceArchiveRuleRead,
@@ -82,125 +89,135 @@ func ResourceArchiveRule() *schema.Resource {
 }
 
 func resourceArchiveRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AccessAnalyzerConn
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).AccessAnalyzerClient(ctx)
 
 	analyzerName := d.Get("analyzer_name").(string)
 	ruleName := d.Get("rule_name").(string)
-
-	in := &accessanalyzer.CreateArchiveRuleInput{
+	id := archiveRuleCreateResourceID(analyzerName, ruleName)
+	input := &accessanalyzer.CreateArchiveRuleInput{
 		AnalyzerName: aws.String(analyzerName),
-		ClientToken:  aws.String(resource.UniqueId()),
+		ClientToken:  aws.String(sdkid.UniqueId()),
 		RuleName:     aws.String(ruleName),
 	}
 
 	if v, ok := d.GetOk("filter"); ok {
-		in.Filter = expandFilter(v.(*schema.Set))
+		input.Filter = expandFilter(v.(*schema.Set))
 	}
 
-	_, err := conn.CreateArchiveRuleWithContext(ctx, in)
+	_, err := conn.CreateArchiveRule(ctx, input)
+
 	if err != nil {
-		return diag.Errorf("creating AWS IAM Access Analyzer ArchiveRule (%s): %s", d.Get("rule_name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating IAM Access Analyzer Archive Rule (%s): %s", id, err)
 	}
 
-	id := EncodeRuleID(analyzerName, ruleName)
 	d.SetId(id)
 
-	return resourceArchiveRuleRead(ctx, d, meta)
+	return append(diags, resourceArchiveRuleRead(ctx, d, meta)...)
 }
 
 func resourceArchiveRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AccessAnalyzerConn
+	var diags diag.Diagnostics
 
-	analyzerName, ruleName, err := DecodeRuleID(d.Id())
+	conn := meta.(*conns.AWSClient).AccessAnalyzerClient(ctx)
+
+	analyzerName, ruleName, err := archiveRuleParseResourceID(d.Id())
+
 	if err != nil {
-		return diag.Errorf("unable to decode AccessAnalyzer ArchiveRule ID (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	out, err := FindArchiveRule(ctx, conn, analyzerName, ruleName)
+	archiveRule, err := findArchiveRuleByTwoPartKey(ctx, conn, analyzerName, ruleName)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] AccessAnalyzer ArchiveRule (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] IAM Access Analyzer Archive Rule (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading AccessAnalyzer ArchiveRule (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading IAM Access Analyzer Archive Rule (%s): %s", d.Id(), err)
 	}
 
 	d.Set("analyzer_name", analyzerName)
-	d.Set("filter", flattenFilter(out.Filter))
-	d.Set("rule_name", out.RuleName)
+	d.Set("filter", flattenFilter(archiveRule.Filter))
+	d.Set("rule_name", archiveRule.RuleName)
 
-	return nil
+	return diags
 }
 
 func resourceArchiveRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AccessAnalyzerConn
+	var diags diag.Diagnostics
 
-	analyzerName, ruleName, err := DecodeRuleID(d.Id())
+	conn := meta.(*conns.AWSClient).AccessAnalyzerClient(ctx)
+
+	analyzerName, ruleName, err := archiveRuleParseResourceID(d.Id())
+
 	if err != nil {
-		return diag.Errorf("unable to decode AccessAnalyzer ArchiveRule ID (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	in := &accessanalyzer.UpdateArchiveRuleInput{
+	input := &accessanalyzer.UpdateArchiveRuleInput{
 		AnalyzerName: aws.String(analyzerName),
-		ClientToken:  aws.String(resource.UniqueId()),
+		ClientToken:  aws.String(sdkid.UniqueId()),
 		RuleName:     aws.String(ruleName),
 	}
 
 	if d.HasChanges("filter") {
-		in.Filter = expandFilter(d.Get("filter").(*schema.Set))
-
+		input.Filter = expandFilter(d.Get("filter").(*schema.Set))
 	}
 
-	log.Printf("[DEBUG] Updating AccessAnalyzer ArchiveRule (%s): %#v", d.Id(), in)
-	_, err = conn.UpdateArchiveRuleWithContext(ctx, in)
+	_, err = conn.UpdateArchiveRule(ctx, input)
+
 	if err != nil {
-		return diag.Errorf("updating AccessAnalyzer ArchiveRule (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating AWS IAM Access Analyzer Archive Rule (%s): %s", d.Id(), err)
 	}
 
-	return resourceArchiveRuleRead(ctx, d, meta)
+	return append(diags, resourceArchiveRuleRead(ctx, d, meta)...)
 }
 
 func resourceArchiveRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AccessAnalyzerConn
+	var diags diag.Diagnostics
 
-	log.Printf("[INFO] Deleting AccessAnalyzer ArchiveRule %s", d.Id())
+	conn := meta.(*conns.AWSClient).AccessAnalyzerClient(ctx)
 
-	analyzerName, ruleName, err := DecodeRuleID(d.Id())
+	analyzerName, ruleName, err := archiveRuleParseResourceID(d.Id())
+
 	if err != nil {
-		return diag.Errorf("unable to decode AccessAnalyzer ArchiveRule ID (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	_, err = conn.DeleteArchiveRuleWithContext(ctx, &accessanalyzer.DeleteArchiveRuleInput{
+	log.Printf("[INFO] Deleting IAM Access Analyzer Archive Rule: %s", d.Id())
+	_, err = conn.DeleteArchiveRule(ctx, &accessanalyzer.DeleteArchiveRuleInput{
 		AnalyzerName: aws.String(analyzerName),
-		ClientToken:  aws.String(resource.UniqueId()),
+		ClientToken:  aws.String(sdkid.UniqueId()),
 		RuleName:     aws.String(ruleName),
 	})
 
-	if tfawserr.ErrCodeEquals(err, accessanalyzer.ErrCodeResourceNotFoundException) {
-		return nil
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting AccessAnalyzer ArchiveRule (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting IAM Access Analyzer Archive Rule (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
-func FindArchiveRule(ctx context.Context, conn *accessanalyzer.AccessAnalyzer, analyzerName, ruleName string) (*accessanalyzer.ArchiveRuleSummary, error) {
-	in := &accessanalyzer.GetArchiveRuleInput{
+func findArchiveRuleByTwoPartKey(ctx context.Context, conn *accessanalyzer.Client, analyzerName, ruleName string) (*types.ArchiveRuleSummary, error) {
+	input := &accessanalyzer.GetArchiveRuleInput{
 		AnalyzerName: aws.String(analyzerName),
 		RuleName:     aws.String(ruleName),
 	}
 
-	out, err := conn.GetArchiveRuleWithContext(ctx, in)
-	if tfawserr.ErrCodeEquals(err, accessanalyzer.ErrCodeResourceNotFoundException) {
-		return nil, &resource.NotFoundError{
+	output, err := conn.GetArchiveRule(ctx, input)
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
 			LastError:   err,
-			LastRequest: in,
+			LastRequest: input,
 		}
 	}
 
@@ -208,14 +225,14 @@ func FindArchiveRule(ctx context.Context, conn *accessanalyzer.AccessAnalyzer, a
 		return nil, err
 	}
 
-	if out == nil || out.ArchiveRule == nil {
-		return nil, tfresource.NewEmptyResultError(in)
+	if output == nil || output.ArchiveRule == nil {
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return out.ArchiveRule, nil
+	return output.ArchiveRule, nil
 }
 
-func flattenFilter(filter map[string]*accessanalyzer.Criterion) []interface{} {
+func flattenFilter(filter map[string]types.Criterion) []interface{} {
 	if filter == nil {
 		return nil
 	}
@@ -225,14 +242,14 @@ func flattenFilter(filter map[string]*accessanalyzer.Criterion) []interface{} {
 	for key, value := range filter {
 		val := make(map[string]interface{})
 		val["criteria"] = key
-		val["contains"] = aws.ToStringSlice(value.Contains)
-		val["eq"] = aws.ToStringSlice(value.Eq)
+		val["contains"] = value.Contains
+		val["eq"] = value.Eq
 
 		if value.Exists != nil {
 			val["exists"] = strconv.FormatBool(aws.ToBool(value.Exists))
 		}
 
-		val["neq"] = aws.ToStringSlice(value.Neq)
+		val["neq"] = value.Neq
 
 		l = append(l, val)
 	}
@@ -240,28 +257,28 @@ func flattenFilter(filter map[string]*accessanalyzer.Criterion) []interface{} {
 	return l
 }
 
-func expandFilter(l *schema.Set) map[string]*accessanalyzer.Criterion {
+func expandFilter(l *schema.Set) map[string]types.Criterion {
 	if len(l.List()) == 0 || l.List()[0] == nil {
 		return nil
 	}
 
-	a := make(map[string]*accessanalyzer.Criterion)
+	a := make(map[string]types.Criterion)
 
 	for _, value := range l.List() {
-		c := &accessanalyzer.Criterion{}
+		c := types.Criterion{}
 		if v, ok := value.(map[string]interface{})["contains"]; ok {
 			if len(v.([]interface{})) > 0 {
-				c.Contains = flex.ExpandStringList(v.([]interface{}))
+				c.Contains = flex.ExpandStringValueList(v.([]interface{}))
 			}
 		}
 		if v, ok := value.(map[string]interface{})["eq"]; ok {
 			if len(v.([]interface{})) > 0 {
-				c.Eq = flex.ExpandStringList(v.([]interface{}))
+				c.Eq = flex.ExpandStringValueList(v.([]interface{}))
 			}
 		}
 		if v, ok := value.(map[string]interface{})["neq"]; ok {
 			if len(v.([]interface{})) > 0 {
-				c.Neq = flex.ExpandStringList(v.([]interface{}))
+				c.Neq = flex.ExpandStringValueList(v.([]interface{}))
 			}
 		}
 		if v, ok := value.(map[string]interface{})["exists"]; ok {
@@ -276,15 +293,20 @@ func expandFilter(l *schema.Set) map[string]*accessanalyzer.Criterion {
 	return a
 }
 
-func EncodeRuleID(analyzerName, ruleName string) string {
-	return fmt.Sprintf("%s/%s", analyzerName, ruleName)
+const archiveRuleResourceIDSeparator = "/"
+
+func archiveRuleCreateResourceID(analyzerName, ruleName string) string {
+	parts := []string{analyzerName, ruleName}
+	id := strings.Join(parts, archiveRuleResourceIDSeparator)
+
+	return id
 }
 
-func DecodeRuleID(id string) (string, string, error) {
-	idParts := strings.Split(id, "/")
-	if len(idParts) != 2 || idParts[0] == "" || idParts[1] == "" {
-		return "", "", fmt.Errorf("expected ID to be the form analyzer_name/rule_name, given: %s", id)
+func archiveRuleParseResourceID(id string) (string, string, error) {
+	parts := strings.Split(id, archiveRuleResourceIDSeparator)
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected AnalyzerName%[2]sRuleName", id, archiveRuleResourceIDSeparator)
 	}
 
-	return idParts[0], idParts[1], nil
+	return parts[0], parts[1], nil
 }

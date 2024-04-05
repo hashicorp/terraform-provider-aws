@@ -1,22 +1,28 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package gamelift_test
 
 import (
+	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/gamelift"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfgamelift "github.com/hashicorp/terraform-provider-aws/internal/service/gamelift"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccGameLiftBuild_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf gamelift.Build
 	resourceName := "aws_gamelift_build.test"
 
@@ -41,20 +47,20 @@ func TestAccGameLiftBuild_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBuildDestroy,
+		CheckDestroy:             testAccCheckBuildDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBuildConfig_basic(rName, bucketName, key, roleArn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBuildExists(resourceName, &conf),
+					testAccCheckBuildExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexp.MustCompile(`build/build-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexache.MustCompile(`build/build-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "operating_system", "WINDOWS_2012"),
 					resource.TestCheckResourceAttr(resourceName, "storage_location.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_location.0.bucket", bucketName),
@@ -72,9 +78,9 @@ func TestAccGameLiftBuild_basic(t *testing.T) {
 			{
 				Config: testAccBuildConfig_basic(rNameUpdated, bucketName, key, roleArn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBuildExists(resourceName, &conf),
+					testAccCheckBuildExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexp.MustCompile(`build/build-.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "gamelift", regexache.MustCompile(`build/build-.+`)),
 					resource.TestCheckResourceAttr(resourceName, "operating_system", "WINDOWS_2012"),
 					resource.TestCheckResourceAttr(resourceName, "storage_location.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "storage_location.0.bucket", bucketName),
@@ -88,6 +94,7 @@ func TestAccGameLiftBuild_basic(t *testing.T) {
 }
 
 func TestAccGameLiftBuild_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf gamelift.Build
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -111,18 +118,18 @@ func TestAccGameLiftBuild_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBuildDestroy,
+		CheckDestroy:             testAccCheckBuildDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBuildConfig_basicTags1(rName, bucketName, key, roleArn, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBuildExists(resourceName, &conf),
+					testAccCheckBuildExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -136,7 +143,7 @@ func TestAccGameLiftBuild_tags(t *testing.T) {
 			{
 				Config: testAccBuildConfig_basicTags2(rName, bucketName, key, roleArn, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBuildExists(resourceName, &conf),
+					testAccCheckBuildExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -145,7 +152,7 @@ func TestAccGameLiftBuild_tags(t *testing.T) {
 			{
 				Config: testAccBuildConfig_basicTags1(rName, bucketName, key, roleArn, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBuildExists(resourceName, &conf),
+					testAccCheckBuildExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -155,6 +162,7 @@ func TestAccGameLiftBuild_tags(t *testing.T) {
 }
 
 func TestAccGameLiftBuild_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf gamelift.Build
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -178,20 +186,20 @@ func TestAccGameLiftBuild_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			acctest.PreCheckPartitionHasService(gamelift.EndpointsID, t)
-			testAccPreCheck(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, gamelift.EndpointsID)
+			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, gamelift.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GameLiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBuildDestroy,
+		CheckDestroy:             testAccCheckBuildDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccBuildConfig_basic(rName, bucketName, key, roleArn),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBuildExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, tfgamelift.ResourceBuild(), resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfgamelift.ResourceBuild(), resourceName),
+					testAccCheckBuildExists(ctx, resourceName, &conf),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfgamelift.ResourceBuild(), resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfgamelift.ResourceBuild(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -199,7 +207,7 @@ func TestAccGameLiftBuild_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckBuildExists(n string, res *gamelift.Build) resource.TestCheckFunc {
+func testAccCheckBuildExists(ctx context.Context, n string, res *gamelift.Build) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -210,9 +218,9 @@ func testAccCheckBuildExists(n string, res *gamelift.Build) resource.TestCheckFu
 			return fmt.Errorf("No GameLift Build ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn(ctx)
 
-		build, err := tfgamelift.FindBuildByID(conn, rs.Primary.ID)
+		build, err := tfgamelift.FindBuildByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
@@ -227,34 +235,36 @@ func testAccCheckBuildExists(n string, res *gamelift.Build) resource.TestCheckFu
 	}
 }
 
-func testAccCheckBuildDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn
+func testAccCheckBuildDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_gamelift_build" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_gamelift_build" {
+				continue
+			}
+
+			build, err := tfgamelift.FindBuildByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if build != nil {
+				return fmt.Errorf("GameLift Build (%s) still exists", rs.Primary.ID)
+			}
 		}
 
-		build, err := tfgamelift.FindBuildByID(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if build != nil {
-			return fmt.Errorf("GameLift Build (%s) still exists", rs.Primary.ID)
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccPreCheck(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn
+func testAccPreCheck(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).GameLiftConn(ctx)
 
 	input := &gamelift.ListBuildsInput{}
 
-	_, err := conn.ListBuilds(input)
+	_, err := conn.ListBuildsWithContext(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

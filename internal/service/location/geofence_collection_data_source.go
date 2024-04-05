@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package location
 
 import (
@@ -14,9 +17,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKDataSource("aws_location_geofence_collection")
 func DataSourceGeofenceCollection() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceGeofenceCollectionRead,
+		ReadWithoutTimeout: dataSourceGeofenceCollectionRead,
 
 		Schema: map[string]*schema.Schema{
 			"collection_arn": {
@@ -55,13 +59,15 @@ const (
 )
 
 func dataSourceGeofenceCollectionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LocationConn
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).LocationConn(ctx)
 
 	name := d.Get("collection_name").(string)
 
 	out, err := findGeofenceCollectionByName(ctx, conn, name)
 	if err != nil {
-		return create.DiagError(names.Location, create.ErrActionReading, DSNameGeofenceCollection, name, err)
+		return create.AppendDiagError(diags, names.Location, create.ErrActionReading, DSNameGeofenceCollection, name, err)
 	}
 
 	d.SetId(aws.StringValue(out.CollectionName))
@@ -73,9 +79,9 @@ func dataSourceGeofenceCollectionRead(ctx context.Context, d *schema.ResourceDat
 
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	if err := d.Set("tags", KeyValueTags(out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return create.DiagError(names.Location, create.ErrActionSetting, DSNameGeofenceCollection, d.Id(), err)
+	if err := d.Set("tags", KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return create.AppendDiagError(diags, names.Location, create.ErrActionSetting, DSNameGeofenceCollection, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

@@ -1,35 +1,41 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package apigatewayv2_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/apigatewayv2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAPIGatewayV2Integration_basicWebSocket(t *testing.T) {
+	ctx := acctest.Context(t)
 	var apiId string
 	var v apigatewayv2.GetIntegrationOutput
 	resourceName := "aws_apigatewayv2_integration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIntegrationDestroy,
+		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntegrationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(resourceName, &apiId, &v),
+					testAccCheckIntegrationExists(ctx, resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "connection_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", ""),
@@ -61,21 +67,22 @@ func TestAccAPIGatewayV2Integration_basicWebSocket(t *testing.T) {
 }
 
 func TestAccAPIGatewayV2Integration_basicHTTP(t *testing.T) {
+	ctx := acctest.Context(t)
 	var apiId string
 	var v apigatewayv2.GetIntegrationOutput
 	resourceName := "aws_apigatewayv2_integration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIntegrationDestroy,
+		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntegrationConfig_httpProxy(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(resourceName, &apiId, &v),
+					testAccCheckIntegrationExists(ctx, resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "connection_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", ""),
@@ -107,22 +114,23 @@ func TestAccAPIGatewayV2Integration_basicHTTP(t *testing.T) {
 }
 
 func TestAccAPIGatewayV2Integration_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var apiId string
 	var v apigatewayv2.GetIntegrationOutput
 	resourceName := "aws_apigatewayv2_integration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIntegrationDestroy,
+		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntegrationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(resourceName, &apiId, &v),
-					testAccCheckIntegrationDisappears(&apiId, &v),
+					testAccCheckIntegrationExists(ctx, resourceName, &apiId, &v),
+					testAccCheckIntegrationDisappears(ctx, &apiId, &v),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -131,21 +139,22 @@ func TestAccAPIGatewayV2Integration_disappears(t *testing.T) {
 }
 
 func TestAccAPIGatewayV2Integration_dataMappingHTTP(t *testing.T) {
+	ctx := acctest.Context(t)
 	var apiId string
 	var v apigatewayv2.GetIntegrationOutput
 	resourceName := "aws_apigatewayv2_integration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIntegrationDestroy,
+		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntegrationConfig_dataMappingHTTP(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(resourceName, &apiId, &v),
+					testAccCheckIntegrationExists(ctx, resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "connection_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", ""),
@@ -182,7 +191,7 @@ func TestAccAPIGatewayV2Integration_dataMappingHTTP(t *testing.T) {
 			{
 				Config: testAccIntegrationConfig_dataMappingHTTPUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(resourceName, &apiId, &v),
+					testAccCheckIntegrationExists(ctx, resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "connection_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", ""),
@@ -222,21 +231,22 @@ func TestAccAPIGatewayV2Integration_dataMappingHTTP(t *testing.T) {
 }
 
 func TestAccAPIGatewayV2Integration_integrationTypeHTTP(t *testing.T) {
+	ctx := acctest.Context(t)
 	var apiId string
 	var v apigatewayv2.GetIntegrationOutput
 	resourceName := "aws_apigatewayv2_integration.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIntegrationDestroy,
+		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntegrationConfig_typeHTTP(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(resourceName, &apiId, &v),
+					testAccCheckIntegrationExists(ctx, resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "connection_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", "CONVERT_TO_TEXT"),
@@ -262,7 +272,7 @@ func TestAccAPIGatewayV2Integration_integrationTypeHTTP(t *testing.T) {
 			{
 				Config: testAccIntegrationConfig_typeHTTPUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(resourceName, &apiId, &v),
+					testAccCheckIntegrationExists(ctx, resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "connection_id", ""),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", "CONVERT_TO_BINARY"),
@@ -298,6 +308,7 @@ func TestAccAPIGatewayV2Integration_integrationTypeHTTP(t *testing.T) {
 }
 
 func TestAccAPIGatewayV2Integration_lambdaWebSocket(t *testing.T) {
+	ctx := acctest.Context(t)
 	var apiId string
 	var v apigatewayv2.GetIntegrationOutput
 	resourceName := "aws_apigatewayv2_integration.test"
@@ -305,15 +316,15 @@ func TestAccAPIGatewayV2Integration_lambdaWebSocket(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIntegrationDestroy,
+		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntegrationConfig_lambdaWebSocket(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(resourceName, &apiId, &v),
+					testAccCheckIntegrationExists(ctx, resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", "CONVERT_TO_TEXT"),
 					resource.TestCheckResourceAttr(resourceName, "credentials_arn", ""),
@@ -344,6 +355,7 @@ func TestAccAPIGatewayV2Integration_lambdaWebSocket(t *testing.T) {
 }
 
 func TestAccAPIGatewayV2Integration_lambdaHTTP(t *testing.T) {
+	ctx := acctest.Context(t)
 	var apiId string
 	var v apigatewayv2.GetIntegrationOutput
 	resourceName := "aws_apigatewayv2_integration.test"
@@ -351,15 +363,15 @@ func TestAccAPIGatewayV2Integration_lambdaHTTP(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIntegrationDestroy,
+		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntegrationConfig_lambdaHTTP(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(resourceName, &apiId, &v),
+					testAccCheckIntegrationExists(ctx, resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", ""),
 					resource.TestCheckResourceAttr(resourceName, "credentials_arn", ""),
@@ -390,6 +402,7 @@ func TestAccAPIGatewayV2Integration_lambdaHTTP(t *testing.T) {
 }
 
 func TestAccAPIGatewayV2Integration_vpcLinkWebSocket(t *testing.T) {
+	ctx := acctest.Context(t)
 	var apiId string
 	var v apigatewayv2.GetIntegrationOutput
 	resourceName := "aws_apigatewayv2_integration.test"
@@ -397,15 +410,15 @@ func TestAccAPIGatewayV2Integration_vpcLinkWebSocket(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIntegrationDestroy,
+		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntegrationConfig_vpcLinkWebSocket(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(resourceName, &apiId, &v),
+					testAccCheckIntegrationExists(ctx, resourceName, &apiId, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "connection_id", vpcLinkResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "VPC_LINK"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", "CONVERT_TO_TEXT"),
@@ -437,6 +450,7 @@ func TestAccAPIGatewayV2Integration_vpcLinkWebSocket(t *testing.T) {
 }
 
 func TestAccAPIGatewayV2Integration_vpcLinkHTTP(t *testing.T) {
+	ctx := acctest.Context(t)
 	var apiId string
 	var v apigatewayv2.GetIntegrationOutput
 	resourceName := "aws_apigatewayv2_integration.test"
@@ -445,15 +459,15 @@ func TestAccAPIGatewayV2Integration_vpcLinkHTTP(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIntegrationDestroy,
+		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntegrationConfig_vpcLinkHTTP(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(resourceName, &apiId, &v),
+					testAccCheckIntegrationExists(ctx, resourceName, &apiId, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "connection_id", vpcLinkResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "VPC_LINK"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", ""),
@@ -484,7 +498,7 @@ func TestAccAPIGatewayV2Integration_vpcLinkHTTP(t *testing.T) {
 			{
 				Config: testAccIntegrationConfig_vpcLinkHTTPUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(resourceName, &apiId, &v),
+					testAccCheckIntegrationExists(ctx, resourceName, &apiId, &v),
 					resource.TestCheckResourceAttrPair(resourceName, "connection_id", vpcLinkResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "VPC_LINK"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", ""),
@@ -517,6 +531,7 @@ func TestAccAPIGatewayV2Integration_vpcLinkHTTP(t *testing.T) {
 }
 
 func TestAccAPIGatewayV2Integration_serviceIntegration(t *testing.T) {
+	ctx := acctest.Context(t)
 	var apiId string
 	var v apigatewayv2.GetIntegrationOutput
 	resourceName := "aws_apigatewayv2_integration.test"
@@ -526,15 +541,15 @@ func TestAccAPIGatewayV2Integration_serviceIntegration(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigatewayv2.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIntegrationDestroy,
+		CheckDestroy:             testAccCheckIntegrationDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIntegrationConfig_sqs(rName, 0),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(resourceName, &apiId, &v),
+					testAccCheckIntegrationExists(ctx, resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "credentials_arn", iamRoleResourceName, "arn"),
@@ -560,7 +575,7 @@ func TestAccAPIGatewayV2Integration_serviceIntegration(t *testing.T) {
 			{
 				Config: testAccIntegrationConfig_sqs(rName, 1),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIntegrationExists(resourceName, &apiId, &v),
+					testAccCheckIntegrationExists(ctx, resourceName, &apiId, &v),
 					resource.TestCheckResourceAttr(resourceName, "connection_type", "INTERNET"),
 					resource.TestCheckResourceAttr(resourceName, "content_handling_strategy", ""),
 					resource.TestCheckResourceAttrPair(resourceName, "credentials_arn", iamRoleResourceName, "arn"),
@@ -593,36 +608,38 @@ func TestAccAPIGatewayV2Integration_serviceIntegration(t *testing.T) {
 	})
 }
 
-func testAccCheckIntegrationDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
+func testAccCheckIntegrationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_apigatewayv2_integration" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_apigatewayv2_integration" {
+				continue
+			}
+
+			_, err := conn.GetIntegrationWithContext(ctx, &apigatewayv2.GetIntegrationInput{
+				ApiId:         aws.String(rs.Primary.Attributes["api_id"]),
+				IntegrationId: aws.String(rs.Primary.ID),
+			})
+			if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
+				continue
+			}
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("API Gateway v2 integration %s still exists", rs.Primary.ID)
 		}
 
-		_, err := conn.GetIntegration(&apigatewayv2.GetIntegrationInput{
-			ApiId:         aws.String(rs.Primary.Attributes["api_id"]),
-			IntegrationId: aws.String(rs.Primary.ID),
-		})
-		if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
-			continue
-		}
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("API Gateway v2 integration %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckIntegrationDisappears(apiId *string, v *apigatewayv2.GetIntegrationOutput) resource.TestCheckFunc {
+func testAccCheckIntegrationDisappears(ctx context.Context, apiId *string, v *apigatewayv2.GetIntegrationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
-		_, err := conn.DeleteIntegration(&apigatewayv2.DeleteIntegrationInput{
+		_, err := conn.DeleteIntegrationWithContext(ctx, &apigatewayv2.DeleteIntegrationInput{
 			ApiId:         apiId,
 			IntegrationId: v.IntegrationId,
 		})
@@ -631,7 +648,7 @@ func testAccCheckIntegrationDisappears(apiId *string, v *apigatewayv2.GetIntegra
 	}
 }
 
-func testAccCheckIntegrationExists(n string, vApiId *string, v *apigatewayv2.GetIntegrationOutput) resource.TestCheckFunc {
+func testAccCheckIntegrationExists(ctx context.Context, n string, vApiId *string, v *apigatewayv2.GetIntegrationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -642,10 +659,10 @@ func testAccCheckIntegrationExists(n string, vApiId *string, v *apigatewayv2.Get
 			return fmt.Errorf("No API Gateway v2 integration ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn(ctx)
 
 		apiId := aws.String(rs.Primary.Attributes["api_id"])
-		resp, err := conn.GetIntegration(&apigatewayv2.GetIntegrationInput{
+		resp, err := conn.GetIntegrationWithContext(ctx, &apigatewayv2.GetIntegrationInput{
 			ApiId:         apiId,
 			IntegrationId: aws.String(rs.Primary.ID),
 		})
@@ -754,7 +771,7 @@ resource "aws_lb" "test" {
 
   internal           = true
   load_balancer_type = "network"
-  subnets            = aws_subnet.test.*.id
+  subnets            = aws_subnet.test[*].id
 
   tags = {
     Name = %[1]q
@@ -791,16 +808,16 @@ resource "aws_lb_listener" "test" {
 }
 
 func testAccIntegrationConfig_basic(rName string) string {
-	return testAccIntegrationConfig_apiWebSocket(rName) + `
+	return acctest.ConfigCompose(testAccIntegrationConfig_apiWebSocket(rName), `
 resource "aws_apigatewayv2_integration" "test" {
   api_id           = aws_apigatewayv2_api.test.id
   integration_type = "MOCK"
 }
-`
+`)
 }
 
 func testAccIntegrationConfig_dataMappingHTTP(rName string) string {
-	return testAccIntegrationConfig_apiHTTP(rName) + `
+	return acctest.ConfigCompose(testAccIntegrationConfig_apiHTTP(rName), `
 resource "aws_apigatewayv2_integration" "test" {
   api_id = aws_apigatewayv2_api.test.id
 
@@ -830,11 +847,11 @@ resource "aws_apigatewayv2_integration" "test" {
     }
   }
 }
-`
+`)
 }
 
 func testAccIntegrationConfig_dataMappingHTTPUpdated(rName string) string {
-	return testAccIntegrationConfig_apiHTTP(rName) + `
+	return acctest.ConfigCompose(testAccIntegrationConfig_apiHTTP(rName), `
 resource "aws_apigatewayv2_integration" "test" {
   api_id = aws_apigatewayv2_api.test.id
 
@@ -856,11 +873,11 @@ resource "aws_apigatewayv2_integration" "test" {
     }
   }
 }
-`
+`)
 }
 
 func testAccIntegrationConfig_typeHTTP(rName string) string {
-	return testAccIntegrationConfig_apiWebSocket(rName) + `
+	return acctest.ConfigCompose(testAccIntegrationConfig_apiWebSocket(rName), `
 resource "aws_apigatewayv2_integration" "test" {
   api_id           = aws_apigatewayv2_api.test.id
   integration_type = "HTTP"
@@ -882,11 +899,11 @@ resource "aws_apigatewayv2_integration" "test" {
     "application/json" = ""
   }
 }
-`
+`)
 }
 
 func testAccIntegrationConfig_typeHTTPUpdated(rName string) string {
-	return testAccIntegrationConfig_apiWebSocket(rName) + `
+	return acctest.ConfigCompose(testAccIntegrationConfig_apiWebSocket(rName), `
 resource "aws_apigatewayv2_integration" "test" {
   api_id           = aws_apigatewayv2_api.test.id
   integration_type = "HTTP"
@@ -910,7 +927,7 @@ resource "aws_apigatewayv2_integration" "test" {
     "application/xml"  = "#set($percent=$number/100)"
   }
 }
-`
+`)
 }
 
 func testAccIntegrationConfig_lambdaWebSocket(rName string) string {

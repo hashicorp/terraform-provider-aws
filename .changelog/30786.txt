@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_sagemaker_app: Fix crash when app is not found
+```

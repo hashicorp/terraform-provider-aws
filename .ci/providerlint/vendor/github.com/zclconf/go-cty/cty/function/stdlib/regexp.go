@@ -10,6 +10,7 @@ import (
 )
 
 var RegexFunc = function.New(&function.Spec{
+	Description: `Applies the given regular expression pattern to the given string and returns information about a single match, or raises an error if there is no match.`,
 	Params: []function.Parameter{
 		{
 			Name: "pattern",
@@ -32,6 +33,7 @@ var RegexFunc = function.New(&function.Spec{
 		}
 		return retTy, err
 	},
+	RefineResult: refineNonNull,
 	Impl: func(args []cty.Value, retType cty.Type) (cty.Value, error) {
 		if retType == cty.DynamicPseudoType {
 			return cty.DynamicVal, nil
@@ -54,6 +56,7 @@ var RegexFunc = function.New(&function.Spec{
 })
 
 var RegexAllFunc = function.New(&function.Spec{
+	Description: `Applies the given regular expression pattern to the given string and returns a list of information about all non-overlapping matches, or an empty list if there are no matches.`,
 	Params: []function.Parameter{
 		{
 			Name: "pattern",
@@ -77,6 +80,7 @@ var RegexAllFunc = function.New(&function.Spec{
 		}
 		return cty.List(retTy), err
 	},
+	RefineResult: refineNonNull,
 	Impl: func(args []cty.Value, retType cty.Type) (cty.Value, error) {
 		ety := retType.ElementType()
 		if ety == cty.DynamicPseudoType {

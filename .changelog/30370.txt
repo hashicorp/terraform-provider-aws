@@ -1,0 +1,7 @@
+```release-note:bug
+resource/aws_glue_crawler: Fix InvalidInputException error string matching
+```
+
+```release-note:bug
+resource/aws_glue_trigger: Fix InvalidInputException error string matching
+```

@@ -124,7 +124,7 @@ resource "aws_mwaa_environment" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `airflow_configuration_options` - (Optional) The `airflow_configuration_options` parameter specifies airflow override options. Check the [Official documentation](https://docs.aws.amazon.com/mwaa/latest/userguide/configuring-env-variables.html#configuring-env-variables-reference) for all possible configuration options.
 * `airflow_version` - (Optional) Airflow version of your environment, will be set by default to the latest version that MWAA supports.
@@ -143,6 +143,8 @@ The following arguments are supported:
 * `requirements_s3_path` - (Optional) The relative path to the requirements.txt file on your Amazon S3 storage bucket. For example, requirements.txt. If a relative path is provided in the request, then requirements_s3_object_version is required. For more information, see [Importing DAGs on Amazon MWAA](https://docs.aws.amazon.com/mwaa/latest/userguide/configuring-dag-import.html).
 * `schedulers` - (Optional) The number of schedulers that you want to run in your environment. v2.0.2 and above accepts `2` - `5`, default `2`. v1.10.12 accepts `1`.
 * `source_bucket_arn` - (Required) The Amazon Resource Name (ARN) of your Amazon S3 storage bucket. For example, arn:aws:s3:::airflow-mybucketname.
+* `startup_script_s3_object_version` - (Optional) The version of the startup shell script you want to use. You must specify the version ID that Amazon S3 assigns to the file every time you update the script.
+* `startup_script_s3_path` - (Optional) The relative path to the script hosted in your bucket. The script runs as your environment starts before starting the Apache Airflow process. Use this script to install dependencies, modify configuration options, and set environment variables. See [Using a startup script](https://docs.aws.amazon.com/mwaa/latest/userguide/using-startup-script.html). Supported for environment versions 2.x and later.
 * `webserver_access_mode` - (Optional) Specifies whether the webserver should be accessible over the internet or via your specified VPC. Possible options: `PRIVATE_ONLY` (default) and `PUBLIC_ONLY`.
 * `weekly_maintenance_window_start` - (Optional) Specifies the start date for the weekly maintenance window.
 * `tags` - (Optional) A map of resource tags to associate with the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -171,9 +173,9 @@ The `network_configuration` block supports the following arguments. More informa
 * `security_group_ids` - (Required) Security groups IDs for the environment. At least one of the security group needs to allow MWAA resources to talk to each other, otherwise MWAA cannot be provisioned.
 * `subnet_ids` - (Required)  The private subnet IDs in which the environment should be created. MWAA requires two subnets.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the MWAA Environment
 * `created_at` - The Created At date of the MWAA Environment
@@ -183,11 +185,27 @@ In addition to all arguments above, the following attributes are exported:
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `webserver_url` - The webserver URL of the MWAA Environment
 
+## Timeouts
+
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
+
+- `create` - (Default `120m`)
+- `update` - (Default `90m`)
+- `delete` - (Default `90m`)
 
 ## Import
 
-MWAA Environment can be imported using `Name` e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import MWAA Environment using `Name`. For example:
 
+```terraform
+import {
+  to = aws_mwaa_environment.example
+  id = "MyAirflowEnvironment"
+}
 ```
-$ terraform import aws_mwaa_environment.example MyAirflowEnvironment
+
+Using `terraform import`, import MWAA Environment using `Name`. For example:
+
+```console
+% terraform import aws_mwaa_environment.example MyAirflowEnvironment
 ```

@@ -17,7 +17,7 @@ resource "aws_launch_template" "foo" {
   name = "foo"
 
   block_device_mappings {
-    device_name = "/dev/sda1"
+    device_name = "/dev/sdf"
 
     ebs {
       volume_size = 20
@@ -109,7 +109,7 @@ resource "aws_launch_template" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `block_device_mappings` - (Optional) Specify volumes to attach to the instance besides the volumes specified by the AMI.
   See [Block Devices](#block-devices) below for details.
@@ -168,27 +168,28 @@ To find out more information for an existing AMI to override the configuration, 
 
 Each `block_device_mappings` supports the following:
 
-* `device_name` - The name of the device to mount.
-* `ebs` - Configure EBS volume properties.
-* `no_device` - Suppresses the specified device included in the AMI's block device mapping.
-* `virtual_name` - The [Instance Store Device
+* `device_name` - (Required) The name of the device to mount.
+* `ebs` - (Optional) Configure EBS volume properties.
+* `no_device` - (Optional) Suppresses the specified device included in the AMI's block device mapping.
+* `virtual_name` - (Optional) The [Instance Store Device
   Name](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/InstanceStorage.html#InstanceStoreDeviceNames)
   (e.g., `"ephemeral0"`).
 
 The `ebs` block supports the following:
 
-* `delete_on_termination` - Whether the volume should be destroyed on instance termination. Defaults to `false` if not set. See [Preserving Amazon EBS Volumes on Instance Termination](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/terminating-instances.html#preserving-volumes-on-termination) for more information.
-* `encrypted` - Enables [EBS encryption](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html)
-  on the volume (Default: `false`). Cannot be used with `snapshot_id`.
-* `iops` - The amount of provisioned
-  [IOPS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html).
-  This must be set with a `volume_type` of `"io1/io2"`.
-* `kms_key_id` - The ARN of the AWS Key Management Service (AWS KMS) customer master key (CMK) to use when creating the encrypted volume.
- `encrypted` must be set to `true` when this is set.
-* `snapshot_id` - The Snapshot ID to mount.
-* `throughput` - The throughput to provision for a `gp3` volume in MiB/s (specified as an integer, e.g., 500), with a maximum of 1,000 MiB/s.
-* `volume_size` - The size of the volume in gigabytes.
-* `volume_type` - The volume type. Can be `standard`, `gp2`, `gp3`, `io1`, `io2`, `sc1` or `st1` (Default: `gp2`).
+* `delete_on_termination` - (Optional) Whether the volume should be destroyed on instance termination.
+  See [Preserving Amazon EBS Volumes on Instance Termination](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/terminating-instances.html#preserving-volumes-on-termination) for more information.
+* `encrypted` - (Optional) Enables [EBS encryption](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html) on the volume.
+  Cannot be used with `snapshot_id`.
+* `iops` - (Optional) The amount of provisioned [IOPS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html).
+  This must be set with a `volume_type` of `"io1/io2/gp3"`.
+* `kms_key_id` - (Optional) The ARN of the AWS Key Management Service (AWS KMS) customer master key (CMK) to use when creating the encrypted volume.
+  `encrypted` must be set to `true` when this is set.
+* `snapshot_id` - (Optional) The Snapshot ID to mount.
+* `throughput` - (Optional) The throughput to provision for a `gp3` volume in MiB/s (specified as an integer, e.g., 500), with a maximum of 1,000 MiB/s.
+* `volume_size` - (Optional) The size of the volume in gigabytes.
+* `volume_type` - (Optional) The volume type.
+  Can be one of `standard`, `gp2`, `gp3`, `io1`, `io2`, `sc1` or `st1`.
 
 ### Capacity Reservation Specification
 
@@ -206,9 +207,11 @@ The `capacity_reservation_target` block supports the following:
 
 The `cpu_options` block supports the following:
 
+* `amd_sev_snp` - Indicates whether to enable the instance for AMD SEV-SNP. AMD SEV-SNP is supported with M6a, R6a, and C6a instance types only. Valid values are `enabled` and `disabled`.
 * `core_count` - The number of CPU cores for the instance.
-* `threads_per_core` - The number of threads per CPU core. To disable Intel Hyper-Threading Technology for the instance, specify a value of 1.
-Otherwise, specify the default value of 2.
+* `threads_per_core` - The number of threads per CPU core.
+  To disable Intel Hyper-Threading Technology for the instance, specify a value of 1.
+  Otherwise, specify the default value of 2.
 
 Both number of CPU cores and threads per core must be specified. Valid number of CPU cores and threads per core for the instance type can be found in the [CPU Options Documentation](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/instance-optimize-cpu.html?shortFooter=true#cpu-options-supported-instances-values)
 
@@ -218,7 +221,10 @@ Credit specification can be applied/modified to the EC2 Instance at any time.
 
 The `credit_specification` block supports the following:
 
-* `cpu_credits` - The credit option for CPU usage. Can be `"standard"` or `"unlimited"`. T3 instances are launched as unlimited by default. T2 instances are launched as standard by default.
+* `cpu_credits` - The credit option for CPU usage.
+  Can be `standard` or `unlimited`.
+  T3 instances are launched as `unlimited` by default.
+  T2 instances are launched as `standard` by default.
 
 ### Elastic GPU
 
@@ -257,14 +263,14 @@ to attach.
 
 The `iam_instance_profile` block supports the following:
 
-* `arn` - The Amazon Resource Name (ARN) of the instance profile.
+* `arn` - The Amazon Resource Name (ARN) of the instance profile. Conflicts with `name`.
 * `name` - The name of the instance profile.
 
 ### Instance Requirements
 
 This configuration block supports the following:
 
-~> **NOTE**: Both `memory_mib.min` and `vcpu_count.min` must be specified.
+~> **NOTE:** Both `memory_mib.min` and `vcpu_count.min` must be specified.
 
 * `accelerator_count` - (Optional) Block describing the minimum and maximum number of accelerators (GPUs, FPGAs, or AWS Inferentia chips). Default is no minimum or maximum.
     * `min` - (Optional) Minimum.
@@ -304,6 +310,10 @@ This configuration block supports the following:
       * inference
     ```
 
+* `allowed_instance_types` - (Optional) List of instance types to apply your specified attributes against. All other instance types are ignored, even if they match your specified attributes. You can use strings with one or more wild cards, represented by an asterisk (\*), to allow an instance type, size, or generation. The following are examples: `m5.8xlarge`, `c5*.*`, `m5a.*`, `r*`, `*3*`. For example, if you specify `c5*`, you are allowing the entire C5 instance family, which includes all C5a and C5n instance types. If you specify `m5a.*`, you are allowing all the M5a instance types, but not the M5n instance types. Maximum of 400 entries in the list; each entry is limited to 30 characters. Default is all instance types.
+
+    ~> **NOTE:** If you specify `allowed_instance_types`, you can't specify `excluded_instance_types`.
+
 * `bare_metal` - (Optional) Indicate whether bare metal instace types should be `included`, `excluded`, or `required`. Default is `excluded`.
 * `baseline_ebs_bandwidth_mbps` - (Optional) Block describing the minimum and maximum baseline EBS bandwidth, in Mbps. Default is no minimum or maximum.
     * `min` - (Optional) Minimum.
@@ -311,7 +321,7 @@ This configuration block supports the following:
 * `burstable_performance` - (Optional) Indicate whether burstable performance instance types should be `included`, `excluded`, or `required`. Default is `excluded`.
 * `cpu_manufacturers` (Optional) List of CPU manufacturer names. Default is any manufacturer.
 
-    ~> **NOTE**: Don't confuse the CPU hardware manufacturer with the CPU hardware architecture. Instances will be launched with a compatible CPU architecture based on the Amazon Machine Image (AMI) that you specify in your launch template.
+    ~> **NOTE:** Don't confuse the CPU hardware manufacturer with the CPU hardware architecture. Instances will be launched with a compatible CPU architecture based on the Amazon Machine Image (AMI) that you specify in your launch template.
 
     ```
     Valid names:
@@ -320,7 +330,10 @@ This configuration block supports the following:
       * intel
     ```
 
-* `excluded_instance_types` - (Optional) List of instance types to exclude. You can use strings with one or more wild cards, represented by an asterisk (\*). The following are examples: `c5*`, `m5a.*`, `r*`, `*3*`. For example, if you specify `c5*`, you are excluding the entire C5 instance family, which includes all C5a and C5n instance types. If you specify `m5a.*`, you are excluding all the M5a instance types, but not the M5n instance types. Maximum of 400 entries in the list; each entry is limited to 30 characters. Default is no excluded instance types.
+* `excluded_instance_types` - (Optional) List of instance types to exclude. You can use strings with one or more wild cards, represented by an asterisk (\*), to exclude an instance type, size, or generation. The following are examples: `m5.8xlarge`, `c5*.*`, `m5a.*`, `r*`, `*3*`. For example, if you specify `c5*`, you are excluding the entire C5 instance family, which includes all C5a and C5n instance types. If you specify `m5a.*`, you are excluding all the M5a instance types, but not the M5n instance types. Maximum of 400 entries in the list; each entry is limited to 30 characters. Default is no excluded instance types.
+
+    ~> **NOTE:** If you specify `excluded_instance_types`, you can't specify `allowed_instance_types`.
+
 * `instance_generations` - (Optional) List of instance generation names. Default is any generation.
 
     ```
@@ -344,12 +357,15 @@ This configuration block supports the following:
 * `memory_mib` - (Required) Block describing the minimum and maximum amount of memory (MiB). Default is no maximum.
     * `min` - (Required) Minimum.
     * `max` - (Optional) Maximum.
+* `network_bandwidth_gbps` - (Optional) Block describing the minimum and maximum amount of network bandwidth, in gigabits per second (Gbps). Default is no minimum or maximum.
+    * `min` - (Optional) Minimum.
+    * `max` - (Optional) Maximum.
 * `network_interface_count` - (Optional) Block describing the minimum and maximum number of network interfaces. Default is no minimum or maximum.
     * `min` - (Optional) Minimum.
     * `max` - (Optional) Maximum.
 * `on_demand_max_price_percentage_over_lowest_price` - (Optional) The price protection threshold for On-Demand Instances. This is the maximum you’ll pay for an On-Demand Instance, expressed as a percentage higher than the cheapest M, C, or R instance type with your specified attributes. When Amazon EC2 Auto Scaling selects instance types with your attributes, we will exclude instance types whose price is higher than your threshold. The parameter accepts an integer, which Amazon EC2 Auto Scaling interprets as a percentage. To turn off price protection, specify a high value, such as 999999. Default is 20.
 
-    If you set DesiredCapacityType to vcpu or memory-mib, the price protection threshold is applied based on the per vCPU or per memory price instead of the per instance price.  
+    If you set DesiredCapacityType to vcpu or memory-mib, the price protection threshold is applied based on the per vCPU or per memory price instead of the per instance price.
 * `require_hibernate_support` - (Optional) Indicate whether instance types must support On-Demand Instance Hibernation, either `true` or `false`. Default is `false`.
 * `spot_max_price_percentage_over_lowest_price` - (Optional) The price protection threshold for Spot Instances. This is the maximum you’ll pay for a Spot Instance, expressed as a percentage higher than the cheapest M, C, or R instance type with your specified attributes. When Amazon EC2 Auto Scaling selects instance types with your attributes, we will exclude instance types whose price is higher than your threshold. The parameter accepts an integer, which Amazon EC2 Auto Scaling interprets as a percentage. To turn off price protection, specify a high value, such as 999999. Default is 100.
 
@@ -402,8 +418,8 @@ The `metadata_options` block supports the following:
 * `http_endpoint` - (Optional) Whether the metadata service is available. Can be `"enabled"` or `"disabled"`. (Default: `"enabled"`).
 * `http_tokens` - (Optional) Whether or not the metadata service requires session tokens, also referred to as _Instance Metadata Service Version 2 (IMDSv2)_. Can be `"optional"` or `"required"`. (Default: `"optional"`).
 * `http_put_response_hop_limit` - (Optional) The desired HTTP PUT response hop limit for instance metadata requests. The larger the number, the further instance metadata requests can travel. Can be an integer from `1` to `64`. (Default: `1`).
-* `http_protocol_ipv6` - (Optional) Enables or disables the IPv6 endpoint for the instance metadata service. (Default: `disabled`).
-* `instance_metadata_tags` - (Optional) Enables or disables access to instance tags from the instance metadata service. (Default: `disabled`).
+* `http_protocol_ipv6` - (Optional) Enables or disables the IPv6 endpoint for the instance metadata service. Can be `"enabled"` or `"disabled"`.
+* `instance_metadata_tags` - (Optional) Enables or disables access to instance tags from the instance metadata service. Can be `"enabled"` or `"disabled"`.
 
 For more information, see the documentation on the [Instance Metadata Service](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-instance-metadata.html).
 
@@ -421,25 +437,28 @@ Check limitations for autoscaling group in [Creating an Auto Scaling Group Using
 
 Each `network_interfaces` block supports the following:
 
-* `associate_carrier_ip_address` - Associate a Carrier IP address with `eth0` for a new network interface. Use this option when you launch an instance in a Wavelength Zone and want to associate a Carrier IP address with the network interface. Boolean value.
-* `associate_public_ip_address` - Associate a public ip address with the network interface.  Boolean value.
-* `delete_on_termination` - Whether the network interface should be destroyed on instance termination. Defaults to `false` if not set.
-* `description` - Description of the network interface.
-* `device_index` - The integer index of the network interface attachment.
-* `interface_type` - The type of network interface. To create an Elastic Fabric Adapter (EFA), specify `efa`.
-* `ipv4_prefix_count` - The number of IPv4 prefixes to be automatically assigned to the network interface. Conflicts with `ipv4_prefixes`
-* `ipv4_prefixes` - One or more IPv4 prefixes to be assigned to the network interface. Conflicts with `ipv4_prefix_count`
-* `ipv6_addresses` - One or more specific IPv6 addresses from the IPv6 CIDR block range of your subnet. Conflicts with `ipv6_address_count`
-* `ipv6_address_count` - The number of IPv6 addresses to assign to a network interface. Conflicts with `ipv6_addresses`
-* `ipv6_prefix_count` - The number of IPv6 prefixes to be automatically assigned to the network interface. Conflicts with `ipv6_prefixes`
-* `ipv6_prefixes` - One or more IPv6 prefixes to be assigned to the network interface. Conflicts with `ipv6_prefix_count`
-* `network_interface_id` - The ID of the network interface to attach.
-* `network_card_index` - The index of the network card. Some instance types support multiple network cards. The primary network interface must be assigned to network card index 0. The default is network card index 0.
-* `private_ip_address` - The primary private IPv4 address.
-* `ipv4_address_count` - The number of secondary private IPv4 addresses to assign to a network interface. Conflicts with `ipv4_addresses`
-* `ipv4_addresses` - One or more private IPv4 addresses to associate. Conflicts with `ipv4_address_count`
-* `security_groups` - A list of security group IDs to associate.
-* `subnet_id` - The VPC Subnet ID to associate.
+* `associate_carrier_ip_address` - (Optional) Associate a Carrier IP address with `eth0` for a new network interface.
+  Use this option when you launch an instance in a Wavelength Zone and want to associate a Carrier IP address with the network interface.
+  Boolean value, can be left unset.
+* `associate_public_ip_address` - (Optional) Associate a public ip address with the network interface.
+  Boolean value, can be left unset.
+* `delete_on_termination` - (Optional) Whether the network interface should be destroyed on instance termination.
+* `description` - (Optional) Description of the network interface.
+* `device_index` - (Optional) The integer index of the network interface attachment.
+* `interface_type` - (Optional) The type of network interface. To create an Elastic Fabric Adapter (EFA), specify `efa`.
+* `ipv4_prefix_count` - (Optional) The number of IPv4 prefixes to be automatically assigned to the network interface. Conflicts with `ipv4_prefixes`
+* `ipv4_prefixes` - (Optional) One or more IPv4 prefixes to be assigned to the network interface. Conflicts with `ipv4_prefix_count`
+* `ipv6_addresses` - (Optional) One or more specific IPv6 addresses from the IPv6 CIDR block range of your subnet. Conflicts with `ipv6_address_count`
+* `ipv6_address_count` - (Optional) The number of IPv6 addresses to assign to a network interface. Conflicts with `ipv6_addresses`
+* `ipv6_prefix_count` - (Optional) The number of IPv6 prefixes to be automatically assigned to the network interface. Conflicts with `ipv6_prefixes`
+* `ipv6_prefixes` - (Optional) One or more IPv6 prefixes to be assigned to the network interface. Conflicts with `ipv6_prefix_count`
+* `network_interface_id` - (Optional) The ID of the network interface to attach.
+* `network_card_index` - (Optional) The index of the network card. Some instance types support multiple network cards. The primary network interface must be assigned to network card index 0. The default is network card index 0.
+* `private_ip_address` - (Optional) The primary private IPv4 address.
+* `ipv4_address_count` - (Optional) The number of secondary private IPv4 addresses to assign to a network interface. Conflicts with `ipv4_addresses`
+* `ipv4_addresses` - (Optional) One or more private IPv4 addresses to associate. Conflicts with `ipv4_address_count`
+* `security_groups` - (Optional) A list of security group IDs to associate.
+* `subnet_id` - (Optional) The VPC Subnet ID to associate.
 
 ### Placement
 
@@ -447,22 +466,22 @@ The [Placement Group](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/placem
 
 The `placement` block supports the following:
 
-* `affinity` - The affinity setting for an instance on a Dedicated Host.
-* `availability_zone` - The Availability Zone for the instance.
-* `group_name` - The name of the placement group for the instance.
-* `host_id` - The ID of the Dedicated Host for the instance.
-* `host_resource_group_arn` - The ARN of the Host Resource Group in which to launch instances.
-* `spread_domain` - Reserved for future use.
-* `tenancy` - The tenancy of the instance (if the instance is running in a VPC). Can be `default`, `dedicated`, or `host`.
-* `partition_number` - The number of the partition the instance should launch in. Valid only if the placement group strategy is set to partition.
+* `affinity` - (Optional) The affinity setting for an instance on a Dedicated Host.
+* `availability_zone` - (Optional) The Availability Zone for the instance.
+* `group_name` - (Optional) The name of the placement group for the instance.
+* `host_id` - (Optional) The ID of the Dedicated Host for the instance.
+* `host_resource_group_arn` - (Optional) The ARN of the Host Resource Group in which to launch instances.
+* `spread_domain` - (Optional) Reserved for future use.
+* `tenancy` - (Optional) The tenancy of the instance (if the instance is running in a VPC). Can be `default`, `dedicated`, or `host`.
+* `partition_number` - (Optional) The number of the partition the instance should launch in. Valid only if the placement group strategy is set to partition.
 
 ### Private DNS Name Options
 
 The `private_dns_name_options` block supports the following:
 
-* `enable_resource_name_dns_aaaa_record` - Indicates whether to respond to DNS queries for instance hostnames with DNS AAAA records.
-* `enable_resource_name_dns_a_record` - Indicates whether to respond to DNS queries for instance hostnames with DNS A records.
-* `hostname_type` - The type of hostname for Amazon EC2 instances. For IPv4 only subnets, an instance DNS name must be based on the instance IPv4 address. For IPv6 native subnets, an instance DNS name must be based on the instance ID. For dual-stack subnets, you can specify whether DNS names use the instance IPv4 address or the instance ID. Valid values: `ip-name` and `resource-name`.
+* `enable_resource_name_dns_aaaa_record` - (Optional) Indicates whether to respond to DNS queries for instance hostnames with DNS AAAA records.
+* `enable_resource_name_dns_a_record` - (Optional) Indicates whether to respond to DNS queries for instance hostnames with DNS A records.
+* `hostname_type` - (Optional) The type of hostname for Amazon EC2 instances. For IPv4 only subnets, an instance DNS name must be based on the instance IPv4 address. For IPv6 native subnets, an instance DNS name must be based on the instance ID. For dual-stack subnets, you can specify whether DNS names use the instance IPv4 address or the instance ID. Valid values: `ip-name` and `resource-name`.
 
 ### Tag Specifications
 
@@ -470,13 +489,12 @@ The tags to apply to the resources during launch. You can tag instances, volumes
 
 Each `tag_specifications` block supports the following:
 
-* `resource_type` - The type of resource to tag.
-* `tags` - A map of tags to assign to the resource.
+* `resource_type` - (Optional) The type of resource to tag.
+* `tags` -(Optional)  A map of tags to assign to the resource.
 
+## Attribute Reference
 
-## Attributes Reference
-
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the launch template.
 * `id` - The ID of the launch template.
@@ -485,8 +503,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Launch Templates can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Launch Templates using the `id`. For example:
 
+```terraform
+import {
+  to = aws_launch_template.web
+  id = "lt-12345678"
+}
 ```
-$ terraform import aws_launch_template.web lt-12345678
+
+Using `terraform import`, import Launch Templates using the `id`. For example:
+
+```console
+% terraform import aws_launch_template.web lt-12345678
 ```

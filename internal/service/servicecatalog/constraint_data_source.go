@@ -1,17 +1,23 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package servicecatalog
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_servicecatalog_constraint")
 func DataSourceConstraint() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceConstraintRead,
+		ReadWithoutTimeout: dataSourceConstraintRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(ConstraintReadTimeout),
@@ -61,17 +67,18 @@ func DataSourceConstraint() *schema.Resource {
 	}
 }
 
-func dataSourceConstraintRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ServiceCatalogConn
+func dataSourceConstraintRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
-	output, err := WaitConstraintReady(conn, d.Get("accept_language").(string), d.Get("id").(string), d.Timeout(schema.TimeoutRead))
+	output, err := WaitConstraintReady(ctx, conn, d.Get("accept_language").(string), d.Get("id").(string), d.Timeout(schema.TimeoutRead))
 
 	if err != nil {
-		return fmt.Errorf("error describing Service Catalog Constraint: %w", err)
+		return sdkdiag.AppendErrorf(diags, "describing Service Catalog Constraint: %s", err)
 	}
 
 	if output == nil || output.ConstraintDetail == nil {
-		return fmt.Errorf("error getting Service Catalog Constraint: empty response")
+		return sdkdiag.AppendErrorf(diags, "getting Service Catalog Constraint: empty response")
 	}
 
 	acceptLanguage := d.Get("accept_language").(string)
@@ -95,5 +102,5 @@ func dataSourceConstraintRead(d *schema.ResourceData, meta interface{}) error {
 
 	d.SetId(aws.StringValue(detail.ConstraintId))
 
-	return nil
+	return diags
 }

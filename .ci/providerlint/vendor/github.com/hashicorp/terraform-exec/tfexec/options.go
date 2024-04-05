@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package tfexec
 
 import (
@@ -240,6 +243,15 @@ func GraphPlan(file string) *GraphPlanOption {
 	return &GraphPlanOption{file}
 }
 
+type UseJSONNumberOption struct {
+	useJSONNumber bool
+}
+
+// JSONNumber determines how numerical values are handled during JSON decoding.
+func JSONNumber(useJSONNumber bool) *UseJSONNumberOption {
+	return &UseJSONNumberOption{useJSONNumber}
+}
+
 type PlatformOption struct {
 	platform string
 }
@@ -324,6 +336,14 @@ func Refresh(refresh bool) *RefreshOption {
 	return &RefreshOption{refresh}
 }
 
+type RefreshOnlyOption struct {
+	refreshOnly bool
+}
+
+func RefreshOnly(refreshOnly bool) *RefreshOnlyOption {
+	return &RefreshOnlyOption{refreshOnly}
+}
+
 type ReplaceOption struct {
 	address string
 }
@@ -360,6 +380,15 @@ type TargetOption struct {
 
 func Target(resource string) *TargetOption {
 	return &TargetOption{resource}
+}
+
+type TestsDirectoryOption struct {
+	testsDirectory string
+}
+
+// TestsDirectory represents the -tests-directory option (path to tests files)
+func TestsDirectory(testsDirectory string) *TestsDirectoryOption {
+	return &TestsDirectoryOption{testsDirectory}
 }
 
 type GraphTypeOption struct {

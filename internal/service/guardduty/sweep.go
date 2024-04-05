@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package guardduty
 
@@ -11,12 +11,12 @@ import (
 	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_guardduty_detector", &resource.Sweeper{
 		Name:         "aws_guardduty_detector",
 		F:            sweepDetectors,
@@ -30,17 +30,18 @@ func init() {
 }
 
 func sweepDetectors(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
 
-	conn := client.(*conns.AWSClient).GuardDutyConn
+	conn := client.GuardDutyConn(ctx)
 	input := &guardduty.ListDetectorsInput{}
 	var sweeperErrs *multierror.Error
 
-	err = conn.ListDetectorsPages(input, func(page *guardduty.ListDetectorsOutput, lastPage bool) bool {
+	err = conn.ListDetectorsPagesWithContext(ctx, input, func(page *guardduty.ListDetectorsOutput, lastPage bool) bool {
 		for _, detectorID := range page.DetectorIds {
 			id := aws.StringValue(detectorID)
 			input := &guardduty.DeleteDetectorInput{
@@ -48,7 +49,7 @@ func sweepDetectors(region string) error {
 			}
 
 			log.Printf("[INFO] Deleting GuardDuty Detector: %s", id)
-			_, err := conn.DeleteDetector(input)
+			_, err := conn.DeleteDetectorWithContext(ctx, input)
 			if tfawserr.ErrCodeContains(err, "AccessDenied") {
 				log.Printf("[WARN] Skipping GuardDuty Detector (%s): %s", id, err)
 				continue
@@ -63,7 +64,7 @@ func sweepDetectors(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping GuardDuty Detector sweep for %s: %s", region, err)
 		return nil
 	}
@@ -76,24 +77,25 @@ func sweepDetectors(region string) error {
 }
 
 func sweepPublishingDestinations(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.(*conns.AWSClient).GuardDutyConn
+	conn := client.GuardDutyConn(ctx)
 	var sweeperErrs *multierror.Error
 
 	detect_input := &guardduty.ListDetectorsInput{}
 
-	err = conn.ListDetectorsPages(detect_input, func(page *guardduty.ListDetectorsOutput, lastPage bool) bool {
+	err = conn.ListDetectorsPagesWithContext(ctx, detect_input, func(page *guardduty.ListDetectorsOutput, lastPage bool) bool {
 		for _, detectorID := range page.DetectorIds {
 			list_input := &guardduty.ListPublishingDestinationsInput{
 				DetectorId: detectorID,
 			}
 
-			err = conn.ListPublishingDestinationsPages(list_input, func(page *guardduty.ListPublishingDestinationsOutput, lastPage bool) bool {
+			err = conn.ListPublishingDestinationsPagesWithContext(ctx, list_input, func(page *guardduty.ListPublishingDestinationsOutput, lastPage bool) bool {
 				for _, destination_element := range page.Destinations {
 					input := &guardduty.DeletePublishingDestinationInput{
 						DestinationId: destination_element.DestinationId,
@@ -101,7 +103,7 @@ func sweepPublishingDestinations(region string) error {
 					}
 
 					log.Printf("[INFO] Deleting GuardDuty Publishing Destination: %s", *destination_element.DestinationId)
-					_, err := conn.DeletePublishingDestination(input)
+					_, err := conn.DeletePublishingDestinationWithContext(ctx, input)
 
 					if err != nil {
 						sweeperErr := fmt.Errorf("error deleting GuardDuty Publishing Destination (%s): %w", *destination_element.DestinationId, err)
@@ -121,7 +123,7 @@ func sweepPublishingDestinations(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
 	}
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping GuardDuty Publishing Destination sweep for %s: %s", region, err)
 		return nil
 	}

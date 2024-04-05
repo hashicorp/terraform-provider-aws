@@ -1,22 +1,27 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kendra
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_kendra_experience")
 func DataSourceExperience() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceExperienceRead,
+		ReadWithoutTimeout: dataSourceExperienceRead,
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -102,7 +107,7 @@ func DataSourceExperience() *schema.Resource {
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 36),
 					validation.StringMatch(
-						regexp.MustCompile(`[a-zA-Z0-9][a-zA-Z0-9_-]*`),
+						regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z_-]*`),
 						"Starts with an alphanumeric character. Subsequently, can contain alphanumeric characters and hyphens.",
 					),
 				),
@@ -111,7 +116,7 @@ func DataSourceExperience() *schema.Resource {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.StringMatch(
-					regexp.MustCompile(`[a-zA-Z0-9][a-zA-Z0-9-]{35}`),
+					regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z-]{35}`),
 					"Starts with an alphanumeric character. Subsequently, can contain alphanumeric characters and hyphens. Fixed length of 36.",
 				),
 			},
@@ -136,7 +141,9 @@ func DataSourceExperience() *schema.Resource {
 }
 
 func dataSourceExperienceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).KendraConn
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	experienceID := d.Get("experience_id").(string)
 	indexID := d.Get("index_id").(string)
@@ -144,7 +151,7 @@ func dataSourceExperienceRead(ctx context.Context, d *schema.ResourceData, meta 
 	resp, err := FindExperienceByID(ctx, conn, experienceID, indexID)
 
 	if err != nil {
-		return diag.Errorf("reading Kendra Experience (%s): %s", experienceID, err)
+		return sdkdiag.AppendErrorf(diags, "reading Kendra Experience (%s): %s", experienceID, err)
 	}
 
 	arn := arn.ARN{
@@ -166,14 +173,14 @@ func dataSourceExperienceRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("updated_at", aws.ToTime(resp.UpdatedAt).Format(time.RFC3339))
 
 	if err := d.Set("configuration", flattenConfiguration(resp.Configuration)); err != nil {
-		return diag.Errorf("setting configuration argument: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting configuration argument: %s", err)
 	}
 
 	if err := d.Set("endpoints", flattenEndpoints(resp.Endpoints)); err != nil {
-		return diag.Errorf("setting endpoints argument: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting endpoints argument: %s", err)
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s", experienceID, indexID))
 
-	return nil
+	return diags
 }

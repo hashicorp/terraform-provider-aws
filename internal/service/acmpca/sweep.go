@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package acmpca
 
@@ -7,16 +7,15 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/acmpca"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/go-multierror"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/acmpca"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/acmpca/types"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_acmpca_certificate_authority", &resource.Sweeper{
 		Name: "aws_acmpca_certificate_authority",
 		F:    sweepCertificateAuthorities,
@@ -24,81 +23,50 @@ func init() {
 }
 
 func sweepCertificateAuthorities(region string) error {
-	client, err := sweep.SharedRegionalSweepClient(region)
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-	conn := client.(*conns.AWSClient).ACMPCAConn
+	input := &acmpca.ListCertificateAuthoritiesInput{}
+	conn := client.ACMPCAClient(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
 
-	certificateAuthorities, err := listCertificateAuthorities(conn)
-	if err != nil {
-		if sweep.SkipSweepError(err) {
-			log.Printf("[WARN] Skipping ACM PCA Certificate Authorities sweep for %s: %s", region, err)
+	paginator := acmpca.NewListCertificateAuthoritiesPaginator(conn, input)
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping ACM PCA Certificate Authority sweep for %s: %s", region, err)
 			return nil
 		}
-		return fmt.Errorf("retrieving ACM PCA Certificate Authorities: %w", err)
-	}
-	if len(certificateAuthorities) == 0 {
-		log.Print("[DEBUG] No ACM PCA Certificate Authorities to sweep")
-		return nil
-	}
 
-	var sweeperErrs *multierror.Error
+		if err != nil {
+			return fmt.Errorf("error listing ACM PCA Certificate Authorities (%s): %w", region, err)
+		}
 
-	for _, certificateAuthority := range certificateAuthorities {
-		arn := aws.StringValue(certificateAuthority.Arn)
+		for _, v := range page.CertificateAuthorities {
+			arn := aws.ToString(v.Arn)
 
-		if aws.StringValue(certificateAuthority.Status) == acmpca.CertificateAuthorityStatusActive {
-			log.Printf("[INFO] Disabling ACM PCA Certificate Authority: %s", arn)
-			_, err := conn.UpdateCertificateAuthority(&acmpca.UpdateCertificateAuthorityInput{
-				CertificateAuthorityArn: aws.String(arn),
-				Status:                  aws.String(acmpca.CertificateAuthorityStatusDisabled),
-			})
-			if tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
+			if v.Status == awstypes.CertificateAuthorityStatusDeleted {
+				log.Printf("[INFO] Skipping ACM PCA Certificate Authority %s: Status=%s", arn, string(v.Status))
 				continue
 			}
-			if err != nil {
-				sweeperErr := fmt.Errorf("error disabling ACM PCA Certificate Authority (%s): %w", arn, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-				continue
-			}
-		}
 
-		log.Printf("[INFO] Deleting ACM PCA Certificate Authority: %s", arn)
-		_, err := conn.DeleteCertificateAuthority(&acmpca.DeleteCertificateAuthorityInput{
-			CertificateAuthorityArn:     aws.String(arn),
-			PermanentDeletionTimeInDays: aws.Int64(7),
-		})
-		if tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
-			continue
-		}
-		if err != nil {
-			sweeperErr := fmt.Errorf("error deleting ACM PCA Certificate Authority (%s): %w", arn, err)
-			log.Printf("[ERROR] %s", sweeperErr)
-			sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
-			continue
+			r := resourceCertificateAuthority()
+			d := r.Data(nil)
+			d.SetId(arn)
+			d.Set("permanent_deletion_time_in_days", 7) //nolint:gomnd
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
 	}
 
-	return sweeperErrs.ErrorOrNil()
-}
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
-func listCertificateAuthorities(conn *acmpca.ACMPCA) ([]*acmpca.CertificateAuthority, error) {
-	certificateAuthorities := []*acmpca.CertificateAuthority{}
-	input := &acmpca.ListCertificateAuthoritiesInput{}
-
-	for {
-		output, err := conn.ListCertificateAuthorities(input)
-		if err != nil {
-			return certificateAuthorities, err
-		}
-		certificateAuthorities = append(certificateAuthorities, output.CertificateAuthorities...)
-		if output.NextToken == nil {
-			break
-		}
-		input.NextToken = output.NextToken
+	if err != nil {
+		return fmt.Errorf("error sweeping ACM PCA Certificate Authorities (%s): %w", region, err)
 	}
 
-	return certificateAuthorities, nil
+	return nil
 }

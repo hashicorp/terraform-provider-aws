@@ -8,17 +8,18 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/aws/aws-sdk-go/service/elb/elbiface"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// ListTags lists elb service tags.
+// listTags lists elb service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func ListTags(conn elbiface.ELBAPI, identifier string) (tftags.KeyValueTags, error) {
-	return ListTagsWithContext(context.Background(), conn, identifier)
-}
-
-func ListTagsWithContext(ctx context.Context, conn elbiface.ELBAPI, identifier string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn elbiface.ELBAPI, identifier string) (tftags.KeyValueTags, error) {
 	input := &elb.DescribeTagsInput{
 		LoadBalancerNames: aws.StringSlice([]string{identifier}),
 	}
@@ -26,10 +27,26 @@ func ListTagsWithContext(ctx context.Context, conn elbiface.ELBAPI, identifier s
 	output, err := conn.DescribeTagsWithContext(ctx, input)
 
 	if err != nil {
-		return tftags.New(nil), err
+		return tftags.New(ctx, nil), err
 	}
 
-	return KeyValueTags(output.TagDescriptions[0].Tags), nil
+	return KeyValueTags(ctx, output.TagDescriptions[0].Tags), nil
+}
+
+// ListTags lists elb service tags and set them in Context.
+// It is called from outside this package.
+func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
+	tags, err := listTags(ctx, meta.(*conns.AWSClient).ELBConn(ctx), identifier)
+
+	if err != nil {
+		return err
+	}
+
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = option.Some(tags)
+	}
+
+	return nil
 }
 
 // []*SERVICE.Tag handling
@@ -66,30 +83,50 @@ func Tags(tags tftags.KeyValueTags) []*elb.Tag {
 }
 
 // KeyValueTags creates tftags.KeyValueTags from elb service tags.
-func KeyValueTags(tags []*elb.Tag) tftags.KeyValueTags {
+func KeyValueTags(ctx context.Context, tags []*elb.Tag) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
 		m[aws.StringValue(tag.Key)] = tag.Value
 	}
 
-	return tftags.New(m)
+	return tftags.New(ctx, m)
 }
 
-// UpdateTags updates elb service tags.
+// getTagsIn returns elb service tags from Context.
+// nil is returned if there are no input tags.
+func getTagsIn(ctx context.Context) []*elb.Tag {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+			return tags
+		}
+	}
+
+	return nil
+}
+
+// setTagsOut sets elb service tags in Context.
+func setTagsOut(ctx context.Context, tags []*elb.Tag) {
+	if inContext, ok := tftags.FromContext(ctx); ok {
+		inContext.TagsOut = option.Some(KeyValueTags(ctx, tags))
+	}
+}
+
+// updateTags updates elb service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func UpdateTags(conn elbiface.ELBAPI, identifier string, oldTags interface{}, newTags interface{}) error {
-	return UpdateTagsWithContext(context.Background(), conn, identifier, oldTags, newTags)
-}
-func UpdateTagsWithContext(ctx context.Context, conn elbiface.ELBAPI, identifier string, oldTagsMap interface{}, newTagsMap interface{}) error {
-	oldTags := tftags.New(oldTagsMap)
-	newTags := tftags.New(newTagsMap)
+func updateTags(ctx context.Context, conn elbiface.ELBAPI, identifier string, oldTagsMap, newTagsMap any) error {
+	oldTags := tftags.New(ctx, oldTagsMap)
+	newTags := tftags.New(ctx, newTagsMap)
 
-	if removedTags := oldTags.Removed(newTags); len(removedTags) > 0 {
+	ctx = tflog.SetField(ctx, logging.KeyResourceId, identifier)
+
+	removedTags := oldTags.Removed(newTags)
+	removedTags = removedTags.IgnoreSystem(names.ELB)
+	if len(removedTags) > 0 {
 		input := &elb.RemoveTagsInput{
 			LoadBalancerNames: aws.StringSlice([]string{identifier}),
-			Tags:              TagKeys(removedTags.IgnoreAWS()),
+			Tags:              TagKeys(removedTags),
 		}
 
 		_, err := conn.RemoveTagsWithContext(ctx, input)
@@ -99,10 +136,12 @@ func UpdateTagsWithContext(ctx context.Context, conn elbiface.ELBAPI, identifier
 		}
 	}
 
-	if updatedTags := oldTags.Updated(newTags); len(updatedTags) > 0 {
+	updatedTags := oldTags.Updated(newTags)
+	updatedTags = updatedTags.IgnoreSystem(names.ELB)
+	if len(updatedTags) > 0 {
 		input := &elb.AddTagsInput{
 			LoadBalancerNames: aws.StringSlice([]string{identifier}),
-			Tags:              Tags(updatedTags.IgnoreAWS()),
+			Tags:              Tags(updatedTags),
 		}
 
 		_, err := conn.AddTagsWithContext(ctx, input)
@@ -113,4 +152,10 @@ func UpdateTagsWithContext(ctx context.Context, conn elbiface.ELBAPI, identifier
 	}
 
 	return nil
+}
+
+// UpdateTags updates elb service tags.
+// It is called from outside this package.
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
+	return updateTags(ctx, meta.(*conns.AWSClient).ELBConn(ctx), identifier, oldTags, newTags)
 }

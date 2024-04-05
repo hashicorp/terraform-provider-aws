@@ -10,6 +10,8 @@ description: |-
 
 Provides a S3 bucket [inventory configuration](https://docs.aws.amazon.com/AmazonS3/latest/dev/storage-inventory.html) resource.
 
+-> This resource cannot be used with S3 directory buckets.
+
 ## Example Usage
 
 ### Add inventory configuration
@@ -79,9 +81,9 @@ resource "aws_s3_bucket_inventory" "test-prefix" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
-* `bucket` - (Required) The name of the source bucket that inventory lists the objects for.
+* `bucket` - (Required) Name of the source bucket that inventory lists the objects for.
 * `name` - (Required) Unique identifier of the inventory configuration for the bucket.
 * `included_object_versions` - (Required) Object versions to include in the inventory list. Valid values: `All`, `Current`.
 * `schedule` - (Required) Specifies the schedule for generating inventory results (documented below).
@@ -92,7 +94,7 @@ The following arguments are supported:
 
 The `filter` configuration supports the following:
 
-* `prefix` - (Optional) The prefix that an object must have to be included in the inventory results.
+* `prefix` - (Optional) Prefix that an object must have to be included in the inventory results.
 
 The `schedule` configuration supports the following:
 
@@ -100,14 +102,14 @@ The `schedule` configuration supports the following:
 
 The `destination` configuration supports the following:
 
-* `bucket` - (Required) The S3 bucket configuration where inventory results are published (documented below).
+* `bucket` - (Required) S3 bucket configuration where inventory results are published (documented below).
 
 The `bucket` configuration supports the following:
 
-* `bucket_arn` - (Required) The Amazon S3 bucket ARN of the destination.
+* `bucket_arn` - (Required) Amazon S3 bucket ARN of the destination.
 * `format` - (Required) Specifies the output format of the inventory results. Can be `CSV`, [`ORC`](https://orc.apache.org/) or [`Parquet`](https://parquet.apache.org/).
-* `account_id` - (Optional) The ID of the account that owns the destination bucket. Recommended to be set to prevent problems if the destination bucket ownership changes.
-* `prefix` - (Optional) The prefix that is prepended to all inventory results.
+* `account_id` - (Optional) ID of the account that owns the destination bucket. Recommended to be set to prevent problems if the destination bucket ownership changes.
+* `prefix` - (Optional) Prefix that is prepended to all inventory results.
 * `encryption` - (Optional) Contains the type of server-side encryption to use to encrypt the inventory (documented below).
 
 The `encryption` configuration supports the following:
@@ -117,16 +119,25 @@ The `encryption` configuration supports the following:
 
 The `sse_kms` configuration supports the following:
 
-* `key_id` - (Required) The ARN of the KMS customer master key (CMK) used to encrypt the inventory file.
+* `key_id` - (Required) ARN of the KMS customer master key (CMK) used to encrypt the inventory file.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-S3 bucket inventory configurations can be imported using `bucket:inventory`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 bucket inventory configurations using `bucket:inventory`. For example:
 
-```sh
-$ terraform import aws_s3_bucket_inventory.my-bucket-entire-bucket my-bucket:EntireBucket
+```terraform
+import {
+  to = aws_s3_bucket_inventory.my-bucket-entire-bucket
+  id = "my-bucket:EntireBucket"
+}
+```
+
+Using `terraform import`, import S3 bucket inventory configurations using `bucket:inventory`. For example:
+
+```console
+% terraform import aws_s3_bucket_inventory.my-bucket-entire-bucket my-bucket:EntireBucket
 ```

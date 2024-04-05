@@ -1,19 +1,25 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
-	"fmt"
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_eips")
 func DataSourceEIPs() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceEIPsRead,
+		ReadWithoutTimeout: dataSourceEIPsRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
@@ -25,7 +31,7 @@ func DataSourceEIPs() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": DataSourceFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"public_ips": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -36,30 +42,31 @@ func DataSourceEIPs() *schema.Resource {
 	}
 }
 
-func dataSourceEIPsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceEIPsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.DescribeAddressesInput{}
 
 	if tags, tagsOk := d.GetOk("tags"); tagsOk {
-		input.Filters = append(input.Filters, BuildTagFilterList(
-			Tags(tftags.New(tags.(map[string]interface{}))),
+		input.Filters = append(input.Filters, newTagFilterList(
+			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 		)...)
 	}
 
 	if filters, filtersOk := d.GetOk("filter"); filtersOk {
 		input.Filters = append(input.Filters,
-			BuildFiltersDataSource(filters.(*schema.Set))...)
+			newCustomFilterList(filters.(*schema.Set))...)
 	}
 
 	if len(input.Filters) == 0 {
 		input.Filters = nil
 	}
 
-	output, err := FindEIPs(conn, input)
+	output, err := FindEIPs(ctx, conn, input)
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 EIPs: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 EIPs: %s", err)
 	}
 
 	var allocationIDs []string
@@ -77,5 +84,5 @@ func dataSourceEIPsRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("allocation_ids", allocationIDs)
 	d.Set("public_ips", publicIPs)
 
-	return nil
+	return diags
 }

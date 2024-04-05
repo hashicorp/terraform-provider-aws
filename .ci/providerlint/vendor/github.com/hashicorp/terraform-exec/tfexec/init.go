@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package tfexec
 
 import (
@@ -50,6 +53,10 @@ func (opt *BackendConfigOption) configureInit(conf *initConfig) {
 
 func (opt *DirOption) configureInit(conf *initConfig) {
 	conf.dir = opt.path
+}
+
+func (opt *ForceCopyOption) configureInit(conf *initConfig) {
+	conf.forceCopy = opt.forceCopy
 }
 
 func (opt *FromModuleOption) configureInit(conf *initConfig) {
@@ -116,7 +123,7 @@ func (tf *Terraform) initCmd(ctx context.Context, opts ...InitOption) (*exec.Cmd
 		o.configureInit(&c)
 	}
 
-	args := []string{"init", "-no-color", "-force-copy", "-input=false"}
+	args := []string{"init", "-no-color", "-input=false"}
 
 	// string opts: only pass if set
 	if c.fromModule != "" {
@@ -142,6 +149,10 @@ func (tf *Terraform) initCmd(ctx context.Context, opts ...InitOption) (*exec.Cmd
 		args = append(args, "-lock="+fmt.Sprint(c.lock))
 		args = append(args, "-get-plugins="+fmt.Sprint(c.getPlugins))
 		args = append(args, "-verify-plugins="+fmt.Sprint(c.verifyPlugins))
+	}
+
+	if c.forceCopy {
+		args = append(args, "-force-copy")
 	}
 
 	// unary flags: pass if true

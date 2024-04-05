@@ -1,26 +1,34 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_default_security_group", name="Security Group")
+// @Tags(identifierAttribute="id")
 func ResourceDefaultSecurityGroup() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
-		Create: resourceDefaultSecurityGroupCreate,
-		Read:   resourceSecurityGroupRead,
-		Update: resourceSecurityGroupUpdate,
-		Delete: schema.Noop,
+		CreateWithoutTimeout: resourceDefaultSecurityGroupCreate,
+		ReadWithoutTimeout:   resourceSecurityGroupRead,
+		UpdateWithoutTimeout: resourceSecurityGroupUpdate,
+		DeleteWithoutTimeout: schema.NoopContext,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		SchemaVersion: 1, // Keep in sync with aws_security_group's schema version.
@@ -59,8 +67,8 @@ func ResourceDefaultSecurityGroup() *schema.Resource {
 				Default:  false,
 				Optional: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vpc_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -73,13 +81,13 @@ func ResourceDefaultSecurityGroup() *schema.Resource {
 	}
 }
 
-func resourceDefaultSecurityGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceDefaultSecurityGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics { // nosemgrep:ci.semgrep.tags.calling-UpdateTags-in-resource-create
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.DescribeSecurityGroupsInput{
-		Filters: BuildAttributeFilterList(
+		Filters: newAttributeFilterList(
 			map[string]string{
 				"group-name": DefaultSecurityGroupName,
 			},
@@ -87,39 +95,40 @@ func resourceDefaultSecurityGroupCreate(d *schema.ResourceData, meta interface{}
 	}
 
 	if v, ok := d.GetOk("vpc_id"); ok {
-		input.Filters = append(input.Filters, BuildAttributeFilterList(
+		input.Filters = append(input.Filters, newAttributeFilterList(
 			map[string]string{
 				"vpc-id": v.(string),
 			},
 		)...)
 	} else {
-		input.Filters = append(input.Filters, BuildAttributeFilterList(
+		input.Filters = append(input.Filters, newAttributeFilterList(
 			map[string]string{
 				"description": "default group",
 			},
 		)...)
 	}
 
-	sg, err := FindSecurityGroup(conn, input)
+	sg, err := FindSecurityGroup(ctx, conn, input)
 
 	if err != nil {
-		return fmt.Errorf("reading Default Security Group: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading Default Security Group: %s", err)
 	}
 
 	d.SetId(aws.StringValue(sg.GroupId))
 
-	oTagsAll := KeyValueTags(sg.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-	nTagsAll := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	newTags := KeyValueTags(ctx, getTagsIn(ctx))
+	oldTags := KeyValueTags(ctx, sg.Tags).IgnoreSystem(names.EC2).IgnoreConfig(ignoreTagsConfig)
 
-	if !nTagsAll.Equal(oTagsAll) {
-		if err := UpdateTags(conn, d.Id(), oTagsAll.Map(), nTagsAll.Map()); err != nil {
-			return fmt.Errorf("updating Default Security Group (%s) tags: %w", d.Id(), err)
+	if !newTags.Equal(oldTags) {
+		if err := updateTags(ctx, conn, d.Id(), oldTags, newTags); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating Default Security Group (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	if err := forceRevokeSecurityGroupRules(conn, d.Id(), false); err != nil {
-		return err
+	if err := forceRevokeSecurityGroupRules(ctx, conn, d.Id(), false); err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	return resourceSecurityGroupUpdate(d, meta)
+	return append(diags, resourceSecurityGroupUpdate(ctx, d, meta)...)
 }

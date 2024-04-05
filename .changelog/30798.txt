@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_subnet: Add `enable_lni_at_device_index` attribute
+```
+
+```release-note:enhancement
+data-source/aws_subnet: Add `enable_lni_at_device_index` attribute
+```

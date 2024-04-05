@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build generate
 // +build generate
 
@@ -7,17 +10,17 @@ import (
 	"bufio"
 	"bytes"
 	_ "embed"
-	"encoding/csv"
+	"errors"
 	"fmt"
 	"io"
-	"log"
+	"io/fs"
 	"os"
-	"regexp"
 	"sort"
 	"strings"
-	"text/template"
 
-	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/YakDriver/regexache"
+	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
+	"github.com/hashicorp/terraform-provider-aws/names/data"
 )
 
 //go:embed semgrep_header.tmpl
@@ -33,11 +36,6 @@ var tmplCAE string
 var tmpl string
 
 const (
-	filename            = `../../../.ci/.semgrep-service-name.yml`
-	filenameCAE         = `../../../.ci/.semgrep-caps-aws-ec2.yml`
-	filenameConfigs     = `../../../.ci/.semgrep-configs.yml`
-	namesDataFile       = "../../../names/names_data.csv"
-	capsDataFile        = "../../../names/caps.csv"
 	maxBadCaps          = 21
 	semgrepConfigChunks = 4
 )
@@ -59,96 +57,102 @@ type CAEData struct {
 }
 
 func main() {
-	fmt.Printf("Generating %s\n", strings.TrimPrefix(filenameCAE, "../../../"))
+	const (
+		filename        = `../../../.ci/.semgrep-service-name.yml`
+		filenameCAE     = `../../../.ci/.semgrep-caps-aws-ec2.yml`
+		filenameConfigs = `../../../.ci/.semgrep-configs.yml`
+		capsDataFile    = "../../../names/caps.csv"
+	)
+	g := common.NewGenerator()
 
-	badCaps := readBadCaps()
+	g.Infof("Generating %s", strings.TrimPrefix(filenameCAE, "../../../"))
+
+	badCaps, err := readBadCaps(capsDataFile)
+
+	if err != nil {
+		g.Fatalf("error reading %s: %s", capsDataFile, err)
+	}
 
 	cd := CAEData{}
 	cd.BadCaps = badCaps
 
-	writeCAE(tmplCAE, "caps-aws-ec2", cd)
+	d := g.NewUnformattedFileDestination(filenameCAE)
 
-	fmt.Printf("Generating %s\n", strings.TrimPrefix(filenameConfigs, "../../../"))
+	if err := d.WriteTemplate("caps-aws-ec2", tmplCAE, cd); err != nil {
+		g.Fatalf("generating file (%s): %s", filenameCAE, err)
+	}
 
-	writeConfigs()
+	if err := d.Write(); err != nil {
+		g.Fatalf("generating file (%s): %s", filenameCAE, err)
+	}
 
-	fmt.Printf("Generating %s\n", strings.TrimPrefix(filename, "../../../"))
+	g.Infof("Generating %s", strings.TrimPrefix(filenameConfigs, "../../../"))
+
+	d = g.NewUnformattedFileDestination(filenameConfigs)
+
+	if err := d.WriteBytes([]byte(configs)); err != nil {
+		g.Fatalf("generating file (%s): %s", filenameConfigs, err)
+	}
+
+	if err := d.Write(); err != nil {
+		g.Fatalf("generating file (%s): %s", filenameConfigs, err)
+	}
+
+	g.Infof("Generating %s", strings.TrimPrefix(filename, "../../../"))
+
+	data, err := data.ReadAllServiceData()
+
+	if err != nil {
+		g.Fatalf("error reading service data: %s", err)
+	}
 
 	td := TemplateData{}
 
-	f, err := os.Open(namesDataFile)
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer f.Close()
-
-	csvReader := csv.NewReader(f)
-
-	data, err := csvReader.ReadAll()
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	for i, l := range data {
-		if i < 1 { // no header
+	for _, l := range data {
+		if l.Exclude() && l.AllowedSubcategory() == "" {
 			continue
 		}
 
-		if l[names.ColExclude] != "" && l[names.ColAllowedSubcategory] == "" {
-			continue
-		}
-
-		if l[names.ColProviderPackageActual] == "" && l[names.ColProviderPackageCorrect] == "" {
-			continue
-		}
-
-		p := l[names.ColProviderPackageCorrect]
-
-		if l[names.ColProviderPackageActual] != "" {
-			p = l[names.ColProviderPackageActual]
-		}
+		p := l.ProviderPackage()
 
 		rp := p
 
-		if l[names.ColSplitPackageRealPackage] != "" {
-			rp = l[names.ColSplitPackageRealPackage]
+		if l.SplitPackageRealPackage() != "" {
+			rp = l.SplitPackageRealPackage()
 		}
 
-		if _, err := os.Stat(fmt.Sprintf("../../service/%s", rp)); err != nil || os.IsNotExist(err) {
+		if _, err := os.Stat(fmt.Sprintf("../../service/%s", rp)); err != nil || errors.Is(err, fs.ErrNotExist) {
 			continue
 		}
 
-		if l[names.ColAliases] != "" {
-			for _, v := range strings.Split(l[names.ColAliases], ";") {
-				if strings.ToLower(v) == "es" {
-					continue // "es" is too short to usefully grep
-				}
-
-				if strings.ToLower(v) == "config" {
-					continue // "config" is too ubiquitous
-				}
-
-				sd := ServiceDatum{
-					ProviderPackage: rp,
-					ServiceAlias:    v,
-					LowerAlias:      strings.ToLower(v),
-					MainAlias:       false,
-				}
-
-				td.Services = append(td.Services, sd)
+		for _, v := range l.Aliases() {
+			if strings.ToLower(v) == "es" {
+				continue // "es" is too short to usefully grep
 			}
+
+			if strings.ToLower(v) == "config" {
+				continue // "config" is too ubiquitous
+			}
+
+			sd := ServiceDatum{
+				ProviderPackage: rp,
+				ServiceAlias:    v,
+				LowerAlias:      strings.ToLower(v),
+				MainAlias:       false,
+			}
+
+			td.Services = append(td.Services, sd)
 		}
 
 		sd := ServiceDatum{
 			ProviderPackage: rp,
-			ServiceAlias:    l[names.ColProviderNameUpper],
+			ServiceAlias:    l.ProviderNameUpper(),
 			LowerAlias:      strings.ToLower(p),
 			MainAlias:       true,
 		}
 
-		if l[names.ColFilePrefix] != "" {
-			sd.FilePrefix = l[names.ColFilePrefix]
+		if l.FilePrefix() != "" {
+			sd.FilePrefix = l.FilePrefix()
 		}
 
 		td.Services = append(td.Services, sd)
@@ -161,30 +165,32 @@ func main() {
 		return td.Services[i].LowerAlias < td.Services[j].LowerAlias
 	})
 
-	writeTemplate(tmpl, "servicesemgrep", td)
+	d = g.NewUnformattedFileDestination(filename)
 
-	breakUpBigFile()
+	if err := d.WriteTemplate("servicesemgrep", tmpl, td); err != nil {
+		g.Fatalf("generating file (%s): %s", filename, err)
+	}
 
-	fmt.Printf("  Removing %s\n", strings.TrimPrefix(filename, "../../../"))
+	if err := d.Write(); err != nil {
+		g.Fatalf("generating file (%s): %s", filename, err)
+	}
+
+	if err := breakUpBigFile(g, filename, header); err != nil {
+		g.Fatalf("error: %s", err)
+	}
+
+	g.Infof("  Removing %s", strings.TrimPrefix(filename, "../../../"))
+
 	err = os.Remove(filename)
 	if err != nil {
-		log.Fatal(err)
+		g.Fatalf("error: %s", err)
 	}
 }
 
-func readBadCaps() []string {
-	cf, err := os.Open(capsDataFile)
+func readBadCaps(capsDataFile string) ([]string, error) {
+	caps, err := common.ReadAllCSVData(capsDataFile)
 	if err != nil {
-		log.Fatal(err)
-	}
-
-	defer cf.Close()
-
-	csvReader := csv.NewReader(cf)
-
-	caps, err := csvReader.ReadAll()
-	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
 	var capsList []string
@@ -229,97 +235,24 @@ func readBadCaps() []string {
 		strChunks = append(strChunks, strings.Join(v, "|"))
 	}
 
-	return strChunks
+	return strChunks, nil
 }
 
-func writeCAE(body string, templateName string, cd CAEData) {
-	// If the file doesn't exist, create it, or append to the file
-	f, err := os.OpenFile(filenameCAE, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
-	if err != nil {
-		log.Fatalf("error opening file (%s): %s", filename, err)
-	}
-
-	tplate, err := template.New(templateName).Parse(body)
-	if err != nil {
-		log.Fatalf("error parsing template: %s", err)
-	}
-
-	var buffer bytes.Buffer
-	err = tplate.Execute(&buffer, cd)
-	if err != nil {
-		log.Fatalf("error executing template: %s", err)
-	}
-
-	if _, err := f.Write(buffer.Bytes()); err != nil {
-		f.Close()
-		log.Fatalf("error writing to file (%s): %s", filename, err)
-	}
-
-	if err := f.Close(); err != nil {
-		log.Fatalf("error closing file (%s): %s", filename, err)
-	}
-}
-
-func writeConfigs() {
-	// If the file doesn't exist, create it, or append to the file
-	f, err := os.OpenFile(filenameConfigs, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
-	if err != nil {
-		log.Fatalf("error opening file (%s): %s", filename, err)
-	}
-
-	if _, err := f.Write([]byte(configs)); err != nil {
-		f.Close()
-		log.Fatalf("error writing to file (%s): %s", filename, err)
-	}
-
-	if err := f.Close(); err != nil {
-		log.Fatalf("error closing file (%s): %s", filename, err)
-	}
-}
-
-func writeTemplate(body string, templateName string, td TemplateData) {
-	// If the file doesn't exist, create it, or append to the file
-	f, err := os.OpenFile(filename, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
-	if err != nil {
-		log.Fatalf("error opening file (%s): %s", filename, err)
-	}
-
-	tplate, err := template.New(templateName).Parse(body)
-	if err != nil {
-		log.Fatalf("error parsing template: %s", err)
-	}
-
-	var buffer bytes.Buffer
-	err = tplate.Execute(&buffer, td)
-	if err != nil {
-		log.Fatalf("error executing template: %s", err)
-	}
-
-	if _, err := f.Write(buffer.Bytes()); err != nil {
-		f.Close()
-		log.Fatalf("error writing to file (%s): %s", filename, err)
-	}
-
-	if err := f.Close(); err != nil {
-		log.Fatalf("error closing file (%s): %s", filename, err)
-	}
-}
-
-func breakUpBigFile() {
+func breakUpBigFile(g *common.Generator, filename, header string) error {
 	f, err := os.Open(filename)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 	defer f.Close()
 
 	lines, err := lineCounter(f)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	_, err = f.Seek(0, 0)
 	if err != nil {
-		log.Fatal(err)
+		return err
 	}
 
 	scanner := bufio.NewScanner(f)
@@ -331,7 +264,7 @@ func breakUpBigFile() {
 	var cfile string
 	passedChunk := false
 
-	re := regexp.MustCompile(`^  - id: `)
+	re := regexache.MustCompile(`^  - id: `)
 
 	for scanner.Scan() {
 		if l%(lines/semgrepConfigChunks) == 0 {
@@ -350,19 +283,19 @@ func breakUpBigFile() {
 			}
 
 			cfile = fmt.Sprintf("%s%d.yml", strings.TrimSuffix(filename, ".yml"), chunk)
-			fmt.Printf("  Splitting into %s\n", strings.TrimPrefix(cfile, "../../../"))
+			g.Infof("  Splitting into %s", strings.TrimPrefix(cfile, "../../../"))
 			chunk++
 
 			var err error
 			piece, err = os.OpenFile(cfile, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 			if err != nil {
-				log.Fatalf("error opening file (%s): %s", cfile, err)
+				return fmt.Errorf("opening file (%s): %s", cfile, err)
 			}
 
 			w = bufio.NewWriter(piece)
 			_, err = w.WriteString(header)
 			if err != nil {
-				log.Fatalf("error writing header to file (%s): %s", cfile, err)
+				return fmt.Errorf("writing header to file (%s): %s", cfile, err)
 			}
 			w.Flush()
 		}
@@ -370,7 +303,7 @@ func breakUpBigFile() {
 		if w != nil {
 			_, err = w.WriteString(fmt.Sprintf("%s\n", scanner.Text()))
 			if err != nil {
-				log.Fatalf("error writing to file (%s): %s", cfile, err)
+				return fmt.Errorf("writing to file (%s): %s", cfile, err)
 			}
 		}
 
@@ -380,6 +313,8 @@ func breakUpBigFile() {
 	if w != nil {
 		w.Flush()
 	}
+
+	return nil
 }
 
 func lineCounter(r io.Reader) (int, error) {

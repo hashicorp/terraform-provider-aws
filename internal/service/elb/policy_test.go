@@ -1,40 +1,41 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elb_test
 
 import (
+	"context"
 	"fmt"
-	"regexp"
-	"strconv"
-	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/elb"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfelb "github.com/hashicorp/terraform-provider-aws/internal/service/elb"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccELBPolicy_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var policy elb.PolicyDescription
-	loadBalancerResourceName := "aws_elb.test-lb"
 	resourceName := "aws_load_balancer_policy.test-policy"
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elb.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(resourceName, &policy),
-					testAccCheckPolicyState(loadBalancerResourceName, resourceName),
+					testAccCheckPolicyExists(ctx, resourceName, &policy),
 				),
 			},
 		},
@@ -42,33 +43,22 @@ func TestAccELBPolicy_basic(t *testing.T) {
 }
 
 func TestAccELBPolicy_disappears(t *testing.T) {
-	var loadBalancer elb.LoadBalancerDescription
+	ctx := acctest.Context(t)
 	var policy elb.PolicyDescription
-	loadBalancerResourceName := "aws_elb.test-lb"
 	resourceName := "aws_load_balancer_policy.test-policy"
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elb.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_basic(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLoadBalancerExists(loadBalancerResourceName, &loadBalancer),
-					testAccCheckPolicyExists(resourceName, &policy),
-					testAccCheckPolicyDisappears(&loadBalancer, &policy),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-			{
-				Config: testAccPolicyConfig_basic(rInt),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLoadBalancerExists(loadBalancerResourceName, &loadBalancer),
-					testAccCheckPolicyExists(resourceName, &policy),
-					testAccCheckLoadBalancerDisappears(&loadBalancer),
+					testAccCheckPolicyExists(ctx, resourceName, &policy),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfelb.ResourcePolicy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -77,21 +67,22 @@ func TestAccELBPolicy_disappears(t *testing.T) {
 }
 
 func TestAccELBPolicy_LBCookieStickinessPolicyType_computedAttributesOnly(t *testing.T) {
+	ctx := acctest.Context(t)
 	var policy elb.PolicyDescription
 	resourceName := "aws_load_balancer_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	policyTypeName := "LBCookieStickinessPolicyType"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elb.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_typeNameOnly(rName, policyTypeName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(resourceName, &policy),
+					testAccCheckPolicyExists(ctx, resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "policy_type_name", policyTypeName),
 					resource.TestCheckResourceAttr(resourceName, "policy_attribute.#", "1"),
 				),
@@ -101,22 +92,23 @@ func TestAccELBPolicy_LBCookieStickinessPolicyType_computedAttributesOnly(t *tes
 }
 
 func TestAccELBPolicy_SSLNegotiationPolicyType_computedAttributesOnly(t *testing.T) {
+	ctx := acctest.Context(t)
 	var policy elb.PolicyDescription
 	resourceName := "aws_load_balancer_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elb.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_typeNameOnly(rName, tfelb.SSLNegotiationPolicyType),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(resourceName, &policy),
+					testAccCheckPolicyExists(ctx, resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "policy_type_name", tfelb.SSLNegotiationPolicyType),
-					resource.TestMatchResourceAttr(resourceName, "policy_attribute.#", regexp.MustCompile(`[^0]+`)),
+					resource.TestMatchResourceAttr(resourceName, "policy_attribute.#", regexache.MustCompile(`[^0]+`)),
 				),
 			},
 		},
@@ -124,20 +116,21 @@ func TestAccELBPolicy_SSLNegotiationPolicyType_computedAttributesOnly(t *testing
 }
 
 func TestAccELBPolicy_SSLNegotiationPolicyType_customPolicy(t *testing.T) {
+	ctx := acctest.Context(t)
 	var policy elb.PolicyDescription
 	resourceName := "aws_load_balancer_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elb.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_customSSLSecurity(rName, "Protocol-TLSv1.1", "DHE-RSA-AES256-SHA256"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(resourceName, &policy),
+					testAccCheckPolicyExists(ctx, resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "policy_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "policy_type_name", tfelb.SSLNegotiationPolicyType),
 					resource.TestCheckResourceAttr(resourceName, "policy_attribute.#", "2"),
@@ -154,7 +147,7 @@ func TestAccELBPolicy_SSLNegotiationPolicyType_customPolicy(t *testing.T) {
 			{
 				Config: testAccPolicyConfig_customSSLSecurity(rName, "Protocol-TLSv1.2", "ECDHE-ECDSA-AES128-GCM-SHA256"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(resourceName, &policy),
+					testAccCheckPolicyExists(ctx, resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "policy_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "policy_type_name", tfelb.SSLNegotiationPolicyType),
 					resource.TestCheckResourceAttr(resourceName, "policy_attribute.#", "2"),
@@ -173,6 +166,7 @@ func TestAccELBPolicy_SSLNegotiationPolicyType_customPolicy(t *testing.T) {
 }
 
 func TestAccELBPolicy_SSLSecurityPolicy_predefined(t *testing.T) {
+	ctx := acctest.Context(t)
 	var policy elb.PolicyDescription
 	resourceName := "aws_load_balancer_policy.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -180,15 +174,15 @@ func TestAccELBPolicy_SSLSecurityPolicy_predefined(t *testing.T) {
 	predefinedSecurityPolicyUpdated := "ELBSecurityPolicy-2016-08"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elb.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_predefinedSSLSecurity(rName, predefinedSecurityPolicy),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(resourceName, &policy),
+					testAccCheckPolicyExists(ctx, resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "policy_attribute.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "policy_attribute.*", map[string]string{
 						"name":  tfelb.ReferenceSecurityPolicy,
@@ -200,7 +194,7 @@ func TestAccELBPolicy_SSLSecurityPolicy_predefined(t *testing.T) {
 			{
 				Config: testAccPolicyConfig_predefinedSSLSecurity(rName, predefinedSecurityPolicyUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(resourceName, &policy),
+					testAccCheckPolicyExists(ctx, resourceName, &policy),
 					resource.TestCheckResourceAttr(resourceName, "policy_attribute.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "policy_attribute.*", map[string]string{
 						"name":  tfelb.ReferenceSecurityPolicy,
@@ -214,166 +208,90 @@ func TestAccELBPolicy_SSLSecurityPolicy_predefined(t *testing.T) {
 }
 
 func TestAccELBPolicy_updateWhileAssigned(t *testing.T) {
+	ctx := acctest.Context(t)
 	var policy elb.PolicyDescription
-	loadBalancerResourceName := "aws_elb.test-lb"
 	resourceName := "aws_load_balancer_policy.test-policy"
 	rInt := sdkacctest.RandInt()
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elb.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckPolicyDestroy,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPolicyConfig_updateWhileAssigned0(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(resourceName, &policy),
-					testAccCheckPolicyState(loadBalancerResourceName, resourceName),
+					testAccCheckPolicyExists(ctx, resourceName, &policy),
 				),
 			},
 			{
 				Config: testAccPolicyConfig_updateWhileAssigned1(rInt),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPolicyExists(resourceName, &policy),
-					testAccCheckPolicyState(loadBalancerResourceName, resourceName),
+					testAccCheckPolicyExists(ctx, resourceName, &policy),
 				),
 			},
 		},
 	})
 }
 
-func testAccCheckPolicyExists(resourceName string, policyDescription *elb.PolicyDescription) resource.TestCheckFunc {
+func testAccCheckPolicyExists(ctx context.Context, n string, v *elb.PolicyDescription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Load Balancer Policy ID is set for %s", resourceName)
+			return fmt.Errorf("No ELB Classic Load Balancer Policy is set")
 		}
 
-		loadBalancerName, policyName := tfelb.PolicyParseID(rs.Primary.ID)
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
-
-		input := &elb.DescribeLoadBalancerPoliciesInput{
-			LoadBalancerName: aws.String(loadBalancerName),
-			PolicyNames:      []*string{aws.String(policyName)},
-		}
-
-		output, err := conn.DescribeLoadBalancerPolicies(input)
+		lbName, policyName, err := tfelb.PolicyParseResourceID(rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if output == nil || len(output.PolicyDescriptions) == 0 {
-			return fmt.Errorf("Load Balancer Policy (%s) not found", rs.Primary.ID)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn(ctx)
+
+		output, err := tfelb.FindLoadBalancerPolicyByTwoPartKey(ctx, conn, lbName, policyName)
+
+		if err != nil {
+			return err
 		}
 
-		*policyDescription = *output.PolicyDescriptions[0]
+		*output = *v
 
 		return nil
 	}
 }
 
-func testAccCheckPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
+func testAccCheckPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_load_balancer_policy" {
-			continue
-		}
-
-		loadBalancerName, policyName := tfelb.PolicyParseID(rs.Primary.ID)
-		out, err := conn.DescribeLoadBalancerPolicies(
-			&elb.DescribeLoadBalancerPoliciesInput{
-				LoadBalancerName: aws.String(loadBalancerName),
-				PolicyNames:      []*string{aws.String(policyName)},
-			})
-		if err != nil {
-			if ec2err, ok := err.(awserr.Error); ok && (ec2err.Code() == "PolicyNotFound" || ec2err.Code() == "LoadBalancerNotFound") {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_load_balancer_policy" {
 				continue
 			}
-			return err
-		}
 
-		if len(out.PolicyDescriptions) > 0 {
-			return fmt.Errorf("Policy still exists")
-		}
-	}
-	return nil
-}
+			lbName, policyName, err := tfelb.PolicyParseResourceID(rs.Primary.ID)
 
-func testAccCheckPolicyDisappears(loadBalancer *elb.LoadBalancerDescription, policy *elb.PolicyDescription) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
-
-		input := elb.DeleteLoadBalancerPolicyInput{
-			LoadBalancerName: loadBalancer.LoadBalancerName,
-			PolicyName:       policy.PolicyName,
-		}
-		_, err := conn.DeleteLoadBalancerPolicy(&input)
-
-		return err
-	}
-}
-
-func testAccCheckPolicyState(elbResource string, policyResource string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[elbResource]
-		if !ok {
-			return fmt.Errorf("Not found: %s", elbResource)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
-
-		policy, ok := s.RootModule().Resources[policyResource]
-		if !ok {
-			return fmt.Errorf("Not found: %s", policyResource)
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBConn
-		loadBalancerName, policyName := tfelb.PolicyParseID(policy.Primary.ID)
-		loadBalancerPolicies, err := conn.DescribeLoadBalancerPolicies(&elb.DescribeLoadBalancerPoliciesInput{
-			LoadBalancerName: aws.String(loadBalancerName),
-			PolicyNames:      []*string{aws.String(policyName)},
-		})
-
-		if err != nil {
-			return err
-		}
-
-		for _, loadBalancerPolicy := range loadBalancerPolicies.PolicyDescriptions {
-			if *loadBalancerPolicy.PolicyName == policyName {
-				if *loadBalancerPolicy.PolicyTypeName != policy.Primary.Attributes["policy_type_name"] {
-					return fmt.Errorf("PolicyTypeName does not match")
-				}
-				policyAttributeCount, err := strconv.Atoi(policy.Primary.Attributes["policy_attribute.#"])
-				if err != nil {
-					return err
-				}
-				if len(loadBalancerPolicy.PolicyAttributeDescriptions) != policyAttributeCount {
-					return fmt.Errorf("PolicyAttributeDescriptions length mismatch")
-				}
-				policyAttributes := make(map[string]string)
-				for k, v := range policy.Primary.Attributes {
-					if strings.HasPrefix(k, "policy_attribute.") && strings.HasSuffix(k, ".name") {
-						key := v
-						value_key := fmt.Sprintf("%s.value", strings.TrimSuffix(k, ".name"))
-						policyAttributes[key] = policy.Primary.Attributes[value_key]
-					}
-				}
-				for _, policyAttribute := range loadBalancerPolicy.PolicyAttributeDescriptions {
-					if *policyAttribute.AttributeValue != policyAttributes[*policyAttribute.AttributeName] {
-						return fmt.Errorf("PollicyAttribute Value mismatch %s != %s: %s", *policyAttribute.AttributeValue, policyAttributes[*policyAttribute.AttributeName], policyAttributes)
-					}
-				}
+			if err != nil {
+				return err
 			}
+
+			_, err = tfelb.FindLoadBalancerPolicyByTwoPartKey(ctx, conn, lbName, policyName)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("ELB Classic Load Balancer Policy %s still exists", rs.Primary.ID)
 		}
 
 		return nil

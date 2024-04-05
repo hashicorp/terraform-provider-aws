@@ -1,13 +1,17 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticache
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"math"
 	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
-	multierror "github.com/hashicorp/go-multierror"
 	gversion "github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
@@ -17,9 +21,9 @@ const (
 	versionStringRegexpPattern         = "^" + versionStringRegexpInternalPattern + "$"
 )
 
-var versionStringRegexp = regexp.MustCompile(versionStringRegexpPattern)
+var versionStringRegexp = regexache.MustCompile(versionStringRegexpPattern)
 
-func validMemcachedVersionString(v interface{}, k string) (ws []string, errors []error) {
+func validMemcachedVersionString(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 
 	if !versionStringRegexp.MatchString(value) {
@@ -30,34 +34,29 @@ func validMemcachedVersionString(v interface{}, k string) (ws []string, errors [
 }
 
 const (
-	redisVersionPreV6RegexpRaw  = `[1-5](\.[[:digit:]]+){2}`
-	redisVersionPostV6RegexpRaw = `(([6-9])\.x)|([6-9]\.[[:digit:]]+)`
+	redisVersionPreV6RegexpPattern  = `^[1-5](\.[[:digit:]]+){2}$`
+	redisVersionPostV6RegexpPattern = `^((6)\.x)|([6-9]\.[[:digit:]]+)$`
 
-	redisVersionRegexpRaw = redisVersionPreV6RegexpRaw + "|" + redisVersionPostV6RegexpRaw
-)
-
-const (
-	redisVersionRegexpPattern       = "^" + redisVersionRegexpRaw + "$"
-	redisVersionPostV6RegexpPattern = "^" + redisVersionPostV6RegexpRaw + "$"
+	redisVersionRegexpPattern = redisVersionPreV6RegexpPattern + "|" + redisVersionPostV6RegexpPattern
 )
 
 var (
-	redisVersionRegexp       = regexp.MustCompile(redisVersionRegexpPattern)
-	redisVersionPostV6Regexp = regexp.MustCompile(redisVersionPostV6RegexpPattern)
+	redisVersionRegexp       = regexache.MustCompile(redisVersionRegexpPattern)
+	redisVersionPostV6Regexp = regexache.MustCompile(redisVersionPostV6RegexpPattern)
 )
 
-func validRedisVersionString(v interface{}, k string) (ws []string, errors []error) {
+func validRedisVersionString(v any, k string) (ws []string, errors []error) {
 	value := v.(string)
 
 	if !redisVersionRegexp.MatchString(value) {
-		errors = append(errors, fmt.Errorf("%s: Redis versions must match <major>.<minor> when using version 6 or higher, or <major>.<minor>.<patch>", k))
+		errors = append(errors, fmt.Errorf("%s: %s is invalid. For Redis v6 or higher, use <major>.<minor>. For Redis v5 or lower, use <major>.<minor>.<patch>.", k, value))
 	}
 
 	return
 }
 
 // CustomizeDiffValidateClusterEngineVersion validates the correct format for `engine_version`, based on `engine`
-func CustomizeDiffValidateClusterEngineVersion(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
+func CustomizeDiffValidateClusterEngineVersion(_ context.Context, diff *schema.ResourceDiff, _ any) error {
 	engineVersion, ok := diff.GetOk("engine_version")
 	if !ok {
 		return nil
@@ -79,29 +78,48 @@ func validateClusterEngineVersion(engine, engineVersion string) error {
 
 	_, errs := validator(engineVersion, "engine_version")
 
-	var err *multierror.Error
-	err = multierror.Append(err, errs...)
-	return err.ErrorOrNil()
+	return errors.Join(errs...)
 }
 
 // customizeDiffEngineVersionForceNewOnDowngrade causes re-creation of the resource if the version is being downgraded
-func customizeDiffEngineVersionForceNewOnDowngrade(_ context.Context, diff *schema.ResourceDiff, _ interface{}) error {
+func customizeDiffEngineVersionForceNewOnDowngrade(_ context.Context, diff *schema.ResourceDiff, _ any) error {
 	return engineVersionForceNewOnDowngrade(diff)
 }
 
 type getChangeDiffer interface {
-	GetChange(key string) (interface{}, interface{})
+	Get(key string) any
+	GetChange(key string) (any, any)
 }
 
 func engineVersionIsDowngrade(diff getChangeDiffer) (bool, error) {
 	o, n := diff.GetChange("engine_version")
+	if o == "6.x" {
+		actual := diff.Get("engine_version_actual")
+		aVersion, err := gversion.NewVersion(actual.(string))
+		if err != nil {
+			return false, fmt.Errorf("parsing current engine_version: %w", err)
+		}
+		nVersion, err := normalizeEngineVersion(n.(string))
+		if err != nil {
+			return false, fmt.Errorf("parsing new engine_version: %w", err)
+		}
+
+		aSegments := aVersion.Segments()
+		nSegments := nVersion.Segments()
+
+		if nSegments[0] != aSegments[0] {
+			return nSegments[0] < aSegments[0], nil
+		}
+		return nSegments[1] < aSegments[1], nil
+	}
+
 	oVersion, err := normalizeEngineVersion(o.(string))
 	if err != nil {
-		return false, fmt.Errorf("error parsing old engine_version: %w", err)
+		return false, fmt.Errorf("parsing old engine_version: %w", err)
 	}
 	nVersion, err := normalizeEngineVersion(n.(string))
 	if err != nil {
-		return false, fmt.Errorf("error parsing new engine_version: %w", err)
+		return false, fmt.Errorf("parsing new engine_version: %w", err)
 	}
 
 	return nVersion.LessThan(oVersion), nil
@@ -109,7 +127,8 @@ func engineVersionIsDowngrade(diff getChangeDiffer) (bool, error) {
 
 type forceNewDiffer interface {
 	Id() string
-	GetChange(key string) (interface{}, interface{})
+	Get(key string) any
+	GetChange(key string) (any, any)
 	HasChange(key string) bool
 	ForceNew(key string) error
 }
@@ -128,15 +147,14 @@ func engineVersionForceNewOnDowngrade(diff forceNewDiffer) error {
 	return diff.ForceNew("engine_version")
 }
 
-// normalizeEngineVersion returns a github.com/hashicorp/go-version Version
-// that can handle a regular 1.2.3 version number or either the  6.x or 6.0 version number used for
-// ElastiCache Redis version 6 and higher. 6.x will sort to 6.<maxint>
+// normalizeEngineVersion returns a github.com/hashicorp/go-version Version from:
+// - a regular 1.2.3 version number
+// - either the 6.x or 6.0 version number used for ElastiCache Redis version 6. 6.x will sort to 6.<maxint>
+// - a 7.0 version number used from version 7
 func normalizeEngineVersion(version string) (*gversion.Version, error) {
 	if matches := redisVersionPostV6Regexp.FindStringSubmatch(version); matches != nil {
 		if matches[1] != "" {
 			version = fmt.Sprintf("%s.%d", matches[2], math.MaxInt)
-		} else if matches[3] != "" {
-			version = matches[3]
 		}
 	}
 	return gversion.NewVersion(version)
@@ -150,7 +168,7 @@ func setEngineVersionMemcached(d *schema.ResourceData, version *string) {
 func setEngineVersionRedis(d *schema.ResourceData, version *string) error {
 	engineVersion, err := gversion.NewVersion(aws.StringValue(version))
 	if err != nil {
-		return fmt.Errorf("error reading engine version: %w", err)
+		return fmt.Errorf("reading engine version: %w", err)
 	}
 	if engineVersion.Segments()[0] < 6 {
 		d.Set("engine_version", engineVersion.String())

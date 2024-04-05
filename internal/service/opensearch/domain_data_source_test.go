@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opensearch_test
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/opensearchservice"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccOpenSearchDomainDataSource_Data_basic(t *testing.T) {
@@ -14,14 +17,15 @@ func TestAccOpenSearchDomainDataSource_Data_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
+	ctx := acctest.Context(t)
 	rName := testAccRandomDomainName()
 	autoTuneStartAtTime := testAccGetValidStartAtTime(t, "24h")
 	datasourceName := "data.aws_opensearch_domain.test"
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -44,9 +48,11 @@ func TestAccOpenSearchDomainDataSource_Data_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "ebs_options.0.volume_type", resourceName, "ebs_options.0.volume_type"),
 					resource.TestCheckResourceAttrPair(datasourceName, "ebs_options.0.volume_size", resourceName, "ebs_options.0.volume_size"),
 					resource.TestCheckResourceAttrPair(datasourceName, "ebs_options.0.iops", resourceName, "ebs_options.0.iops"),
+					resource.TestCheckResourceAttrPair(datasourceName, "off_peak_window_options.#", resourceName, "off_peak_window_options.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "snapshot_options.#", resourceName, "snapshot_options.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "snapshot_options.0.automated_snapshot_start_hour", resourceName, "snapshot_options.0.automated_snapshot_start_hour"),
-					resource.TestCheckResourceAttrPair(datasourceName, "advanced_security_options.#", resourceName, "advanced_security_options.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "software_update_options.#", resourceName, "software_update_options.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "software_update_options.0.auto_software_update_enabled", resourceName, "software_update_options.0.auto_software_update_enabled"),
 				),
 			},
 		},
@@ -58,20 +64,23 @@ func TestAccOpenSearchDomainDataSource_Data_advanced(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
+	ctx := acctest.Context(t)
 	rName := testAccRandomDomainName()
 	autoTuneStartAtTime := testAccGetValidStartAtTime(t, "24h")
 	datasourceName := "data.aws_opensearch_domain.test"
 	resourceName := "aws_opensearch_domain.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckIAMServiceLinkedRole(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, opensearchservice.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIAMServiceLinkedRole(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.OpenSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccDomainDataSourceConfig_advanced(rName, autoTuneStartAtTime),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttrPair(datasourceName, "engine_version", resourceName, "engine_version"),
+					resource.TestCheckResourceAttrPair(datasourceName, "advanced_security_options.#", resourceName, "advanced_security_options.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "advanced_security_options.0.enabled", resourceName, "advanced_security_options.0.enabled"),
+					resource.TestCheckResourceAttrPair(datasourceName, "advanced_security_options.0.internal_user_database_enabled", resourceName, "advanced_security_options.0.internal_user_database_enabled"),
 					resource.TestCheckResourceAttrPair(datasourceName, "auto_tune_options.#", resourceName, "auto_tune_options.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "auto_tune_options.0.desired_state", resourceName, "auto_tune_options.0.desired_state"),
 					resource.TestCheckResourceAttrPair(datasourceName, "auto_tune_options.0.maintenance_schedule", resourceName, "auto_tune_options.0.maintenance_schedule"),
@@ -85,12 +94,12 @@ func TestAccOpenSearchDomainDataSource_Data_advanced(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "ebs_options.0.ebs_enabled", resourceName, "ebs_options.0.ebs_enabled"),
 					resource.TestCheckResourceAttrPair(datasourceName, "ebs_options.0.volume_type", resourceName, "ebs_options.0.volume_type"),
 					resource.TestCheckResourceAttrPair(datasourceName, "ebs_options.0.volume_size", resourceName, "ebs_options.0.volume_size"),
+					resource.TestCheckResourceAttrPair(datasourceName, "engine_version", resourceName, "engine_version"),
+					resource.TestCheckResourceAttrPair(datasourceName, "log_publishing_options.#", resourceName, "log_publishing_options.#"),
+					resource.TestCheckResourceAttrPair(datasourceName, "off_peak_window_options.#", resourceName, "off_peak_window_options.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "snapshot_options.#", resourceName, "snapshot_options.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "snapshot_options.0.automated_snapshot_start_hour", resourceName, "snapshot_options.0.automated_snapshot_start_hour"),
-					resource.TestCheckResourceAttrPair(datasourceName, "log_publishing_options.#", resourceName, "log_publishing_options.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "vpc_options.#", resourceName, "vpc_options.#"),
-					resource.TestCheckResourceAttrPair(datasourceName, "advanced_security_options.0.enabled", resourceName, "advanced_security_options.0.enabled"),
-					resource.TestCheckResourceAttrPair(datasourceName, "advanced_security_options.0.internal_user_database_enabled", resourceName, "advanced_security_options.0.internal_user_database_enabled"),
 				),
 			},
 		},
@@ -151,7 +160,6 @@ POLICY
   }
 
   cluster_config {
-    instance_type            = "t3.small.search"
     instance_count           = 2
     dedicated_master_enabled = false
 
@@ -173,6 +181,10 @@ POLICY
   snapshot_options {
     automated_snapshot_start_hour = 23
   }
+
+  software_update_options {
+    auto_software_update_enabled = true
+  }
 }
 
 data "aws_opensearch_domain" "test" {
@@ -182,9 +194,7 @@ data "aws_opensearch_domain" "test" {
 }
 
 func testAccDomainDataSourceConfig_advanced(rName, autoTuneStartAtTime string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigAvailableAZsNoOptIn(),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 data "aws_partition" "current" {}
 
 data "aws_region" "current" {}
@@ -219,25 +229,13 @@ resource "aws_cloudwatch_log_resource_policy" "test" {
 CONFIG
 }
 
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-}
-
-resource "aws_subnet" "test" {
-  availability_zone = data.aws_availability_zones.available.names[0]
-  cidr_block        = "10.0.0.0/24"
-  vpc_id            = aws_vpc.test.id
-}
-
-resource "aws_subnet" "test2" {
-  availability_zone = data.aws_availability_zones.available.names[1]
-  cidr_block        = "10.0.1.0/24"
-  vpc_id            = aws_vpc.test.id
-}
-
 resource "aws_security_group" "test" {
   name   = %[1]q
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_security_group_rule" "test" {
@@ -285,11 +283,9 @@ POLICY
     }
 
     rollback_on_disable = "NO_ROLLBACK"
-
   }
 
   cluster_config {
-    instance_type            = "t2.small.search"
     instance_count           = 2
     dedicated_master_enabled = false
 
@@ -316,13 +312,8 @@ POLICY
   }
 
   vpc_options {
-    security_group_ids = [
-      aws_security_group.test.id
-    ]
-    subnet_ids = [
-      aws_subnet.test.id,
-      aws_subnet.test2.id
-    ]
+    security_group_ids = [aws_security_group.test.id]
+    subnet_ids         = aws_subnet.test[*].id
   }
 
   advanced_security_options {

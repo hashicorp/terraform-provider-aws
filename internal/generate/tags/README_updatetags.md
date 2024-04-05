@@ -27,7 +27,7 @@ func AthenaUpdateTags(conn *athena.Athena, identifier string, oldTagsMap interfa
         _, err := conn.UntagResource(input)
 
         if err != nil {
-            return fmt.Errorf("error untagging resource (%s): %s", identifier, err)
+            return fmt.Errorf("untagging resource (%s): %s", identifier, err)
         }
     }
 
@@ -40,7 +40,7 @@ func AthenaUpdateTags(conn *athena.Athena, identifier string, oldTagsMap interfa
         _, err := conn.TagResource(input)
 
         if err != nil {
-            return fmt.Errorf("error tagging resource (%s): %s", identifier, err)
+            return fmt.Errorf("tagging resource (%s): %s", identifier, err)
         }
     }
 

@@ -1,30 +1,40 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package datasync
 
 import (
+	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/datasync"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceTask() *schema.Resource {
+// @SDKResource("aws_datasync_task", name="Task")
+// @Tags(identifierAttribute="id")
+func resourceTask() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceTaskCreate,
-		Read:   resourceTaskRead,
-		Update: resourceTaskUpdate,
-		Delete: resourceTaskDelete,
+		CreateWithoutTimeout: resourceTaskCreate,
+		ReadWithoutTimeout:   resourceTaskRead,
+		UpdateWithoutTimeout: resourceTaskUpdate,
+		DeleteWithoutTimeout: resourceTaskDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(5 * time.Minute),
@@ -123,6 +133,12 @@ func ResourceTask() *schema.Resource {
 							Default:      datasync.MtimePreserve,
 							ValidateFunc: validation.StringInSlice(datasync.Mtime_Values(), false),
 						},
+						"object_tags": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      datasync.ObjectTagsPreserve,
+							ValidateFunc: validation.StringInSlice(datasync.ObjectTags_Values(), false),
+						},
 						"overwrite_mode": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -146,6 +162,12 @@ func ResourceTask() *schema.Resource {
 							Optional:     true,
 							Default:      datasync.PreserveDevicesNone,
 							ValidateFunc: validation.StringInSlice(datasync.PreserveDevices_Values(), false),
+						},
+						"security_descriptor_copy_flags": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice(datasync.SmbSecurityDescriptorCopyFlags_Values(), false),
 						},
 						"task_queueing": {
 							Type:         schema.TypeString,
@@ -185,7 +207,7 @@ func ResourceTask() *schema.Resource {
 							Required: true,
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(1, 256),
-								validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9\ \_\*\?\,\|\^\-\/\#\s\(\)\+]*$`),
+								validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_\s #()*+,/?^|-]*$`),
 									"Schedule expressions must have the following syntax: rate(<number>\\\\s?(minutes?|hours?|days?)), cron(<cron_expression>) or at(yyyy-MM-dd'T'HH:mm:ss)."),
 							),
 						},
@@ -198,24 +220,99 @@ func ResourceTask() *schema.Resource {
 				ForceNew:     true,
 				ValidateFunc: verify.ValidARN,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"task_report_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"s3_destination": {
+							Type:     schema.TypeList,
+							Required: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"bucket_access_role_arn": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+									"s3_bucket_arn": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+									"subdirectory": {
+										Type:     schema.TypeString,
+										Optional: true,
+									},
+								},
+							},
+						},
+						"s3_object_versioning": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(datasync.ObjectVersionIds_Values(), false),
+						},
+						"output_type": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(datasync.ReportOutputType_Values(), false),
+						},
+						"report_overrides": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"deleted_override": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice(datasync.ReportLevel_Values(), false),
+									},
+									"skipped_override": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice(datasync.ReportLevel_Values(), false),
+									},
+									"transferred_override": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice(datasync.ReportLevel_Values(), false),
+									},
+									"verified_override": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: validation.StringInSlice(datasync.ReportLevel_Values(), false),
+									},
+								},
+							},
+						},
+						"report_level": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(datasync.ReportLevel_Values(), false),
+						},
+					},
+				},
+			},
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceTaskCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceTaskCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
 	input := &datasync.CreateTaskInput{
 		DestinationLocationArn: aws.String(d.Get("destination_location_arn").(string)),
 		Options:                expandOptions(d.Get("options").([]interface{})),
 		SourceLocationArn:      aws.String(d.Get("source_location_arn").(string)),
-		Tags:                   Tags(tags.IgnoreAWS()),
+		Tags:                   getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("cloudwatch_log_group_arn"); ok {
@@ -234,83 +331,72 @@ func resourceTaskCreate(d *schema.ResourceData, meta interface{}) error {
 		input.Name = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("task_report_config"); ok {
+		input.TaskReportConfig = expandTaskReportConfig(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("schedule"); ok {
 		input.Schedule = expandTaskSchedule(v.([]interface{}))
 	}
 
-	log.Printf("[DEBUG] Creating DataSync Task: %s", input)
-	output, err := conn.CreateTask(input)
+	output, err := conn.CreateTaskWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating DataSync Task: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating DataSync Task: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.TaskArn))
 
-	if _, err := waitTaskAvailable(conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return fmt.Errorf("error waiting for DataSync Task (%s) creation: %w", d.Id(), err)
+	if _, err := waitTaskAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for DataSync Task (%s) creation: %s", d.Id(), err)
 	}
 
-	return resourceTaskRead(d, meta)
+	return append(diags, resourceTaskRead(ctx, d, meta)...)
 }
 
-func resourceTaskRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceTaskRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
-	output, err := FindTaskByARN(conn, d.Id())
+	output, err := findTaskByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DataSync Task (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading DataSync Task (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading DataSync Task (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", output.TaskArn)
 	d.Set("cloudwatch_log_group_arn", output.CloudWatchLogGroupArn)
 	d.Set("destination_location_arn", output.DestinationLocationArn)
 	if err := d.Set("excludes", flattenFilterRules(output.Excludes)); err != nil {
-		return fmt.Errorf("error setting excludes: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting excludes: %s", err)
 	}
 	if err := d.Set("includes", flattenFilterRules(output.Includes)); err != nil {
-		return fmt.Errorf("error setting includes: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting includes: %s", err)
 	}
 	d.Set("name", output.Name)
 	if err := d.Set("options", flattenOptions(output.Options)); err != nil {
-		return fmt.Errorf("error setting options: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting options: %s", err)
 	}
 	if err := d.Set("schedule", flattenTaskSchedule(output.Schedule)); err != nil {
-		return fmt.Errorf("error setting schedule: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting schedule: %s", err)
+	}
+	if err := d.Set("task_report_config", flattenTaskReportConfig(output.TaskReportConfig)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting task_report_config: %s", err)
 	}
 	d.Set("source_location_arn", output.SourceLocationArn)
 
-	tags, err := ListTags(conn, d.Id())
-
-	if err != nil {
-		return fmt.Errorf("error listing tags for DataSync Task (%s): %w", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceTaskUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+func resourceTaskUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &datasync.UpdateTaskInput{
@@ -341,42 +427,98 @@ func resourceTaskUpdate(d *schema.ResourceData, meta interface{}) error {
 			input.Schedule = expandTaskSchedule(d.Get("schedule").([]interface{}))
 		}
 
-		log.Printf("[DEBUG] Updating DataSync Task: %s", input)
-		if _, err := conn.UpdateTask(input); err != nil {
-			return fmt.Errorf("error updating DataSync Task (%s): %w", d.Id(), err)
+		if d.HasChanges("task_report_config") {
+			input.TaskReportConfig = expandTaskReportConfig(d.Get("task_report_config").([]interface{}))
+		}
+
+		if _, err := conn.UpdateTaskWithContext(ctx, input); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating DataSync Task (%s): %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating DataSync Task (%s) tags: %w", d.Id(), err)
-		}
-	}
-
-	return resourceTaskRead(d, meta)
+	return append(diags, resourceTaskRead(ctx, d, meta)...)
 }
 
-func resourceTaskDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DataSyncConn
+func resourceTaskDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
-	input := &datasync.DeleteTaskInput{
+	log.Printf("[DEBUG] Deleting DataSync Task: %s", d.Id())
+	_, err := conn.DeleteTaskWithContext(ctx, &datasync.DeleteTaskInput{
 		TaskArn: aws.String(d.Id()),
-	}
-
-	log.Printf("[DEBUG] Deleting DataSync Task: %s", input)
-	_, err := conn.DeleteTask(input)
+	})
 
 	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting DataSync Task (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting DataSync Task (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
+}
+
+func findTaskByARN(ctx context.Context, conn *datasync.DataSync, arn string) (*datasync.DescribeTaskOutput, error) {
+	input := &datasync.DescribeTaskInput{
+		TaskArn: aws.String(arn),
+	}
+
+	output, err := conn.DescribeTaskWithContext(ctx, input)
+
+	if tfawserr.ErrMessageContains(err, datasync.ErrCodeInvalidRequestException, "not found") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func statusTask(ctx context.Context, conn *datasync.DataSync, arn string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findTaskByARN(ctx, conn, arn)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
+func waitTaskAvailable(ctx context.Context, conn *datasync.DataSync, arn string, timeout time.Duration) (*datasync.DescribeTaskOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{datasync.TaskStatusCreating, datasync.TaskStatusUnavailable},
+		Target:  []string{datasync.TaskStatusAvailable, datasync.TaskStatusRunning},
+		Refresh: statusTask(ctx, conn, arn),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*datasync.DescribeTaskOutput); ok {
+		if errorCode, errorDetail := aws.StringValue(output.ErrorCode), aws.StringValue(output.ErrorDetail); errorCode != "" && errorDetail != "" {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", errorCode, errorDetail))
+		}
+
+		return output, err
+	}
+
+	return nil, err
 }
 
 func flattenOptions(options *datasync.Options) []interface{} {
@@ -385,19 +527,77 @@ func flattenOptions(options *datasync.Options) []interface{} {
 	}
 
 	m := map[string]interface{}{
-		"atime":                  aws.StringValue(options.Atime),
-		"bytes_per_second":       aws.Int64Value(options.BytesPerSecond),
-		"gid":                    aws.StringValue(options.Gid),
-		"log_level":              aws.StringValue(options.LogLevel),
-		"mtime":                  aws.StringValue(options.Mtime),
-		"overwrite_mode":         aws.StringValue(options.OverwriteMode),
-		"posix_permissions":      aws.StringValue(options.PosixPermissions),
-		"preserve_deleted_files": aws.StringValue(options.PreserveDeletedFiles),
-		"preserve_devices":       aws.StringValue(options.PreserveDevices),
-		"task_queueing":          aws.StringValue(options.TaskQueueing),
-		"transfer_mode":          aws.StringValue(options.TransferMode),
-		"uid":                    aws.StringValue(options.Uid),
-		"verify_mode":            aws.StringValue(options.VerifyMode),
+		"atime":                          aws.StringValue(options.Atime),
+		"bytes_per_second":               aws.Int64Value(options.BytesPerSecond),
+		"gid":                            aws.StringValue(options.Gid),
+		"log_level":                      aws.StringValue(options.LogLevel),
+		"mtime":                          aws.StringValue(options.Mtime),
+		"object_tags":                    aws.StringValue(options.ObjectTags),
+		"overwrite_mode":                 aws.StringValue(options.OverwriteMode),
+		"posix_permissions":              aws.StringValue(options.PosixPermissions),
+		"preserve_deleted_files":         aws.StringValue(options.PreserveDeletedFiles),
+		"preserve_devices":               aws.StringValue(options.PreserveDevices),
+		"security_descriptor_copy_flags": aws.StringValue(options.SecurityDescriptorCopyFlags),
+		"task_queueing":                  aws.StringValue(options.TaskQueueing),
+		"transfer_mode":                  aws.StringValue(options.TransferMode),
+		"uid":                            aws.StringValue(options.Uid),
+		"verify_mode":                    aws.StringValue(options.VerifyMode),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenTaskReportConfig(options *datasync.TaskReportConfig) []interface{} {
+	if options == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"s3_object_versioning": aws.StringValue(options.ObjectVersionIds),
+		"output_type":          aws.StringValue(options.OutputType),
+		"report_level":         aws.StringValue(options.ReportLevel),
+		"s3_destination":       flattenTaskReportConfigS3Destination(options.Destination.S3),
+		"report_overrides":     flattenTaskReportConfigReportOverrides(options.Overrides),
+	}
+
+	return []interface{}{m}
+}
+
+func flattenTaskReportConfigReportOverrides(options *datasync.ReportOverrides) []interface{} {
+	m := make(map[string]interface{})
+
+	if options == nil {
+		return []interface{}{m}
+	}
+
+	if options.Deleted != nil && options.Deleted.ReportLevel != nil {
+		m["deleted_override"] = aws.StringValue(options.Deleted.ReportLevel)
+	}
+
+	if options.Skipped != nil && options.Skipped.ReportLevel != nil {
+		m["skipped_override"] = aws.StringValue(options.Skipped.ReportLevel)
+	}
+
+	if options.Transferred != nil && options.Transferred.ReportLevel != nil {
+		m["transferred_override"] = aws.StringValue(options.Transferred.ReportLevel)
+	}
+
+	if options.Verified != nil && options.Verified.ReportLevel != nil {
+		m["verified_override"] = aws.StringValue(options.Verified.ReportLevel)
+	}
+
+	return []interface{}{m}
+}
+
+func flattenTaskReportConfigS3Destination(options *datasync.ReportDestinationS3) []interface{} {
+	if options == nil {
+		return []interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"bucket_access_role_arn": aws.StringValue(options.BucketAccessRoleArn),
+		"s3_bucket_arn":          aws.StringValue(options.S3BucketArn),
+		"subdirectory":           aws.StringValue(options.Subdirectory),
 	}
 
 	return []interface{}{m}
@@ -415,6 +615,7 @@ func expandOptions(l []interface{}) *datasync.Options {
 		Gid:                  aws.String(m["gid"].(string)),
 		LogLevel:             aws.String(m["log_level"].(string)),
 		Mtime:                aws.String(m["mtime"].(string)),
+		ObjectTags:           aws.String(m["object_tags"].(string)),
 		OverwriteMode:        aws.String(m["overwrite_mode"].(string)),
 		PreserveDeletedFiles: aws.String(m["preserve_deleted_files"].(string)),
 		PreserveDevices:      aws.String(m["preserve_devices"].(string)),
@@ -425,8 +626,12 @@ func expandOptions(l []interface{}) *datasync.Options {
 		VerifyMode:           aws.String(m["verify_mode"].(string)),
 	}
 
-	if v, ok := m["bytes_per_second"]; ok && v.(int) > 0 {
-		options.BytesPerSecond = aws.Int64(int64(v.(int)))
+	if v, ok := m["bytes_per_second"].(int); ok && v != 0 {
+		options.BytesPerSecond = aws.Int64(int64(v))
+	}
+
+	if v, ok := m["security_descriptor_copy_flags"].(string); ok && v != "" {
+		options.SecurityDescriptorCopyFlags = aws.String(v)
 	}
 
 	return options
@@ -434,7 +639,7 @@ func expandOptions(l []interface{}) *datasync.Options {
 
 func expandTaskSchedule(l []interface{}) *datasync.TaskSchedule {
 	if len(l) == 0 || l[0] == nil {
-		return nil
+		return &datasync.TaskSchedule{ScheduleExpression: aws.String("")} // explicitly set empty object if schedule is nil
 	}
 
 	m := l[0].(map[string]interface{})
@@ -456,6 +661,79 @@ func flattenTaskSchedule(schedule *datasync.TaskSchedule) []interface{} {
 	}
 
 	return []interface{}{m}
+}
+
+func expandTaskReportConfig(l []interface{}) *datasync.TaskReportConfig {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+	reportConfig := &datasync.TaskReportConfig{}
+
+	m := l[0].(map[string]interface{})
+
+	dest := m["s3_destination"].([]interface{})
+	reportConfig = reportConfig.SetDestination(expandTaskReportDestination(dest))
+	reportConfig = reportConfig.SetObjectVersionIds(m["s3_object_versioning"].(string))
+	reportConfig = reportConfig.SetOutputType(m["output_type"].(string))
+	reportConfig = reportConfig.SetReportLevel(m["report_level"].(string))
+	o := m["report_overrides"].([]interface{})
+	reportConfig = reportConfig.SetOverrides(expandTaskReportOverrides(o))
+
+	return reportConfig
+}
+
+func expandTaskReportDestination(l []interface{}) *datasync.ReportDestination {
+	if len(l) == 0 || l[0] == nil {
+		return nil
+	}
+	m := l[0].(map[string]interface{})
+	return &datasync.ReportDestination{
+		S3: &datasync.ReportDestinationS3{
+			BucketAccessRoleArn: aws.String(m["bucket_access_role_arn"].(string)),
+			S3BucketArn:         aws.String(m["s3_bucket_arn"].(string)),
+			Subdirectory:        aws.String(m["subdirectory"].(string)),
+		},
+	}
+}
+
+func expandTaskReportOverrides(l []interface{}) *datasync.ReportOverrides {
+	var overrides = &datasync.ReportOverrides{}
+
+	if len(l) == 0 || l[0] == nil {
+		return overrides
+	}
+
+	m := l[0].(map[string]interface{})
+
+	deleteOverride := m["deleted_override"].(string)
+	if deleteOverride != "" {
+		overrides.SetDeleted(&datasync.ReportOverride{
+			ReportLevel: aws.String(deleteOverride),
+		})
+	}
+
+	skippedOverride := m["skipped_override"].(string)
+	if skippedOverride != "" {
+		overrides.SetSkipped(&datasync.ReportOverride{
+			ReportLevel: aws.String(skippedOverride),
+		})
+	}
+
+	transferredOverride := m["transferred_override"].(string)
+	if transferredOverride != "" {
+		overrides.SetTransferred(&datasync.ReportOverride{
+			ReportLevel: aws.String(transferredOverride),
+		})
+	}
+
+	verifiedOverride := m["verified_override"].(string)
+	if verifiedOverride != "" {
+		overrides.SetVerified(&datasync.ReportOverride{
+			ReportLevel: aws.String(verifiedOverride),
+		})
+	}
+
+	return overrides
 }
 
 func expandFilterRules(l []interface{}) []*datasync.FilterRule {

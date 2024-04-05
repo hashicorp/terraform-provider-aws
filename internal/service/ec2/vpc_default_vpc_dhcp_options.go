@@ -1,27 +1,36 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_default_vpc_dhcp_options", name="DHCP Options")
+// @Tags(identifierAttribute="id")
 func ResourceDefaultVPCDHCPOptions() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
-		Create: resourceDefaultVPCDHCPOptionsCreate,
-		Read:   resourceVPCDHCPOptionsRead,
-		Update: resourceVPCDHCPOptionsUpdate,
-		Delete: schema.Noop,
+		CreateWithoutTimeout: resourceDefaultVPCDHCPOptionsCreate,
+		ReadWithoutTimeout:   resourceVPCDHCPOptionsRead,
+		UpdateWithoutTimeout: resourceVPCDHCPOptionsUpdate,
+		DeleteWithoutTimeout: schema.NoopContext,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -63,39 +72,40 @@ func ResourceDefaultVPCDHCPOptions() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
-func resourceDefaultVPCDHCPOptionsCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceDefaultVPCDHCPOptionsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.DescribeDhcpOptionsInput{}
 
 	input.Filters = append(input.Filters,
-		NewFilter("key", []string{"domain-name"}),
-		NewFilter("value", []string{RegionalPrivateDNSSuffix(meta.(*conns.AWSClient).Region)}),
-		NewFilter("key", []string{"domain-name-servers"}),
-		NewFilter("value", []string{"AmazonProvidedDNS"}),
+		newFilter("key", []string{"domain-name"}),
+		newFilter("value", []string{RegionalPrivateDNSSuffix(meta.(*conns.AWSClient).Region)}),
+		newFilter("key", []string{"domain-name-servers"}),
+		newFilter("value", []string{"AmazonProvidedDNS"}),
 	)
 
 	if v, ok := d.GetOk("owner_id"); ok {
-		input.Filters = append(input.Filters, BuildAttributeFilterList(map[string]string{
+		input.Filters = append(input.Filters, newAttributeFilterList(map[string]string{
 			"owner-id": v.(string),
 		})...)
 	}
 
-	dhcpOptions, err := FindDHCPOptions(conn, input)
+	dhcpOptions, err := FindDHCPOptions(ctx, conn, input)
 
 	if err != nil {
-		return fmt.Errorf("reading EC2 Default DHCP Options Set: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Default DHCP Options Set: %s", err)
 	}
 
 	d.SetId(aws.StringValue(dhcpOptions.DhcpOptionsId))
 
-	return resourceVPCDHCPOptionsUpdate(d, meta)
+	return append(diags, resourceVPCDHCPOptionsUpdate(ctx, d, meta)...)
 }
 
 func RegionalPrivateDNSSuffix(region string) string {

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -9,10 +12,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_ec2_network_insights_analysis")
 func DataSourceNetworkInsightsAnalysis() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceNetworkInsightsAnalysisRead,
@@ -39,7 +44,7 @@ func DataSourceNetworkInsightsAnalysis() *schema.Resource {
 				Computed: true,
 			},
 			"explanations": networkInsightsAnalysisExplanationsSchema,
-			"filter":       CustomFiltersSchema(),
+			"filter":       customFiltersSchema(),
 			"filter_in_arns": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -82,7 +87,9 @@ func DataSourceNetworkInsightsAnalysis() *schema.Resource {
 }
 
 func dataSourceNetworkInsightsAnalysisRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeNetworkInsightsAnalysesInput{}
@@ -91,7 +98,7 @@ func dataSourceNetworkInsightsAnalysisRead(ctx context.Context, d *schema.Resour
 		input.NetworkInsightsAnalysisIds = aws.StringSlice([]string{v.(string)})
 	}
 
-	input.Filters = append(input.Filters, BuildCustomFilterList(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 
@@ -103,36 +110,36 @@ func dataSourceNetworkInsightsAnalysisRead(ctx context.Context, d *schema.Resour
 	output, err := FindNetworkInsightsAnalysis(ctx, conn, input)
 
 	if err != nil {
-		return diag.FromErr(tfresource.SingularDataSourceFindError("EC2 Network Insights Analysis", err))
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Network Insights Analysis", err))
 	}
 
 	networkInsightsAnalysisID := aws.StringValue(output.NetworkInsightsAnalysisId)
 	d.SetId(networkInsightsAnalysisID)
 	if err := d.Set("alternate_path_hints", flattenAlternatePathHints(output.AlternatePathHints)); err != nil {
-		return diag.Errorf("setting alternate_path_hints: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting alternate_path_hints: %s", err)
 	}
 	d.Set("arn", output.NetworkInsightsAnalysisArn)
 	if err := d.Set("explanations", flattenExplanations(output.Explanations)); err != nil {
-		return diag.Errorf("setting explanations: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting explanations: %s", err)
 	}
 	d.Set("filter_in_arns", aws.StringValueSlice(output.FilterInArns))
 	if err := d.Set("forward_path_components", flattenPathComponents(output.ForwardPathComponents)); err != nil {
-		return diag.Errorf("setting forward_path_components: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting forward_path_components: %s", err)
 	}
 	d.Set("network_insights_analysis_id", networkInsightsAnalysisID)
 	d.Set("network_insights_path_id", output.NetworkInsightsPathId)
 	d.Set("path_found", output.NetworkPathFound)
 	if err := d.Set("return_path_components", flattenPathComponents(output.ReturnPathComponents)); err != nil {
-		return diag.Errorf("setting return_path_components: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting return_path_components: %s", err)
 	}
 	d.Set("start_date", output.StartDate.Format(time.RFC3339))
 	d.Set("status", output.Status)
 	d.Set("status_message", output.StatusMessage)
 	d.Set("warning_message", output.WarningMessage)
 
-	if err := d.Set("tags", KeyValueTags(output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
+	if err := d.Set("tags", KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

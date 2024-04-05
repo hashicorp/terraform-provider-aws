@@ -1,8 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift
 
-import "time"
+import (
+	"time"
+)
 
-//nolint:deadcode,varcheck // These constants are missing from the AWS SDK
 const (
 	clusterAvailabilityStatusAvailable   = "Available"
 	clusterAvailabilityStatusFailed      = "Failed"
@@ -17,6 +21,12 @@ const (
 	clusterStatusAvailable = "available"
 	clusterStatusModifying = "modifying"
 	clusterStatusRebooting = "rebooting"
+)
+
+const (
+	clusterSnapshotStatusAvailable = "available"
+	clusterSnapshotStatusCreating  = "creating"
+	clusterSnapshotStatusDeleted   = "deleted"
 )
 
 const (

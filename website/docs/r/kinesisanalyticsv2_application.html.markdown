@@ -23,7 +23,7 @@ resource "aws_s3_bucket" "example" {
 }
 
 resource "aws_s3_object" "example" {
-  bucket = aws_s3_bucket.example.bucket
+  bucket = aws_s3_bucket.example.id
   key    = "example-flink-application"
   source = "flink-app.jar"
 }
@@ -221,7 +221,7 @@ resource "aws_s3_bucket" "example" {
 }
 
 resource "aws_s3_object" "example" {
-  bucket = aws_s3_bucket.example.bucket
+  bucket = aws_s3_bucket.example.id
   key    = "example-flink-application"
   source = "flink-app.jar"
 }
@@ -253,10 +253,10 @@ resource "aws_kinesisanalyticsv2_application" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the application.
-* `runtime_environment` - (Required) The runtime environment for the application. Valid values: `SQL-1_0`, `FLINK-1_6`, `FLINK-1_8`, `FLINK-1_11`, `FLINK-1_13`.
+* `runtime_environment` - (Required) The runtime environment for the application. Valid values: `SQL-1_0`, `FLINK-1_6`, `FLINK-1_8`, `FLINK-1_11`, `FLINK-1_13`, `FLINK-1_15`, `FLINK-1_18`.
 * `service_execution_role` - (Required) The ARN of the [IAM role](/docs/providers/aws/r/iam_role.html) used by the application to access Kinesis data streams, Kinesis Data Firehose delivery streams, Amazon S3 objects, and other external resources.
 * `application_configuration` - (Optional) The application's configuration
 * `cloudwatch_logging_options` - (Optional) A [CloudWatch log stream](/docs/providers/aws/r/cloudwatch_log_stream.html) to monitor application configuration errors.
@@ -409,7 +409,7 @@ The `json_mapping_parameters` object supports the following:
 
 The `input_starting_position_configuration` object supports the following:
 
-~> **NOTE**: To modify an application's starting position, first stop the application by setting `start_application = false`, then update `starting_position` and set `start_application = true`.
+~> **NOTE:** To modify an application's starting position, first stop the application by setting `start_application = false`, then update `starting_position` and set `start_application = true`.
 
 * `input_starting_position` - (Required) The starting position on the stream. Valid values: `LAST_STOPPED_POINT`, `NOW`, `TRIM_HORIZON`.
 
@@ -471,9 +471,9 @@ The `cloudwatch_logging_options` object supports the following:
 
 * `log_stream_arn` - (Required) The ARN of the CloudWatch log stream to receive application messages.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The application identifier.
 * `arn` - The ARN of the application.
@@ -485,7 +485,7 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `create` - (Default `10m`)
 - `update` - (Default `10m`)
@@ -493,8 +493,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_kinesisanalyticsv2_application` can be imported by using the application ARN, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_kinesisanalyticsv2_application` using the application ARN. For example:
 
+```terraform
+import {
+  to = aws_kinesisanalyticsv2_application.example
+  id = "arn:aws:kinesisanalytics:us-west-2:123456789012:application/example-sql-application"
+}
 ```
-$ terraform import aws_kinesisanalyticsv2_application.example arn:aws:kinesisanalytics:us-west-2:123456789012:application/example-sql-application
+
+Using `terraform import`, import `aws_kinesisanalyticsv2_application` using the application ARN. For example:
+
+```console
+% terraform import aws_kinesisanalyticsv2_application.example arn:aws:kinesisanalytics:us-west-2:123456789012:application/example-sql-application
 ```

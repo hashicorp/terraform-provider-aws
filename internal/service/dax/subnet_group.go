@@ -1,25 +1,33 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dax
 
 import (
+	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/dax"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/dax"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/dax/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
+// @SDKResource("aws_dax_subnet_group")
 func ResourceSubnetGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceSubnetGroupCreate,
-		Read:   resourceSubnetGroupRead,
-		Update: resourceSubnetGroupUpdate,
-		Delete: resourceSubnetGroupDelete,
+		CreateWithoutTimeout: resourceSubnetGroupCreate,
+		ReadWithoutTimeout:   resourceSubnetGroupRead,
+		UpdateWithoutTimeout: resourceSubnetGroupUpdate,
+		DeleteWithoutTimeout: resourceSubnetGroupDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -46,39 +54,43 @@ func ResourceSubnetGroup() *schema.Resource {
 	}
 }
 
-func resourceSubnetGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DAXConn
+func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DAXClient(ctx)
 
 	input := &dax.CreateSubnetGroupInput{
 		SubnetGroupName: aws.String(d.Get("name").(string)),
-		SubnetIds:       flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set)),
+		SubnetIds:       flex.ExpandStringValueSet(d.Get("subnet_ids").(*schema.Set)),
 	}
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
 	}
 
-	_, err := conn.CreateSubnetGroup(input)
+	_, err := conn.CreateSubnetGroup(ctx, input)
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "creating DAX Subnet Group (%s): %s", d.Get("name").(string), err)
 	}
 
 	d.SetId(d.Get("name").(string))
-	return resourceSubnetGroupRead(d, meta)
+	return append(diags, resourceSubnetGroupRead(ctx, d, meta)...)
 }
 
-func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DAXConn
+func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DAXClient(ctx)
 
-	resp, err := conn.DescribeSubnetGroups(&dax.DescribeSubnetGroupsInput{
-		SubnetGroupNames: []*string{aws.String(d.Id())},
+	resp, err := conn.DescribeSubnetGroups(ctx, &dax.DescribeSubnetGroupsInput{
+		SubnetGroupNames: []string{d.Id()},
 	})
+
+	if errs.IsA[*awstypes.SubnetGroupNotFoundFault](err) {
+		log.Printf("[WARN] DAX Subnet Group %q not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, dax.ErrCodeSubnetGroupNotFoundFault) {
-			log.Printf("[WARN] DAX SubnetGroup %q not found, removing from state", d.Id())
-			d.SetId("")
-			return nil
-		}
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading DAX Subnet Group (%s): %s", d.Id(), err)
 	}
 	sg := resp.SubnetGroups[0]
 
@@ -90,11 +102,13 @@ func resourceSubnetGroupRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("subnet_ids", flex.FlattenStringList(subnetIDs))
 	d.Set("vpc_id", sg.VpcId)
-	return nil
+
+	return diags
 }
 
-func resourceSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DAXConn
+func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DAXClient(ctx)
 
 	input := &dax.UpdateSubnetGroupInput{
 		SubnetGroupName: aws.String(d.Id()),
@@ -105,31 +119,34 @@ func resourceSubnetGroupUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if d.HasChange("subnet_ids") {
-		input.SubnetIds = flex.ExpandStringSet(d.Get("subnet_ids").(*schema.Set))
+		input.SubnetIds = flex.ExpandStringValueSet(d.Get("subnet_ids").(*schema.Set))
 	}
 
-	_, err := conn.UpdateSubnetGroup(input)
+	_, err := conn.UpdateSubnetGroup(ctx, input)
 	if err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "updating DAX Subnet Group (%s): %s", d.Id(), err)
 	}
 
-	return resourceSubnetGroupRead(d, meta)
+	return append(diags, resourceSubnetGroupRead(ctx, d, meta)...)
 }
 
-func resourceSubnetGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).DAXConn
+func resourceSubnetGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).DAXClient(ctx)
 
 	input := &dax.DeleteSubnetGroupInput{
 		SubnetGroupName: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeleteSubnetGroup(input)
-	if err != nil {
-		if tfawserr.ErrCodeEquals(err, dax.ErrCodeSubnetGroupNotFoundFault) {
-			return nil
-		}
-		return err
+	_, err := conn.DeleteSubnetGroup(ctx, input)
+
+	if errs.IsA[*awstypes.SubnetGroupNotFoundFault](err) {
+		return diags
 	}
 
-	return nil
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting DAX Subnet Group (%s): %s", d.Id(), err)
+	}
+
+	return diags
 }

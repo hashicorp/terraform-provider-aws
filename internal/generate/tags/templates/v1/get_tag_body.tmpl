@@ -1,20 +1,13 @@
-// GetTag fetches an individual {{ .ServicePackage }} service tag for a resource.
+// {{ .GetTagFunc }} fetches an individual {{ .ServicePackage }} service tag for a resource.
 // Returns whether the key value and any errors. A NotFoundError is used to signal that no value was found.
-// This function will optimise the handling over ListTags, if possible.
+// This function will optimise the handling over {{ .ListTagsFunc }}, if possible.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-{{- if or ( .TagTypeIDElem ) ( .TagTypeAddBoolElem ) }}
-func GetTag(conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }}, key string) (*tftags.TagData, error) {
-{{- else }}
-func GetTag(conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }}, key string) (*string, error) {
-{{- end }}
-	return GetTagWithContext(context.Background(), conn, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}, key)
-}
-
-{{- if or ( .TagTypeIDElem ) ( .TagTypeAddBoolElem ) }}
-func GetTagWithContext(ctx context.Context, conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }}, key string) (*tftags.TagData, error) {
-{{- else }}
-func GetTagWithContext(ctx context.Context, conn {{ .ClientType }}, identifier string{{ if .TagResTypeElem }}, resourceType string{{ end }}, key string) (*string, error) {
+func {{ .GetTagFunc }}(ctx context.Context, conn {{ .ClientType }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}, key string)
+{{- if or ( .TagTypeIDElem ) ( .TagTypeAddBoolElem ) -}}
+(*tftags.TagData, error) {
+{{- else -}}
+(*string, error) {
 {{- end }}
 	{{- if .ListTagsInFiltIDName }}
 	input := &{{ .TagPackage  }}.{{ .ListTagsOp }}Input{
@@ -30,15 +23,33 @@ func GetTagWithContext(ctx context.Context, conn {{ .ClientType }}, identifier s
 		},
 	}
 
+	{{ if .RetryTagsListTagsType }}
+	output, err := tfresource.RetryGWhenMessageContains(ctx, {{ .RetryTagsTimeout }},
+		func() (*{{ .TagPackage  }}.{{ .RetryTagsListTagsType }}, error) {
+			return conn.{{ .ListTagsOp }}WithContext(ctx, input)
+		},
+		[]string{
+			{{- range .RetryTagsErrorCodes }}
+			{{ . }},
+			{{- end }}
+		},
+		[]string{
+			{{- range .RetryTagsErrorMessages }}
+			"{{ . }}",
+			{{- end }}
+		},
+	)
+	{{ else }}
 	output, err := conn.{{ .ListTagsOp }}WithContext(ctx, input)
+	{{- end }}
 
 	if err != nil {
 		return nil, err
 	}
 
-	listTags := KeyValueTags(output.{{ .ListTagsOutTagsElem }}{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }})
+	listTags := {{ .KeyValueTagsFunc }}(ctx, output.{{ .ListTagsOutTagsElem }}{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }})
 	{{- else }}
-	listTags, err := ListTagsWithContext(ctx, conn, identifier{{ if .TagResTypeElem }}, resourceType{{ end }})
+	listTags, err := {{ .ListTagsFunc }}(ctx, conn, identifier{{ if .TagResTypeElem }}, resourceType{{ end }})
 
 	if err != nil {
 		return nil, err

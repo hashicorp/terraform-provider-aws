@@ -1,18 +1,24 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package imagebuilder
 
 import (
-	"fmt"
+	"context"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/imagebuilder"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/namevaluesfilters"
 )
 
+// @SDKDataSource("aws_imagebuilder_image_pipelines")
 func DataSourceImagePipelines() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceImagePipelinesRead,
+		ReadWithoutTimeout: dataSourceImagePipelinesRead,
 		Schema: map[string]*schema.Schema{
 			"arns": {
 				Type:     schema.TypeSet,
@@ -29,8 +35,9 @@ func DataSourceImagePipelines() *schema.Resource {
 	}
 }
 
-func dataSourceImagePipelinesRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ImageBuilderConn
+func dataSourceImagePipelinesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ImageBuilderConn(ctx)
 
 	input := &imagebuilder.ListImagePipelinesInput{}
 
@@ -40,7 +47,7 @@ func dataSourceImagePipelinesRead(d *schema.ResourceData, meta interface{}) erro
 
 	var results []*imagebuilder.ImagePipeline
 
-	err := conn.ListImagePipelinesPages(input, func(page *imagebuilder.ListImagePipelinesOutput, lastPage bool) bool {
+	err := conn.ListImagePipelinesPagesWithContext(ctx, input, func(page *imagebuilder.ListImagePipelinesOutput, lastPage bool) bool {
 		if page == nil {
 			return !lastPage
 		}
@@ -57,7 +64,7 @@ func dataSourceImagePipelinesRead(d *schema.ResourceData, meta interface{}) erro
 	})
 
 	if err != nil {
-		return fmt.Errorf("error reading Image Builder Image Pipelines: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading Image Builder Image Pipelines: %s", err)
 	}
 
 	var arns, names []string
@@ -71,5 +78,5 @@ func dataSourceImagePipelinesRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("arns", arns)
 	d.Set("names", names)
 
-	return nil
+	return diags
 }

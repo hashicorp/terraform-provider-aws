@@ -1,20 +1,24 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package directconnect_test
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"os"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/directconnect"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdirectconnect "github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 type testAccDxHostedConnectionEnv struct {
@@ -23,6 +27,7 @@ type testAccDxHostedConnectionEnv struct {
 }
 
 func TestAccDirectConnectHostedConnection_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	env, err := testAccCheckHostedConnectionEnv()
 	if err != nil {
 		acctest.Skip(t, err.Error())
@@ -32,15 +37,15 @@ func TestAccDirectConnectHostedConnection_basic(t *testing.T) {
 	resourceName := "aws_dx_hosted_connection.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, directconnect.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DirectConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckHostedConnectionDestroy(testAccHostedConnectionProvider),
+		CheckDestroy:             testAccCheckHostedConnectionDestroy(ctx, testAccHostedConnectionProvider),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHostedConnectionConfig_basic(connectionName, env.ConnectionId, env.OwnerAccountId),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHostedConnectionExists(resourceName),
+					testAccCheckHostedConnectionExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "name", connectionName),
 					resource.TestCheckResourceAttr(resourceName, "connection_id", env.ConnectionId),
 					resource.TestCheckResourceAttr(resourceName, "owner_account_id", env.OwnerAccountId),
@@ -65,17 +70,17 @@ func testAccCheckHostedConnectionEnv() (*testAccDxHostedConnectionEnv, error) {
 	return result, nil
 }
 
-func testAccCheckHostedConnectionDestroy(providerFunc func() *schema.Provider) resource.TestCheckFunc {
+func testAccCheckHostedConnectionDestroy(ctx context.Context, providerFunc func() *schema.Provider) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		provider := providerFunc()
-		conn := provider.Meta().(*conns.AWSClient).DirectConnectConn
+		conn := provider.Meta().(*conns.AWSClient).DirectConnectConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_dx_hosted_connection" {
 				continue
 			}
 
-			_, err := tfdirectconnect.FindHostedConnectionByID(conn, rs.Primary.ID)
+			_, err := tfdirectconnect.FindHostedConnectionByID(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -92,9 +97,9 @@ func testAccCheckHostedConnectionDestroy(providerFunc func() *schema.Provider) r
 	}
 }
 
-func testAccCheckHostedConnectionExists(name string) resource.TestCheckFunc {
+func testAccCheckHostedConnectionExists(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DirectConnectConn(ctx)
 
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -105,7 +110,7 @@ func testAccCheckHostedConnectionExists(name string) resource.TestCheckFunc {
 			return errors.New("No Direct Connect Hosted Connection ID is set")
 		}
 
-		_, err := tfdirectconnect.FindHostedConnectionByID(conn, rs.Primary.ID)
+		_, err := tfdirectconnect.FindHostedConnectionByID(ctx, conn, rs.Primary.ID)
 
 		return err
 	}

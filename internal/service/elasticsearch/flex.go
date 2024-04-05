@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticsearch
 
 import (
@@ -21,7 +24,6 @@ func expandCognitoOptions(c []interface{}) *elasticsearch.CognitoOptions {
 		options.Enabled = aws.Bool(cognitoEnabled.(bool))
 
 		if cognitoEnabled.(bool) {
-
 			if v, ok := m["user_pool_id"]; ok && v.(string) != "" {
 				options.UserPoolId = aws.String(v.(string))
 			}
@@ -77,17 +79,19 @@ func expandEBSOptions(m map[string]interface{}) *elasticsearch.EBSOptions {
 		options.EBSEnabled = aws.Bool(ebsEnabled.(bool))
 
 		if ebsEnabled.(bool) {
-			if v, ok := m["iops"]; ok && v.(int) > 0 {
-				options.Iops = aws.Int64(int64(v.(int)))
-			}
-			if v, ok := m["throughput"]; ok && v.(int) > 0 {
-				options.Throughput = aws.Int64(int64(v.(int)))
-			}
 			if v, ok := m["volume_size"]; ok && v.(int) > 0 {
 				options.VolumeSize = aws.Int64(int64(v.(int)))
 			}
+			var volumeType string
 			if v, ok := m["volume_type"]; ok && v.(string) != "" {
-				options.VolumeType = aws.String(v.(string))
+				volumeType = v.(string)
+				options.VolumeType = aws.String(volumeType)
+			}
+			if v, ok := m["iops"]; ok && v.(int) > 0 && EBSVolumeTypePermitsIopsInput(volumeType) {
+				options.Iops = aws.Int64(int64(v.(int)))
+			}
+			if v, ok := m["throughput"]; ok && v.(int) > 0 && EBSVolumeTypePermitsThroughputInput(volumeType) {
+				options.Throughput = aws.Int64(int64(v.(int)))
 			}
 		}
 	}
@@ -109,13 +113,17 @@ func expandEncryptAtRestOptions(m map[string]interface{}) *elasticsearch.Encrypt
 }
 
 func expandVPCOptions(m map[string]interface{}) *elasticsearch.VPCOptions {
+	if m == nil {
+		return nil
+	}
+
 	options := elasticsearch.VPCOptions{}
 
-	if v, ok := m["security_group_ids"]; ok {
-		options.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
+	if v, ok := m["security_group_ids"].(*schema.Set); ok && v.Len() > 0 {
+		options.SecurityGroupIds = flex.ExpandStringSet(v)
 	}
-	if v, ok := m["subnet_ids"]; ok {
-		options.SubnetIds = flex.ExpandStringSet(v.(*schema.Set))
+	if v, ok := m["subnet_ids"].(*schema.Set); ok && v.Len() > 0 {
+		options.SubnetIds = flex.ExpandStringSet(v)
 	}
 
 	return &options
@@ -211,7 +219,11 @@ func flattenSnapshotOptions(snapshotOptions *elasticsearch.SnapshotOptions) []ma
 	return []map[string]interface{}{m}
 }
 
-func flattenVPCDerivedInfo(o *elasticsearch.VPCDerivedInfo) []map[string]interface{} {
+func flattenVPCDerivedInfo(o *elasticsearch.VPCDerivedInfo) map[string]interface{} {
+	if o == nil {
+		return nil
+	}
+
 	m := map[string]interface{}{}
 
 	if o.AvailabilityZones != nil {
@@ -227,5 +239,5 @@ func flattenVPCDerivedInfo(o *elasticsearch.VPCDerivedInfo) []map[string]interfa
 		m["vpc_id"] = aws.StringValue(o.VPCId)
 	}
 
-	return []map[string]interface{}{m}
+	return m
 }

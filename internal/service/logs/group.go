@@ -1,31 +1,59 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package logs
 
 import (
-	"fmt"
+	"context"
 	"log"
+	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudwatchlogs"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs"
+	"github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func ResourceGroup() *schema.Resource {
+// @SDKResource("aws_cloudwatch_log_group", name="Log Group")
+// @Tags
+func resourceGroup() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceGroupCreate,
-		Read:   resourceGroupRead,
-		Update: resourceGroupUpdate,
-		Delete: resourceGroupDelete,
+		CreateWithoutTimeout: resourceGroupCreate,
+		ReadWithoutTimeout:   resourceGroupRead,
+		UpdateWithoutTimeout: resourceGroupUpdate,
+		DeleteWithoutTimeout: resourceGroupDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"kms_key_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"log_group_class": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[types.LogGroupClass](),
+			},
 			"name": {
 				Type:          schema.TypeString,
 				Optional:      true,
@@ -35,228 +63,220 @@ func ResourceGroup() *schema.Resource {
 				ValidateFunc:  validLogGroupName,
 			},
 			"name_prefix": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validLogGroupNamePrefix,
+				Type:          schema.TypeString,
+				Optional:      true,
+				Computed:      true,
+				ForceNew:      true,
+				ConflictsWith: []string{"name"},
+				ValidateFunc:  validLogGroupNamePrefix,
 			},
-
 			"retention_in_days": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      0,
-				ValidateFunc: validation.IntInSlice([]int{0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1827, 3653}),
+				ValidateFunc: validation.IntInSlice([]int{0, 1, 3, 5, 7, 14, 30, 60, 90, 120, 150, 180, 365, 400, 545, 731, 1096, 1827, 2192, 2557, 2922, 3288, 3653}),
 			},
-
-			"kms_key_id": {
-				Type:     schema.TypeString,
+			"skip_destroy": {
+				Type:     schema.TypeBool,
+				Default:  false,
 				Optional: true,
 			},
-
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
-func resourceGroupCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LogsConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 
-	var logGroupName string
-	if v, ok := d.GetOk("name"); ok {
-		logGroupName = v.(string)
-	} else if v, ok := d.GetOk("name_prefix"); ok {
-		logGroupName = resource.PrefixedUniqueId(v.(string))
-	} else {
-		logGroupName = resource.UniqueId()
-	}
+	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
-	log.Printf("[DEBUG] Creating CloudWatch Log Group: %s", logGroupName)
-
-	params := &cloudwatchlogs.CreateLogGroupInput{
-		LogGroupName: aws.String(logGroupName),
+	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
+	input := &cloudwatchlogs.CreateLogGroupInput{
+		LogGroupClass: types.LogGroupClass(d.Get("log_group_class").(string)),
+		LogGroupName:  aws.String(name),
+		Tags:          getTagsIn(ctx),
 	}
 
 	if v, ok := d.GetOk("kms_key_id"); ok {
-		params.KmsKeyId = aws.String(v.(string))
+		input.KmsKeyId = aws.String(v.(string))
 	}
 
-	if len(tags) > 0 {
-		params.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	_, err := conn.CreateLogGroup(params)
-
-	if tfawserr.ErrCodeEquals(err, cloudwatchlogs.ErrCodeResourceAlreadyExistsException) {
-		return fmt.Errorf("Creating CloudWatch Log Group failed: %s:  The CloudWatch Log Group '%s' already exists.", err, d.Get("name").(string))
-	}
+	_, err := conn.CreateLogGroup(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("Creating CloudWatch Log Group failed: %s '%s'", err, d.Get("name"))
+		return sdkdiag.AppendErrorf(diags, "creating CloudWatch Logs Log Group (%s): %s", name, err)
 	}
 
-	d.SetId(logGroupName)
-
-	log.Println("[INFO] CloudWatch Log Group created")
+	d.SetId(name)
 
 	if v, ok := d.GetOk("retention_in_days"); ok {
-		input := cloudwatchlogs.PutRetentionPolicyInput{
-			LogGroupName:    aws.String(logGroupName),
-			RetentionInDays: aws.Int64(int64(v.(int))),
+		input := &cloudwatchlogs.PutRetentionPolicyInput{
+			LogGroupName:    aws.String(d.Id()),
+			RetentionInDays: aws.Int32(int32(v.(int))),
 		}
-		log.Printf("[DEBUG] Setting retention for CloudWatch Log Group: %q: %s", logGroupName, input)
-		_, err = conn.PutRetentionPolicy(&input)
+
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+			return conn.PutRetentionPolicy(ctx, input)
+		}, "AccessDeniedException", "no identity-based policy allows the logs:PutRetentionPolicy action")
 
 		if err != nil {
-			return err
+			return sdkdiag.AppendErrorf(diags, "setting CloudWatch Logs Log Group (%s) retention policy: %s", d.Id(), err)
 		}
 	}
 
-	return resourceGroupRead(d, meta)
+	return append(diags, resourceGroupRead(ctx, d, meta)...)
 }
 
-func resourceGroupRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LogsConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 
-	log.Printf("[DEBUG] Reading CloudWatch Log Group: %q", d.Get("name").(string))
-	lg, err := LookupGroup(conn, d.Id())
-	if err != nil {
-		return err
-	}
+	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
-	if lg == nil {
-		log.Printf("[DEBUG] CloudWatch Group %q Not Found", d.Id())
+	lg, err := findLogGroupByName(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] CloudWatch Logs Log Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
-	d.Set("arn", TrimLogGroupARNWildcardSuffix(aws.StringValue(lg.Arn)))
-	d.Set("name", lg.LogGroupName)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Logs Log Group (%s): %s", d.Id(), err)
+	}
+
+	d.Set("arn", TrimLogGroupARNWildcardSuffix(aws.ToString(lg.Arn)))
 	d.Set("kms_key_id", lg.KmsKeyId)
+	d.Set("log_group_class", lg.LogGroupClass)
+	d.Set("name", lg.LogGroupName)
+	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(lg.LogGroupName)))
 	d.Set("retention_in_days", lg.RetentionInDays)
+	// Support in-place update of non-refreshable attribute.
+	d.Set("skip_destroy", d.Get("skip_destroy"))
 
-	tags, err := ListTags(conn, d.Id())
+	tags, err := listLogGroupTags(ctx, conn, d.Id())
 
 	if err != nil {
-		return fmt.Errorf("listing tags for CloudWatch Logs Group (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for CloudWatch Logs Log Group (%s): %s", d.Id(), err)
 	}
 
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	setTagsOut(ctx, Tags(tags))
 
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func LookupGroup(conn *cloudwatchlogs.CloudWatchLogs, name string) (*cloudwatchlogs.LogGroup, error) {
-	input := &cloudwatchlogs.DescribeLogGroupsInput{
-		LogGroupNamePrefix: aws.String(name),
-	}
-	var logGroup *cloudwatchlogs.LogGroup
-	err := conn.DescribeLogGroupsPages(input, func(page *cloudwatchlogs.DescribeLogGroupsOutput, lastPage bool) bool {
-		for _, lg := range page.LogGroups {
-			if aws.StringValue(lg.LogGroupName) == name {
-				logGroup = lg
-				return false
-			}
-		}
-		return !lastPage
-	})
-	if err != nil {
-		return nil, err
-	}
+func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 
-	return logGroup, nil
-}
-
-func resourceGroupUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LogsConn
-
-	name := d.Id()
-	log.Printf("[DEBUG] Updating CloudWatch Log Group: %q", name)
+	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	if d.HasChange("retention_in_days") {
-		var err error
-
 		if v, ok := d.GetOk("retention_in_days"); ok {
-			input := cloudwatchlogs.PutRetentionPolicyInput{
-				LogGroupName:    aws.String(name),
-				RetentionInDays: aws.Int64(int64(v.(int))),
+			input := &cloudwatchlogs.PutRetentionPolicyInput{
+				LogGroupName:    aws.String(d.Id()),
+				RetentionInDays: aws.Int32(int32(v.(int))),
 			}
-			log.Printf("[DEBUG] Setting retention for CloudWatch Log Group: %q: %s", name, input)
-			_, err = conn.PutRetentionPolicy(&input)
-		} else {
-			log.Printf("[DEBUG] Deleting retention for CloudWatch Log Group: %q", name)
-			_, err = conn.DeleteRetentionPolicy(&cloudwatchlogs.DeleteRetentionPolicyInput{
-				LogGroupName: aws.String(name),
-			})
-		}
 
-		if err != nil {
-			return err
+			_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+				return conn.PutRetentionPolicy(ctx, input)
+			}, "AccessDeniedException", "no identity-based policy allows the logs:PutRetentionPolicy action")
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "setting CloudWatch Logs Log Group (%s) retention policy: %s", d.Id(), err)
+			}
+		} else {
+			_, err := conn.DeleteRetentionPolicy(ctx, &cloudwatchlogs.DeleteRetentionPolicyInput{
+				LogGroupName: aws.String(d.Id()),
+			})
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "deleting CloudWatch Logs Log Group (%s) retention policy: %s", d.Id(), err)
+			}
+		}
+	}
+
+	if d.HasChange("kms_key_id") {
+		if v, ok := d.GetOk("kms_key_id"); ok {
+			_, err := conn.AssociateKmsKey(ctx, &cloudwatchlogs.AssociateKmsKeyInput{
+				KmsKeyId:     aws.String(v.(string)),
+				LogGroupName: aws.String(d.Id()),
+			})
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "associating CloudWatch Logs Log Group (%s) KMS key: %s", d.Id(), err)
+			}
+		} else {
+			_, err := conn.DisassociateKmsKey(ctx, &cloudwatchlogs.DisassociateKmsKeyInput{
+				LogGroupName: aws.String(d.Id()),
+			})
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "disassociating CloudWatch Logs Log Group (%s) KMS key: %s", d.Id(), err)
+			}
 		}
 	}
 
 	if d.HasChange("tags_all") {
 		o, n := d.GetChange("tags_all")
 
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("updating CloudWatch Log Group (%s) tags: %s", d.Id(), err)
+		if err := updateLogGroupTags(ctx, conn, d.Id(), o, n); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating CloudWatch Logs Log Group (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	if d.HasChange("kms_key_id") && !d.IsNewResource() {
-		_, newKey := d.GetChange("kms_key_id")
-
-		if newKey.(string) == "" {
-			_, err := conn.DisassociateKmsKey(&cloudwatchlogs.DisassociateKmsKeyInput{
-				LogGroupName: aws.String(name),
-			})
-			if err != nil {
-				return err
-			}
-		} else {
-			_, err := conn.AssociateKmsKey(&cloudwatchlogs.AssociateKmsKeyInput{
-				LogGroupName: aws.String(name),
-				KmsKeyId:     aws.String(newKey.(string)),
-			})
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	return resourceGroupRead(d, meta)
+	return append(diags, resourceGroupRead(ctx, d, meta)...)
 }
 
-func resourceGroupDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).LogsConn
-	log.Printf("[INFO] Deleting CloudWatch Log Group: %s", d.Id())
-	_, err := conn.DeleteLogGroup(&cloudwatchlogs.DeleteLogGroupInput{
-		LogGroupName: aws.String(d.Get("name").(string)),
-	})
-	if err != nil {
-		return fmt.Errorf("Error deleting CloudWatch Log Group: %s", err)
-	}
-	log.Println("[INFO] CloudWatch Log Group deleted")
+func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 
-	return nil
+	if v, ok := d.GetOk("skip_destroy"); ok && v.(bool) {
+		log.Printf("[DEBUG] Retaining CloudWatch Logs Log Group: %s", d.Id())
+		return diags
+	}
+
+	conn := meta.(*conns.AWSClient).LogsClient(ctx)
+
+	log.Printf("[INFO] Deleting CloudWatch Logs Log Group: %s", d.Id())
+	_, err := tfresource.RetryWhenIsAErrorMessageContains[*types.OperationAbortedException](ctx, 1*time.Minute, func() (interface{}, error) {
+		return conn.DeleteLogGroup(ctx, &cloudwatchlogs.DeleteLogGroupInput{
+			LogGroupName: aws.String(d.Id()),
+		})
+	}, "try again")
+
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting CloudWatch Logs Log Group (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func findLogGroupByName(ctx context.Context, conn *cloudwatchlogs.Client, name string) (*types.LogGroup, error) {
+	input := &cloudwatchlogs.DescribeLogGroupsInput{
+		LogGroupNamePrefix: aws.String(name),
+	}
+
+	pages := cloudwatchlogs.NewDescribeLogGroupsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.LogGroups {
+			if aws.ToString(v.LogGroupName) == name {
+				return &v, nil
+			}
+		}
+	}
+
+	return nil, tfresource.NewEmptyResultError(input)
 }

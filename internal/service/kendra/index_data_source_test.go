@@ -1,17 +1,20 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kendra_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/backup"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccKendraIndexDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_kendra_index.test"
 	resourceName := "aws_kendra_index.test"
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -19,14 +22,10 @@ func TestAccKendraIndexDataSource_basic(t *testing.T) {
 	rName3 := sdkacctest.RandomWithPrefix("resource-test-terraform")
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, backup.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BackupServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
-			{
-				Config:      testAccIndexDataSourceConfig_nonExistent,
-				ExpectError: regexp.MustCompile(`error getting Kendra Index`),
-			},
 			{
 				Config: testAccIndexDataSourceConfig_userTokenJSON(rName, rName2, rName3),
 				Check: resource.ComposeTestCheckFunc(
@@ -64,12 +63,6 @@ func TestAccKendraIndexDataSource_basic(t *testing.T) {
 		},
 	})
 }
-
-const testAccIndexDataSourceConfig_nonExistent = `
-data "aws_kendra_index" "test" {
-  id = "tf-acc-test-does-not-exist-kendra-id"
-}
-`
 
 func testAccIndexDataSourceConfig_userTokenJSON(rName, rName2, rName3 string) string {
 	return acctest.ConfigCompose(

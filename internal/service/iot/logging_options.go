@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iot
 
 import (
@@ -9,10 +12,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_iot_logging_options")
 func ResourceLoggingOptions() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLoggingOptionsPut,
@@ -40,7 +45,9 @@ func ResourceLoggingOptions() *schema.Resource {
 }
 
 func resourceLoggingOptionsPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IoTConn
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	input := &iot.SetV2LoggingOptionsInput{}
 
@@ -56,7 +63,7 @@ func resourceLoggingOptionsPut(ctx context.Context, d *schema.ResourceData, meta
 		input.RoleArn = aws.String(v.(string))
 	}
 
-	_, err := tfresource.RetryWhenAWSErrMessageContainsContext(ctx, propagationTimeout,
+	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
 		func() (interface{}, error) {
 			return conn.SetV2LoggingOptionsWithContext(ctx, input)
 		},
@@ -64,26 +71,28 @@ func resourceLoggingOptionsPut(ctx context.Context, d *schema.ResourceData, meta
 	)
 
 	if err != nil {
-		return diag.Errorf("setting IoT logging options: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting IoT logging options: %s", err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).Region)
 
-	return resourceLoggingOptionsRead(ctx, d, meta)
+	return append(diags, resourceLoggingOptionsRead(ctx, d, meta)...)
 }
 
 func resourceLoggingOptionsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IoTConn
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	output, err := conn.GetV2LoggingOptionsWithContext(ctx, &iot.GetV2LoggingOptionsInput{})
 
 	if err != nil {
-		return diag.Errorf("reading IoT logging options: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading IoT logging options: %s", err)
 	}
 
 	d.Set("default_log_level", output.DefaultLogLevel)
 	d.Set("disable_all_logs", output.DisableAllLogs)
 	d.Set("role_arn", output.RoleArn)
 
-	return nil
+	return diags
 }

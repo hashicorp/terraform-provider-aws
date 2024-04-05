@@ -1,6 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
+	"context"
 	"fmt"
 	"sort"
 	"time"
@@ -8,14 +12,17 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_ebs_volume")
 func DataSourceEBSVolume() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceEBSVolumeRead,
+		ReadWithoutTimeout: dataSourceEBSVolumeRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
@@ -34,7 +41,7 @@ func DataSourceEBSVolume() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"filter": DataSourceFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"iops": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -81,13 +88,14 @@ func DataSourceEBSVolume() *schema.Resource {
 	}
 }
 
-func dataSourceEBSVolumeRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceEBSVolumeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeVolumesInput{}
 
-	input.Filters = append(input.Filters, BuildFiltersDataSource(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 
@@ -95,14 +103,14 @@ func dataSourceEBSVolumeRead(d *schema.ResourceData, meta interface{}) error {
 		input.Filters = nil
 	}
 
-	output, err := FindEBSVolumes(conn, input)
+	output, err := FindEBSVolumes(ctx, conn, input)
 
 	if err != nil {
-		return fmt.Errorf("reading EBS Volumes: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading EBS Volumes: %s", err)
 	}
 
 	if len(output) < 1 {
-		return fmt.Errorf("Your query returned no results. Please change your search criteria and try again.")
+		return sdkdiag.AppendErrorf(diags, "Your query returned no results. Please change your search criteria and try again.")
 	}
 
 	var volume *ec2.Volume
@@ -111,7 +119,7 @@ func dataSourceEBSVolumeRead(d *schema.ResourceData, meta interface{}) error {
 		recent := d.Get("most_recent").(bool)
 
 		if !recent {
-			return fmt.Errorf("Your query returned more than one result. Please try a more " +
+			return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more "+
 				"specific search criteria, or set `most_recent` attribute to true.")
 		}
 
@@ -143,11 +151,11 @@ func dataSourceEBSVolumeRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("volume_id", volume.VolumeId)
 	d.Set("volume_type", volume.VolumeType)
 
-	if err := d.Set("tags", KeyValueTags(volume.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+	if err := d.Set("tags", KeyValueTags(ctx, volume.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 type volumeSort []*ec2.Volume

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ce_test
 
 import (
@@ -6,12 +9,14 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go/service/costexplorer"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCETagsDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var output costexplorer.CostCategory
 	resourceName := "aws_ce_cost_category.test"
 	dataSourceName := "data.aws_ce_tags.test"
@@ -24,14 +29,14 @@ func TestAccCETagsDataSource_basic(t *testing.T) {
 	endDate := currentTime.Format(formatDate)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ErrorCheck:               acctest.ErrorCheck(t, costexplorer.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CEServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTagsDataSourceConfig_basic(rName, startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCostCategoryExists(resourceName, &output),
+					testAccCheckCostCategoryExists(ctx, resourceName, &output),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.#", "1"),
 				),
 			},
@@ -40,6 +45,7 @@ func TestAccCETagsDataSource_basic(t *testing.T) {
 }
 
 func TestAccCETagsDataSource_filter(t *testing.T) {
+	ctx := acctest.Context(t)
 	var output costexplorer.CostCategory
 	resourceName := "aws_ce_cost_category.test"
 	dataSourceName := "data.aws_ce_tags.test"
@@ -52,14 +58,14 @@ func TestAccCETagsDataSource_filter(t *testing.T) {
 	endDate := currentTime.Format(formatDate)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ErrorCheck:               acctest.ErrorCheck(t, costexplorer.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CEServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTagsDataSourceConfig_filter(rName, startDate, endDate),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckCostCategoryExists(resourceName, &output),
+					testAccCheckCostCategoryExists(ctx, resourceName, &output),
 					resource.TestCheckResourceAttr(dataSourceName, "tags.#", "1"),
 				),
 			},

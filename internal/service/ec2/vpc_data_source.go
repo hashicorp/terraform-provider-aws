@@ -1,22 +1,31 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKDataSource("aws_vpc", name="VPC")
+// @Tags
 func DataSourceVPC() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceVPCRead,
+		ReadWithoutTimeout: dataSourceVPCRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
@@ -70,7 +79,11 @@ func DataSourceVPC() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"filter": CustomFiltersSchema(),
+			"enable_network_address_usage_metrics": {
+				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"filter": customFiltersSchema(),
 			"id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -101,14 +114,14 @@ func DataSourceVPC() *schema.Resource {
 				Optional: true,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
-func dataSourceVPCRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func dataSourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	// We specify "default" as boolean, but EC2 filters want
 	// it to be serialized as a string. Note that setting it to
@@ -120,7 +133,7 @@ func dataSourceVPCRead(d *schema.ResourceData, meta interface{}) error {
 		isDefaultStr = "true"
 	}
 	input := &ec2.DescribeVpcsInput{
-		Filters: BuildAttributeFilterList(
+		Filters: newAttributeFilterListV2(
 			map[string]string{
 				"cidr":            d.Get("cidr_block").(string),
 				"dhcp-options-id": d.Get("dhcp_options_id").(string),
@@ -131,38 +144,32 @@ func dataSourceVPCRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	if v, ok := d.GetOk("id"); ok {
-		input.VpcIds = aws.StringSlice([]string{v.(string)})
+		input.VpcIds = []string{v.(string)}
 	}
 
-	if tags, tagsOk := d.GetOk("tags"); tagsOk {
-		input.Filters = append(input.Filters, BuildTagFilterList(
-			Tags(tftags.New(tags.(map[string]interface{}))),
-		)...)
-	}
+	input.Filters = append(input.Filters, newCustomFilterListV2(d.Get("filter").(*schema.Set))...)
+	input.Filters = append(input.Filters, tagFilters(ctx)...)
 
-	input.Filters = append(input.Filters, BuildCustomFilterList(
-		d.Get("filter").(*schema.Set),
-	)...)
 	if len(input.Filters) == 0 {
 		// Don't send an empty filters list; the EC2 API won't accept it.
 		input.Filters = nil
 	}
 
-	vpc, err := FindVPC(conn, input)
+	vpc, err := findVPCV2(ctx, conn, input)
 
 	if err != nil {
-		return tfresource.SingularDataSourceFindError("EC2 VPC", err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 VPC", err))
 	}
 
-	d.SetId(aws.StringValue(vpc.VpcId))
+	d.SetId(aws.ToString(vpc.VpcId))
 
-	ownerID := aws.StringValue(vpc.OwnerId)
+	ownerID := aws.String(aws.ToString(vpc.OwnerId))
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   ec2.ServiceName,
+		Service:   names.EC2,
 		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: ownerID,
-		Resource:  fmt.Sprintf("vpc/%s", d.Id()),
+		AccountID: aws.ToString(ownerID),
+		Resource:  "vpc/" + d.Id(),
 	}.String()
 	d.Set("arn", arn)
 	d.Set("cidr_block", vpc.CidrBlock)
@@ -171,19 +178,25 @@ func dataSourceVPCRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("instance_tenancy", vpc.InstanceTenancy)
 	d.Set("owner_id", ownerID)
 
-	if v, err := FindVPCAttribute(conn, d.Id(), ec2.VpcAttributeNameEnableDnsHostnames); err != nil {
-		return fmt.Errorf("error reading EC2 VPC (%s) Attribute (%s): %w", d.Id(), ec2.VpcAttributeNameEnableDnsHostnames, err)
+	if v, err := findVPCAttributeV2(ctx, conn, d.Id(), types.VpcAttributeNameEnableDnsHostnames); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), types.VpcAttributeNameEnableDnsHostnames, err)
 	} else {
 		d.Set("enable_dns_hostnames", v)
 	}
 
-	if v, err := FindVPCAttribute(conn, d.Id(), ec2.VpcAttributeNameEnableDnsSupport); err != nil {
-		return fmt.Errorf("error reading EC2 VPC (%s) Attribute (%s): %w", d.Id(), ec2.VpcAttributeNameEnableDnsSupport, err)
+	if v, err := findVPCAttributeV2(ctx, conn, d.Id(), types.VpcAttributeNameEnableDnsSupport); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), types.VpcAttributeNameEnableDnsSupport, err)
 	} else {
 		d.Set("enable_dns_support", v)
 	}
 
-	if v, err := FindVPCMainRouteTable(conn, d.Id()); err != nil {
+	if v, err := findVPCAttributeV2(ctx, conn, d.Id(), types.VpcAttributeNameEnableNetworkAddressUsageMetrics); err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading EC2 VPC (%s) Attribute (%s): %s", d.Id(), types.VpcAttributeNameEnableNetworkAddressUsageMetrics, err)
+	} else {
+		d.Set("enable_network_address_usage_metrics", v)
+	}
+
+	if v, err := findVPCMainRouteTableV2(ctx, conn, d.Id()); err != nil {
 		log.Printf("[WARN] Error reading EC2 VPC (%s) main Route Table: %s", d.Id(), err)
 		d.Set("main_route_table_id", nil)
 	} else {
@@ -193,14 +206,14 @@ func dataSourceVPCRead(d *schema.ResourceData, meta interface{}) error {
 	cidrAssociations := []interface{}{}
 	for _, v := range vpc.CidrBlockAssociationSet {
 		association := map[string]interface{}{
-			"association_id": aws.StringValue(v.AssociationId),
-			"cidr_block":     aws.StringValue(v.CidrBlock),
-			"state":          aws.StringValue(v.CidrBlockState.State),
+			"association_id": aws.ToString(v.AssociationId),
+			"cidr_block":     aws.ToString(v.CidrBlock),
+			"state":          aws.ToString(aws.String(string(v.CidrBlockState.State))),
 		}
 		cidrAssociations = append(cidrAssociations, association)
 	}
 	if err := d.Set("cidr_block_associations", cidrAssociations); err != nil {
-		return fmt.Errorf("error setting cidr_block_associations: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting cidr_block_associations: %s", err)
 	}
 
 	if len(vpc.Ipv6CidrBlockAssociationSet) > 0 {
@@ -211,9 +224,7 @@ func dataSourceVPCRead(d *schema.ResourceData, meta interface{}) error {
 		d.Set("ipv6_cidr_block", nil)
 	}
 
-	if err := d.Set("tags", KeyValueTags(vpc.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
+	setTagsOutV2(ctx, vpc.Tags)
 
-	return nil
+	return diags
 }

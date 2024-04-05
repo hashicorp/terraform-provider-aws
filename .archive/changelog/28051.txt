@@ -1,0 +1,15 @@
+```release-note:bug
+resource/aws_neptune_cluster: Fix major version upgrade
+```
+
+```release-note:enhancement
+resource/aws_neptune_cluster: Add `neptune_instance_parameter_group_name` argument, used only when upgrading major version
+```
+
+```release-note:enhancement
+resource/aws_neptune_global_cluster: Increase Update timeout to 120 minutes (per global cluster member)
+```
+
+```release-note:bug
+resource/aws_neptune_cluster: Fix [restore-from-snapshot functionality](https://docs.aws.amazon.com/neptune/latest/userguide/backup-restore-restore-snapshot.html) using the `snapshot_identifier` argument on resource Create
+```

@@ -1,32 +1,37 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iot
 
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/iot"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// @SDKResource("aws_iot_authorizer")
 func ResourceAuthorizer() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceAuthorizerCreate,
-		Read:   resourceAuthorizerRead,
-		Update: resourceAuthorizerUpdate,
-		Delete: resourceAuthorizerDelete,
+		CreateWithoutTimeout: resourceAuthorizerCreate,
+		ReadWithoutTimeout:   resourceAuthorizerRead,
+		UpdateWithoutTimeout: resourceAuthorizerUpdate,
+		DeleteWithoutTimeout: resourceAuthorizerDelete,
 
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: resourceAuthorizerCustomizeDiff,
@@ -51,7 +56,7 @@ func ResourceAuthorizer() *schema.Resource {
 				Required: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 128),
-					validation.StringMatch(regexp.MustCompile(`^[\w=,@-]+`), "must contain only alphanumeric characters, underscores, and hyphens"),
+					validation.StringMatch(regexache.MustCompile(`^[\w=,@-]+`), "must contain only alphanumeric characters, underscores, and hyphens"),
 				),
 			},
 			"signing_disabled": {
@@ -70,7 +75,7 @@ func ResourceAuthorizer() *schema.Resource {
 				Optional: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 128),
-					validation.StringMatch(regexp.MustCompile(`^[A-Za-z0-9_-]+`), "must contain only alphanumeric characters, underscores, and hyphens"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]+`), "must contain only alphanumeric characters, underscores, and hyphens"),
 				),
 			},
 			"token_signing_public_keys": {
@@ -83,8 +88,9 @@ func ResourceAuthorizer() *schema.Resource {
 	}
 }
 
-func resourceAuthorizerCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+func resourceAuthorizerCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	name := d.Get("name").(string)
 	input := &iot.CreateAuthorizerInput{
@@ -104,30 +110,31 @@ func resourceAuthorizerCreate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[INFO] Creating IoT Authorizer: %s", input)
-	output, err := conn.CreateAuthorizer(input)
+	output, err := conn.CreateAuthorizerWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating IoT Authorizer (%s): %w", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating IoT Authorizer (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.AuthorizerName))
 
-	return resourceAuthorizerRead(d, meta)
+	return append(diags, resourceAuthorizerRead(ctx, d, meta)...)
 }
 
-func resourceAuthorizerRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+func resourceAuthorizerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
-	authorizer, err := FindAuthorizerByName(conn, d.Id())
+	authorizer, err := FindAuthorizerByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IoT Authorizer (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading IoT Authorizer (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading IoT Authorizer (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", authorizer.AuthorizerArn)
@@ -139,11 +146,12 @@ func resourceAuthorizerRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("token_key_name", authorizer.TokenKeyName)
 	d.Set("token_signing_public_keys", aws.StringValueMap(authorizer.TokenSigningPublicKeys))
 
-	return nil
+	return diags
 }
 
-func resourceAuthorizerUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+func resourceAuthorizerUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	input := iot.UpdateAuthorizerInput{
 		AuthorizerName: aws.String(d.Id()),
@@ -170,45 +178,46 @@ func resourceAuthorizerUpdate(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[INFO] Updating IoT Authorizer: %s", input)
-	_, err := conn.UpdateAuthorizer(&input)
+	_, err := conn.UpdateAuthorizerWithContext(ctx, &input)
 
 	if err != nil {
-		return fmt.Errorf("error updating IoT Authorizer (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating IoT Authorizer (%s): %s", d.Id(), err)
 	}
 
-	return resourceAuthorizerRead(d, meta)
+	return append(diags, resourceAuthorizerRead(ctx, d, meta)...)
 }
 
-func resourceAuthorizerDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IoTConn
+func resourceAuthorizerDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
 	// In order to delete an IoT Authorizer, you must set it inactive first.
 	if d.Get("status").(string) == iot.AuthorizerStatusActive {
 		log.Printf("[INFO] Deactivating IoT Authorizer: %s", d.Id())
-		_, err := conn.UpdateAuthorizer(&iot.UpdateAuthorizerInput{
+		_, err := conn.UpdateAuthorizerWithContext(ctx, &iot.UpdateAuthorizerInput{
 			AuthorizerName: aws.String(d.Id()),
 			Status:         aws.String(iot.AuthorizerStatusInactive),
 		})
 
 		if err != nil {
-			return fmt.Errorf("error deactivating IoT Authorizer (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "deactivating IoT Authorizer (%s): %s", d.Id(), err)
 		}
 	}
 
 	log.Printf("[INFO] Deleting IoT Authorizer: %s", d.Id())
-	_, err := conn.DeleteAuthorizer(&iot.DeleteAuthorizerInput{
+	_, err := conn.DeleteAuthorizerWithContext(ctx, &iot.DeleteAuthorizerInput{
 		AuthorizerName: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrCodeEquals(err, iot.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting IOT Authorizer (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting IOT Authorizer (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceAuthorizerCustomizeDiff(_ context.Context, diff *schema.ResourceDiff, v interface{}) error {

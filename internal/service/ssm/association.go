@@ -1,30 +1,37 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssm
 
 import (
+	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ssm"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_ssm_association")
 func ResourceAssociation() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
-		Create: resourceAssociationCreate,
-		Read:   resourceAssociationRead,
-		Update: resourceAssociationUpdate,
-		Delete: resourceAssociationDelete,
+		CreateWithoutTimeout: resourceAssociationCreate,
+		ReadWithoutTimeout:   resourceAssociationRead,
+		UpdateWithoutTimeout: resourceAssociationUpdate,
+		DeleteWithoutTimeout: resourceAssociationDelete,
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		MigrateState:  AssociationMigrateState,
@@ -45,50 +52,49 @@ func ResourceAssociation() *schema.Resource {
 				Optional: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(3, 128),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9_\-.]{3,128}$`), "must contain only alphanumeric, underscore, hyphen, or period characters"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]{3,128}$`), "must contain only alphanumeric, underscore, hyphen, or period characters"),
 				),
 			},
 			"association_id": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"instance_id": {
-				Type:       schema.TypeString,
-				ForceNew:   true,
-				Optional:   true,
-				Deprecated: "use 'targets' argument instead. https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_CreateAssociation.html#systemsmanager-CreateAssociation-request-InstanceId",
+			"automation_target_parameter_name": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(1, 50),
+			},
+			"compliance_severity": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(ssm.ComplianceSeverity_Values(), false),
 			},
 			"document_version": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^([$]LATEST|[$]DEFAULT|^[1-9][0-9]*$)$`), ""),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^([$]LATEST|[$]DEFAULT|^[1-9][0-9]*$)$`), ""),
 			},
 			"max_concurrency": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^([1-9][0-9]*|[1-9][0-9]%|[1-9]%|100%)$`), "must be a valid number (e.g. 10) or percentage including the percent sign (e.g. 10%)"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^([1-9][0-9]*|[1-9][0-9]%|[1-9]%|100%)$`), "must be a valid number (e.g. 10) or percentage including the percent sign (e.g. 10%)"),
 			},
 			"max_errors": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`^([1-9][0-9]*|[0]|[1-9][0-9]%|[0-9]%|100%)$`), "must be a valid number (e.g. 10) or percentage including the percent sign (e.g. 10%)"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^([1-9][0-9]*|[0]|[1-9][0-9]%|[0-9]%|100%)$`), "must be a valid number (e.g. 10) or percentage including the percent sign (e.g. 10%)"),
 			},
 			"name": {
 				Type:     schema.TypeString,
 				ForceNew: true,
 				Required: true,
 			},
-			"parameters": {
-				Type:     schema.TypeMap,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			"schedule_expression": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 256),
+			"instance_id": {
+				Type:       schema.TypeString,
+				ForceNew:   true,
+				Optional:   true,
+				Deprecated: "use 'targets' argument instead. https://docs.aws.amazon.com/systems-manager/latest/APIReference/API_CreateAssociation.html#systemsmanager-CreateAssociation-request-InstanceId",
 			},
 			"output_location": {
 				Type:     schema.TypeList,
@@ -114,6 +120,22 @@ func ResourceAssociation() *schema.Resource {
 					},
 				},
 			},
+			"parameters": {
+				Type:     schema.TypeMap,
+				Optional: true,
+				Computed: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"schedule_expression": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(1, 256),
+			},
+			"sync_compliance": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(ssm.AssociationSyncCompliance_Values(), false),
+			},
 			"targets": {
 				Type:     schema.TypeList,
 				Optional: true,
@@ -135,16 +157,6 @@ func ResourceAssociation() *schema.Resource {
 					},
 				},
 			},
-			"compliance_severity": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(ssm.ComplianceSeverity_Values(), false),
-			},
-			"automation_target_parameter_name": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(1, 50),
-			},
 			"wait_for_success_timeout_seconds": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -153,8 +165,9 @@ func ResourceAssociation() *schema.Resource {
 	}
 }
 
-func resourceAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+func resourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	log.Printf("[DEBUG] SSM association create: %s", d.Id())
 
@@ -178,12 +191,16 @@ func resourceAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 		associationInput.DocumentVersion = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("parameters"); ok {
+		associationInput.Parameters = expandDocumentParameters(v.(map[string]interface{}))
+	}
+
 	if v, ok := d.GetOk("schedule_expression"); ok {
 		associationInput.ScheduleExpression = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("parameters"); ok {
-		associationInput.Parameters = expandDocumentParameters(v.(map[string]interface{}))
+	if v, ok := d.GetOk("sync_compliance"); ok {
+		associationInput.SyncCompliance = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("targets"); ok {
@@ -210,41 +227,42 @@ func resourceAssociationCreate(d *schema.ResourceData, meta interface{}) error {
 		associationInput.AutomationTargetParameterName = aws.String(v.(string))
 	}
 
-	resp, err := conn.CreateAssociation(associationInput)
+	resp, err := conn.CreateAssociationWithContext(ctx, associationInput)
 	if err != nil {
-		return fmt.Errorf("Error creating SSM association: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating SSM association: %s", err)
 	}
 
 	if resp.AssociationDescription == nil {
-		return fmt.Errorf("AssociationDescription was nil")
+		return sdkdiag.AppendErrorf(diags, "AssociationDescription was nil")
 	}
 
 	d.SetId(aws.StringValue(resp.AssociationDescription.AssociationId))
 
 	if v, ok := d.GetOk("wait_for_success_timeout_seconds"); ok {
 		dur, _ := time.ParseDuration(fmt.Sprintf("%ds", v.(int)))
-		_, err = waitAssociationSuccess(conn, d.Id(), dur)
+		_, err = waitAssociationSuccess(ctx, conn, d.Id(), dur)
 		if err != nil {
-			return fmt.Errorf("error waiting for SSM Association (%s) to be Success: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for SSM Association (%s) to be Success: %s", d.Id(), err)
 		}
 	}
 
-	return resourceAssociationRead(d, meta)
+	return append(diags, resourceAssociationRead(ctx, d, meta)...)
 }
 
-func resourceAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+func resourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	log.Printf("[DEBUG] Reading SSM Association: %s", d.Id())
 
-	association, err := FindAssociationById(conn, d.Id())
+	association, err := FindAssociationById(ctx, conn, d.Id())
 	if err != nil {
 		if !d.IsNewResource() && tfresource.NotFound(err) {
 			d.SetId("")
 			log.Printf("[WARN] Unable to find SSM Association (%s); removing from state", d.Id())
-			return nil
+			return diags
 		}
-		return fmt.Errorf("error reading SSM Association (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading SSM Association (%s): %s", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -261,6 +279,7 @@ func resourceAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("name", association.Name)
 	d.Set("association_id", association.AssociationId)
 	d.Set("schedule_expression", association.ScheduleExpression)
+	d.Set("sync_compliance", association.SyncCompliance)
 	d.Set("document_version", association.DocumentVersion)
 	d.Set("compliance_severity", association.ComplianceSeverity)
 	d.Set("max_concurrency", association.MaxConcurrency)
@@ -268,22 +287,23 @@ func resourceAssociationRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("automation_target_parameter_name", association.AutomationTargetParameterName)
 
 	if err := d.Set("parameters", flattenParameters(association.Parameters)); err != nil {
-		return err
+		return sdkdiag.AppendErrorf(diags, "reading SSM Association (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("targets", flattenTargets(association.Targets)); err != nil {
-		return fmt.Errorf("Error setting targets error: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting targets error: %s", err)
 	}
 
 	if err := d.Set("output_location", flattenAssociationOutputLocation(association.OutputLocation)); err != nil {
-		return fmt.Errorf("Error setting output_location error: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting output_location error: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
-func resourceAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+func resourceAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	log.Printf("[DEBUG] SSM Association update: %s", d.Id())
 
@@ -306,6 +326,10 @@ func resourceAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
 
 	if v, ok := d.GetOk("schedule_expression"); ok {
 		associationInput.ScheduleExpression = aws.String(v.(string))
+	}
+
+	if d.HasChange("sync_compliance") {
+		associationInput.SyncCompliance = aws.String(d.Get("sync_compliance").(string))
 	}
 
 	if v, ok := d.GetOk("parameters"); ok {
@@ -336,16 +360,17 @@ func resourceAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
 		associationInput.AutomationTargetParameterName = aws.String(v.(string))
 	}
 
-	_, err := conn.UpdateAssociation(associationInput)
+	_, err := conn.UpdateAssociationWithContext(ctx, associationInput)
 	if err != nil {
-		return fmt.Errorf("Error updating SSM association: %s", err)
+		return sdkdiag.AppendErrorf(diags, "updating SSM association: %s", err)
 	}
 
-	return resourceAssociationRead(d, meta)
+	return append(diags, resourceAssociationRead(ctx, d, meta)...)
 }
 
-func resourceAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).SSMConn
+func resourceAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
 	log.Printf("[DEBUG] Deleting SSM Association: %s", d.Id())
 
@@ -353,16 +378,16 @@ func resourceAssociationDelete(d *schema.ResourceData, meta interface{}) error {
 		AssociationId: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeleteAssociation(params)
+	_, err := conn.DeleteAssociationWithContext(ctx, params)
 
 	if err != nil {
 		if tfawserr.ErrCodeContains(err, ssm.ErrCodeAssociationDoesNotExist) {
-			return nil
+			return diags
 		}
-		return fmt.Errorf("Error deleting SSM association: %w", err)
+		return sdkdiag.AppendErrorf(diags, "deleting SSM association: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandDocumentParameters(params map[string]interface{}) map[string][]*string {

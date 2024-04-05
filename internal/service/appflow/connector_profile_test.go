@@ -1,43 +1,47 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appflow_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/appflow"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/service/appflow/types"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfappflow "github.com/hashicorp/terraform-provider-aws/internal/service/appflow"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAppFlowConnectorProfile_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var connectorProfiles appflow.DescribeConnectorProfilesOutput
+	var connectorProfiles types.ConnectorProfile
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appflow_connector_profile.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, appflow.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppFlowServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectorProfileDestroy,
+		CheckDestroy:             testAccCheckConnectorProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectorProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectorProfileExists(resourceName, &connectorProfiles),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appflow", regexp.MustCompile(`connectorprofile/.+`)),
+					testAccCheckConnectorProfileExists(ctx, resourceName, &connectorProfiles),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "appflow", regexache.MustCompile(`connectorprofile/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "connection_mode"),
 					resource.TestCheckResourceAttrSet(resourceName, "connector_profile_config.#"),
@@ -57,31 +61,32 @@ func TestAccAppFlowConnectorProfile_basic(t *testing.T) {
 }
 
 func TestAccAppFlowConnectorProfile_update(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var connectorProfiles appflow.DescribeConnectorProfilesOutput
+	var connectorProfiles types.ConnectorProfile
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appflow_connector_profile.test"
 	testPrefix := "test-prefix"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, appflow.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppFlowServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectorProfileDestroy,
+		CheckDestroy:             testAccCheckConnectorProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectorProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectorProfileExists(resourceName, &connectorProfiles),
+					testAccCheckConnectorProfileExists(ctx, resourceName, &connectorProfiles),
 				),
 			},
 			{
 				Config: testAccConnectorProfileConfig_update(rName, testPrefix),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectorProfileExists(resourceName, &connectorProfiles),
+					testAccCheckConnectorProfileExists(ctx, resourceName, &connectorProfiles),
 					resource.TestCheckResourceAttr(resourceName, "connector_profile_config.0.connector_profile_properties.0.redshift.0.bucket_prefix", testPrefix),
 				),
 			},
@@ -90,26 +95,27 @@ func TestAccAppFlowConnectorProfile_update(t *testing.T) {
 }
 
 func TestAccAppFlowConnectorProfile_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var connectorProfiles appflow.DescribeConnectorProfilesOutput
+	var connectorProfiles types.ConnectorProfile
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_appflow_connector_profile.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, appflow.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AppFlowServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckConnectorProfileDestroy,
+		CheckDestroy:             testAccCheckConnectorProfileDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConnectorProfileConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckConnectorProfileExists(resourceName, &connectorProfiles),
-					acctest.CheckResourceDisappears(acctest.Provider, tfappflow.ResourceConnectorProfile(), resourceName),
+					testAccCheckConnectorProfileExists(ctx, resourceName, &connectorProfiles),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfappflow.ResourceConnectorProfile(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -117,56 +123,48 @@ func TestAccAppFlowConnectorProfile_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckConnectorProfileDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).AppFlowConn
+func testAccCheckConnectorProfileDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppFlowClient(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_appflow_connector_profile" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_appflow_connector_profile" {
+				continue
+			}
+
+			_, err := tfappflow.FindConnectorProfileByARN(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("AppFlow Connector Profile %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfappflow.FindConnectorProfileByARN(context.Background(), conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("Expected AppFlow Connector Profile to be destroyed, %s found", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckConnectorProfileExists(n string, res *appflow.DescribeConnectorProfilesOutput) resource.TestCheckFunc {
+func testAccCheckConnectorProfileExists(ctx context.Context, n string, v *types.ConnectorProfile) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppFlowConn
-
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No ID is set")
-		}
 
-		req := &appflow.DescribeConnectorProfilesInput{
-			ConnectorProfileNames: []*string{aws.String(rs.Primary.Attributes["name"])},
-		}
-		describe, err := conn.DescribeConnectorProfiles(req)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppFlowClient(ctx)
 
-		if len(describe.ConnectorProfileDetails) == 0 {
-			return fmt.Errorf("AppFlow Connector profile %s does not exist.", n)
-		}
+		output, err := tfappflow.FindConnectorProfileByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		*res = *describe
+		*v = *output
 
 		return nil
 	}
@@ -220,7 +218,7 @@ resource "aws_redshift_subnet_group" "test" {
 }
 
 data "aws_iam_policy" "test" {
-  name = "AmazonRedshiftAllCommandsFullAccess"
+  name = "AmazonRedshiftFullAccess"
 }
 
 resource "aws_iam_role" "test" {
@@ -236,7 +234,7 @@ resource "aws_iam_role" "test" {
         Effect = "Allow"
         Sid    = ""
         Principal = {
-          Service = "ec2.amazonaws.com"
+          Service = "appflow.amazonaws.com"
         }
       },
     ]
@@ -301,9 +299,12 @@ resource "aws_appflow_connector_profile" "test" {
 
     connector_profile_properties {
       redshift {
-        bucket_name  = %[1]q
-        database_url = "jdbc:redshift://${aws_redshift_cluster.test.endpoint}/dev"
-        role_arn     = aws_iam_role.test.arn
+        bucket_name        = %[1]q
+        cluster_identifier = aws_redshift_cluster.test.cluster_identifier
+        database_name      = "dev"
+        database_url       = "jdbc:redshift://${aws_redshift_cluster.test.endpoint}/dev"
+        data_api_role_arn  = aws_iam_role.test.arn
+        role_arn           = aws_iam_role.test.arn
       }
     }
   }
@@ -340,10 +341,13 @@ resource "aws_appflow_connector_profile" "test" {
 
     connector_profile_properties {
       redshift {
-        bucket_name   = %[1]q
-        bucket_prefix = %[4]q
-        database_url  = "jdbc:redshift://${aws_redshift_cluster.test.endpoint}/dev"
-        role_arn      = aws_iam_role.test.arn
+        bucket_name        = %[1]q
+        bucket_prefix      = %[4]q
+        cluster_identifier = aws_redshift_cluster.test.cluster_identifier
+        database_name      = "dev"
+        database_url       = "jdbc:redshift://${aws_redshift_cluster.test.endpoint}/dev"
+        data_api_role_arn  = aws_iam_role.test.arn
+        role_arn           = aws_iam_role.test.arn
       }
     }
   }

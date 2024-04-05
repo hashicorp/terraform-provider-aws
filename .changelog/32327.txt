@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_lambda_function: Support `code_signing_config_arn` in the `ap-east-1` AWS Region
+```

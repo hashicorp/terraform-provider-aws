@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package glue
 
 import (
@@ -9,7 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/glue"
 )
 
-func readPartitionID(id string) (catalogID string, dbName string, tableName string, values []string, error error) {
+func readPartitionID(id string) (string, string, string, []string, error) {
 	idParts := strings.Split(id, ":")
 	if len(idParts) != 4 {
 		return "", "", "", []string{}, fmt.Errorf("expected ID in format catalog-id:database-name:table-name:values, received: %s", id)
@@ -18,7 +21,7 @@ func readPartitionID(id string) (catalogID string, dbName string, tableName stri
 	return idParts[0], idParts[1], idParts[2], vals, nil
 }
 
-func readPartitionIndexID(id string) (catalogID, dbName, tableName, indexName string, error error) {
+func readPartitionIndexID(id string) (string, string, string, string, error) {
 	idParts := strings.Split(id, ":")
 	if len(idParts) != 4 {
 		return "", "", "", "", fmt.Errorf("expected ID in format catalog-id:database-name:table-name:index-name, received: %s", id)

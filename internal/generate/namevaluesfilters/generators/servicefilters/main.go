@@ -32,7 +32,6 @@ var sliceServiceNames = []string{
 	"rds",
 	"resourcegroupstaggingapi",
 	"route53resolver",
-	"secretsmanager",
 }
 
 type TemplateData struct {
@@ -93,7 +92,7 @@ var templateBody = `
 
 package namevaluesfilters
 
-import ( // nosemgrep:ci.aws-sdk-go-multiple-service-imports
+import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/aws/aws-sdk-go/aws"
 {{- range .SliceServiceNames }}
 {{- if eq . (. | FilterPackage) }}

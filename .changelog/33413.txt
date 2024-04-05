@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_neptune_cluster: Fix ignored `kms_key_arn` on restore from DB cluster snapshot
+```

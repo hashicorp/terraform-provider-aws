@@ -42,28 +42,31 @@ resource "aws_cloudformation_stack_set" "example" {
     VPCCidr = "10.0.0.0/16"
   }
 
-  template_body = <<TEMPLATE
-{
-  "Parameters" : {
-    "VPCCidr" : {
-      "Type" : "String",
-      "Default" : "10.0.0.0/16",
-      "Description" : "Enter the CIDR block for the VPC. Default is 10.0.0.0/16."
-    }
-  },
-  "Resources" : {
-    "myVpc": {
-      "Type" : "AWS::EC2::VPC",
-      "Properties" : {
-        "CidrBlock" : { "Ref" : "VPCCidr" },
-        "Tags" : [
-          {"Key": "Name", "Value": "Primary_CF_VPC"}
-        ]
+  template_body = jsonencode({
+    Parameters = {
+      VPCCidr = {
+        Type        = "String"
+        Default     = "10.0.0.0/16"
+        Description = "Enter the CIDR block for the VPC. Default is 10.0.0.0/16."
       }
     }
-  }
-}
-TEMPLATE
+    Resources = {
+      myVpc = {
+        Type = "AWS::EC2::VPC"
+        Properties = {
+          CidrBlock = {
+            Ref = "VPCCidr"
+          }
+          Tags = [
+            {
+              Key   = "Name"
+              Value = "Primary_CF_VPC"
+            }
+          ]
+        }
+      }
+    }
+  })
 }
 
 data "aws_iam_policy_document" "AWSCloudFormationStackSetAdministrationRole_ExecutionPolicy" {
@@ -83,7 +86,7 @@ resource "aws_iam_role_policy" "AWSCloudFormationStackSetAdministrationRole_Exec
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `administration_role_arn` - (Optional) Amazon Resource Number (ARN) of the IAM Role in the administrator account. This must be defined when using the `SELF_MANAGED` permission model.
 * `auto_deployment` - (Optional) Configuration block containing the auto-deployment model for your StackSet. This can only be defined when using the `SERVICE_MANAGED` permission model.
@@ -94,6 +97,8 @@ The following arguments are supported:
 * `operation_preferences` - (Optional) Preferences for how AWS CloudFormation performs a stack set update.
 * `description` - (Optional) Description of the StackSet.
 * `execution_role_name` - (Optional) Name of the IAM Role in all target accounts for StackSet operations. Defaults to `AWSCloudFormationStackSetExecutionRole` when using the `SELF_MANAGED` permission model. This should not be defined when using the `SERVICE_MANAGED` permission model.
+* `managed_execution` - (Optional) Configuration block to allow StackSets to perform non-conflicting operations concurrently and queues conflicting operations.
+    * `active` - (Optional) When set to true, StackSets performs non-conflicting operations concurrently and queues conflicting operations. After conflicting operations finish, StackSets starts queued operations in request order. Default is false.
 * `parameters` - (Optional) Key-value map of input parameters for the StackSet template. All template parameters, including those with a `Default`, must be configured or ignored with `lifecycle` configuration block `ignore_changes` argument. All `NoEcho` template parameters must be ignored with the `lifecycle` configuration block `ignore_changes` argument.
 * `permission_model` - (Optional) Describes how the IAM roles required for your StackSet are created. Valid values: `SELF_MANAGED` (default), `SERVICE_MANAGED`.
 * `call_as` - (Optional) Specifies whether you are acting as an account administrator in the organization's management account or as a delegated administrator in a member account. Valid values: `SELF` (default), `DELEGATED_ADMIN`.
@@ -112,9 +117,9 @@ The `operation_preferences` configuration block supports the following arguments
 * `region_concurrency_type` - (Optional) The concurrency type of deploying StackSets operations in Regions, could be in parallel or one Region at a time.
 * `region_order` - (Optional) The order of the Regions in where you want to perform the stack operation.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of the StackSet.
 * `id` - Name of the StackSet.
@@ -123,14 +128,38 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `update` - (Default `30m`)
 
 ## Import
 
-CloudFormation StackSets can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudFormation StackSets using the `name`. For example:
 
+```terraform
+import {
+  to = aws_cloudformation_stack_set.example
+  id = "example"
+}
 ```
-$ terraform import aws_cloudformation_stack_set.example example
+
+Import CloudFormation StackSets when acting a delegated administrator in a member account using the `name` and `call_as` values separated by a comma (`,`). For example:
+
+```terraform
+import {
+  to = aws_cloudformation_stack_set.example
+  id = "example,DELEGATED_ADMIN"
+}
+```
+
+Using `terraform import`, import CloudFormation StackSets using the `name`. For example:
+
+```console
+% terraform import aws_cloudformation_stack_set.example example
+```
+
+Using `terraform import`, import CloudFormation StackSets when acting a delegated administrator in a member account using the `name` and `call_as` values separated by a comma (`,`). For example:
+
+```console
+% terraform import aws_cloudformation_stack_set.example example,DELEGATED_ADMIN
 ```

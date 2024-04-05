@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package storagegateway
 
 import (
@@ -5,6 +8,8 @@ import (
 )
 
 func TestValid4ByteASN(t *testing.T) {
+	t.Parallel()
+
 	validAsns := []string{
 		"0",
 		"1",

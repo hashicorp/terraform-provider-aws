@@ -1,21 +1,28 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dynamodb_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdynamodb "github.com/hashicorp/terraform-provider-aws/internal/service/dynamodb"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDynamoDBTableItem_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf dynamodb.GetItemOutput
 
 	tableName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -29,19 +36,19 @@ func TestAccDynamoDBTableItem_basic(t *testing.T) {
 }`
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableItemDestroy,
+		CheckDestroy:             testAccCheckTableItemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableItemConfig_basic(tableName, hashKey, itemContent),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTableItemExists("aws_dynamodb_table_item.test", &conf),
-					testAccCheckTableItemCount(tableName, 1),
+					testAccCheckTableItemExists(ctx, "aws_dynamodb_table_item.test", &conf),
+					testAccCheckTableItemCount(ctx, tableName, 1),
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test", "hash_key", hashKey),
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test", "table_name", tableName),
-					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test", "item", itemContent+"\n"),
+					acctest.CheckResourceAttrEquivalentJSON("aws_dynamodb_table_item.test", "item", itemContent),
 				),
 			},
 		},
@@ -49,6 +56,7 @@ func TestAccDynamoDBTableItem_basic(t *testing.T) {
 }
 
 func TestAccDynamoDBTableItem_rangeKey(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf dynamodb.GetItemOutput
 
 	tableName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -64,20 +72,20 @@ func TestAccDynamoDBTableItem_rangeKey(t *testing.T) {
 }`
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableItemDestroy,
+		CheckDestroy:             testAccCheckTableItemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableItemConfig_rangeKey(tableName, hashKey, rangeKey, itemContent),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTableItemExists("aws_dynamodb_table_item.test", &conf),
-					testAccCheckTableItemCount(tableName, 1),
+					testAccCheckTableItemExists(ctx, "aws_dynamodb_table_item.test", &conf),
+					testAccCheckTableItemCount(ctx, tableName, 1),
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test", "hash_key", hashKey),
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test", "range_key", rangeKey),
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test", "table_name", tableName),
-					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test", "item", itemContent+"\n"),
+					acctest.CheckResourceAttrEquivalentJSON("aws_dynamodb_table_item.test", "item", itemContent),
 				),
 			},
 		},
@@ -85,6 +93,7 @@ func TestAccDynamoDBTableItem_rangeKey(t *testing.T) {
 }
 
 func TestAccDynamoDBTableItem_withMultipleItems(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf1 dynamodb.GetItemOutput
 	var conf2 dynamodb.GetItemOutput
 
@@ -108,27 +117,105 @@ func TestAccDynamoDBTableItem_withMultipleItems(t *testing.T) {
 }`
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableItemDestroy,
+		CheckDestroy:             testAccCheckTableItemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableItemConfig_multiple(tableName, hashKey, rangeKey, firstItem, secondItem),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTableItemExists("aws_dynamodb_table_item.test1", &conf1),
-					testAccCheckTableItemExists("aws_dynamodb_table_item.test2", &conf2),
-					testAccCheckTableItemCount(tableName, 2),
+					testAccCheckTableItemExists(ctx, "aws_dynamodb_table_item.test1", &conf1),
+					testAccCheckTableItemExists(ctx, "aws_dynamodb_table_item.test2", &conf2),
+					testAccCheckTableItemCount(ctx, tableName, 2),
 
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test1", "hash_key", hashKey),
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test1", "range_key", rangeKey),
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test1", "table_name", tableName),
-					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test1", "item", firstItem+"\n"),
+					acctest.CheckResourceAttrEquivalentJSON("aws_dynamodb_table_item.test1", "item", firstItem),
 
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test2", "hash_key", hashKey),
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test2", "range_key", rangeKey),
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test2", "table_name", tableName),
-					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test2", "item", secondItem+"\n"),
+					acctest.CheckResourceAttrEquivalentJSON("aws_dynamodb_table_item.test2", "item", secondItem),
+				),
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTableItem_withDuplicateItemsSameRangeKey(t *testing.T) {
+	ctx := acctest.Context(t)
+	tableName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	hashKey := "hashKey"
+	rangeKey := "rangeKey"
+	firstItem := `{
+	"hashKey": {"S": "something"},
+	"rangeKey": {"S": "first"},
+	"one": {"N": "11111"},
+	"two": {"N": "22222"},
+	"three": {"N": "33333"}
+}`
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableItemDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccTableItemConfig_multiple(tableName, hashKey, rangeKey, firstItem, firstItem),
+				ExpectError: regexache.MustCompile(`ConditionalCheckFailedException: The conditional request failed`),
+			},
+		},
+	})
+}
+
+func TestAccDynamoDBTableItem_withDuplicateItemsDifferentRangeKey(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf1 dynamodb.GetItemOutput
+	var conf2 dynamodb.GetItemOutput
+
+	tableName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	hashKey := "hashKey"
+	rangeKey := "rangeKey"
+	firstItem := `{
+	"hashKey": {"S": "something"},
+	"rangeKey": {"S": "first"},
+	"one": {"N": "11111"},
+	"two": {"N": "22222"},
+	"three": {"N": "33333"}
+}`
+	secondItem := `{
+	"hashKey": {"S": "something"},
+	"rangeKey": {"S": "second"},
+	"one": {"N": "11111"},
+	"two": {"N": "22222"},
+	"three": {"N": "33333"}
+}`
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableItemDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableItemConfig_multiple(tableName, hashKey, rangeKey, firstItem, secondItem),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckTableItemExists(ctx, "aws_dynamodb_table_item.test1", &conf1),
+					testAccCheckTableItemExists(ctx, "aws_dynamodb_table_item.test2", &conf2),
+					testAccCheckTableItemCount(ctx, tableName, 2),
+
+					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test1", "hash_key", hashKey),
+					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test1", "range_key", rangeKey),
+					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test1", "table_name", tableName),
+					acctest.CheckResourceAttrEquivalentJSON("aws_dynamodb_table_item.test1", "item", firstItem),
+
+					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test2", "hash_key", hashKey),
+					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test2", "range_key", rangeKey),
+					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test2", "table_name", tableName),
+					acctest.CheckResourceAttrEquivalentJSON("aws_dynamodb_table_item.test2", "item", secondItem),
 				),
 			},
 		},
@@ -136,6 +223,7 @@ func TestAccDynamoDBTableItem_withMultipleItems(t *testing.T) {
 }
 
 func TestAccDynamoDBTableItem_wonkyItems(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf1 dynamodb.GetItemOutput
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -151,21 +239,21 @@ func TestAccDynamoDBTableItem_wonkyItems(t *testing.T) {
 }`
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableItemDestroy,
+		CheckDestroy:             testAccCheckTableItemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableItemConfig_wonky(rName, hashKey, rangeKey, item),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTableItemExists("aws_dynamodb_table_item.test1", &conf1),
-					testAccCheckTableItemCount(rName, 1),
+					testAccCheckTableItemExists(ctx, "aws_dynamodb_table_item.test1", &conf1),
+					testAccCheckTableItemCount(ctx, rName, 1),
 
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test1", "hash_key", hashKey),
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test1", "range_key", rangeKey),
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test1", "table_name", rName),
-					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test1", "item", item+"\n"),
+					acctest.CheckResourceAttrEquivalentJSON("aws_dynamodb_table_item.test1", "item", item),
 				),
 			},
 		},
@@ -173,6 +261,7 @@ func TestAccDynamoDBTableItem_wonkyItems(t *testing.T) {
 }
 
 func TestAccDynamoDBTableItem_update(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf dynamodb.GetItemOutput
 
 	tableName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -193,29 +282,29 @@ func TestAccDynamoDBTableItem_update(t *testing.T) {
 }`
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableItemDestroy,
+		CheckDestroy:             testAccCheckTableItemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableItemConfig_basic(tableName, hashKey, itemBefore),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTableItemExists("aws_dynamodb_table_item.test", &conf),
-					testAccCheckTableItemCount(tableName, 1),
+					testAccCheckTableItemExists(ctx, "aws_dynamodb_table_item.test", &conf),
+					testAccCheckTableItemCount(ctx, tableName, 1),
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test", "hash_key", hashKey),
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test", "table_name", tableName),
-					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test", "item", itemBefore+"\n"),
+					acctest.CheckResourceAttrEquivalentJSON("aws_dynamodb_table_item.test", "item", itemBefore),
 				),
 			},
 			{
 				Config: testAccTableItemConfig_basic(tableName, hashKey, itemAfter),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTableItemExists("aws_dynamodb_table_item.test", &conf),
-					testAccCheckTableItemCount(tableName, 1),
+					testAccCheckTableItemExists(ctx, "aws_dynamodb_table_item.test", &conf),
+					testAccCheckTableItemCount(ctx, tableName, 1),
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test", "hash_key", hashKey),
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test", "table_name", tableName),
-					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test", "item", itemAfter+"\n"),
+					acctest.CheckResourceAttrEquivalentJSON("aws_dynamodb_table_item.test", "item", itemAfter),
 				),
 			},
 		},
@@ -223,6 +312,7 @@ func TestAccDynamoDBTableItem_update(t *testing.T) {
 }
 
 func TestAccDynamoDBTableItem_updateWithRangeKey(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf dynamodb.GetItemOutput
 
 	tableName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -241,31 +331,31 @@ func TestAccDynamoDBTableItem_updateWithRangeKey(t *testing.T) {
 }`
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableItemDestroy,
+		CheckDestroy:             testAccCheckTableItemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableItemConfig_rangeKey(tableName, hashKey, rangeKey, itemBefore),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTableItemExists("aws_dynamodb_table_item.test", &conf),
-					testAccCheckTableItemCount(tableName, 1),
+					testAccCheckTableItemExists(ctx, "aws_dynamodb_table_item.test", &conf),
+					testAccCheckTableItemCount(ctx, tableName, 1),
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test", "hash_key", hashKey),
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test", "range_key", rangeKey),
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test", "table_name", tableName),
-					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test", "item", itemBefore+"\n"),
+					acctest.CheckResourceAttrEquivalentJSON("aws_dynamodb_table_item.test", "item", itemBefore),
 				),
 			},
 			{
 				Config: testAccTableItemConfig_rangeKey(tableName, hashKey, rangeKey, itemAfter),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTableItemExists("aws_dynamodb_table_item.test", &conf),
-					testAccCheckTableItemCount(tableName, 1),
+					testAccCheckTableItemExists(ctx, "aws_dynamodb_table_item.test", &conf),
+					testAccCheckTableItemCount(ctx, tableName, 1),
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test", "hash_key", hashKey),
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test", "range_key", rangeKey),
 					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test", "table_name", tableName),
-					resource.TestCheckResourceAttr("aws_dynamodb_table_item.test", "item", itemAfter+"\n"),
+					acctest.CheckResourceAttrEquivalentJSON("aws_dynamodb_table_item.test", "item", itemAfter),
 				),
 			},
 		},
@@ -273,6 +363,7 @@ func TestAccDynamoDBTableItem_updateWithRangeKey(t *testing.T) {
 }
 
 func TestAccDynamoDBTableItem_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var conf dynamodb.GetItemOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dynamodb_table_item.test"
@@ -287,16 +378,16 @@ func TestAccDynamoDBTableItem_disappears(t *testing.T) {
 }`
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, dynamodb.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckTableItemDestroy,
+		CheckDestroy:             testAccCheckTableItemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTableItemConfig_basic(rName, hashKey, itemContent),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTableItemExists(resourceName, &conf),
-					acctest.CheckResourceDisappears(acctest.Provider, tfdynamodb.ResourceTableItem(), resourceName),
+					testAccCheckTableItemExists(ctx, resourceName, &conf),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdynamodb.ResourceTableItem(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -304,39 +395,120 @@ func TestAccDynamoDBTableItem_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckTableItemDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn
+func TestAccDynamoDBTableItem_mapOutOfBandUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf dynamodb.GetItemOutput
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_dynamodb_table_item" {
-			continue
+	tableName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	hashKey := "key"
+	tmpl := `{
+	"key": {"S": "something"},
+	"value": {
+		"M": {
+			"valid_after": {
+				"N": %[1]q
+			}
 		}
-
-		attrs := rs.Primary.Attributes
-		attributes, err := tfdynamodb.ExpandTableItemAttributes(attrs["item"])
-		if err != nil {
-			return err
-		}
-
-		key := tfdynamodb.BuildTableItemqueryKey(attributes, attrs["hash_key"], attrs["range_key"])
-
-		_, err = tfdynamodb.FindTableItem(conn, attrs["table_name"], key)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("DynamoDB table item %s still exists.", rs.Primary.ID)
+	},
+	"other": {
+		"N": %[1]q
 	}
+}`
 
-	return nil
+	oldValue := "300"
+	newValue := "400"
+
+	oldItem := fmt.Sprintf(tmpl, oldValue)
+	newItem := fmt.Sprintf(tmpl, newValue)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DynamoDBServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckTableItemDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTableItemConfig_map(tableName, hashKey, oldItem),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTableItemExists(ctx, "aws_dynamodb_table_item.test", &conf),
+					testAccCheckTableItemCount(ctx, tableName, 1),
+					acctest.CheckResourceAttrEquivalentJSON("aws_dynamodb_table_item.test", "item", oldItem),
+					acctest.CheckResourceAttrJMES("aws_dynamodb_table_item.test", "item", "value.M.valid_after.N", oldValue),
+				),
+			},
+			{
+				PreConfig: func() {
+					conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn(ctx)
+
+					attributes, err := tfdynamodb.ExpandTableItemAttributes(newItem)
+					if err != nil {
+						t.Fatalf("making out-of-band change: %s", err)
+					}
+
+					updates := map[string]*dynamodb.AttributeValueUpdate{}
+					for key, value := range attributes {
+						if key == hashKey {
+							continue
+						}
+						updates[key] = &dynamodb.AttributeValueUpdate{
+							Action: aws.String(dynamodb.AttributeActionPut),
+							Value:  value,
+						}
+					}
+
+					newQueryKey := tfdynamodb.BuildTableItemQueryKey(attributes, hashKey, "")
+					_, err = conn.UpdateItemWithContext(ctx, &dynamodb.UpdateItemInput{
+						AttributeUpdates: updates,
+						TableName:        aws.String(tableName),
+						Key:              newQueryKey,
+					})
+					if err != nil {
+						t.Fatalf("making out-of-band change: %s", err)
+					}
+				},
+				Config:   testAccTableItemConfig_map(tableName, hashKey, newItem),
+				PlanOnly: true,
+			},
+		},
+	})
 }
 
-func testAccCheckTableItemExists(n string, item *dynamodb.GetItemOutput) resource.TestCheckFunc {
+func testAccCheckTableItemDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_dynamodb_table_item" {
+				continue
+			}
+
+			attrs := rs.Primary.Attributes
+			attributes, err := tfdynamodb.ExpandTableItemAttributes(attrs["item"])
+			if err != nil {
+				return err
+			}
+
+			key := tfdynamodb.BuildTableItemQueryKey(attributes, attrs["hash_key"], attrs["range_key"])
+
+			_, err = tfdynamodb.FindTableItem(ctx, conn, attrs["table_name"], key)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("DynamoDB table item %s still exists.", rs.Primary.ID)
+		}
+
+		return nil
+	}
+}
+
+func testAccCheckTableItemExists(ctx context.Context, n string, item *dynamodb.GetItemOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -347,7 +519,7 @@ func testAccCheckTableItemExists(n string, item *dynamodb.GetItemOutput) resourc
 			return fmt.Errorf("No DynamoDB table item ID specified!")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn(ctx)
 
 		attrs := rs.Primary.Attributes
 		attributes, err := tfdynamodb.ExpandTableItemAttributes(attrs["item"])
@@ -355,9 +527,9 @@ func testAccCheckTableItemExists(n string, item *dynamodb.GetItemOutput) resourc
 			return err
 		}
 
-		key := tfdynamodb.BuildTableItemqueryKey(attributes, attrs["hash_key"], attrs["range_key"])
+		key := tfdynamodb.BuildTableItemQueryKey(attributes, attrs["hash_key"], attrs["range_key"])
 
-		result, err := tfdynamodb.FindTableItem(conn, attrs["table_name"], key)
+		result, err := tfdynamodb.FindTableItem(ctx, conn, attrs["table_name"], key)
 
 		if err != nil {
 			return err
@@ -369,10 +541,10 @@ func testAccCheckTableItemExists(n string, item *dynamodb.GetItemOutput) resourc
 	}
 }
 
-func testAccCheckTableItemCount(tableName string, count int64) resource.TestCheckFunc {
+func testAccCheckTableItemCount(ctx context.Context, tableName string, count int64) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn
-		out, err := conn.Scan(&dynamodb.ScanInput{
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn(ctx)
+		out, err := conn.ScanWithContext(ctx, &dynamodb.ScanInput{
 			ConsistentRead: aws.Bool(true),
 			TableName:      aws.String(tableName),
 			Select:         aws.String(dynamodb.SelectCount),
@@ -517,4 +689,29 @@ resource "aws_dynamodb_table_item" "test1" {
 ITEM
 }
 `, tableName, hashKey, rangeKey, item)
+}
+
+func testAccTableItemConfig_map(tableName, hashKey, content string) string {
+	return fmt.Sprintf(`
+resource "aws_dynamodb_table" "test" {
+  name           = %[1]q
+  read_capacity  = 10
+  write_capacity = 10
+  hash_key       = %[2]q
+
+  attribute {
+    name = %[2]q
+    type = "S"
+  }
+}
+
+resource "aws_dynamodb_table_item" "test" {
+  table_name = aws_dynamodb_table.test.name
+  hash_key   = aws_dynamodb_table.test.hash_key
+
+  item = <<ITEM
+%[3]s
+ITEM
+}
+`, tableName, hashKey, content)
 }

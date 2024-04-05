@@ -1,64 +1,28 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/iam"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/YakDriver/regexache"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
-	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestPolicySearchDetails(t *testing.T) {
-	testCases := []struct {
-		Name       string
-		PathPrefix string
-		Expected   string
-	}{
-		{
-			Name:       "",
-			PathPrefix: "",
-			Expected:   "",
-		},
-		{
-			Name:       "tf-acc-test-policy",
-			PathPrefix: "",
-			Expected:   "Name: tf-acc-test-policy",
-		},
-		{
-			Name:       "",
-			PathPrefix: "/test-prefix/",
-			Expected:   "PathPrefix: /test-prefix/",
-		},
-		{
-			Name:       "tf-acc-test-policy",
-			PathPrefix: "/test-prefix/",
-			Expected:   "Name: tf-acc-test-policy, PathPrefix: /test-prefix/",
-		},
-	}
-
-	for _, testCase := range testCases {
-		t.Run(testCase.Name, func(t *testing.T) {
-			got := tfiam.PolicySearchDetails(testCase.Name, testCase.PathPrefix)
-
-			if got != testCase.Expected {
-				t.Errorf("got %s, expected %s", got, testCase.Expected)
-			}
-		})
-	}
-}
-
 func TestAccIAMPolicyDataSource_arn(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_iam_policy.test"
 	resourceName := "aws_iam_policy.test"
 	policyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -78,13 +42,14 @@ func TestAccIAMPolicyDataSource_arn(t *testing.T) {
 }
 
 func TestAccIAMPolicyDataSource_arnTags(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_iam_policy.test"
 	resourceName := "aws_iam_policy.test"
 	policyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -106,13 +71,14 @@ func TestAccIAMPolicyDataSource_arnTags(t *testing.T) {
 }
 
 func TestAccIAMPolicyDataSource_name(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_iam_policy.test"
 	resourceName := "aws_iam_policy.test"
 	policyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -132,13 +98,14 @@ func TestAccIAMPolicyDataSource_name(t *testing.T) {
 }
 
 func TestAccIAMPolicyDataSource_nameTags(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_iam_policy.test"
 	resourceName := "aws_iam_policy.test"
 	policyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -159,6 +126,7 @@ func TestAccIAMPolicyDataSource_nameTags(t *testing.T) {
 }
 
 func TestAccIAMPolicyDataSource_nameAndPathPrefix(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_iam_policy.test"
 	resourceName := "aws_iam_policy.test"
 
@@ -166,8 +134,8 @@ func TestAccIAMPolicyDataSource_nameAndPathPrefix(t *testing.T) {
 	policyPath := "/test-path/"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -187,6 +155,7 @@ func TestAccIAMPolicyDataSource_nameAndPathPrefix(t *testing.T) {
 }
 
 func TestAccIAMPolicyDataSource_nameAndPathPrefixTags(t *testing.T) {
+	ctx := acctest.Context(t)
 	datasourceName := "data.aws_iam_policy.test"
 	resourceName := "aws_iam_policy.test"
 
@@ -194,8 +163,8 @@ func TestAccIAMPolicyDataSource_nameAndPathPrefixTags(t *testing.T) {
 	policyPath := "/test-path/"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -216,17 +185,18 @@ func TestAccIAMPolicyDataSource_nameAndPathPrefixTags(t *testing.T) {
 }
 
 func TestAccIAMPolicyDataSource_nonExistent(t *testing.T) {
+	ctx := acctest.Context(t)
 	policyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	policyPath := "/test-path/"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccPolicyDataSourceConfig_nonExistent(policyName, policyPath),
-				ExpectError: regexp.MustCompile(`no IAM policy found matching criteria`),
+				ExpectError: regexache.MustCompile(`no matching IAM Policy found`),
 			},
 		},
 	})

@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_sagemaker_app_image_config: Add `jupyter_lab_image_config` configuration block
+```

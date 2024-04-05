@@ -1,33 +1,39 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ses_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ses"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfses "github.com/hashicorp/terraform-provider-aws/internal/service/ses"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSESIdentityPolicy_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	domain := acctest.RandomDomainName()
 	resourceName := "aws_ses_identity_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIdentityPolicyDestroy,
+		CheckDestroy:             testAccCheckIdentityPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIdentityPolicyConfig_domain(domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIdentityPolicyExists(resourceName),
+					testAccCheckIdentityPolicyExists(ctx, resourceName),
 				),
 			},
 			{
@@ -40,20 +46,21 @@ func TestAccSESIdentityPolicy_basic(t *testing.T) {
 }
 
 func TestAccSESIdentityPolicy_Identity_email(t *testing.T) {
+	ctx := acctest.Context(t)
 	emailPrefix := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	email := fmt.Sprintf("%s@%s", emailPrefix, acctest.RandomDomainName())
 	resourceName := "aws_ses_identity_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIdentityPolicyDestroy,
+		CheckDestroy:             testAccCheckIdentityPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIdentityPolicyConfig_email(email),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIdentityPolicyExists(resourceName),
+					testAccCheckIdentityPolicyExists(ctx, resourceName),
 				),
 			},
 			{
@@ -66,25 +73,26 @@ func TestAccSESIdentityPolicy_Identity_email(t *testing.T) {
 }
 
 func TestAccSESIdentityPolicy_policy(t *testing.T) {
+	ctx := acctest.Context(t)
 	domain := acctest.RandomDomainName()
 	resourceName := "aws_ses_identity_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIdentityPolicyDestroy,
+		CheckDestroy:             testAccCheckIdentityPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIdentityPolicyConfig_1(domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIdentityPolicyExists(resourceName),
+					testAccCheckIdentityPolicyExists(ctx, resourceName),
 				),
 			},
 			{
 				Config: testAccIdentityPolicyConfig_2(domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIdentityPolicyExists(resourceName),
+					testAccCheckIdentityPolicyExists(ctx, resourceName),
 				),
 			},
 			{
@@ -97,20 +105,21 @@ func TestAccSESIdentityPolicy_policy(t *testing.T) {
 }
 
 func TestAccSESIdentityPolicy_ignoreEquivalent(t *testing.T) {
+	ctx := acctest.Context(t)
 	domain := acctest.RandomDomainName()
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ses_identity_policy.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ses.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckIdentityPolicyDestroy,
+		CheckDestroy:             testAccCheckIdentityPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccIdentityPolicyConfig_equivalent(rName, domain),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckIdentityPolicyExists(resourceName),
+					testAccCheckIdentityPolicyExists(ctx, resourceName),
 				),
 			},
 			{
@@ -121,39 +130,41 @@ func TestAccSESIdentityPolicy_ignoreEquivalent(t *testing.T) {
 	})
 }
 
-func testAccCheckIdentityPolicyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
+func testAccCheckIdentityPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_ses_identity_policy" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_ses_identity_policy" {
+				continue
+			}
+
+			identityARN, policyName, err := tfses.IdentityPolicyParseID(rs.Primary.ID)
+			if err != nil {
+				return err
+			}
+
+			input := &ses.GetIdentityPoliciesInput{
+				Identity:    aws.String(identityARN),
+				PolicyNames: aws.StringSlice([]string{policyName}),
+			}
+
+			output, err := conn.GetIdentityPoliciesWithContext(ctx, input)
+
+			if err != nil {
+				return err
+			}
+
+			if output != nil && len(output.Policies) > 0 && aws.StringValue(output.Policies[policyName]) != "" {
+				return fmt.Errorf("SES Identity (%s) Policy (%s) still exists", identityARN, policyName)
+			}
 		}
 
-		identityARN, policyName, err := tfses.IdentityPolicyParseID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-
-		input := &ses.GetIdentityPoliciesInput{
-			Identity:    aws.String(identityARN),
-			PolicyNames: aws.StringSlice([]string{policyName}),
-		}
-
-		output, err := conn.GetIdentityPolicies(input)
-
-		if err != nil {
-			return err
-		}
-
-		if output != nil && len(output.Policies) > 0 && aws.StringValue(output.Policies[policyName]) != "" {
-			return fmt.Errorf("SES Identity (%s) Policy (%s) still exists", identityARN, policyName)
-		}
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckIdentityPolicyExists(resourceName string) resource.TestCheckFunc {
+func testAccCheckIdentityPolicyExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -164,7 +175,7 @@ func testAccCheckIdentityPolicyExists(resourceName string) resource.TestCheckFun
 			return fmt.Errorf("SES Identity Policy ID not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).SESConn(ctx)
 
 		identityARN, policyName, err := tfses.IdentityPolicyParseID(rs.Primary.ID)
 		if err != nil {
@@ -176,7 +187,7 @@ func testAccCheckIdentityPolicyExists(resourceName string) resource.TestCheckFun
 			PolicyNames: aws.StringSlice([]string{policyName}),
 		}
 
-		output, err := conn.GetIdentityPolicies(input)
+		output, err := conn.GetIdentityPoliciesWithContext(ctx, input)
 
 		if err != nil {
 			return err

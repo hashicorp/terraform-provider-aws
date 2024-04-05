@@ -1,27 +1,37 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elbv2
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
-	"regexp"
 	"sort"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/elbv2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
+	"github.com/hashicorp/go-cty/cty"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 const (
@@ -33,14 +43,18 @@ const (
 	listenerActionOrderMax = 50_000
 )
 
+// @SDKResource("aws_alb_listener_rule", name="Listener Rule")
+// @SDKResource("aws_lb_listener_rule", name="Listener Rule")
+// @Tags(identifierAttribute="id")
 func ResourceListenerRule() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceListenerRuleCreate,
-		Read:   resourceListenerRuleRead,
-		Update: resourceListenerRuleUpdate,
-		Delete: resourceListenerRuleDelete,
+		CreateWithoutTimeout: resourceListenerRuleCreate,
+		ReadWithoutTimeout:   resourceListenerRuleRead,
+		UpdateWithoutTimeout: resourceListenerRuleUpdate,
+		DeleteWithoutTimeout: resourceListenerRuleDelete,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -67,9 +81,9 @@ func ResourceListenerRule() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(elbv2.ActionTypeEnum_Values(), true),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.ActionTypeEnum](),
 						},
 						"order": {
 							Type:         schema.TypeInt,
@@ -81,20 +95,21 @@ func ResourceListenerRule() *schema.Resource {
 						"target_group_arn": {
 							Type:             schema.TypeString,
 							Optional:         true,
-							DiffSuppressFunc: suppressIfActionTypeNot(elbv2.ActionTypeEnumForward),
+							DiffSuppressFunc: suppressIfActionTypeNot(awstypes.ActionTypeEnumForward),
 							ValidateFunc:     verify.ValidARN,
 						},
 
 						"forward": {
-							Type:             schema.TypeList,
-							Optional:         true,
-							DiffSuppressFunc: suppressIfActionTypeNot(elbv2.ActionTypeEnumForward),
-							MaxItems:         1,
+							Type:                  schema.TypeList,
+							Optional:              true,
+							DiffSuppressOnRefresh: true,
+							DiffSuppressFunc:      diffSuppressMissingForward("action"),
+							MaxItems:              1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"target_group": {
 										Type:     schema.TypeSet,
-										MinItems: 2,
+										MinItems: 1,
 										MaxItems: 5,
 										Required: true,
 										Elem: &schema.Resource{
@@ -140,7 +155,7 @@ func ResourceListenerRule() *schema.Resource {
 						"redirect": {
 							Type:             schema.TypeList,
 							Optional:         true,
-							DiffSuppressFunc: suppressIfActionTypeNot(elbv2.ActionTypeEnumRedirect),
+							DiffSuppressFunc: suppressIfActionTypeNot(awstypes.ActionTypeEnumRedirect),
 							MaxItems:         1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -183,9 +198,9 @@ func ResourceListenerRule() *schema.Resource {
 									},
 
 									"status_code": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice(elbv2.RedirectActionStatusCodeEnum_Values(), false),
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.RedirectActionStatusCodeEnum](),
 									},
 								},
 							},
@@ -194,7 +209,7 @@ func ResourceListenerRule() *schema.Resource {
 						"fixed_response": {
 							Type:             schema.TypeList,
 							Optional:         true,
-							DiffSuppressFunc: suppressIfActionTypeNot(elbv2.ActionTypeEnumFixedResponse),
+							DiffSuppressFunc: suppressIfActionTypeNot(awstypes.ActionTypeEnumFixedResponse),
 							MaxItems:         1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -220,7 +235,7 @@ func ResourceListenerRule() *schema.Resource {
 										Type:         schema.TypeString,
 										Optional:     true,
 										Computed:     true,
-										ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[245]\d\d$`), ""),
+										ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[245]\d\d$`), ""),
 									},
 								},
 							},
@@ -229,7 +244,7 @@ func ResourceListenerRule() *schema.Resource {
 						"authenticate_cognito": {
 							Type:             schema.TypeList,
 							Optional:         true,
-							DiffSuppressFunc: suppressIfActionTypeNot(elbv2.ActionTypeEnumAuthenticateCognito),
+							DiffSuppressFunc: suppressIfActionTypeNot(awstypes.ActionTypeEnumAuthenticateCognito),
 							MaxItems:         1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -239,10 +254,10 @@ func ResourceListenerRule() *schema.Resource {
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
 									"on_unauthenticated_request": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Computed:     true,
-										ValidateFunc: validation.StringInSlice(elbv2.AuthenticateCognitoActionConditionalBehaviorEnum_Values(), true),
+										Type:             schema.TypeString,
+										Optional:         true,
+										Computed:         true,
+										ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.AuthenticateCognitoActionConditionalBehaviorEnum](),
 									},
 									"scope": {
 										Type:     schema.TypeString,
@@ -279,7 +294,7 @@ func ResourceListenerRule() *schema.Resource {
 						"authenticate_oidc": {
 							Type:             schema.TypeList,
 							Optional:         true,
-							DiffSuppressFunc: suppressIfActionTypeNot(elbv2.ActionTypeEnumAuthenticateOidc),
+							DiffSuppressFunc: suppressIfActionTypeNot(awstypes.ActionTypeEnumAuthenticateOidc),
 							MaxItems:         1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
@@ -306,10 +321,10 @@ func ResourceListenerRule() *schema.Resource {
 										Required: true,
 									},
 									"on_unauthenticated_request": {
-										Type:         schema.TypeString,
-										Optional:     true,
-										Computed:     true,
-										ValidateFunc: validation.StringInSlice(elbv2.AuthenticateOidcActionConditionalBehaviorEnum_Values(), true),
+										Type:             schema.TypeString,
+										Optional:         true,
+										Computed:         true,
+										ValidateDiagFunc: enum.ValidateIgnoreCase[awstypes.AuthenticateOidcActionConditionalBehaviorEnum](),
 									},
 									"scope": {
 										Type:     schema.TypeString,
@@ -373,7 +388,7 @@ func ResourceListenerRule() *schema.Resource {
 									"http_header_name": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validation.StringMatch(regexp.MustCompile("^[A-Za-z0-9!#$%&'*+-.^_`|~]{1,40}$"), ""),
+										ValidateFunc: validation.StringMatch(regexache.MustCompile("^[0-9A-Za-z_!#$%&'*+,.^`|~-]{1,40}$"), ""), // was "," meant to be included? +-. creates a range including: +,-.
 									},
 									"values": {
 										Type: schema.TypeSet,
@@ -397,7 +412,7 @@ func ResourceListenerRule() *schema.Resource {
 										Type: schema.TypeSet,
 										Elem: &schema.Schema{
 											Type:         schema.TypeString,
-											ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[A-Za-z-_]{1,40}$`), ""),
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[A-Za-z-_]{1,40}$`), ""),
 										},
 										Required: true,
 										Set:      schema.HashString,
@@ -461,16 +476,18 @@ func ResourceListenerRule() *schema.Resource {
 					},
 				},
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
-		CustomizeDiff: customdiff.Sequence(
+
+		CustomizeDiff: customdiff.All(
 			verify.SetTagsDiff,
+			validateListenerActionsCustomDiff("action"),
 		),
 	}
 }
 
-func suppressIfActionTypeNot(t string) schema.SchemaDiffSuppressFunc {
+func suppressIfActionTypeNot(t awstypes.ActionTypeEnum) schema.SchemaDiffSuppressFunc {
 	return func(k, old, new string, d *schema.ResourceData) bool {
 		take := 2
 		i := strings.IndexFunc(k, func(r rune) bool {
@@ -481,104 +498,99 @@ func suppressIfActionTypeNot(t string) schema.SchemaDiffSuppressFunc {
 			return false
 		})
 		at := k[:i+1] + "type"
-		return d.Get(at).(string) != t
+		return awstypes.ActionTypeEnum(d.Get(at).(string)) != t
 	}
 }
 
-func resourceListenerRuleCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBV2Conn
-	listenerArn := d.Get("listener_arn").(string)
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceListenerRuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
-	params := &elbv2.CreateRuleInput{
-		ListenerArn: aws.String(listenerArn),
+	listenerARN := d.Get("listener_arn").(string)
+	input := &elasticloadbalancingv2.CreateRuleInput{
+		ListenerArn: aws.String(listenerARN),
+		Tags:        getTagsInV2(ctx),
 	}
-	if len(tags) > 0 {
-		params.Tags = Tags(tags.IgnoreAWS())
+
+	input.Actions = expandLbListenerActions(cty.GetAttrPath("action"), d.Get("action").([]any), &diags)
+	if diags.HasError() {
+		return diags
 	}
 
 	var err error
 
-	params.Actions, err = expandLbListenerActions(d.Get("action").([]interface{}))
+	input.Conditions, err = lbListenerRuleConditions(d.Get("condition").(*schema.Set).List())
 	if err != nil {
-		return fmt.Errorf("creating LB Listener Rule for Listener (%s): %w", listenerArn, err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	params.Conditions, err = lbListenerRuleConditions(d.Get("condition").(*schema.Set).List())
-	if err != nil {
-		return fmt.Errorf("creating LB Listener Rule for Listener (%s): %w", listenerArn, err)
-	}
+	output, err := retryListenerRuleCreate(ctx, conn, d, input, listenerARN)
 
-	resp, err := retryListenerRuleCreate(conn, d, params, listenerArn)
+	// Some partitions (e.g. ISO) may not support tag-on-create.
+	if input.Tags != nil && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
+		input.Tags = nil
 
-	// Some partitions may not support tag-on-create
-	if params.Tags != nil && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
-		log.Printf("[WARN] ELBv2 Listener Rule (%s) create failed (%s) with tags. Trying create without tags.", listenerArn, err)
-		params.Tags = nil
-		resp, err = retryListenerRuleCreate(conn, d, params, listenerArn)
+		output, err = retryListenerRuleCreate(ctx, conn, d, input, listenerARN)
 	}
 
 	if err != nil {
-		return fmt.Errorf("Error creating LB Listener Rule: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating ELBv2 Listener Rule: %s", err)
 	}
 
-	d.SetId(aws.StringValue(resp.Rules[0].RuleArn))
+	d.SetId(aws.ToString(output.Rules[0].RuleArn))
 
 	// Post-create tagging supported in some partitions
-	if params.Tags == nil && len(tags) > 0 {
-		err := UpdateTags(conn, d.Id(), nil, tags)
+	if tags := getTagsInV2(ctx); input.Tags == nil && len(tags) > 0 {
+		err := createTagsV2(ctx, conn, d.Id(), tags)
 
-		if v, ok := d.GetOk("tags"); (!ok || len(v.(map[string]interface{})) == 0) && verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
-			// if default tags only, log and continue (i.e., should error if explicitly setting tags and they can't be)
-			log.Printf("[WARN] error adding tags after create for ELBv2 Listener Rule (%s): %s", d.Id(), err)
-			return resourceListenerRuleRead(d, meta)
+		// If default tags only, continue. Otherwise, error.
+		if v, ok := d.GetOk(names.AttrTags); (!ok || len(v.(map[string]interface{})) == 0) && errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
+			return append(diags, resourceListenerRuleRead(ctx, d, meta)...)
 		}
 
 		if err != nil {
-			return fmt.Errorf("creating ELBv2 Listener Rule (%s) tags: %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "setting ELBv2 Listener Rule (%s) tags: %s", d.Id(), err)
 		}
 	}
 
-	return resourceListenerRuleRead(d, meta)
+	return append(diags, resourceListenerRuleRead(ctx, d, meta)...)
 }
 
-func resourceListenerRuleRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBV2Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceListenerRuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
-	var resp *elbv2.DescribeRulesOutput
-	var req = &elbv2.DescribeRulesInput{
-		RuleArns: []*string{aws.String(d.Id())},
+	var resp *elasticloadbalancingv2.DescribeRulesOutput
+	var req = &elasticloadbalancingv2.DescribeRulesInput{
+		RuleArns: []string{d.Id()},
 	}
 
-	err := resource.Retry(1*time.Minute, func() *resource.RetryError {
+	err := retry.RetryContext(ctx, 1*time.Minute, func() *retry.RetryError {
 		var err error
-		resp, err = conn.DescribeRules(req)
+		resp, err = conn.DescribeRules(ctx, req)
 		if err != nil {
-			if d.IsNewResource() && tfawserr.ErrCodeEquals(err, elbv2.ErrCodeRuleNotFoundException) {
-				return resource.RetryableError(err)
+			if d.IsNewResource() && errs.IsA[*awstypes.RuleNotFoundException](err) {
+				return retry.RetryableError(err)
 			} else {
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 		}
 		return nil
 	})
 	if tfresource.TimedOut(err) {
-		resp, err = conn.DescribeRules(req)
+		resp, err = conn.DescribeRules(ctx, req)
 	}
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeRuleNotFoundException) {
+		if errs.IsA[*awstypes.RuleNotFoundException](err) {
 			log.Printf("[WARN] DescribeRules - removing %s from state", d.Id())
 			d.SetId("")
-			return nil
+			return diags
 		}
-		return fmt.Errorf("Error retrieving Rules for listener %q: %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "retrieving Rules for listener %q: %s", d.Id(), err)
 	}
 
 	if len(resp.Rules) != 1 {
-		return fmt.Errorf("Error retrieving Rule %q", d.Id())
+		return sdkdiag.AppendErrorf(diags, "retrieving Rule %q", d.Id())
 	}
 
 	rule := resp.Rules[0]
@@ -586,157 +598,57 @@ func resourceListenerRuleRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", rule.RuleArn)
 
 	// The listener arn isn't in the response but can be derived from the rule arn
-	d.Set("listener_arn", ListenerARNFromRuleARN(aws.StringValue(rule.RuleArn)))
+	d.Set("listener_arn", ListenerARNFromRuleARN(aws.ToString(rule.RuleArn)))
 
 	// Rules are evaluated in priority order, from the lowest value to the highest value. The default rule has the lowest priority.
-	if aws.StringValue(rule.Priority) == "default" {
+	if aws.ToString(rule.Priority) == "default" {
 		d.Set("priority", listenerRulePriorityDefault)
 	} else {
-		if priority, err := strconv.Atoi(aws.StringValue(rule.Priority)); err != nil {
-			return fmt.Errorf("Cannot convert rule priority %q to int: %w", aws.StringValue(rule.Priority), err)
+		if priority, err := strconv.Atoi(aws.ToString(rule.Priority)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "Cannot convert rule priority %q to int: %s", aws.ToString(rule.Priority), err)
 		} else {
 			d.Set("priority", priority)
 		}
 	}
 
 	sort.Slice(rule.Actions, func(i, j int) bool {
-		return aws.Int64Value(rule.Actions[i].Order) < aws.Int64Value(rule.Actions[j].Order)
+		return aws.ToInt32(rule.Actions[i].Order) < aws.ToInt32(rule.Actions[j].Order)
 	})
-	actions := make([]interface{}, len(rule.Actions))
-	for i, action := range rule.Actions {
-		actionMap := make(map[string]interface{})
-		actionMap["type"] = aws.StringValue(action.Type)
-		actionMap["order"] = aws.Int64Value(action.Order)
-
-		switch actionMap["type"] {
-		case elbv2.ActionTypeEnumForward:
-			if aws.StringValue(action.TargetGroupArn) != "" {
-				actionMap["target_group_arn"] = aws.StringValue(action.TargetGroupArn)
-			} else {
-				targetGroups := make([]map[string]interface{}, 0, len(action.ForwardConfig.TargetGroups))
-				for _, targetGroup := range action.ForwardConfig.TargetGroups {
-					targetGroups = append(targetGroups,
-						map[string]interface{}{
-							"arn":    aws.StringValue(targetGroup.TargetGroupArn),
-							"weight": aws.Int64Value(targetGroup.Weight),
-						},
-					)
-				}
-				actionMap["forward"] = []map[string]interface{}{
-					{
-						"target_group": targetGroups,
-						"stickiness": []map[string]interface{}{
-							{
-								"enabled":  aws.BoolValue(action.ForwardConfig.TargetGroupStickinessConfig.Enabled),
-								"duration": aws.Int64Value(action.ForwardConfig.TargetGroupStickinessConfig.DurationSeconds),
-							},
-						},
-					},
-				}
-			}
-
-		case elbv2.ActionTypeEnumRedirect:
-			actionMap["redirect"] = []map[string]interface{}{
-				{
-					"host":        aws.StringValue(action.RedirectConfig.Host),
-					"path":        aws.StringValue(action.RedirectConfig.Path),
-					"port":        aws.StringValue(action.RedirectConfig.Port),
-					"protocol":    aws.StringValue(action.RedirectConfig.Protocol),
-					"query":       aws.StringValue(action.RedirectConfig.Query),
-					"status_code": aws.StringValue(action.RedirectConfig.StatusCode),
-				},
-			}
-
-		case elbv2.ActionTypeEnumFixedResponse:
-			actionMap["fixed_response"] = []map[string]interface{}{
-				{
-					"content_type": aws.StringValue(action.FixedResponseConfig.ContentType),
-					"message_body": aws.StringValue(action.FixedResponseConfig.MessageBody),
-					"status_code":  aws.StringValue(action.FixedResponseConfig.StatusCode),
-				},
-			}
-
-		case elbv2.ActionTypeEnumAuthenticateCognito:
-			authenticationRequestExtraParams := make(map[string]interface{})
-			for key, value := range action.AuthenticateCognitoConfig.AuthenticationRequestExtraParams {
-				authenticationRequestExtraParams[key] = aws.StringValue(value)
-			}
-
-			actionMap["authenticate_cognito"] = []map[string]interface{}{
-				{
-					"authentication_request_extra_params": authenticationRequestExtraParams,
-					"on_unauthenticated_request":          aws.StringValue(action.AuthenticateCognitoConfig.OnUnauthenticatedRequest),
-					"scope":                               aws.StringValue(action.AuthenticateCognitoConfig.Scope),
-					"session_cookie_name":                 aws.StringValue(action.AuthenticateCognitoConfig.SessionCookieName),
-					"session_timeout":                     aws.Int64Value(action.AuthenticateCognitoConfig.SessionTimeout),
-					"user_pool_arn":                       aws.StringValue(action.AuthenticateCognitoConfig.UserPoolArn),
-					"user_pool_client_id":                 aws.StringValue(action.AuthenticateCognitoConfig.UserPoolClientId),
-					"user_pool_domain":                    aws.StringValue(action.AuthenticateCognitoConfig.UserPoolDomain),
-				},
-			}
-
-		case elbv2.ActionTypeEnumAuthenticateOidc:
-			authenticationRequestExtraParams := make(map[string]interface{})
-			for key, value := range action.AuthenticateOidcConfig.AuthenticationRequestExtraParams {
-				authenticationRequestExtraParams[key] = aws.StringValue(value)
-			}
-
-			// The LB API currently provides no way to read the ClientSecret
-			// Instead we passthrough the configuration value into the state
-			clientSecret := d.Get("action." + strconv.Itoa(i) + ".authenticate_oidc.0.client_secret").(string)
-
-			actionMap["authenticate_oidc"] = []map[string]interface{}{
-				{
-					"authentication_request_extra_params": authenticationRequestExtraParams,
-					"authorization_endpoint":              aws.StringValue(action.AuthenticateOidcConfig.AuthorizationEndpoint),
-					"client_id":                           aws.StringValue(action.AuthenticateOidcConfig.ClientId),
-					"client_secret":                       clientSecret,
-					"issuer":                              aws.StringValue(action.AuthenticateOidcConfig.Issuer),
-					"on_unauthenticated_request":          aws.StringValue(action.AuthenticateOidcConfig.OnUnauthenticatedRequest),
-					"scope":                               aws.StringValue(action.AuthenticateOidcConfig.Scope),
-					"session_cookie_name":                 aws.StringValue(action.AuthenticateOidcConfig.SessionCookieName),
-					"session_timeout":                     aws.Int64Value(action.AuthenticateOidcConfig.SessionTimeout),
-					"token_endpoint":                      aws.StringValue(action.AuthenticateOidcConfig.TokenEndpoint),
-					"user_info_endpoint":                  aws.StringValue(action.AuthenticateOidcConfig.UserInfoEndpoint),
-				},
-			}
-		}
-
-		actions[i] = actionMap
+	if err := d.Set("action", flattenLbListenerActions(d, "action", rule.Actions)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting action: %s", err)
 	}
-	d.Set("action", actions)
 
 	conditions := make([]interface{}, len(rule.Conditions))
 	for i, condition := range rule.Conditions {
 		conditionMap := make(map[string]interface{})
 
-		switch aws.StringValue(condition.Field) {
+		switch aws.ToString(condition.Field) {
 		case "host-header":
 			conditionMap["host_header"] = []interface{}{
 				map[string]interface{}{
-					"values": flex.FlattenStringSet(condition.HostHeaderConfig.Values),
+					"values": flex.FlattenStringValueSet(condition.HostHeaderConfig.Values),
 				},
 			}
 
 		case "http-header":
 			conditionMap["http_header"] = []interface{}{
 				map[string]interface{}{
-					"http_header_name": aws.StringValue(condition.HttpHeaderConfig.HttpHeaderName),
-					"values":           flex.FlattenStringSet(condition.HttpHeaderConfig.Values),
+					"http_header_name": aws.ToString(condition.HttpHeaderConfig.HttpHeaderName),
+					"values":           flex.FlattenStringValueSet(condition.HttpHeaderConfig.Values),
 				},
 			}
 
 		case "http-request-method":
 			conditionMap["http_request_method"] = []interface{}{
 				map[string]interface{}{
-					"values": flex.FlattenStringSet(condition.HttpRequestMethodConfig.Values),
+					"values": flex.FlattenStringValueSet(condition.HttpRequestMethodConfig.Values),
 				},
 			}
 
 		case "path-pattern":
 			conditionMap["path_pattern"] = []interface{}{
 				map[string]interface{}{
-					"values": flex.FlattenStringSet(condition.PathPatternConfig.Values),
+					"values": flex.FlattenStringValueSet(condition.PathPatternConfig.Values),
 				},
 			}
 
@@ -744,8 +656,8 @@ func resourceListenerRuleRead(d *schema.ResourceData, meta interface{}) error {
 			values := make([]interface{}, len(condition.QueryStringConfig.Values))
 			for k, value := range condition.QueryStringConfig.Values {
 				values[k] = map[string]interface{}{
-					"key":   aws.StringValue(value.Key),
-					"value": aws.StringValue(value.Value),
+					"key":   aws.ToString(value.Key),
+					"value": aws.ToString(value.Value),
 				}
 			}
 			conditionMap["query_string"] = values
@@ -753,7 +665,7 @@ func resourceListenerRuleRead(d *schema.ResourceData, meta interface{}) error {
 		case "source-ip":
 			conditionMap["source_ip"] = []interface{}{
 				map[string]interface{}{
-					"values": flex.FlattenStringSet(condition.SourceIpConfig.Values),
+					"values": flex.FlattenStringValueSet(condition.SourceIpConfig.Values),
 				},
 			}
 		}
@@ -761,173 +673,120 @@ func resourceListenerRuleRead(d *schema.ResourceData, meta interface{}) error {
 		conditions[i] = conditionMap
 	}
 	if err := d.Set("condition", conditions); err != nil {
-		return fmt.Errorf("setting condition: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting condition: %s", err)
 	}
 
-	// tags at the end because, if not supported, will skip the rest of Read
-	tags, err := ListTags(conn, d.Id())
-
-	if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
-		log.Printf("[WARN] Unable to list tags for ELBv2 Listener Rule %s: %s", d.Id(), err)
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("listing tags for (%s): %w", d.Id(), err)
-	}
-
-	tags = tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceListenerRuleUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBV2Conn
+func resourceListenerRuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
-	if d.HasChange("priority") {
-		params := &elbv2.SetRulePrioritiesInput{
-			RulePriorities: []*elbv2.RulePriorityPair{
-				{
-					RuleArn:  aws.String(d.Id()),
-					Priority: aws.Int64(int64(d.Get("priority").(int))),
+	if d.HasChangesExcept("tags", "tags_all") {
+		if d.HasChange("priority") {
+			params := &elasticloadbalancingv2.SetRulePrioritiesInput{
+				RulePriorities: []awstypes.RulePriorityPair{
+					{
+						RuleArn:  aws.String(d.Id()),
+						Priority: aws.Int32(int32(d.Get("priority").(int))),
+					},
 				},
-			},
-		}
-
-		_, err := conn.SetRulePriorities(params)
-		if err != nil {
-			return err
-		}
-	}
-
-	requestUpdate := false
-	params := &elbv2.ModifyRuleInput{
-		RuleArn: aws.String(d.Id()),
-	}
-
-	if d.HasChange("action") {
-		var err error
-		params.Actions, err = expandLbListenerActions(d.Get("action").([]interface{}))
-		if err != nil {
-			return fmt.Errorf("modifying LB Listener Rule (%s) action: %w", d.Id(), err)
-		}
-		requestUpdate = true
-	}
-
-	if d.HasChange("condition") {
-		var err error
-		params.Conditions, err = lbListenerRuleConditions(d.Get("condition").(*schema.Set).List())
-		if err != nil {
-			return fmt.Errorf("modifying LB Listener Rule (%s) condition: %w", d.Id(), err)
-		}
-		requestUpdate = true
-	}
-
-	if requestUpdate {
-		resp, err := conn.ModifyRule(params)
-		if err != nil {
-			return fmt.Errorf("Error modifying LB Listener Rule: %w", err)
-		}
-
-		if len(resp.Rules) == 0 {
-			return errors.New("Error modifying creating LB Listener Rule: no rules returned in response")
-		}
-	}
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		err := resource.Retry(loadBalancerTagPropagationTimeout, func() *resource.RetryError {
-			err := UpdateTags(conn, d.Id(), o, n)
-
-			if tfawserr.ErrCodeEquals(err, elbv2.ErrCodeLoadBalancerNotFoundException) {
-				log.Printf("[DEBUG] Retrying tagging of LB Listener Rule (%s) after error: %s", d.Id(), err)
-				return resource.RetryableError(err)
 			}
 
+			_, err := conn.SetRulePriorities(ctx, params)
 			if err != nil {
-				return resource.NonRetryableError(err)
+				return sdkdiag.AppendErrorf(diags, "updating ELB v2 Listener Rule (%s): setting priority: %s", d.Id(), err)
+			}
+		}
+
+		requestUpdate := false
+		input := &elasticloadbalancingv2.ModifyRuleInput{
+			RuleArn: aws.String(d.Id()),
+		}
+
+		if d.HasChange("action") {
+			input.Actions = expandLbListenerActions(cty.GetAttrPath("action"), d.Get("action").([]any), &diags)
+			if diags.HasError() {
+				return diags
+			}
+			requestUpdate = true
+		}
+
+		if d.HasChange("condition") {
+			var err error
+			input.Conditions, err = lbListenerRuleConditions(d.Get("condition").(*schema.Set).List())
+			if err != nil {
+				return sdkdiag.AppendFromErr(diags, err)
+			}
+			requestUpdate = true
+		}
+
+		if requestUpdate {
+			resp, err := conn.ModifyRule(ctx, input)
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "modifying LB Listener Rule: %s", err)
 			}
 
-			return nil
-		})
-
-		if tfresource.TimedOut(err) {
-			err = UpdateTags(conn, d.Id(), o, n)
-		}
-
-		// ISO partitions may not support tagging, giving error
-		if verify.CheckISOErrorTagsUnsupported(conn.PartitionID, err) {
-			log.Printf("[WARN] Unable to update tags for ELBv2 Listener Rule %s: %s", d.Id(), err)
-			return resourceListenerRuleRead(d, meta)
-		}
-
-		if err != nil {
-			return fmt.Errorf("updating LB (%s) tags: %w", d.Id(), err)
+			if len(resp.Rules) == 0 {
+				return sdkdiag.AppendErrorf(diags, "modifying creating LB Listener Rule: no rules returned in response")
+			}
 		}
 	}
 
-	return resourceListenerRuleRead(d, meta)
+	return append(diags, resourceListenerRuleRead(ctx, d, meta)...)
 }
 
-func resourceListenerRuleDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).ELBV2Conn
+func resourceListenerRuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 
-	_, err := conn.DeleteRule(&elbv2.DeleteRuleInput{
+	_, err := conn.DeleteRule(ctx, &elasticloadbalancingv2.DeleteRuleInput{
 		RuleArn: aws.String(d.Id()),
 	})
-	if err != nil && !tfawserr.ErrCodeEquals(err, elbv2.ErrCodeRuleNotFoundException) {
-		return fmt.Errorf("Error deleting LB Listener Rule: %w", err)
+	if err != nil && !errs.IsA[*awstypes.RuleNotFoundException](err) {
+		return sdkdiag.AppendErrorf(diags, "deleting LB Listener Rule: %s", err)
 	}
-	return nil
+	return diags
 }
 
-func retryListenerRuleCreate(conn *elbv2.ELBV2, d *schema.ResourceData, params *elbv2.CreateRuleInput, listenerARN string) (*elbv2.CreateRuleOutput, error) {
-	var resp *elbv2.CreateRuleOutput
+func retryListenerRuleCreate(ctx context.Context, conn *elasticloadbalancingv2.Client, d *schema.ResourceData, params *elasticloadbalancingv2.CreateRuleInput, listenerARN string) (*elasticloadbalancingv2.CreateRuleOutput, error) {
+	var resp *elasticloadbalancingv2.CreateRuleOutput
 	if v, ok := d.GetOk("priority"); ok {
 		var err error
-		params.Priority = aws.Int64(int64(v.(int)))
-		resp, err = conn.CreateRule(params)
+		params.Priority = aws.Int32(int32(v.(int)))
+		resp, err = conn.CreateRule(ctx, params)
 
 		if err != nil {
 			return nil, err
 		}
 	} else {
-		var priority int64
+		var priority int32
 
-		err := resource.Retry(5*time.Minute, func() *resource.RetryError {
+		err := retry.RetryContext(ctx, 5*time.Minute, func() *retry.RetryError {
 			var err error
-			priority, err = highestListenerRulePriority(conn, listenerARN)
+			priority, err = highestListenerRulePriority(ctx, conn, listenerARN)
 			if err != nil {
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
-			params.Priority = aws.Int64(priority + 1)
-			resp, err = conn.CreateRule(params)
+			params.Priority = aws.Int32(priority + 1)
+			resp, err = conn.CreateRule(ctx, params)
 			if err != nil {
-				if tfawserr.ErrCodeEquals(err, elbv2.ErrCodePriorityInUseException) {
-					return resource.RetryableError(err)
+				if errs.IsA[*awstypes.PriorityInUseException](err) {
+					return retry.RetryableError(err)
 				}
-				return resource.NonRetryableError(err)
+				return retry.NonRetryableError(err)
 			}
 			return nil
 		})
 
 		if tfresource.TimedOut(err) {
-			priority, err = highestListenerRulePriority(conn, listenerARN)
+			priority, err = highestListenerRulePriority(ctx, conn, listenerARN)
 			if err != nil {
 				return nil, fmt.Errorf("getting highest listener rule (%s) priority: %w", listenerARN, err)
 			}
-			params.Priority = aws.Int64(priority + 1)
-			resp, err = conn.CreateRule(params)
+			params.Priority = aws.Int32(priority + 1)
+			resp, err = conn.CreateRule(ctx, params)
 		}
 
 		if err != nil {
@@ -956,7 +815,7 @@ func validListenerRulePriority(v interface{}, k string) (ws []string, errors []e
 // (arn:aws:elasticloadbalancing:us-east-1:012345678912:listener)-rule(/app/name/0123456789abcdef/abcdef0123456789)/456789abcedf1234
 // concat to become:
 // arn:aws:elasticloadbalancing:us-east-1:012345678912:listener/app/name/0123456789abcdef/abcdef0123456789
-var lbListenerARNFromRuleARNRegexp = regexp.MustCompile(`^(arn:.+:listener)-rule(/.+)/[^/]+$`)
+var lbListenerARNFromRuleARNRegexp = regexache.MustCompile(`^(arn:.+:listener)-rule(/.+)/[^/]+$`)
 
 func ListenerARNFromRuleARN(ruleArn string) string {
 	if arnComponents := lbListenerARNFromRuleARNRegexp.FindStringSubmatch(ruleArn); len(arnComponents) > 1 {
@@ -966,12 +825,12 @@ func ListenerARNFromRuleARN(ruleArn string) string {
 	return ""
 }
 
-func highestListenerRulePriority(conn *elbv2.ELBV2, arn string) (priority int64, err error) {
+func highestListenerRulePriority(ctx context.Context, conn *elasticloadbalancingv2.Client, arn string) (priority int32, err error) {
 	var priorities []int
 	var nextMarker *string
 
 	for {
-		out, aerr := conn.DescribeRules(&elbv2.DescribeRulesInput{
+		out, aerr := conn.DescribeRules(ctx, &elasticloadbalancingv2.DescribeRulesInput{
 			ListenerArn: aws.String(arn),
 			Marker:      nextMarker,
 		})
@@ -979,8 +838,8 @@ func highestListenerRulePriority(conn *elbv2.ELBV2, arn string) (priority int64,
 			return 0, aerr
 		}
 		for _, rule := range out.Rules {
-			if aws.StringValue(rule.Priority) != "default" {
-				p, _ := strconv.Atoi(aws.StringValue(rule.Priority))
+			if aws.ToString(rule.Priority) != "default" {
+				p, _ := strconv.Atoi(aws.ToString(rule.Priority))
 				priorities = append(priorities, p)
 			}
 		}
@@ -996,15 +855,15 @@ func highestListenerRulePriority(conn *elbv2.ELBV2, arn string) (priority int64,
 
 	sort.IntSlice(priorities).Sort()
 
-	return int64(priorities[len(priorities)-1]), nil
+	return int32(priorities[len(priorities)-1]), nil
 }
 
 // lbListenerRuleConditions converts data source generated by Terraform into
-// an elbv2.RuleCondition object suitable for submitting to AWS API.
-func lbListenerRuleConditions(conditions []interface{}) ([]*elbv2.RuleCondition, error) {
-	elbConditions := make([]*elbv2.RuleCondition, len(conditions))
+// an elasticloadbalancingv2/types.RuleCondition object suitable for submitting to AWS API.
+func lbListenerRuleConditions(conditions []interface{}) ([]awstypes.RuleCondition, error) {
+	elbConditions := make([]awstypes.RuleCondition, len(conditions))
 	for i, condition := range conditions {
-		elbConditions[i] = &elbv2.RuleCondition{}
+		elbConditions[i] = awstypes.RuleCondition{}
 		conditionMap := condition.(map[string]interface{})
 		var field string
 		var attrs int
@@ -1014,8 +873,8 @@ func lbListenerRuleConditions(conditions []interface{}) ([]*elbv2.RuleCondition,
 			attrs += 1
 			values := hostHeader[0].(map[string]interface{})["values"].(*schema.Set)
 
-			elbConditions[i].HostHeaderConfig = &elbv2.HostHeaderConditionConfig{
-				Values: flex.ExpandStringSet(values),
+			elbConditions[i].HostHeaderConfig = &awstypes.HostHeaderConditionConfig{
+				Values: flex.ExpandStringValueSet(values),
 			}
 		}
 
@@ -1025,9 +884,9 @@ func lbListenerRuleConditions(conditions []interface{}) ([]*elbv2.RuleCondition,
 			httpHeaderMap := httpHeader[0].(map[string]interface{})
 			values := httpHeaderMap["values"].(*schema.Set)
 
-			elbConditions[i].HttpHeaderConfig = &elbv2.HttpHeaderConditionConfig{
+			elbConditions[i].HttpHeaderConfig = &awstypes.HttpHeaderConditionConfig{
 				HttpHeaderName: aws.String(httpHeaderMap["http_header_name"].(string)),
-				Values:         flex.ExpandStringSet(values),
+				Values:         flex.ExpandStringValueSet(values),
 			}
 		}
 
@@ -1036,8 +895,8 @@ func lbListenerRuleConditions(conditions []interface{}) ([]*elbv2.RuleCondition,
 			attrs += 1
 			values := httpRequestMethod[0].(map[string]interface{})["values"].(*schema.Set)
 
-			elbConditions[i].HttpRequestMethodConfig = &elbv2.HttpRequestMethodConditionConfig{
-				Values: flex.ExpandStringSet(values),
+			elbConditions[i].HttpRequestMethodConfig = &awstypes.HttpRequestMethodConditionConfig{
+				Values: flex.ExpandStringValueSet(values),
 			}
 		}
 
@@ -1046,8 +905,8 @@ func lbListenerRuleConditions(conditions []interface{}) ([]*elbv2.RuleCondition,
 			attrs += 1
 			values := pathPattern[0].(map[string]interface{})["values"].(*schema.Set)
 
-			elbConditions[i].PathPatternConfig = &elbv2.PathPatternConditionConfig{
-				Values: flex.ExpandStringSet(values),
+			elbConditions[i].PathPatternConfig = &awstypes.PathPatternConditionConfig{
+				Values: flex.ExpandStringValueSet(values),
 			}
 		}
 
@@ -1056,12 +915,12 @@ func lbListenerRuleConditions(conditions []interface{}) ([]*elbv2.RuleCondition,
 			attrs += 1
 			values := queryString.List()
 
-			elbConditions[i].QueryStringConfig = &elbv2.QueryStringConditionConfig{
-				Values: make([]*elbv2.QueryStringKeyValuePair, len(values)),
+			elbConditions[i].QueryStringConfig = &awstypes.QueryStringConditionConfig{
+				Values: make([]awstypes.QueryStringKeyValuePair, len(values)),
 			}
 			for j, p := range values {
 				valuePair := p.(map[string]interface{})
-				elbValuePair := &elbv2.QueryStringKeyValuePair{
+				elbValuePair := awstypes.QueryStringKeyValuePair{
 					Value: aws.String(valuePair["value"].(string)),
 				}
 				if valuePair["key"].(string) != "" {
@@ -1076,8 +935,8 @@ func lbListenerRuleConditions(conditions []interface{}) ([]*elbv2.RuleCondition,
 			attrs += 1
 			values := sourceIp[0].(map[string]interface{})["values"].(*schema.Set)
 
-			elbConditions[i].SourceIpConfig = &elbv2.SourceIpConditionConfig{
-				Values: flex.ExpandStringSet(values),
+			elbConditions[i].SourceIpConfig = &awstypes.SourceIpConditionConfig{
+				Values: flex.ExpandStringValueSet(values),
 			}
 		}
 

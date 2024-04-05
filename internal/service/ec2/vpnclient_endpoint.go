@@ -1,6 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
+	"context"
 	"fmt"
 	"log"
 
@@ -8,23 +12,30 @@ import (
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_ec2_client_vpn_endpoint", name="Client VPN Endpoint")
+// @Tags(identifierAttribute="id")
 func ResourceClientVPNEndpoint() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceClientVPNEndpointCreate,
-		Read:   resourceClientVPNEndpointRead,
-		Delete: resourceClientVPNEndpointDelete,
-		Update: resourceClientVPNEndpointUpdate,
+		CreateWithoutTimeout: resourceClientVPNEndpointCreate,
+		ReadWithoutTimeout:   resourceClientVPNEndpointRead,
+		DeleteWithoutTimeout: resourceClientVPNEndpointDelete,
+		UpdateWithoutTimeout: resourceClientVPNEndpointUpdate,
+
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -35,7 +46,7 @@ func ResourceClientVPNEndpoint() *schema.Resource {
 				Computed: true,
 			},
 			"authentication_options": {
-				Type:     schema.TypeList,
+				Type:     schema.TypeSet,
 				Required: true,
 				ForceNew: true,
 				MaxItems: 2,
@@ -170,6 +181,10 @@ func ResourceClientVPNEndpoint() *schema.Resource {
 				Default:      ec2.SelfServicePortalDisabled,
 				ValidateFunc: validation.StringInSlice(ec2.SelfServicePortal_Values(), false),
 			},
+			"self_service_portal_url": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"server_certificate_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -186,13 +201,8 @@ func ResourceClientVPNEndpoint() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
-			"status": {
-				Type:       schema.TypeString,
-				Computed:   true,
-				Deprecated: `This attribute has been deprecated.`,
-			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"transport_protocol": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -218,22 +228,22 @@ func ResourceClientVPNEndpoint() *schema.Resource {
 	}
 }
 
-func resourceClientVPNEndpointCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceClientVPNEndpointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.CreateClientVpnEndpointInput{
 		ClientCidrBlock:      aws.String(d.Get("client_cidr_block").(string)),
+		ClientToken:          aws.String(id.UniqueId()),
 		ServerCertificateArn: aws.String(d.Get("server_certificate_arn").(string)),
 		SplitTunnel:          aws.Bool(d.Get("split_tunnel").(bool)),
-		TagSpecifications:    tagSpecificationsFromKeyValueTags(tags, ec2.ResourceTypeClientVpnEndpoint),
+		TagSpecifications:    getTagSpecificationsIn(ctx, ec2.ResourceTypeClientVpnEndpoint),
 		TransportProtocol:    aws.String(d.Get("transport_protocol").(string)),
 		VpnPort:              aws.Int64(int64(d.Get("vpn_port").(int))),
 	}
 
-	if v, ok := d.GetOk("authentication_options"); ok && len(v.([]interface{})) > 0 {
-		input.AuthenticationOptions = expandClientVPNAuthenticationRequests(v.([]interface{}))
+	if v, ok := d.GetOk("authentication_options"); ok && v.(*schema.Set).Len() > 0 {
+		input.AuthenticationOptions = expandClientVPNAuthenticationRequests(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("client_connect_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -272,33 +282,31 @@ func resourceClientVPNEndpointCreate(d *schema.ResourceData, meta interface{}) e
 		input.VpcId = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating EC2 Client VPN Endpoint: %s", input)
-	output, err := conn.CreateClientVpnEndpoint(input)
+	output, err := conn.CreateClientVpnEndpointWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating EC2 Client VPN Endpoint: %w", err)
+		return sdkdiag.AppendErrorf(diags, "creating EC2 Client VPN Endpoint: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.ClientVpnEndpointId))
 
-	return resourceClientVPNEndpointRead(d, meta)
+	return append(diags, resourceClientVPNEndpointRead(ctx, d, meta)...)
 }
 
-func resourceClientVPNEndpointRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceClientVPNEndpointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	ep, err := FindClientVPNEndpointByID(conn, d.Id())
+	ep, err := FindClientVPNEndpointByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Client VPN Endpoint (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Client VPN Endpoint (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Client VPN Endpoint (%s): %s", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -310,26 +318,26 @@ func resourceClientVPNEndpointRead(d *schema.ResourceData, meta interface{}) err
 	}.String()
 	d.Set("arn", arn)
 	if err := d.Set("authentication_options", flattenClientVPNAuthentications(ep.AuthenticationOptions)); err != nil {
-		return fmt.Errorf("error setting authentication_options: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting authentication_options: %s", err)
 	}
 	d.Set("client_cidr_block", ep.ClientCidrBlock)
 	if ep.ClientConnectOptions != nil {
 		if err := d.Set("client_connect_options", []interface{}{flattenClientConnectResponseOptions(ep.ClientConnectOptions)}); err != nil {
-			return fmt.Errorf("error setting client_connect_options: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting client_connect_options: %s", err)
 		}
 	} else {
 		d.Set("client_connect_options", nil)
 	}
 	if ep.ClientLoginBannerOptions != nil {
 		if err := d.Set("client_login_banner_options", []interface{}{flattenClientLoginBannerResponseOptions(ep.ClientLoginBannerOptions)}); err != nil {
-			return fmt.Errorf("error setting client_login_banner_options: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting client_login_banner_options: %s", err)
 		}
 	} else {
 		d.Set("client_login_banner_options", nil)
 	}
 	if ep.ConnectionLogOptions != nil {
 		if err := d.Set("connection_log_options", []interface{}{flattenConnectionLogResponseOptions(ep.ConnectionLogOptions)}); err != nil {
-			return fmt.Errorf("error setting connection_log_options: %w", err)
+			return sdkdiag.AppendErrorf(diags, "setting connection_log_options: %s", err)
 		}
 	} else {
 		d.Set("connection_log_options", nil)
@@ -343,30 +351,22 @@ func resourceClientVPNEndpointRead(d *schema.ResourceData, meta interface{}) err
 	} else {
 		d.Set("self_service_portal", ec2.SelfServicePortalDisabled)
 	}
+	d.Set("self_service_portal_url", ep.SelfServicePortalUrl)
 	d.Set("server_certificate_arn", ep.ServerCertificateArn)
 	d.Set("session_timeout_hours", ep.SessionTimeoutHours)
 	d.Set("split_tunnel", ep.SplitTunnel)
-	d.Set("status", ep.Status.Code)
 	d.Set("transport_protocol", ep.TransportProtocol)
 	d.Set("vpc_id", ep.VpcId)
 	d.Set("vpn_port", ep.VpnPort)
 
-	tags := KeyValueTags(ep.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	setTagsOut(ctx, ep.Tags)
 
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceClientVPNEndpointUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceClientVPNEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		var waitForClientConnectResponseOptionsUpdate bool
@@ -440,49 +440,42 @@ func resourceClientVPNEndpointUpdate(d *schema.ResourceData, meta interface{}) e
 			input.VpcId = aws.String(d.Get("vpc_id").(string))
 		}
 
-		if _, err := conn.ModifyClientVpnEndpoint(input); err != nil {
-			return fmt.Errorf("error modifying EC2 Client VPN Endpoint (%s): %w", d.Id(), err)
+		if _, err := conn.ModifyClientVpnEndpointWithContext(ctx, input); err != nil {
+			return sdkdiag.AppendErrorf(diags, "modifying EC2 Client VPN Endpoint (%s): %s", d.Id(), err)
 		}
 
 		if waitForClientConnectResponseOptionsUpdate {
-			if _, err := WaitClientVPNEndpointClientConnectResponseOptionsUpdated(conn, d.Id()); err != nil {
-				return fmt.Errorf("error waiting for EC2 Client VPN Endpoint (%s) ClientConnectResponseOptions update: %w", d.Id(), err)
+			if _, err := WaitClientVPNEndpointClientConnectResponseOptionsUpdated(ctx, conn, d.Id()); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for EC2 Client VPN Endpoint (%s) ClientConnectResponseOptions update: %s", d.Id(), err)
 			}
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := UpdateTags(conn, d.Id(), o, n); err != nil {
-			return fmt.Errorf("error updating EC2 Client VPN Endpoint (%s) tags: %w", d.Id(), err)
-		}
-	}
-
-	return resourceClientVPNEndpointRead(d, meta)
+	return append(diags, resourceClientVPNEndpointRead(ctx, d, meta)...)
 }
 
-func resourceClientVPNEndpointDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func resourceClientVPNEndpointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	log.Printf("[DEBUG] Deleting EC2 Client VPN Endpoint: %s", d.Id())
-	_, err := conn.DeleteClientVpnEndpoint(&ec2.DeleteClientVpnEndpointInput{
+	_, err := conn.DeleteClientVpnEndpointWithContext(ctx, &ec2.DeleteClientVpnEndpointInput{
 		ClientVpnEndpointId: aws.String(d.Id()),
 	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidClientVPNEndpointIdNotFound) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting EC2 Client VPN Endpoint (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting EC2 Client VPN Endpoint (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitClientVPNEndpointDeleted(conn, d.Id()); err != nil {
-		return fmt.Errorf("error waiting for EC2 Client VPN Endpoint (%s) delete: %w", d.Id(), err)
+	if _, err := WaitClientVPNEndpointDeleted(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Client VPN Endpoint (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandClientVPNAuthenticationRequest(tfMap map[string]interface{}) *ec2.ClientVpnAuthenticationRequest {

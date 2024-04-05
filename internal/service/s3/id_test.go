@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3_test
 
 import (
@@ -7,6 +10,8 @@ import (
 )
 
 func TestParseResourceID(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName            string
 		InputID             string
@@ -39,7 +44,10 @@ func TestParseResourceID(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
 			gotBucket, gotExpectedBucketOwner, err := tfs3.ParseResourceID(testCase.InputID)
 
 			if err == nil && testCase.ExpectError {

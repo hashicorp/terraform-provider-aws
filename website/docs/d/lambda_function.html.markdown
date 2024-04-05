@@ -24,14 +24,14 @@ data "aws_lambda_function" "existing" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `function_name` - (Required) Name of the lambda function.
 * `qualifier` - (Optional) Alias name or version number of the lambda functionE.g., `$LATEST`, `my-alias`, or `1`. When not included: the data source resolves to the most recent published version; if no published version exists: it resolves to the most recent unpublished version.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `architectures` - Instruction set architecture for the Lambda function.
 * `arn` - Unqualified (no `:QUALIFIER` or `:VERSION` suffix) ARN identifying your Lambda Function. See also `qualified_arn`.
@@ -43,12 +43,14 @@ In addition to all arguments above, the following attributes are exported:
 * `file_system_config` - Connection settings for an Amazon EFS file system.
 * `handler` - Function entrypoint in your code.
 * `image_uri` - URI of the container image.
-* `invoke_arn` - ARN to be used for invoking Lambda Function from API Gateway.
+* `invoke_arn` - ARN to be used for invoking Lambda Function from API Gateway. **NOTE:** Starting with `v4.51.0` of the provider, this will *not* include the qualifier.
 * `kms_key_arn` - ARN for the KMS encryption key.
 * `last_modified` - Date this resource was last modified.
 * `layers` - List of Lambda Layer ARNs attached to your Lambda Function.
+* `logging_config` - Advanced logging settings.
 * `memory_size` - Amount of memory in MB your Lambda Function can use at runtime.
 * `qualified_arn` - Qualified (`:QUALIFIER` or `:VERSION` suffix) ARN identifying your Lambda Function. See also `arn`.
+* `qualified_invoke_arn` - Qualified (`:QUALIFIER` or `:VERSION` suffix) ARN to be used for invoking Lambda Function from API Gateway. See also `invoke_arn`.
 * `reserved_concurrent_executions` - The amount of reserved concurrent executions for this lambda function or `-1` if unreserved.
 * `role` - IAM role attached to the Lambda Function.
 * `runtime` - Runtime environment for the Lambda function.

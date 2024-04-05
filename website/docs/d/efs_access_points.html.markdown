@@ -20,13 +20,13 @@ data "aws_efs_access_points" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `file_system_id` - (Required) EFS File System identifier.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arns` - Set of Amazon Resource Names (ARNs).
 * `id` - EFS File System identifier.

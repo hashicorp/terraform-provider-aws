@@ -46,7 +46,7 @@ data "aws_s3_bucket_object" "lambda" {
 }
 
 resource "aws_lambda_function" "test_lambda" {
-  s3_bucket         = data.aws_s3_bucket_object.lambda.bucket
+  s3_bucket         = data.aws_s3_bucket_object.lambda.id
   s3_key            = data.aws_s3_bucket_object.lambda.key
   s3_object_version = data.aws_s3_bucket_object.lambda.version_id
   function_name     = "lambda_function_name"
@@ -57,15 +57,15 @@ resource "aws_lambda_function" "test_lambda" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `bucket` - (Required) Name of the bucket to read the object from. Alternatively, an [S3 access point](https://docs.aws.amazon.com/AmazonS3/latest/dev/using-access-points.html) ARN can be specified
 * `key` - (Required) Full path to the object inside the bucket
 * `version_id` - (Optional) Specific version ID of the object returned (defaults to latest version)
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `body` - Object data (see **limitations above** to understand cases in which this field is actually available)
 * `bucket_key_enabled` - (Optional) Whether or not to use [Amazon S3 Bucket Keys](https://docs.aws.amazon.com/AmazonS3/latest/dev/bucket-key.html) for SSE-KMS.
@@ -79,7 +79,7 @@ In addition to all arguments above, the following attributes are exported:
 * `expiration` - If the object expiration is configured (see [object lifecycle management](http://docs.aws.amazon.com/AmazonS3/latest/dev/object-lifecycle-mgmt.html)), the field includes this header. It includes the expiry-date and rule-id key value pairs providing object expiration information. The value of the rule-id is URL encoded.
 * `expires` - Date and time at which the object is no longer cacheable.
 * `last_modified` - Last modified date of the object in RFC1123 format (e.g., `Mon, 02 Jan 2006 15:04:05 MST`)
-* `metadata` - Map of metadata stored with the object in S3
+* `metadata` - Map of metadata stored with the object in S3. [Keys](https://developer.hashicorp.com/terraform/language/expressions/types#maps-objects) are always returned in lowercase.
 * `object_lock_legal_hold_status` - Indicates whether this object has an active [legal hold](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html#object-lock-legal-holds). This field is only returned if you have permission to view an object's legal hold status.
 * `object_lock_mode` - Object lock [retention mode](https://docs.aws.amazon.com/AmazonS3/latest/dev/object-lock-overview.html#object-lock-retention-modes) currently in place for this object.
 * `object_lock_retain_until_date` - The date and time when this object's object lock will expire.

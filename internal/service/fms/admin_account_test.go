@@ -1,33 +1,40 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package fms_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/fms"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tffms "github.com/hashicorp/terraform-provider-aws/internal/service/fms"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccAdminAccount_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_fms_admin_account.test"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
-			acctest.PreCheck(t)
-			testAccPreCheckAdmin(t)
-			acctest.PreCheckOrganizationsAccount(t)
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckOrganizationsEnabled(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, fms.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckAdminAccountDestroy,
+		CheckDestroy:             testAccCheckAdminAccountDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAdminAccountConfig_basic(),
+				Config: testAccAdminAccountConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
 				),
@@ -36,47 +43,63 @@ func testAccAdminAccount_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckAdminAccountDestroy(s *terraform.State) error {
-	conn := testAccProviderAdmin.Meta().(*conns.AWSClient).FMSConn
+func testAccAdminAccount_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_fms_admin_account.test"
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_fms_admin_account" {
-			continue
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckRegion(t, endpoints.UsEast1RegionID)
+			acctest.PreCheckOrganizationsEnabled(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.FMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAdminAccountDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAdminAccountConfig_basic,
+				Check: resource.ComposeTestCheckFunc(
+					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffms.ResourceAdminAccount(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func testAccCheckAdminAccountDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FMSConn(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_fms_admin_account" {
+				continue
+			}
+
+			_, err := tffms.FindAdminAccount(ctx, conn)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("FMS Admin Account %s still exists", rs.Primary.ID)
 		}
 
-		output, err := conn.GetAdminAccount(&fms.GetAdminAccountInput{})
-
-		if tfawserr.ErrCodeEquals(err, fms.ErrCodeResourceNotFoundException) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		if aws.StringValue(output.RoleStatus) == fms.AccountRoleStatusDeleted {
-			continue
-		}
-
-		return fmt.Errorf("FMS Admin Account (%s) still exists with status: %s", aws.StringValue(output.AdminAccount), aws.StringValue(output.RoleStatus))
+		return nil
 	}
-
-	return nil
 }
 
-func testAccAdminAccountConfig_basic() string {
-	return acctest.ConfigCompose(
-		testAccAdminRegionProviderConfig(),
-		`
-data "aws_partition" "current" {}
-
-resource "aws_organizations_organization" "test" {
-  aws_service_access_principals = ["fms.${data.aws_partition.current.dns_suffix}"]
-  feature_set                   = "ALL"
-}
+const testAccAdminAccountConfig_basic = `
+data "aws_caller_identity" "current" {}
 
 resource "aws_fms_admin_account" "test" {
-  account_id = aws_organizations_organization.test.master_account_id
+  account_id = data.aws_caller_identity.current.account_id
 }
-`)
-}
+`

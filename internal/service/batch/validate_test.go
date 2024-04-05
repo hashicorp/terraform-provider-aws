@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package batch
 
 import (
@@ -6,6 +9,8 @@ import (
 )
 
 func TestValidName(t *testing.T) {
+	t.Parallel()
+
 	validNames := []string{
 		strings.Repeat("W", 128), // <= 128
 	}
@@ -29,6 +34,8 @@ func TestValidName(t *testing.T) {
 }
 
 func TestValidPrefix(t *testing.T) {
+	t.Parallel()
+
 	validPrefixes := []string{
 		strings.Repeat("W", 102), // <= 102
 	}
@@ -52,6 +59,8 @@ func TestValidPrefix(t *testing.T) {
 }
 
 func TestValidShareIdentifier(t *testing.T) {
+	t.Parallel()
+
 	validShareIdentifiers := []string{
 		"sample*",
 		"sample1",

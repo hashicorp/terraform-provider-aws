@@ -1,19 +1,25 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
-	"fmt"
+	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
-func DataSourceUser() *schema.Resource {
+// @SDKDataSource("aws_iam_user", name="User")
+func dataSourceUser() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceUserRead,
+		ReadWithoutTimeout: dataSourceUserRead,
 
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -41,8 +47,9 @@ func DataSourceUser() *schema.Resource {
 	}
 }
 
-func dataSourceUserRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).IAMConn
+func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	userName := d.Get("user_name").(string)
@@ -50,14 +57,14 @@ func dataSourceUserRead(d *schema.ResourceData, meta interface{}) error {
 		UserName: aws.String(userName),
 	}
 
-	log.Printf("[DEBUG] Reading IAM User: %s", req)
-	resp, err := conn.GetUser(req)
+	log.Printf("[DEBUG] Reading IAM User: %v", req)
+	resp, err := conn.GetUser(ctx, req)
 	if err != nil {
-		return fmt.Errorf("error getting user: %w", err)
+		return sdkdiag.AppendErrorf(diags, "getting user: %s", err)
 	}
 
 	user := resp.User
-	d.SetId(aws.StringValue(user.UserId))
+	d.SetId(aws.ToString(user.UserId))
 	d.Set("arn", user.Arn)
 	d.Set("path", user.Path)
 	d.Set("permissions_boundary", "")
@@ -66,12 +73,12 @@ func dataSourceUserRead(d *schema.ResourceData, meta interface{}) error {
 	}
 	d.Set("user_id", user.UserId)
 
-	tags := KeyValueTags(user.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, user.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

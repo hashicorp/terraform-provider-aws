@@ -1,17 +1,24 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
+	"context"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_ec2_instance_type")
 func DataSourceInstanceType() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceInstanceTypeRead,
+		ReadWithoutTimeout: dataSourceInstanceTypeRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
@@ -218,6 +225,10 @@ func DataSourceInstanceType() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
+			"maximum_network_cards": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"maximum_network_interfaces": {
 				Type:     schema.TypeInt,
 				Computed: true,
@@ -285,13 +296,14 @@ func DataSourceInstanceType() *schema.Resource {
 	}
 }
 
-func dataSourceInstanceTypeRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceInstanceTypeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	v, err := FindInstanceTypeByName(conn, d.Get("instance_type").(string))
+	v, err := FindInstanceTypeByName(ctx, conn, d.Get("instance_type").(string))
 
 	if err != nil {
-		return tfresource.SingularDataSourceFindError("EC2 Instance Type", err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Instance Type", err))
 	}
 
 	d.SetId(aws.StringValue(v.InstanceType))
@@ -380,6 +392,7 @@ func dataSourceInstanceTypeRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("ipv6_supported", v.NetworkInfo.Ipv6Supported)
 	d.Set("maximum_ipv4_addresses_per_interface", v.NetworkInfo.Ipv4AddressesPerInterface)
 	d.Set("maximum_ipv6_addresses_per_interface", v.NetworkInfo.Ipv6AddressesPerInterface)
+	d.Set("maximum_network_cards", v.NetworkInfo.MaximumNetworkCards)
 	d.Set("maximum_network_interfaces", v.NetworkInfo.MaximumNetworkInterfaces)
 	d.Set("memory_size", v.MemoryInfo.SizeInMiB)
 	d.Set("network_performance", v.NetworkInfo.NetworkPerformance)
@@ -392,5 +405,5 @@ func dataSourceInstanceTypeRead(d *schema.ResourceData, meta interface{}) error 
 	d.Set("valid_cores", v.VCpuInfo.ValidCores)
 	d.Set("valid_threads_per_core", v.VCpuInfo.ValidThreadsPerCore)
 
-	return nil
+	return diags
 }

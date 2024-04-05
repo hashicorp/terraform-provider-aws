@@ -1,21 +1,28 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
+	"context"
 	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_internet_gateway")
 func DataSourceInternetGateway() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceInternetGatewayRead,
+		ReadWithoutTimeout: dataSourceInternetGatewayRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
@@ -42,7 +49,7 @@ func DataSourceInternetGateway() *schema.Resource {
 					},
 				},
 			},
-			"filter": CustomFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"internet_gateway_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -57,8 +64,9 @@ func DataSourceInternetGateway() *schema.Resource {
 	}
 }
 
-func dataSourceInternetGatewayRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceInternetGatewayRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	internetGatewayId, internetGatewayIdOk := d.GetOk("internet_gateway_id")
@@ -66,24 +74,24 @@ func dataSourceInternetGatewayRead(d *schema.ResourceData, meta interface{}) err
 	filter, filterOk := d.GetOk("filter")
 
 	if !internetGatewayIdOk && !filterOk && !tagsOk {
-		return fmt.Errorf("One of internet_gateway_id or filter or tags must be assigned")
+		return sdkdiag.AppendErrorf(diags, "One of internet_gateway_id or filter or tags must be assigned")
 	}
 
 	input := &ec2.DescribeInternetGatewaysInput{}
-	input.Filters = BuildAttributeFilterList(map[string]string{
+	input.Filters = newAttributeFilterList(map[string]string{
 		"internet-gateway-id": internetGatewayId.(string),
 	})
-	input.Filters = append(input.Filters, BuildTagFilterList(
-		Tags(tftags.New(tags.(map[string]interface{}))),
+	input.Filters = append(input.Filters, newTagFilterList(
+		Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 	)...)
-	input.Filters = append(input.Filters, BuildCustomFilterList(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		filter.(*schema.Set),
 	)...)
 
-	igw, err := FindInternetGateway(conn, input)
+	igw, err := FindInternetGateway(ctx, conn, input)
 
 	if err != nil {
-		return tfresource.SingularDataSourceFindError("EC2 Internet Gateway", err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Internet Gateway", err))
 	}
 
 	d.SetId(aws.StringValue(igw.InternetGatewayId))
@@ -99,17 +107,17 @@ func dataSourceInternetGatewayRead(d *schema.ResourceData, meta interface{}) err
 	d.Set("arn", arn)
 
 	if err := d.Set("attachments", flattenInternetGatewayAttachments(igw.Attachments)); err != nil {
-		return fmt.Errorf("error setting attachments: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting attachments: %s", err)
 	}
 
 	d.Set("internet_gateway_id", igw.InternetGatewayId)
 	d.Set("owner_id", ownerID)
 
-	if err := d.Set("tags", KeyValueTags(igw.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
+	if err := d.Set("tags", KeyValueTags(ctx, igw.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func flattenInternetGatewayAttachments(igwAttachments []*ec2.InternetGatewayAttachment) []map[string]interface{} {

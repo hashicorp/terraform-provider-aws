@@ -1,19 +1,23 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package glue
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+// @SDKDataSource("aws_glue_data_catalog_encryption_settings")
 func DataSourceDataCatalogEncryptionSettings() *schema.Resource {
 	return &schema.Resource{
-		ReadContext: dataSourceDataCatalogEncryptionSettingsRead,
+		ReadWithoutTimeout: dataSourceDataCatalogEncryptionSettingsRead,
 		Schema: map[string]*schema.Schema{
 			"catalog_id": {
 				Type:     schema.TypeString,
@@ -49,6 +53,10 @@ func DataSourceDataCatalogEncryptionSettings() *schema.Resource {
 										Type:     schema.TypeString,
 										Computed: true,
 									},
+									"catalog_encryption_service_role": {
+										Type:     schema.TypeString,
+										Computed: true,
+									},
 									"sse_aws_kms_key_id": {
 										Type:     schema.TypeString,
 										Computed: true,
@@ -64,26 +72,28 @@ func DataSourceDataCatalogEncryptionSettings() *schema.Resource {
 }
 
 func dataSourceDataCatalogEncryptionSettingsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).GlueConn
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
 	catalogID := d.Get("catalog_id").(string)
-	output, err := conn.GetDataCatalogEncryptionSettings(&glue.GetDataCatalogEncryptionSettingsInput{
+	output, err := conn.GetDataCatalogEncryptionSettingsWithContext(ctx, &glue.GetDataCatalogEncryptionSettingsInput{
 		CatalogId: aws.String(catalogID),
 	})
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading Glue Data Catalog Encryption Settings (%s): %w", catalogID, err))
+		return sdkdiag.AppendErrorf(diags, "reading Glue Data Catalog Encryption Settings (%s): %s", catalogID, err)
 	}
 
 	d.SetId(catalogID)
 	d.Set("catalog_id", d.Id())
 	if output.DataCatalogEncryptionSettings != nil {
 		if err := d.Set("data_catalog_encryption_settings", []interface{}{flattenDataCatalogEncryptionSettings(output.DataCatalogEncryptionSettings)}); err != nil {
-			return diag.FromErr(fmt.Errorf("error setting data_catalog_encryption_settings: %w", err))
+			return sdkdiag.AppendErrorf(diags, "setting data_catalog_encryption_settings: %s", err)
 		}
 	} else {
 		d.Set("data_catalog_encryption_settings", nil)
 	}
 
-	return nil
+	return diags
 }

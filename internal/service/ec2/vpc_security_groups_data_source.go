@@ -1,20 +1,27 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
+	"context"
 	"fmt"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_security_groups")
 func DataSourceSecurityGroups() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceSecurityGroupsRead,
+		ReadWithoutTimeout: dataSourceSecurityGroupsRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
@@ -26,7 +33,7 @@ func DataSourceSecurityGroups() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": DataSourceFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"ids": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -42,16 +49,18 @@ func DataSourceSecurityGroups() *schema.Resource {
 	}
 }
 
-func dataSourceSecurityGroupsRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceSecurityGroupsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.DescribeSecurityGroupsInput{}
 
-	input.Filters = append(input.Filters, BuildTagFilterList(
-		Tags(tftags.New(d.Get("tags").(map[string]interface{}))),
+	input.Filters = append(input.Filters, newTagFilterList(
+		Tags(tftags.New(ctx, d.Get("tags").(map[string]interface{}))),
 	)...)
 
-	input.Filters = append(input.Filters, BuildFiltersDataSource(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 
@@ -59,10 +68,10 @@ func dataSourceSecurityGroupsRead(d *schema.ResourceData, meta interface{}) erro
 		input.Filters = nil
 	}
 
-	output, err := FindSecurityGroups(conn, input)
+	output, err := FindSecurityGroups(ctx, conn, input)
 
 	if err != nil {
-		return fmt.Errorf("error reading EC2 Security Groups: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Security Groups: %s", err)
 	}
 
 	var arns, securityGroupIDs, vpcIDs []string
@@ -85,5 +94,5 @@ func dataSourceSecurityGroupsRead(d *schema.ResourceData, meta interface{}) erro
 	d.Set("ids", securityGroupIDs)
 	d.Set("vpc_ids", vpcIDs)
 
-	return nil
+	return diags
 }

@@ -1,9 +1,17 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
 	"encoding/json"
 	"fmt"
 	"sort"
+	"strconv"
+
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/jmespath/go-jmespath"
 )
 
 const (
@@ -13,11 +21,11 @@ const (
 type IAMPolicyDoc struct {
 	Version    string                `json:",omitempty"`
 	Id         string                `json:",omitempty"`
-	Statements []*IAMPolicyStatement `json:"Statement"`
+	Statements []*IAMPolicyStatement `json:"Statement,omitempty"`
 }
 
 type IAMPolicyStatement struct {
-	Sid           string
+	Sid           string                         `json:",omitempty"`
 	Effect        string                         `json:",omitempty"`
 	Actions       interface{}                    `json:"Action,omitempty"`
 	NotActions    interface{}                    `json:"NotAction,omitempty"`
@@ -169,17 +177,27 @@ func (cs IAMPolicyStatementConditionSet) MarshalJSON() ([]byte, error) {
 		if _, ok := raw[c.Test]; !ok {
 			raw[c.Test] = map[string]interface{}{}
 		}
+		if _, ok := raw[c.Test][c.Variable]; !ok {
+			raw[c.Test][c.Variable] = []string{}
+		}
 		switch i := c.Values.(type) {
 		case []string:
-			if _, ok := raw[c.Test][c.Variable]; !ok {
-				raw[c.Test][c.Variable] = make([]string, 0, len(i))
-			}
 			// order matters with values so not sorting here
 			raw[c.Test][c.Variable] = append(raw[c.Test][c.Variable].([]string), i...)
 		case string:
-			raw[c.Test][c.Variable] = i
+			raw[c.Test][c.Variable] = append(raw[c.Test][c.Variable].([]string), i)
 		default:
 			return nil, fmt.Errorf("Unsupported data type for IAMPolicyStatementConditionSet: %s", i)
+		}
+	}
+
+	// flatten entries with a single item to match AWS IAM syntax
+	for k1 := range raw {
+		for k2 := range raw[k1] {
+			items := raw[k1][k2].([]string)
+			if len(items) == 1 {
+				raw[k1][k2] = items[0]
+			}
 		}
 	}
 
@@ -199,6 +217,8 @@ func (cs *IAMPolicyStatementConditionSet) UnmarshalJSON(b []byte) error {
 			switch var_values := var_values.(type) {
 			case string:
 				out = append(out, IAMPolicyStatementCondition{Test: test_key, Variable: var_key, Values: []string{var_values}})
+			case bool:
+				out = append(out, IAMPolicyStatementCondition{Test: test_key, Variable: var_key, Values: strconv.FormatBool(var_values)})
 			case []interface{}:
 				values := []string{}
 				for _, v := range var_values {
@@ -223,4 +243,58 @@ func policyDecodeConfigStringList(lI []interface{}) interface{} {
 	}
 	sort.Sort(sort.Reverse(sort.StringSlice(ret)))
 	return ret
+}
+
+// PolicyHasValidAWSPrincipals validates that the Principals in an IAM Policy are valid
+// Assumes that non-"AWS" Principals are valid
+// The value can be a single string or a slice of strings
+// Valid strings are either an ARN or an AWS account ID
+func PolicyHasValidAWSPrincipals(policy string) (bool, error) { // nosemgrep:ci.aws-in-func-name
+	var policyData any
+	err := json.Unmarshal([]byte(policy), &policyData)
+	if err != nil {
+		return false, fmt.Errorf("parsing policy: %w", err)
+	}
+
+	result, err := jmespath.Search("Statement[*].Principal.AWS", policyData)
+	if err != nil {
+		return false, fmt.Errorf("parsing policy: %w", err)
+	}
+
+	principals, ok := result.([]any)
+	if !ok {
+		return false, fmt.Errorf(`parsing policy: unexpected result: (%[1]T) "%[1]v"`, result)
+	}
+
+	for _, principal := range principals {
+		switch x := principal.(type) {
+		case string:
+			if !isValidPolicyAWSPrincipal(x) {
+				return false, nil
+			}
+		case []string:
+			for _, s := range x {
+				if !isValidPolicyAWSPrincipal(s) {
+					return false, nil
+				}
+			}
+		}
+	}
+
+	return true, nil
+}
+
+// isValidPolicyAWSPrincipal returns true if a string is a valid AWS Princial for an IAM Policy document
+// That is: either an ARN, an AWS account ID, or `*`
+func isValidPolicyAWSPrincipal(principal string) bool { // nosemgrep:ci.aws-in-func-name
+	if principal == "*" {
+		return true
+	}
+	if arn.IsARN(principal) {
+		return true
+	}
+	if regexache.MustCompile(`^\d{12}$`).MatchString(principal) {
+		return true
+	}
+	return false
 }

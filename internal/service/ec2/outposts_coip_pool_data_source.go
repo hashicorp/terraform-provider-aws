@@ -1,20 +1,26 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
-	"fmt"
+	"context"
 	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_ec2_coip_pool")
 func DataSourceCoIPPool() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceCoIPPoolRead,
+		ReadWithoutTimeout: dataSourceCoIPPoolRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
@@ -47,13 +53,14 @@ func DataSourceCoIPPool() *schema.Resource {
 
 			"tags": tftags.TagsSchemaComputed(),
 
-			"filter": CustomFiltersSchema(),
+			"filter": customFiltersSchema(),
 		},
 	}
 }
 
-func dataSourceCoIPPoolRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceCoIPPoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	req := &ec2.DescribeCoipPoolsInput{}
@@ -68,15 +75,15 @@ func dataSourceCoIPPoolRead(d *schema.ResourceData, meta interface{}) error {
 		filters["coip-pool.local-gateway-route-table-id"] = v.(string)
 	}
 
-	req.Filters = BuildAttributeFilterList(filters)
+	req.Filters = newAttributeFilterList(filters)
 
 	if tags, tagsOk := d.GetOk("tags"); tagsOk {
-		req.Filters = append(req.Filters, BuildTagFilterList(
-			Tags(tftags.New(tags.(map[string]interface{}))),
+		req.Filters = append(req.Filters, newTagFilterList(
+			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 		)...)
 	}
 
-	req.Filters = append(req.Filters, BuildCustomFilterList(
+	req.Filters = append(req.Filters, newCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 	if len(req.Filters) == 0 {
@@ -85,15 +92,15 @@ func dataSourceCoIPPoolRead(d *schema.ResourceData, meta interface{}) error {
 	}
 
 	log.Printf("[DEBUG] Reading AWS COIP Pool: %s", req)
-	resp, err := conn.DescribeCoipPools(req)
+	resp, err := conn.DescribeCoipPoolsWithContext(ctx, req)
 	if err != nil {
-		return fmt.Errorf("describing EC2 COIP Pools: %w", err)
+		return sdkdiag.AppendErrorf(diags, "describing EC2 COIP Pools: %s", err)
 	}
 	if resp == nil || len(resp.CoipPools) == 0 {
-		return fmt.Errorf("no matching COIP Pool found")
+		return sdkdiag.AppendErrorf(diags, "no matching COIP Pool found")
 	}
 	if len(resp.CoipPools) > 1 {
-		return fmt.Errorf("multiple Coip Pools matched; use additional constraints to reduce matches to a single COIP Pool")
+		return sdkdiag.AppendErrorf(diags, "multiple Coip Pools matched; use additional constraints to reduce matches to a single COIP Pool")
 	}
 
 	coip := resp.CoipPools[0]
@@ -104,14 +111,14 @@ func dataSourceCoIPPoolRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("arn", coip.PoolArn)
 
 	if err := d.Set("pool_cidrs", aws.StringValueSlice(coip.PoolCidrs)); err != nil {
-		return fmt.Errorf("setting pool_cidrs: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting pool_cidrs: %s", err)
 	}
 
 	d.Set("pool_id", coip.PoolId)
 
-	if err := d.Set("tags", KeyValueTags(coip.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+	if err := d.Set("tags", KeyValueTags(ctx, coip.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

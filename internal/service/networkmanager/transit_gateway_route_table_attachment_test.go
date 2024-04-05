@@ -1,44 +1,42 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package networkmanager_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/service/networkmanager"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfnetworkmanager "github.com/hashicorp/terraform-provider-aws/internal/service/networkmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccNetworkManagerTransitGatewayRouteTableAttachment_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v networkmanager.TransitGatewayRouteTableAttachment
 	resourceName := "aws_networkmanager_transit_gateway_route_table_attachment.test"
-	testExternalProviders := map[string]resource.ExternalProvider{
-		"awscc": {
-			Source:            "hashicorp/awscc",
-			VersionConstraint: "0.29.0",
-		},
-	}
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ExternalProviders:        testExternalProviders,
-		CheckDestroy:             testAccCheckTransitGatewayRouteTableAttachmentDestroy,
+		CheckDestroy:             testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayRouteTableAttachmentConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckTransitGatewayRouteTableAttachmentExists(resourceName, &v),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "networkmanager", regexp.MustCompile(`attachment/.+`)),
+					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "networkmanager", regexache.MustCompile(`attachment/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "attachment_policy_rule_number", "0"),
 					resource.TestCheckResourceAttr(resourceName, "attachment_type", "TRANSIT_GATEWAY_ROUTE_TABLE"),
 					resource.TestCheckResourceAttr(resourceName, "edge_location", acctest.Region()),
@@ -59,28 +57,22 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_basic(t *testing.T)
 }
 
 func TestAccNetworkManagerTransitGatewayRouteTableAttachment_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v networkmanager.TransitGatewayRouteTableAttachment
 	resourceName := "aws_networkmanager_transit_gateway_route_table_attachment.test"
-	testExternalProviders := map[string]resource.ExternalProvider{
-		"awscc": {
-			Source:            "hashicorp/awscc",
-			VersionConstraint: "0.29.0",
-		},
-	}
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ExternalProviders:        testExternalProviders,
-		CheckDestroy:             testAccCheckTransitGatewayRouteTableAttachmentDestroy,
+		CheckDestroy:             testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayRouteTableAttachmentConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayRouteTableAttachmentExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfnetworkmanager.ResourceTransitGatewayRouteTableAttachment(), resourceName),
+					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfnetworkmanager.ResourceTransitGatewayRouteTableAttachment(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -89,27 +81,21 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_disappears(t *testi
 }
 
 func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v networkmanager.TransitGatewayRouteTableAttachment
 	resourceName := "aws_networkmanager_transit_gateway_route_table_attachment.test"
-	testExternalProviders := map[string]resource.ExternalProvider{
-		"awscc": {
-			Source:            "hashicorp/awscc",
-			VersionConstraint: "0.29.0",
-		},
-	}
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, networkmanager.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NetworkManagerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		ExternalProviders:        testExternalProviders,
-		CheckDestroy:             testAccCheckTransitGatewayRouteTableAttachmentDestroy,
+		CheckDestroy:             testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccTransitGatewayRouteTableAttachmentConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayRouteTableAttachmentExists(resourceName, &v),
+					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -122,7 +108,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags(t *testing.T) 
 			{
 				Config: testAccTransitGatewayRouteTableAttachmentConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayRouteTableAttachmentExists(resourceName, &v),
+					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -131,7 +117,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags(t *testing.T) 
 			{
 				Config: testAccTransitGatewayRouteTableAttachmentConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckTransitGatewayRouteTableAttachmentExists(resourceName, &v),
+					testAccCheckTransitGatewayRouteTableAttachmentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -140,7 +126,7 @@ func TestAccNetworkManagerTransitGatewayRouteTableAttachment_tags(t *testing.T) 
 	})
 }
 
-func testAccCheckTransitGatewayRouteTableAttachmentExists(n string, v *networkmanager.TransitGatewayRouteTableAttachment) resource.TestCheckFunc {
+func testAccCheckTransitGatewayRouteTableAttachmentExists(ctx context.Context, n string, v *networkmanager.TransitGatewayRouteTableAttachment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -151,9 +137,9 @@ func testAccCheckTransitGatewayRouteTableAttachmentExists(n string, v *networkma
 			return fmt.Errorf("No Network Manager Transit Gateway Route Table Attachment ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn(ctx)
 
-		output, err := tfnetworkmanager.FindTransitGatewayRouteTableAttachmentByID(context.Background(), conn, rs.Primary.ID)
+		output, err := tfnetworkmanager.FindTransitGatewayRouteTableAttachmentByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -165,41 +151,43 @@ func testAccCheckTransitGatewayRouteTableAttachmentExists(n string, v *networkma
 	}
 }
 
-func testAccCheckTransitGatewayRouteTableAttachmentDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn
+func testAccCheckTransitGatewayRouteTableAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).NetworkManagerConn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_networkmanager_transit_gateway_route_table_attachment" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_networkmanager_transit_gateway_route_table_attachment" {
+				continue
+			}
+
+			_, err := tfnetworkmanager.FindTransitGatewayRouteTableAttachmentByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Network Manager Transit Gateway Route Table Attachment %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfnetworkmanager.FindTransitGatewayRouteTableAttachmentByID(context.Background(), conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("Network Manager Transit Gateway Route Table Attachment %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
 func testAccTransitGatewayRouteTableAttachmentConfig_base(rName string) string {
 	return acctest.ConfigCompose(testAccTransitGatewayPeeringConfig_base(rName), fmt.Sprintf(`
 resource "aws_networkmanager_transit_gateway_peering" "test" {
-  core_network_id     = awscc_networkmanager_core_network.test.id
+  core_network_id     = aws_networkmanager_core_network.test.id
   transit_gateway_arn = aws_ec2_transit_gateway.test.arn
 
   tags = {
     Name = %[1]q
   }
 
-  depends_on = [aws_ec2_transit_gateway_policy_table.test]
+  depends_on = [aws_ec2_transit_gateway_policy_table.test, aws_networkmanager_core_network_policy_attachment.test]
 }
 
 resource "aws_ec2_transit_gateway_route_table" "test" {
@@ -225,6 +213,11 @@ resource "aws_networkmanager_transit_gateway_route_table_attachment" "test" {
 
   depends_on = [aws_ec2_transit_gateway_policy_table_association.test]
 }
+
+resource "aws_networkmanager_attachment_accepter" "test" {
+  attachment_id   = aws_networkmanager_transit_gateway_route_table_attachment.test.id
+  attachment_type = aws_networkmanager_transit_gateway_route_table_attachment.test.attachment_type
+}
 `)
 }
 
@@ -239,6 +232,11 @@ resource "aws_networkmanager_transit_gateway_route_table_attachment" "test" {
   }
 
   depends_on = [aws_ec2_transit_gateway_policy_table_association.test]
+}
+
+resource "aws_networkmanager_attachment_accepter" "test" {
+  attachment_id   = aws_networkmanager_transit_gateway_route_table_attachment.test.id
+  attachment_type = aws_networkmanager_transit_gateway_route_table_attachment.test.attachment_type
 }
 `, tagKey1, tagValue1))
 }
@@ -255,6 +253,11 @@ resource "aws_networkmanager_transit_gateway_route_table_attachment" "test" {
   }
 
   depends_on = [aws_ec2_transit_gateway_policy_table_association.test]
+}
+
+resource "aws_networkmanager_attachment_accepter" "test" {
+  attachment_id   = aws_networkmanager_transit_gateway_route_table_attachment.test.id
+  attachment_type = aws_networkmanager_transit_gateway_route_table_attachment.test.attachment_type
 }
 `, tagKey1, tagValue1, tagKey2, tagValue2))
 }

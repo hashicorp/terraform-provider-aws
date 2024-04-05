@@ -3,12 +3,12 @@ subcategory: "Organizations"
 layout: "aws"
 page_title: "AWS: aws_organizations_delegated_administrators"
 description: |-
-  Get a list the AWS accounts that are designated as delegated administrators in this organization 
+  Get a list of AWS accounts that are designated as delegated administrators in this organization 
 ---
 
 # Data Source: aws_organizations_delegated_administrators
 
-Get a list the AWS accounts that are designated as delegated administrators in this organization
+Get a list of AWS accounts that are designated as delegated administrators in this organization
 
 ## Example Usage
 
@@ -18,12 +18,13 @@ data "aws_organizations_delegated_administrators" "example" {
 }
 ```
 
-
 ## Argument Reference
 
 * `service_principal` - (Optional) Specifies a service principal name. If specified, then the operation lists the delegated administrators only for the specified service. If you don't specify a service principal, the operation lists all delegated administrators for all services in your organization.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `delegated_administrators` - The list of delegated administrators in your organization, which have the following attributes:
     * `arn` - The ARN of the delegated administrator's account.

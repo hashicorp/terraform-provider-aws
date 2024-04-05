@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -13,9 +16,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKResource("aws_ec2_transit_gateway_multicast_domain_association")
 func ResourceTransitGatewayMulticastDomainAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTransitGatewayMulticastDomainAssociationCreate,
@@ -48,7 +53,9 @@ func ResourceTransitGatewayMulticastDomainAssociation() *schema.Resource {
 }
 
 func resourceTransitGatewayMulticastDomainAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	multicastDomainID := d.Get("transit_gateway_multicast_domain_id").(string)
 	attachmentID := d.Get("transit_gateway_attachment_id").(string)
@@ -64,62 +71,66 @@ func resourceTransitGatewayMulticastDomainAssociationCreate(ctx context.Context,
 	_, err := conn.AssociateTransitGatewayMulticastDomainWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating EC2 Transit Gateway Multicast Domain Association (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "creating EC2 Transit Gateway Multicast Domain Association (%s): %s", id, err)
 	}
 
 	d.SetId(id)
 
-	if _, err := WaitTransitGatewayMulticastDomainAssociationCreated(conn, multicastDomainID, attachmentID, subnetID, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for EC2 Transit Gateway Multicast Domain Association (%s) create: %s", d.Id(), err)
+	if _, err := WaitTransitGatewayMulticastDomainAssociationCreated(ctx, conn, multicastDomainID, attachmentID, subnetID, d.Timeout(schema.TimeoutCreate)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Transit Gateway Multicast Domain Association (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceTransitGatewayMulticastDomainAssociationRead(ctx, d, meta)
+	return append(diags, resourceTransitGatewayMulticastDomainAssociationRead(ctx, d, meta)...)
 }
 
 func resourceTransitGatewayMulticastDomainAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	multicastDomainID, attachmentID, subnetID, err := TransitGatewayMulticastDomainAssociationParseResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	multicastDomainAssociation, err := FindTransitGatewayMulticastDomainAssociationByThreePartKey(conn, multicastDomainID, attachmentID, subnetID)
+	multicastDomainAssociation, err := FindTransitGatewayMulticastDomainAssociationByThreePartKey(ctx, conn, multicastDomainID, attachmentID, subnetID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 Transit Gateway Multicast Domain Association %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading EC2 Transit Gateway Multicast Domain Association (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading EC2 Transit Gateway Multicast Domain Association (%s): %s", d.Id(), err)
 	}
 
 	d.Set("subnet_id", multicastDomainAssociation.Subnet.SubnetId)
 	d.Set("transit_gateway_attachment_id", multicastDomainAssociation.TransitGatewayAttachmentId)
 	d.Set("transit_gateway_multicast_domain_id", multicastDomainID)
 
-	return nil
+	return diags
 }
 
 func resourceTransitGatewayMulticastDomainAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	multicastDomainID, attachmentID, subnetID, err := TransitGatewayMulticastDomainAssociationParseResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	err = disassociateTransitGatewayMulticastDomain(ctx, conn, multicastDomainID, attachmentID, subnetID, d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	return nil
+	return diags
 }
 
 func disassociateTransitGatewayMulticastDomain(ctx context.Context, conn *ec2.EC2, multicastDomainID, attachmentID, subnetID string, timeout time.Duration) error {
@@ -140,7 +151,7 @@ func disassociateTransitGatewayMulticastDomain(ctx context.Context, conn *ec2.EC
 		return fmt.Errorf("deleting EC2 Transit Gateway Multicast Domain Association (%s): %w", id, err)
 	}
 
-	if _, err := WaitTransitGatewayMulticastDomainAssociationDeleted(conn, multicastDomainID, attachmentID, subnetID, timeout); err != nil {
+	if _, err := WaitTransitGatewayMulticastDomainAssociationDeleted(ctx, conn, multicastDomainID, attachmentID, subnetID, timeout); err != nil {
 		return fmt.Errorf("waiting for EC2 Transit Gateway Multicast Domain Association (%s) delete: %w", id, err)
 	}
 

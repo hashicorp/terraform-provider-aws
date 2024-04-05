@@ -35,6 +35,14 @@ func NewRootSDKLogger(ctx context.Context, options ...logging.Option) context.Co
 	if opts.Level == hclog.NoLevel {
 		opts.Level = hclog.Trace
 	}
+
+	// Cache root logger level outside context for performance reasons.
+	rootLevelMutex.Lock()
+
+	rootLevel = opts.Level
+
+	rootLevelMutex.Unlock()
+
 	loggerOptions := &hclog.LoggerOptions{
 		Name:                     opts.Name,
 		Level:                    opts.Level,
@@ -103,7 +111,9 @@ func NewRootProviderLogger(ctx context.Context, options ...logging.Option) conte
 func SetField(ctx context.Context, key string, value interface{}) context.Context {
 	lOpts := logging.GetSDKRootTFLoggerOpts(ctx)
 
-	lOpts = logging.WithField(key, value)(lOpts)
+	// Copy to prevent slice/map aliasing issues.
+	// Reference: https://github.com/hashicorp/terraform-plugin-log/issues/131
+	lOpts = logging.WithField(key, value)(lOpts.Copy())
 
 	return logging.SetSDKRootTFLoggerOpts(ctx, lOpts)
 }
@@ -227,16 +237,17 @@ func Error(ctx context.Context, msg string, additionalFields ...map[string]inter
 //
 // Example:
 //
-//   configuration = `['foo', 'baz']`
+//	configuration = `['foo', 'baz']`
 //
-//   log1 = `{ msg = "...", fields = { 'foo': '...', 'bar': '...' }`  -> omitted
-//   log2 = `{ msg = "...", fields = { 'bar': '...' }`                -> printed
-//   log3 = `{ msg = "...", fields = { 'baz': '...', 'boo': '...' }`  -> omitted
-//
+//	log1 = `{ msg = "...", fields = { 'foo': '...', 'bar': '...' }`  -> omitted
+//	log2 = `{ msg = "...", fields = { 'bar': '...' }`                -> printed
+//	log3 = `{ msg = "...", fields = { 'baz': '...', 'boo': '...' }`  -> omitted
 func OmitLogWithFieldKeys(ctx context.Context, keys ...string) context.Context {
 	lOpts := logging.GetSDKRootTFLoggerOpts(ctx)
 
-	lOpts = logging.WithOmitLogWithFieldKeys(keys...)(lOpts)
+	// Copy to prevent slice/map aliasing issues.
+	// Reference: https://github.com/hashicorp/terraform-plugin-log/issues/131
+	lOpts = logging.WithOmitLogWithFieldKeys(keys...)(lOpts.Copy())
 
 	return logging.SetSDKRootTFLoggerOpts(ctx, lOpts)
 }
@@ -250,16 +261,17 @@ func OmitLogWithFieldKeys(ctx context.Context, keys ...string) context.Context {
 //
 // Example:
 //
-//   configuration = `[regexp.MustCompile("(foo|bar)")]`
+//	configuration = `[regexp.MustCompile("(foo|bar)")]`
 //
-//   log1 = `{ msg = "banana apple foo", fields = {...}`     -> omitted
-//   log2 = `{ msg = "pineapple mango", fields = {...}`      -> printed
-//   log3 = `{ msg = "pineapple mango bar", fields = {...}`  -> omitted
-//
+//	log1 = `{ msg = "banana apple foo", fields = {...}`     -> omitted
+//	log2 = `{ msg = "pineapple mango", fields = {...}`      -> printed
+//	log3 = `{ msg = "pineapple mango bar", fields = {...}`  -> omitted
 func OmitLogWithMessageRegexes(ctx context.Context, expressions ...*regexp.Regexp) context.Context {
 	lOpts := logging.GetSDKRootTFLoggerOpts(ctx)
 
-	lOpts = logging.WithOmitLogWithMessageRegexes(expressions...)(lOpts)
+	// Copy to prevent slice/map aliasing issues.
+	// Reference: https://github.com/hashicorp/terraform-plugin-log/issues/131
+	lOpts = logging.WithOmitLogWithMessageRegexes(expressions...)(lOpts.Copy())
 
 	return logging.SetSDKRootTFLoggerOpts(ctx, lOpts)
 }
@@ -272,16 +284,17 @@ func OmitLogWithMessageRegexes(ctx context.Context, expressions ...*regexp.Regex
 //
 // Example:
 //
-//   configuration = `['foo', 'bar']`
+//	configuration = `['foo', 'bar']`
 //
-//   log1 = `{ msg = "banana apple foo", fields = {...}`     -> omitted
-//   log2 = `{ msg = "pineapple mango", fields = {...}`      -> printed
-//   log3 = `{ msg = "pineapple mango bar", fields = {...}`  -> omitted
-//
+//	log1 = `{ msg = "banana apple foo", fields = {...}`     -> omitted
+//	log2 = `{ msg = "pineapple mango", fields = {...}`      -> printed
+//	log3 = `{ msg = "pineapple mango bar", fields = {...}`  -> omitted
 func OmitLogWithMessageStrings(ctx context.Context, matchingStrings ...string) context.Context {
 	lOpts := logging.GetSDKRootTFLoggerOpts(ctx)
 
-	lOpts = logging.WithOmitLogWithMessageStrings(matchingStrings...)(lOpts)
+	// Copy to prevent slice/map aliasing issues.
+	// Reference: https://github.com/hashicorp/terraform-plugin-log/issues/131
+	lOpts = logging.WithOmitLogWithMessageStrings(matchingStrings...)(lOpts.Copy())
 
 	return logging.SetSDKRootTFLoggerOpts(ctx, lOpts)
 }
@@ -295,16 +308,17 @@ func OmitLogWithMessageStrings(ctx context.Context, matchingStrings ...string) c
 //
 // Example:
 //
-//   configuration = `['foo', 'baz']`
+//	configuration = `['foo', 'baz']`
 //
-//   log1 = `{ msg = "...", fields = { 'foo': '***', 'bar': '...' }`  -> masked value
-//   log2 = `{ msg = "...", fields = { 'bar': '...' }`                -> as-is value
-//   log3 = `{ msg = "...", fields = { 'baz': '***', 'boo': '...' }`  -> masked value
-//
+//	log1 = `{ msg = "...", fields = { 'foo': '***', 'bar': '...' }`  -> masked value
+//	log2 = `{ msg = "...", fields = { 'bar': '...' }`                -> as-is value
+//	log3 = `{ msg = "...", fields = { 'baz': '***', 'boo': '...' }`  -> masked value
 func MaskFieldValuesWithFieldKeys(ctx context.Context, keys ...string) context.Context {
 	lOpts := logging.GetSDKRootTFLoggerOpts(ctx)
 
-	lOpts = logging.WithMaskFieldValuesWithFieldKeys(keys...)(lOpts)
+	// Copy to prevent slice/map aliasing issues.
+	// Reference: https://github.com/hashicorp/terraform-plugin-log/issues/131
+	lOpts = logging.WithMaskFieldValuesWithFieldKeys(keys...)(lOpts.Copy())
 
 	return logging.SetSDKRootTFLoggerOpts(ctx, lOpts)
 }
@@ -320,16 +334,17 @@ func MaskFieldValuesWithFieldKeys(ctx context.Context, keys ...string) context.C
 //
 // Example:
 //
-//   configuration = `[regexp.MustCompile("(foo|bar)")]`
+//	configuration = `[regexp.MustCompile("(foo|bar)")]`
 //
-//   log1 = `{ msg = "...", fields = { 'k1': '***', 'k2': '***', 'k3': 'baz' }`  -> masked value
-//   log2 = `{ msg = "...", fields = { 'k1': 'boo', 'k2': 'far', 'k3': 'baz' }`  -> as-is value
-//   log2 = `{ msg = "...", fields = { 'k1': '*** *** baz' }`                    -> masked value
-//
+//	log1 = `{ msg = "...", fields = { 'k1': '***', 'k2': '***', 'k3': 'baz' }`  -> masked value
+//	log2 = `{ msg = "...", fields = { 'k1': 'boo', 'k2': 'far', 'k3': 'baz' }`  -> as-is value
+//	log2 = `{ msg = "...", fields = { 'k1': '*** *** baz' }`                    -> masked value
 func MaskAllFieldValuesRegexes(ctx context.Context, expressions ...*regexp.Regexp) context.Context {
 	lOpts := logging.GetSDKRootTFLoggerOpts(ctx)
 
-	lOpts = logging.WithMaskAllFieldValuesRegexes(expressions...)(lOpts)
+	// Copy to prevent slice/map aliasing issues.
+	// Reference: https://github.com/hashicorp/terraform-plugin-log/issues/131
+	lOpts = logging.WithMaskAllFieldValuesRegexes(expressions...)(lOpts.Copy())
 
 	return logging.SetSDKRootTFLoggerOpts(ctx, lOpts)
 }
@@ -345,16 +360,17 @@ func MaskAllFieldValuesRegexes(ctx context.Context, expressions ...*regexp.Regex
 //
 // Example:
 //
-//   configuration = `[regexp.MustCompile("(foo|bar)")]`
+//	configuration = `[regexp.MustCompile("(foo|bar)")]`
 //
-//   log1 = `{ msg = "...", fields = { 'k1': '***', 'k2': '***', 'k3': 'baz' }`  -> masked value
-//   log2 = `{ msg = "...", fields = { 'k1': 'boo', 'k2': 'far', 'k3': 'baz' }`  -> as-is value
-//   log2 = `{ msg = "...", fields = { 'k1': '*** *** baz' }`                    -> masked value
-//
+//	log1 = `{ msg = "...", fields = { 'k1': '***', 'k2': '***', 'k3': 'baz' }`  -> masked value
+//	log2 = `{ msg = "...", fields = { 'k1': 'boo', 'k2': 'far', 'k3': 'baz' }`  -> as-is value
+//	log2 = `{ msg = "...", fields = { 'k1': '*** *** baz' }`                    -> masked value
 func MaskAllFieldValuesStrings(ctx context.Context, matchingStrings ...string) context.Context {
 	lOpts := logging.GetSDKRootTFLoggerOpts(ctx)
 
-	lOpts = logging.WithMaskAllFieldValuesStrings(matchingStrings...)(lOpts)
+	// Copy to prevent slice/map aliasing issues.
+	// Reference: https://github.com/hashicorp/terraform-plugin-log/issues/131
+	lOpts = logging.WithMaskAllFieldValuesStrings(matchingStrings...)(lOpts.Copy())
 
 	return logging.SetSDKRootTFLoggerOpts(ctx, lOpts)
 }
@@ -368,16 +384,17 @@ func MaskAllFieldValuesStrings(ctx context.Context, matchingStrings ...string) c
 //
 // Example:
 //
-//   configuration = `[regexp.MustCompile("(foo|bar)")]`
+//	configuration = `[regexp.MustCompile("(foo|bar)")]`
 //
-//   log1 = `{ msg = "banana apple ***", fields = {...}`     -> masked portion
-//   log2 = `{ msg = "pineapple mango", fields = {...}`      -> as-is
-//   log3 = `{ msg = "pineapple mango ***", fields = {...}`  -> masked portion
-//
+//	log1 = `{ msg = "banana apple ***", fields = {...}`     -> masked portion
+//	log2 = `{ msg = "pineapple mango", fields = {...}`      -> as-is
+//	log3 = `{ msg = "pineapple mango ***", fields = {...}`  -> masked portion
 func MaskMessageRegexes(ctx context.Context, expressions ...*regexp.Regexp) context.Context {
 	lOpts := logging.GetSDKRootTFLoggerOpts(ctx)
 
-	lOpts = logging.WithMaskMessageRegexes(expressions...)(lOpts)
+	// Copy to prevent slice/map aliasing issues.
+	// Reference: https://github.com/hashicorp/terraform-plugin-log/issues/131
+	lOpts = logging.WithMaskMessageRegexes(expressions...)(lOpts.Copy())
 
 	return logging.SetSDKRootTFLoggerOpts(ctx, lOpts)
 }
@@ -391,16 +408,17 @@ func MaskMessageRegexes(ctx context.Context, expressions ...*regexp.Regexp) cont
 //
 // Example:
 //
-//   configuration = `['foo', 'bar']`
+//	configuration = `['foo', 'bar']`
 //
-//   log1 = `{ msg = "banana apple ***", fields = { 'k1': 'foo, bar, baz' }`  -> masked portion
-//   log2 = `{ msg = "pineapple mango", fields = {...}`                       -> as-is
-//   log3 = `{ msg = "pineapple mango ***", fields = {...}`                   -> masked portion
-//
+//	log1 = `{ msg = "banana apple ***", fields = { 'k1': 'foo, bar, baz' }`  -> masked portion
+//	log2 = `{ msg = "pineapple mango", fields = {...}`                       -> as-is
+//	log3 = `{ msg = "pineapple mango ***", fields = {...}`                   -> masked portion
 func MaskMessageStrings(ctx context.Context, matchingStrings ...string) context.Context {
 	lOpts := logging.GetSDKRootTFLoggerOpts(ctx)
 
-	lOpts = logging.WithMaskMessageStrings(matchingStrings...)(lOpts)
+	// Copy to prevent slice/map aliasing issues.
+	// Reference: https://github.com/hashicorp/terraform-plugin-log/issues/131
+	lOpts = logging.WithMaskMessageStrings(matchingStrings...)(lOpts.Copy())
 
 	return logging.SetSDKRootTFLoggerOpts(ctx, lOpts)
 }

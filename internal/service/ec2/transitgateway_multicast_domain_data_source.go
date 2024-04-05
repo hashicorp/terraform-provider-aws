@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -9,10 +12,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
+// @SDKDataSource("aws_ec2_transit_gateway_multicast_domain")
 func DataSourceTransitGatewayMulticastDomain() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTransitGatewayMulticastDomainRead,
@@ -46,7 +51,7 @@ func DataSourceTransitGatewayMulticastDomain() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"filter": DataSourceFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"igmpv2_support": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -114,7 +119,9 @@ func DataSourceTransitGatewayMulticastDomain() *schema.Resource {
 }
 
 func dataSourceTransitGatewayMulticastDomainRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).EC2Conn
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeTransitGatewayMulticastDomainsInput{}
@@ -123,7 +130,7 @@ func dataSourceTransitGatewayMulticastDomainRead(ctx context.Context, d *schema.
 		input.TransitGatewayMulticastDomainIds = aws.StringSlice([]string{v.(string)})
 	}
 
-	input.Filters = append(input.Filters, BuildFiltersDataSource(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 
@@ -131,10 +138,10 @@ func dataSourceTransitGatewayMulticastDomainRead(ctx context.Context, d *schema.
 		input.Filters = nil
 	}
 
-	transitGatewayMulticastDomain, err := FindTransitGatewayMulticastDomain(conn, input)
+	transitGatewayMulticastDomain, err := FindTransitGatewayMulticastDomain(ctx, conn, input)
 
 	if err != nil {
-		return diag.FromErr(tfresource.SingularDataSourceFindError("EC2 Transit Gateway Multicast Domain", err))
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Transit Gateway Multicast Domain", err))
 	}
 
 	d.SetId(aws.StringValue(transitGatewayMulticastDomain.TransitGatewayMulticastDomainId))
@@ -147,24 +154,24 @@ func dataSourceTransitGatewayMulticastDomainRead(ctx context.Context, d *schema.
 	d.Set("transit_gateway_id", transitGatewayMulticastDomain.TransitGatewayId)
 	d.Set("transit_gateway_multicast_domain_id", transitGatewayMulticastDomain.TransitGatewayMulticastDomainId)
 
-	if err := d.Set("tags", KeyValueTags(transitGatewayMulticastDomain.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
+	if err := d.Set("tags", KeyValueTags(ctx, transitGatewayMulticastDomain.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	associations, err := FindTransitGatewayMulticastDomainAssociations(conn, &ec2.GetTransitGatewayMulticastDomainAssociationsInput{
+	associations, err := FindTransitGatewayMulticastDomainAssociations(ctx, conn, &ec2.GetTransitGatewayMulticastDomainAssociationsInput{
 		TransitGatewayMulticastDomainId: aws.String(d.Id()),
 	})
 
 	if err != nil {
-		return diag.Errorf("listing EC2 Transit Gateway Multicast Domain Associations (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing EC2 Transit Gateway Multicast Domain Associations (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("associations", flattenTransitGatewayMulticastDomainAssociations(associations)); err != nil {
-		return diag.Errorf("setting associations: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting associations: %s", err)
 	}
 
-	members, err := FindTransitGatewayMulticastGroups(conn, &ec2.SearchTransitGatewayMulticastGroupsInput{
-		Filters: BuildAttributeFilterList(map[string]string{
+	members, err := FindTransitGatewayMulticastGroups(ctx, conn, &ec2.SearchTransitGatewayMulticastGroupsInput{
+		Filters: newAttributeFilterList(map[string]string{
 			"is-group-member": "true",
 			"is-group-source": "false",
 		}),
@@ -172,15 +179,15 @@ func dataSourceTransitGatewayMulticastDomainRead(ctx context.Context, d *schema.
 	})
 
 	if err != nil {
-		return diag.Errorf("listing EC2 Transit Gateway Multicast Group Members (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing EC2 Transit Gateway Multicast Group Members (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("members", flattenTransitGatewayMulticastGroups(members)); err != nil {
-		return diag.Errorf("setting members: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting members: %s", err)
 	}
 
-	sources, err := FindTransitGatewayMulticastGroups(conn, &ec2.SearchTransitGatewayMulticastGroupsInput{
-		Filters: BuildAttributeFilterList(map[string]string{
+	sources, err := FindTransitGatewayMulticastGroups(ctx, conn, &ec2.SearchTransitGatewayMulticastGroupsInput{
+		Filters: newAttributeFilterList(map[string]string{
 			"is-group-member": "false",
 			"is-group-source": "true",
 		}),
@@ -188,14 +195,14 @@ func dataSourceTransitGatewayMulticastDomainRead(ctx context.Context, d *schema.
 	})
 
 	if err != nil {
-		return diag.Errorf("listing EC2 Transit Gateway Multicast Group Members (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing EC2 Transit Gateway Multicast Group Members (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("sources", flattenTransitGatewayMulticastGroups(sources)); err != nil {
-		return diag.Errorf("setting sources: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting sources: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func flattenTransitGatewayMulticastDomainAssociation(apiObject *ec2.TransitGatewayMulticastDomainAssociation) map[string]interface{} {

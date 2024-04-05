@@ -1,21 +1,27 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/connect"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccUserHierarchyStructure_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v connect.DescribeUserHierarchyStructureOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	levelOneName := sdkacctest.RandomWithPrefix("resource-test-terraform")
@@ -26,15 +32,15 @@ func testAccUserHierarchyStructure_basic(t *testing.T) {
 	resourceName := "aws_connect_user_hierarchy_structure.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserHierarchyStructureDestroy,
+		CheckDestroy:             testAccCheckUserHierarchyStructureDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserHierarchyStructureConfig_basic(rName, levelOneName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserHierarchyStructureExists(resourceName, &v),
+					testAccCheckUserHierarchyStructureExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "hierarchy_structure.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "hierarchy_structure.0.level_one.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "hierarchy_structure.0.level_one.0.arn"),
@@ -52,7 +58,7 @@ func testAccUserHierarchyStructure_basic(t *testing.T) {
 			{
 				Config: testAccUserHierarchyStructureConfig_twoLevels(rName, levelOneName, levelTwoName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserHierarchyStructureExists(resourceName, &v),
+					testAccCheckUserHierarchyStructureExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "hierarchy_structure.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "hierarchy_structure.0.level_one.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "hierarchy_structure.0.level_one.0.arn"),
@@ -74,7 +80,7 @@ func testAccUserHierarchyStructure_basic(t *testing.T) {
 			{
 				Config: testAccUserHierarchyStructureConfig_threeLevels(rName, levelOneName, levelTwoName, levelThreeName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserHierarchyStructureExists(resourceName, &v),
+					testAccCheckUserHierarchyStructureExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "hierarchy_structure.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "hierarchy_structure.0.level_one.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "hierarchy_structure.0.level_one.0.arn"),
@@ -100,7 +106,7 @@ func testAccUserHierarchyStructure_basic(t *testing.T) {
 			{
 				Config: testAccUserHierarchyStructureConfig_fourLevels(rName, levelOneName, levelTwoName, levelThreeName, levelFourName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserHierarchyStructureExists(resourceName, &v),
+					testAccCheckUserHierarchyStructureExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "hierarchy_structure.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "hierarchy_structure.0.level_one.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "hierarchy_structure.0.level_one.0.arn"),
@@ -130,7 +136,7 @@ func testAccUserHierarchyStructure_basic(t *testing.T) {
 			{
 				Config: testAccUserHierarchyStructureConfig_fiveLevels(rName, levelOneName, levelTwoName, levelThreeName, levelFourName, levelFiveName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckUserHierarchyStructureExists(resourceName, &v),
+					testAccCheckUserHierarchyStructureExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "hierarchy_structure.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "hierarchy_structure.0.level_one.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "hierarchy_structure.0.level_one.0.arn"),
@@ -165,7 +171,7 @@ func testAccUserHierarchyStructure_basic(t *testing.T) {
 				// test removing 4 levels
 				Config: testAccUserHierarchyStructureConfig_basic(rName, levelOneName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserHierarchyStructureExists(resourceName, &v),
+					testAccCheckUserHierarchyStructureExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "hierarchy_structure.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "hierarchy_structure.0.level_one.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "hierarchy_structure.0.level_one.0.arn"),
@@ -180,22 +186,23 @@ func testAccUserHierarchyStructure_basic(t *testing.T) {
 }
 
 func testAccUserHierarchyStructure_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	var v connect.DescribeUserHierarchyStructureOutput
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_user_hierarchy_structure.test"
 	levelOneName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, connect.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ConnectServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckUserHierarchyStructureDestroy,
+		CheckDestroy:             testAccCheckUserHierarchyStructureDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccUserHierarchyStructureConfig_basic(rName, levelOneName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckUserHierarchyStructureExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfconnect.ResourceUserHierarchyStructure(), resourceName),
+					testAccCheckUserHierarchyStructureExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfconnect.ResourceUserHierarchyStructure(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -203,7 +210,7 @@ func testAccUserHierarchyStructure_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckUserHierarchyStructureExists(resourceName string, function *connect.DescribeUserHierarchyStructureOutput) resource.TestCheckFunc {
+func testAccCheckUserHierarchyStructureExists(ctx context.Context, resourceName string, function *connect.DescribeUserHierarchyStructureOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -215,13 +222,13 @@ func testAccCheckUserHierarchyStructureExists(resourceName string, function *con
 		}
 		instanceID := rs.Primary.ID
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
 
 		params := &connect.DescribeUserHierarchyStructureInput{
 			InstanceId: aws.String(instanceID),
 		}
 
-		getFunction, err := conn.DescribeUserHierarchyStructure(params)
+		getFunction, err := conn.DescribeUserHierarchyStructureWithContext(ctx, params)
 		if err != nil {
 			return err
 		}
@@ -232,37 +239,39 @@ func testAccCheckUserHierarchyStructureExists(resourceName string, function *con
 	}
 }
 
-func testAccCheckUserHierarchyStructureDestroy(s *terraform.State) error {
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_connect_user_hierarchy_structure" {
-			continue
+func testAccCheckUserHierarchyStructureDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_connect_user_hierarchy_structure" {
+				continue
+			}
+
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
+
+			instanceID := rs.Primary.ID
+
+			params := &connect.DescribeUserHierarchyStructureInput{
+				InstanceId: aws.String(instanceID),
+			}
+
+			resp, err := conn.DescribeUserHierarchyStructureWithContext(ctx, params)
+
+			if tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			// API returns an empty list for HierarchyStructure if there are none
+			if resp.HierarchyStructure == nil {
+				continue
+			}
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn
-
-		instanceID := rs.Primary.ID
-
-		params := &connect.DescribeUserHierarchyStructureInput{
-			InstanceId: aws.String(instanceID),
-		}
-
-		resp, err := conn.DescribeUserHierarchyStructure(params)
-
-		if tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		// API returns an empty list for HierarchyStructure if there are none
-		if resp.HierarchyStructure == nil {
-			continue
-		}
+		return nil
 	}
-
-	return nil
 }
 
 func testAccUserHierarchyStructureConfig_base(rName string) string {

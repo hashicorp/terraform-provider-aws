@@ -1,31 +1,39 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package storagegateway
 
 import (
-	"fmt"
+	"context"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/storagegateway"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// @SDKResource("aws_storagegateway_file_system_association", name="File System Association")
+// @Tags(identifierAttribute="arn")
 func ResourceFileSystemAssociation() *schema.Resource {
 	return &schema.Resource{
-		Create:        resourceFileSystemAssociationCreate,
-		Read:          resourceFileSystemAssociationRead,
-		Update:        resourceFileSystemAssociationUpdate,
-		Delete:        resourceFileSystemAssociationDelete,
-		CustomizeDiff: customdiff.Sequence(verify.SetTagsDiff),
+		CreateWithoutTimeout: resourceFileSystemAssociationCreate,
+		ReadWithoutTimeout:   resourceFileSystemAssociationRead,
+		UpdateWithoutTimeout: resourceFileSystemAssociationUpdate,
+		DeleteWithoutTimeout: resourceFileSystemAssociationDelete,
+		CustomizeDiff:        customdiff.Sequence(verify.SetTagsDiff),
 		Importer: &schema.ResourceImporter{
-			State: schema.ImportStatePassthrough,
+			StateContext: schema.ImportStatePassthroughContext,
 		},
 		Schema: map[string]*schema.Schema{
 			"arn": {
@@ -74,17 +82,17 @@ func ResourceFileSystemAssociation() *schema.Resource {
 				Required:  true,
 				Sensitive: true,
 				ValidateFunc: validation.All(
-					validation.StringMatch(regexp.MustCompile(`^[ -~]+$`), ""),
+					validation.StringMatch(regexache.MustCompile(`^[ -~]+$`), ""),
 					validation.StringLenBetween(1, 1024),
 				),
 			},
-			"tags":     tftags.TagsSchema(),
-			"tags_all": tftags.TagsSchemaComputed(),
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"username": {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
-					validation.StringMatch(regexp.MustCompile(`^\w[\w\.\- ]*$`), ""),
+					validation.StringMatch(regexache.MustCompile(`^\w[\w\.\- ]*$`), ""),
 					validation.StringLenBetween(1, 1024),
 				),
 			},
@@ -92,18 +100,17 @@ func ResourceFileSystemAssociation() *schema.Resource {
 	}
 }
 
-func resourceFileSystemAssociationCreate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+func resourceFileSystemAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
 	gatewayARN := d.Get("gateway_arn").(string)
 	input := &storagegateway.AssociateFileSystemInput{
-		ClientToken: aws.String(resource.UniqueId()),
+		ClientToken: aws.String(id.UniqueId()),
 		GatewayARN:  aws.String(gatewayARN),
 		LocationARN: aws.String(d.Get("location_arn").(string)),
 		Password:    aws.String(d.Get("password").(string)),
-		Tags:        Tags(tags.IgnoreAWS()),
+		Tags:        getTagsIn(ctx),
 		UserName:    aws.String(d.Get("username").(string)),
 	}
 
@@ -115,37 +122,35 @@ func resourceFileSystemAssociationCreate(d *schema.ResourceData, meta interface{
 		input.CacheAttributes = expandFileSystemAssociationCacheAttributes(v.([]interface{}))
 	}
 
-	log.Printf("[DEBUG] Creating Storage Gateway File System Association: %s", input)
-	output, err := conn.AssociateFileSystem(input)
+	output, err := conn.AssociateFileSystemWithContext(ctx, input)
 
 	if err != nil {
-		return fmt.Errorf("error creating Storage Gateway (%s) File System Association: %w", gatewayARN, err)
+		return sdkdiag.AppendErrorf(diags, "creating Storage Gateway (%s) File System Association: %s", gatewayARN, err)
 	}
 
 	d.SetId(aws.StringValue(output.FileSystemAssociationARN))
 
-	if _, err = waitFileSystemAssociationAvailable(conn, d.Id(), fileSystemAssociationCreateTimeout); err != nil {
-		return fmt.Errorf("error waiting for Storage Gateway File System Association (%s) create: %w", d.Id(), err)
+	if _, err = waitFileSystemAssociationAvailable(ctx, conn, d.Id(), fileSystemAssociationCreateTimeout); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Storage Gateway File System Association (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceFileSystemAssociationRead(d, meta)
+	return append(diags, resourceFileSystemAssociationRead(ctx, d, meta)...)
 }
 
-func resourceFileSystemAssociationRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+func resourceFileSystemAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
-	filesystem, err := FindFileSystemAssociationByARN(conn, d.Id())
+	filesystem, err := FindFileSystemAssociationByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Storage Gateway File System Association (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error reading Storage Gateway File System Association (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Storage Gateway File System Association (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", filesystem.FileSystemAssociationARN)
@@ -154,32 +159,17 @@ func resourceFileSystemAssociationRead(d *schema.ResourceData, meta interface{})
 	d.Set("location_arn", filesystem.LocationARN)
 
 	if err := d.Set("cache_attributes", flattenFileSystemAssociationCacheAttributes(filesystem.CacheAttributes)); err != nil {
-		return fmt.Errorf("error setting cache_attributes: %w", err)
+		return sdkdiag.AppendErrorf(diags, "setting cache_attributes: %s", err)
 	}
 
-	tags := KeyValueTags(filesystem.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	setTagsOut(ctx, filesystem.Tags)
 
-	//lintignore:AWSR002
-	if err := d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-		return fmt.Errorf("error setting tags: %w", err)
-	}
-
-	if err := d.Set("tags_all", tags.Map()); err != nil {
-		return fmt.Errorf("error setting tags_all: %w", err)
-	}
-
-	return nil
+	return diags
 }
 
-func resourceFileSystemAssociationUpdate(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
-
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-		if err := UpdateTags(conn, d.Get("arn").(string), o, n); err != nil {
-			return fmt.Errorf("error updating tags: %w", err)
-		}
-	}
+func resourceFileSystemAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
 	if d.HasChangesExcept("tags_all") {
 		input := &storagegateway.UpdateFileSystemAssociationInput{
@@ -193,44 +183,44 @@ func resourceFileSystemAssociationUpdate(d *schema.ResourceData, meta interface{
 			input.CacheAttributes = expandFileSystemAssociationCacheAttributes(v.([]interface{}))
 		}
 
-		log.Printf("[DEBUG] Updating Storage Gateway File System Association: %s", input)
-		_, err := conn.UpdateFileSystemAssociation(input)
+		_, err := conn.UpdateFileSystemAssociationWithContext(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("error updating Storage Gateway File System Association (%s): %w", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Storage Gateway File System Association (%s): %s", d.Id(), err)
 		}
 
-		if _, err = waitFileSystemAssociationAvailable(conn, d.Id(), fileSystemAssociationUpdateTimeout); err != nil {
-			return fmt.Errorf("error waiting for Storage Gateway File System Association (%s) update: %w", d.Id(), err)
+		if _, err = waitFileSystemAssociationAvailable(ctx, conn, d.Id(), fileSystemAssociationUpdateTimeout); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for Storage Gateway File System Association (%s) update: %s", d.Id(), err)
 		}
 	}
 
-	return resourceFileSystemAssociationRead(d, meta)
+	return append(diags, resourceFileSystemAssociationRead(ctx, d, meta)...)
 }
 
-func resourceFileSystemAssociationDelete(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).StorageGatewayConn
+func resourceFileSystemAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).StorageGatewayConn(ctx)
 
 	input := &storagegateway.DisassociateFileSystemInput{
 		FileSystemAssociationARN: aws.String(d.Id()),
 	}
 
 	log.Printf("[DEBUG] Deleting Storage Gateway File System Association: %s", input)
-	_, err := conn.DisassociateFileSystem(input)
+	_, err := conn.DisassociateFileSystemWithContext(ctx, input)
 
 	if operationErrorCode(err) == operationErrCodeFileSystemAssociationNotFound {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return fmt.Errorf("error deleting Storage Gateway File System Association (%s): %w", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Storage Gateway File System Association (%s): %s", d.Id(), err)
 	}
 
-	if _, err = waitFileSystemAssociationDeleted(conn, d.Id(), fileSystemAssociationDeleteTimeout); err != nil {
-		return fmt.Errorf("error waiting for Storage Gateway File System Association (%s) delete: %w", d.Id(), err)
+	if _, err = waitFileSystemAssociationDeleted(ctx, conn, d.Id(), fileSystemAssociationDeleteTimeout); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Storage Gateway File System Association (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandFileSystemAssociationCacheAttributes(l []interface{}) *storagegateway.CacheAttributes {

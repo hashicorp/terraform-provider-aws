@@ -1,6 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
+	"context"
 	"fmt"
 	"sort"
 	"time"
@@ -8,15 +12,18 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
+// @SDKDataSource("aws_ebs_snapshot")
 func DataSourceEBSSnapshot() *schema.Resource {
 	return &schema.Resource{
-		Read: dataSourceEBSSnapshotRead,
+		ReadWithoutTimeout: dataSourceEBSSnapshotRead,
 
 		Timeouts: &schema.ResourceTimeout{
 			Read: schema.DefaultTimeout(20 * time.Minute),
@@ -39,7 +46,7 @@ func DataSourceEBSSnapshot() *schema.Resource {
 				Type:     schema.TypeBool,
 				Computed: true,
 			},
-			"filter": DataSourceFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"kms_key_id": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -101,8 +108,9 @@ func DataSourceEBSSnapshot() *schema.Resource {
 	}
 }
 
-func dataSourceEBSSnapshotRead(d *schema.ResourceData, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).EC2Conn
+func dataSourceEBSSnapshotRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeSnapshotsInput{}
@@ -119,7 +127,7 @@ func dataSourceEBSSnapshotRead(d *schema.ResourceData, meta interface{}) error {
 		input.SnapshotIds = flex.ExpandStringList(v.([]interface{}))
 	}
 
-	input.Filters = append(input.Filters, BuildFiltersDataSource(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 
@@ -127,19 +135,19 @@ func dataSourceEBSSnapshotRead(d *schema.ResourceData, meta interface{}) error {
 		input.Filters = nil
 	}
 
-	snapshots, err := FindSnapshots(conn, input)
+	snapshots, err := FindSnapshots(ctx, conn, input)
 
 	if err != nil {
-		return fmt.Errorf("reading EBS Snapshots: %w", err)
+		return sdkdiag.AppendErrorf(diags, "reading EBS Snapshots: %s", err)
 	}
 
 	if len(snapshots) < 1 {
-		return fmt.Errorf("Your query returned no results. Please change your search criteria and try again.")
+		return sdkdiag.AppendErrorf(diags, "Your query returned no results. Please change your search criteria and try again.")
 	}
 
 	if len(snapshots) > 1 {
 		if !d.Get("most_recent").(bool) {
-			return fmt.Errorf("Your query returned more than one result. Please try a more " +
+			return sdkdiag.AppendErrorf(diags, "Your query returned more than one result. Please try a more "+
 				"specific search criteria, or set `most_recent` attribute to true.")
 		}
 
@@ -171,9 +179,9 @@ func dataSourceEBSSnapshotRead(d *schema.ResourceData, meta interface{}) error {
 	d.Set("volume_id", snapshot.VolumeId)
 	d.Set("volume_size", snapshot.VolumeSize)
 
-	if err := d.Set("tags", KeyValueTags(snapshot.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return fmt.Errorf("setting tags: %w", err)
+	if err := d.Set("tags", KeyValueTags(ctx, snapshot.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

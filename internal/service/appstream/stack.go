@@ -1,39 +1,50 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appstream
 
 import (
-	"bytes"
 	"context"
-	"fmt"
+	"errors"
 	"log"
+	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/appstream"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-var (
-	flagDiffUserSettings = false
+const (
+	stackOperationTimeout = 4 * time.Minute
 )
 
+// @SDKResource("aws_appstream_stack", name="Stack")
+// @Tags(identifierAttribute="arn")
 func ResourceStack() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStackCreate,
 		ReadWithoutTimeout:   resourceStackRead,
 		UpdateWithoutTimeout: resourceStackUpdate,
 		DeleteWithoutTimeout: resourceStackDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
+
 		Schema: map[string]*schema.Schema{
 			"access_endpoints": {
 				Type:     schema.TypeSet,
@@ -55,7 +66,6 @@ func ResourceStack() *schema.Resource {
 						},
 					},
 				},
-				Set: accessEndpointsHash,
 			},
 			"application_settings": {
 				Type:     schema.TypeList,
@@ -66,11 +76,12 @@ func ResourceStack() *schema.Resource {
 					Schema: map[string]*schema.Schema{
 						"enabled": {
 							Type:     schema.TypeBool,
-							Optional: true,
+							Required: true,
 						},
 						"settings_group": {
-							Type:     schema.TypeString,
-							Optional: true,
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringLenBetween(0, 100),
 						},
 					},
 				},
@@ -86,15 +97,11 @@ func ResourceStack() *schema.Resource {
 			"description": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(0, 256),
 			},
 			"display_name": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
 				ValidateFunc: validation.StringLenBetween(0, 100),
 			},
 			"embed_host_domains": {
@@ -124,7 +131,7 @@ func ResourceStack() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				Computed:     true,
-				ValidateFunc: validation.StringLenBetween(0, 100),
+				ValidateFunc: validation.StringLenBetween(0, 1000),
 			},
 			"storage_connectors": {
 				Type:     schema.TypeSet,
@@ -155,8 +162,24 @@ func ResourceStack() *schema.Resource {
 						},
 					},
 				},
-				Set: storageConnectorsHash,
 			},
+			"streaming_experience_settings": {
+				Type:     schema.TypeList,
+				MaxItems: 1,
+				Optional: true,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"preferred_protocol": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(appstream.PreferredProtocol_Values(), false),
+						},
+					},
+				},
+			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"user_settings": {
 				Type:             schema.TypeSet,
 				Optional:         true,
@@ -177,22 +200,68 @@ func ResourceStack() *schema.Resource {
 						},
 					},
 				},
-				Set: userSettingsHash,
 			},
-			"tags":     tftags.TagsSchemaForceNew(),
-			"tags_all": tftags.TagsSchemaComputed(),
 		},
+
+		CustomizeDiff: customdiff.All(
+			verify.SetTagsDiff,
+			func(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+				if d.Id() == "" {
+					return nil
+				}
+
+				rawConfig := d.GetRawConfig()
+				configApplicationSettings := rawConfig.GetAttr("application_settings")
+				if configApplicationSettings.IsKnown() && !configApplicationSettings.IsNull() && configApplicationSettings.LengthInt() > 0 {
+					return nil
+				}
+
+				rawState := d.GetRawState()
+				stateApplicationSettings := rawState.GetAttr("application_settings")
+				if stateApplicationSettings.IsKnown() && !stateApplicationSettings.IsNull() && stateApplicationSettings.LengthInt() > 0 {
+					setting := stateApplicationSettings.Index(cty.NumberIntVal(0))
+					if setting.IsKnown() && !setting.IsNull() {
+						enabled := setting.GetAttr("enabled")
+						if enabled.IsKnown() && !enabled.IsNull() && enabled.True() {
+							// Trigger a diff
+							return d.SetNew("application_settings", []map[string]any{
+								{
+									"enabled":        false,
+									"settings_group": "",
+								},
+							})
+						}
+					}
+				}
+
+				return nil
+			},
+			func(_ context.Context, d *schema.ResourceDiff, meta interface{}) error {
+				_, enabled := d.GetOk("application_settings.0.enabled")
+				v, sg := d.GetOk("application_settings.0.settings_group")
+				log.Print(v)
+
+				if enabled && !sg {
+					return errors.New("application_settings.settings_group must be set when application_settings.enabled is true")
+				} else if !enabled && sg {
+					return errors.New("application_settings.settings_group must not be set when application_settings.enabled is false")
+				}
+				return nil
+			},
+		),
 	}
 }
 
 func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn
-	input := &appstream.CreateStackInput{
-		Name: aws.String(d.Get("name").(string)),
-	}
+	var diags diag.Diagnostics
 
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	tags := defaultTagsConfig.MergeTags(tftags.New(d.Get("tags").(map[string]interface{})))
+	conn := meta.(*conns.AWSClient).AppStreamConn(ctx)
+
+	name := d.Get("name").(string)
+	input := &appstream.CreateStackInput{
+		Name: aws.String(name),
+		Tags: getTagsIn(ctx),
+	}
 
 	if v, ok := d.GetOk("access_endpoints"); ok {
 		input.AccessEndpoints = expandAccessEndpoints(v.(*schema.Set).List())
@@ -226,158 +295,129 @@ func resourceStackCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.StorageConnectors = expandStorageConnectors(v.(*schema.Set).List())
 	}
 
+	if v, ok := d.GetOk("streaming_experience_settings"); ok {
+		input.StreamingExperienceSettings = expandStreamingExperienceSettings(v.([]interface{}))
+	}
+
 	if v, ok := d.GetOk("user_settings"); ok {
 		input.UserSettings = expandUserSettings(v.(*schema.Set).List())
 	}
 
-	if len(tags) > 0 {
-		input.Tags = Tags(tags.IgnoreAWS())
-	}
-
-	var err error
-	var output *appstream.CreateStackOutput
-	err = resource.RetryContext(ctx, stackOperationTimeout, func() *resource.RetryError {
-		output, err = conn.CreateStackWithContext(ctx, input)
-		if err != nil {
-			if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
-				return resource.RetryableError(err)
-			}
-
-			return resource.NonRetryableError(err)
-		}
-
-		return nil
-	})
-
-	if tfresource.TimedOut(err) {
-		output, err = conn.CreateStackWithContext(ctx, input)
-	}
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, stackOperationTimeout, func() (interface{}, error) {
+		return conn.CreateStackWithContext(ctx, input)
+	}, appstream.ErrCodeResourceNotFoundException)
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error creating Appstream Stack (%s): %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "creating Appstream Stack (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(output.Stack.Name))
+	d.SetId(aws.StringValue(outputRaw.(*appstream.CreateStackOutput).Stack.Name))
 
-	return resourceStackRead(ctx, d, meta)
+	return append(diags, resourceStackRead(ctx, d, meta)...)
 }
 
 func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn
+	var diags diag.Diagnostics
 
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).AppStreamConn(ctx)
 
-	resp, err := conn.DescribeStacksWithContext(ctx, &appstream.DescribeStacksInput{Names: []*string{aws.String(d.Id())}})
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
+	stack, err := FindStackByName(ctx, conn, d.Id())
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Appstream Stack (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading Appstream Stack (%s): %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "reading Appstream Stack (%s): %s", d.Id(), err)
 	}
-	for _, v := range resp.Stacks {
 
-		if err = d.Set("access_endpoints", flattenAccessEndpoints(v.AccessEndpoints)); err != nil {
-			return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Stack (%s): %w", "access_endpoints", d.Id(), err))
-		}
-		if err = d.Set("application_settings", flattenApplicationSettings(v.ApplicationSettings)); err != nil {
-			return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Stack (%s): %w", "user_settings", d.Id(), err))
-		}
-		d.Set("arn", v.Arn)
-		d.Set("created_time", aws.TimeValue(v.CreatedTime).Format(time.RFC3339))
-		d.Set("description", v.Description)
-		d.Set("display_name", v.DisplayName)
-		if err = d.Set("embed_host_domains", flex.FlattenStringList(v.EmbedHostDomains)); err != nil {
-			return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Stack (%s): %w", "user_settings", d.Id(), err))
-		}
-		d.Set("feedback_url", v.FeedbackURL)
-		d.Set("name", v.Name)
-		d.Set("redirect_url", v.RedirectURL)
-		if err = d.Set("storage_connectors", flattenStorageConnectors(v.StorageConnectors)); err != nil {
-			return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Stack (%s): %w", "storage_connectors", d.Id(), err))
-		}
-		if err = d.Set("user_settings", flattenUserSettings(v.UserSettings)); err != nil {
-			return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Stack (%s): %w", "user_settings", d.Id(), err))
-		}
-
-		tg, err := conn.ListTagsForResource(&appstream.ListTagsForResourceInput{
-			ResourceArn: v.Arn,
-		})
-		if err != nil {
-			return diag.FromErr(fmt.Errorf("error listing stack tags for AppStream Stack (%s): %w", d.Id(), err))
-		}
-
-		tags := KeyValueTags(tg.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
-
-		if err = d.Set("tags", tags.RemoveDefaultConfig(defaultTagsConfig).Map()); err != nil {
-			return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Stack (%s): %w", "tags", d.Id(), err))
-		}
-
-		if err = d.Set("tags_all", tags.Map()); err != nil {
-			return diag.FromErr(fmt.Errorf("error setting `%s` for AppStream Stack (%s): %w", "tags_all", d.Id(), err))
-		}
+	if err = d.Set("access_endpoints", flattenAccessEndpoints(stack.AccessEndpoints)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting access_endpoints: %s", err)
 	}
-	return nil
+	if err = d.Set("application_settings", flattenApplicationSettings(stack.ApplicationSettings)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting application_settings: %s", err)
+	}
+	d.Set("arn", stack.Arn)
+	d.Set("created_time", aws.TimeValue(stack.CreatedTime).Format(time.RFC3339))
+	d.Set("description", stack.Description)
+	d.Set("display_name", stack.DisplayName)
+	if err = d.Set("embed_host_domains", flex.FlattenStringList(stack.EmbedHostDomains)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting embed_host_domains: %s", err)
+	}
+	d.Set("feedback_url", stack.FeedbackURL)
+	d.Set("name", stack.Name)
+	d.Set("redirect_url", stack.RedirectURL)
+	if err = d.Set("storage_connectors", flattenStorageConnectors(stack.StorageConnectors)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting storage_connectors: %s", err)
+	}
+	if err = d.Set("streaming_experience_settings", flattenStreaminExperienceSettings(stack.StreamingExperienceSettings)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting streaming_experience_settings: %s", err)
+	}
+	if err = d.Set("user_settings", flattenUserSettings(stack.UserSettings)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting user_settings: %s", err)
+	}
+
+	return diags
 }
 
 func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn
+	var diags diag.Diagnostics
 
-	input := &appstream.UpdateStackInput{
-		Name: aws.String(d.Id()),
-	}
+	conn := meta.(*conns.AWSClient).AppStreamConn(ctx)
 
-	if d.HasChange("access_endpoints") {
-		input.AccessEndpoints = expandAccessEndpoints(d.Get("access_endpoints").(*schema.Set).List())
-	}
+	if d.HasChangesExcept("tags", "tags_all") {
+		input := &appstream.UpdateStackInput{
+			Name: aws.String(d.Id()),
+		}
 
-	if d.HasChange("application_settings") {
-		input.ApplicationSettings = expandApplicationSettings(d.Get("application_settings").(*schema.Set).List())
-	}
+		if d.HasChange("access_endpoints") {
+			input.AccessEndpoints = expandAccessEndpoints(d.Get("access_endpoints").(*schema.Set).List())
+		}
 
-	if d.HasChange("description") {
-		input.Description = aws.String(d.Get("description").(string))
-	}
+		if d.HasChange("application_settings") {
+			input.ApplicationSettings = expandApplicationSettings(d.Get("application_settings").([]interface{}))
+		}
 
-	if d.HasChange("display_name") {
-		input.DisplayName = aws.String(d.Get("display_name").(string))
-	}
+		if d.HasChange("description") {
+			input.Description = aws.String(d.Get("description").(string))
+		}
 
-	if d.HasChange("feedback_url") {
-		input.FeedbackURL = aws.String(d.Get("feedback_url").(string))
-	}
+		if d.HasChange("display_name") {
+			input.DisplayName = aws.String(d.Get("display_name").(string))
+		}
 
-	if d.HasChange("redirect_url") {
-		input.RedirectURL = aws.String(d.Get("redirect_url").(string))
-	}
+		if d.HasChange("feedback_url") {
+			input.FeedbackURL = aws.String(d.Get("feedback_url").(string))
+		}
 
-	if d.HasChange("user_settings") {
-		input.UserSettings = expandUserSettings(d.Get("user_settings").([]interface{}))
-	}
+		if d.HasChange("redirect_url") {
+			input.RedirectURL = aws.String(d.Get("redirect_url").(string))
+		}
 
-	resp, err := conn.UpdateStack(input)
+		if d.HasChange("streaming_experience_settings") {
+			input.StreamingExperienceSettings = expandStreamingExperienceSettings(d.Get("streaming_experience_settings").([]interface{}))
+		}
 
-	if err != nil {
-		diag.FromErr(fmt.Errorf("error updating Appstream Stack (%s): %w", d.Id(), err))
-	}
+		if d.HasChange("user_settings") {
+			input.UserSettings = expandUserSettings(d.Get("user_settings").(*schema.Set).List())
+		}
 
-	if d.HasChange("tags") {
-		arn := aws.StringValue(resp.Stack.Arn)
+		_, err := conn.UpdateStackWithContext(ctx, input)
 
-		o, n := d.GetChange("tags")
-		if err := UpdateTags(conn, arn, o, n); err != nil {
-			return diag.FromErr(fmt.Errorf("error updating Appstream Stack tags (%s): %w", d.Id(), err))
+		if err != nil {
+			sdkdiag.AppendErrorf(diags, "updating Appstream Stack (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceStackRead(ctx, d, meta)
+	return append(diags, resourceStackRead(ctx, d, meta)...)
 }
 
 func resourceStackDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppStreamConn
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).AppStreamConn(ctx)
 
 	log.Printf("[DEBUG] Deleting AppStream Stack: (%s)", d.Id())
 	_, err := conn.DeleteStackWithContext(ctx, &appstream.DeleteStackInput{
@@ -385,26 +425,51 @@ func resourceStackDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	})
 
 	if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error deleting Appstream Stack (%s): %w", d.Id(), err))
+		return sdkdiag.AppendErrorf(diags, "deleting Appstream Stack (%s): %s", d.Id(), err)
 	}
 
-	if _, err = waitStackStateDeleted(ctx, conn, d.Id()); err != nil {
-		if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
-			return nil
+	_, err = tfresource.RetryUntilNotFound(ctx, stackOperationTimeout, func() (interface{}, error) {
+		return FindStackByName(ctx, conn, d.Id())
+	})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for Appstream Stack (%s) delete: %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+func FindStackByName(ctx context.Context, conn *appstream.AppStream, name string) (*appstream.Stack, error) {
+	input := &appstream.DescribeStacksInput{
+		Names: aws.StringSlice([]string{name}),
+	}
+
+	output, err := conn.DescribeStacksWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, appstream.ErrCodeResourceNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
 		}
-
-		return diag.FromErr(fmt.Errorf("error waiting for Appstream Stack (%s) to be deleted: %w", d.Id(), err))
 	}
 
 	if err != nil {
-		return diag.FromErr(fmt.Errorf("error reading Appstream Stack (%s): %w", d.Id(), err))
+		return nil, err
 	}
 
-	return nil
+	if output == nil || len(output.Stacks) == 0 || output.Stacks[0] == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	if count := len(output.Stacks); count > 1 {
+		return nil, tfresource.NewTooManyResultsError(count, input)
+	}
+
+	return output.Stacks[0], nil
 }
 
 func expandAccessEndpoint(tfMap map[string]interface{}) *appstream.AccessEndpoint {
@@ -474,38 +539,20 @@ func flattenAccessEndpoints(apiObjects []*appstream.AccessEndpoint) []map[string
 	return tfList
 }
 
-func expandApplicationSetting(tfMap map[string]interface{}) *appstream.ApplicationSettings {
-	if tfMap == nil {
-		return nil
+func expandApplicationSettings(tfList []interface{}) *appstream.ApplicationSettings {
+	if len(tfList) == 0 {
+		return &appstream.ApplicationSettings{
+			Enabled: aws.Bool(false),
+		}
 	}
 
-	apiObject := &appstream.ApplicationSettings{}
+	tfMap := tfList[0].(map[string]interface{})
 
-	if v, ok := tfMap["enabled"]; ok {
-		apiObject.Enabled = aws.Bool(v.(bool))
+	apiObject := &appstream.ApplicationSettings{
+		Enabled: aws.Bool(tfMap["enabled"].(bool)),
 	}
 	if v, ok := tfMap["settings_group"]; ok {
 		apiObject.SettingsGroup = aws.String(v.(string))
-	}
-
-	return apiObject
-}
-
-func expandApplicationSettings(tfList []interface{}) *appstream.ApplicationSettings {
-	if len(tfList) == 0 {
-		return nil
-	}
-
-	var apiObject *appstream.ApplicationSettings
-
-	for _, tfMapRaw := range tfList {
-		tfMap, ok := tfMapRaw.(map[string]interface{})
-
-		if !ok {
-			continue
-		}
-
-		apiObject = expandApplicationSetting(tfMap)
 	}
 
 	return apiObject
@@ -516,11 +563,10 @@ func flattenApplicationSetting(apiObject *appstream.ApplicationSettingsResponse)
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
-	tfMap["enabled"] = aws.BoolValue(apiObject.Enabled)
-	tfMap["settings_group"] = aws.StringValue(apiObject.SettingsGroup)
-
-	return tfMap
+	return map[string]interface{}{
+		"enabled":        aws.BoolValue(apiObject.Enabled),
+		"settings_group": aws.StringValue(apiObject.SettingsGroup),
+	}
 }
 
 func flattenApplicationSettings(apiObject *appstream.ApplicationSettingsResponse) []interface{} {
@@ -531,6 +577,42 @@ func flattenApplicationSettings(apiObject *appstream.ApplicationSettingsResponse
 	var tfList []interface{}
 
 	tfList = append(tfList, flattenApplicationSetting(apiObject))
+
+	return tfList
+}
+
+func expandStreamingExperienceSettings(tfList []interface{}) *appstream.StreamingExperienceSettings {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	tfMap := tfList[0].(map[string]interface{})
+
+	apiObject := &appstream.StreamingExperienceSettings{
+		PreferredProtocol: aws.String(tfMap["preferred_protocol"].(string)),
+	}
+
+	return apiObject
+}
+
+func flattenStreaminExperienceSetting(apiObject *appstream.StreamingExperienceSettings) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	return map[string]interface{}{
+		"preferred_protocol": aws.StringValue(apiObject.PreferredProtocol),
+	}
+}
+
+func flattenStreaminExperienceSettings(apiObject *appstream.StreamingExperienceSettings) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	tfList = append(tfList, flattenStreaminExperienceSetting(apiObject))
 
 	return tfList
 }
@@ -679,6 +761,7 @@ func flattenUserSettings(apiObjects []*appstream.UserSetting) []map[string]inter
 }
 
 func suppressAppsStreamStackUserSettings(k, old, new string, d *schema.ResourceData) bool {
+	flagDiffUserSettings := false
 	count := len(d.Get("user_settings").(*schema.Set).List())
 	defaultCount := len(appstream.Action_Values())
 
@@ -686,34 +769,9 @@ func suppressAppsStreamStackUserSettings(k, old, new string, d *schema.ResourceD
 		flagDiffUserSettings = false
 	}
 
-	if count != defaultCount && (fmt.Sprintf("%d", count) == new && fmt.Sprintf("%d", defaultCount) == old) {
+	if count != defaultCount && (strconv.Itoa(count) == new && strconv.Itoa(defaultCount) == old) {
 		flagDiffUserSettings = true
 	}
 
 	return flagDiffUserSettings
-}
-
-func accessEndpointsHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	buf.WriteString(m["endpoint_type"].(string))
-	buf.WriteString(m["vpce_id"].(string))
-	return create.StringHashcode(buf.String())
-}
-
-func storageConnectorsHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	buf.WriteString(m["connector_type"].(string))
-	buf.WriteString(fmt.Sprintf("%+v", m["domains"].([]interface{})))
-	buf.WriteString(m["resource_identifier"].(string))
-	return create.StringHashcode(buf.String())
-}
-
-func userSettingsHash(v interface{}) int {
-	var buf bytes.Buffer
-	m := v.(map[string]interface{})
-	buf.WriteString(m["action"].(string))
-	buf.WriteString(m["permission"].(string))
-	return create.StringHashcode(buf.String())
 }

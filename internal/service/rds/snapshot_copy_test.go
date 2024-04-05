@@ -1,22 +1,26 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds_test
 
 import (
 	"context"
 	"fmt"
-	"log"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/rds"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccRDSSnapshotCopy_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -26,15 +30,15 @@ func TestAccRDSSnapshotCopy_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSnapshotCopyDestroy,
+		CheckDestroy:             testAccCheckSnapshotCopyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSnapshotCopyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotCopyExists(resourceName, &v),
+					testAccCheckSnapshotCopyExists(ctx, resourceName, &v),
 				),
 			},
 			{
@@ -47,6 +51,7 @@ func TestAccRDSSnapshotCopy_basic(t *testing.T) {
 }
 
 func TestAccRDSSnapshotCopy_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -56,15 +61,15 @@ func TestAccRDSSnapshotCopy_tags(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSnapshotCopyDestroy,
+		CheckDestroy:             testAccCheckSnapshotCopyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSnapshotCopyConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBSnapshotExists(resourceName, &v),
+					testAccCheckDBSnapshotExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -77,7 +82,7 @@ func TestAccRDSSnapshotCopy_tags(t *testing.T) {
 			{
 				Config: testAccSnapshotCopyConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBSnapshotExists(resourceName, &v),
+					testAccCheckDBSnapshotExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -86,7 +91,7 @@ func TestAccRDSSnapshotCopy_tags(t *testing.T) {
 			{
 				Config: testAccSnapshotCopyConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDBSnapshotExists(resourceName, &v),
+					testAccCheckDBSnapshotExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -96,6 +101,7 @@ func TestAccRDSSnapshotCopy_tags(t *testing.T) {
 }
 
 func TestAccRDSSnapshotCopy_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
@@ -105,16 +111,16 @@ func TestAccRDSSnapshotCopy_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckSnapshotCopyDestroy,
+		CheckDestroy:             testAccCheckSnapshotCopyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccSnapshotCopyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckSnapshotCopyExists(resourceName, &v),
-					acctest.CheckResourceDisappears(acctest.Provider, tfrds.ResourceSnapshotCopy(), resourceName),
+					testAccCheckSnapshotCopyExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfrds.ResourceSnapshotCopy(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -122,30 +128,33 @@ func TestAccRDSSnapshotCopy_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckSnapshotCopyDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+func testAccCheckSnapshotCopyDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_db_snapshot_copy" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_db_snapshot_copy" {
+				continue
+			}
+
+			_, err := tfrds.FindDBSnapshotByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("RDS DB Snapshot Copy %s still exists", rs.Primary.ID)
 		}
 
-		log.Printf("[DEBUG] Checking if RDS DB Snapshot %s exists", rs.Primary.ID)
-
-		_, err := tfrds.FindSnapshot(context.Background(), conn, rs.Primary.ID)
-
-		// verify error is what we want
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		return err
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckSnapshotCopyExists(n string, ci *rds.DBSnapshot) resource.TestCheckFunc {
+func testAccCheckSnapshotCopyExists(ctx context.Context, n string, v *rds.DBSnapshot) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -153,23 +162,23 @@ func testAccCheckSnapshotCopyExists(n string, ci *rds.DBSnapshot) resource.TestC
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("no RDS DB Snapshot ID is set")
+			return fmt.Errorf("No RDS DB Snapshot Copy ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RDSConn(ctx)
 
-		out, err := tfrds.FindSnapshot(context.Background(), conn, rs.Primary.ID)
+		output, err := tfrds.FindDBSnapshotByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		ci = out
+		*v = *output
 
 		return nil
 	}
 }
 
-func testAccSnapshotCopyBaseConfig(rName string) string {
+func testAccSnapshotCopyConfig_base(rName string) string {
 	return fmt.Sprintf(`
 data "aws_rds_engine_version" "default" {
   engine = "mysql"
@@ -186,10 +195,10 @@ resource "aws_db_instance" "test" {
   engine                  = data.aws_rds_engine_version.default.engine
   engine_version          = data.aws_rds_engine_version.default.version
   instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
-  name                    = "baz"
+  db_name                 = "test"
   identifier              = %[1]q
-  password                = "barbarbarbar"
-  username                = "foo"
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
   maintenance_window      = "Fri:09:00-Fri:09:30"
   backup_retention_period = 0
   parameter_group_name    = "default.${data.aws_rds_engine_version.default.parameter_group_family}"
@@ -197,15 +206,13 @@ resource "aws_db_instance" "test" {
 }
 
 resource "aws_db_snapshot" "test" {
-  db_instance_identifier = aws_db_instance.test.id
+  db_instance_identifier = aws_db_instance.test.identifier
   db_snapshot_identifier = "%[1]s-source"
 }`, rName)
 }
 
 func testAccSnapshotCopyConfig_basic(rName string) string {
-	return acctest.ConfigCompose(
-		testAccSnapshotCopyBaseConfig(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccSnapshotCopyConfig_base(rName), fmt.Sprintf(`
 resource "aws_db_snapshot_copy" "test" {
   source_db_snapshot_identifier = aws_db_snapshot.test.db_snapshot_arn
   target_db_snapshot_identifier = "%[1]s-target"
@@ -213,9 +220,7 @@ resource "aws_db_snapshot_copy" "test" {
 }
 
 func testAccSnapshotCopyConfig_tags1(rName, tagKey, tagValue string) string {
-	return acctest.ConfigCompose(
-		testAccSnapshotCopyBaseConfig(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccSnapshotCopyConfig_base(rName), fmt.Sprintf(`
 resource "aws_db_snapshot_copy" "test" {
   source_db_snapshot_identifier = aws_db_snapshot.test.db_snapshot_arn
   target_db_snapshot_identifier = "%[1]s-target"
@@ -227,9 +232,7 @@ resource "aws_db_snapshot_copy" "test" {
 }
 
 func testAccSnapshotCopyConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(
-		testAccSnapshotCopyBaseConfig(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccSnapshotCopyConfig_base(rName), fmt.Sprintf(`
 resource "aws_db_snapshot_copy" "test" {
   source_db_snapshot_identifier = aws_db_snapshot.test.db_snapshot_arn
   target_db_snapshot_identifier = "%[1]s-target"

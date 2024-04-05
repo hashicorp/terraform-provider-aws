@@ -1,35 +1,40 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift_test
 
 import (
+	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/redshift"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/terraform"
+	"github.com/YakDriver/regexache"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfredshift "github.com/hashicorp/terraform-provider-aws/internal/service/redshift"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccRedshiftHSMClientCertificate_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_redshift_hsm_client_certificate.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckHSMClientCertificateDestroy,
+		CheckDestroy:             testAccCheckHSMClientCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHSMClientCertificateConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHSMClientCertificateExists(resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "redshift", regexp.MustCompile(`hsmclientcertificate:.+`)),
+					testAccCheckHSMClientCertificateExists(ctx, resourceName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "redshift", regexache.MustCompile(`hsmclientcertificate:.+`)),
 					resource.TestCheckResourceAttr(resourceName, "hsm_client_certificate_identifier", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "hsm_client_certificate_public_key"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -45,19 +50,20 @@ func TestAccRedshiftHSMClientCertificate_basic(t *testing.T) {
 }
 
 func TestAccRedshiftHSMClientCertificate_tags(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_redshift_hsm_client_certificate.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckHSMClientCertificateDestroy,
+		CheckDestroy:             testAccCheckHSMClientCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHSMClientCertificateConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHSMClientCertificateExists(resourceName),
+					testAccCheckHSMClientCertificateExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -70,7 +76,7 @@ func TestAccRedshiftHSMClientCertificate_tags(t *testing.T) {
 			{
 				Config: testAccHSMClientCertificateConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHSMClientCertificateExists(resourceName),
+					testAccCheckHSMClientCertificateExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -78,7 +84,7 @@ func TestAccRedshiftHSMClientCertificate_tags(t *testing.T) {
 			}, {
 				Config: testAccHSMClientCertificateConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHSMClientCertificateExists(resourceName),
+					testAccCheckHSMClientCertificateExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -88,20 +94,21 @@ func TestAccRedshiftHSMClientCertificate_tags(t *testing.T) {
 }
 
 func TestAccRedshiftHSMClientCertificate_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
 	resourceName := "aws_redshift_hsm_client_certificate.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, redshift.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RedshiftServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckHSMClientCertificateDestroy,
+		CheckDestroy:             testAccCheckHSMClientCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccHSMClientCertificateConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckHSMClientCertificateExists(resourceName),
-					acctest.CheckResourceDisappears(acctest.Provider, tfredshift.ResourceHSMClientCertificate(), resourceName),
+					testAccCheckHSMClientCertificateExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfredshift.ResourceHSMClientCertificate(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -109,31 +116,33 @@ func TestAccRedshiftHSMClientCertificate_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckHSMClientCertificateDestroy(s *terraform.State) error {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
+func testAccCheckHSMClientCertificateDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
 
-	for _, rs := range s.RootModule().Resources {
-		if rs.Type != "aws_redshift_hsm_client_certificate" {
-			continue
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_redshift_hsm_client_certificate" {
+				continue
+			}
+
+			_, err := tfredshift.FindHSMClientCertificateByID(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("Redshift Hsm Client Certificate %s still exists", rs.Primary.ID)
 		}
 
-		_, err := tfredshift.FindHSMClientCertificateByID(conn, rs.Primary.ID)
-
-		if tfresource.NotFound(err) {
-			continue
-		}
-
-		if err != nil {
-			return err
-		}
-
-		return fmt.Errorf("Redshift Hsm Client Certificate %s still exists", rs.Primary.ID)
+		return nil
 	}
-
-	return nil
 }
 
-func testAccCheckHSMClientCertificateExists(name string) resource.TestCheckFunc {
+func testAccCheckHSMClientCertificateExists(ctx context.Context, name string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -144,9 +153,9 @@ func testAccCheckHSMClientCertificateExists(name string) resource.TestCheckFunc 
 			return fmt.Errorf("Snapshot Copy Grant ID (HsmClientCertificateName) is not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn
+		conn := acctest.Provider.Meta().(*conns.AWSClient).RedshiftConn(ctx)
 
-		_, err := tfredshift.FindHSMClientCertificateByID(conn, rs.Primary.ID)
+		_, err := tfredshift.FindHSMClientCertificateByID(ctx, conn, rs.Primary.ID)
 
 		return err
 	}

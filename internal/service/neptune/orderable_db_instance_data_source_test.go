@@ -1,28 +1,33 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package neptune_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/neptune"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccNeptuneOrderableDBInstanceDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_neptune_orderable_db_instance.test"
 	engine := "neptune"
-	engineVersion := "1.0.2.2"
+	engineVersion := "1.1.0.0"
 	licenseModel := "amazon-license"
-	class := "db.t3.medium"
+	class := "db.t4g.medium"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckOrderableDBInstance(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckOrderableDBInstance(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrderableDBInstanceDataSourceConfig_basic(class, engine, engineVersion, licenseModel),
@@ -38,17 +43,17 @@ func TestAccNeptuneOrderableDBInstanceDataSource_basic(t *testing.T) {
 }
 
 func TestAccNeptuneOrderableDBInstanceDataSource_preferred(t *testing.T) {
+	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_neptune_orderable_db_instance.test"
 	engine := "neptune"
-	engineVersion := "1.0.3.0"
+	engineVersion := "1.2.0.2"
 	licenseModel := "amazon-license"
-	preferredOption := "db.r4.2xlarge"
+	preferredOption := "db.r5.2xlarge"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); testAccPreCheckOrderableDBInstance(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckOrderableDBInstance(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccOrderableDBInstanceDataSourceConfig_preferred(engine, engineVersion, licenseModel, preferredOption),
@@ -63,14 +68,14 @@ func TestAccNeptuneOrderableDBInstanceDataSource_preferred(t *testing.T) {
 	})
 }
 
-func testAccPreCheckOrderableDBInstance(t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn
+func testAccPreCheckOrderableDBInstance(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).NeptuneConn(ctx)
 
 	input := &neptune.DescribeOrderableDBInstanceOptionsInput{
 		Engine: aws.String("mysql"),
 	}
 
-	_, err := conn.DescribeOrderableDBInstanceOptions(input)
+	_, err := conn.DescribeOrderableDBInstanceOptionsWithContext(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -84,10 +89,10 @@ func testAccPreCheckOrderableDBInstance(t *testing.T) {
 func testAccOrderableDBInstanceDataSourceConfig_basic(class, engine, version, license string) string {
 	return fmt.Sprintf(`
 data "aws_neptune_orderable_db_instance" "test" {
-  instance_class = %q
-  engine         = %q
-  engine_version = %q
-  license_model  = %q
+  instance_class = %[1]q
+  engine         = %[2]q
+  engine_version = %[3]q
+  license_model  = %[4]q
 }
 `, class, engine, version, license)
 }
@@ -95,13 +100,13 @@ data "aws_neptune_orderable_db_instance" "test" {
 func testAccOrderableDBInstanceDataSourceConfig_preferred(engine, version, license, preferredOption string) string {
 	return fmt.Sprintf(`
 data "aws_neptune_orderable_db_instance" "test" {
-  engine         = %q
-  engine_version = %q
-  license_model  = %q
+  engine         = %[1]q
+  engine_version = %[2]q
+  license_model  = %[3]q
 
   preferred_instance_classes = [
     "db.xyz.xlarge",
-    %q,
+    %[4]q,
     "db.t3.small",
   ]
 }

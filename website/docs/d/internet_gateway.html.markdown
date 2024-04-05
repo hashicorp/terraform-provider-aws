@@ -45,7 +45,9 @@ which take the following arguments:
 * `values` - (Required) Set of values that are accepted for the given field.
   An Internet Gateway will be selected if any one of the given values matches.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Internet Gateway.
 
@@ -63,6 +65,6 @@ Each attachment supports the following:
 
 ## Timeouts
 
-[Configuration options](https://www.terraform.io/docs/configuration/blocks/resources/syntax.html#operation-timeouts):
+[Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 - `read` - (Default `20m`)

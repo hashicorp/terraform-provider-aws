@@ -1,16 +1,20 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elbv2_test
 
 import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/elbv2"
-	sdkacctest "github.com/hashicorp/terraform-plugin-sdk/v2/helper/acctest"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
+	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccELBV2LoadBalancerDataSource_basic(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lb.alb_test_with_arn"
 	dataSourceName2 := "data.aws_lb.alb_test_with_name"
@@ -18,8 +22,8 @@ func TestAccELBV2LoadBalancerDataSource_basic(t *testing.T) {
 	resourceName := "aws_lb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -41,6 +45,7 @@ func TestAccELBV2LoadBalancerDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "ip_address_type", resourceName, "ip_address_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "subnet_mapping.#", resourceName, "subnet_mapping.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "desync_mitigation_mode", resourceName, "desync_mitigation_mode"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "enforce_security_group_inbound_rules_on_private_link_traffic", resourceName, "enforce_security_group_inbound_rules_on_private_link_traffic"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "internal", resourceName, "internal"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "subnets.#", resourceName, "subnets.#"),
@@ -57,6 +62,7 @@ func TestAccELBV2LoadBalancerDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName2, "ip_address_type", resourceName, "ip_address_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "subnet_mapping.#", resourceName, "subnet_mapping.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "desync_mitigation_mode", resourceName, "desync_mitigation_mode"),
+					resource.TestCheckResourceAttrPair(dataSourceName2, "enforce_security_group_inbound_rules_on_private_link_traffic", resourceName, "enforce_security_group_inbound_rules_on_private_link_traffic"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "internal", resourceName, "internal"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "subnets.#", resourceName, "subnets.#"),
@@ -73,6 +79,10 @@ func TestAccELBV2LoadBalancerDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName3, "ip_address_type", resourceName, "ip_address_type"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "subnet_mapping.#", resourceName, "subnet_mapping.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "desync_mitigation_mode", resourceName, "desync_mitigation_mode"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, "enforce_security_group_inbound_rules_on_private_link_traffic", resourceName, "enforce_security_group_inbound_rules_on_private_link_traffic"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, "enable_tls_version_and_cipher_suite_headers", resourceName, "enable_tls_version_and_cipher_suite_headers"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, "enable_xff_client_port", resourceName, "enable_xff_client_port"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, "xff_header_processing_mode", resourceName, "xff_header_processing_mode"),
 				),
 			},
 		},
@@ -80,13 +90,14 @@ func TestAccELBV2LoadBalancerDataSource_basic(t *testing.T) {
 }
 
 func TestAccELBV2LoadBalancerDataSource_outpost(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName := "data.aws_lb.alb_test_with_arn"
 	resourceName := "aws_lb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t); acctest.PreCheckOutpostsOutposts(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -115,6 +126,7 @@ func TestAccELBV2LoadBalancerDataSource_outpost(t *testing.T) {
 }
 
 func TestAccELBV2LoadBalancerDataSource_backwardsCompatibility(t *testing.T) {
+	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	dataSourceName1 := "data.aws_alb.alb_test_with_arn"
 	dataSourceName2 := "data.aws_alb.alb_test_with_name"
@@ -122,8 +134,8 @@ func TestAccELBV2LoadBalancerDataSource_backwardsCompatibility(t *testing.T) {
 	resourceName := "aws_alb.test"
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -149,6 +161,7 @@ func TestAccELBV2LoadBalancerDataSource_backwardsCompatibility(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName1, "enable_http2", resourceName, "enable_http2"),
 					resource.TestCheckResourceAttrPair(dataSourceName1, "enable_waf_fail_open", resourceName, "enable_waf_fail_open"),
 					resource.TestCheckResourceAttrPair(dataSourceName1, "access_logs.#", resourceName, "access_logs.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName1, "connection_logs.#", resourceName, "connection_logs.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "internal", resourceName, "internal"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "subnets.#", resourceName, "subnets.#"),
@@ -169,6 +182,7 @@ func TestAccELBV2LoadBalancerDataSource_backwardsCompatibility(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName2, "enable_http2", resourceName, "enable_http2"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "enable_waf_fail_open", resourceName, "enable_waf_fail_open"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "access_logs.#", resourceName, "access_logs.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName2, "connection_logs.#", resourceName, "connection_logs.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "internal", resourceName, "internal"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "subnets.#", resourceName, "subnets.#"),
@@ -189,6 +203,7 @@ func TestAccELBV2LoadBalancerDataSource_backwardsCompatibility(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName3, "enable_http2", resourceName, "enable_http2"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "enable_waf_fail_open", resourceName, "enable_waf_fail_open"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "access_logs.#", resourceName, "access_logs.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, "connection_logs.#", resourceName, "connection_logs.#"),
 				),
 			},
 		},
@@ -196,7 +211,7 @@ func TestAccELBV2LoadBalancerDataSource_backwardsCompatibility(t *testing.T) {
 }
 
 func testAccLoadBalancerDataSourceConfig_basic(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_lb" "test" {
   name            = %[1]q
   internal        = true
@@ -214,35 +229,9 @@ resource "aws_lb" "test" {
   }
 }
 
-variable "subnets" {
-  default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = list(string)
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count                   = 2
-  vpc_id                  = aws_vpc.test.id
-  cidr_block              = element(var.subnets, count.index)
-  map_public_ip_on_launch = true
-  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
 resource "aws_security_group" "test" {
-  name        = %[1]q
-  description = "Used for ALB Testing"
-  vpc_id      = aws_vpc.test.id
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
 
   ingress {
     from_port   = 0
@@ -350,7 +339,7 @@ data "aws_lb" "alb_test_with_arn" {
 }
 
 func testAccLoadBalancerDataSourceConfig_backwardsCompatibility(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigAvailableAZsNoOptIn(), fmt.Sprintf(`
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_alb" "test" {
   name            = %[1]q
   internal        = true
@@ -366,35 +355,9 @@ resource "aws_alb" "test" {
   }
 }
 
-variable "subnets" {
-  default = ["10.0.1.0/24", "10.0.2.0/24"]
-  type    = list(string)
-}
-
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  count                   = 2
-  vpc_id                  = aws_vpc.test.id
-  cidr_block              = element(var.subnets, count.index)
-  map_public_ip_on_launch = true
-  availability_zone       = element(data.aws_availability_zones.available.names, count.index)
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
 resource "aws_security_group" "test" {
-  name        = %[1]q
-  description = "Used for ALB Testing"
-  vpc_id      = aws_vpc.test.id
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
 
   ingress {
     from_port   = 0

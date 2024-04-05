@@ -1,24 +1,30 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package workspaces
 
 import (
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/workspaces"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/resource"
+	"context"
+	"reflect"
+
+	"github.com/aws/aws-sdk-go-v2/service/workspaces"
+	"github.com/aws/aws-sdk-go-v2/service/workspaces/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
-func FindDirectoryByID(conn *workspaces.WorkSpaces, id string) (*workspaces.WorkspaceDirectory, error) {
+func FindDirectoryByID(ctx context.Context, conn *workspaces.Client, id string) (*types.WorkspaceDirectory, error) {
 	input := &workspaces.DescribeWorkspaceDirectoriesInput{
-		DirectoryIds: aws.StringSlice([]string{id}),
+		DirectoryIds: []string{id},
 	}
 
-	output, err := conn.DescribeWorkspaceDirectories(input)
+	output, err := conn.DescribeWorkspaceDirectories(ctx, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if output == nil || len(output.Directories) == 0 || output.Directories[0] == nil {
-		return nil, &resource.NotFoundError{
+	if output == nil || len(output.Directories) == 0 || reflect.DeepEqual(output.Directories[0], (types.WorkspaceDirectory{})) {
+		return nil, &retry.NotFoundError{
 			Message:     "Empty result",
 			LastRequest: input,
 		}
@@ -29,12 +35,12 @@ func FindDirectoryByID(conn *workspaces.WorkSpaces, id string) (*workspaces.Work
 
 	directory := output.Directories[0]
 
-	if state := aws.StringValue(directory.State); state == workspaces.WorkspaceDirectoryStateDeregistered {
-		return nil, &resource.NotFoundError{
+	if state := string(directory.State); state == string(types.WorkspaceDirectoryStateDeregistered) {
+		return nil, &retry.NotFoundError{
 			Message:     state,
 			LastRequest: input,
 		}
 	}
 
-	return directory, nil
+	return &directory, nil
 }
