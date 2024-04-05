@@ -26,8 +26,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceIPSet,
+			Factory:  dataSourceIPSet,
 			TypeName: "aws_wafregional_ipset",
+			Name:     "IPSet",
 		},
 		{
 			Factory:  DataSourceRateBasedRule,
