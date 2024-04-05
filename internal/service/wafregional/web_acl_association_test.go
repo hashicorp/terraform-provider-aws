@@ -8,15 +8,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/wafregional"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfwafregional "github.com/hashicorp/terraform-provider-aws/internal/service/wafregional"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -132,15 +131,9 @@ func testAccCheckWebACLAssociationDestroy(ctx context.Context) resource.TestChec
 				continue
 			}
 
-			resourceArn := tfwafregional.WebACLAssociationParseID(rs.Primary.ID)
+			_, err := tfwafregional.FindWebACLByResourceARN(ctx, conn, rs.Primary.Attributes["resource_arn"])
 
-			input := &wafregional.GetWebACLForResourceInput{
-				ResourceArn: aws.String(resourceArn),
-			}
-
-			_, err := conn.GetWebACLForResourceWithContext(ctx, input)
-
-			if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
@@ -148,7 +141,7 @@ func testAccCheckWebACLAssociationDestroy(ctx context.Context) resource.TestChec
 				return err
 			}
 
-			return fmt.Errorf("Resource (%s) still associated to WAF Regional Web ACL", resourceArn)
+			return fmt.Errorf("WAF Regional WebACL Association %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -162,19 +155,9 @@ func testAccCheckWebACLAssociationExists(ctx context.Context, n string) resource
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No WebACL association ID is set")
-		}
-
-		resourceArn := tfwafregional.WebACLAssociationParseID(rs.Primary.ID)
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn(ctx)
 
-		input := &wafregional.GetWebACLForResourceInput{
-			ResourceArn: aws.String(resourceArn),
-		}
-
-		_, err := conn.GetWebACLForResourceWithContext(ctx, input)
+		_, err := tfwafregional.FindWebACLByResourceARN(ctx, conn, rs.Primary.Attributes["resource_arn"])
 
 		return err
 	}

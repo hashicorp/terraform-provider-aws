@@ -18,4 +18,6 @@ var (
 	ResourceWebACL               = resourceWebACL
 	ResourceWebACLAssociation    = resourceWebACLAssociation
 	ResourceXSSMatchSet          = resourceXSSMatchSet
+
+	FindWebACLByResourceARN = findWebACLByResourceARN
 )
