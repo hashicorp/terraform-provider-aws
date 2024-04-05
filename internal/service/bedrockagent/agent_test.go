@@ -298,11 +298,10 @@ func testAccBedrockAgentConfig_full(rName, model, desc string) string {
 resource "aws_bedrockagent_agent" "test" {
   agent_name                    = %[1]q
   agent_resource_role_arn       = aws_iam_role.test.arn
-  description             = %[3]q
+  description                   = %[3]q
   idle_ttl                      = 500
   foundation_model              = %[2]q
-  prompt_override_configuration = [
-    {
+  prompt_override_configuration {
       override_lambda       = null
       prompt_configurations = [
         {
@@ -712,9 +711,7 @@ resource "aws_bedrockagent_agent" "test" {
           prompt_type          = "POST_PROCESSING"
         },
       ]
-    },
-  ]
-
+    }
 }
 `, rName, model, desc))
 }
