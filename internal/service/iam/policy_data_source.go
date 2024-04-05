@@ -11,6 +11,7 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -30,6 +31,12 @@ func dataSourcePolicy() *schema.Resource {
 				Computed:      true,
 				ValidateFunc:  verify.ValidARN,
 				ConflictsWith: []string{"name", "path_prefix"},
+			},
+			"attachment_count": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntAtLeast(0),
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -97,6 +104,7 @@ func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.SetId(arn)
 	d.Set("arn", arn)
+	d.Set("attachment_count", policy.AttachmentCount)
 	d.Set("description", policy.Description)
 	d.Set("name", policy.PolicyName)
 	d.Set("path", policy.Path)
