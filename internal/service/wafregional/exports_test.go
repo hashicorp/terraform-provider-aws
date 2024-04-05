@@ -11,4 +11,5 @@ var (
 	ResourceRateBasedRule   = resourceRateBasedRule
 	ResourceRegexMatchSet   = resourceRegexMatchSet
 	ResourceRegexPatternSet = resourceRegexPatternSet
+	ResourceRuleGroup       = resourceRuleGroup
 )

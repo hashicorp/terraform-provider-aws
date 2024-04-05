@@ -25,12 +25,13 @@ import (
 
 // @SDKResource("aws_wafregional_rule_group", name="Rule Group")
 // @Tags(identifierAttribute="arn")
-func ResourceRuleGroup() *schema.Resource {
+func resourceRuleGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRuleGroupCreate,
 		ReadWithoutTimeout:   resourceRuleGroupRead,
 		UpdateWithoutTimeout: resourceRuleGroupUpdate,
 		DeleteWithoutTimeout: resourceRuleGroupDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -220,9 +221,15 @@ func DeleteRuleGroup(ctx context.Context, id string, oldRules []interface{}, con
 		log.Printf("[INFO] Deleting WAF Regional Rule Group")
 		return conn.DeleteRuleGroupWithContext(ctx, req)
 	})
-	if err != nil {
-		return fmt.Errorf("deleting WAF Regional Rule Group: %s", err)
+
+	if tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
+		return nil
 	}
+
+	if err != nil {
+		return fmt.Errorf("deleting WAF Regional Rule Group (%s): %s", id, err)
+	}
+
 	return nil
 }
 
