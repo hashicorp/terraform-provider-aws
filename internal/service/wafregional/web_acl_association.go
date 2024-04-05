@@ -164,7 +164,7 @@ func webACLAssociationCreateResourceID(webACLID, resourceARN string) string {
 	return id
 }
 
-func webACLAssociationParseResourceID(id string) (string, string, error) {
+func webACLAssociationParseResourceID(id string) (string, string, error) { //nolint:unparam
 	parts := strings.SplitN(id, webACLAssociationIDSeparator, 2)
 
 	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
