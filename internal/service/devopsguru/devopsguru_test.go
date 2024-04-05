@@ -4,9 +4,12 @@
 package devopsguru_test
 
 import (
+	"context"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/service/devopsguru"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
 func TestAccDevOpsGuru_serial(t *testing.T) {
@@ -44,4 +47,17 @@ func TestAccDevOpsGuru_serial(t *testing.T) {
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)
+}
+
+func testAccPreCheck(ctx context.Context, t *testing.T) {
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DevOpsGuruClient(ctx)
+
+	_, err := conn.DescribeAccountHealth(ctx, &devopsguru.DescribeAccountHealthInput{})
+
+	if acctest.PreCheckSkipError(err) {
+		t.Skipf("skipping acceptance testing: %s", err)
+	}
+	if err != nil {
+		t.Fatalf("unexpected PreCheck error: %s", err)
+	}
 }
