@@ -67,7 +67,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "IPSet",
 		},
 		{
-			Factory:  ResourceRateBasedRule,
+			Factory:  resourceRateBasedRule,
 			TypeName: "aws_wafregional_rate_based_rule",
 			Name:     "Rate Based Rule",
 			Tags: &types.ServicePackageResourceTags{

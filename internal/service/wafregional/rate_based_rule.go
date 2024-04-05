@@ -26,12 +26,13 @@ import (
 
 // @SDKResource("aws_wafregional_rate_based_rule", name="Rate Based Rule")
 // @Tags(identifierAttribute="arn")
-func ResourceRateBasedRule() *schema.Resource {
+func resourceRateBasedRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRateBasedRuleCreate,
 		ReadWithoutTimeout:   resourceRateBasedRuleRead,
 		UpdateWithoutTimeout: resourceRateBasedRuleUpdate,
 		DeleteWithoutTimeout: resourceRateBasedRuleDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -219,11 +220,13 @@ func resourceRateBasedRuleDelete(ctx context.Context, d *schema.ResourceData, me
 		log.Printf("[INFO] Deleting WAF Regional Rate Based Rule")
 		return conn.DeleteRateBasedRuleWithContext(ctx, req)
 	})
+
 	if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
 		return diags
 	}
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting WAF Regional Rate Based Rule (%s): %s", d.Get("name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "deleting WAF Regional Rate Based Rule (%s): %s", d.Id(), err)
 	}
 
 	return diags
