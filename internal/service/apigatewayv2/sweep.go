@@ -59,7 +59,7 @@ func sweepAPIs(region string) error {
 		}
 
 		for _, v := range page.Items {
-			r := ResourceAPI()
+			r := resourceAPI()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.ApiId))
 

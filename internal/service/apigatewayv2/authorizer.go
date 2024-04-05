@@ -110,7 +110,7 @@ func resourceAuthorizerCreate(ctx context.Context, d *schema.ResourceData, meta 
 	apiId := d.Get("api_id").(string)
 	authorizerType := d.Get("authorizer_type").(string)
 
-	apiOutput, err := FindAPIByID(ctx, conn, apiId)
+	apiOutput, err := findAPIByID(ctx, conn, apiId)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway v2 API (%s): %s", apiId, err)

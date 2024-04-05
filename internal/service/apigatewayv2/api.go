@@ -30,12 +30,13 @@ import (
 
 // @SDKResource("aws_apigatewayv2_api", name="API")
 // @Tags(identifierAttribute="arn")
-func ResourceAPI() *schema.Resource {
+func resourceAPI() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAPICreate,
 		ReadWithoutTimeout:   resourceAPIRead,
 		UpdateWithoutTimeout: resourceAPIUpdate,
 		DeleteWithoutTimeout: resourceAPIDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -235,7 +236,7 @@ func resourceAPIRead(ctx context.Context, d *schema.ResourceData, meta interface
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-	output, err := FindAPIByID(ctx, conn, d.Id())
+	output, err := findAPIByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] API Gateway v2 API (%s) not found, removing from state", d.Id())
@@ -249,33 +250,19 @@ func resourceAPIRead(ctx context.Context, d *schema.ResourceData, meta interface
 
 	d.Set("api_endpoint", output.ApiEndpoint)
 	d.Set("api_key_selection_expression", output.ApiKeySelectionExpression)
-	apiARN := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "apigateway",
-		Region:    meta.(*conns.AWSClient).Region,
-		Resource:  "/apis/" + d.Id(),
-	}.String()
-	d.Set("arn", apiARN)
+	d.Set("arn", apiARN(meta.(*conns.AWSClient), d.Id()))
 	if err := d.Set("cors_configuration", flattenCORSConfiguration(output.CorsConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting cors_configuration: %s", err)
 	}
 	d.Set("description", output.Description)
 	d.Set("disable_execute_api_endpoint", output.DisableExecuteApiEndpoint)
-	executionArn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "execute-api",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  d.Id(),
-	}.String()
-	d.Set("execution_arn", executionArn)
+	d.Set("execution_arn", apiInvokeARN(meta.(*conns.AWSClient), d.Id()))
 	d.Set("name", output.Name)
 	d.Set("protocol_type", output.ProtocolType)
 	d.Set("route_selection_expression", output.RouteSelectionExpression)
+	d.Set("version", output.Version)
 
 	setTagsOut(ctx, output.Tags)
-
-	d.Set("version", output.Version)
 
 	return diags
 }
@@ -431,7 +418,7 @@ func reimportOpenAPIDefinition(ctx context.Context, d *schema.ResourceData, meta
 	return nil
 }
 
-func FindAPIByID(ctx context.Context, conn *apigatewayv2.Client, id string) (*apigatewayv2.GetApiOutput, error) {
+func findAPIByID(ctx context.Context, conn *apigatewayv2.Client, id string) (*apigatewayv2.GetApiOutput, error) {
 	input := &apigatewayv2.GetApiInput{
 		ApiId: aws.String(id),
 	}
@@ -503,4 +490,23 @@ func flattenCORSConfiguration(configuration *awstypes.Cors) []interface{} {
 		"expose_headers":    flattenCaseInsensitiveStringSet(configuration.ExposeHeaders),
 		"max_age":           aws.ToInt32(configuration.MaxAge),
 	}}
+}
+
+func apiARN(c *conns.AWSClient, apiID string) string {
+	return arn.ARN{
+		Partition: c.Partition,
+		Service:   "apigateway",
+		Region:    c.Region,
+		Resource:  "/apis/" + apiID,
+	}.String()
+}
+
+func apiInvokeARN(c *conns.AWSClient, apiID string) string {
+	return arn.ARN{
+		Partition: c.Partition,
+		Service:   "execute-api",
+		Region:    c.Region,
+		AccountID: c.AccountID,
+		Resource:  apiID,
+	}.String()
 }

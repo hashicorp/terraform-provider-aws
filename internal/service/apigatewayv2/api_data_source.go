@@ -116,7 +116,7 @@ func dataSourceAPIRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 	apiID := d.Get("api_id").(string)
 
-	api, err := FindAPIByID(ctx, conn, apiID)
+	api, err := findAPIByID(ctx, conn, apiID)
 
 	if tfresource.NotFound(err) {
 		return sdkdiag.AppendErrorf(diags, "no API Gateway v2 API matched; change the search criteria and try again")
@@ -127,7 +127,6 @@ func dataSourceAPIRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	d.SetId(apiID)
-
 	d.Set("api_endpoint", api.ApiEndpoint)
 	d.Set("api_key_selection_expression", api.ApiKeySelectionExpression)
 	apiArn := arn.ARN{
