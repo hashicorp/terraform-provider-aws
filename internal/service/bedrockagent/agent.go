@@ -66,9 +66,6 @@ func (r *bedrockAgentResource) Schema(ctx context.Context, request resource.Sche
 			"agent_id":  framework.IDAttribute(),
 			"agent_name": schema.StringAttribute{
 				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
 			},
 			"agent_resource_role_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
@@ -96,16 +93,10 @@ func (r *bedrockAgentResource) Schema(ctx context.Context, request resource.Sche
 			"customer_encryption_key_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Optional:   true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
 			},
 			"description": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
 			},
 			"failure_reasons": schema.ListAttribute{
 				ElementType: types.StringType,
@@ -116,9 +107,6 @@ func (r *bedrockAgentResource) Schema(ctx context.Context, request resource.Sche
 			},
 			"foundation_model": schema.StringAttribute{
 				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
 			},
 			names.AttrID: framework.IDAttribute(),
 			"idle_ttl": schema.Int64Attribute{
@@ -283,22 +271,20 @@ func (r *bedrockAgentResource) Update(ctx context.Context, request resource.Upda
 
 	conn := r.Meta().BedrockAgentClient(ctx)
 
-	if bedrockAgentHasChanges(ctx, old, new) {
-		input := &bedrockagent.UpdateAgentInput{}
-		response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
-		if response.Diagnostics.HasError() {
-			return
-		}
+	input := &bedrockagent.UpdateAgentInput{}
+	response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
-		_, err := conn.UpdateAgent(ctx, input)
+	_, err := conn.UpdateAgent(ctx, input)
 
-		if err != nil {
-			response.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionUpdating, "Bedrock Agent", old.AgentId.ValueString(), err),
-				err.Error(),
-			)
-			return
-		}
+	if err != nil {
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionUpdating, "Bedrock Agent", old.AgentId.ValueString(), err),
+			err.Error(),
+		)
+		return
 	}
 
 	out, err := findBedrockAgentByID(ctx, conn, old.ID.ValueString())
@@ -309,7 +295,7 @@ func (r *bedrockAgentResource) Update(ctx context.Context, request resource.Upda
 		)
 		return
 	}
-	response.Diagnostics.Append(fwflex.Flatten(ctx, out, &new)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, out.Agent, &new)...)
 	if response.Diagnostics.HasError() {
 		return
 	}

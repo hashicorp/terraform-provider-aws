@@ -54,6 +54,43 @@ func TestAccBedrockAgent_basic(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgent_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagent_agent.test"
+	var v bedrockagent.GetAgentOutput
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBedrockAgentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBedrockAgentConfig_basic(rName+"-1", "anthropic.claude-v2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBedrockAgentExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "agent_name", rName+"-1"),
+					resource.TestCheckResourceAttr(resourceName, "prompt_override_configuration.#", "1"),
+				),
+			},
+			{
+				Config: testAccBedrockAgentConfig_basic(rName+"-2", "anthropic.claude-v2"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBedrockAgentExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "agent_name", rName+"-2"),
+					resource.TestCheckResourceAttr(resourceName, "prompt_override_configuration.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccBedrockAgent_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
