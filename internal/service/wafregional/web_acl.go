@@ -26,12 +26,13 @@ import (
 
 // @SDKResource("aws_wafregional_web_acl", name="Web ACL")
 // @Tags(identifierAttribute="arn")
-func ResourceWebACL() *schema.Resource {
+func resourceWebACL() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceWebACLCreate,
 		ReadWithoutTimeout:   resourceWebACLRead,
 		UpdateWithoutTimeout: resourceWebACLUpdate,
 		DeleteWithoutTimeout: resourceWebACLDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -385,8 +386,13 @@ func resourceWebACLDelete(ctx context.Context, d *schema.ResourceData, meta inte
 			}
 			return conn.UpdateWebACLWithContext(ctx, req)
 		})
+
+		if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
+			return diags
+		}
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "Removing WAF Regional ACL Rules: %s", err)
+			return sdkdiag.AppendErrorf(diags, "updating WAF Regional Web ACL (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -400,9 +406,15 @@ func resourceWebACLDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		log.Printf("[INFO] Deleting WAF ACL")
 		return conn.DeleteWebACLWithContext(ctx, req)
 	})
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Deleting WAF Regional ACL: %s", err)
+
+	if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
+		return diags
 	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting WAF Regional Web ACL (%s): %s", d.Id(), err)
+	}
+
 	return diags
 }
 

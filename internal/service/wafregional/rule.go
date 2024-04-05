@@ -189,7 +189,7 @@ func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta interf
 		return conn.DeleteRuleWithContext(ctx, req)
 	})
 
-	if tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
+	if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
 		return diags
 	}
 
