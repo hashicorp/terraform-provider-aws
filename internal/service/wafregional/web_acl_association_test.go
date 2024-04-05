@@ -47,6 +47,8 @@ func TestAccWAFRegionalWebACLAssociation_basic(t *testing.T) {
 
 func TestAccWAFRegionalWebACLAssociation_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
+	resourceName := "aws_wafregional_web_acl_association.foo"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, wafregional.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.WAFRegionalServiceID),
@@ -56,8 +58,8 @@ func TestAccWAFRegionalWebACLAssociation_disappears(t *testing.T) {
 			{
 				Config: testAccWebACLAssociationConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLAssociationExists(ctx, "aws_wafregional_web_acl_association.foo"),
-					testAccCheckWebACLAssociationDisappears(ctx, "aws_wafregional_web_acl_association.foo"),
+					testAccCheckWebACLAssociationExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfwafregional.ResourceWebACLAssociation(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -173,33 +175,6 @@ func testAccCheckWebACLAssociationExists(ctx context.Context, n string) resource
 		}
 
 		_, err := conn.GetWebACLForResourceWithContext(ctx, input)
-
-		return err
-	}
-}
-
-func testAccCheckWebACLAssociationDisappears(ctx context.Context, resourceName string) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		// waf.WebACLSummary does not contain the information so we instead just use the state information
-
-		rs, ok := s.RootModule().Resources[resourceName]
-		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No WebACL association ID is set")
-		}
-
-		resourceArn := tfwafregional.WebACLAssociationParseID(rs.Primary.ID)
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn(ctx)
-
-		input := &wafregional.DisassociateWebACLInput{
-			ResourceArn: aws.String(resourceArn),
-		}
-
-		_, err := conn.DisassociateWebACLWithContext(ctx, input)
 
 		return err
 	}

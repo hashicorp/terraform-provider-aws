@@ -19,25 +19,28 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_wafregional_web_acl_association")
-func ResourceWebACLAssociation() *schema.Resource {
+// @SDKResource("aws_wafregional_web_acl_association", name="Web ACL Association")
+func resourceWebACLAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceWebACLAssociationCreate,
 		ReadWithoutTimeout:   resourceWebACLAssociationRead,
 		DeleteWithoutTimeout: resourceWebACLAssociationDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
 		Schema: map[string]*schema.Schema{
-			"web_acl_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
 			"resource_arn": {
+				Type:         schema.TypeString,
+				Required:     true,
+				ForceNew:     true,
+				ValidateFunc: verify.ValidARN,
+			},
+			"web_acl_id": {
 				Type:     schema.TypeString,
 				Required: true,
 				ForceNew: true,
@@ -126,16 +129,18 @@ func resourceWebACLAssociationDelete(ctx context.Context, d *schema.ResourceData
 
 	resourceArn := WebACLAssociationParseID(d.Id())
 
-	log.Printf("[INFO] Deleting WAF Regional Web ACL association: %s", resourceArn)
-
-	params := &wafregional.DisassociateWebACLInput{
+	_, err := conn.DisassociateWebACLWithContext(ctx, &wafregional.DisassociateWebACLInput{
 		ResourceArn: aws.String(resourceArn),
+	})
+
+	if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
+		return diags
 	}
 
-	// If action successful HTTP 200 response with an empty body
-	if _, err := conn.DisassociateWebACLWithContext(ctx, params); err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting WAF Regional Web ACL Association (%s): %s", resourceArn, err)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting WAF Regional Web ACL Association (%s): %s", d.Id(), err)
 	}
+
 	return diags
 }
 

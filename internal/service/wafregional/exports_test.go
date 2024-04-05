@@ -15,4 +15,5 @@ var (
 	ResourceRuleGroup            = resourceRuleGroup
 	ResourceSizeConstraintSet    = resourceSizeConstraintSet
 	ResourceSQLInjectionMatchSet = resourceSQLInjectionMatchSet
+	ResourceWebACLAssociation    = resourceWebACLAssociation
 )

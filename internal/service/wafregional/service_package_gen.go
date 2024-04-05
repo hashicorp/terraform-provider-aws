@@ -122,8 +122,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceWebACLAssociation,
+			Factory:  resourceWebACLAssociation,
 			TypeName: "aws_wafregional_web_acl_association",
+			Name:     "Web ACL Association",
 		},
 		{
 			Factory:  ResourceXSSMatchSet,
