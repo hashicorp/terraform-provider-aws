@@ -8,6 +8,7 @@ val services = mapOf(
         {{- if ne .Region "" }}, regionOverride = "{{ .Region }}"{{ end -}}
         {{- if ne .PatternOverride "" }}, patternOverride = "{{ .PatternOverride }}"{{ end -}}
         {{- if ne .SplitPackageRealPackage "" }}, splitPackageRealPackage = "{{ .SplitPackageRealPackage }}"{{ end -}}
+        {{- if ne .ExcludePattern "" }}, excludePattern = "{{ .ExcludePattern }}"{{ end -}}
     ),
 {{- end }}
 )

@@ -79,7 +79,7 @@ val services = mapOf(
     "docdbelastic" to ServiceSpec("DocumentDB Elastic"),
     "ds" to ServiceSpec("Directory Service", vpcLock = true),
     "dynamodb" to ServiceSpec("DynamoDB"),
-    "ec2" to ServiceSpec("EC2 (Elastic Compute Cloud)", vpcLock = true, patternOverride = "TestAccEC2(?:[^E]|E[^B]|EB[^S])*$"),
+    "ec2" to ServiceSpec("EC2 (Elastic Compute Cloud)", vpcLock = true, patternOverride = "TestAccEC2", excludePattern = "TestAccEC2EBS|TestAccEC2Outposts"),
     "ec2ebs" to ServiceSpec("EBS (EC2)"),
     "ec2outposts" to ServiceSpec("Outposts (EC2)"),
     "ecr" to ServiceSpec("ECR (Elastic Container Registry)"),

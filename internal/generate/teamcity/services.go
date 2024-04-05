@@ -29,6 +29,7 @@ type ServiceDatum struct {
 	Region                  string
 	PatternOverride         string
 	SplitPackageRealPackage string
+	ExcludePattern          string
 }
 
 type TemplateData struct {
@@ -82,6 +83,7 @@ func main() {
 			sd.Region = serviceConfig.Region
 			sd.PatternOverride = serviceConfig.PatternOverride
 			sd.SplitPackageRealPackage = serviceConfig.SplitPackageRealPackage
+			sd.ExcludePattern = serviceConfig.ExcludePattern
 		}
 
 		if serviceConfig.Skip {
@@ -122,6 +124,7 @@ type acctestServiceConfig struct {
 	Region                  string `hcl:"region,optional"`
 	PatternOverride         string `hcl:"pattern_override,optional"`
 	SplitPackageRealPackage string `hcl:"split_package_real_package,optional"`
+	ExcludePattern          string `hcl:"exclude_pattern,optional"`
 }
 
 func acctestConfigurations(filename string) (map[string]acctestServiceConfig, error) {

@@ -68,7 +68,8 @@ service "ds" {
 
 service "ec2" {
   vpc_lock         = true
-  pattern_override = "TestAccEC2(?:[^E]|E[^B]|EB[^S])*$"
+  pattern_override = "TestAccEC2"
+  exclude_pattern  = "TestAccEC2EBS|TestAccEC2Outposts"
 }
 
 service "transitgateway" {
