@@ -372,22 +372,21 @@ func resourceWebACLDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 	region := meta.(*conns.AWSClient).Region
+	wr := NewRetryer(conn, region)
 
-	// First, need to delete all rules
-	rules := d.Get("rule").(*schema.Set).List()
-	if len(rules) > 0 {
-		wr := NewRetryer(conn, region)
+	if rules := d.Get("rule").(*schema.Set).List(); len(rules) > 0 {
 		_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
-			req := &waf.UpdateWebACLInput{
+			input := &waf.UpdateWebACLInput{
 				ChangeToken:   token,
 				DefaultAction: tfwaf.ExpandAction(d.Get("default_action").([]interface{})),
 				Updates:       diffWebACLRules(rules, []interface{}{}),
 				WebACLId:      aws.String(d.Id()),
 			}
-			return conn.UpdateWebACLWithContext(ctx, req)
+
+			return conn.UpdateWebACLWithContext(ctx, input)
 		})
 
-		if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
+		if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentContainerException, wafregional.ErrCodeWAFNonexistentItemException) {
 			return diags
 		}
 
@@ -396,14 +395,13 @@ func resourceWebACLDelete(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	wr := NewRetryer(conn, region)
+	log.Printf("[INFO] Deleting WAF Regional Web ACL: %s", d.Id())
 	_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		req := &waf.DeleteWebACLInput{
 			ChangeToken: token,
 			WebACLId:    aws.String(d.Id()),
 		}
 
-		log.Printf("[INFO] Deleting WAF ACL")
 		return conn.DeleteWebACLWithContext(ctx, req)
 	})
 

@@ -142,9 +142,8 @@ func resourceIPSetUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		o, n := d.GetChange("ip_set_descriptor")
 		oldD, newD := o.(*schema.Set).List(), n.(*schema.Set).List()
 
-		err := updateIPSetResourceWR(ctx, d.Id(), oldD, newD, conn, region)
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating WAF Regional IPSet: %s", err)
+		if err := updateIPSetResourceWR(ctx, conn, region, d.Id(), oldD, newD); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating WAF Regional IPSet (%s): %s", d.Id(), err)
 		}
 	}
 	return append(diags, resourceIPSetRead(ctx, d, meta)...)
@@ -155,25 +154,28 @@ func resourceIPSetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 	region := meta.(*conns.AWSClient).Region
 
-	oldD := d.Get("ip_set_descriptor").(*schema.Set).List()
+	if oldD := d.Get("ip_set_descriptor").(*schema.Set).List(); len(oldD) > 0 {
+		var newD []interface{}
 
-	if len(oldD) > 0 {
-		noD := []interface{}{}
-		err := updateIPSetResourceWR(ctx, d.Id(), oldD, noD, conn, region)
+		err := updateIPSetResourceWR(ctx, conn, region, d.Id(), oldD, newD)
+
+		if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentContainerException, wafregional.ErrCodeWAFNonexistentItemException) {
+			return diags
+		}
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "deleting IPSetDescriptors: %s", err)
+			return sdkdiag.AppendErrorf(diags, "updating WAF Regional IPSet (%s): %s", d.Id(), err)
 		}
 	}
 
-	wr := NewRetryer(conn, region)
-	_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
-		req := &waf.DeleteIPSetInput{
+	log.Printf("[INFO] Deleting WAF Regional IPSet: %s", d.Id())
+	_, err := NewRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+		input := &waf.DeleteIPSetInput{
 			ChangeToken: token,
 			IPSetId:     aws.String(d.Id()),
 		}
-		log.Printf("[INFO] Deleting WAF Regional IPSet")
-		return conn.DeleteIPSetWithContext(ctx, req)
+
+		return conn.DeleteIPSetWithContext(ctx, input)
 	})
 
 	if tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
@@ -187,20 +189,22 @@ func resourceIPSetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	return diags
 }
 
-func updateIPSetResourceWR(ctx context.Context, id string, oldD, newD []interface{}, conn *wafregional.WAFRegional, region string) error {
+func updateIPSetResourceWR(ctx context.Context, conn *wafregional.WAFRegional, region, ipSetID string, oldD, newD []interface{}) error {
+	wr := NewRetryer(conn, region)
+
 	for _, ipSetUpdates := range DiffIPSetDescriptors(oldD, newD) {
-		wr := NewRetryer(conn, region)
 		_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
-			req := &waf.UpdateIPSetInput{
+			input := &waf.UpdateIPSetInput{
 				ChangeToken: token,
-				IPSetId:     aws.String(id),
+				IPSetId:     aws.String(ipSetID),
 				Updates:     ipSetUpdates,
 			}
 
-			return conn.UpdateIPSetWithContext(ctx, req)
+			return conn.UpdateIPSetWithContext(ctx, input)
 		})
+
 		if err != nil {
-			return fmt.Errorf("updating WAF Regional IPSet: %s", err)
+			return err
 		}
 	}
 
