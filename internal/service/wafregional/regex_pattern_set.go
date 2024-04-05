@@ -18,13 +18,14 @@ import (
 	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 )
 
-// @SDKResource("aws_wafregional_regex_pattern_set")
-func ResourceRegexPatternSet() *schema.Resource {
+// @SDKResource("aws_wafregional_regex_pattern_set", name="Regex Pattern Set")
+func resourceRegexPatternSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRegexPatternSetCreate,
 		ReadWithoutTimeout:   resourceRegexPatternSetRead,
 		UpdateWithoutTimeout: resourceRegexPatternSetUpdate,
 		DeleteWithoutTimeout: resourceRegexPatternSetDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -139,6 +140,11 @@ func resourceRegexPatternSetDelete(ctx context.Context, d *schema.ResourceData, 
 		}
 		return conn.DeleteRegexPatternSetWithContext(ctx, req)
 	})
+
+	if tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting WAF Regional Regex Pattern Set (%s): %s", d.Id(), err)
 	}
