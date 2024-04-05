@@ -96,6 +96,7 @@ func TestAccIAMPolicyDataSource_arnTags(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "policy", resourceName, "policy"),
 					resource.TestCheckResourceAttrPair(datasourceName, "policy_id", resourceName, "policy_id"),
 					resource.TestCheckResourceAttrPair(datasourceName, "arn", resourceName, "arn"),
+					resource.TestCheckResourceAttrPair(datasourceName, "attachment_count", resourceName, "attachment_count"),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.%", resourceName, "tags.%"),
 					resource.TestCheckResourceAttrPair(datasourceName, "tags.key", resourceName, "tags.key"),
 				),
