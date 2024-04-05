@@ -21,8 +21,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_apigatewayv2_api_mapping")
-func ResourceAPIMapping() *schema.Resource {
+// @SDKResource("aws_apigatewayv2_api_mapping", name="API Mapping")
+func resourceAPIMapping() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAPIMappingCreate,
 		ReadWithoutTimeout:   resourceAPIMappingRead,
@@ -85,10 +85,10 @@ func resourceAPIMappingRead(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-	output, err := FindAPIMappingByTwoPartKey(ctx, conn, d.Id(), d.Get("domain_name").(string))
+	output, err := findAPIMappingByTwoPartKey(ctx, conn, d.Id(), d.Get("domain_name").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		log.Printf("[WARN] API Gateway v2 API mapping (%s) not found, removing from state", d.Id())
+		log.Printf("[WARN] API Gateway v2 API Mapping (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
@@ -164,7 +164,7 @@ func resourceAPIMappingImport(ctx context.Context, d *schema.ResourceData, meta 
 	return []*schema.ResourceData{d}, nil
 }
 
-func FindAPIMappingByTwoPartKey(ctx context.Context, conn *apigatewayv2.Client, id, domainName string) (*apigatewayv2.GetApiMappingOutput, error) {
+func findAPIMappingByTwoPartKey(ctx context.Context, conn *apigatewayv2.Client, id, domainName string) (*apigatewayv2.GetApiMappingOutput, error) {
 	input := &apigatewayv2.GetApiMappingInput{
 		ApiMappingId: aws.String(id),
 		DomainName:   aws.String(domainName),

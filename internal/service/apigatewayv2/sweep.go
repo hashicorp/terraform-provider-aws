@@ -115,7 +115,7 @@ func sweepAPIMappings(region string) error {
 				}
 
 				for _, v := range page.Items {
-					r := ResourceAPIMapping()
+					r := resourceAPIMapping()
 					d := r.Data(nil)
 					d.SetId(aws.ToString(v.ApiMappingId))
 					d.Set("domain_name", domainName)

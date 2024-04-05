@@ -5,7 +5,9 @@ package apigatewayv2
 
 // Exports for use in tests only.
 var (
-	ResourceAPI = resourceAPI
+	ResourceAPI        = resourceAPI
+	ResourceAPIMapping = resourceAPIMapping
 
-	FindAPIByID = findAPIByID
+	FindAPIByID                = findAPIByID
+	FindAPIMappingByTwoPartKey = findAPIMappingByTwoPartKey
 )
