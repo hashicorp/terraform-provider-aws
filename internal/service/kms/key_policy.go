@@ -115,7 +115,7 @@ func resourceKeyPolicyDelete(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	if !d.Get("bypass_policy_lockout_safety_check").(bool) {
-		if err := updateKeyPolicy(ctx, conn, d.Get("key_id").(string), meta.(*conns.AWSClient).DefaultKMSKeyPolicy(), d.Get("bypass_policy_lockout_safety_check").(bool)); err != nil {
+		if err := updateKeyPolicy(ctx, conn, d.Get("key_id").(string), meta.(*conns.AWSClient).DefaultKMSKeyPolicy(ctx), d.Get("bypass_policy_lockout_safety_check").(bool)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "attaching KMS Key policy (%s): %s", d.Id(), err)
 		} else {
 			log.Printf("[WARN] KMS Key Policy for Key (%s) does not allow PutKeyPolicy. Default Policy cannot be restored. Removing from state", d.Id())

@@ -414,6 +414,57 @@ func ResourceService() *schema.Resource {
 										Type:     schema.TypeString,
 										Required: true,
 									},
+									"timeout": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"idle_timeout_seconds": {
+													Type:         schema.TypeInt,
+													Optional:     true,
+													ValidateFunc: validation.IntBetween(0, 2147483647),
+												},
+												"per_request_timeout_seconds": {
+													Type:         schema.TypeInt,
+													Optional:     true,
+													ValidateFunc: validation.IntBetween(0, 2147483647),
+												},
+											},
+										},
+									},
+									"tls": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"issuer_cert_authority": {
+													Type:     schema.TypeList,
+													Required: true,
+													MaxItems: 1,
+													Elem: &schema.Resource{
+														Schema: map[string]*schema.Schema{
+															"aws_pca_authority_arn": {
+																Type:         schema.TypeString,
+																Required:     true,
+																ValidateFunc: verify.ValidARN,
+															},
+														},
+													},
+												},
+												"kms_key": {
+													Type:     schema.TypeString,
+													Optional: true,
+												},
+												"role_arn": {
+													Type:         schema.TypeString,
+													Optional:     true,
+													ValidateFunc: verify.ValidARN,
+												},
+											},
+										},
+									},
 								},
 							},
 						},
@@ -764,9 +815,9 @@ func resourceServiceRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "setting network_configuration: %s", err)
 	}
 
-	// if err := d.Set("service_connect_configuration", flattenServiceConnectConfiguration(service.ServiceConnectConfiguration)); err != nil {
-	// 	return fmt.Errorf("setting service_connect_configuration for (%s): %w", d.Id(), err)
-	// }
+	//if err := d.Set("service_connect_configuration", flattenServiceConnectConfiguration(service.ServiceConnectConfiguration)); err != nil {
+	//	return sdkdiag.AppendErrorf(diags, "setting service_connect_configuration: %s", err)
+	//}
 
 	if err := d.Set("service_registries", flattenServiceRegistries(service.ServiceRegistries)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting service_registries: %s", err)
@@ -1105,7 +1156,7 @@ func expandAlarms(tfMap map[string]interface{}) *ecs.DeploymentAlarms {
 		apiObject.Enable = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["enable"].(bool); ok {
+	if v, ok := tfMap["rollback"].(bool); ok {
 		apiObject.Rollback = aws.Bool(v)
 	}
 
@@ -1441,10 +1492,76 @@ func expandServices(srv []interface{}) []*ecs.ServiceConnectService {
 			config.PortName = aws.String(v)
 		}
 
+		if v, ok := raw["timeout"].([]interface{}); ok && len(v) > 0 {
+			config.Timeout = expandTimeout(v)
+		}
+
+		if v, ok := raw["tls"].([]interface{}); ok && len(v) > 0 {
+			config.Tls = expandTLS(v)
+		}
+
 		out = append(out, &config)
 	}
 
 	return out
+}
+
+func expandTimeout(timeout []interface{}) *ecs.TimeoutConfiguration {
+	if len(timeout) == 0 {
+		return nil
+	}
+
+	raw, ok := timeout[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+	timeoutConfig := &ecs.TimeoutConfiguration{}
+	if v, ok := raw["idle_timeout_seconds"].(int); ok {
+		timeoutConfig.IdleTimeoutSeconds = aws.Int64(int64(v))
+	}
+	if v, ok := raw["per_request_timeout_seconds"].(int); ok {
+		timeoutConfig.PerRequestTimeoutSeconds = aws.Int64(int64(v))
+	}
+	return timeoutConfig
+}
+
+func expandTLS(tls []interface{}) *ecs.ServiceConnectTlsConfiguration {
+	if len(tls) == 0 {
+		return nil
+	}
+
+	raw, ok := tls[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+	tlsConfig := &ecs.ServiceConnectTlsConfiguration{}
+	if v, ok := raw["issuer_cert_authority"].([]interface{}); ok && len(v) > 0 {
+		tlsConfig.IssuerCertificateAuthority = expandIssuerCertAuthority(v)
+	}
+	if v, ok := raw["kms_key"].(string); ok && v != "" {
+		tlsConfig.KmsKey = aws.String(v)
+	}
+	if v, ok := raw["role_arn"].(string); ok && v != "" {
+		tlsConfig.RoleArn = aws.String(v)
+	}
+	return tlsConfig
+}
+
+func expandIssuerCertAuthority(pca []interface{}) *ecs.ServiceConnectTlsCertificateAuthority {
+	if len(pca) == 0 {
+		return nil
+	}
+
+	raw, ok := pca[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+	config := &ecs.ServiceConnectTlsCertificateAuthority{}
+
+	if v, ok := raw["aws_pca_authority_arn"].(string); ok && v != "" {
+		config.AwsPcaAuthorityArn = aws.String(v)
+	}
+	return config
 }
 
 func expandClientAliases(srv []interface{}) []*ecs.ServiceConnectClientAlias {

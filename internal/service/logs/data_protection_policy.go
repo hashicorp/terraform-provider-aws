@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -56,6 +57,8 @@ func resourceDataProtectionPolicy() *schema.Resource {
 }
 
 func resourceDataProtectionPolicyPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	logGroupName := d.Get("log_group_name").(string)
@@ -63,7 +66,7 @@ func resourceDataProtectionPolicyPut(ctx context.Context, d *schema.ResourceData
 	policy, err := structure.NormalizeJsonString(d.Get("policy_document").(string))
 
 	if err != nil {
-		return diag.Errorf("policy (%s) is invalid JSON: %s", policy, err)
+		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policy, err)
 	}
 
 	input := &cloudwatchlogs.PutDataProtectionPolicyInput{
@@ -74,17 +77,19 @@ func resourceDataProtectionPolicyPut(ctx context.Context, d *schema.ResourceData
 	_, err = conn.PutDataProtectionPolicy(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("putting CloudWatch Logs Data Protection Policy (%s): %s", logGroupName, err)
+		return sdkdiag.AppendErrorf(diags, "putting CloudWatch Logs Data Protection Policy (%s): %s", logGroupName, err)
 	}
 
 	if d.IsNewResource() {
 		d.SetId(logGroupName)
 	}
 
-	return resourceDataProtectionPolicyRead(ctx, d, meta)
+	return append(diags, resourceDataProtectionPolicyRead(ctx, d, meta)...)
 }
 
 func resourceDataProtectionPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	output, err := FindDataProtectionPolicyByID(ctx, conn, d.Id())
@@ -92,11 +97,11 @@ func resourceDataProtectionPolicyRead(ctx context.Context, d *schema.ResourceDat
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CloudWatch Logs Data Protection Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading CloudWatch Logs Data Protection Policy (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Logs Data Protection Policy (%s): %s", d.Id(), err)
 	}
 
 	d.Set("log_group_name", output.LogGroupIdentifier)
@@ -104,21 +109,23 @@ func resourceDataProtectionPolicyRead(ctx context.Context, d *schema.ResourceDat
 	policyToSet, err := verify.SecondJSONUnlessEquivalent(d.Get("policy_document").(string), aws.ToString(output.PolicyDocument))
 
 	if err != nil {
-		return diag.Errorf("while setting policy (%s), encountered: %s", policyToSet, err)
+		return sdkdiag.AppendErrorf(diags, "while setting policy (%s), encountered: %s", policyToSet, err)
 	}
 
 	policyToSet, err = structure.NormalizeJsonString(policyToSet)
 
 	if err != nil {
-		return diag.Errorf("policy (%s) is invalid JSON: %s", policyToSet, err)
+		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policyToSet, err)
 	}
 
 	d.Set("policy_document", policyToSet)
 
-	return nil
+	return diags
 }
 
 func resourceDataProtectionPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudWatch Logs Data Protection Policy: %s", d.Id())
@@ -127,14 +134,14 @@ func resourceDataProtectionPolicyDelete(ctx context.Context, d *schema.ResourceD
 	})
 
 	if nfe := (*types.ResourceNotFoundException)(nil); errors.As(err, &nfe) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting CloudWatch Logs Data Protection Policy (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting CloudWatch Logs Data Protection Policy (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindDataProtectionPolicyByID(ctx context.Context, conn *cloudwatchlogs.Client, id string) (*cloudwatchlogs.GetDataProtectionPolicyOutput, error) {

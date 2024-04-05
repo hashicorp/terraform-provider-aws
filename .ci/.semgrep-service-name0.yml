@@ -14,6 +14,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)AccessAnalyzer"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: accessanalyzer-in-test-name
     languages:
@@ -72,6 +73,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)Account"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: account-in-test-name
     languages:
@@ -130,6 +132,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)ACM"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: acm-in-test-name
     languages:
@@ -188,6 +191,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)ACMPCA"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: acmpca-in-test-name
     languages:
@@ -246,6 +250,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)amg"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: amg-in-const-name
     languages:
@@ -289,6 +294,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)AMP"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: amp-in-test-name
     languages:
@@ -347,6 +353,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)Amplify"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: amplify-in-test-name
     languages:
@@ -405,6 +412,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)APIGateway"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: apigateway-in-test-name
     languages:
@@ -463,6 +471,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)APIGatewayV2"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: apigatewayv2-in-test-name
     languages:
@@ -521,6 +530,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)AppAutoScaling"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: appautoscaling-in-test-name
     languages:
@@ -579,6 +589,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)AppConfig"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: appconfig-in-test-name
     languages:
@@ -637,6 +648,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)AppFabric"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: appfabric-in-test-name
     languages:
@@ -695,6 +707,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)AppFlow"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: appflow-in-test-name
     languages:
@@ -753,6 +766,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)AppIntegrations"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: appintegrations-in-test-name
     languages:
@@ -811,6 +825,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)appintegrationsservice"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: appintegrationsservice-in-const-name
     languages:
@@ -854,6 +869,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)applicationautoscaling"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: applicationautoscaling-in-const-name
     languages:
@@ -897,6 +913,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)ApplicationInsights"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: applicationinsights-in-test-name
     languages:
@@ -955,6 +972,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)AppMesh"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: appmesh-in-test-name
     languages:
@@ -999,6 +1017,50 @@ rules:
           patterns:
             - pattern-regex: "(?i)AppMesh"
     severity: WARNING
+  - id: appregistry-in-func-name
+    languages:
+      - go
+    message: Do not use "appregistry" in func name inside servicecatalogappregistry package
+    paths:
+      include:
+        - internal/service/servicecatalogappregistry
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)appregistry"
+            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+    severity: WARNING
+  - id: appregistry-in-const-name
+    languages:
+      - go
+    message: Do not use "appregistry" in const name inside servicecatalogappregistry package
+    paths:
+      include:
+        - internal/service/servicecatalogappregistry
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)appregistry"
+    severity: WARNING
+  - id: appregistry-in-var-name
+    languages:
+      - go
+    message: Do not use "appregistry" in var name inside servicecatalogappregistry package
+    paths:
+      include:
+        - internal/service/servicecatalogappregistry
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)appregistry"
+    severity: WARNING
   - id: apprunner-in-func-name
     languages:
       - go
@@ -1013,6 +1075,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)AppRunner"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: apprunner-in-test-name
     languages:
@@ -1071,6 +1134,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)AppStream"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: appstream-in-test-name
     languages:
@@ -1129,6 +1193,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)AppSync"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: appsync-in-test-name
     languages:
@@ -1187,6 +1252,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)Athena"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: athena-in-test-name
     languages:
@@ -1245,6 +1311,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)AuditManager"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: auditmanager-in-test-name
     languages:
@@ -1303,6 +1370,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)AutoScaling"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: autoscaling-in-test-name
     languages:
@@ -1361,6 +1429,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)AutoScalingPlans"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: autoscalingplans-in-test-name
     languages:
@@ -1419,6 +1488,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)Backup"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: backup-in-test-name
     languages:
@@ -1477,6 +1547,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)Batch"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: batch-in-test-name
     languages:
@@ -1535,6 +1606,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)beanstalk"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: beanstalk-in-const-name
     languages:
@@ -1578,6 +1650,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)Bedrock"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: bedrock-in-test-name
     languages:
@@ -1622,6 +1695,65 @@ rules:
           patterns:
             - pattern-regex: "(?i)Bedrock"
     severity: WARNING
+  - id: bedrockagent-in-func-name
+    languages:
+      - go
+    message: Do not use "BedrockAgent" in func name inside bedrockagent package
+    paths:
+      include:
+        - internal/service/bedrockagent
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)BedrockAgent"
+            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+    severity: WARNING
+  - id: bedrockagent-in-test-name
+    languages:
+      - go
+    message: Include "BedrockAgent" in test name
+    paths:
+      include:
+        - internal/service/bedrockagent/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccBedrockAgent"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: bedrockagent-in-const-name
+    languages:
+      - go
+    message: Do not use "BedrockAgent" in const name inside bedrockagent package
+    paths:
+      include:
+        - internal/service/bedrockagent
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)BedrockAgent"
+    severity: WARNING
+  - id: bedrockagent-in-var-name
+    languages:
+      - go
+    message: Do not use "BedrockAgent" in var name inside bedrockagent package
+    paths:
+      include:
+        - internal/service/bedrockagent
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)BedrockAgent"
+    severity: WARNING
   - id: budgets-in-func-name
     languages:
       - go
@@ -1636,6 +1768,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)Budgets"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: budgets-in-test-name
     languages:
@@ -1694,8 +1827,10 @@ rules:
           patterns:
             - pattern-regex: "(?i)CE"
             - pattern-not-regex: ource
-            - pattern-not-regex: ServicePackage
+            - pattern-not-regex: "[Ss]ervice"
+            - pattern-not-regex: "[Cc]ancel"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: ce-in-test-name
     languages:
@@ -1725,6 +1860,7 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)CE"
+            - pattern-not-regex: "[Ss]ervice"
     severity: WARNING
   - id: ce-in-var-name
     languages:
@@ -1739,7 +1875,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)CE"
-            - pattern-not-regex: ServicePackage
+            - pattern-not-regex: "[Ss]ervice"
+            - pattern-not-regex: "[Cc]ancel"
     severity: WARNING
   - id: chime-in-func-name
     languages:
@@ -1755,6 +1892,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)Chime"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: chime-in-test-name
     languages:
@@ -1813,6 +1951,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)ChimeSDKMediaPipelines"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: chimesdkmediapipelines-in-test-name
     languages:
@@ -1871,6 +2010,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)ChimeSDKVoice"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: chimesdkvoice-in-test-name
     languages:
@@ -1929,6 +2069,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)CleanRooms"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: cleanrooms-in-test-name
     languages:
@@ -1987,6 +2128,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)Cloud9"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: cloud9-in-test-name
     languages:
@@ -2045,6 +2187,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)CloudControl"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: cloudcontrol-in-test-name
     languages:
@@ -2103,6 +2246,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)cloudcontrolapi"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: cloudcontrolapi-in-const-name
     languages:
@@ -2146,6 +2290,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)CloudFormation"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: cloudformation-in-test-name
     languages:
@@ -2204,6 +2349,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)CloudFront"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: cloudfront-in-test-name
     languages:
@@ -2248,6 +2394,65 @@ rules:
           patterns:
             - pattern-regex: "(?i)CloudFront"
     severity: WARNING
+  - id: cloudfrontkeyvaluestore-in-func-name
+    languages:
+      - go
+    message: Do not use "CloudFrontKeyValueStore" in func name inside cloudfrontkeyvaluestore package
+    paths:
+      include:
+        - internal/service/cloudfrontkeyvaluestore
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)CloudFrontKeyValueStore"
+            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+    severity: WARNING
+  - id: cloudfrontkeyvaluestore-in-test-name
+    languages:
+      - go
+    message: Include "CloudFrontKeyValueStore" in test name
+    paths:
+      include:
+        - internal/service/cloudfrontkeyvaluestore/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccCloudFrontKeyValueStore"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: cloudfrontkeyvaluestore-in-const-name
+    languages:
+      - go
+    message: Do not use "CloudFrontKeyValueStore" in const name inside cloudfrontkeyvaluestore package
+    paths:
+      include:
+        - internal/service/cloudfrontkeyvaluestore
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)CloudFrontKeyValueStore"
+    severity: WARNING
+  - id: cloudfrontkeyvaluestore-in-var-name
+    languages:
+      - go
+    message: Do not use "CloudFrontKeyValueStore" in var name inside cloudfrontkeyvaluestore package
+    paths:
+      include:
+        - internal/service/cloudfrontkeyvaluestore
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)CloudFrontKeyValueStore"
+    severity: WARNING
   - id: cloudhsm-in-func-name
     languages:
       - go
@@ -2262,6 +2467,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)cloudhsm"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: cloudhsm-in-const-name
     languages:
@@ -2305,6 +2511,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)CloudHSMV2"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: cloudhsmv2-in-test-name
     languages:
@@ -2363,6 +2570,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)CloudSearch"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: cloudsearch-in-test-name
     languages:
@@ -2422,6 +2630,7 @@ rules:
             - pattern-regex: "(?i)CloudTrail"
             - pattern-not-regex: ^testAccCloudTrailConfig_.*
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: cloudtrail-in-test-name
     languages:
@@ -2480,6 +2689,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)CloudWatch"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: cloudwatch-in-test-name
     languages:
@@ -2538,6 +2748,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)cloudwatchevents"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: cloudwatchevents-in-const-name
     languages:
@@ -2581,6 +2792,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)cloudwatchevidently"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: cloudwatchevidently-in-const-name
     languages:
@@ -2624,6 +2836,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)cloudwatchlog"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: cloudwatchlog-in-const-name
     languages:
@@ -2667,6 +2880,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)cloudwatchlogs"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: cloudwatchlogs-in-const-name
     languages:
@@ -2710,6 +2924,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)cloudwatchobservabilityaccessmanager"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: cloudwatchobservabilityaccessmanager-in-const-name
     languages:
@@ -2753,6 +2968,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)cloudwatchrum"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: cloudwatchrum-in-const-name
     languages:
@@ -2796,6 +3012,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)CodeArtifact"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: codeartifact-in-test-name
     languages:
@@ -2854,6 +3071,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)CodeBuild"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: codebuild-in-test-name
     languages:
@@ -2912,6 +3130,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)CodeCatalyst"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: codecatalyst-in-test-name
     languages:
@@ -2970,6 +3189,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)CodeCommit"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: codecommit-in-test-name
     languages:
@@ -3028,6 +3248,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)codedeploy"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: codedeploy-in-const-name
     languages:
@@ -3071,6 +3292,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)CodeGuruProfiler"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: codeguruprofiler-in-test-name
     languages:
@@ -3129,6 +3351,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)CodeGuruReviewer"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: codegurureviewer-in-test-name
     languages:
@@ -3187,6 +3410,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)CodePipeline"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: codepipeline-in-test-name
     languages:
@@ -3245,6 +3469,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)CodeStarConnections"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: codestarconnections-in-test-name
     languages:
@@ -3303,6 +3528,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)CodeStarNotifications"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: codestarnotifications-in-test-name
     languages:
@@ -3361,6 +3587,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)CognitoIdentity"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: cognitoidentity-in-test-name
     languages:
@@ -3419,6 +3646,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)cognitoidentityprovider"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: cognitoidentityprovider-in-const-name
     languages:
@@ -3462,6 +3690,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)CognitoIDP"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: cognitoidp-in-test-name
     languages:
@@ -3520,6 +3749,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)Comprehend"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: comprehend-in-test-name
     languages:
@@ -3578,6 +3808,7 @@ rules:
           patterns:
             - pattern-regex: "(?i)ComputeOptimizer"
             - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING
   - id: computeoptimizer-in-test-name
     languages:
@@ -3607,4 +3838,94 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)ComputeOptimizer"
+    severity: WARNING
+  - id: computeoptimizer-in-var-name
+    languages:
+      - go
+    message: Do not use "ComputeOptimizer" in var name inside computeoptimizer package
+    paths:
+      include:
+        - internal/service/computeoptimizer
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ComputeOptimizer"
+    severity: WARNING
+  - id: configservice-in-func-name
+    languages:
+      - go
+    message: Do not use "ConfigService" in func name inside configservice package
+    paths:
+      include:
+        - internal/service/configservice
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ConfigService"
+            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+    severity: WARNING
+  - id: configservice-in-test-name
+    languages:
+      - go
+    message: Include "ConfigService" in test name
+    paths:
+      include:
+        - internal/service/configservice/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccConfigService"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: configservice-in-const-name
+    languages:
+      - go
+    message: Do not use "ConfigService" in const name inside configservice package
+    paths:
+      include:
+        - internal/service/configservice
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ConfigService"
+    severity: WARNING
+  - id: configservice-in-var-name
+    languages:
+      - go
+    message: Do not use "ConfigService" in var name inside configservice package
+    paths:
+      include:
+        - internal/service/configservice
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)ConfigService"
+    severity: WARNING
+  - id: connect-in-func-name
+    languages:
+      - go
+    message: Do not use "Connect" in func name inside connect package
+    paths:
+      include:
+        - internal/service/connect
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Connect"
+            - pattern-not-regex: .*uickConnect.*
+            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
     severity: WARNING

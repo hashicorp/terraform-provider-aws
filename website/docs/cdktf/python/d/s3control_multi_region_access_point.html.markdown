@@ -69,4 +69,4 @@ This data source exports the following attributes in addition to the arguments a
 * `bucket_account_id` - The AWS account ID that owns the bucket.
 * `region` - The name of the region.
 
-<!-- cache-key: cdktf-0.19.0 input-4b2d4507f55425b893c6a7909b5f48feef1f322a3ab4bf8683d78ca9a96619fb -->
+<!-- cache-key: cdktf-0.20.1 input-4b2d4507f55425b893c6a7909b5f48feef1f322a3ab4bf8683d78ca9a96619fb -->

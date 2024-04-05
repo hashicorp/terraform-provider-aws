@@ -12,12 +12,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	fwtypes "github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -348,7 +350,7 @@ func (r tagsResourceInterceptor) create(ctx context.Context, request resource.Cr
 		// Remove system tags.
 		tags = tags.IgnoreSystem(inContext.ServicePackageName)
 
-		tagsInContext.TagsIn = types.Some(tags)
+		tagsInContext.TagsIn = option.Some(tags)
 	case After:
 		// Set values for unknowns.
 		// Remove any provider configured ignore_tags and system tags from those passed to the service API.
@@ -426,6 +428,11 @@ func (r tagsResourceInterceptor) read(ctx context.Context, request resource.Read
 						ListTags(context.Context, any, string, string) error
 					}); ok && r.tags.ResourceType != "" {
 						err = v.ListTags(ctx, meta, identifier, r.tags.ResourceType) // Sets tags in Context
+					} else {
+						tflog.Warn(ctx, "No ListTags method found", map[string]interface{}{
+							"ServicePackage": sp.ServicePackageName(),
+							"ResourceType":   r.tags.ResourceType,
+						})
 					}
 
 					// ISO partitions may not support tagging, giving error.
@@ -513,7 +520,7 @@ func (r tagsResourceInterceptor) update(ctx context.Context, request resource.Up
 		// Remove system tags.
 		tags = tags.IgnoreSystem(inContext.ServicePackageName)
 
-		tagsInContext.TagsIn = types.Some(tags)
+		tagsInContext.TagsIn = option.Some(tags)
 
 		var oldTagsAll, newTagsAll fwtypes.Map
 
@@ -553,6 +560,11 @@ func (r tagsResourceInterceptor) update(ctx context.Context, request resource.Up
 						UpdateTags(context.Context, any, string, string, any, any) error
 					}); ok && r.tags.ResourceType != "" {
 						err = v.UpdateTags(ctx, meta, identifier, r.tags.ResourceType, oldTagsAll, newTagsAll)
+					} else {
+						tflog.Warn(ctx, "No UpdateTags method found", map[string]interface{}{
+							"ServicePackage": sp.ServicePackageName(),
+							"ResourceType":   r.tags.ResourceType,
+						})
 					}
 
 					// ISO partitions may not support tagging, giving error.

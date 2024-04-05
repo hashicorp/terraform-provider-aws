@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfemrcontainers "github.com/hashicorp/terraform-provider-aws/internal/service/emrcontainers"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEMRContainersVirtualCluster_basic(t *testing.T) {
@@ -35,7 +36,7 @@ func TestAccEMRContainersVirtualCluster_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/emr-containers.amazonaws.com")
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, emrcontainers.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRContainersServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		ExternalProviders:        testExternalProviders,
 		CheckDestroy:             testAccCheckVirtualClusterDestroy(ctx),
@@ -91,7 +92,7 @@ func TestAccEMRContainersVirtualCluster_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/emr-containers.amazonaws.com")
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, emrcontainers.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRContainersServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		ExternalProviders:        testExternalProviders,
 		CheckDestroy:             testAccCheckVirtualClusterDestroy(ctx),
@@ -125,7 +126,7 @@ func TestAccEMRContainersVirtualCluster_tags(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckIAMServiceLinkedRole(ctx, t, "/aws-service-role/emr-containers.amazonaws.com")
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, emrcontainers.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRContainersServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		ExternalProviders:        testExternalProviders,
 		CheckDestroy:             testAccCheckVirtualClusterDestroy(ctx),

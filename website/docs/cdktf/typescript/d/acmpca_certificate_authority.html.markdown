@@ -65,4 +65,4 @@ This data source exports the following attributes in addition to the arguments a
 * `tags` - Key-value map of user-defined tags that are attached to the certificate authority.
 * `type` - Type of the certificate authority.
 
-<!-- cache-key: cdktf-0.19.0 input-bc455641e95958e404dd0619abf86e9d1dc1b0604b9b489c29ed39db56a62037 -->
+<!-- cache-key: cdktf-0.20.1 input-bc455641e95958e404dd0619abf86e9d1dc1b0604b9b489c29ed39db56a62037 -->

@@ -70,4 +70,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `ipAddress` - The allocated static IP address
 
-<!-- cache-key: cdktf-0.19.0 input-6383b2c1ce9e0d3f93e326883a08bc4696b5b00c508566ea4d895b90af237860 -->
+<!-- cache-key: cdktf-0.20.1 input-6383b2c1ce9e0d3f93e326883a08bc4696b5b00c508566ea4d895b90af237860 -->

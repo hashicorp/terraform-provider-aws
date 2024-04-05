@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 )
 
 func TestApplyToAllKeys(t *testing.T) {
@@ -86,6 +87,76 @@ func TestApplyToAllValues(t *testing.T) {
 			got := ApplyToAllValues(test.input, strings.ToUpper)
 
 			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func TestKeys(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    map[string]int
+		expected []string
+	}
+	tests := map[string]testCase{
+		"three elements": {
+			input: map[string]int{
+				"one": 1,
+				"two": 2,
+				"3":   3},
+			expected: []string{"one", "two", "3"},
+		},
+		"zero elements": {
+			input:    map[string]int{},
+			expected: []string{},
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := Keys(test.input)
+
+			if diff := cmp.Diff(got, test.expected, cmpopts.SortSlices(func(v1, v2 string) bool { return v1 < v2 })); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}
+
+func TestValues(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    map[string]int
+		expected []int
+	}
+	tests := map[string]testCase{
+		"three elements": {
+			input: map[string]int{
+				"one": 1,
+				"two": 2,
+				"3":   3},
+			expected: []int{1, 2, 3},
+		},
+		"zero elements": {
+			input:    map[string]int{},
+			expected: []int{},
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := Values(test.input)
+
+			if diff := cmp.Diff(got, test.expected, cmpopts.SortSlices(func(v1, v2 int) bool { return v1 < v2 })); diff != "" {
 				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 			}
 		})

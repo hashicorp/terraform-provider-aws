@@ -3063,7 +3063,7 @@ func expandChannelEncoderSettings(tfList []interface{}) *types.EncoderSettings {
 	m := tfList[0].(map[string]interface{})
 
 	var settings types.EncoderSettings
-	if v, ok := m["audio_descriptions"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := m["audio_descriptions"].(*schema.Set); ok {
 		settings.AudioDescriptions = expandChannelEncoderSettingsAudioDescriptions(v.List())
 	}
 	if v, ok := m["output_groups"].([]interface{}); ok && len(v) > 0 {
@@ -3108,7 +3108,7 @@ func expandChannelEncoderSettingsAudioDescriptions(tfList []interface{}) []types
 		return nil
 	}
 
-	var audioDesc []types.AudioDescription
+	audioDesc := []types.AudioDescription{}
 	for _, tfItem := range tfList {
 		m, ok := tfItem.(map[string]interface{})
 		if !ok {
@@ -3696,6 +3696,9 @@ func expandHLSGroupSettings(tfList []interface{}) *types.HlsGroupSettings {
 	}
 	if v, ok := m["caption_language_setting"].(string); ok && v != "" {
 		out.CaptionLanguageSetting = types.HlsCaptionLanguageSetting(v)
+	}
+	if v, ok := m["client_cache"].(string); ok && v != "" {
+		out.ClientCache = types.HlsClientCache(v)
 	}
 	if v, ok := m["codec_specification"].(string); ok && v != "" {
 		out.CodecSpecification = types.HlsCodecSpecification(v)

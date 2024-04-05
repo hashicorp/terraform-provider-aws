@@ -38,7 +38,7 @@ func TestAccChimeSDKMediaPipelinesMediaInsightsPipelineConfiguration_basic(t *te
 			acctest.PreCheckPartitionHasService(t, names.ChimeSDKMediaPipelinesEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKMediaPipelinesEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKMediaPipelinesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMediaInsightsPipelineConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -83,7 +83,7 @@ func TestAccChimeSDKMediaPipelinesMediaInsightsPipelineConfiguration_disappears(
 			acctest.PreCheckPartitionHasService(t, names.ChimeSDKMediaPipelinesEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKMediaPipelinesEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKMediaPipelinesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMediaInsightsPipelineConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -115,7 +115,7 @@ func TestAccChimeSDKMediaPipelinesMediaInsightsPipelineConfiguration_updateAllPr
 			acctest.PreCheckPartitionHasService(t, names.ChimeSDKMediaPipelinesEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKMediaPipelinesEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKMediaPipelinesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMediaInsightsPipelineConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -212,7 +212,7 @@ func TestAccChimeSDKMediaPipelinesMediaInsightsPipelineConfiguration_tags(t *tes
 			acctest.PreCheckPartitionHasService(t, names.ChimeSDKMediaPipelinesEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKMediaPipelinesEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ChimeSDKMediaPipelinesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMediaInsightsPipelineConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{

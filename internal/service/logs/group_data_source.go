@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
@@ -49,6 +50,8 @@ func dataSourceGroup() *schema.Resource {
 }
 
 func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LogsClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -56,7 +59,7 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 	logGroup, err := findLogGroupByName(ctx, conn, name)
 
 	if err != nil {
-		return diag.Errorf("reading CloudWatch Logs Log Group (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "reading CloudWatch Logs Log Group (%s): %s", name, err)
 	}
 
 	d.SetId(name)
@@ -69,12 +72,12 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 	tags, err := listLogGroupTags(ctx, conn, name)
 
 	if err != nil {
-		return diag.Errorf("listing tags for CloudWatch Logs Log Group (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "listing tags for CloudWatch Logs Log Group (%s): %s", name, err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

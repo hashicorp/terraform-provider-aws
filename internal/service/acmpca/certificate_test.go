@@ -13,26 +13,26 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/acmpca"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/service/acmpca/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfacmpca "github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccACMPCACertificate_rootCertificate(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acmpca_certificate.test"
 	certificateAuthorityResourceName := "aws_acmpca_certificate_authority.test"
-
 	domain := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -72,12 +72,11 @@ func TestAccACMPCACertificate_rootCertificateWithAPIPassthrough(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acmpca_certificate.test"
 	certificateAuthorityResourceName := "aws_acmpca_certificate_authority.test"
-
 	domain := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -118,12 +117,11 @@ func TestAccACMPCACertificate_subordinateCertificate(t *testing.T) {
 	resourceName := "aws_acmpca_certificate.test"
 	rootCertificateAuthorityResourceName := "aws_acmpca_certificate_authority.root"
 	subordinateCertificateAuthorityResourceName := "aws_acmpca_certificate_authority.test"
-
 	domain := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -161,14 +159,13 @@ func TestAccACMPCACertificate_subordinateCertificate(t *testing.T) {
 func TestAccACMPCACertificate_endEntityCertificate(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acmpca_certificate.test"
-
 	csrDomain := acctest.RandomDomainName()
 	csr, _ := acctest.TLSRSAX509CertificateRequestPEM(t, 4096, csrDomain)
 	domain := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -205,7 +202,6 @@ func TestAccACMPCACertificate_endEntityCertificate(t *testing.T) {
 func TestAccACMPCACertificate_Validity_endDate(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acmpca_certificate.test"
-
 	csrDomain := acctest.RandomDomainName()
 	csr, _ := acctest.TLSRSAX509CertificateRequestPEM(t, 4096, csrDomain)
 	domain := acctest.RandomDomainName()
@@ -213,7 +209,7 @@ func TestAccACMPCACertificate_Validity_endDate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -250,7 +246,6 @@ func TestAccACMPCACertificate_Validity_endDate(t *testing.T) {
 func TestAccACMPCACertificate_Validity_absolute(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_acmpca_certificate.test"
-
 	csrDomain := acctest.RandomDomainName()
 	csr, _ := acctest.TLSRSAX509CertificateRequestPEM(t, 4096, csrDomain)
 	domain := acctest.RandomDomainName()
@@ -258,7 +253,7 @@ func TestAccACMPCACertificate_Validity_absolute(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -294,63 +289,47 @@ func TestAccACMPCACertificate_Validity_absolute(t *testing.T) {
 
 func testAccCheckCertificateDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_acmpca_certificate" {
 				continue
 			}
 
-			input := &acmpca.GetCertificateInput{
-				CertificateArn:          aws.String(rs.Primary.ID),
-				CertificateAuthorityArn: aws.String(rs.Primary.Attributes["certificate_authority_arn"]),
+			_, err := tfacmpca.FindCertificateByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["certificate_authority_arn"])
+
+			if tfresource.NotFound(err) {
+				continue
 			}
 
-			output, err := conn.GetCertificateWithContext(ctx, input)
-			if tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
-				return nil
-			}
-			if tfawserr.ErrMessageContains(err, acmpca.ErrCodeInvalidStateException, "not in the correct state to have issued certificates") {
+			if errs.IsAErrorMessageContains[*types.InvalidStateException](err, "not in the correct state to have issued certificates") {
 				// This is returned when checking root certificates and the certificate has not been associated with the certificate authority
-				return nil
+				continue
 			}
+
 			if err != nil {
 				return err
 			}
 
-			if output != nil {
-				return fmt.Errorf("ACM PCA Certificate (%s) still exists", rs.Primary.ID)
-			}
+			return fmt.Errorf("ACM PCA Certificate %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckCertificateExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckCertificateExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn(ctx)
-		input := &acmpca.GetCertificateInput{
-			CertificateArn:          aws.String(rs.Primary.ID),
-			CertificateAuthorityArn: aws.String(rs.Primary.Attributes["certificate_authority_arn"]),
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAClient(ctx)
 
-		output, err := conn.GetCertificateWithContext(ctx, input)
+		_, err := tfacmpca.FindCertificateByTwoPartKey(ctx, conn, rs.Primary.ID, rs.Primary.Attributes["certificate_authority_arn"])
 
-		if err != nil {
-			return err
-		}
-
-		if output == nil || output.Certificate == nil {
-			return fmt.Errorf("ACM PCA Certificate %q does not exist", rs.Primary.ID)
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -628,22 +607,22 @@ func TestExpandValidityValue(t *testing.T) {
 		Expected int64
 	}{
 		{
-			Type:     acmpca.ValidityPeriodTypeEndDate,
+			Type:     string(types.ValidityPeriodTypeEndDate),
 			Value:    "2021-02-26T16:04:00Z",
 			Expected: 20210226160400,
 		},
 		{
-			Type:     acmpca.ValidityPeriodTypeEndDate,
+			Type:     string(types.ValidityPeriodTypeEndDate),
 			Value:    "2021-02-26T16:04:00-08:00",
 			Expected: 20210227000400,
 		},
 		{
-			Type:     acmpca.ValidityPeriodTypeAbsolute,
+			Type:     string(types.ValidityPeriodTypeAbsolute),
 			Value:    "1614385420",
 			Expected: 1614385420,
 		},
 		{
-			Type:     acmpca.ValidityPeriodTypeYears,
+			Type:     string(types.ValidityPeriodTypeYears),
 			Value:    "2",
 			Expected: 2,
 		},

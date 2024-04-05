@@ -70,7 +70,7 @@ func sweepObjects(region string) error {
 		return fmt.Errorf("error listing S3 Buckets: %w", err)
 	}
 
-	buckets := tfslices.Filter(output.Buckets, bucketRegionFilter(ctx, conn, region, client.S3UsePathStyle()))
+	buckets := tfslices.Filter(output.Buckets, bucketRegionFilter(ctx, conn, region, client.S3UsePathStyle(ctx)))
 	buckets = tfslices.Filter(buckets, bucketNameFilter)
 	sweepables := make([]sweep.Sweepable, 0)
 
@@ -96,13 +96,14 @@ func sweepObjects(region string) error {
 	}
 
 	// Directory buckets.
-	pages := s3.NewListDirectoryBucketsPaginator(conn, &s3.ListDirectoryBucketsInput{})
+	s3ExpressConn := client.S3ExpressClient(ctx)
+	pages := s3.NewListDirectoryBucketsPaginator(s3ExpressConn, &s3.ListDirectoryBucketsInput{})
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
 		if awsv2.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping S3 Objects sweep for %s: %s", region, err)
-			return nil
+			break // Allow objects in general purpose buckets to be deleted.
 		}
 
 		if err != nil {
@@ -115,7 +116,7 @@ func sweepObjects(region string) error {
 			}
 
 			sweepables = append(sweepables, directoryBucketObjectSweeper{
-				conn:   conn,
+				conn:   s3ExpressConn,
 				bucket: aws.ToString(v.Name),
 			})
 		}
@@ -138,10 +139,12 @@ type objectSweeper struct {
 
 func (os objectSweeper) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
 	// Delete everything including locked objects.
-	_, err := emptyBucket(ctx, os.conn, os.bucket, os.locked)
+	log.Printf("[INFO] Emptying S3 Bucket (%s)", os.bucket)
+	n, err := emptyBucket(ctx, os.conn, os.bucket, os.locked)
 	if err != nil {
 		return fmt.Errorf("deleting S3 Bucket (%s) objects: %w", os.bucket, err)
 	}
+	log.Printf("[INFO] Deleted %d S3 Objects from S3 Bucket (%s)", n, os.bucket)
 	return nil
 }
 
@@ -151,10 +154,12 @@ type directoryBucketObjectSweeper struct {
 }
 
 func (os directoryBucketObjectSweeper) Delete(ctx context.Context, timeout time.Duration, optFns ...tfresource.OptionsFunc) error {
-	_, err := emptyDirectoryBucket(ctx, os.conn, os.bucket)
+	log.Printf("[INFO] Emptying S3 Directory Bucket (%s)", os.bucket)
+	n, err := emptyDirectoryBucket(ctx, os.conn, os.bucket)
 	if err != nil {
 		return fmt.Errorf("deleting S3 Directory Bucket (%s) objects: %w", os.bucket, err)
 	}
+	log.Printf("[INFO] Deleted %d S3 Objects from S3 Directory Bucket (%s)", n, os.bucket)
 	return nil
 }
 
@@ -183,14 +188,14 @@ func sweepBuckets(region string) error {
 		return nil
 	}
 
-	buckets := tfslices.Filter(output.Buckets, bucketRegionFilter(ctx, conn, region, client.S3UsePathStyle()))
+	buckets := tfslices.Filter(output.Buckets, bucketRegionFilter(ctx, conn, region, client.S3UsePathStyle(ctx)))
 	buckets = tfslices.Filter(buckets, bucketNameFilter)
 	sweepables := make([]sweep.Sweepable, 0)
 
 	for _, bucket := range buckets {
 		name := aws.ToString(bucket.Name)
 
-		r := ResourceBucket()
+		r := resourceBucket()
 		d := r.Data(nil)
 		d.SetId(name)
 
@@ -231,6 +236,8 @@ func bucketNameFilter(bucket types.Bucket) bool {
 		"tf-test",
 		"tftest.applicationversion",
 		"terraform-remote-s3-test",
+		"aws-security-data-lake-", // Orphaned by aws_securitylake_data_lake.
+		"resource-test-terraform",
 	}
 	for _, prefix := range prefixes {
 		if strings.HasPrefix(name, prefix) {
@@ -276,7 +283,7 @@ func sweepDirectoryBuckets(region string) error {
 	if err != nil {
 		return fmt.Errorf("getting client: %s", err)
 	}
-	conn := client.S3Client(ctx)
+	conn := client.S3ExpressClient(ctx)
 	input := &s3.ListDirectoryBucketsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 

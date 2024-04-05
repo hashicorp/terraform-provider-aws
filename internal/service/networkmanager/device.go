@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -154,6 +155,8 @@ func ResourceDevice() *schema.Resource {
 }
 
 func resourceDeviceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
@@ -198,19 +201,21 @@ func resourceDeviceCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	output, err := conn.CreateDeviceWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Network Manager Device: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating Network Manager Device: %s", err)
 	}
 
 	d.SetId(aws.StringValue(output.Device.DeviceId))
 
 	if _, err := waitDeviceCreated(ctx, conn, globalNetworkID, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for Network Manager Device (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Network Manager Device (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceDeviceRead(ctx, d, meta)
+	return append(diags, resourceDeviceRead(ctx, d, meta)...)
 }
 
 func resourceDeviceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
@@ -219,17 +224,17 @@ func resourceDeviceRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Network Manager Device %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Network Manager Device (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Network Manager Device (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", device.DeviceArn)
 	if device.AWSLocation != nil {
 		if err := d.Set("aws_location", []interface{}{flattenAWSLocation(device.AWSLocation)}); err != nil {
-			return diag.Errorf("setting aws_location: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting aws_location: %s", err)
 		}
 	} else {
 		d.Set("aws_location", nil)
@@ -238,7 +243,7 @@ func resourceDeviceRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("global_network_id", device.GlobalNetworkId)
 	if device.Location != nil {
 		if err := d.Set("location", []interface{}{flattenLocation(device.Location)}); err != nil {
-			return diag.Errorf("setting location: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting location: %s", err)
 		}
 	} else {
 		d.Set("location", nil)
@@ -251,10 +256,12 @@ func resourceDeviceRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	setTagsOut(ctx, device.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceDeviceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -282,18 +289,20 @@ func resourceDeviceUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		_, err := conn.UpdateDeviceWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating Network Manager Device (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Network Manager Device (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitDeviceUpdated(ctx, conn, globalNetworkID, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return diag.Errorf("waiting for Network Manager Device (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for Network Manager Device (%s) update: %s", d.Id(), err)
 		}
 	}
 
-	return resourceDeviceRead(ctx, d, meta)
+	return append(diags, resourceDeviceRead(ctx, d, meta)...)
 }
 
 func resourceDeviceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
@@ -305,18 +314,18 @@ func resourceDeviceDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	})
 
 	if globalNetworkIDNotFoundError(err) || tfawserr.ErrCodeEquals(err, networkmanager.ErrCodeResourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Network Manager Device (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Network Manager Device (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitDeviceDeleted(ctx, conn, globalNetworkID, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for Network Manager Device (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Network Manager Device (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindDevice(ctx context.Context, conn *networkmanager.NetworkManager, input *networkmanager.GetDevicesInput) (*networkmanager.Device, error) {

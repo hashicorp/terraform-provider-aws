@@ -56,7 +56,7 @@ func FindAvailabilityZone(ctx context.Context, conn *ec2.EC2, input *ec2.Describ
 func FindAvailabilityZoneGroupByName(ctx context.Context, conn *ec2.EC2, name string) (*ec2.AvailabilityZone, error) {
 	input := &ec2.DescribeAvailabilityZonesInput{
 		AllAvailabilityZones: aws.Bool(true),
-		Filters: BuildAttributeFilterList(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"group-name": name,
 		}),
 	}
@@ -392,7 +392,7 @@ func FindClientVPNAuthorizationRuleByThreePartKey(ctx context.Context, conn *ec2
 	}
 	input := &ec2.DescribeClientVpnAuthorizationRulesInput{
 		ClientVpnEndpointId: aws.String(endpointID),
-		Filters:             BuildAttributeFilterList(filters),
+		Filters:             newAttributeFilterList(filters),
 	}
 
 	return FindClientVPNAuthorizationRule(ctx, conn, input)
@@ -532,7 +532,7 @@ func FindClientVPNRoutes(ctx context.Context, conn *ec2.EC2, input *ec2.Describe
 func FindClientVPNRouteByThreePartKey(ctx context.Context, conn *ec2.EC2, endpointID, targetSubnetID, destinationCIDR string) (*ec2.ClientVpnRoute, error) {
 	input := &ec2.DescribeClientVpnRoutesInput{
 		ClientVpnEndpointId: aws.String(endpointID),
-		Filters: BuildAttributeFilterList(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"destination-cidr": destinationCIDR,
 			"target-subnet":    targetSubnetID,
 		}),
@@ -669,7 +669,7 @@ func FindEBSVolumeByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.Volu
 
 func FindEBSVolumeAttachment(ctx context.Context, conn *ec2.EC2, volumeID, instanceID, deviceName string) (*ec2.VolumeAttachment, error) {
 	input := &ec2.DescribeVolumesInput{
-		Filters: BuildAttributeFilterList(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"attachment.device":      deviceName,
 			"attachment.instance-id": instanceID,
 		}),
@@ -776,7 +776,7 @@ func FindEIPByAllocationID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.
 
 func FindEIPByAssociationID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.Address, error) {
 	input := &ec2.DescribeAddressesInput{
-		Filters: BuildAttributeFilterList(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"association-id": id,
 		}),
 	}
@@ -1513,7 +1513,7 @@ func FindNetworkACLByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.Net
 
 func FindNetworkACLAssociationByID(ctx context.Context, conn *ec2.EC2, associationID string) (*ec2.NetworkAclAssociation, error) {
 	input := &ec2.DescribeNetworkAclsInput{
-		Filters: BuildAttributeFilterList(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"association.association-id": associationID,
 		}),
 	}
@@ -1535,7 +1535,7 @@ func FindNetworkACLAssociationByID(ctx context.Context, conn *ec2.EC2, associati
 
 func FindNetworkACLAssociationBySubnetID(ctx context.Context, conn *ec2.EC2, subnetID string) (*ec2.NetworkAclAssociation, error) {
 	input := &ec2.DescribeNetworkAclsInput{
-		Filters: BuildAttributeFilterList(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"association.subnet-id": subnetID,
 		}),
 	}
@@ -1557,7 +1557,7 @@ func FindNetworkACLAssociationBySubnetID(ctx context.Context, conn *ec2.EC2, sub
 
 func FindNetworkACLEntryByThreePartKey(ctx context.Context, conn *ec2.EC2, naclID string, egress bool, ruleNumber int) (*ec2.NetworkAclEntry, error) {
 	input := &ec2.DescribeNetworkAclsInput{
-		Filters: BuildAttributeFilterList(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"entry.egress":      strconv.FormatBool(egress),
 			"entry.rule-number": strconv.Itoa(ruleNumber),
 		}),
@@ -1651,7 +1651,7 @@ func FindNetworkInterfaceByID(ctx context.Context, conn *ec2.EC2, id string) (*e
 
 func FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription(ctx context.Context, conn *ec2.EC2, attachmentInstanceOwnerID, description string) ([]*ec2.NetworkInterface, error) {
 	input := &ec2.DescribeNetworkInterfacesInput{
-		Filters: BuildAttributeFilterList(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"attachment.instance-owner-id": attachmentInstanceOwnerID,
 			"description":                  description,
 		}),
@@ -1662,7 +1662,7 @@ func FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription(ctx context.
 
 func FindNetworkInterfaceByAttachmentID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.NetworkInterface, error) {
 	input := &ec2.DescribeNetworkInterfacesInput{
-		Filters: BuildAttributeFilterList(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"attachment.attachment-id": id,
 		}),
 	}
@@ -1682,7 +1682,7 @@ func FindNetworkInterfaceByAttachmentID(ctx context.Context, conn *ec2.EC2, id s
 
 func FindNetworkInterfaceAttachmentByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.NetworkInterfaceAttachment, error) {
 	input := &ec2.DescribeNetworkInterfacesInput{
-		Filters: BuildAttributeFilterList(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"attachment.attachment-id": id,
 		}),
 	}
@@ -1904,7 +1904,7 @@ func FindMainRouteTableAssociationByVPCID(ctx context.Context, conn *ec2.EC2, vp
 // Returns NotFoundError if no route table association is found.
 func FindRouteTableAssociationByID(ctx context.Context, conn *ec2.EC2, associationID string) (*ec2.RouteTableAssociation, error) {
 	input := &ec2.DescribeRouteTablesInput{
-		Filters: BuildAttributeFilterList(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"association.route-table-association-id": associationID,
 		}),
 	}
@@ -1934,7 +1934,7 @@ func FindRouteTableAssociationByID(ctx context.Context, conn *ec2.EC2, associati
 // Returns NotFoundError if no route table is found.
 func FindMainRouteTableByVPCID(ctx context.Context, conn *ec2.EC2, vpcID string) (*ec2.RouteTable, error) {
 	input := &ec2.DescribeRouteTablesInput{
-		Filters: BuildAttributeFilterList(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"association.main": "true",
 			"vpc-id":           vpcID,
 		}),
@@ -2091,7 +2091,7 @@ func FindSecurityGroupByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.
 // FindSecurityGroupByNameAndVPCID looks up a security group by name, VPC ID. Returns a retry.NotFoundError if not found.
 func FindSecurityGroupByNameAndVPCID(ctx context.Context, conn *ec2.EC2, name, vpcID string) (*ec2.SecurityGroup, error) {
 	input := &ec2.DescribeSecurityGroupsInput{
-		Filters: BuildAttributeFilterList(
+		Filters: newAttributeFilterList(
 			map[string]string{
 				"group-name": name,
 				"vpc-id":     vpcID,
@@ -2104,7 +2104,7 @@ func FindSecurityGroupByNameAndVPCID(ctx context.Context, conn *ec2.EC2, name, v
 // FindSecurityGroupByNameAndVPCIDAndOwnerID looks up a security group by name, VPC ID and owner ID. Returns a retry.NotFoundError if not found.
 func FindSecurityGroupByNameAndVPCIDAndOwnerID(ctx context.Context, conn *ec2.EC2, name, vpcID, ownerID string) (*ec2.SecurityGroup, error) {
 	input := &ec2.DescribeSecurityGroupsInput{
-		Filters: BuildAttributeFilterList(
+		Filters: newAttributeFilterList(
 			map[string]string{
 				"group-name": name,
 				"vpc-id":     vpcID,
@@ -2269,7 +2269,7 @@ func FindSecurityGroupIngressRuleByID(ctx context.Context, conn *ec2.EC2, id str
 
 func FindSecurityGroupRulesBySecurityGroupID(ctx context.Context, conn *ec2.EC2, id string) ([]*ec2.SecurityGroupRule, error) {
 	input := &ec2.DescribeSecurityGroupRulesInput{
-		Filters: BuildAttributeFilterList(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"group-id": id,
 		}),
 	}
@@ -2626,7 +2626,7 @@ func FindSubnetCIDRReservationBySubnetIDAndReservationID(ctx context.Context, co
 
 func FindSubnetIPv6CIDRBlockAssociationByID(ctx context.Context, conn *ec2.EC2, associationID string) (*ec2.SubnetIpv6CidrBlockAssociation, error) {
 	input := &ec2.DescribeSubnetsInput{
-		Filters: BuildAttributeFilterList(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"ipv6-cidr-block-association.association-id": associationID,
 		}),
 	}
@@ -2850,7 +2850,7 @@ func FindVPCDHCPOptionsAssociation(ctx context.Context, conn *ec2.EC2, vpcID str
 
 func FindVPCCIDRBlockAssociationByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.VpcCidrBlockAssociation, *ec2.Vpc, error) {
 	input := &ec2.DescribeVpcsInput{
-		Filters: BuildAttributeFilterList(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"cidr-block-association.association-id": id,
 		}),
 	}
@@ -2876,7 +2876,7 @@ func FindVPCCIDRBlockAssociationByID(ctx context.Context, conn *ec2.EC2, id stri
 
 func FindVPCIPv6CIDRBlockAssociationByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.VpcIpv6CidrBlockAssociation, *ec2.Vpc, error) {
 	input := &ec2.DescribeVpcsInput{
-		Filters: BuildAttributeFilterList(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"ipv6-cidr-block-association.association-id": id,
 		}),
 	}
@@ -2902,7 +2902,7 @@ func FindVPCIPv6CIDRBlockAssociationByID(ctx context.Context, conn *ec2.EC2, id 
 
 func FindVPCDefaultNetworkACL(ctx context.Context, conn *ec2.EC2, id string) (*ec2.NetworkAcl, error) {
 	input := &ec2.DescribeNetworkAclsInput{
-		Filters: BuildAttributeFilterList(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"default": "true",
 			"vpc-id":  id,
 		}),
@@ -2913,7 +2913,7 @@ func FindVPCDefaultNetworkACL(ctx context.Context, conn *ec2.EC2, id string) (*e
 
 func FindVPCDefaultSecurityGroup(ctx context.Context, conn *ec2.EC2, id string) (*ec2.SecurityGroup, error) {
 	input := &ec2.DescribeSecurityGroupsInput{
-		Filters: BuildAttributeFilterList(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"group-name": DefaultSecurityGroupName,
 			"vpc-id":     id,
 		}),
@@ -2924,7 +2924,7 @@ func FindVPCDefaultSecurityGroup(ctx context.Context, conn *ec2.EC2, id string) 
 
 func FindVPCMainRouteTable(ctx context.Context, conn *ec2.EC2, id string) (*ec2.RouteTable, error) {
 	input := &ec2.DescribeRouteTablesInput{
-		Filters: BuildAttributeFilterList(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"association.main": "true",
 			"vpc-id":           id,
 		}),
@@ -3131,7 +3131,7 @@ func FindVPCEndpointServiceConfigurations(ctx context.Context, conn *ec2.EC2, in
 
 func FindVPCEndpointServiceConfigurationByServiceName(ctx context.Context, conn *ec2.EC2, name string) (*ec2.ServiceConfiguration, error) {
 	input := &ec2.DescribeVpcEndpointServiceConfigurationsInput{
-		Filters: BuildAttributeFilterList(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"service-name": name,
 		}),
 	}
@@ -3629,7 +3629,7 @@ func FindVPNConnection(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeVp
 
 func FindVPNConnectionRouteByVPNConnectionIDAndCIDR(ctx context.Context, conn *ec2.EC2, vpnConnectionID, cidrBlock string) (*ec2.VpnStaticRoute, error) {
 	input := &ec2.DescribeVpnConnectionsInput{
-		Filters: BuildAttributeFilterList(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"route.destination-cidr-block": cidrBlock,
 			"vpn-connection-id":            vpnConnectionID,
 		}),
@@ -4310,7 +4310,7 @@ func FindTransitGatewayMulticastDomainAssociations(ctx context.Context, conn *ec
 
 func FindTransitGatewayMulticastDomainAssociationByThreePartKey(ctx context.Context, conn *ec2.EC2, multicastDomainID, attachmentID, subnetID string) (*ec2.TransitGatewayMulticastDomainAssociation, error) {
 	input := &ec2.GetTransitGatewayMulticastDomainAssociationsInput{
-		Filters: BuildAttributeFilterList(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"subnet-id":                     subnetID,
 			"transit-gateway-attachment-id": attachmentID,
 		}),
@@ -4373,7 +4373,7 @@ func FindTransitGatewayMulticastGroups(ctx context.Context, conn *ec2.EC2, input
 
 func FindTransitGatewayMulticastGroupMemberByThreePartKey(ctx context.Context, conn *ec2.EC2, multicastDomainID, groupIPAddress, eniID string) (*ec2.TransitGatewayMulticastGroup, error) {
 	input := &ec2.SearchTransitGatewayMulticastGroupsInput{
-		Filters: BuildAttributeFilterList(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"group-ip-address": groupIPAddress,
 			"is-group-member":  "true",
 			"is-group-source":  "false",
@@ -4409,7 +4409,7 @@ func FindTransitGatewayMulticastGroupMemberByThreePartKey(ctx context.Context, c
 
 func FindTransitGatewayMulticastGroupSourceByThreePartKey(ctx context.Context, conn *ec2.EC2, multicastDomainID, groupIPAddress, eniID string) (*ec2.TransitGatewayMulticastGroup, error) {
 	input := &ec2.SearchTransitGatewayMulticastGroupsInput{
-		Filters: BuildAttributeFilterList(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"group-ip-address": groupIPAddress,
 			"is-group-member":  "false",
 			"is-group-source":  "true",
@@ -4575,7 +4575,7 @@ func FindTransitGatewayPrefixListReferences(ctx context.Context, conn *ec2.EC2, 
 
 func FindTransitGatewayPrefixListReferenceByTwoPartKey(ctx context.Context, conn *ec2.EC2, transitGatewayRouteTableID, prefixListID string) (*ec2.TransitGatewayPrefixListReference, error) {
 	input := &ec2.GetTransitGatewayPrefixListReferencesInput{
-		Filters: BuildAttributeFilterList(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"prefix-list-id": prefixListID,
 		}),
 		TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
@@ -4599,7 +4599,7 @@ func FindTransitGatewayPrefixListReferenceByTwoPartKey(ctx context.Context, conn
 
 func FindTransitGatewayStaticRoute(ctx context.Context, conn *ec2.EC2, transitGatewayRouteTableID, destination string) (*ec2.TransitGatewayRoute, error) {
 	input := &ec2.SearchTransitGatewayRoutesInput{
-		Filters: BuildAttributeFilterList(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"type":                     ec2.TransitGatewayRouteTypeStatic,
 			"route-search.exact-match": destination,
 		}),
@@ -4804,7 +4804,7 @@ func FindTransitGatewayRouteTableByID(ctx context.Context, conn *ec2.EC2, id str
 
 func FindTransitGatewayPolicyTableAssociationByTwoPartKey(ctx context.Context, conn *ec2.EC2, transitGatewayPolicyTableID, transitGatewayAttachmentID string) (*ec2.TransitGatewayPolicyTableAssociation, error) {
 	input := &ec2.GetTransitGatewayPolicyTableAssociationsInput{
-		Filters: BuildAttributeFilterList(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"transit-gateway-attachment-id": transitGatewayAttachmentID,
 		}),
 		TransitGatewayPolicyTableId: aws.String(transitGatewayPolicyTableID),
@@ -4835,7 +4835,7 @@ func FindTransitGatewayPolicyTableAssociationByTwoPartKey(ctx context.Context, c
 
 func FindTransitGatewayRouteTableAssociationByTwoPartKey(ctx context.Context, conn *ec2.EC2, transitGatewayRouteTableID, transitGatewayAttachmentID string) (*ec2.TransitGatewayRouteTableAssociation, error) {
 	input := &ec2.GetTransitGatewayRouteTableAssociationsInput{
-		Filters: BuildAttributeFilterList(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"transit-gateway-attachment-id": transitGatewayAttachmentID,
 		}),
 		TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
@@ -4964,7 +4964,7 @@ func FindTransitGatewayRouteTableAssociations(ctx context.Context, conn *ec2.EC2
 
 func FindTransitGatewayRouteTablePropagationByTwoPartKey(ctx context.Context, conn *ec2.EC2, transitGatewayRouteTableID string, transitGatewayAttachmentID string) (*ec2.TransitGatewayRouteTablePropagation, error) {
 	input := &ec2.GetTransitGatewayRouteTablePropagationsInput{
-		Filters: BuildAttributeFilterList(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"transit-gateway-attachment-id": transitGatewayAttachmentID,
 		}),
 		TransitGatewayRouteTableId: aws.String(transitGatewayRouteTableID),
@@ -5766,7 +5766,7 @@ func FindIPAMPoolCIDRs(ctx context.Context, conn *ec2.EC2, input *ec2.GetIpamPoo
 
 func FindIPAMPoolCIDRByTwoPartKey(ctx context.Context, conn *ec2.EC2, cidrBlock, poolID string) (*ec2.IpamPoolCidr, error) {
 	input := &ec2.GetIpamPoolCidrsInput{
-		Filters: BuildAttributeFilterList(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"cidr": cidrBlock,
 		}),
 		IpamPoolId: aws.String(poolID),
@@ -5797,7 +5797,7 @@ func FindIPAMPoolCIDRByTwoPartKey(ctx context.Context, conn *ec2.EC2, cidrBlock,
 
 func FindIPAMPoolCIDRByPoolCIDRId(ctx context.Context, conn *ec2.EC2, poolCidrId, poolID string) (*ec2.IpamPoolCidr, error) {
 	input := &ec2.GetIpamPoolCidrsInput{
-		Filters: BuildAttributeFilterList(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"ipam-pool-cidr-id": poolCidrId,
 		}),
 		IpamPoolId: aws.String(poolID),
@@ -6585,7 +6585,7 @@ func FindPrefixLists(ctx context.Context, conn *ec2.EC2, input *ec2.DescribePref
 
 func FindPrefixListByName(ctx context.Context, conn *ec2.EC2, name string) (*ec2.PrefixList, error) {
 	input := &ec2.DescribePrefixListsInput{
-		Filters: BuildAttributeFilterList(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"prefix-list-name": name,
 		}),
 	}
@@ -6595,7 +6595,7 @@ func FindPrefixListByName(ctx context.Context, conn *ec2.EC2, name string) (*ec2
 
 func FindVPCEndpointConnectionByServiceIDAndVPCEndpointID(ctx context.Context, conn *ec2.EC2, serviceID, vpcEndpointID string) (*ec2.VpcEndpointConnection, error) {
 	input := &ec2.DescribeVpcEndpointConnectionsInput{
-		Filters: BuildAttributeFilterList(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"service-id": serviceID,
 			// "InvalidFilter: The filter vpc-endpoint-id  is invalid"
 			// "vpc-endpoint-id ": vpcEndpointID,
@@ -6864,7 +6864,7 @@ func FindFindSnapshotTierStatus(ctx context.Context, conn *ec2.EC2, input *ec2.D
 
 func FindSnapshotTierStatusBySnapshotID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.SnapshotTierStatus, error) {
 	input := &ec2.DescribeSnapshotTierStatusInput{
-		Filters: BuildAttributeFilterList(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"snapshot-id": id,
 		}),
 	}
@@ -7029,6 +7029,30 @@ func FindVerifiedAccessGroupPolicyByID(ctx context.Context, conn *ec2_sdkv2.Clie
 	output, err := conn.GetVerifiedAccessGroupPolicy(ctx, input)
 
 	if tfawserr_sdkv2.ErrCodeEquals(err, errCodeInvalidVerifiedAccessGroupIdNotFound) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
+}
+
+func FindVerifiedAccessEndpointPolicyByID(ctx context.Context, conn *ec2_sdkv2.Client, id string) (*ec2_sdkv2.GetVerifiedAccessEndpointPolicyOutput, error) {
+	input := &ec2_sdkv2.GetVerifiedAccessEndpointPolicyInput{
+		VerifiedAccessEndpointId: &id,
+	}
+	output, err := conn.GetVerifiedAccessEndpointPolicy(ctx, input)
+
+	if tfawserr_sdkv2.ErrCodeEquals(err, errCodeInvalidVerifiedAccessEndpointIdNotFound) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -7222,7 +7246,7 @@ func FindVerifiedAccessInstanceTrustProviderAttachmentExists(ctx context.Context
 	}
 
 	return &retry.NotFoundError{
-		LastError: fmt.Errorf("Verified Access Instance (%s) Trust Provider (%s) Association not found", vaiID, vatpID),
+		LastError: fmt.Errorf("Verified Access Instance (%s) Trust Provider (%s) Attachment not found", vaiID, vatpID),
 	}
 }
 

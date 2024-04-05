@@ -77,6 +77,8 @@ func ResourceDisk() *schema.Resource {
 }
 
 func resourceDiskCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	id := d.Get("name").(string)
@@ -90,7 +92,7 @@ func resourceDiskCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	out, err := conn.CreateDisk(ctx, &in)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, string(types.OperationTypeCreateDisk), ResDisk, id, err)
+		return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeCreateDisk), ResDisk, id, err)
 	}
 
 	diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeCreateDisk, ResDisk, id)
@@ -101,10 +103,12 @@ func resourceDiskCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.SetId(id)
 
-	return resourceDiskRead(ctx, d, meta)
+	return append(diags, resourceDiskRead(ctx, d, meta)...)
 }
 
 func resourceDiskRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	out, err := FindDiskById(ctx, conn, d.Id())
@@ -112,11 +116,11 @@ func resourceDiskRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		create.LogNotFoundRemoveState(names.Lightsail, create.ErrActionReading, ResDisk, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionReading, ResDisk, d.Id(), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionReading, ResDisk, d.Id(), err)
 	}
 
 	d.Set("arn", out.Arn)
@@ -128,7 +132,7 @@ func resourceDiskRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 	setTagsOut(ctx, out.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceDiskUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -137,6 +141,8 @@ func resourceDiskUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 }
 
 func resourceDiskDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	out, err := conn.DeleteDisk(ctx, &lightsail.DeleteDiskInput{
@@ -144,11 +150,11 @@ func resourceDiskDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	})
 
 	if IsANotFoundError(err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, string(types.OperationTypeDeleteDisk), ResDisk, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeDeleteDisk), ResDisk, d.Get("name").(string), err)
 	}
 
 	diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeDeleteDisk, ResDisk, d.Id())
@@ -157,7 +163,7 @@ func resourceDiskDelete(ctx context.Context, d *schema.ResourceData, meta interf
 		return diag
 	}
 
-	return nil
+	return diags
 }
 
 func FindDiskById(ctx context.Context, conn *lightsail.Client, id string) (*types.Disk, error) {

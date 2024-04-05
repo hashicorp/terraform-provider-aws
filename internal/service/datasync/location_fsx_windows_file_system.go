@@ -28,7 +28,7 @@ import (
 
 // @SDKResource("aws_datasync_location_fsx_windows_file_system", name="Location FSx for Windows File Server File System")
 // @Tags(identifierAttribute="id")
-func ResourceLocationFSxWindowsFileSystem() *schema.Resource {
+func resourceLocationFSxWindowsFileSystem() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLocationFSxWindowsFileSystemCreate,
 		ReadWithoutTimeout:   resourceLocationFSxWindowsFileSystemRead,
@@ -151,7 +151,7 @@ func resourceLocationFSxWindowsFileSystemRead(ctx context.Context, d *schema.Res
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).DataSyncConn(ctx)
 
-	output, err := FindLocationFSxWindowsByARN(ctx, conn, d.Id())
+	output, err := findLocationFSxWindowsByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] DataSync Location FSx for Windows File Server File System (%s) not found, removing from state", d.Id())
@@ -209,7 +209,7 @@ func resourceLocationFSxWindowsFileSystemDelete(ctx context.Context, d *schema.R
 	return diags
 }
 
-func FindLocationFSxWindowsByARN(ctx context.Context, conn *datasync.DataSync, arn string) (*datasync.DescribeLocationFsxWindowsOutput, error) {
+func findLocationFSxWindowsByARN(ctx context.Context, conn *datasync.DataSync, arn string) (*datasync.DescribeLocationFsxWindowsOutput, error) {
 	input := &datasync.DescribeLocationFsxWindowsInput{
 		LocationArn: aws.String(arn),
 	}

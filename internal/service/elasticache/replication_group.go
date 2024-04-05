@@ -862,7 +862,13 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 		}
 
 		if requestUpdate {
-			_, err := conn.ModifyReplicationGroupWithContext(ctx, input)
+			// tagging may cause this resource to not yet be available, so wait for it to be available
+			_, err := WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Replication Group (%s) to update: %s", d.Id(), err)
+			}
+
+			_, err = conn.ModifyReplicationGroupWithContext(ctx, input)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating ElastiCache Replication Group (%s): %s", d.Id(), err)
 			}
@@ -881,7 +887,13 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 				AuthToken:               aws.String(d.Get("auth_token").(string)),
 			}
 
-			_, err := conn.ModifyReplicationGroupWithContext(ctx, params)
+			// tagging may cause this resource to not yet be available, so wait for it to be available
+			_, err := WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Replication Group (%s) to update: %s", d.Id(), err)
+			}
+
+			_, err = conn.ModifyReplicationGroupWithContext(ctx, params)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "changing auth_token for ElastiCache Replication Group (%s): %s", d.Id(), err)
 			}

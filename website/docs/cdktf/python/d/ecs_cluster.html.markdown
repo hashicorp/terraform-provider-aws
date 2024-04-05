@@ -51,4 +51,4 @@ This data source exports the following attributes in addition to the arguments a
 * `setting` - Settings associated with the ECS Cluster
 * `tags` - Key-value map of resource tags
 
-<!-- cache-key: cdktf-0.19.0 input-34810e42d3b55e16f7f6d3afebb0129a5abba1001be099dab6e734c0ce5c7341 -->
+<!-- cache-key: cdktf-0.20.1 input-34810e42d3b55e16f7f6d3afebb0129a5abba1001be099dab6e734c0ce5c7341 -->

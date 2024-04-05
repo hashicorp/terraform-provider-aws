@@ -30,7 +30,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfelb "github.com/hashicorp/terraform-provider-aws/internal/service/elb"
-	"github.com/hashicorp/terraform-provider-aws/internal/slices"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -250,6 +250,12 @@ func ResourceGroup() *schema.Resource {
 										Optional:     true,
 										ValidateFunc: nullable.ValidateTypeStringNullableIntAtLeast(0),
 									},
+									"max_healthy_percentage": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										Default:      100,
+										ValidateFunc: validation.IntBetween(100, 200),
+									},
 									"min_healthy_percentage": {
 										Type:         schema.TypeInt,
 										Optional:     true,
@@ -321,6 +327,7 @@ func ResourceGroup() *schema.Resource {
 						"version": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							Computed:     true,
 							ValidateFunc: validation.StringLenBetween(1, 255),
 						},
 					},
@@ -438,7 +445,7 @@ func ResourceGroup() *schema.Resource {
 												"version": {
 													Type:     schema.TypeString,
 													Optional: true,
-													Default:  "$Default",
+													Computed: true,
 												},
 											},
 										},
@@ -742,7 +749,7 @@ func ResourceGroup() *schema.Resource {
 															"version": {
 																Type:     schema.TypeString,
 																Optional: true,
-																Default:  "$Default",
+																Computed: true,
 															},
 														},
 													},
@@ -1073,7 +1080,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("launch_template"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		createInput.LaunchTemplate = expandLaunchTemplateSpecification(v.([]interface{})[0].(map[string]interface{}))
+		createInput.LaunchTemplate = expandLaunchTemplateSpecification(v.([]interface{})[0].(map[string]interface{}), false)
 	}
 
 	if v, ok := d.GetOk("load_balancers"); ok && v.(*schema.Set).Len() > 0 {
@@ -1085,7 +1092,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	if v, ok := d.GetOk("mixed_instances_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		createInput.MixedInstancesPolicy = expandMixedInstancesPolicy(v.([]interface{})[0].(map[string]interface{}))
+		createInput.MixedInstancesPolicy = expandMixedInstancesPolicy(v.([]interface{})[0].(map[string]interface{}), true)
 	}
 
 	if v, ok := d.GetOk("placement_group"); ok {
@@ -1121,7 +1128,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 			return conn.CreateAutoScalingGroupWithContext(ctx, createInput)
 		},
 		// ValidationError: You must use a valid fully-formed launch template. Value (tf-acc-test-6643732652421074386) for parameter iamInstanceProfile.name is invalid. Invalid IAM Instance Profile name
-		ErrCodeValidationError, "Invalid IAM Instance Profile")
+		errCodeValidationError, "Invalid IAM Instance Profile")
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Auto Scaling Group (%s): %s", asgName, err)
@@ -1135,7 +1142,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 				func() (interface{}, error) {
 					return conn.PutLifecycleHookWithContext(ctx, input)
 				},
-				ErrCodeValidationError, "Unable to publish test message to notification target")
+				errCodeValidationError, "Unable to publish test message to notification target")
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "creating Auto Scaling Group (%s) Lifecycle Hook: %s", d.Id(), err)
@@ -1397,7 +1404,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		if d.HasChange("launch_template") {
 			if v, ok := d.GetOk("launch_template"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.LaunchTemplate = expandLaunchTemplateSpecification(v.([]interface{})[0].(map[string]interface{}))
+				input.LaunchTemplate = expandLaunchTemplateSpecification(v.([]interface{})[0].(map[string]interface{}), false)
 			}
 			shouldRefreshInstances = true
 		}
@@ -1417,7 +1424,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		if d.HasChange("mixed_instances_policy") {
 			if v, ok := d.GetOk("mixed_instances_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				input.MixedInstancesPolicy = expandMixedInstancesPolicy(v.([]interface{})[0].(map[string]interface{}))
+				input.MixedInstancesPolicy = expandMixedInstancesPolicy(v.([]interface{})[0].(map[string]interface{}), true)
 			}
 			shouldRefreshInstances = true
 		}
@@ -1476,7 +1483,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		// API only supports adding or removing 10 at a time.
 		batchSize := 10
-		for _, chunk := range slices.Chunks(expandTrafficSourceIdentifiers(os.Difference(ns).List()), batchSize) {
+		for _, chunk := range tfslices.Chunks(expandTrafficSourceIdentifiers(os.Difference(ns).List()), batchSize) {
 			_, err := conn.DetachTrafficSourcesWithContext(ctx, &autoscaling.DetachTrafficSourcesInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				TrafficSources:       chunk,
@@ -1491,7 +1498,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			}
 		}
 
-		for _, chunk := range slices.Chunks(expandTrafficSourceIdentifiers(ns.Difference(os).List()), batchSize) {
+		for _, chunk := range tfslices.Chunks(expandTrafficSourceIdentifiers(ns.Difference(os).List()), batchSize) {
 			_, err := conn.AttachTrafficSourcesWithContext(ctx, &autoscaling.AttachTrafficSourcesInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				TrafficSources:       chunk,
@@ -1520,7 +1527,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		// API only supports adding or removing 10 at a time.
 		batchSize := 10
-		for _, chunk := range slices.Chunks(flex.ExpandStringSet(os.Difference(ns)), batchSize) {
+		for _, chunk := range tfslices.Chunks(flex.ExpandStringSet(os.Difference(ns)), batchSize) {
 			_, err := conn.DetachLoadBalancersWithContext(ctx, &autoscaling.DetachLoadBalancersInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				LoadBalancerNames:    chunk,
@@ -1535,7 +1542,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			}
 		}
 
-		for _, chunk := range slices.Chunks(flex.ExpandStringSet(ns.Difference(os)), batchSize) {
+		for _, chunk := range tfslices.Chunks(flex.ExpandStringSet(ns.Difference(os)), batchSize) {
 			_, err := conn.AttachLoadBalancersWithContext(ctx, &autoscaling.AttachLoadBalancersInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				LoadBalancerNames:    chunk,
@@ -1564,7 +1571,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 		// API only supports adding or removing 10 at a time.
 		batchSize := 10
-		for _, chunk := range slices.Chunks(flex.ExpandStringSet(os.Difference(ns)), batchSize) {
+		for _, chunk := range tfslices.Chunks(flex.ExpandStringSet(os.Difference(ns)), batchSize) {
 			_, err := conn.DetachLoadBalancerTargetGroupsWithContext(ctx, &autoscaling.DetachLoadBalancerTargetGroupsInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				TargetGroupARNs:      chunk,
@@ -1579,7 +1586,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			}
 		}
 
-		for _, chunk := range slices.Chunks(flex.ExpandStringSet(ns.Difference(os)), batchSize) {
+		for _, chunk := range tfslices.Chunks(flex.ExpandStringSet(ns.Difference(os)), batchSize) {
 			_, err := conn.AttachLoadBalancerTargetGroupsWithContext(ctx, &autoscaling.AttachLoadBalancerTargetGroupsInput{
 				AutoScalingGroupName: aws.String(d.Id()),
 				TargetGroupARNs:      chunk,
@@ -1616,13 +1623,13 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			var launchTemplate *autoscaling.LaunchTemplateSpecification
 
 			if v, ok := d.GetOk("launch_template"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				launchTemplate = expandLaunchTemplateSpecification(v.([]interface{})[0].(map[string]interface{}))
+				launchTemplate = expandLaunchTemplateSpecification(v.([]interface{})[0].(map[string]interface{}), false)
 			}
 
 			var mixedInstancesPolicy *autoscaling.MixedInstancesPolicy
 
 			if v, ok := d.GetOk("mixed_instances_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-				mixedInstancesPolicy = expandMixedInstancesPolicy(v.([]interface{})[0].(map[string]interface{}))
+				mixedInstancesPolicy = expandMixedInstancesPolicy(v.([]interface{})[0].(map[string]interface{}), true)
 			}
 
 			if err := startInstanceRefresh(ctx, conn, expandStartInstanceRefreshInput(d.Id(), tfMap, launchTemplate, mixedInstancesPolicy)); err != nil {
@@ -1803,7 +1810,7 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		},
 		autoscaling.ErrCodeResourceInUseFault, autoscaling.ErrCodeScalingActivityInProgressFault)
 
-	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
+	if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
 		return diags
 	}
 
@@ -1843,27 +1850,31 @@ func drainGroup(ctx context.Context, conn *autoscaling.AutoScaling, name string,
 	// desired capacity is set to 0. There is also the possibility that this ASG
 	// no longer applies scale-in protection to new instances, but there's still
 	// old ones that have it.
-
-	const chunkSize = 50 // API limit.
-	for i, n := 0, len(instances); i < n; i += chunkSize {
-		j := i + chunkSize
-		if j > n {
-			j = n
+	//
+	// Filter by ProtectedFromScaleIn to avoid unnecessary API calls (#36584)
+	var instanceIDs []string
+	for _, instance := range instances {
+		if aws.BoolValue(instance.ProtectedFromScaleIn) {
+			instanceIDs = append(instanceIDs, aws.StringValue(instance.InstanceId))
 		}
-
-		var instanceIDs []string
-
-		for k := i; k < j; k++ {
-			instanceIDs = append(instanceIDs, aws.StringValue(instances[k].InstanceId))
-		}
-
+	}
+	const batchSize = 50 // API limit.
+	for _, chunk := range tfslices.Chunks(instanceIDs, batchSize) {
 		input := &autoscaling.SetInstanceProtectionInput{
 			AutoScalingGroupName: aws.String(name),
-			InstanceIds:          aws.StringSlice(instanceIDs),
+			InstanceIds:          aws.StringSlice(chunk),
 			ProtectedFromScaleIn: aws.Bool(false),
 		}
 
-		if _, err := conn.SetInstanceProtectionWithContext(ctx, input); err != nil {
+		_, err := conn.SetInstanceProtectionWithContext(ctx, input)
+
+		// Ignore ValidationError when instance is already fully terminated
+		// and is not a part of Auto Scaling Group anymore.
+		if tfawserr.ErrMessageContains(err, errCodeValidationError, "not part of Auto Scaling group") {
+			continue
+		}
+
+		if err != nil {
 			return fmt.Errorf("disabling Auto Scaling Group (%s) scale-in protections: %w", name, err)
 		}
 	}
@@ -1892,7 +1903,7 @@ func deleteWarmPool(ctx context.Context, conn *autoscaling.AutoScaling, name str
 		},
 		autoscaling.ErrCodeResourceInUseFault, autoscaling.ErrCodeScalingActivityInProgressFault)
 
-	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "No warm pool found") {
+	if tfawserr.ErrMessageContains(err, errCodeValidationError, "No warm pool found") {
 		return nil
 	}
 
@@ -2100,7 +2111,7 @@ func FindInstanceRefreshes(ctx context.Context, conn *autoscaling.AutoScaling, i
 		return !lastPage
 	})
 
-	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
+	if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -2136,7 +2147,7 @@ func findLoadBalancerStates(ctx context.Context, conn *autoscaling.AutoScaling, 
 		return !lastPage
 	})
 
-	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
+	if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -2172,7 +2183,7 @@ func findLoadBalancerTargetGroupStates(ctx context.Context, conn *autoscaling.Au
 		return !lastPage
 	})
 
-	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
+	if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -2207,7 +2218,7 @@ func findScalingActivities(ctx context.Context, conn *autoscaling.AutoScaling, i
 		return !lastPage
 	})
 
-	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
+	if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -2248,7 +2259,7 @@ func findTrafficSourceStates(ctx context.Context, conn *autoscaling.AutoScaling,
 		return !lastPage
 	})
 
-	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
+	if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -2293,7 +2304,7 @@ func findWarmPool(ctx context.Context, conn *autoscaling.AutoScaling, name strin
 		return !lastPage
 	})
 
-	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
+	if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -2796,7 +2807,7 @@ func expandInstancesDistribution(tfMap map[string]interface{}) *autoscaling.Inst
 	return apiObject
 }
 
-func expandLaunchTemplate(tfMap map[string]interface{}) *autoscaling.LaunchTemplate {
+func expandLaunchTemplate(tfMap map[string]interface{}, hasDefaultVersion bool) *autoscaling.LaunchTemplate {
 	if tfMap == nil {
 		return nil
 	}
@@ -2804,17 +2815,17 @@ func expandLaunchTemplate(tfMap map[string]interface{}) *autoscaling.LaunchTempl
 	apiObject := &autoscaling.LaunchTemplate{}
 
 	if v, ok := tfMap["launch_template_specification"].([]interface{}); ok && len(v) > 0 {
-		apiObject.LaunchTemplateSpecification = expandLaunchTemplateSpecificationForMixedInstancesPolicy(v[0].(map[string]interface{}))
+		apiObject.LaunchTemplateSpecification = expandLaunchTemplateSpecificationForMixedInstancesPolicy(v[0].(map[string]interface{}), hasDefaultVersion)
 	}
 
 	if v, ok := tfMap["override"].([]interface{}); ok && len(v) > 0 {
-		apiObject.Overrides = expandLaunchTemplateOverrideses(v)
+		apiObject.Overrides = expandLaunchTemplateOverrideses(v, hasDefaultVersion)
 	}
 
 	return apiObject
 }
 
-func expandLaunchTemplateOverrides(tfMap map[string]interface{}) *autoscaling.LaunchTemplateOverrides {
+func expandLaunchTemplateOverrides(tfMap map[string]interface{}, hasDefaultVersion bool) *autoscaling.LaunchTemplateOverrides {
 	if tfMap == nil {
 		return nil
 	}
@@ -2826,7 +2837,7 @@ func expandLaunchTemplateOverrides(tfMap map[string]interface{}) *autoscaling.La
 	}
 
 	if v, ok := tfMap["launch_template_specification"].([]interface{}); ok && len(v) > 0 {
-		apiObject.LaunchTemplateSpecification = expandLaunchTemplateSpecificationForMixedInstancesPolicy(v[0].(map[string]interface{}))
+		apiObject.LaunchTemplateSpecification = expandLaunchTemplateSpecificationForMixedInstancesPolicy(v[0].(map[string]interface{}), hasDefaultVersion)
 	}
 
 	if v, ok := tfMap["instance_type"].(string); ok && v != "" {
@@ -2840,7 +2851,7 @@ func expandLaunchTemplateOverrides(tfMap map[string]interface{}) *autoscaling.La
 	return apiObject
 }
 
-func expandLaunchTemplateOverrideses(tfList []interface{}) []*autoscaling.LaunchTemplateOverrides {
+func expandLaunchTemplateOverrideses(tfList []interface{}, hasDefaultVersion bool) []*autoscaling.LaunchTemplateOverrides {
 	if len(tfList) == 0 {
 		return nil
 	}
@@ -2854,7 +2865,7 @@ func expandLaunchTemplateOverrideses(tfList []interface{}) []*autoscaling.Launch
 			continue
 		}
 
-		apiObject := expandLaunchTemplateOverrides(tfMap)
+		apiObject := expandLaunchTemplateOverrides(tfMap, hasDefaultVersion)
 
 		if apiObject == nil {
 			continue
@@ -3148,7 +3159,7 @@ func expandVCPUCountRequest(tfMap map[string]interface{}) *autoscaling.VCpuCount
 	return apiObject
 }
 
-func expandLaunchTemplateSpecificationForMixedInstancesPolicy(tfMap map[string]interface{}) *autoscaling.LaunchTemplateSpecification {
+func expandLaunchTemplateSpecificationForMixedInstancesPolicy(tfMap map[string]interface{}, hasDefaultVersion bool) *autoscaling.LaunchTemplateSpecification {
 	if tfMap == nil {
 		return nil
 	}
@@ -3164,6 +3175,10 @@ func expandLaunchTemplateSpecificationForMixedInstancesPolicy(tfMap map[string]i
 		apiObject.LaunchTemplateName = aws.String(v.(string))
 	}
 
+	if hasDefaultVersion {
+		apiObject.Version = aws.String("$Default")
+	}
+
 	if v, ok := tfMap["version"].(string); ok && v != "" {
 		apiObject.Version = aws.String(v)
 	}
@@ -3171,7 +3186,7 @@ func expandLaunchTemplateSpecificationForMixedInstancesPolicy(tfMap map[string]i
 	return apiObject
 }
 
-func expandLaunchTemplateSpecification(tfMap map[string]interface{}) *autoscaling.LaunchTemplateSpecification {
+func expandLaunchTemplateSpecification(tfMap map[string]interface{}, hasDefaultVersion bool) *autoscaling.LaunchTemplateSpecification {
 	if tfMap == nil {
 		return nil
 	}
@@ -3186,6 +3201,10 @@ func expandLaunchTemplateSpecification(tfMap map[string]interface{}) *autoscalin
 		apiObject.LaunchTemplateName = aws.String(v.(string))
 	}
 
+	if hasDefaultVersion {
+		apiObject.Version = aws.String("$Default")
+	}
+
 	if v, ok := tfMap["version"].(string); ok && v != "" {
 		apiObject.Version = aws.String(v)
 	}
@@ -3193,7 +3212,7 @@ func expandLaunchTemplateSpecification(tfMap map[string]interface{}) *autoscalin
 	return apiObject
 }
 
-func expandMixedInstancesPolicy(tfMap map[string]interface{}) *autoscaling.MixedInstancesPolicy {
+func expandMixedInstancesPolicy(tfMap map[string]interface{}, hasDefaultVersion bool) *autoscaling.MixedInstancesPolicy {
 	if tfMap == nil {
 		return nil
 	}
@@ -3205,7 +3224,7 @@ func expandMixedInstancesPolicy(tfMap map[string]interface{}) *autoscaling.Mixed
 	}
 
 	if v, ok := tfMap["launch_template"].([]interface{}); ok && len(v) > 0 {
-		apiObject.LaunchTemplate = expandLaunchTemplate(v[0].(map[string]interface{}))
+		apiObject.LaunchTemplate = expandLaunchTemplate(v[0].(map[string]interface{}), hasDefaultVersion)
 	}
 
 	return apiObject
@@ -3372,6 +3391,10 @@ func expandRefreshPreferences(tfMap map[string]interface{}) *autoscaling.Refresh
 		if v, null, _ := nullable.Int(v).Value(); !null {
 			apiObject.InstanceWarmup = aws.Int64(v)
 		}
+	}
+
+	if v, ok := tfMap["max_healthy_percentage"].(int); ok {
+		apiObject.MaxHealthyPercentage = aws.Int64(int64(v))
 	}
 
 	if v, ok := tfMap["min_healthy_percentage"].(int); ok {

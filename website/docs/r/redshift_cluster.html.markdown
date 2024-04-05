@@ -67,6 +67,7 @@ This resource supports the following arguments:
   Password must contain at least 8 characters and contain at least one uppercase letter, one lowercase letter, and one number.
 * `master_password_secret_kms_key_id` - (Optional) ID of the KMS key used to encrypt the cluster admin credentials secret.
 * `master_username` - (Required unless a `snapshot_identifier` is provided) Username for the master DB user.
+* `multi_az` - (Optional) Specifies if the Redshift cluster is multi-AZ.
 * `vpc_security_group_ids` - (Optional) A list of Virtual Private Cloud (VPC) security groups to be associated with the cluster.
 * `cluster_subnet_group_name` - (Optional) The name of a cluster subnet group to be associated with this cluster. If this parameter is not provided the resulting cluster will be deployed outside virtual private cloud (VPC).
 * `availability_zone` - (Optional) The EC2 Availability Zone (AZ) in which you want Amazon Redshift to provision the cluster. For example, if you have several EC2 instances running in a specific Availability Zone, then you might want the cluster to be provisioned in the same zone in order to decrease network latency. Can only be changed if `availability_zone_relocation_enabled` is `true`.

@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_opensearchserverless_collection: Add `standby_replicas` attribute
+```
+
+```release-note:enhancement
+data-source/aws_opensearchserverless_collection: Add `standby_replicas` attribute
+```

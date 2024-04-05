@@ -81,7 +81,7 @@ func ResourceONTAPFileSystem() *schema.Resource {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Computed:     true,
-							ValidateFunc: validation.IntBetween(0, 160000),
+							ValidateFunc: validation.IntBetween(0, 2400000),
 						},
 						"mode": {
 							Type:         schema.TypeString,
@@ -151,6 +151,13 @@ func ResourceONTAPFileSystem() *schema.Resource {
 				Sensitive:    true,
 				ValidateFunc: validation.StringLenBetween(8, 50),
 			},
+			"ha_pairs": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IntBetween(1, 6),
+			},
 			"kms_key_id": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -212,8 +219,16 @@ func ResourceONTAPFileSystem() *schema.Resource {
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"throughput_capacity": {
 				Type:         schema.TypeInt,
-				Required:     true,
+				Optional:     true,
 				ValidateFunc: validation.IntInSlice([]int{128, 256, 512, 1024, 2048, 4096}),
+				ExactlyOneOf: []string{"throughput_capacity", "throughput_capacity_per_ha_pair"},
+			},
+			"throughput_capacity_per_ha_pair": {
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IntInSlice([]int{3072, 6144}),
+				ExactlyOneOf: []string{"throughput_capacity", "throughput_capacity_per_ha_pair"},
 			},
 			"vpc_id": {
 				Type:     schema.TypeString,
@@ -245,7 +260,6 @@ func resourceONTAPFileSystemCreate(ctx context.Context, d *schema.ResourceData, 
 			AutomaticBackupRetentionDays: aws.Int64(int64(d.Get("automatic_backup_retention_days").(int))),
 			DeploymentType:               aws.String(d.Get("deployment_type").(string)),
 			PreferredSubnetId:            aws.String(d.Get("preferred_subnet_id").(string)),
-			ThroughputCapacity:           aws.Int64(int64(d.Get("throughput_capacity").(int))),
 		},
 		StorageCapacity: aws.Int64(int64(d.Get("storage_capacity").(int))),
 		StorageType:     aws.String(d.Get("storage_type").(string)),
@@ -269,6 +283,17 @@ func resourceONTAPFileSystemCreate(ctx context.Context, d *schema.ResourceData, 
 		input.OntapConfiguration.FsxAdminPassword = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("ha_pairs"); ok {
+		v := int64(v.(int))
+		input.OntapConfiguration.HAPairs = aws.Int64(v)
+
+		if v > 1 {
+			if v, ok := d.GetOk("throughput_capacity_per_ha_pair"); ok {
+				input.OntapConfiguration.ThroughputCapacityPerHAPair = aws.Int64(int64(v.(int)))
+			}
+		}
+	}
+
 	if v, ok := d.GetOk("kms_key_id"); ok {
 		input.KmsKeyId = aws.String(v.(string))
 	}
@@ -279,6 +304,10 @@ func resourceONTAPFileSystemCreate(ctx context.Context, d *schema.ResourceData, 
 
 	if v, ok := d.GetOk("security_group_ids"); ok {
 		input.SecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
+	}
+
+	if v, ok := d.GetOk("throughput_capacity"); ok {
+		input.OntapConfiguration.ThroughputCapacity = aws.Int64(int64(v.(int)))
 	}
 
 	if v, ok := d.GetOk("weekly_maintenance_start_time"); ok {
@@ -331,6 +360,8 @@ func resourceONTAPFileSystemRead(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "setting endpoints: %s", err)
 	}
 	d.Set("fsx_admin_password", d.Get("fsx_admin_password").(string))
+	haPairs := aws.Int64Value(ontapConfig.HAPairs)
+	d.Set("ha_pairs", haPairs)
 	d.Set("kms_key_id", filesystem.KmsKeyId)
 	d.Set("network_interface_ids", aws.StringValueSlice(filesystem.NetworkInterfaceIds))
 	d.Set("owner_id", filesystem.OwnerId)
@@ -339,7 +370,13 @@ func resourceONTAPFileSystemRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("storage_capacity", filesystem.StorageCapacity)
 	d.Set("storage_type", filesystem.StorageType)
 	d.Set("subnet_ids", aws.StringValueSlice(filesystem.SubnetIds))
-	d.Set("throughput_capacity", ontapConfig.ThroughputCapacity)
+	if haPairs > 1 {
+		d.Set("throughput_capacity", nil)
+		d.Set("throughput_capacity_per_ha_pair", ontapConfig.ThroughputCapacityPerHAPair)
+	} else {
+		d.Set("throughput_capacity", ontapConfig.ThroughputCapacity)
+		d.Set("throughput_capacity_per_ha_pair", nil)
+	}
 	d.Set("vpc_id", filesystem.VpcId)
 	d.Set("weekly_maintenance_start_time", ontapConfig.WeeklyMaintenanceStartTime)
 

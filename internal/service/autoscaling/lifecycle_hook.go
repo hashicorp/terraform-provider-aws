@@ -123,7 +123,7 @@ func resourceLifecycleHookPut(ctx context.Context, d *schema.ResourceData, meta 
 		func() (interface{}, error) {
 			return conn.PutLifecycleHookWithContext(ctx, input)
 		},
-		ErrCodeValidationError, "Unable to publish test message to notification target")
+		errCodeValidationError, "Unable to publish test message to notification target")
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "putting Auto Scaling Lifecycle Hook (%s): %s", name, err)
@@ -171,7 +171,7 @@ func resourceLifecycleHookDelete(ctx context.Context, d *schema.ResourceData, me
 		LifecycleHookName:    aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
+	if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
 		return diags
 	}
 
@@ -190,7 +190,7 @@ func FindLifecycleHook(ctx context.Context, conn *autoscaling.AutoScaling, asgNa
 
 	output, err := conn.DescribeLifecycleHooksWithContext(ctx, input)
 
-	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "not found") {
+	if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

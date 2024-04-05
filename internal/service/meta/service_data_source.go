@@ -126,7 +126,7 @@ func (d *dataSourceService) Read(ctx context.Context, request datasource.ReadReq
 	}
 
 	if data.ReverseDNSPrefix.IsNull() {
-		dnsParts := strings.Split(d.Meta().DNSSuffix, ".")
+		dnsParts := strings.Split(d.Meta().DNSSuffix(ctx), ".")
 		data.ReverseDNSPrefix = types.StringValue(strings.Join(slices.Reverse(dnsParts), "."))
 	}
 

@@ -166,8 +166,16 @@ func ResourceClusterInstance() *schema.Resource {
 				Default:  false,
 				ForceNew: true,
 			},
+			"skip_final_snapshot": {
+				Type:     schema.TypeBool,
+				Optional: true,
+			},
 			"storage_encrypted": {
 				Type:     schema.TypeBool,
+				Computed: true,
+			},
+			"storage_type": {
+				Type:     schema.TypeString,
 				Computed: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
@@ -282,6 +290,7 @@ func resourceClusterInstanceRead(ctx context.Context, d *schema.ResourceData, me
 	d.Set("promotion_tier", db.PromotionTier)
 	d.Set("publicly_accessible", db.PubliclyAccessible)
 	d.Set("storage_encrypted", db.StorageEncrypted)
+	d.Set("storage_type", db.StorageType)
 
 	if db.Endpoint != nil {
 		address := aws.StringValue(db.Endpoint.Address)
@@ -358,9 +367,15 @@ func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, 
 	conn := meta.(*conns.AWSClient).NeptuneConn(ctx)
 
 	log.Printf("[DEBUG] Deleting Neptune Cluster Instance: %s", d.Id())
-	_, err := conn.DeleteDBInstanceWithContext(ctx, &neptune.DeleteDBInstanceInput{
+	input := neptune.DeleteDBInstanceInput{
 		DBInstanceIdentifier: aws.String(d.Id()),
-	})
+	}
+
+	if d.Get("skip_final_snapshot").(bool) {
+		input.SkipFinalSnapshot = aws.Bool(true)
+	}
+
+	_, err := conn.DeleteDBInstanceWithContext(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBInstanceNotFoundFault) {
 		return diags
@@ -374,7 +389,7 @@ func resourceClusterInstanceDelete(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "waiting for Neptune Cluster Instance (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindDBInstanceByID(ctx context.Context, conn *neptune.Neptune, id string) (*neptune.DBInstance, error) {

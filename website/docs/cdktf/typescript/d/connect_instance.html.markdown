@@ -80,10 +80,10 @@ This data source exports the following attributes in addition to the arguments a
 * `earlyMediaEnabled` - Whether early media for outbound calls is enabled .
 * `contactFlowLogsEnabled` - Whether contact flow logs are enabled.
 * `contactLensEnabled` - Whether contact lens is enabled.
-* `autoResolveBestVoices` - Whether auto resolve best voices is enabled.
+* `auto_resolve_best_voices` - Whether auto resolve best voices is enabled.
 * `multiPartyConferenceEnabled` - Whether multi-party calls/conference is enabled.
-* `useCustomTtsVoices` - Whether use custom tts voices is enabled.
+* `use_custom_tts_voices` - Whether use custom tts voices is enabled.
 * `status` - State of the instance.
 * `serviceRole` - Service role of the instance.
 
-<!-- cache-key: cdktf-0.19.0 input-f348847518408d57a1b3c05acaebc2f7c353201d2c00301debc08e5c4c84bccc -->
+<!-- cache-key: cdktf-0.20.1 input-f348847518408d57a1b3c05acaebc2f7c353201d2c00301debc08e5c4c84bccc -->

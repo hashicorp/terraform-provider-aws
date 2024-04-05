@@ -76,7 +76,7 @@ func ResourceCACertificate() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"role_arn": {
-							Type:         schema.TypeBool,
+							Type:         schema.TypeString,
 							Optional:     true,
 							ValidateFunc: verify.ValidARN,
 						},
@@ -159,13 +159,17 @@ func resourceCACertificateCreate(ctx context.Context, d *schema.ResourceData, me
 		input.VerificationCertificate = aws.String(v.(string))
 	}
 
-	output, err := conn.RegisterCACertificateWithContext(ctx, input)
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
+		func() (interface{}, error) {
+			return conn.RegisterCACertificateWithContext(ctx, input)
+		},
+		iot.ErrCodeInvalidRequestException, "included in the RegistrationConfig does not exist or cannot be assumed by AWS IoT")
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "registering IoT CA Certificate: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.CertificateId))
+	d.SetId(aws.StringValue(outputRaw.(*iot.RegisterCACertificateOutput).CertificateId))
 
 	return append(diags, resourceCACertificateRead(ctx, d, meta)...)
 }
@@ -239,7 +243,11 @@ func resourceCACertificateUpdate(ctx context.Context, d *schema.ResourceData, me
 			}
 		}
 
-		_, err := conn.UpdateCACertificateWithContext(ctx, input)
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
+			func() (interface{}, error) {
+				return conn.UpdateCACertificateWithContext(ctx, input)
+			},
+			iot.ErrCodeInvalidRequestException, "included in the RegistrationConfig does not exist or cannot be assumed by AWS IoT")
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating IoT CA Certificate (%s): %s", d.Id(), err)

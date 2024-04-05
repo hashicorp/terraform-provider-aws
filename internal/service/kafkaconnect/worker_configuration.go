@@ -5,7 +5,6 @@ package kafkaconnect
 
 import (
 	"context"
-	"encoding/base64"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -14,8 +13,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 // @SDKResource("aws_mskconnect_worker_configuration")
@@ -73,7 +73,7 @@ func resourceWorkerConfigurationCreate(ctx context.Context, d *schema.ResourceDa
 	name := d.Get("name").(string)
 	input := &kafkaconnect.CreateWorkerConfigurationInput{
 		Name:                  aws.String(name),
-		PropertiesFileContent: aws.String(verify.Base64Encode([]byte(d.Get("properties_file_content").(string)))),
+		PropertiesFileContent: flex.StringValueToBase64String(d.Get("properties_file_content").(string)),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -125,11 +125,10 @@ func resourceWorkerConfigurationRead(ctx context.Context, d *schema.ResourceData
 }
 
 func decodePropertiesFileContent(content string) string {
-	result, err := base64.StdEncoding.DecodeString(content)
-
+	v, err := itypes.Base64Decode(content)
 	if err != nil {
 		return content
 	}
 
-	return string(result)
+	return string(v)
 }

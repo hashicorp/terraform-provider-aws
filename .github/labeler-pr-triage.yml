@@ -13,6 +13,8 @@ examples:
   - 'examples/**/*'
 flex:
   - 'internal/flex/**/*'
+function:
+  - 'internal/function/**/*'
 generators:
   - 'internal/**/*_gen.go'
   - 'internal/**/*_gen_test.go'
@@ -161,6 +163,9 @@ service/batch:
 service/bedrock:
   - 'internal/service/bedrock/**/*'
   - 'website/**/bedrock_*'
+service/bedrockagent:
+  - 'internal/service/bedrockagent/**/*'
+  - 'website/**/bedrock_agent_*'
 service/billingconductor:
   - 'internal/service/billingconductor/**/*'
   - 'website/**/billingconductor_*'
@@ -209,6 +214,9 @@ service/cloudformation:
 service/cloudfront:
   - 'internal/service/cloudfront/**/*'
   - 'website/**/cloudfront_*'
+service/cloudfrontkeyvaluestore:
+  - 'internal/service/cloudfrontkeyvaluestore/**/*'
+  - 'website/**/cloudfrontkeyvaluestore_*'
 service/cloudhsmv2:
   - 'internal/service/cloudhsmv2/**/*'
   - 'website/**/cloudhsm*'
@@ -296,6 +304,9 @@ service/connectparticipant:
 service/controltower:
   - 'internal/service/controltower/**/*'
   - 'website/**/controltower_*'
+service/costoptimizationhub:
+  - 'internal/service/costoptimizationhub/**/*'
+  - 'website/**/costoptimizationhub_*'
 service/cur:
   - 'internal/service/cur/**/*'
   - 'website/**/cur_*'
@@ -314,6 +325,9 @@ service/datapipeline:
 service/datasync:
   - 'internal/service/datasync/**/*'
   - 'website/**/datasync_*'
+service/datazone:
+  - 'internal/service/datazone/**/*'
+  - 'website/**/datazone_*'
 service/dax:
   - 'internal/service/dax/**/*'
   - 'website/**/dax_*'
@@ -604,6 +618,7 @@ service/keyspaces:
 service/kinesis:
   - 'internal/service/kinesis/**/*'
   - 'website/**/kinesis_stream*'
+  - 'website/**/kinesis_resource_policy*'
 service/kinesisanalytics:
   - 'internal/service/kinesisanalytics/**/*'
   - 'website/**/kinesis_analytics_*'
@@ -631,6 +646,9 @@ service/lakeformation:
 service/lambda:
   - 'internal/service/lambda/**/*'
   - 'website/**/lambda_*'
+service/launchwizard:
+  - 'internal/service/launchwizard/**/*'
+  - 'website/**/launchwizard_*'
 service/lexmodels:
   - 'internal/service/lexmodels/**/*'
   - 'website/**/lex_*'
@@ -665,6 +683,9 @@ service/lookoutmetrics:
 service/lookoutvision:
   - 'internal/service/lookoutvision/**/*'
   - 'website/**/lookoutvision_*'
+service/m2:
+  - 'internal/service/m2/**/*'
+  - 'website/**/m2_*'
 service/machinelearning:
   - 'internal/service/machinelearning/**/*'
   - 'website/**/machinelearning_*'
@@ -794,6 +815,12 @@ service/outposts:
 service/panorama:
   - 'internal/service/panorama/**/*'
   - 'website/**/panorama_*'
+service/paymentcryptography:
+  - 'internal/service/paymentcryptography/**/*'
+  - 'website/**/paymentcryptography_*'
+service/pcaconnectorad:
+  - 'internal/service/pcaconnectorad/**/*'
+  - 'website/**/pcaconnectorad_*'
 service/personalize:
   - 'internal/service/personalize/**/*'
   - 'website/**/personalize_*'
@@ -827,6 +854,9 @@ service/pricing:
 service/proton:
   - 'internal/service/proton/**/*'
   - 'website/**/proton_*'
+service/qbusiness:
+  - 'internal/service/qbusiness/**/*'
+  - 'website/**/qbusiness_*'
 service/qldb:
   - 'internal/service/qldb/**/*'
   - 'website/**/qldb_*'
@@ -1013,6 +1043,9 @@ service/ssmcontacts:
 service/ssmincidents:
   - 'internal/service/ssmincidents/**/*'
   - 'website/**/ssmincidents_*'
+service/ssmsap:
+  - 'internal/service/ssmsap/**/*'
+  - 'website/**/ssmsap_*'
 service/sso:
   - 'internal/service/sso/**/*'
   - 'website/**/sso_*'

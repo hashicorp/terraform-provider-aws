@@ -112,6 +112,7 @@ should only be used for informational purposes, not for resource dependencies:
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
 * `create` - (Default `10m`)
+* `read` - (Default `15m`)
 * `delete` - (Default `20m`)
 
-<!-- cache-key: cdktf-0.19.0 input-c3c3583217fff10aa06f5c451738196ae8dc39997f2223d31cdbbf7593fbebc2 -->
+<!-- cache-key: cdktf-0.20.1 input-41ed2e086fde1e9ac47e3151ca332ac4c789a2f389301862b42d62217ca9d626 -->
