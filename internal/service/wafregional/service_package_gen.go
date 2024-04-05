@@ -36,8 +36,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Rate Based Rule",
 		},
 		{
-			Factory:  DataSourceRule,
+			Factory:  dataSourceRule,
 			TypeName: "aws_wafregional_rule",
+			Name:     "Rule",
 		},
 		{
 			Factory:  DataSourceSubscribedRuleGroup,
