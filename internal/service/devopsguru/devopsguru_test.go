@@ -5,9 +5,6 @@ package devopsguru_test
 
 import (
 	"context"
-	"errors"
-	"net"
-	"strings"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/devopsguru"
@@ -59,13 +56,6 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
-	}
-	// In GovCloud partitions, API calls trigger an operation error
-	var netOpErr *net.OpError
-	if errors.As(err, &netOpErr) {
-		if strings.Contains(netOpErr.Error(), "no such host") {
-			t.Skipf("skipping acceptance testing: %s", err)
-		}
 	}
 	if err != nil {
 		t.Fatalf("unexpected PreCheck error: %s", err)
