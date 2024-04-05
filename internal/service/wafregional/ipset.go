@@ -22,13 +22,14 @@ import (
 // WAF requires UpdateIPSet operations be split into batches of 1000 Updates
 const ipSetUpdatesLimit = 1000
 
-// @SDKResource("aws_wafregional_ipset")
-func ResourceIPSet() *schema.Resource {
+// @SDKResource("aws_wafregional_ipset", name="IPSet")
+func resourceIPSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceIPSetCreate,
 		ReadWithoutTimeout:   resourceIPSetRead,
 		UpdateWithoutTimeout: resourceIPSetUpdate,
 		DeleteWithoutTimeout: resourceIPSetDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -174,8 +175,13 @@ func resourceIPSetDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		log.Printf("[INFO] Deleting WAF Regional IPSet")
 		return conn.DeleteIPSetWithContext(ctx, req)
 	})
+
+	if tfawserr.ErrCodeEquals(err, waf.ErrCodeNonexistentItemException) {
+		return diags
+	}
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting WAF Regional IPSet: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting WAF Regional IPSet (%s): %s", d.Id(), err)
 	}
 
 	return diags

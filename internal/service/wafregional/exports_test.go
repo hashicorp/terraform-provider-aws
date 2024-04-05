@@ -7,4 +7,5 @@ package wafregional
 var (
 	ResourceByteMatchSet = resourceByteMatchSet
 	ResourceGeoMatchSet  = resourceGeoMatchSet
+	ResourceIPSet        = resourceIPSet
 )
