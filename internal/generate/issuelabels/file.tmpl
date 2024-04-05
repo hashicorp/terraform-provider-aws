@@ -14,15 +14,30 @@ bug:
   # Terraform Plugin SDK:
   #   doesn't support update
   #   Invalid address to set
-  - "(\\[Bug\\]:|doesn't support update|failed to satisfy constraint: Member must not be null|Invalid address to set|panic:|produced an (invalid|unexpected) new value|Provider produced inconsistent (final plan|result after apply))"
+- any:
+  - changed-files:
+    - any-glob-to-any-file:
+      - "(\\[Bug\\]:|doesn't support update|failed to satisfy constraint: Member must not be null|Invalid address to set|panic:|produced an (invalid|unexpected) new value|Provider produced inconsistent (final plan|result after apply))"
 crash:
-  - 'panic:'
-sweeper:
-  - 'sweeper'
-skaff:
-  - 'skaff'
+- any:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'panic:'
 function:
-  - 'provider::aws::'
+- any:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'provider::aws::'
+skaff:
+- any:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'skaff'
+sweeper:
+- any:
+  - changed-files:
+    - any-glob-to-any-file:
+      - 'sweeper'
 #
 # AWS Per-Service Labeling
 #
@@ -31,5 +46,8 @@ function:
 # 2. "data aws_XXX" or "resource aws_XXX"
 {{- range .Services }}
 service/{{ .ProviderPackage }}:
-  - '{{ .RegExp }}'
+- any:
+  - changed-files:
+    - any-glob-to-any-file:
+      - '{{ .RegExp }}'
 {{- end }}
