@@ -46,6 +46,20 @@ func TestAccAPIGateway_serial(t *testing.T) {
 			"ThrottlingRateLimitDisabledByDefault":   testAccMethodSettings_Settings_throttlingRateLimitDisabledByDefault,
 			"UnauthorizedCacheControlHeaderStrategy": testAccMethodSettings_Settings_unauthorizedCacheControlHeaderStrategy,
 		},
+		// Some aws_api_gateway_stage tests require the account-level CloudWatch Logs role ARN to be set.
+		// Serialize all this resource's acceptance tests.
+		"Stage": {
+			"basic":                     testAccStage_basic,
+			"tags":                      testAccStage_tags,
+			"disappears":                testAccStage_disappears,
+			"disappears_restAPI":        testAccStage_Disappears_restAPI,
+			"Cache":                     testAccStage_cache,
+			"CacheSizeCacheDisabled":    testAccStage_cacheSizeCacheDisabled,
+			"AccessLogSettings":         testAccStage_accessLogSettings,
+			"AccessLogSettings_kinesis": testAccStage_AccessLogSettings_kinesis,
+			"WAF":                       testAccStage_waf,
+			"CanarySettings":            testAccStage_canarySettings,
+		},
 	}
 
 	acctest.RunSerialTests2Levels(t, testCases, 0)

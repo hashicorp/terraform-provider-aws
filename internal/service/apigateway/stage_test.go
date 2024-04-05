@@ -20,13 +20,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccAPIGatewayStage_basic(t *testing.T) {
+func testAccStage_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf apigateway.GetStageOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_stage.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -87,13 +87,13 @@ func TestAccAPIGatewayStage_basic(t *testing.T) {
 	})
 }
 
-func TestAccAPIGatewayStage_cache(t *testing.T) {
+func testAccStage_cache(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf apigateway.GetStageOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_stage.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -141,13 +141,13 @@ func TestAccAPIGatewayStage_cache(t *testing.T) {
 }
 
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/22866
-func TestAccAPIGatewayStage_cacheSizeCacheDisabled(t *testing.T) {
+func testAccStage_cacheSizeCacheDisabled(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf apigateway.GetStageOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_stage.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -195,13 +195,13 @@ func TestAccAPIGatewayStage_cacheSizeCacheDisabled(t *testing.T) {
 	})
 }
 
-func TestAccAPIGatewayStage_tags(t *testing.T) {
+func testAccStage_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf apigateway.GetStageOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_stage.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -242,13 +242,13 @@ func TestAccAPIGatewayStage_tags(t *testing.T) {
 	})
 }
 
-func TestAccAPIGatewayStage_disappears(t *testing.T) {
+func testAccStage_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var stage apigateway.GetStageOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_stage.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -266,13 +266,13 @@ func TestAccAPIGatewayStage_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAPIGatewayStage_Disappears_restAPI(t *testing.T) {
+func testAccStage_Disappears_restAPI(t *testing.T) {
 	ctx := acctest.Context(t)
 	var stage apigateway.GetStageOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_stage.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -291,7 +291,7 @@ func TestAccAPIGatewayStage_Disappears_restAPI(t *testing.T) {
 	})
 }
 
-func TestAccAPIGatewayStage_accessLogSettings(t *testing.T) {
+func testAccStage_accessLogSettings(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf apigateway.GetStageOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -302,7 +302,7 @@ func TestAccAPIGatewayStage_accessLogSettings(t *testing.T) {
 	xml := `<request id="$context.requestId"> <ip>$context.identity.sourceIp</ip> <caller>$context.identity.caller</caller> <user>$context.identity.user</user> <requestTime>$context.requestTime</requestTime> <httpMethod>$context.httpMethod</httpMethod> <resourcePath>$context.resourcePath</resourcePath> <status>$context.status</status> <protocol>$context.protocol</protocol> <responseLength>$context.responseLength</responseLength> </request>`
 	csv := `$context.identity.sourceIp,$context.identity.caller,$context.identity.user,$context.requestTime,$context.httpMethod,$context.resourcePath,$context.protocol,$context.status,$context.responseLength,$context.requestId`
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -361,7 +361,7 @@ func TestAccAPIGatewayStage_accessLogSettings(t *testing.T) {
 	})
 }
 
-func TestAccAPIGatewayStage_AccessLogSettings_kinesis(t *testing.T) {
+func testAccStage_AccessLogSettings_kinesis(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf apigateway.GetStageOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -372,7 +372,7 @@ func TestAccAPIGatewayStage_AccessLogSettings_kinesis(t *testing.T) {
 	xml := `<request id="$context.requestId"> <ip>$context.identity.sourceIp</ip> <caller>$context.identity.caller</caller> <user>$context.identity.user</user> <requestTime>$context.requestTime</requestTime> <httpMethod>$context.httpMethod</httpMethod> <resourcePath>$context.resourcePath</resourcePath> <status>$context.status</status> <protocol>$context.protocol</protocol> <responseLength>$context.responseLength</responseLength> </request>`
 	csv := `$context.identity.sourceIp,$context.identity.caller,$context.identity.user,$context.requestTime,$context.httpMethod,$context.resourcePath,$context.protocol,$context.status,$context.responseLength,$context.requestId`
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -430,13 +430,13 @@ func TestAccAPIGatewayStage_AccessLogSettings_kinesis(t *testing.T) {
 	})
 }
 
-func TestAccAPIGatewayStage_waf(t *testing.T) {
+func testAccStage_waf(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf apigateway.GetStageOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_stage.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -465,13 +465,13 @@ func TestAccAPIGatewayStage_waf(t *testing.T) {
 	})
 }
 
-func TestAccAPIGatewayStage_canarySettings(t *testing.T) {
+func testAccStage_canarySettings(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf apigateway.GetStageOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_stage.test"
 
-	resource.ParallelTest(t, resource.TestCase{
+	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -573,7 +573,7 @@ func testAccStageImportStateIdFunc(resourceName string) resource.ImportStateIdFu
 }
 
 func testAccStageConfig_base(rName string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAccountConfig_role0(rName), fmt.Sprintf(`
 resource "aws_api_gateway_rest_api" "test" {
   name = %[1]q
 }
@@ -626,7 +626,7 @@ resource "aws_api_gateway_deployment" "test" {
     "a" = "2"
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccStageConfig_basic(rName string) string {
@@ -704,7 +704,7 @@ resource "aws_s3_bucket" "test" {
   bucket = %[1]q
 }
 
-resource "aws_iam_role" "test" {
+resource "aws_iam_role" "test_firehose" {
   name = %[1]q
 
   assume_role_policy = <<EOF
@@ -729,7 +729,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
   name        = "amazon-apigateway-%[1]s"
 
   extended_s3_configuration {
-    role_arn   = aws_iam_role.test.arn
+    role_arn   = aws_iam_role.test_firehose.arn
     bucket_arn = aws_s3_bucket.test.arn
   }
 }
