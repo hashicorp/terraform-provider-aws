@@ -31,8 +31,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "IPSet",
 		},
 		{
-			Factory:  DataSourceRateBasedRule,
+			Factory:  dataSourceRateBasedRule,
 			TypeName: "aws_wafregional_rate_based_rule",
+			Name:     "Rate Based Rule",
 		},
 		{
 			Factory:  DataSourceRule,
