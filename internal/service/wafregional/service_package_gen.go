@@ -108,8 +108,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Size Constraint Set",
 		},
 		{
-			Factory:  ResourceSQLInjectionMatchSet,
+			Factory:  resourceSQLInjectionMatchSet,
 			TypeName: "aws_wafregional_sql_injection_match_set",
+			Name:     "SQL Injection Match Set",
 		},
 		{
 			Factory:  ResourceWebACL,

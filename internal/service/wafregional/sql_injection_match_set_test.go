@@ -114,7 +114,7 @@ func TestAccWAFRegionalSQLInjectionMatchSet_disappears(t *testing.T) {
 				Config: testAccSQLInjectionMatchSetConfig_basic(sqlInjectionMatchSet),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSQLInjectionMatchSetExists(ctx, resourceName, &v),
-					testAccCheckSQLInjectionMatchSetDisappears(ctx, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfwafregional.ResourceSQLInjectionMatchSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -204,48 +204,6 @@ func TestAccWAFRegionalSQLInjectionMatchSet_noTuples(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccCheckSQLInjectionMatchSetDisappears(ctx context.Context, v *waf.SqlInjectionMatchSet) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn(ctx)
-		region := acctest.Provider.Meta().(*conns.AWSClient).Region
-
-		wr := tfwafregional.NewRetryer(conn, region)
-		_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
-			req := &waf.UpdateSqlInjectionMatchSetInput{
-				ChangeToken:            token,
-				SqlInjectionMatchSetId: v.SqlInjectionMatchSetId,
-			}
-
-			for _, sqlInjectionMatchTuple := range v.SqlInjectionMatchTuples {
-				sqlInjectionMatchTupleUpdate := &waf.SqlInjectionMatchSetUpdate{
-					Action: aws.String("DELETE"),
-					SqlInjectionMatchTuple: &waf.SqlInjectionMatchTuple{
-						FieldToMatch:       sqlInjectionMatchTuple.FieldToMatch,
-						TextTransformation: sqlInjectionMatchTuple.TextTransformation,
-					},
-				}
-				req.Updates = append(req.Updates, sqlInjectionMatchTupleUpdate)
-			}
-			return conn.UpdateSqlInjectionMatchSetWithContext(ctx, req)
-		})
-		if err != nil {
-			return fmt.Errorf("Failed updating SQL Injection Match Set: %s", err)
-		}
-
-		_, err = wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
-			opts := &waf.DeleteSqlInjectionMatchSetInput{
-				ChangeToken:            token,
-				SqlInjectionMatchSetId: v.SqlInjectionMatchSetId,
-			}
-			return conn.DeleteSqlInjectionMatchSetWithContext(ctx, opts)
-		})
-		if err != nil {
-			return fmt.Errorf("Failed deleting SQL Injection Match Set: %s", err)
-		}
-		return nil
-	}
 }
 
 func testAccCheckSQLInjectionMatchSetExists(ctx context.Context, n string, v *waf.SqlInjectionMatchSet) resource.TestCheckFunc {
