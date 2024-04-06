@@ -73,7 +73,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Deployment",
 		},
 		{
-			Factory:  ResourceDomainName,
+			Factory:  resourceDomainName,
 			TypeName: "aws_apigatewayv2_domain_name",
 			Name:     "Domain Name",
 			Tags: &types.ServicePackageResourceTags{

@@ -172,7 +172,7 @@ func sweepDomainNames(region string) error {
 		}
 
 		for _, v := range page.Items {
-			r := ResourceDomainName()
+			r := resourceDomainName()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.DomainName))
 

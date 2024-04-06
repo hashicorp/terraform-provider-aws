@@ -29,7 +29,7 @@ import (
 
 // @SDKResource("aws_apigatewayv2_domain_name", name="Domain Name")
 // @Tags(identifierAttribute="arn")
-func ResourceDomainName() *schema.Resource {
+func resourceDomainName() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDomainNameCreate,
 		ReadWithoutTimeout:   resourceDomainNameRead,
@@ -155,7 +155,7 @@ func resourceDomainNameRead(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-	output, err := FindDomainName(ctx, conn, d.Id())
+	output, err := findDomainName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] API Gateway v2 Domain Name (%s) not found, removing from state", d.Id())
@@ -253,7 +253,7 @@ func resourceDomainNameDelete(ctx context.Context, d *schema.ResourceData, meta 
 	return diags
 }
 
-func FindDomainName(ctx context.Context, conn *apigatewayv2.Client, name string) (*apigatewayv2.GetDomainNameOutput, error) {
+func findDomainName(ctx context.Context, conn *apigatewayv2.Client, name string) (*apigatewayv2.GetDomainNameOutput, error) {
 	input := &apigatewayv2.GetDomainNameInput{
 		DomainName: aws.String(name),
 	}
@@ -280,7 +280,7 @@ func FindDomainName(ctx context.Context, conn *apigatewayv2.Client, name string)
 
 func statusDomainName(ctx context.Context, conn *apigatewayv2.Client, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindDomainName(ctx, conn, name)
+		output, err := findDomainName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

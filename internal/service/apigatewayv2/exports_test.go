@@ -9,9 +9,11 @@ var (
 	ResourceAPIMapping = resourceAPIMapping
 	ResourceAuthorizer = resourceAuthorizer
 	ResourceDeployment = resourceDeployment
+	ResourceDomainName = resourceDomainName
 
 	FindAPIByID                = findAPIByID
 	FindAPIMappingByTwoPartKey = findAPIMappingByTwoPartKey
 	FindAuthorizerByTwoPartKey = findAuthorizerByTwoPartKey
 	FindDeploymentByTwoPartKey = findDeploymentByTwoPartKey
+	FindDomainName             = findDomainName
 )
