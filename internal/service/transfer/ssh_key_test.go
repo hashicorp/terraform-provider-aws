@@ -64,7 +64,7 @@ func testAccCheckSSHKeyExists(ctx context.Context, n string, res *transfer.SshPu
 		}
 
 		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Transfer Ssh Public Key ID is set")
+			return fmt.Errorf("Transfer SSH Public Key ID not set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).TransferConn(ctx)
@@ -89,7 +89,7 @@ func testAccCheckSSHKeyExists(ctx context.Context, n string, res *transfer.SshPu
 			}
 		}
 
-		return fmt.Errorf("Transfer Ssh Public Key doesn't exists.")
+		return fmt.Errorf("Transfer SSH Public Key does not exist")
 	}
 }
 

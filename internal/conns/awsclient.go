@@ -14,8 +14,15 @@ import (
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	config_sdkv2 "github.com/aws/aws-sdk-go-v2/config"
 	s3_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3"
+	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	apigatewayv2_sdkv1 "github.com/aws/aws-sdk-go/service/apigatewayv2"
+	directoryservice_sdkv1 "github.com/aws/aws-sdk-go/service/directoryservice"
+	dynamodb_sdkv1 "github.com/aws/aws-sdk-go/service/dynamodb"
+	efs_sdkv1 "github.com/aws/aws-sdk-go/service/efs"
+	kms_sdkv1 "github.com/aws/aws-sdk-go/service/kms"
+	opsworks_sdkv1 "github.com/aws/aws-sdk-go/service/opsworks"
+	rds_sdkv1 "github.com/aws/aws-sdk-go/service/rds"
 	baselogging "github.com/hashicorp/aws-sdk-go-base/v2/logging"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -29,8 +36,6 @@ type AWSClient struct {
 	Partition         string
 	Region            string
 	ServicePackages   map[string]ServicePackage
-	Session           *session_sdkv1.Session
-	TerraformVersion  string
 
 	awsConfig                 *aws_sdkv2.Config
 	clients                   map[string]any
@@ -40,6 +45,7 @@ type AWSClient struct {
 	httpClient                *http.Client
 	lock                      sync.Mutex
 	logger                    baselogging.Logger
+	session                   *session_sdkv1.Session
 	s3ExpressClient           *s3_sdkv2.Client
 	s3UsePathStyle            bool   // From provider configuration.
 	s3USEast1RegionalEndpoint string // From provider configuration.
@@ -58,6 +64,56 @@ func (c *AWSClient) AwsConfig(context.Context) aws_sdkv2.Config { // nosemgrep:c
 	return c.awsConfig.Copy()
 }
 
+// DynamoDBConnForRegion returns an AWS SDK For Go v1 DynamoDB API client for the specified AWS Region.
+// If the specified region is not the default a new "simple" client is created.
+// This new client does not use any configured endpoint override.
+func (c *AWSClient) DynamoDBConnForRegion(ctx context.Context, region string) *dynamodb_sdkv1.DynamoDB {
+	if region == c.Region {
+		return c.DynamoDBConn(ctx)
+	}
+	return dynamodb_sdkv1.New(c.session, aws_sdkv1.NewConfig().WithRegion(region))
+}
+
+// DSConnForRegion returns an AWS SDK For Go v1 DS API client for the specified AWS Region.
+// If the specified region is not the default a new "simple" client is created.
+// This new client does not use any configured endpoint override.
+func (c *AWSClient) DSConnForRegion(ctx context.Context, region string) *directoryservice_sdkv1.DirectoryService {
+	if region == c.Region {
+		return c.DSConn(ctx)
+	}
+	return directoryservice_sdkv1.New(c.session, aws_sdkv1.NewConfig().WithRegion(region))
+}
+
+// EFSConnForRegion returns an AWS SDK For Go v1 EFS API client for the specified AWS Region.
+// If the specified region is not the default a new "simple" client is created.
+// This new client does not use any configured endpoint override.
+func (c *AWSClient) EFSConnForRegion(ctx context.Context, region string) *efs_sdkv1.EFS {
+	if region == c.Region {
+		return c.EFSConn(ctx)
+	}
+	return efs_sdkv1.New(c.session, aws_sdkv1.NewConfig().WithRegion(region))
+}
+
+// KMSConnForRegion returns an AWS SDK For Go v1 KMS API client for the specified AWS Region.
+// If the specified region is not the default a new "simple" client is created.
+// This new client does not use any configured endpoint override.
+func (c *AWSClient) KMSConnForRegion(ctx context.Context, region string) *kms_sdkv1.KMS {
+	if region == c.Region {
+		return c.KMSConn(ctx)
+	}
+	return kms_sdkv1.New(c.session, aws_sdkv1.NewConfig().WithRegion(region))
+}
+
+// KMSConnForRegion returns an AWS SDK For Go v1 OpsWorks API client for the specified AWS Region.
+// If the specified region is not the default a new "simple" client is created.
+// This new client does not use any configured endpoint override.
+func (c *AWSClient) OpsWorksConnForRegion(ctx context.Context, region string) *opsworks_sdkv1.OpsWorks {
+	if region == c.Region {
+		return c.OpsWorksConn(ctx)
+	}
+	return opsworks_sdkv1.New(c.session, aws_sdkv1.NewConfig().WithRegion(region))
+}
+
 // PartitionHostname returns a hostname with the provider domain suffix for the partition
 // e.g. PREFIX.amazonaws.com
 // The prefix should not contain a trailing period.
@@ -72,7 +128,17 @@ func (c *AWSClient) RegionalHostname(ctx context.Context, prefix string) string 
 	return fmt.Sprintf("%s.%s.%s", prefix, c.Region, c.DNSSuffix(ctx))
 }
 
-// S3ExpressClient returns an S3 API client suitable for use with S3 Express (directory buckets).
+// RDSConnForRegion returns an AWS SDK For Go v1 RDS API client for the specified AWS Region.
+// If the specified region is not the default a new "simple" client is created.
+// This new client does not use any configured endpoint override.
+func (c *AWSClient) RDSConnForRegion(ctx context.Context, region string) *rds_sdkv1.RDS {
+	if region == c.Region {
+		return c.RDSConn(ctx)
+	}
+	return rds_sdkv1.New(c.session, aws_sdkv1.NewConfig().WithRegion(region))
+}
+
+// S3ExpressClient returns an AWS SDK for Go v2 S3 API client suitable for use with S3 Express (directory buckets).
 // This client differs from the standard S3 API client only in us-east-1 if the global S3 endpoint is used.
 // In that case the returned client uses the regional S3 endpoint.
 func (c *AWSClient) S3ExpressClient(ctx context.Context) *s3_sdkv2.Client {
@@ -102,7 +168,7 @@ func (c *AWSClient) S3UsePathStyle(context.Context) bool {
 // SetHTTPClient sets the http.Client used for AWS API calls.
 // To have effect it must be called before the AWS SDK v1 Session is created.
 func (c *AWSClient) SetHTTPClient(_ context.Context, httpClient *http.Client) {
-	if c.Session == nil {
+	if c.session == nil {
 		c.httpClient = httpClient
 	}
 }
@@ -190,7 +256,7 @@ func (c *AWSClient) apiClientConfig(ctx context.Context, servicePackageName stri
 		"aws_sdkv2_config": c.awsConfig,
 		"endpoint":         c.resolveEndpoint(ctx, servicePackageName),
 		"partition":        c.Partition,
-		"session":          c.Session,
+		"session":          c.session,
 	}
 	switch servicePackageName {
 	case names.S3:
@@ -207,6 +273,7 @@ func (c *AWSClient) apiClientConfig(ctx context.Context, servicePackageName stri
 
 	return m
 }
+
 func (c *AWSClient) resolveEndpoint(ctx context.Context, servicePackageName string) string {
 	endpoint := c.endpoints[servicePackageName]
 	if endpoint != "" {
@@ -262,6 +329,7 @@ func resolveServiceBaseEndpoint(ctx context.Context, sdkID string, configs []any
 
 // conn returns the AWS SDK for Go v1 API client for the specified service.
 // The default service client (`extra` is empty) is cached. In this case the AWSClient lock is held.
+// This function is not a method on `AWSClient` as methods can't be parameterized (https://go.googlesource.com/proposal/+/refs/heads/master/design/43651-type-parameters.md#no-parameterized-methods).
 func conn[T any](ctx context.Context, c *AWSClient, servicePackageName string, extra map[string]any) (T, error) {
 	isDefault := len(extra) == 0
 	// Default service client is cached.
@@ -321,6 +389,7 @@ func conn[T any](ctx context.Context, c *AWSClient, servicePackageName string, e
 
 // client returns the AWS SDK for Go v2 API client for the specified service.
 // The default service client (`extra` is empty) is cached. In this case the AWSClient lock is held.
+// This function is not a method on `AWSClient` as methods can't be parameterized (https://go.googlesource.com/proposal/+/refs/heads/master/design/43651-type-parameters.md#no-parameterized-methods).
 func client[T any](ctx context.Context, c *AWSClient, servicePackageName string, extra map[string]any) (T, error) {
 	isDefault := len(extra) == 0
 	// Default service client is cached.

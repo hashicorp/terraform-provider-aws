@@ -125,6 +125,7 @@ func TestAccQuickSightDashboard_updateVersionNumber(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	var dashboard quicksight.Dashboard
+	var dashboardV1 quicksight.Dashboard
 	resourceName := "aws_quicksight_dashboard.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -151,11 +152,13 @@ func TestAccQuickSightDashboard_updateVersionNumber(t *testing.T) {
 			{
 				Config: testAccDashboardConfig_basic(rId, rNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckDashboardExists(ctx, resourceName, &dashboard),
+					testAccCheckDashboardExists(ctx, resourceName, &dashboardV1),
 					resource.TestCheckResourceAttr(resourceName, "dashboard_id", rId),
 					resource.TestCheckResourceAttr(resourceName, "name", rNameUpdated),
 					resource.TestCheckResourceAttr(resourceName, "status", quicksight.ResourceStatusCreationSuccessful),
 					resource.TestCheckResourceAttr(resourceName, "version_number", "2"),
+					testAccCheckDashboardVersionExists(ctx, resourceName, 1, &dashboardV1),
+					testAccCheckDashboardName(&dashboardV1, rName),
 				),
 			},
 		},
@@ -206,7 +209,7 @@ func testAccCheckDashboardDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			output, err := tfquicksight.FindDashboardByID(ctx, conn, rs.Primary.ID)
+			output, err := tfquicksight.FindDashboardByID(ctx, conn, rs.Primary.ID, tfquicksight.DashboardLatestVersion)
 			if err != nil {
 				if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeResourceNotFoundException) {
 					return nil
@@ -224,6 +227,10 @@ func testAccCheckDashboardDestroy(ctx context.Context) resource.TestCheckFunc {
 }
 
 func testAccCheckDashboardExists(ctx context.Context, name string, dashboard *quicksight.Dashboard) resource.TestCheckFunc {
+	return testAccCheckDashboardVersionExists(ctx, name, tfquicksight.DashboardLatestVersion, dashboard)
+}
+
+func testAccCheckDashboardVersionExists(ctx context.Context, name string, version int64, dashboard *quicksight.Dashboard) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -235,13 +242,23 @@ func testAccCheckDashboardExists(ctx context.Context, name string, dashboard *qu
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).QuickSightConn(ctx)
-		output, err := tfquicksight.FindDashboardByID(ctx, conn, rs.Primary.ID)
+		output, err := tfquicksight.FindDashboardByID(ctx, conn, rs.Primary.ID, version)
 
 		if err != nil {
 			return create.Error(names.QuickSight, create.ErrActionCheckingExistence, tfquicksight.ResNameDashboard, rs.Primary.ID, err)
 		}
 
 		*dashboard = *output
+
+		return nil
+	}
+}
+
+func testAccCheckDashboardName(dashboard *quicksight.Dashboard, expectedName string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		if *dashboard.Name != expectedName {
+			return create.Error(names.QuickSight, create.ErrActionChecking, tfquicksight.ResNameDashboard, *dashboard.Name, errors.New("value does not match expected"))
+		}
 
 		return nil
 	}

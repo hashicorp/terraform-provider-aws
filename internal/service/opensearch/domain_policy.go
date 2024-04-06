@@ -90,10 +90,16 @@ func resourceDomainPolicyUpsert(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policy, err)
 	}
 
-	_, err = conn.UpdateDomainConfigWithContext(ctx, &opensearchservice.UpdateDomainConfigInput{
-		DomainName:     aws.String(domainName),
-		AccessPolicies: aws.String(policy),
-	})
+	_, err = tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
+		func() (interface{}, error) {
+			return conn.UpdateDomainConfigWithContext(ctx, &opensearchservice.UpdateDomainConfigInput{
+				DomainName:     aws.String(domainName),
+				AccessPolicies: aws.String(policy),
+			})
+		},
+		opensearchservice.ErrCodeValidationException,
+		"A change/update is in progress",
+	)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating OpenSearch Domain Policy (%s): %s", d.Id(), err)
 	}

@@ -14,14 +14,17 @@ import (
 )
 
 const (
-	createTableTimeout                  = 30 * time.Minute
-	updateTableTimeoutTotal             = 60 * time.Minute
-	replicaUpdateTimeout                = 30 * time.Minute
-	updateTableTimeout                  = 20 * time.Minute
-	updateTableContinuousBackupsTimeout = 20 * time.Minute
-	deleteTableTimeout                  = 10 * time.Minute
-	pitrUpdateTimeout                   = 30 * time.Second
-	ttlUpdateTimeout                    = 30 * time.Second
+	createTableExportTimeout                   = 60 * time.Minute
+	createTableTimeout                         = 30 * time.Minute
+	deleteTableTimeout                         = 10 * time.Minute
+	kinesisStreamingDestinationActiveTimeout   = 5 * time.Minute
+	kinesisStreamingDestinationDisabledTimeout = 5 * time.Minute
+	pitrUpdateTimeout                          = 30 * time.Second
+	replicaUpdateTimeout                       = 30 * time.Minute
+	ttlUpdateTimeout                           = 30 * time.Second
+	updateTableContinuousBackupsTimeout        = 20 * time.Minute
+	updateTableTimeout                         = 20 * time.Minute
+	updateTableTimeoutTotal                    = 60 * time.Minute
 )
 
 func maxDuration(a, b time.Duration) time.Duration {
@@ -225,12 +228,8 @@ func waitSSEUpdated(ctx context.Context, conn *dynamodb.DynamoDB, tableName stri
 }
 
 func waitReplicaSSEUpdated(ctx context.Context, client *conns.AWSClient, region string, tableName string, timeout time.Duration) (*dynamodb.TableDescription, error) {
-	sess, err := conns.NewSessionForRegion(&client.DynamoDBConn(ctx).Config, region, client.TerraformVersion)
-	if err != nil {
-		return nil, fmt.Errorf("creating session for region %q: %w", region, err)
-	}
+	conn := client.DynamoDBConnForRegion(ctx, region)
 
-	conn := dynamodb.New(sess)
 	stateConf := &retry.StateChangeConf{
 		Delay:   30 * time.Second,
 		Pending: []string{dynamodb.SSEStatusDisabling, dynamodb.SSEStatusEnabling, dynamodb.SSEStatusUpdating},
@@ -272,4 +271,20 @@ func waitContributorInsightsDeleted(ctx context.Context, conn *dynamodb.DynamoDB
 	_, err := stateConf.WaitForStateContext(ctx)
 
 	return err
+}
+
+func waitTableExportCreated(ctx context.Context, conn *dynamodb.DynamoDB, id string, timeout time.Duration) (*dynamodb.ExportDescription, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{dynamodb.ExportStatusInProgress},
+		Target:  []string{dynamodb.ExportStatusCompleted, dynamodb.ExportStatusFailed},
+		Refresh: statusTableExport(ctx, conn, id),
+		Timeout: maxDuration(createTableExportTimeout, timeout),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if out, ok := outputRaw.(*dynamodb.ExportDescription); ok {
+		return out, err
+	}
+
+	return nil, err
 }

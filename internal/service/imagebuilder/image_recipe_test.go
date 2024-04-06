@@ -19,7 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfimagebuilder "github.com/hashicorp/terraform-provider-aws/internal/service/imagebuilder"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -703,7 +703,7 @@ func TestAccImageBuilderImageRecipe_userDataBase64(t *testing.T) {
 				Config: testAccImageRecipeConfig_userDataBase64(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckImageRecipeExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "user_data_base64", verify.Base64Encode([]byte("hello world"))),
+					resource.TestCheckResourceAttr(resourceName, "user_data_base64", itypes.Base64EncodeOnce([]byte("hello world"))),
 				),
 			},
 			{

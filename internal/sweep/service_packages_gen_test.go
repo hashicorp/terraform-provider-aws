@@ -31,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/autoscalingplans"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/backup"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/batch"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/bcmdataexports"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrock"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagent"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/budgets"
@@ -71,10 +72,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dataexchange"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/datapipeline"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/datazone"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dax"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/deploy"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/detective"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/devicefarm"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/devopsguru"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/directconnect"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dlm"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/dms"
@@ -165,6 +168,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/osis"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/outposts"
+	"github.com/hashicorp/terraform-provider-aws/internal/service/paymentcryptography"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pcaconnectorad"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pinpoint"
 	"github.com/hashicorp/terraform-provider-aws/internal/service/pipes"
@@ -262,6 +266,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		autoscalingplans.ServicePackage(ctx),
 		backup.ServicePackage(ctx),
 		batch.ServicePackage(ctx),
+		bcmdataexports.ServicePackage(ctx),
 		bedrock.ServicePackage(ctx),
 		bedrockagent.ServicePackage(ctx),
 		budgets.ServicePackage(ctx),
@@ -302,10 +307,12 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		dataexchange.ServicePackage(ctx),
 		datapipeline.ServicePackage(ctx),
 		datasync.ServicePackage(ctx),
+		datazone.ServicePackage(ctx),
 		dax.ServicePackage(ctx),
 		deploy.ServicePackage(ctx),
 		detective.ServicePackage(ctx),
 		devicefarm.ServicePackage(ctx),
+		devopsguru.ServicePackage(ctx),
 		directconnect.ServicePackage(ctx),
 		dlm.ServicePackage(ctx),
 		dms.ServicePackage(ctx),
@@ -396,6 +403,7 @@ func servicePackages(ctx context.Context) []conns.ServicePackage {
 		organizations.ServicePackage(ctx),
 		osis.ServicePackage(ctx),
 		outposts.ServicePackage(ctx),
+		paymentcryptography.ServicePackage(ctx),
 		pcaconnectorad.ServicePackage(ctx),
 		pinpoint.ServicePackage(ctx),
 		pipes.ServicePackage(ctx),

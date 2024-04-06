@@ -447,7 +447,7 @@ func ResourceService() *schema.Resource {
 														Schema: map[string]*schema.Schema{
 															"aws_pca_authority_arn": {
 																Type:         schema.TypeString,
-																Optional:     true,
+																Required:     true,
 																ValidateFunc: verify.ValidARN,
 															},
 														},
@@ -1156,7 +1156,7 @@ func expandAlarms(tfMap map[string]interface{}) *ecs.DeploymentAlarms {
 		apiObject.Enable = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["enable"].(bool); ok {
+	if v, ok := tfMap["rollback"].(bool); ok {
 		apiObject.Rollback = aws.Bool(v)
 	}
 
@@ -1510,7 +1510,11 @@ func expandTimeout(timeout []interface{}) *ecs.TimeoutConfiguration {
 	if len(timeout) == 0 {
 		return nil
 	}
-	raw := timeout[0].(map[string]interface{})
+
+	raw, ok := timeout[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
 	timeoutConfig := &ecs.TimeoutConfiguration{}
 	if v, ok := raw["idle_timeout_seconds"].(int); ok {
 		timeoutConfig.IdleTimeoutSeconds = aws.Int64(int64(v))
@@ -1526,7 +1530,10 @@ func expandTLS(tls []interface{}) *ecs.ServiceConnectTlsConfiguration {
 		return nil
 	}
 
-	raw := tls[0].(map[string]interface{})
+	raw, ok := tls[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
 	tlsConfig := &ecs.ServiceConnectTlsConfiguration{}
 	if v, ok := raw["issuer_cert_authority"].([]interface{}); ok && len(v) > 0 {
 		tlsConfig.IssuerCertificateAuthority = expandIssuerCertAuthority(v)
@@ -1545,7 +1552,10 @@ func expandIssuerCertAuthority(pca []interface{}) *ecs.ServiceConnectTlsCertific
 		return nil
 	}
 
-	raw := pca[0].(map[string]interface{})
+	raw, ok := pca[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
 	config := &ecs.ServiceConnectTlsCertificateAuthority{}
 
 	if v, ok := raw["aws_pca_authority_arn"].(string); ok && v != "" {

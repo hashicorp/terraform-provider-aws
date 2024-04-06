@@ -91,17 +91,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Security Lake subscriber using the  subscriber ARN. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Security Lake subscriber using the subscriber ID. For example:
 
 ```terraform
 import {
   to = aws_securitylake_subscriber.example
-  id = "arn:aws:securitylake:eu-west-2:1234567890:subscriber/9f3bfe79-d543-474d-a93c-f3846805d208"
+  id = "9f3bfe79-d543-474d-a93c-f3846805d208"
 }
 ```
 
-Using `terraform import`, import Security Lake subscriber using the subscriber ARN. For example:
+Using `terraform import`, import Security Lake subscriber using the subscriber ID. For example:
 
 ```console
-% terraform import aws_securitylake_subscriber.example arn:aws:securitylake:eu-west-2:1234567890:subscriber/9f3bfe79-d543-474d-a93c-f3846805d208
+% terraform import aws_securitylake_subscriber.example 9f3bfe79-d543-474d-a93c-f3846805d208
 ```

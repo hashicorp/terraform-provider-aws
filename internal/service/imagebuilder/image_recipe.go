@@ -5,7 +5,6 @@ package imagebuilder
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"strconv"
 
@@ -222,15 +221,7 @@ func ResourceImageRecipe() *schema.Resource {
 				Computed: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 21847),
-					func(v interface{}, name string) (warns []string, errs []error) {
-						s := v.(string)
-						if !verify.IsBase64Encoded([]byte(s)) {
-							errs = append(errs, fmt.Errorf(
-								"%s: must be base64-encoded", name,
-							))
-						}
-						return
-					},
+					verify.ValidBase64String,
 				),
 			},
 			"version": {

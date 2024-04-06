@@ -7,9 +7,6 @@ import (
 
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	lakeformation_sdkv2 "github.com/aws/aws-sdk-go-v2/service/lakeformation"
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	lakeformation_sdkv1 "github.com/aws/aws-sdk-go/service/lakeformation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -26,6 +23,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 		{
 			Factory: newResourceDataCellsFilter,
 			Name:    "Data Cells Filter",
+		},
+		{
+			Factory: newResourceResourceLFTag,
+			Name:    "Resource LF Tag",
 		},
 	}
 }
@@ -75,13 +76,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 
 func (p *servicePackage) ServicePackageName() string {
 	return names.LakeFormation
-}
-
-// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*lakeformation_sdkv1.LakeFormation, error) {
-	sess := config["session"].(*session_sdkv1.Session)
-
-	return lakeformation_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
 }
 
 // NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.

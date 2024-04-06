@@ -21,7 +21,7 @@ import (
 
 // @SDKDataSource("aws_cognito_identity_pool", name="Pool")
 // @Tags(identifierAttribute="arn")
-func DataSourcePool() *schema.Resource {
+func dataSourcePool() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourcePoolRead,
 

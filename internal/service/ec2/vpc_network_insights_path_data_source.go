@@ -42,7 +42,7 @@ func DataSourceNetworkInsightsPath() *schema.Resource {
 				Type:     schema.TypeInt,
 				Computed: true,
 			},
-			"filter": CustomFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"network_insights_path_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -81,7 +81,7 @@ func dataSourceNetworkInsightsPathRead(ctx context.Context, d *schema.ResourceDa
 		input.NetworkInsightsPathIds = aws.StringSlice([]string{v.(string)})
 	}
 
-	input.Filters = append(input.Filters, BuildCustomFilterList(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 

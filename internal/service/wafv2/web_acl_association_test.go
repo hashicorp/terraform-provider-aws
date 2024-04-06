@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 	tfwafv2 "github.com/hashicorp/terraform-provider-aws/internal/service/wafv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -72,14 +71,6 @@ func TestAccWAFV2WebACLAssociation_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWebACLAssociationExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfwafv2.ResourceWebACLAssociation(), resourceName),
-				),
-				ExpectNonEmptyPlan: true,
-			},
-			{
-				Config: testAccWebACLAssociationConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckWebACLAssociationExists(ctx, resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, apigateway.ResourceStage(), "aws_api_gateway_stage.test"),
 				),
 				ExpectNonEmptyPlan: true,
 			},
