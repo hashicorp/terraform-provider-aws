@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/openzfs_file_system: add `endpoint_ip_address` attribute as output
+```
