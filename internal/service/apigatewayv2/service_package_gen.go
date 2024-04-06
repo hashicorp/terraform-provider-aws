@@ -68,8 +68,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Authorizer",
 		},
 		{
-			Factory:  ResourceDeployment,
+			Factory:  resourceDeployment,
 			TypeName: "aws_apigatewayv2_deployment",
+			Name:     "Deployment",
 		},
 		{
 			Factory:  ResourceDomainName,

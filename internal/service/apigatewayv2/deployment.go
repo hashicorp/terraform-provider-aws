@@ -25,8 +25,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_apigatewayv2_deployment")
-func ResourceDeployment() *schema.Resource {
+// @SDKResource("aws_apigatewayv2_deployment", name="Deployment")
+func resourceDeployment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDeploymentCreate,
 		ReadWithoutTimeout:   resourceDeploymentRead,
@@ -66,8 +66,9 @@ func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
+	apiID := d.Get("api_id").(string)
 	input := &apigatewayv2.CreateDeploymentInput{
-		ApiId: aws.String(d.Get("api_id").(string)),
+		ApiId: aws.String(apiID),
 	}
 
 	if v, ok := d.GetOk("description"); ok {
@@ -82,7 +83,7 @@ func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	d.SetId(aws.ToString(output.DeploymentId))
 
-	if _, err := waitDeploymentDeployed(ctx, conn, d.Get("api_id").(string), d.Id()); err != nil {
+	if _, err := waitDeploymentDeployed(ctx, conn, apiID, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for API Gateway v2 Deployment (%s) create: %s", d.Id(), err)
 	}
 
@@ -93,7 +94,7 @@ func resourceDeploymentRead(ctx context.Context, d *schema.ResourceData, meta in
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-	output, err := FindDeploymentByTwoPartKey(ctx, conn, d.Get("api_id").(string), d.Id())
+	output, err := findDeploymentByTwoPartKey(ctx, conn, d.Get("api_id").(string), d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] API Gateway v2 Deployment (%s) not found, removing from state", d.Id())
@@ -115,8 +116,9 @@ func resourceDeploymentUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
+	apiID := d.Get("api_id").(string)
 	input := &apigatewayv2.UpdateDeploymentInput{
-		ApiId:        aws.String(d.Get("api_id").(string)),
+		ApiId:        aws.String(apiID),
 		DeploymentId: aws.String(d.Id()),
 	}
 
@@ -130,7 +132,7 @@ func resourceDeploymentUpdate(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "updating API Gateway v2 Deployment (%s): %s", d.Id(), err)
 	}
 
-	if _, err := waitDeploymentDeployed(ctx, conn, d.Get("api_id").(string), d.Id()); err != nil {
+	if _, err := waitDeploymentDeployed(ctx, conn, apiID, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for API Gateway v2 Deployment (%s) update: %s", d.Id(), err)
 	}
 
@@ -170,7 +172,7 @@ func resourceDeploymentImport(ctx context.Context, d *schema.ResourceData, meta 
 	return []*schema.ResourceData{d}, nil
 }
 
-func FindDeploymentByTwoPartKey(ctx context.Context, conn *apigatewayv2.Client, apiID, deploymentID string) (*apigatewayv2.GetDeploymentOutput, error) {
+func findDeploymentByTwoPartKey(ctx context.Context, conn *apigatewayv2.Client, apiID, deploymentID string) (*apigatewayv2.GetDeploymentOutput, error) {
 	input := &apigatewayv2.GetDeploymentInput{
 		ApiId:        aws.String(apiID),
 		DeploymentId: aws.String(deploymentID),
@@ -202,7 +204,7 @@ func findDeployment(ctx context.Context, conn *apigatewayv2.Client, input *apiga
 
 func statusDeployment(ctx context.Context, conn *apigatewayv2.Client, apiID, deploymentID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindDeploymentByTwoPartKey(ctx, conn, apiID, deploymentID)
+		output, err := findDeploymentByTwoPartKey(ctx, conn, apiID, deploymentID)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

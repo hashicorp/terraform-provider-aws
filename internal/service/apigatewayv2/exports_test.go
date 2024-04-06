@@ -8,8 +8,10 @@ var (
 	ResourceAPI        = resourceAPI
 	ResourceAPIMapping = resourceAPIMapping
 	ResourceAuthorizer = resourceAuthorizer
+	ResourceDeployment = resourceDeployment
 
 	FindAPIByID                = findAPIByID
 	FindAPIMappingByTwoPartKey = findAPIMappingByTwoPartKey
 	FindAuthorizerByTwoPartKey = findAuthorizerByTwoPartKey
+	FindDeploymentByTwoPartKey = findDeploymentByTwoPartKey
 )
