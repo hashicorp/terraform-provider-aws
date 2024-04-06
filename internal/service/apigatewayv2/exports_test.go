@@ -7,7 +7,9 @@ package apigatewayv2
 var (
 	ResourceAPI        = resourceAPI
 	ResourceAPIMapping = resourceAPIMapping
+	ResourceAuthorizer = resourceAuthorizer
 
 	FindAPIByID                = findAPIByID
 	FindAPIMappingByTwoPartKey = findAPIMappingByTwoPartKey
+	FindAuthorizerByTwoPartKey = findAuthorizerByTwoPartKey
 )

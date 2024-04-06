@@ -63,8 +63,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "API Mapping",
 		},
 		{
-			Factory:  ResourceAuthorizer,
+			Factory:  resourceAuthorizer,
 			TypeName: "aws_apigatewayv2_authorizer",
+			Name:     "Authorizer",
 		},
 		{
 			Factory:  ResourceDeployment,
