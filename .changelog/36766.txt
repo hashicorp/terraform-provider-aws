@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/serverless_cache: add `minimum` attribute in data_storage and ecpu_per_second
+```
