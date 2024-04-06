@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -79,25 +80,25 @@ func resourceAPI() *schema.Resource {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      hashStringCaseInsensitive,
+							Set:      sdkv2.StringCaseInsensitiveSetFunc,
 						},
 						"allow_methods": {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      hashStringCaseInsensitive,
+							Set:      sdkv2.StringCaseInsensitiveSetFunc,
 						},
 						"allow_origins": {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      hashStringCaseInsensitive,
+							Set:      sdkv2.StringCaseInsensitiveSetFunc,
 						},
 						"expose_headers": {
 							Type:     schema.TypeSet,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      hashStringCaseInsensitive,
+							Set:      sdkv2.StringCaseInsensitiveSetFunc,
 						},
 						"max_age": {
 							Type:     schema.TypeInt,
@@ -484,10 +485,10 @@ func flattenCORSConfiguration(configuration *awstypes.Cors) []interface{} {
 
 	return []interface{}{map[string]interface{}{
 		"allow_credentials": aws.ToBool(configuration.AllowCredentials),
-		"allow_headers":     flattenCaseInsensitiveStringSet(configuration.AllowHeaders),
-		"allow_methods":     flattenCaseInsensitiveStringSet(configuration.AllowMethods),
-		"allow_origins":     flattenCaseInsensitiveStringSet(configuration.AllowOrigins),
-		"expose_headers":    flattenCaseInsensitiveStringSet(configuration.ExposeHeaders),
+		"allow_headers":     flex.FlattenStringValueSetCaseInsensitive(configuration.AllowHeaders),
+		"allow_methods":     flex.FlattenStringValueSetCaseInsensitive(configuration.AllowMethods),
+		"allow_origins":     flex.FlattenStringValueSetCaseInsensitive(configuration.AllowOrigins),
+		"expose_headers":    flex.FlattenStringValueSetCaseInsensitive(configuration.ExposeHeaders),
 		"max_age":           aws.ToInt32(configuration.MaxAge),
 	}}
 }

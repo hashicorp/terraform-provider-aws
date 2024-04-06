@@ -7,6 +7,22 @@ import (
 	"testing"
 )
 
+func TestStringCaseInsensitiveSetFunc(t *testing.T) {
+	t.Parallel()
+
+	v1 := "testInG"
+	v2 := "TestiNG"
+	v3 := "test1ng"
+	f := StringCaseInsensitiveSetFunc
+
+	if f(v1) != f(v2) {
+		t.Errorf("expected equal")
+	}
+	if f(v1) == f(v3) {
+		t.Errorf("expected not equal")
+	}
+}
+
 func TestSimpleSchemaSetFunc(t *testing.T) {
 	t.Parallel()
 

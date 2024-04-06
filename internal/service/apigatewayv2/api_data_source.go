@@ -51,25 +51,21 @@ func dataSourceAPI() *schema.Resource {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      hashStringCaseInsensitive,
 						},
 						"allow_methods": {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      hashStringCaseInsensitive,
 						},
 						"allow_origins": {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      hashStringCaseInsensitive,
 						},
 						"expose_headers": {
 							Type:     schema.TypeSet,
 							Computed: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
-							Set:      hashStringCaseInsensitive,
 						},
 						"max_age": {
 							Type:     schema.TypeInt,
