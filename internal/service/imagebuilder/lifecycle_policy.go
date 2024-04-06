@@ -34,6 +34,7 @@ import (
 )
 
 // @FrameworkResource(name="Lifecycle Policy")
+// @Tags(identifierAttribute="id")
 func newResourceLifecyclePolicy(_ context.Context) (resource.ResourceWithConfigure, error) {
 	return &resourceLifecyclePolicy{}, nil
 }
@@ -405,6 +406,8 @@ func (r *resourceLifecyclePolicy) Read(ctx context.Context, req resource.ReadReq
 
 	state.ResourceType = flex.StringValueToFramework(ctx, out.ResourceType)
 	state.Status = flex.StringValueToFramework(ctx, out.Status)
+
+	setTagsOut(ctx, out.Tags)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
