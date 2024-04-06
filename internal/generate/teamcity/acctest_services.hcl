@@ -72,6 +72,18 @@ service "ec2" {
   exclude_pattern  = "TestAccEC2EBS|TestAccEC2Outposts"
 }
 
+service "ec2ebs" {
+  vpc_lock                   = true
+  pattern_override           = "TestAccEC2EBS"
+  split_package_real_package = "ec2"
+}
+
+service "ec2outposts" {
+  vpc_lock                   = true
+  pattern_override           = "TestAccOutposts"
+  split_package_real_package = "ec2"
+}
+
 service "ecrpublic" {
   region = "us-east-1"
 }
@@ -176,12 +188,6 @@ service "opensearch" {
 
 service "opsworks" {
   vpc_lock = true
-}
-
-service "outposts" {
-  vpc_lock                   = true
-  pattern_override           = "TestAccOutposts"
-  split_package_real_package = "ec2"
 }
 
 service "pricing" {
