@@ -10,6 +10,7 @@ var (
 	ResourceAuthorizer          = resourceAuthorizer
 	ResourceDeployment          = resourceDeployment
 	ResourceDomainName          = resourceDomainName
+	ResourceIntegration         = resourceIntegration
 	ResourceIntegrationResponse = resourceIntegrationResponse
 
 	FindAPIByID                           = findAPIByID
@@ -17,5 +18,6 @@ var (
 	FindAuthorizerByTwoPartKey            = findAuthorizerByTwoPartKey
 	FindDeploymentByTwoPartKey            = findDeploymentByTwoPartKey
 	FindDomainName                        = findDomainName
+	FindIntegrationByTwoPartKey           = findIntegrationByTwoPartKey
 	FindIntegrationResponseByThreePartKey = findIntegrationResponseByThreePartKey
 )

@@ -114,7 +114,7 @@ func resourceIntegrationResponseRead(ctx context.Context, d *schema.ResourceData
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading API Gateway v2 Integration Response: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading API Gateway v2 Integration Response (%s): %s", d.Id(), err)
 	}
 
 	d.Set("content_handling_strategy", output.ContentHandlingStrategy)
