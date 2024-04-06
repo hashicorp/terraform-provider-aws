@@ -12,6 +12,7 @@ var (
 	ResourceDomainName          = resourceDomainName
 	ResourceIntegration         = resourceIntegration
 	ResourceIntegrationResponse = resourceIntegrationResponse
+	ResourceModel               = resourceModel
 
 	FindAPIByID                           = findAPIByID
 	FindAPIMappingByTwoPartKey            = findAPIMappingByTwoPartKey
@@ -20,4 +21,5 @@ var (
 	FindDomainName                        = findDomainName
 	FindIntegrationByTwoPartKey           = findIntegrationByTwoPartKey
 	FindIntegrationResponseByThreePartKey = findIntegrationResponseByThreePartKey
+	FindModelByTwoPartKey                 = findModelByTwoPartKey
 )

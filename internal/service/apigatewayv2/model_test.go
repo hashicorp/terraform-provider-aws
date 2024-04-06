@@ -9,15 +9,14 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -97,7 +96,7 @@ func TestAccAPIGatewayV2Model_disappears(t *testing.T) {
 				Config: testAccModelConfig_basic(rName, schema),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckModelExists(ctx, resourceName, &apiId, &v),
-					testAccCheckModelDisappears(ctx, &apiId, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigatewayv2.ResourceModel(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -195,61 +194,40 @@ func testAccCheckModelDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := conn.GetModel(ctx, &apigatewayv2.GetModelInput{
-				ApiId:   aws.String(rs.Primary.Attributes["api_id"]),
-				ModelId: aws.String(rs.Primary.ID),
-			})
-			if errs.IsA[*awstypes.NotFoundException](err) {
+			_, err := tfapigatewayv2.FindModelByTwoPartKey(ctx, conn, rs.Primary.Attributes["api_id"], rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
 				continue
 			}
+
 			if err != nil {
 				return err
 			}
 
-			return fmt.Errorf("API Gateway v2 model %s still exists", rs.Primary.ID)
+			return fmt.Errorf("API Gateway v2 Model %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckModelDisappears(ctx context.Context, apiId *string, v *apigatewayv2.GetModelOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Client(ctx)
-
-		_, err := conn.DeleteModel(ctx, &apigatewayv2.DeleteModelInput{
-			ApiId:   apiId,
-			ModelId: v.ModelId,
-		})
-
-		return err
-	}
-}
-
-func testAccCheckModelExists(ctx context.Context, n string, vApiId *string, v *apigatewayv2.GetModelOutput) resource.TestCheckFunc {
+func testAccCheckModelExists(ctx context.Context, n string, apiID *string, v *apigatewayv2.GetModelOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No API Gateway v2 model ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-		apiId := aws.String(rs.Primary.Attributes["api_id"])
-		resp, err := conn.GetModel(ctx, &apigatewayv2.GetModelInput{
-			ApiId:   apiId,
-			ModelId: aws.String(rs.Primary.ID),
-		})
+		output, err := tfapigatewayv2.FindModelByTwoPartKey(ctx, conn, rs.Primary.Attributes["api_id"], rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		*vApiId = *apiId
-		*v = *resp
+		*apiID = rs.Primary.Attributes["api_id"]
+		*v = *output
 
 		return nil
 	}
