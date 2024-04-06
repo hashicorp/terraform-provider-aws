@@ -7,8 +7,8 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/autoscalingplans"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/autoscalingplans"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
@@ -27,7 +27,7 @@ func sweepScalingPlans(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.AutoScalingPlansConn(ctx)
+	conn := client.AutoScalingPlansClient(ctx)
 	input := &autoscalingplans.DescribeScalingPlansInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -37,8 +37,8 @@ func sweepScalingPlans(region string) error {
 		}
 
 		for _, scalingPlan := range page.ScalingPlans {
-			scalingPlanName := aws.StringValue(scalingPlan.ScalingPlanName)
-			scalingPlanVersion := int(aws.Int64Value(scalingPlan.ScalingPlanVersion))
+			scalingPlanName := aws.ToString(scalingPlan.ScalingPlanName)
+			scalingPlanVersion := int(aws.ToInt64(scalingPlan.ScalingPlanVersion))
 
 			r := ResourceScalingPlan()
 			d := r.Data(nil)

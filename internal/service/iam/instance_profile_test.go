@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/iam"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -22,7 +22,7 @@ import (
 
 func TestAccIAMInstanceProfile_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf iam.InstanceProfile
+	var conf awstypes.InstanceProfile
 	resourceName := "aws_iam_instance_profile.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -53,7 +53,7 @@ func TestAccIAMInstanceProfile_basic(t *testing.T) {
 
 func TestAccIAMInstanceProfile_withoutRole(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf iam.InstanceProfile
+	var conf awstypes.InstanceProfile
 	resourceName := "aws_iam_instance_profile.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -81,7 +81,7 @@ func TestAccIAMInstanceProfile_withoutRole(t *testing.T) {
 
 func TestAccIAMInstanceProfile_nameGenerated(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf iam.InstanceProfile
+	var conf awstypes.InstanceProfile
 	resourceName := "aws_iam_instance_profile.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -110,7 +110,7 @@ func TestAccIAMInstanceProfile_nameGenerated(t *testing.T) {
 
 func TestAccIAMInstanceProfile_namePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf iam.InstanceProfile
+	var conf awstypes.InstanceProfile
 	resourceName := "aws_iam_instance_profile.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -139,7 +139,7 @@ func TestAccIAMInstanceProfile_namePrefix(t *testing.T) {
 
 func TestAccIAMInstanceProfile_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf iam.InstanceProfile
+	var conf awstypes.InstanceProfile
 	resourceName := "aws_iam_instance_profile.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -163,7 +163,7 @@ func TestAccIAMInstanceProfile_disappears(t *testing.T) {
 
 func TestAccIAMInstanceProfile_Disappears_role(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf iam.InstanceProfile
+	var conf awstypes.InstanceProfile
 	resourceName := "aws_iam_instance_profile.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -187,7 +187,7 @@ func TestAccIAMInstanceProfile_Disappears_role(t *testing.T) {
 
 func TestAccIAMInstanceProfile_launchConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf iam.InstanceProfile
+	var conf awstypes.InstanceProfile
 	resourceName := "aws_iam_instance_profile.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -263,7 +263,7 @@ func TestAccIAMInstanceProfile_launchConfiguration(t *testing.T) {
 
 func testAccCheckInstanceProfileDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iam_instance_profile" {
@@ -287,7 +287,7 @@ func testAccCheckInstanceProfileDestroy(ctx context.Context) resource.TestCheckF
 	}
 }
 
-func testAccCheckInstanceProfileExists(ctx context.Context, n string, v *iam.InstanceProfile) resource.TestCheckFunc {
+func testAccCheckInstanceProfileExists(ctx context.Context, n string, v *awstypes.InstanceProfile) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -298,7 +298,7 @@ func testAccCheckInstanceProfileExists(ctx context.Context, n string, v *iam.Ins
 			return fmt.Errorf("No IAM Instance Profile ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
 		output, err := tfiam.FindInstanceProfileByName(ctx, conn, rs.Primary.ID)
 

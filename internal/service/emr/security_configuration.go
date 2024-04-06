@@ -22,8 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_emr_security_configuration")
-func ResourceSecurityConfiguration() *schema.Resource {
+// @SDKResource("aws_emr_security_configuration", name="Security Configuration")
+func resourceSecurityConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSecurityConfigurationCreate,
 		ReadWithoutTimeout:   resourceSecurityConfigurationRead,
@@ -93,7 +93,7 @@ func resourceSecurityConfigurationRead(ctx context.Context, d *schema.ResourceDa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
-	output, err := FindSecurityConfigurationByName(ctx, conn, d.Id())
+	output, err := findSecurityConfigurationByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EMR Security Configuration (%s) not found, removing from state", d.Id())
@@ -133,7 +133,7 @@ func resourceSecurityConfigurationDelete(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func FindSecurityConfigurationByName(ctx context.Context, conn *emr.EMR, name string) (*emr.DescribeSecurityConfigurationOutput, error) {
+func findSecurityConfigurationByName(ctx context.Context, conn *emr.EMR, name string) (*emr.DescribeSecurityConfigurationOutput, error) {
 	input := &emr.DescribeSecurityConfigurationInput{
 		Name: aws.String(name),
 	}

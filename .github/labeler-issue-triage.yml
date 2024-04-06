@@ -21,6 +21,8 @@ sweeper:
   - 'sweeper'
 skaff:
   - 'skaff'
+function:
+  - 'provider::aws::'
 #
 # AWS Per-Service Labeling
 #
@@ -497,6 +499,8 @@ service/outposts:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_outposts_'
 service/panorama:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_panorama_'
+service/paymentcryptography:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_paymentcryptography_'
 service/pcaconnectorad:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_pcaconnectorad_'
 service/personalize:

@@ -7,13 +7,16 @@ import (
 	accessanalyzer_sdkv2 "github.com/aws/aws-sdk-go-v2/service/accessanalyzer"
 	account_sdkv2 "github.com/aws/aws-sdk-go-v2/service/account"
 	acm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/acm"
+	acmpca_sdkv2 "github.com/aws/aws-sdk-go-v2/service/acmpca"
 	amp_sdkv2 "github.com/aws/aws-sdk-go-v2/service/amp"
+	amplify_sdkv2 "github.com/aws/aws-sdk-go-v2/service/amplify"
 	appconfig_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appconfig"
 	appfabric_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appfabric"
 	appflow_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appflow"
 	apprunner_sdkv2 "github.com/aws/aws-sdk-go-v2/service/apprunner"
 	athena_sdkv2 "github.com/aws/aws-sdk-go-v2/service/athena"
 	auditmanager_sdkv2 "github.com/aws/aws-sdk-go-v2/service/auditmanager"
+	autoscalingplans_sdkv2 "github.com/aws/aws-sdk-go-v2/service/autoscalingplans"
 	batch_sdkv2 "github.com/aws/aws-sdk-go-v2/service/batch"
 	bedrock_sdkv2 "github.com/aws/aws-sdk-go-v2/service/bedrock"
 	bedrockagent_sdkv2 "github.com/aws/aws-sdk-go-v2/service/bedrockagent"
@@ -72,6 +75,7 @@ import (
 	glacier_sdkv2 "github.com/aws/aws-sdk-go-v2/service/glacier"
 	groundstation_sdkv2 "github.com/aws/aws-sdk-go-v2/service/groundstation"
 	healthlake_sdkv2 "github.com/aws/aws-sdk-go-v2/service/healthlake"
+	iam_sdkv2 "github.com/aws/aws-sdk-go-v2/service/iam"
 	identitystore_sdkv2 "github.com/aws/aws-sdk-go-v2/service/identitystore"
 	inspector2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/inspector2"
 	internetmonitor_sdkv2 "github.com/aws/aws-sdk-go-v2/service/internetmonitor"
@@ -98,6 +102,7 @@ import (
 	oam_sdkv2 "github.com/aws/aws-sdk-go-v2/service/oam"
 	opensearchserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	osis_sdkv2 "github.com/aws/aws-sdk-go-v2/service/osis"
+	paymentcryptography_sdkv2 "github.com/aws/aws-sdk-go-v2/service/paymentcryptography"
 	pcaconnectorad_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pcaconnectorad"
 	pipes_sdkv2 "github.com/aws/aws-sdk-go-v2/service/pipes"
 	polly_sdkv2 "github.com/aws/aws-sdk-go-v2/service/polly"
@@ -145,11 +150,8 @@ import (
 	wellarchitected_sdkv2 "github.com/aws/aws-sdk-go-v2/service/wellarchitected"
 	workspaces_sdkv2 "github.com/aws/aws-sdk-go-v2/service/workspaces"
 	xray_sdkv2 "github.com/aws/aws-sdk-go-v2/service/xray"
-	acmpca_sdkv1 "github.com/aws/aws-sdk-go/service/acmpca"
-	amplify_sdkv1 "github.com/aws/aws-sdk-go/service/amplify"
 	apigateway_sdkv1 "github.com/aws/aws-sdk-go/service/apigateway"
 	apigatewayv2_sdkv1 "github.com/aws/aws-sdk-go/service/apigatewayv2"
-	appconfig_sdkv1 "github.com/aws/aws-sdk-go/service/appconfig"
 	appintegrationsservice_sdkv1 "github.com/aws/aws-sdk-go/service/appintegrationsservice"
 	applicationautoscaling_sdkv1 "github.com/aws/aws-sdk-go/service/applicationautoscaling"
 	applicationinsights_sdkv1 "github.com/aws/aws-sdk-go/service/applicationinsights"
@@ -157,7 +159,6 @@ import (
 	appstream_sdkv1 "github.com/aws/aws-sdk-go/service/appstream"
 	appsync_sdkv1 "github.com/aws/aws-sdk-go/service/appsync"
 	autoscaling_sdkv1 "github.com/aws/aws-sdk-go/service/autoscaling"
-	autoscalingplans_sdkv1 "github.com/aws/aws-sdk-go/service/autoscalingplans"
 	backup_sdkv1 "github.com/aws/aws-sdk-go/service/backup"
 	batch_sdkv1 "github.com/aws/aws-sdk-go/service/batch"
 	chime_sdkv1 "github.com/aws/aws-sdk-go/service/chime"
@@ -179,7 +180,6 @@ import (
 	docdb_sdkv1 "github.com/aws/aws-sdk-go/service/docdb"
 	dynamodb_sdkv1 "github.com/aws/aws-sdk-go/service/dynamodb"
 	ec2_sdkv1 "github.com/aws/aws-sdk-go/service/ec2"
-	ecr_sdkv1 "github.com/aws/aws-sdk-go/service/ecr"
 	ecs_sdkv1 "github.com/aws/aws-sdk-go/service/ecs"
 	efs_sdkv1 "github.com/aws/aws-sdk-go/service/efs"
 	elasticache_sdkv1 "github.com/aws/aws-sdk-go/service/elasticache"
@@ -197,7 +197,6 @@ import (
 	glue_sdkv1 "github.com/aws/aws-sdk-go/service/glue"
 	greengrass_sdkv1 "github.com/aws/aws-sdk-go/service/greengrass"
 	guardduty_sdkv1 "github.com/aws/aws-sdk-go/service/guardduty"
-	iam_sdkv1 "github.com/aws/aws-sdk-go/service/iam"
 	imagebuilder_sdkv1 "github.com/aws/aws-sdk-go/service/imagebuilder"
 	inspector_sdkv1 "github.com/aws/aws-sdk-go/service/inspector"
 	iot_sdkv1 "github.com/aws/aws-sdk-go/service/iot"
@@ -257,8 +256,8 @@ func (c *AWSClient) ACMClient(ctx context.Context) *acm_sdkv2.Client {
 	return errs.Must(client[*acm_sdkv2.Client](ctx, c, names.ACM, make(map[string]any)))
 }
 
-func (c *AWSClient) ACMPCAConn(ctx context.Context) *acmpca_sdkv1.ACMPCA {
-	return errs.Must(conn[*acmpca_sdkv1.ACMPCA](ctx, c, names.ACMPCA, make(map[string]any)))
+func (c *AWSClient) ACMPCAClient(ctx context.Context) *acmpca_sdkv2.Client {
+	return errs.Must(client[*acmpca_sdkv2.Client](ctx, c, names.ACMPCA, make(map[string]any)))
 }
 
 func (c *AWSClient) AMPClient(ctx context.Context) *amp_sdkv2.Client {
@@ -281,16 +280,12 @@ func (c *AWSClient) AccountClient(ctx context.Context) *account_sdkv2.Client {
 	return errs.Must(client[*account_sdkv2.Client](ctx, c, names.Account, make(map[string]any)))
 }
 
-func (c *AWSClient) AmplifyConn(ctx context.Context) *amplify_sdkv1.Amplify {
-	return errs.Must(conn[*amplify_sdkv1.Amplify](ctx, c, names.Amplify, make(map[string]any)))
+func (c *AWSClient) AmplifyClient(ctx context.Context) *amplify_sdkv2.Client {
+	return errs.Must(client[*amplify_sdkv2.Client](ctx, c, names.Amplify, make(map[string]any)))
 }
 
 func (c *AWSClient) AppAutoScalingConn(ctx context.Context) *applicationautoscaling_sdkv1.ApplicationAutoScaling {
 	return errs.Must(conn[*applicationautoscaling_sdkv1.ApplicationAutoScaling](ctx, c, names.AppAutoScaling, make(map[string]any)))
-}
-
-func (c *AWSClient) AppConfigConn(ctx context.Context) *appconfig_sdkv1.AppConfig {
-	return errs.Must(conn[*appconfig_sdkv1.AppConfig](ctx, c, names.AppConfig, make(map[string]any)))
 }
 
 func (c *AWSClient) AppConfigClient(ctx context.Context) *appconfig_sdkv2.Client {
@@ -341,8 +336,8 @@ func (c *AWSClient) AutoScalingConn(ctx context.Context) *autoscaling_sdkv1.Auto
 	return errs.Must(conn[*autoscaling_sdkv1.AutoScaling](ctx, c, names.AutoScaling, make(map[string]any)))
 }
 
-func (c *AWSClient) AutoScalingPlansConn(ctx context.Context) *autoscalingplans_sdkv1.AutoScalingPlans {
-	return errs.Must(conn[*autoscalingplans_sdkv1.AutoScalingPlans](ctx, c, names.AutoScalingPlans, make(map[string]any)))
+func (c *AWSClient) AutoScalingPlansClient(ctx context.Context) *autoscalingplans_sdkv2.Client {
+	return errs.Must(client[*autoscalingplans_sdkv2.Client](ctx, c, names.AutoScalingPlans, make(map[string]any)))
 }
 
 func (c *AWSClient) BackupConn(ctx context.Context) *backup_sdkv1.Backup {
@@ -589,10 +584,6 @@ func (c *AWSClient) EC2Client(ctx context.Context) *ec2_sdkv2.Client {
 	return errs.Must(client[*ec2_sdkv2.Client](ctx, c, names.EC2, make(map[string]any)))
 }
 
-func (c *AWSClient) ECRConn(ctx context.Context) *ecr_sdkv1.ECR {
-	return errs.Must(conn[*ecr_sdkv1.ECR](ctx, c, names.ECR, make(map[string]any)))
-}
-
 func (c *AWSClient) ECRClient(ctx context.Context) *ecr_sdkv2.Client {
 	return errs.Must(client[*ecr_sdkv2.Client](ctx, c, names.ECR, make(map[string]any)))
 }
@@ -729,8 +720,8 @@ func (c *AWSClient) HealthLakeClient(ctx context.Context) *healthlake_sdkv2.Clie
 	return errs.Must(client[*healthlake_sdkv2.Client](ctx, c, names.HealthLake, make(map[string]any)))
 }
 
-func (c *AWSClient) IAMConn(ctx context.Context) *iam_sdkv1.IAM {
-	return errs.Must(conn[*iam_sdkv1.IAM](ctx, c, names.IAM, make(map[string]any)))
+func (c *AWSClient) IAMClient(ctx context.Context) *iam_sdkv2.Client {
+	return errs.Must(client[*iam_sdkv2.Client](ctx, c, names.IAM, make(map[string]any)))
 }
 
 func (c *AWSClient) IVSConn(ctx context.Context) *ivs_sdkv1.IVS {
@@ -939,6 +930,10 @@ func (c *AWSClient) OutpostsConn(ctx context.Context) *outposts_sdkv1.Outposts {
 
 func (c *AWSClient) PCAConnectorADClient(ctx context.Context) *pcaconnectorad_sdkv2.Client {
 	return errs.Must(client[*pcaconnectorad_sdkv2.Client](ctx, c, names.PCAConnectorAD, make(map[string]any)))
+}
+
+func (c *AWSClient) PaymentCryptographyClient(ctx context.Context) *paymentcryptography_sdkv2.Client {
+	return errs.Must(client[*paymentcryptography_sdkv2.Client](ctx, c, names.PaymentCryptography, make(map[string]any)))
 }
 
 func (c *AWSClient) PinpointConn(ctx context.Context) *pinpoint_sdkv1.Pinpoint {

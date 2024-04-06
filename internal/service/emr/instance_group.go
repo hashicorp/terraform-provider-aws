@@ -30,8 +30,8 @@ const (
 	instanceGroupUpdateTimeout = 30 * time.Minute
 )
 
-// @SDKResource("aws_emr_instance_group")
-func ResourceInstanceGroup() *schema.Resource {
+// @SDKResource("aws_emr_instance_group", name="Instance Group")
+func resourceInstanceGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceGroupCreate,
 		ReadWithoutTimeout:   resourceInstanceGroupRead,
@@ -212,7 +212,7 @@ func resourceInstanceGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
-	ig, err := FetchInstanceGroup(ctx, conn, d.Get("cluster_id").(string), d.Id())
+	ig, err := fetchInstanceGroup(ctx, conn, d.Get("cluster_id").(string), d.Id())
 
 	if tfresource.NotFound(err) {
 		log.Printf("[DEBUG] EMR Instance Group (%s) not found, removing", d.Id())
@@ -363,7 +363,7 @@ func resourceInstanceGroupDelete(ctx context.Context, d *schema.ResourceData, me
 
 func instanceGroupStateRefresh(ctx context.Context, conn *emr.EMR, clusterID, groupID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		ig, err := FetchInstanceGroup(ctx, conn, clusterID, groupID)
+		ig, err := fetchInstanceGroup(ctx, conn, clusterID, groupID)
 		if err != nil {
 			return nil, "Not Found", err
 		}
@@ -377,7 +377,7 @@ func instanceGroupStateRefresh(ctx context.Context, conn *emr.EMR, clusterID, gr
 	}
 }
 
-func FetchInstanceGroup(ctx context.Context, conn *emr.EMR, clusterID, groupID string) (*emr.InstanceGroup, error) {
+func fetchInstanceGroup(ctx context.Context, conn *emr.EMR, clusterID, groupID string) (*emr.InstanceGroup, error) {
 	input := &emr.ListInstanceGroupsInput{ClusterId: aws.String(clusterID)}
 
 	var groups []*emr.InstanceGroup

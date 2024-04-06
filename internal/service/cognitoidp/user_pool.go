@@ -2290,7 +2290,7 @@ func flattenUserPoolUserAttributeUpdateSettings(u *cognitoidentityprovider.UserA
 		return nil
 	}
 	// If this setting is enabled then disabled, the API returns a nested empty slice instead of nil
-	if u != nil && len(u.AttributesRequireVerificationBeforeUpdate) == 0 {
+	if len(u.AttributesRequireVerificationBeforeUpdate) == 0 {
 		return nil
 	}
 

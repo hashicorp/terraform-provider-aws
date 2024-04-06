@@ -26,9 +26,13 @@ import (
 // Endpoint constants defined by the AWS SDK v1 but not defined in the AWS SDK v2.
 const (
 	AccessAnalyzerEndpointID             = "access-analyzer"
+	ACMPCAEndpointID                     = "acm-pca"
 	AMPEndpointID                        = "aps"
+	AppConfigEndpointID                  = "appconfig"
+	AmplifyEndpointID                    = "amplify"
 	AthenaEndpointID                     = "athena"
 	AuditManagerEndpointID               = "auditmanager"
+	AutoScalingPlansEndpointID           = "autoscaling-plans"
 	BatchEndpointID                      = "batch"
 	BedrockEndpointID                    = "bedrock"
 	BudgetsEndpointID                    = "budgets"
@@ -71,6 +75,7 @@ const (
 	Route53DomainsEndpointID             = "route53domains"
 	SchedulerEndpointID                  = "scheduler"
 	ServiceQuotasEndpointID              = "servicequotas"
+	ServiceCatalogAppRegistryEndpointID  = "servicecatalog-appregistry"
 	ShieldEndpointID                     = "shield"
 	SSMEndpointID                        = "ssm"
 	SSMIncidentsEndpointID               = "ssm-incidents"
