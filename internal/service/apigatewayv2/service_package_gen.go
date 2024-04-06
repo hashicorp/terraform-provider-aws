@@ -101,8 +101,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_apigatewayv2_route",
 		},
 		{
-			Factory:  ResourceRouteResponse,
+			Factory:  resourceRouteResponse,
 			TypeName: "aws_apigatewayv2_route_response",
+			Name:     "Route Response",
 		},
 		{
 			Factory:  ResourceStage,

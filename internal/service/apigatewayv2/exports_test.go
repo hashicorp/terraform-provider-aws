@@ -13,6 +13,7 @@ var (
 	ResourceIntegration         = resourceIntegration
 	ResourceIntegrationResponse = resourceIntegrationResponse
 	ResourceModel               = resourceModel
+	ResourceRouteResponse       = resourceRouteResponse
 
 	FindAPIByID                           = findAPIByID
 	FindAPIMappingByTwoPartKey            = findAPIMappingByTwoPartKey
@@ -22,4 +23,5 @@ var (
 	FindIntegrationByTwoPartKey           = findIntegrationByTwoPartKey
 	FindIntegrationResponseByThreePartKey = findIntegrationResponseByThreePartKey
 	FindModelByTwoPartKey                 = findModelByTwoPartKey
+	FindRouteResponseByThreePartKey       = findRouteResponseByThreePartKey
 )
