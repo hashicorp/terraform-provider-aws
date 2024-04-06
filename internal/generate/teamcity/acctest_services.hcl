@@ -72,12 +72,6 @@ service "ec2" {
   exclude_pattern  = "TestAccEC2EBS|TestAccEC2Outposts"
 }
 
-service "transitgateway" {
-  vpc_lock                   = true
-  pattern_override           = "TestAccTransitGateway"
-  split_package_real_package = "ec2"
-}
-
 service "ecrpublic" {
   region = "us-east-1"
 }
@@ -130,6 +124,12 @@ service "imagebuilder" {
   vpc_lock = true
 }
 
+service "ipam" {
+  vpc_lock                   = true
+  pattern_override           = "TestAccIPAM"
+  split_package_real_package = "ec2"
+}
+
 service "kafka" {
   vpc_lock = true
 }
@@ -178,6 +178,12 @@ service "opsworks" {
   vpc_lock = true
 }
 
+service "outposts" {
+  vpc_lock                   = true
+  pattern_override           = "TestAccOutposts"
+  split_package_real_package = "ec2"
+}
+
 service "pricing" {
   region = "us-east-1"
 }
@@ -222,8 +228,44 @@ service "transfer" {
   vpc_lock = true
 }
 
+service "transitgateway" {
+  vpc_lock                   = true
+  pattern_override           = "TestAccTransitGateway"
+  split_package_real_package = "ec2"
+}
+
+service "verifiedaccess" {
+  vpc_lock                   = true
+  pattern_override           = "TestAccVerifiedAccess"
+  split_package_real_package = "ec2"
+}
+
+service "vpc" {
+  vpc_lock                   = true
+  pattern_override           = "TestAccVPC"
+  split_package_real_package = "ec2"
+}
+
+service "vpnclient" {
+  vpc_lock                   = true
+  pattern_override           = "TestAccClientVPN"
+  split_package_real_package = "ec2"
+}
+
+service "vpnsite" {
+  vpc_lock                   = true
+  pattern_override           = "TestAccSiteVPN"
+  split_package_real_package = "ec2"
+}
+
 service "waf" {
   region = "us-east-1"
+}
+
+service "wavelength" {
+  vpc_lock                   = true
+  pattern_override           = "TestAccWavelength"
+  split_package_real_package = "ec2"
 }
 
 service "workspaces" {
