@@ -114,13 +114,7 @@ func resourceVPCLinkRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway v2 VPC Link (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "apigateway",
-		Region:    meta.(*conns.AWSClient).Region,
-		Resource:  "/vpclinks/" + d.Id(),
-	}.String()
-	d.Set("arn", arn)
+	d.Set("arn", vpcLinkARN(meta.(*conns.AWSClient), d.Id()))
 	d.Set("name", output.Name)
 	d.Set("security_group_ids", output.SecurityGroupIds)
 	d.Set("subnet_ids", output.SubnetIds)
@@ -261,4 +255,13 @@ func waitVPCLinkDeleted(ctx context.Context, conn *apigatewayv2.Client, vpcLinkI
 	}
 
 	return nil, err
+}
+
+func vpcLinkARN(c *conns.AWSClient, vpcLinkID string) string {
+	return arn.ARN{
+		Partition: c.Partition,
+		Service:   "apigateway",
+		Region:    c.Region,
+		Resource:  "/vpclinks/" + vpcLinkID,
+	}.String()
 }

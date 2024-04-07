@@ -41,9 +41,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Export",
 		},
 		{
-			Factory:  DataSourceVPCLink,
+			Factory:  dataSourceVPCLink,
 			TypeName: "aws_apigatewayv2_vpc_link",
-			Name:     "VPC Link Data Source",
+			Name:     "VPC Link",
 		},
 	}
 }

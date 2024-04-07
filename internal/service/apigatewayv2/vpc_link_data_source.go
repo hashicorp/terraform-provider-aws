@@ -6,7 +6,6 @@ package apigatewayv2
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -15,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_apigatewayv2_vpc_link", name="VPC Link Data Source")
-func DataSourceVPCLink() *schema.Resource {
+// @SDKDataSource("aws_apigatewayv2_vpc_link", name="VPC Link")
+func dataSourceVPCLink() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceVPCLinkRead,
 
@@ -60,13 +59,7 @@ func dataSourceVPCLinkRead(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	d.SetId(vpcLinkID)
-	arn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "apigateway",
-		Region:    meta.(*conns.AWSClient).Region,
-		Resource:  "/vpclinks/" + d.Id(),
-	}.String()
-	d.Set("arn", arn)
+	d.Set("arn", vpcLinkARN(meta.(*conns.AWSClient), d.Id()))
 	d.Set("name", output.Name)
 	d.Set("security_group_ids", output.SecurityGroupIds)
 	d.Set("subnet_ids", output.SubnetIds)
