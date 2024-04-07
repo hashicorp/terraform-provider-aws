@@ -13,7 +13,6 @@ import (
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -68,9 +67,6 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 			"id": framework.IDAttribute(),
 			"name": schema.StringAttribute{
 				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
 			},
 			"role_arn": schema.StringAttribute{
 				Required: true,
@@ -89,21 +85,26 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
-						"vector_knowledge_base_configuration": schema.ListAttribute{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[vectorKnowledgeBaseConfigurationModel](ctx),
-							Optional:   true,
-							Computed:   true,
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-							},
-							ElementType: types.ObjectType{
-								AttrTypes: map[string]attr.Type{
-									"embedding_model_arn": fwtypes.ARNType,
-								},
-							},
-						},
 						"type": schema.StringAttribute{
 							Required: true,
+						},
+					},
+					Blocks: map[string]schema.Block{
+						"vector_knowledge_base_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[vectorKnowledgeBaseConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.IsRequired(),
+								listvalidator.SizeAtLeast(1),
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"embedding_model_arn": schema.StringAttribute{
+										CustomType: fwtypes.ARNType,
+										Required:   true,
+									},
+								},
+							},
 						},
 					},
 				},
@@ -122,44 +123,6 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 						},
 					},
 					Blocks: map[string]schema.Block{
-						"opensearch_serverless_configuration": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[opensearchServerlessConfigurationModel](ctx),
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-							},
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"collection_arn": schema.StringAttribute{
-										CustomType: fwtypes.ARNType,
-										Required:   true,
-									},
-									"vector_index_name": schema.StringAttribute{
-										Required: true,
-									},
-								},
-								Blocks: map[string]schema.Block{
-									"field_mapping": schema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[opensearchServerlessFieldMappingModel](ctx),
-										Validators: []validator.List{
-											listvalidator.SizeAtMost(1),
-										},
-										NestedObject: schema.NestedBlockObject{
-											Attributes: map[string]schema.Attribute{
-												"metadata_field": schema.StringAttribute{
-													Optional: true,
-												},
-												"text_field": schema.StringAttribute{
-													Optional: true,
-												},
-												"vector_field": schema.StringAttribute{
-													Optional: true,
-												},
-											},
-										},
-									},
-								},
-							},
-						},
 						"pinecone_configuration": schema.ListNestedBlock{
 							CustomType: fwtypes.NewListNestedObjectTypeOf[pineconeConfigurationModel](ctx),
 							Validators: []validator.List{
@@ -285,6 +248,44 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 								},
 							},
 						},
+						"opensearch_serverless_configuration": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[opensearchServerlessConfigurationModel](ctx),
+							Validators: []validator.List{
+								listvalidator.SizeAtMost(1),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"collection_arn": schema.StringAttribute{
+										CustomType: fwtypes.ARNType,
+										Required:   true,
+									},
+									"vector_index_name": schema.StringAttribute{
+										Required: true,
+									},
+								},
+								Blocks: map[string]schema.Block{
+									"field_mapping": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[opensearchServerlessFieldMappingModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"metadata_field": schema.StringAttribute{
+													Optional: true,
+												},
+												"text_field": schema.StringAttribute{
+													Optional: true,
+												},
+												"vector_field": schema.StringAttribute{
+													Optional: true,
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -342,18 +343,11 @@ func (r *knowledgeBaseResource) Create(ctx context.Context, request resource.Cre
 		return
 	}
 
-	var knowledgeBase knowledgeBaseResourceModel
-	response.Diagnostics.Append(fwflex.Flatten(ctx, knowledgebase, &knowledgeBase)...)
+	// var knowledgeBase knowledgeBaseResourceModel
+	response.Diagnostics.Append(fwflex.Flatten(ctx, knowledgebase, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
-
-	// Set values for unknowns after creation is complete.
-	data.KnowledgeBaseConfiguration = knowledgeBase.KnowledgeBaseConfiguration
-	data.StorageConfiguration = knowledgeBase.StorageConfiguration
-	data.Name = fwflex.StringToFramework(ctx, knowledgebase.Name)
-	data.Description = fwflex.StringToFramework(ctx, knowledgebase.Description)
-	data.RoleARN = fwflex.StringToFramework(ctx, knowledgebase.RoleArn)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -381,19 +375,11 @@ func (r *knowledgeBaseResource) Read(ctx context.Context, request resource.ReadR
 		return
 	}
 
-	var knowledgeBase knowledgeBaseResourceModel
-	response.Diagnostics.Append(fwflex.Flatten(ctx, knowledgebase, &knowledgeBase)...)
+	// var knowledgeBase knowledgeBaseResourceModel
+	response.Diagnostics.Append(fwflex.Flatten(ctx, knowledgebase, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
-
-	data.KnowledgeBaseARN = knowledgeBase.KnowledgeBaseARN
-	data.KnowledgeBaseId = knowledgeBase.KnowledgeBaseId
-	data.KnowledgeBaseConfiguration = knowledgeBase.KnowledgeBaseConfiguration
-	data.StorageConfiguration = knowledgeBase.StorageConfiguration
-	data.Name = fwflex.StringToFramework(ctx, knowledgebase.Name)
-	data.Description = fwflex.StringToFramework(ctx, knowledgebase.Description)
-	data.RoleARN = fwflex.StringToFramework(ctx, knowledgebase.RoleArn)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
