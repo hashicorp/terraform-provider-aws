@@ -335,7 +335,7 @@ func TestAccIoTTopicRule_cloudWatchLogs_batch_mode(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicRuleExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cloudwatch_logs.*", map[string]string{
 						"batch_mode":     "false",
 						"log_group_name": "mylogs1",
@@ -371,7 +371,7 @@ func TestAccIoTTopicRule_cloudWatchLogs_batch_mode(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTopicRuleExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cloudwatch_alarm.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "cloudwatch_logs.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "cloudwatch_logs.*", map[string]string{
 						"batch_mode":     "true",
 						"log_group_name": "mylogs1",
