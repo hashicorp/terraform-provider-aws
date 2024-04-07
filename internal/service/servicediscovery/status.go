@@ -6,14 +6,13 @@ package servicediscovery
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/servicediscovery"
+	"github.com/aws/aws-sdk-go-v2/service/servicediscovery"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // StatusOperation fetches the Operation and its Status
-func StatusOperation(ctx context.Context, conn *servicediscovery.ServiceDiscovery, id string) retry.StateRefreshFunc {
+func StatusOperation(ctx context.Context, conn *servicediscovery.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindOperationByID(ctx, conn, id)
 
@@ -25,6 +24,6 @@ func StatusOperation(ctx context.Context, conn *servicediscovery.ServiceDiscover
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.Status), nil
+		return output, string(output.Status), nil
 	}
 }

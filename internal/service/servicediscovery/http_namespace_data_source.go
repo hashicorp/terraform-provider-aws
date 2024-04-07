@@ -6,8 +6,8 @@ package servicediscovery
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/servicediscovery"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/servicediscovery/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -43,17 +43,17 @@ func DataSourceHTTPNamespace() *schema.Resource {
 }
 
 func dataSourceHTTPNamespaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceDiscoveryClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
-	nsSummary, err := findNamespaceByNameAndType(ctx, conn, name, servicediscovery.NamespaceTypeHttp)
+	nsSummary, err := findNamespaceByNameAndType(ctx, conn, name, string(awstypes.NamespaceTypeHttp))
 
 	if err != nil {
 		return diag.Errorf("reading Service Discovery HTTP Namespace (%s): %s", name, err)
 	}
 
-	namespaceID := aws.StringValue(nsSummary.Id)
+	namespaceID := aws.ToString(nsSummary.Id)
 
 	ns, err := FindNamespaceByID(ctx, conn, namespaceID)
 
@@ -62,7 +62,7 @@ func dataSourceHTTPNamespaceRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	d.SetId(namespaceID)
-	arn := aws.StringValue(ns.Arn)
+	arn := aws.ToString(ns.Arn)
 	d.Set("arn", arn)
 	d.Set("description", ns.Description)
 	if ns.Properties != nil && ns.Properties.HttpProperties != nil {

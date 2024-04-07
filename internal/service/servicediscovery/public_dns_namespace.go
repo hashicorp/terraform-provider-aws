@@ -7,8 +7,9 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/servicediscovery"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/servicediscovery"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/servicediscovery/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -60,7 +61,7 @@ func ResourcePublicDNSNamespace() *schema.Resource {
 }
 
 func resourcePublicDNSNamespaceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceDiscoveryClient(ctx)
 
 	name := d.Get("name").(string)
 	input := &servicediscovery.CreatePublicDnsNamespaceInput{
@@ -73,31 +74,31 @@ func resourcePublicDNSNamespaceCreate(ctx context.Context, d *schema.ResourceDat
 		input.Description = aws.String(v.(string))
 	}
 
-	output, err := conn.CreatePublicDnsNamespaceWithContext(ctx, input)
+	output, err := conn.CreatePublicDnsNamespace(ctx, input)
 
 	if err != nil {
 		return diag.Errorf("creating Service Discovery Public DNS Namespace (%s): %s", name, err)
 	}
 
-	operation, err := WaitOperationSuccess(ctx, conn, aws.StringValue(output.OperationId))
+	operation, err := WaitOperationSuccess(ctx, conn, aws.ToString(output.OperationId))
 
 	if err != nil {
 		return diag.Errorf("waiting for Service Discovery Public DNS Namespace (%s) create: %s", name, err)
 	}
 
-	namespaceID, ok := operation.Targets[servicediscovery.OperationTargetTypeNamespace]
+	namespaceID, ok := operation.Targets[string(awstypes.OperationTargetTypeNamespace)]
 
 	if !ok {
 		return diag.Errorf("creating Service Discovery Public DNS Namespace (%s): operation response missing Namespace ID", name)
 	}
 
-	d.SetId(aws.StringValue(namespaceID))
+	d.SetId(namespaceID)
 
 	return resourcePublicDNSNamespaceRead(ctx, d, meta)
 }
 
 func resourcePublicDNSNamespaceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceDiscoveryClient(ctx)
 
 	ns, err := FindNamespaceByID(ctx, conn, d.Id())
 
@@ -111,7 +112,7 @@ func resourcePublicDNSNamespaceRead(ctx context.Context, d *schema.ResourceData,
 		return diag.Errorf("reading Service Discovery Public DNS Namespace (%s): %s", d.Id(), err)
 	}
 
-	arn := aws.StringValue(ns.Arn)
+	arn := aws.ToString(ns.Arn)
 	d.Set("arn", arn)
 	d.Set("description", ns.Description)
 	if ns.Properties != nil && ns.Properties.DnsProperties != nil {
@@ -125,25 +126,25 @@ func resourcePublicDNSNamespaceRead(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourcePublicDNSNamespaceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceDiscoveryClient(ctx)
 
 	if d.HasChange("description") {
 		input := &servicediscovery.UpdatePublicDnsNamespaceInput{
 			Id: aws.String(d.Id()),
-			Namespace: &servicediscovery.PublicDnsNamespaceChange{
+			Namespace: &awstypes.PublicDnsNamespaceChange{
 				Description: aws.String(d.Get("description").(string)),
 			},
 			UpdaterRequestId: aws.String(id.UniqueId()),
 		}
 
-		output, err := conn.UpdatePublicDnsNamespaceWithContext(ctx, input)
+		output, err := conn.UpdatePublicDnsNamespace(ctx, input)
 
 		if err != nil {
 			return diag.Errorf("updating Service Discovery Public DNS Namespace (%s): %s", d.Id(), err)
 		}
 
 		if output != nil && output.OperationId != nil {
-			if _, err := WaitOperationSuccess(ctx, conn, aws.StringValue(output.OperationId)); err != nil {
+			if _, err := WaitOperationSuccess(ctx, conn, aws.ToString(output.OperationId)); err != nil {
 				return diag.Errorf("waiting for Service Discovery Public DNS Namespace (%s) update: %s", d.Id(), err)
 			}
 		}
@@ -153,10 +154,10 @@ func resourcePublicDNSNamespaceUpdate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourcePublicDNSNamespaceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).ServiceDiscoveryConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceDiscoveryClient(ctx)
 
 	log.Printf("[INFO] Deleting Service Discovery Public DNS Namespace: %s", d.Id())
-	output, err := conn.DeleteNamespaceWithContext(ctx, &servicediscovery.DeleteNamespaceInput{
+	output, err := conn.DeleteNamespace(ctx, &servicediscovery.DeleteNamespaceInput{
 		Id: aws.String(d.Id()),
 	})
 
@@ -165,7 +166,7 @@ func resourcePublicDNSNamespaceDelete(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if output != nil && output.OperationId != nil {
-		if _, err := WaitOperationSuccess(ctx, conn, aws.StringValue(output.OperationId)); err != nil {
+		if _, err := WaitOperationSuccess(ctx, conn, aws.ToString(output.OperationId)); err != nil {
 			return diag.Errorf("waiting for Service Discovery Public DNS Namespace (%s) delete: %s", d.Id(), err)
 		}
 	}
