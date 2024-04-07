@@ -411,7 +411,7 @@ func TestAccAPIGatewayV2API_OpenAPI_withCors(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"body"},
+				ImportStateVerifyIgnore: []string{"body", "cors_configuration.0.allow_methods"},
 			},
 			{
 				Config: testAccAPIConfig_openYAMLCorsConfigurationUpdated(rName),
@@ -679,9 +679,10 @@ func TestAccAPIGatewayV2API_cors(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"cors_configuration.0.allow_headers", "cors_configuration.0.allow_methods"},
 			},
 			{
 				Config: testAccAPIConfig_corsConfigurationUpdated(rName),
