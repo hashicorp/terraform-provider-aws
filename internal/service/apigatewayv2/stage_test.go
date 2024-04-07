@@ -12,14 +12,13 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -1108,25 +1107,24 @@ func testAccCheckStageDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := conn.GetStage(ctx, &apigatewayv2.GetStageInput{
-				ApiId:     aws.String(rs.Primary.Attributes["api_id"]),
-				StageName: aws.String(rs.Primary.ID),
-			})
-			if errs.IsA[*awstypes.NotFoundException](err) {
+			_, err := tfapigatewayv2.FindStageByTwoPartKey(ctx, conn, rs.Primary.Attributes["api_id"], rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
 				continue
 			}
+
 			if err != nil {
 				return err
 			}
 
-			return fmt.Errorf("API Gateway v2 stage %s still exists", rs.Primary.ID)
+			return fmt.Errorf("API Gateway v2 Stage %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckStageExists(ctx context.Context, n string, vApiId *string, v *apigatewayv2.GetStageOutput) resource.TestCheckFunc {
+func testAccCheckStageExists(ctx context.Context, n string, apiID *string, v *apigatewayv2.GetStageOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -1135,17 +1133,14 @@ func testAccCheckStageExists(ctx context.Context, n string, vApiId *string, v *a
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-		apiId := aws.String(rs.Primary.Attributes["api_id"])
-		resp, err := conn.GetStage(ctx, &apigatewayv2.GetStageInput{
-			ApiId:     apiId,
-			StageName: aws.String(rs.Primary.ID),
-		})
+		output, err := tfapigatewayv2.FindStageByTwoPartKey(ctx, conn, rs.Primary.Attributes["api_id"], rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
 
-		*vApiId = *apiId
-		*v = *resp
+		*apiID = rs.Primary.Attributes["api_id"]
+		*v = *output
 
 		return nil
 	}

@@ -15,6 +15,7 @@ var (
 	ResourceModel               = resourceModel
 	ResourceRoute               = resourceRoute
 	ResourceRouteResponse       = resourceRouteResponse
+	ResourceStage               = resourceStage
 
 	FindAPIByID                           = findAPIByID
 	FindAPIMappingByTwoPartKey            = findAPIMappingByTwoPartKey
@@ -26,4 +27,5 @@ var (
 	FindModelByTwoPartKey                 = findModelByTwoPartKey
 	FindRouteByTwoPartKey                 = findRouteByTwoPartKey
 	FindRouteResponseByThreePartKey       = findRouteResponseByThreePartKey
+	FindStageByTwoPartKey                 = findStageByTwoPartKey
 )
