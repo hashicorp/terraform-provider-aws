@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/costexplorer"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/costexplorer/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func TestAccCECostCategory_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var output costexplorer.CostCategory
+	var output awstypes.CostCategory
 	resourceName := "aws_ce_cost_category.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -52,7 +52,7 @@ func TestAccCECostCategory_basic(t *testing.T) {
 
 func TestAccCECostCategory_effectiveStart(t *testing.T) {
 	ctx := acctest.Context(t)
-	var output costexplorer.CostCategory
+	var output awstypes.CostCategory
 	resourceName := "aws_ce_cost_category.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -89,7 +89,7 @@ func TestAccCECostCategory_effectiveStart(t *testing.T) {
 
 func TestAccCECostCategory_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var output costexplorer.CostCategory
+	var output awstypes.CostCategory
 	resourceName := "aws_ce_cost_category.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -113,7 +113,7 @@ func TestAccCECostCategory_disappears(t *testing.T) {
 
 func TestAccCECostCategory_complete(t *testing.T) {
 	ctx := acctest.Context(t)
-	var output costexplorer.CostCategory
+	var output awstypes.CostCategory
 	resourceName := "aws_ce_cost_category.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -148,7 +148,7 @@ func TestAccCECostCategory_complete(t *testing.T) {
 
 func TestAccCECostCategory_splitCharge(t *testing.T) {
 	ctx := acctest.Context(t)
-	var output costexplorer.CostCategory
+	var output awstypes.CostCategory
 	resourceName := "aws_ce_cost_category.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -183,7 +183,7 @@ func TestAccCECostCategory_splitCharge(t *testing.T) {
 
 func TestAccCECostCategory_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var output costexplorer.CostCategory
+	var output awstypes.CostCategory
 	resourceName := "aws_ce_cost_category.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -227,7 +227,7 @@ func TestAccCECostCategory_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckCostCategoryExists(ctx context.Context, n string, v *costexplorer.CostCategory) resource.TestCheckFunc {
+func testAccCheckCostCategoryExists(ctx context.Context, n string, v *awstypes.CostCategory) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -238,7 +238,7 @@ func testAccCheckCostCategoryExists(ctx context.Context, n string, v *costexplor
 			return fmt.Errorf("No CE Cost Category ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CEConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CEClient(ctx)
 
 		output, err := tfce.FindCostCategoryByARN(ctx, conn, rs.Primary.ID)
 
@@ -254,7 +254,7 @@ func testAccCheckCostCategoryExists(ctx context.Context, n string, v *costexplor
 
 func testAccCheckCostCategoryDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CEConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CEClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ce_cost_category" {

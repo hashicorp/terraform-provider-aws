@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/costexplorer"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/costexplorer/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -24,7 +24,7 @@ import (
 
 func TestAccCEAnomalyMonitor_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var monitor costexplorer.AnomalyMonitor
+	var monitor awstypes.AnomalyMonitor
 	resourceName := "aws_ce_anomaly_monitor.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -55,7 +55,7 @@ func TestAccCEAnomalyMonitor_basic(t *testing.T) {
 
 func TestAccCEAnomalyMonitor_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var monitor costexplorer.AnomalyMonitor
+	var monitor awstypes.AnomalyMonitor
 	resourceName := "aws_ce_anomaly_monitor.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -79,7 +79,7 @@ func TestAccCEAnomalyMonitor_disappears(t *testing.T) {
 
 func TestAccCEAnomalyMonitor_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var monitor costexplorer.AnomalyMonitor
+	var monitor awstypes.AnomalyMonitor
 	resourceName := "aws_ce_anomaly_monitor.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -115,7 +115,7 @@ func TestAccCEAnomalyMonitor_update(t *testing.T) {
 
 func TestAccCEAnomalyMonitor_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var monitor costexplorer.AnomalyMonitor
+	var monitor awstypes.AnomalyMonitor
 	resourceName := "aws_ce_anomaly_monitor.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -164,7 +164,7 @@ func TestAccCEAnomalyMonitor_tags(t *testing.T) {
 // following test in a serial test
 func TestAccCEAnomalyMonitor_Dimensional(t *testing.T) {
 	ctx := acctest.Context(t)
-	var monitor costexplorer.AnomalyMonitor
+	var monitor awstypes.AnomalyMonitor
 	resourceName := "aws_ce_anomaly_monitor.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -192,9 +192,9 @@ func TestAccCEAnomalyMonitor_Dimensional(t *testing.T) {
 	})
 }
 
-func testAccCheckAnomalyMonitorExists(ctx context.Context, n string, anomalyMonitor *costexplorer.AnomalyMonitor) resource.TestCheckFunc {
+func testAccCheckAnomalyMonitorExists(ctx context.Context, n string, anomalyMonitor *awstypes.AnomalyMonitor) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CEConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CEClient(ctx)
 
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -223,7 +223,7 @@ func testAccCheckAnomalyMonitorExists(ctx context.Context, n string, anomalyMoni
 
 func testAccCheckAnomalyMonitorDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CEConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CEClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ce_anomaly_monitor" {

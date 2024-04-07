@@ -6,7 +6,7 @@ package ce
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -319,7 +319,7 @@ func DataSourceCostCategory() *schema.Resource {
 func dataSourceCostCategoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).CEConn(ctx)
+	conn := meta.(*conns.AWSClient).CEClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	costCategory, err := FindCostCategoryByARN(ctx, conn, d.Get("cost_category_arn").(string))
@@ -340,7 +340,7 @@ func dataSourceCostCategoryRead(ctx context.Context, d *schema.ResourceData, met
 		return create.AppendDiagError(diags, names.CE, "setting split_charge_rule", ResNameCostCategory, d.Id(), err)
 	}
 
-	d.SetId(aws.StringValue(costCategory.CostCategoryArn))
+	d.SetId(aws.ToString(costCategory.CostCategoryArn))
 
 	tags, err := listTags(ctx, conn, d.Id())
 

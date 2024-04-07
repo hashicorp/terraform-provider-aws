@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/costexplorer"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/costexplorer/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -24,7 +24,7 @@ import (
 
 func TestAccCEAnomalySubscription_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var subscription costexplorer.AnomalySubscription
+	var subscription awstypes.AnomalySubscription
 	resourceName := "aws_ce_anomaly_subscription.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domain := acctest.RandomDomainName()
@@ -60,7 +60,7 @@ func TestAccCEAnomalySubscription_basic(t *testing.T) {
 
 func TestAccCEAnomalySubscription_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var subscription costexplorer.AnomalySubscription
+	var subscription awstypes.AnomalySubscription
 	resourceName := "aws_ce_anomaly_subscription.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domain := acctest.RandomDomainName()
@@ -86,7 +86,7 @@ func TestAccCEAnomalySubscription_disappears(t *testing.T) {
 
 func TestAccCEAnomalySubscription_Frequency(t *testing.T) {
 	ctx := acctest.Context(t)
-	var subscription costexplorer.AnomalySubscription
+	var subscription awstypes.AnomalySubscription
 	resourceName := "aws_ce_anomaly_subscription.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domain := acctest.RandomDomainName()
@@ -123,7 +123,7 @@ func TestAccCEAnomalySubscription_Frequency(t *testing.T) {
 
 func TestAccCEAnomalySubscription_MonitorARNList(t *testing.T) {
 	ctx := acctest.Context(t)
-	var subscription costexplorer.AnomalySubscription
+	var subscription awstypes.AnomalySubscription
 	resourceName := "aws_ce_anomaly_subscription.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -162,7 +162,7 @@ func TestAccCEAnomalySubscription_MonitorARNList(t *testing.T) {
 
 func TestAccCEAnomalySubscription_Subscriber(t *testing.T) {
 	ctx := acctest.Context(t)
-	var subscription costexplorer.AnomalySubscription
+	var subscription awstypes.AnomalySubscription
 	resourceName := "aws_ce_anomaly_subscription.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domain := acctest.RandomDomainName()
@@ -230,7 +230,7 @@ func TestAccCEAnomalySubscription_Subscriber(t *testing.T) {
 
 func TestAccCEAnomalySubscription_Tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var subscription costexplorer.AnomalySubscription
+	var subscription awstypes.AnomalySubscription
 	resourceName := "aws_ce_anomaly_subscription.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	domain := acctest.RandomDomainName()
@@ -276,9 +276,9 @@ func TestAccCEAnomalySubscription_Tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAnomalySubscriptionExists(ctx context.Context, n string, anomalySubscription *costexplorer.AnomalySubscription) resource.TestCheckFunc {
+func testAccCheckAnomalySubscriptionExists(ctx context.Context, n string, anomalySubscription *awstypes.AnomalySubscription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CEConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CEClient(ctx)
 
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -307,7 +307,7 @@ func testAccCheckAnomalySubscriptionExists(ctx context.Context, n string, anomal
 
 func testAccCheckAnomalySubscriptionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CEConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CEClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ce_anomaly_subscription" {

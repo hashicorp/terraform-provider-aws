@@ -6,22 +6,23 @@ package ce
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/costexplorer"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/costexplorer"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/costexplorer/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindAnomalyMonitorByARN(ctx context.Context, conn *costexplorer.CostExplorer, arn string) (*costexplorer.AnomalyMonitor, error) {
+func FindAnomalyMonitorByARN(ctx context.Context, conn *costexplorer.Client, arn string) (*awstypes.AnomalyMonitor, error) {
 	in := &costexplorer.GetAnomalyMonitorsInput{
-		MonitorArnList: aws.StringSlice([]string{arn}),
-		MaxResults:     aws.Int64(1),
+		MonitorArnList: []string{arn},
+		MaxResults:     aws.Int32(1),
 	}
 
-	out, err := conn.GetAnomalyMonitorsWithContext(ctx, in)
+	out, err := conn.GetAnomalyMonitors(ctx, in)
 
-	if tfawserr.ErrCodeEquals(err, costexplorer.ErrCodeUnknownMonitorException) {
+	if errs.IsA[*awstypes.UnknownMonitorException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
@@ -32,22 +33,22 @@ func FindAnomalyMonitorByARN(ctx context.Context, conn *costexplorer.CostExplore
 		return nil, err
 	}
 
-	if out == nil || len(out.AnomalyMonitors) == 0 || out.AnomalyMonitors[0] == nil {
+	if out == nil || len(out.AnomalyMonitors) == 0 {
 		return nil, tfresource.NewEmptyResultError(in)
 	}
 
-	return out.AnomalyMonitors[0], nil
+	return &out.AnomalyMonitors[0], nil
 }
 
-func FindAnomalySubscriptionByARN(ctx context.Context, conn *costexplorer.CostExplorer, arn string) (*costexplorer.AnomalySubscription, error) {
+func FindAnomalySubscriptionByARN(ctx context.Context, conn *costexplorer.Client, arn string) (*awstypes.AnomalySubscription, error) {
 	in := &costexplorer.GetAnomalySubscriptionsInput{
-		SubscriptionArnList: aws.StringSlice([]string{arn}),
-		MaxResults:          aws.Int64(1),
+		SubscriptionArnList: []string{arn},
+		MaxResults:          aws.Int32(1),
 	}
 
-	out, err := conn.GetAnomalySubscriptionsWithContext(ctx, in)
+	out, err := conn.GetAnomalySubscriptions(ctx, in)
 
-	if tfawserr.ErrCodeEquals(err, costexplorer.ErrCodeUnknownMonitorException) {
+	if errs.IsA[*awstypes.UnknownMonitorException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
@@ -58,22 +59,22 @@ func FindAnomalySubscriptionByARN(ctx context.Context, conn *costexplorer.CostEx
 		return nil, err
 	}
 
-	if out == nil || len(out.AnomalySubscriptions) == 0 || out.AnomalySubscriptions[0] == nil {
+	if out == nil || len(out.AnomalySubscriptions) == 0 {
 		return nil, tfresource.NewEmptyResultError(in)
 	}
 
-	return out.AnomalySubscriptions[0], nil
+	return &out.AnomalySubscriptions[0], nil
 }
 
-func FindCostAllocationTagByKey(ctx context.Context, conn *costexplorer.CostExplorer, key string) (*costexplorer.CostAllocationTag, error) {
+func FindCostAllocationTagByKey(ctx context.Context, conn *costexplorer.Client, key string) (*awstypes.CostAllocationTag, error) {
 	in := &costexplorer.ListCostAllocationTagsInput{
-		TagKeys:    aws.StringSlice([]string{key}),
-		MaxResults: aws.Int64(1),
+		TagKeys:    []string{key},
+		MaxResults: aws.Int32(1),
 	}
 
-	out, err := conn.ListCostAllocationTagsWithContext(ctx, in)
+	out, err := conn.ListCostAllocationTags(ctx, in)
 
-	if tfawserr.ErrCodeEquals(err, costexplorer.ErrCodeUnknownMonitorException) {
+	if errs.IsA[*awstypes.UnknownMonitorException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
@@ -84,21 +85,21 @@ func FindCostAllocationTagByKey(ctx context.Context, conn *costexplorer.CostExpl
 		return nil, err
 	}
 
-	if out == nil || len(out.CostAllocationTags) == 0 || out.CostAllocationTags[0] == nil {
+	if out == nil || len(out.CostAllocationTags) == 0 {
 		return nil, tfresource.NewEmptyResultError(in)
 	}
 
-	return out.CostAllocationTags[0], nil
+	return &out.CostAllocationTags[0], nil
 }
 
-func FindCostCategoryByARN(ctx context.Context, conn *costexplorer.CostExplorer, arn string) (*costexplorer.CostCategory, error) {
+func FindCostCategoryByARN(ctx context.Context, conn *costexplorer.Client, arn string) (*awstypes.CostCategory, error) {
 	in := &costexplorer.DescribeCostCategoryDefinitionInput{
 		CostCategoryArn: aws.String(arn),
 	}
 
-	out, err := conn.DescribeCostCategoryDefinitionWithContext(ctx, in)
+	out, err := conn.DescribeCostCategoryDefinition(ctx, in)
 
-	if tfawserr.ErrCodeEquals(err, costexplorer.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,

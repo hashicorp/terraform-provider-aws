@@ -6,7 +6,7 @@ package ce_test
 import (
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/costexplorer"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/costexplorer/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -15,7 +15,7 @@ import (
 
 func TestAccCECostCategoryDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var output costexplorer.CostCategory
+	var output awstypes.CostCategory
 	resourceName := "aws_ce_cost_category.test"
 	dataSourceName := "data.aws_ce_cost_category.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)

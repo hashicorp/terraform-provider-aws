@@ -7,14 +7,16 @@ import (
 	"context"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/costexplorer"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/costexplorer"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/costexplorer/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -45,9 +47,9 @@ func ResourceAnomalySubscription() *schema.Resource {
 				Computed: true,
 			},
 			"frequency": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(costexplorer.AnomalySubscriptionFrequency_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.AnomalySubscriptionFrequency](),
 			},
 			"monitor_arn_list": {
 				Type:     schema.TypeList,
@@ -75,9 +77,9 @@ func ResourceAnomalySubscription() *schema.Resource {
 							Required: true,
 						},
 						"type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(costexplorer.SubscriberType_Values(), false),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.SubscriberType](),
 						},
 					},
 				},
@@ -100,13 +102,13 @@ func ResourceAnomalySubscription() *schema.Resource {
 func resourceAnomalySubscriptionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).CEConn(ctx)
+	conn := meta.(*conns.AWSClient).CEClient(ctx)
 
 	input := &costexplorer.CreateAnomalySubscriptionInput{
-		AnomalySubscription: &costexplorer.AnomalySubscription{
+		AnomalySubscription: &awstypes.AnomalySubscription{
 			SubscriptionName: aws.String(d.Get("name").(string)),
-			Frequency:        aws.String(d.Get("frequency").(string)),
-			MonitorArnList:   aws.StringSlice(expandAnomalySubscriptionMonitorARNList(d.Get("monitor_arn_list").([]interface{}))),
+			Frequency:        awstypes.AnomalySubscriptionFrequency(d.Get("frequency").(string)),
+			MonitorArnList:   expandAnomalySubscriptionMonitorARNList(d.Get("monitor_arn_list").([]interface{})),
 			Subscribers:      expandAnomalySubscriptionSubscribers(d.Get("subscriber").(*schema.Set).List()),
 		},
 		ResourceTags: getTagsIn(ctx),
@@ -120,7 +122,7 @@ func resourceAnomalySubscriptionCreate(ctx context.Context, d *schema.ResourceDa
 		input.AnomalySubscription.ThresholdExpression = expandCostExpression(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	resp, err := conn.CreateAnomalySubscriptionWithContext(ctx, input)
+	resp, err := conn.CreateAnomalySubscription(ctx, input)
 
 	if err != nil {
 		return create.AppendDiagError(diags, names.CE, create.ErrActionCreating, ResNameAnomalySubscription, d.Id(), err)
@@ -130,7 +132,7 @@ func resourceAnomalySubscriptionCreate(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "creating Cost Explorer Anomaly Subscription resource (%s): empty output", d.Get("name").(string))
 	}
 
-	d.SetId(aws.StringValue(resp.SubscriptionArn))
+	d.SetId(aws.ToString(resp.SubscriptionArn))
 
 	return append(diags, resourceAnomalySubscriptionRead(ctx, d, meta)...)
 }
@@ -138,7 +140,7 @@ func resourceAnomalySubscriptionCreate(ctx context.Context, d *schema.ResourceDa
 func resourceAnomalySubscriptionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).CEConn(ctx)
+	conn := meta.(*conns.AWSClient).CEClient(ctx)
 
 	subscription, err := FindAnomalySubscriptionByARN(ctx, conn, d.Id())
 
@@ -169,7 +171,7 @@ func resourceAnomalySubscriptionRead(ctx context.Context, d *schema.ResourceData
 func resourceAnomalySubscriptionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).CEConn(ctx)
+	conn := meta.(*conns.AWSClient).CEClient(ctx)
 
 	if d.HasChangesExcept("tags", "tags_All") {
 		input := &costexplorer.UpdateAnomalySubscriptionInput{
@@ -177,11 +179,11 @@ func resourceAnomalySubscriptionUpdate(ctx context.Context, d *schema.ResourceDa
 		}
 
 		if d.HasChange("frequency") {
-			input.Frequency = aws.String(d.Get("frequency").(string))
+			input.Frequency = awstypes.AnomalySubscriptionFrequency(d.Get("frequency").(string))
 		}
 
 		if d.HasChange("monitor_arn_list") {
-			input.MonitorArnList = aws.StringSlice(expandAnomalySubscriptionMonitorARNList(d.Get("monitor_arn_list").([]interface{})))
+			input.MonitorArnList = expandAnomalySubscriptionMonitorARNList(d.Get("monitor_arn_list").([]interface{}))
 		}
 
 		if d.HasChange("subscriber") {
@@ -192,7 +194,7 @@ func resourceAnomalySubscriptionUpdate(ctx context.Context, d *schema.ResourceDa
 			input.ThresholdExpression = expandCostExpression(d.Get("threshold_expression").([]interface{})[0].(map[string]interface{}))
 		}
 
-		_, err := conn.UpdateAnomalySubscriptionWithContext(ctx, input)
+		_, err := conn.UpdateAnomalySubscription(ctx, input)
 
 		if err != nil {
 			return create.AppendDiagError(diags, names.CE, create.ErrActionUpdating, ResNameAnomalySubscription, d.Id(), err)
@@ -205,11 +207,11 @@ func resourceAnomalySubscriptionUpdate(ctx context.Context, d *schema.ResourceDa
 func resourceAnomalySubscriptionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).CEConn(ctx)
+	conn := meta.(*conns.AWSClient).CEClient(ctx)
 
-	_, err := conn.DeleteAnomalySubscriptionWithContext(ctx, &costexplorer.DeleteAnomalySubscriptionInput{SubscriptionArn: aws.String(d.Id())})
+	_, err := conn.DeleteAnomalySubscription(ctx, &costexplorer.DeleteAnomalySubscriptionInput{SubscriptionArn: aws.String(d.Id())})
 
-	if err != nil && tfawserr.ErrCodeEquals(err, costexplorer.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -234,23 +236,23 @@ func expandAnomalySubscriptionMonitorARNList(rawMonitorArnList []interface{}) []
 	return monitorArns
 }
 
-func expandAnomalySubscriptionSubscribers(rawSubscribers []interface{}) []*costexplorer.Subscriber {
+func expandAnomalySubscriptionSubscribers(rawSubscribers []interface{}) []awstypes.Subscriber {
 	if len(rawSubscribers) == 0 {
 		return nil
 	}
 
-	var subscribers []*costexplorer.Subscriber
+	var subscribers []awstypes.Subscriber
 
 	for _, sub := range rawSubscribers {
 		rawSubMap := sub.(map[string]interface{})
-		subscriber := &costexplorer.Subscriber{Address: aws.String(rawSubMap["address"].(string)), Type: aws.String(rawSubMap["type"].(string))}
+		subscriber := awstypes.Subscriber{Address: aws.String(rawSubMap["address"].(string)), Type: awstypes.SubscriberType(rawSubMap["type"].(string))}
 		subscribers = append(subscribers, subscriber)
 	}
 
 	return subscribers
 }
 
-func flattenAnomalySubscriptionSubscribers(subscribers []*costexplorer.Subscriber) []interface{} {
+func flattenAnomalySubscriptionSubscribers(subscribers []awstypes.Subscriber) []interface{} {
 	if subscribers == nil {
 		return []interface{}{}
 	}
@@ -258,8 +260,8 @@ func flattenAnomalySubscriptionSubscribers(subscribers []*costexplorer.Subscribe
 	var rawSubscribers []interface{}
 	for _, subscriber := range subscribers {
 		rawSubscriber := map[string]interface{}{
-			"address": aws.StringValue(subscriber.Address),
-			"type":    aws.StringValue(subscriber.Type),
+			"address": aws.ToString(subscriber.Address),
+			"type":    string(subscriber.Type),
 		}
 
 		rawSubscribers = append(rawSubscribers, rawSubscriber)

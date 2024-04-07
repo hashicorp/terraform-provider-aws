@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/costexplorer"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/costexplorer/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -21,7 +21,7 @@ import (
 
 func TestAccCECostAllocationTag_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var output costexplorer.CostAllocationTag
+	var output awstypes.CostAllocationTag
 	resourceName := "aws_ce_cost_allocation_tag.test"
 	rName := "Tag01"
 
@@ -66,14 +66,14 @@ func TestAccCECostAllocationTag_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckCostAllocationTagExists(ctx context.Context, resourceName string, output *costexplorer.CostAllocationTag) resource.TestCheckFunc {
+func testAccCheckCostAllocationTagExists(ctx context.Context, resourceName string, output *awstypes.CostAllocationTag) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return create.Error(names.CE, create.ErrActionCheckingExistence, tfce.ResNameCostAllocationTag, resourceName, errors.New("not found in state"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CEConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CEClient(ctx)
 		costAllocTag, err := tfce.FindCostAllocationTagByKey(ctx, conn, rs.Primary.ID)
 
 		if err != nil {

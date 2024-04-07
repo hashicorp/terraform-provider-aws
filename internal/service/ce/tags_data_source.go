@@ -6,14 +6,15 @@ package ce
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/costexplorer"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/costexplorer"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/costexplorer/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -44,14 +45,14 @@ func DataSourceTags() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"key": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice(costexplorer.Metric_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.Metric](),
 						},
 						"sort_order": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice(costexplorer.SortOrder_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.SortOrder](),
 						},
 					},
 				},
@@ -94,7 +95,7 @@ func DataSourceTags() *schema.Resource {
 func dataSourceTagsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).CEConn(ctx)
+	conn := meta.(*conns.AWSClient).CEClient(ctx)
 
 	input := &costexplorer.GetTagsInput{
 		TimePeriod: expandTagsTimePeriod(d.Get("time_period").([]interface{})[0].(map[string]interface{})),
@@ -116,25 +117,25 @@ func dataSourceTagsRead(ctx context.Context, d *schema.ResourceData, meta interf
 		input.TagKey = aws.String(v.(string))
 	}
 
-	resp, err := conn.GetTagsWithContext(ctx, input)
+	resp, err := conn.GetTags(ctx, input)
 
 	if err != nil {
 		return create.AppendDiagError(diags, names.CE, create.ErrActionReading, DSNameTags, d.Id(), err)
 	}
 
-	d.Set("tags", flex.FlattenStringList(resp.Tags))
+	d.Set("tags", resp.Tags)
 
 	d.SetId(meta.(*conns.AWSClient).AccountID)
 
 	return diags
 }
 
-func expandTagsSortBys(tfList []interface{}) []*costexplorer.SortDefinition {
+func expandTagsSortBys(tfList []interface{}) []awstypes.SortDefinition {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []*costexplorer.SortDefinition
+	var apiObjects []awstypes.SortDefinition
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -151,26 +152,22 @@ func expandTagsSortBys(tfList []interface{}) []*costexplorer.SortDefinition {
 	return apiObjects
 }
 
-func expandTagsSortBy(tfMap map[string]interface{}) *costexplorer.SortDefinition {
-	if tfMap == nil {
-		return nil
-	}
-
-	apiObject := &costexplorer.SortDefinition{}
+func expandTagsSortBy(tfMap map[string]interface{}) awstypes.SortDefinition {
+	apiObject := awstypes.SortDefinition{}
 	apiObject.Key = aws.String(tfMap["key"].(string))
 	if v, ok := tfMap["sort_order"]; ok {
-		apiObject.SortOrder = aws.String(v.(string))
+		apiObject.SortOrder = awstypes.SortOrder(v.(string))
 	}
 
 	return apiObject
 }
 
-func expandTagsTimePeriod(tfMap map[string]interface{}) *costexplorer.DateInterval {
+func expandTagsTimePeriod(tfMap map[string]interface{}) *awstypes.DateInterval {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &costexplorer.DateInterval{}
+	apiObject := &awstypes.DateInterval{}
 	apiObject.Start = aws.String(tfMap["start"].(string))
 	apiObject.End = aws.String(tfMap["end"].(string))
 
