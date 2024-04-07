@@ -15,6 +15,7 @@ import (
 )
 
 // @SDKDataSource("aws_apigatewayv2_vpc_link", name="VPC Link")
+// @Tags
 func dataSourceVPCLink() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceVPCLinkRead,
@@ -38,7 +39,7 @@ func dataSourceVPCLink() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			names.AttrTags: tftags.TagsSchema(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 			"vpc_link_id": {
 				Type:     schema.TypeString,
 				Required: true,
