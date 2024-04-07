@@ -216,7 +216,7 @@ func sweepVPCLinks(region string) error {
 		}
 
 		for _, v := range page.Items {
-			r := ResourceVPCLink()
+			r := resourceVPCLink()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.VpcLinkId))
 

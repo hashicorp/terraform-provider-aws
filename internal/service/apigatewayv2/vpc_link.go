@@ -30,7 +30,7 @@ import (
 
 // @SDKResource("aws_apigatewayv2_vpc_link", name="VPC Link")
 // @Tags(identifierAttribute="arn")
-func ResourceVPCLink() *schema.Resource {
+func resourceVPCLink() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPCLinkCreate,
 		ReadWithoutTimeout:   resourceVPCLinkRead,
@@ -102,7 +102,7 @@ func resourceVPCLinkRead(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-	output, err := FindVPCLinkByID(ctx, conn, d.Id())
+	output, err := findVPCLinkByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] API Gateway v2 VPC Link (%s) not found, removing from state", d.Id())
@@ -174,7 +174,7 @@ func resourceVPCLinkDelete(ctx context.Context, d *schema.ResourceData, meta int
 	return diags
 }
 
-func FindVPCLinkByID(ctx context.Context, conn *apigatewayv2.Client, id string) (*apigatewayv2.GetVpcLinkOutput, error) {
+func findVPCLinkByID(ctx context.Context, conn *apigatewayv2.Client, id string) (*apigatewayv2.GetVpcLinkOutput, error) {
 	input := &apigatewayv2.GetVpcLinkInput{
 		VpcLinkId: aws.String(id),
 	}
@@ -205,7 +205,7 @@ func findVPCLink(ctx context.Context, conn *apigatewayv2.Client, input *apigatew
 
 func statusVPCLink(ctx context.Context, conn *apigatewayv2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindVPCLinkByID(ctx, conn, id)
+		output, err := findVPCLinkByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

@@ -53,7 +53,7 @@ func dataSourceVPCLinkRead(ctx context.Context, d *schema.ResourceData, meta int
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 	vpcLinkID := d.Get("vpc_link_id").(string)
-	output, err := FindVPCLinkByID(ctx, conn, vpcLinkID)
+	output, err := findVPCLinkByID(ctx, conn, vpcLinkID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading API Gateway v2 VPC Link (%s): %s", vpcLinkID, err)
