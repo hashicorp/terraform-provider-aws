@@ -2610,7 +2610,7 @@ resource "aws_iot_topic_rule" "test" {
   sql_version = "2015-10-08"
 
   cloudwatch_logs {
-    batch_mode = %[2]t
+    batch_mode     = %[2]t
     log_group_name = "mylogs1"
     role_arn       = aws_iam_role.test.arn
   }
