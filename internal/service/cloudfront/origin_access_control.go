@@ -50,9 +50,10 @@ func ResourceOriginAccessControl() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 64),
 			},
 			"origin_access_control_origin_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(cloudfront.OriginAccessControlOriginTypes_Values(), false),
+				Type:     schema.TypeString,
+				Required: true,
+				// Some origin types are not returned by OriginAccessControlOriginTypes_Values but ARE supported
+				ValidateFunc: validation.StringInSlice(append([]string{OriginAccessControlOriginTypeLambda, OriginAccessControlOriginTypeMediaPackageV2}, cloudfront.OriginAccessControlOriginTypes_Values()...), false),
 			},
 			"signing_behavior": {
 				Type:         schema.TypeString,
@@ -69,7 +70,9 @@ func ResourceOriginAccessControl() *schema.Resource {
 }
 
 const (
-	ResNameOriginAccessControl = "Origin Access Control"
+	OriginAccessControlOriginTypeLambda         = "lambda"
+	OriginAccessControlOriginTypeMediaPackageV2 = "mediapackagev2"
+	ResNameOriginAccessControl                  = "Origin Access Control"
 )
 
 func resourceOriginAccessControlCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
