@@ -423,7 +423,7 @@ func resourceStageImport(ctx context.Context, d *schema.ResourceData, meta inter
 
 	conn := meta.(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-	output, err := findStageByTwoPartKey(ctx, conn, apiID, d.Id())
+	output, err := findStageByTwoPartKey(ctx, conn, apiID, stageName)
 
 	if err != nil {
 		return nil, err
