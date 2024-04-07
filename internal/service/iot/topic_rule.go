@@ -71,6 +71,11 @@ func ResourceTopicRule() *schema.Resource {
 				Optional: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
+						"batch_mode": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
 						"log_group_name": {
 							Type:     schema.TypeString,
 							Required: true,
@@ -275,6 +280,11 @@ func ResourceTopicRule() *schema.Resource {
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
+									"batch_mode": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  false,
+									},
 									"log_group_name": {
 										Type:     schema.TypeString,
 										Required: true,
@@ -1448,6 +1458,10 @@ func expandCloudWatchLogsAction(tfList []interface{}) *iot.CloudwatchLogsAction 
 	apiObject := &iot.CloudwatchLogsAction{}
 	tfMap := tfList[0].(map[string]interface{})
 
+	if v, ok := tfMap["batch_mode"].(bool); ok {
+		apiObject.BatchMode = aws.Bool(v)
+	}
+
 	if v, ok := tfMap["log_group_name"].(string); ok && v != "" {
 		apiObject.LogGroupName = aws.String(v)
 	}
@@ -2474,6 +2488,10 @@ func flattenCloudWatchLogsAction(apiObject *iot.CloudwatchLogsAction) []interfac
 	}
 
 	tfMap := make(map[string]interface{})
+
+	if v := apiObject.BatchMode; v != nil {
+		tfMap["batch_mode"] = aws.BoolValue(v)
+	}
 
 	if v := apiObject.LogGroupName; v != nil {
 		tfMap["log_group_name"] = aws.StringValue(v)
