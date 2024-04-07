@@ -31,9 +31,7 @@ resource "aws_servicecatalogappregistry_application" "example" {
 resource "aws_s3_bucket" "bucket" {
   bucket = "example-bucket"
 
-  tags = {
-    awsApplication = aws_servicecatalogappregistry_application.example.arn
-  }
+  tags = aws_servicecatalogappregistry_application.example.application_tag
 }
 ```
 
@@ -51,6 +49,7 @@ The following arguments are optional:
 
 This resource exports the following attributes in addition to the arguments above:
 
+* `application_tag` - A map with a single tag key-value pair used to associate resources with the application. This attribute can be passed directly into the `tags` argument of another resource, or merged into a map of existing tags.
 * `arn` - ARN (Amazon Resource Name) of the application.
 * `id` - Identifier of the application.
 

@@ -9,6 +9,8 @@ import (
 	acm_sdkv2 "github.com/aws/aws-sdk-go-v2/service/acm"
 	acmpca_sdkv2 "github.com/aws/aws-sdk-go-v2/service/acmpca"
 	amp_sdkv2 "github.com/aws/aws-sdk-go-v2/service/amp"
+	amplify_sdkv2 "github.com/aws/aws-sdk-go-v2/service/amplify"
+	apigateway_sdkv2 "github.com/aws/aws-sdk-go-v2/service/apigateway"
 	appconfig_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appconfig"
 	appfabric_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appfabric"
 	appflow_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appflow"
@@ -16,7 +18,9 @@ import (
 	athena_sdkv2 "github.com/aws/aws-sdk-go-v2/service/athena"
 	auditmanager_sdkv2 "github.com/aws/aws-sdk-go-v2/service/auditmanager"
 	autoscaling_sdkv2 "github.com/aws/aws-sdk-go-v2/service/autoscaling"
+	autoscalingplans_sdkv2 "github.com/aws/aws-sdk-go-v2/service/autoscalingplans"
 	batch_sdkv2 "github.com/aws/aws-sdk-go-v2/service/batch"
+	bcmdataexports_sdkv2 "github.com/aws/aws-sdk-go-v2/service/bcmdataexports"
 	bedrock_sdkv2 "github.com/aws/aws-sdk-go-v2/service/bedrock"
 	bedrockagent_sdkv2 "github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	budgets_sdkv2 "github.com/aws/aws-sdk-go-v2/service/budgets"
@@ -149,17 +153,13 @@ import (
 	wellarchitected_sdkv2 "github.com/aws/aws-sdk-go-v2/service/wellarchitected"
 	workspaces_sdkv2 "github.com/aws/aws-sdk-go-v2/service/workspaces"
 	xray_sdkv2 "github.com/aws/aws-sdk-go-v2/service/xray"
-	amplify_sdkv1 "github.com/aws/aws-sdk-go/service/amplify"
-	apigateway_sdkv1 "github.com/aws/aws-sdk-go/service/apigateway"
 	apigatewayv2_sdkv1 "github.com/aws/aws-sdk-go/service/apigatewayv2"
-	appconfig_sdkv1 "github.com/aws/aws-sdk-go/service/appconfig"
 	appintegrationsservice_sdkv1 "github.com/aws/aws-sdk-go/service/appintegrationsservice"
 	applicationautoscaling_sdkv1 "github.com/aws/aws-sdk-go/service/applicationautoscaling"
 	applicationinsights_sdkv1 "github.com/aws/aws-sdk-go/service/applicationinsights"
 	appmesh_sdkv1 "github.com/aws/aws-sdk-go/service/appmesh"
 	appstream_sdkv1 "github.com/aws/aws-sdk-go/service/appstream"
 	appsync_sdkv1 "github.com/aws/aws-sdk-go/service/appsync"
-	autoscalingplans_sdkv1 "github.com/aws/aws-sdk-go/service/autoscalingplans"
 	backup_sdkv1 "github.com/aws/aws-sdk-go/service/backup"
 	batch_sdkv1 "github.com/aws/aws-sdk-go/service/batch"
 	chime_sdkv1 "github.com/aws/aws-sdk-go/service/chime"
@@ -181,7 +181,6 @@ import (
 	docdb_sdkv1 "github.com/aws/aws-sdk-go/service/docdb"
 	dynamodb_sdkv1 "github.com/aws/aws-sdk-go/service/dynamodb"
 	ec2_sdkv1 "github.com/aws/aws-sdk-go/service/ec2"
-	ecr_sdkv1 "github.com/aws/aws-sdk-go/service/ecr"
 	ecs_sdkv1 "github.com/aws/aws-sdk-go/service/ecs"
 	efs_sdkv1 "github.com/aws/aws-sdk-go/service/efs"
 	elasticache_sdkv1 "github.com/aws/aws-sdk-go/service/elasticache"
@@ -266,8 +265,8 @@ func (c *AWSClient) AMPClient(ctx context.Context) *amp_sdkv2.Client {
 	return errs.Must(client[*amp_sdkv2.Client](ctx, c, names.AMP, make(map[string]any)))
 }
 
-func (c *AWSClient) APIGatewayConn(ctx context.Context) *apigateway_sdkv1.APIGateway {
-	return errs.Must(conn[*apigateway_sdkv1.APIGateway](ctx, c, names.APIGateway, make(map[string]any)))
+func (c *AWSClient) APIGatewayClient(ctx context.Context) *apigateway_sdkv2.Client {
+	return errs.Must(client[*apigateway_sdkv2.Client](ctx, c, names.APIGateway, make(map[string]any)))
 }
 
 func (c *AWSClient) APIGatewayV2Conn(ctx context.Context) *apigatewayv2_sdkv1.ApiGatewayV2 {
@@ -282,16 +281,12 @@ func (c *AWSClient) AccountClient(ctx context.Context) *account_sdkv2.Client {
 	return errs.Must(client[*account_sdkv2.Client](ctx, c, names.Account, make(map[string]any)))
 }
 
-func (c *AWSClient) AmplifyConn(ctx context.Context) *amplify_sdkv1.Amplify {
-	return errs.Must(conn[*amplify_sdkv1.Amplify](ctx, c, names.Amplify, make(map[string]any)))
+func (c *AWSClient) AmplifyClient(ctx context.Context) *amplify_sdkv2.Client {
+	return errs.Must(client[*amplify_sdkv2.Client](ctx, c, names.Amplify, make(map[string]any)))
 }
 
 func (c *AWSClient) AppAutoScalingConn(ctx context.Context) *applicationautoscaling_sdkv1.ApplicationAutoScaling {
 	return errs.Must(conn[*applicationautoscaling_sdkv1.ApplicationAutoScaling](ctx, c, names.AppAutoScaling, make(map[string]any)))
-}
-
-func (c *AWSClient) AppConfigConn(ctx context.Context) *appconfig_sdkv1.AppConfig {
-	return errs.Must(conn[*appconfig_sdkv1.AppConfig](ctx, c, names.AppConfig, make(map[string]any)))
 }
 
 func (c *AWSClient) AppConfigClient(ctx context.Context) *appconfig_sdkv2.Client {
@@ -342,8 +337,12 @@ func (c *AWSClient) AutoScalingClient(ctx context.Context) *autoscaling_sdkv2.Cl
 	return errs.Must(client[*autoscaling_sdkv2.Client](ctx, c, names.AutoScaling, make(map[string]any)))
 }
 
-func (c *AWSClient) AutoScalingPlansConn(ctx context.Context) *autoscalingplans_sdkv1.AutoScalingPlans {
-	return errs.Must(conn[*autoscalingplans_sdkv1.AutoScalingPlans](ctx, c, names.AutoScalingPlans, make(map[string]any)))
+func (c *AWSClient) AutoScalingPlansClient(ctx context.Context) *autoscalingplans_sdkv2.Client {
+	return errs.Must(client[*autoscalingplans_sdkv2.Client](ctx, c, names.AutoScalingPlans, make(map[string]any)))
+}
+
+func (c *AWSClient) BCMDataExportsClient(ctx context.Context) *bcmdataexports_sdkv2.Client {
+	return errs.Must(client[*bcmdataexports_sdkv2.Client](ctx, c, names.BCMDataExports, make(map[string]any)))
 }
 
 func (c *AWSClient) BackupConn(ctx context.Context) *backup_sdkv1.Backup {
@@ -588,10 +587,6 @@ func (c *AWSClient) EC2Conn(ctx context.Context) *ec2_sdkv1.EC2 {
 
 func (c *AWSClient) EC2Client(ctx context.Context) *ec2_sdkv2.Client {
 	return errs.Must(client[*ec2_sdkv2.Client](ctx, c, names.EC2, make(map[string]any)))
-}
-
-func (c *AWSClient) ECRConn(ctx context.Context) *ecr_sdkv1.ECR {
-	return errs.Must(conn[*ecr_sdkv1.ECR](ctx, c, names.ECR, make(map[string]any)))
 }
 
 func (c *AWSClient) ECRClient(ctx context.Context) *ecr_sdkv2.Client {

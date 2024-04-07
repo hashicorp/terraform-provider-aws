@@ -32,6 +32,7 @@ variable "service_labels" {
     "backup",
     "backupgateway",
     "batch",
+    "bcmdataexports",
     "bedrock",
     "bedrockagent",
     "billingconductor",

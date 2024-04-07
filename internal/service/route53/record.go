@@ -1038,7 +1038,7 @@ func nilString(s string) *string {
 
 func NormalizeAliasName(alias interface{}) string {
 	output := strings.ToLower(alias.(string))
-	return strings.TrimSuffix(output, ".")
+	return CleanRecordName(strings.TrimSuffix(output, "."))
 }
 
 func ParseRecordID(id string) [4]string {

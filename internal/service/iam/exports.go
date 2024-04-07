@@ -10,4 +10,5 @@ var (
 	DeleteServiceLinkedRole = deleteServiceLinkedRole
 	FindRoleByName          = findRoleByName
 	ListGroupsForUserPages  = listGroupsForUserPages
+	AttachPolicyToUser      = attachPolicyToUser
 )

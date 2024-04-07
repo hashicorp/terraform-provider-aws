@@ -13,6 +13,8 @@ examples:
   - 'examples/**/*'
 flex:
   - 'internal/flex/**/*'
+function:
+  - 'internal/function/**/*'
 generators:
   - 'internal/**/*_gen.go'
   - 'internal/**/*_gen_test.go'
@@ -158,6 +160,9 @@ service/backupgateway:
 service/batch:
   - 'internal/service/batch/**/*'
   - 'website/**/batch_*'
+service/bcmdataexports:
+  - 'internal/service/bcmdataexports/**/*'
+  - 'website/**/bcmdataexports_*'
 service/bedrock:
   - 'internal/service/bedrock/**/*'
   - 'website/**/bedrock_*'

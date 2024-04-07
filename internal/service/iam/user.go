@@ -239,6 +239,8 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interf
 			f      func(context.Context, *iam.Client, string) error
 			format string
 		}{
+			{deleteUserPolicies, "removing IAM User (%s) policies: %s"},
+			{detachUserPolicies, "detaching IAM User (%s) policies: %s"},
 			{deleteUserAccessKeys, "removing IAM User (%s) access keys: %s"},
 			{deleteUserSSHKeys, "removing IAM User (%s) access keys: %s"},
 			{deleteUserVirtualMFADevices, "removing IAM User (%s) Virtual MFA devices: %s"},
@@ -530,6 +532,68 @@ func deleteServiceSpecificCredentials(ctx context.Context, conn *iam.Client, use
 		})
 		if err != nil {
 			return fmt.Errorf("deleting Service Specific Credentials %v: %w", m, err)
+		}
+	}
+
+	return nil
+}
+
+func deleteUserPolicies(ctx context.Context, conn *iam.Client, username string) error {
+	input := &iam.ListUserPoliciesInput{
+		UserName: aws.String(username),
+	}
+
+	output, err := conn.ListUserPolicies(ctx, input)
+	if errs.IsA[*awstypes.NoSuchEntityException](err) {
+		// user not found
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("listing/deleting IAM User (%s) inline policies: %s", username, err)
+	}
+
+	for _, name := range output.PolicyNames {
+		log.Printf("[DEBUG] Deleting IAM User (%s) inline policy %q", username, name)
+
+		input := &iam.DeleteUserPolicyInput{
+			PolicyName: aws.String(name),
+			UserName:   aws.String(username),
+		}
+
+		if _, err := conn.DeleteUserPolicy(ctx, input); err != nil {
+			if errs.IsA[*awstypes.NoSuchEntityException](err) {
+				continue
+			}
+			return fmt.Errorf("deleting IAM User (%s) inline policies: %s", username, err)
+		}
+	}
+
+	return nil
+}
+
+func detachUserPolicies(ctx context.Context, conn *iam.Client, username string) error {
+	input := &iam.ListAttachedUserPoliciesInput{
+		UserName: aws.String(username),
+	}
+
+	output, err := conn.ListAttachedUserPolicies(ctx, input)
+	if errs.IsA[*awstypes.NoSuchEntityException](err) {
+		// user was an entity 2 nanoseconds ago, but now it's not
+		return nil
+	}
+
+	if err != nil {
+		return fmt.Errorf("listing/detaching IAM User (%s) attached policy: %s", username, err)
+	}
+
+	for _, policy := range output.AttachedPolicies {
+		policyARN := aws.ToString(policy.PolicyArn)
+
+		log.Printf("[DEBUG] Detaching IAM User (%s) attached policy: %s", username, policyARN)
+
+		if err := detachPolicyFromUser(ctx, conn, username, policyARN); err != nil {
+			return fmt.Errorf("detaching IAM User (%s) attached policy: %s", username, err)
 		}
 	}
 

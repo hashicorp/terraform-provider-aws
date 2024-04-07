@@ -71,9 +71,10 @@ func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta 
 			return sdkdiag.AppendErrorf(diags, "attaching Auto Scaling Group (%s) load balancer (%s): %s", asgName, lbName, err)
 		}
 	} else {
+		lbTargetGroupARN := d.Get("lb_target_group_arn").(string)
 		input := &autoscaling.AttachLoadBalancerTargetGroupsInput{
 			AutoScalingGroupName: aws.String(asgName),
-			TargetGroupARNs:      []string{d.Get("lb_target_group_arn").(string)},
+			TargetGroupARNs:      []string{lbTargetGroupARN},
 		}
 
 		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutCreate),
@@ -83,7 +84,7 @@ func resourceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta 
 			errCodeValidationError, "update too many")
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "attaching Auto Scaling Group (%s) target group (%s): %s", asgName, d.Get("lb_target_group_arn").(string), err)
+			return sdkdiag.AppendErrorf(diags, "attaching Auto Scaling Group (%s) target group (%s): %s", asgName, lbTargetGroupARN, err)
 		}
 	}
 

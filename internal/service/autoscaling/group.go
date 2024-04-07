@@ -1811,7 +1811,7 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta inter
 				ForceDelete:          aws.Bool(forceDeleteGroup),
 			})
 		},
-		awstypes.ResourceInUseFault, awstypes.ScalingActivityInProgressFault)
+		errCodeResourceInUseFault, errCodeScalingActivityInProgressFault)
 
 	if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
 		return diags
@@ -1904,7 +1904,7 @@ func deleteWarmPool(ctx context.Context, conn *autoscaling.Client, name string, 
 				ForceDelete:          aws.Bool(force),
 			})
 		},
-		awstypes.ResourceInUseFault, awstypes.ScalingActivityInProgressFault)
+		errCodeResourceInUseFault, errCodeScalingActivityInProgressFault)
 
 	if tfawserr.ErrMessageContains(err, errCodeValidationError, "No warm pool found") {
 		return nil
