@@ -10,6 +10,8 @@ import (
 	acmpca_sdkv2 "github.com/aws/aws-sdk-go-v2/service/acmpca"
 	amp_sdkv2 "github.com/aws/aws-sdk-go-v2/service/amp"
 	amplify_sdkv2 "github.com/aws/aws-sdk-go-v2/service/amplify"
+	apigateway_sdkv2 "github.com/aws/aws-sdk-go-v2/service/apigateway"
+	apigatewayv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
 	appconfig_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appconfig"
 	appfabric_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appfabric"
 	appflow_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appflow"
@@ -18,6 +20,7 @@ import (
 	auditmanager_sdkv2 "github.com/aws/aws-sdk-go-v2/service/auditmanager"
 	autoscalingplans_sdkv2 "github.com/aws/aws-sdk-go-v2/service/autoscalingplans"
 	batch_sdkv2 "github.com/aws/aws-sdk-go-v2/service/batch"
+	bcmdataexports_sdkv2 "github.com/aws/aws-sdk-go-v2/service/bcmdataexports"
 	bedrock_sdkv2 "github.com/aws/aws-sdk-go-v2/service/bedrock"
 	bedrockagent_sdkv2 "github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	budgets_sdkv2 "github.com/aws/aws-sdk-go-v2/service/budgets"
@@ -99,6 +102,7 @@ import (
 	mediastore_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mediastore"
 	mq_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mq"
 	mwaa_sdkv2 "github.com/aws/aws-sdk-go-v2/service/mwaa"
+	neptunegraph_sdkv2 "github.com/aws/aws-sdk-go-v2/service/neptunegraph"
 	oam_sdkv2 "github.com/aws/aws-sdk-go-v2/service/oam"
 	opensearchserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	osis_sdkv2 "github.com/aws/aws-sdk-go-v2/service/osis"
@@ -150,8 +154,6 @@ import (
 	wellarchitected_sdkv2 "github.com/aws/aws-sdk-go-v2/service/wellarchitected"
 	workspaces_sdkv2 "github.com/aws/aws-sdk-go-v2/service/workspaces"
 	xray_sdkv2 "github.com/aws/aws-sdk-go-v2/service/xray"
-	apigateway_sdkv1 "github.com/aws/aws-sdk-go/service/apigateway"
-	apigatewayv2_sdkv1 "github.com/aws/aws-sdk-go/service/apigatewayv2"
 	appintegrationsservice_sdkv1 "github.com/aws/aws-sdk-go/service/appintegrationsservice"
 	applicationautoscaling_sdkv1 "github.com/aws/aws-sdk-go/service/applicationautoscaling"
 	applicationinsights_sdkv1 "github.com/aws/aws-sdk-go/service/applicationinsights"
@@ -264,12 +266,12 @@ func (c *AWSClient) AMPClient(ctx context.Context) *amp_sdkv2.Client {
 	return errs.Must(client[*amp_sdkv2.Client](ctx, c, names.AMP, make(map[string]any)))
 }
 
-func (c *AWSClient) APIGatewayConn(ctx context.Context) *apigateway_sdkv1.APIGateway {
-	return errs.Must(conn[*apigateway_sdkv1.APIGateway](ctx, c, names.APIGateway, make(map[string]any)))
+func (c *AWSClient) APIGatewayClient(ctx context.Context) *apigateway_sdkv2.Client {
+	return errs.Must(client[*apigateway_sdkv2.Client](ctx, c, names.APIGateway, make(map[string]any)))
 }
 
-func (c *AWSClient) APIGatewayV2Conn(ctx context.Context) *apigatewayv2_sdkv1.ApiGatewayV2 {
-	return errs.Must(conn[*apigatewayv2_sdkv1.ApiGatewayV2](ctx, c, names.APIGatewayV2, make(map[string]any)))
+func (c *AWSClient) APIGatewayV2Client(ctx context.Context) *apigatewayv2_sdkv2.Client {
+	return errs.Must(client[*apigatewayv2_sdkv2.Client](ctx, c, names.APIGatewayV2, make(map[string]any)))
 }
 
 func (c *AWSClient) AccessAnalyzerClient(ctx context.Context) *accessanalyzer_sdkv2.Client {
@@ -338,6 +340,10 @@ func (c *AWSClient) AutoScalingConn(ctx context.Context) *autoscaling_sdkv1.Auto
 
 func (c *AWSClient) AutoScalingPlansClient(ctx context.Context) *autoscalingplans_sdkv2.Client {
 	return errs.Must(client[*autoscalingplans_sdkv2.Client](ctx, c, names.AutoScalingPlans, make(map[string]any)))
+}
+
+func (c *AWSClient) BCMDataExportsClient(ctx context.Context) *bcmdataexports_sdkv2.Client {
+	return errs.Must(client[*bcmdataexports_sdkv2.Client](ctx, c, names.BCMDataExports, make(map[string]any)))
 }
 
 func (c *AWSClient) BackupConn(ctx context.Context) *backup_sdkv1.Backup {
@@ -890,6 +896,10 @@ func (c *AWSClient) MemoryDBConn(ctx context.Context) *memorydb_sdkv1.MemoryDB {
 
 func (c *AWSClient) NeptuneConn(ctx context.Context) *neptune_sdkv1.Neptune {
 	return errs.Must(conn[*neptune_sdkv1.Neptune](ctx, c, names.Neptune, make(map[string]any)))
+}
+
+func (c *AWSClient) NeptuneGraphClient(ctx context.Context) *neptunegraph_sdkv2.Client {
+	return errs.Must(client[*neptunegraph_sdkv2.Client](ctx, c, names.NeptuneGraph, make(map[string]any)))
 }
 
 func (c *AWSClient) NetworkFirewallConn(ctx context.Context) *networkfirewall_sdkv1.NetworkFirewall {

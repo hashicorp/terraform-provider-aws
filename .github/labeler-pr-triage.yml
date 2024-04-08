@@ -307,6 +307,12 @@ service/batch:
           - any-glob-to-any-file:
               - 'internal/service/batch/**/*'
               - 'website/**/batch_*'
+service/bcmdataexports:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/bcmdataexports/**/*'
+              - 'website/**/bcmdataexports_*'
 service/bedrock:
   - any:
       - changed-files:
@@ -1502,6 +1508,12 @@ service/neptune:
           - any-glob-to-any-file:
               - 'internal/service/neptune/**/*'
               - 'website/**/neptune_*'
+service/neptunegraph:
+  - any:
+      - changed-files:
+          - any-glob-to-any-file:
+              - 'internal/service/neptunegraph/**/*'
+              - 'website/**/neptunegraph_*'
 service/networkfirewall:
   - any:
       - changed-files:

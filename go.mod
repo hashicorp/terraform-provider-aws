@@ -18,6 +18,8 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/acmpca v1.29.4
 	github.com/aws/aws-sdk-go-v2/service/amp v1.25.4
 	github.com/aws/aws-sdk-go-v2/service/amplify v1.21.5
+	github.com/aws/aws-sdk-go-v2/service/apigateway v1.23.6
+	github.com/aws/aws-sdk-go-v2/service/apigatewayv2 v1.20.4
 	github.com/aws/aws-sdk-go-v2/service/appconfig v1.29.2
 	github.com/aws/aws-sdk-go-v2/service/appfabric v1.7.4
 	github.com/aws/aws-sdk-go-v2/service/appflow v1.41.4
@@ -26,6 +28,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.32.4
 	github.com/aws/aws-sdk-go-v2/service/autoscalingplans v1.20.4
 	github.com/aws/aws-sdk-go-v2/service/batch v1.36.1
+	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.3.4
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.7.6
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.5.1
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.22.4
@@ -107,6 +110,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mediastore v1.20.4
 	github.com/aws/aws-sdk-go-v2/service/mq v1.22.4
 	github.com/aws/aws-sdk-go-v2/service/mwaa v1.26.5
+	github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.8.0
 	github.com/aws/aws-sdk-go-v2/service/oam v1.10.1
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.11.4
 	github.com/aws/aws-sdk-go-v2/service/osis v1.8.4
