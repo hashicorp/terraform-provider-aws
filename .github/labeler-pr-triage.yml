@@ -782,6 +782,9 @@ service/mwaa:
 service/neptune:
   - 'internal/service/neptune/**/*'
   - 'website/**/neptune_*'
+service/neptunegraph:
+  - 'internal/service/neptunegraph/**/*'
+  - 'website/**/neptunegraph_*'
 service/networkfirewall:
   - 'internal/service/networkfirewall/**/*'
   - 'website/**/networkfirewall_*'

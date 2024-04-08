@@ -260,6 +260,7 @@ mq,mq,mq,mq,,mq,,,MQ,MQ,,,2,,aws_mq_,,mq_,MQ,Amazon,,,,,,,mq,ListBrokers,,
 mturk,mturk,mturk,mturk,,mturk,,,MTurk,MTurk,,1,,,aws_mturk_,,mturk_,MTurk (Mechanical Turk),Amazon,,x,,,,,MTurk,,,
 mwaa,mwaa,mwaa,mwaa,,mwaa,,,MWAA,MWAA,,,2,,aws_mwaa_,,mwaa_,MWAA (Managed Workflows for Apache Airflow),Amazon,,,,,,,MWAA,ListEnvironments,,
 neptune,neptune,neptune,neptune,,neptune,,,Neptune,Neptune,,1,,,aws_neptune_,,neptune_,Neptune,Amazon,,,,,,,Neptune,DescribeDBClusters,,
+neptune-graph,neptunegraph,,neptunegraph,,neptunegraph,,,NeptuneGraph,,,,2,,aws_neptunegraph_,,neptunegraph_,Neptune Analytics,Amazon,,,,,,,Neptune Graph,ListGraphs,,
 network-firewall,networkfirewall,networkfirewall,networkfirewall,,networkfirewall,,,NetworkFirewall,NetworkFirewall,,1,,,aws_networkfirewall_,,networkfirewall_,Network Firewall,AWS,,,,,,,Network Firewall,ListFirewalls,,
 networkmanager,networkmanager,networkmanager,networkmanager,,networkmanager,,,NetworkManager,NetworkManager,,1,,,aws_networkmanager_,,networkmanager_,Network Manager,AWS,,,,,,,NetworkManager,ListCoreNetworks,,
 ,,,,,,,,,,,,,,,,,NICE DCV,,x,,,,,,,,,No SDK support
