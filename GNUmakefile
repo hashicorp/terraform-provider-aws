@@ -455,6 +455,7 @@ tools: prereq-go ## Install tools
 	cd .ci/tools && $(GO_VER) install github.com/hashicorp/go-changelog/cmd/changelog-build
 	cd .ci/tools && $(GO_VER) install github.com/hashicorp/copywrite
 	cd .ci/tools && $(GO_VER) install github.com/rhysd/actionlint/cmd/actionlint
+	cd .ci/tools && $(GO_VER) install github.com/uber-go/gopatch
 	cd .ci/tools && $(GO_VER) install mvdan.cc/gofumpt
 	@echo "make: tools installed"
 
