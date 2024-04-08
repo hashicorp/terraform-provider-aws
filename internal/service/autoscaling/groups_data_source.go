@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
 
-// @SDKDataSource("aws_autoscaling_groups")
-func DataSourceGroups() *schema.Resource {
+// @SDKDataSource("aws_autoscaling_groups", name="Groups")
+func dataSourceGroups() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceGroupsRead,
 

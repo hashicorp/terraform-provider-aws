@@ -29,8 +29,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_autoscaling_group",
 		},
 		{
-			Factory:  DataSourceGroups,
+			Factory:  dataSourceGroups,
 			TypeName: "aws_autoscaling_groups",
+			Name:     "Groups",
 		},
 		{
 			Factory:  DataSourceLaunchConfiguration,
