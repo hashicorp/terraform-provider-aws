@@ -2220,10 +2220,7 @@ func findTrafficSourceStatesByTwoPartKey(ctx context.Context, conn *autoscaling.
 	return findTrafficSourceStates(ctx, conn, input)
 }
 
-func findWarmPool(ctx context.Context, conn *autoscaling.Client, name string) (*autoscaling.DescribeWarmPoolOutput, error) {
-	input := &autoscaling.DescribeWarmPoolInput{
-		AutoScalingGroupName: aws.String(name),
-	}
+func findWarmPool(ctx context.Context, conn *autoscaling.Client, input *autoscaling.DescribeWarmPoolInput) (*autoscaling.DescribeWarmPoolOutput, error) {
 	var output *autoscaling.DescribeWarmPoolOutput
 
 	pages := autoscaling.NewDescribeWarmPoolPaginator(conn, input)
@@ -2241,14 +2238,26 @@ func findWarmPool(ctx context.Context, conn *autoscaling.Client, name string) (*
 			return nil, err
 		}
 
-		output.Instances = append(output.Instances, page.Instances...)
+		if output == nil {
+			output = page
+		} else {
+			output.Instances = append(output.Instances, page.Instances...)
+		}
 	}
 
 	if output == nil || output.WarmPoolConfiguration == nil {
-		return nil, tfresource.NewEmptyResultError(name)
+		return nil, tfresource.NewEmptyResultError(input)
 	}
 
 	return output, nil
+}
+
+func findWarmPoolByName(ctx context.Context, conn *autoscaling.Client, name string) (*autoscaling.DescribeWarmPoolOutput, error) {
+	input := &autoscaling.DescribeWarmPoolInput{
+		AutoScalingGroupName: aws.String(name),
+	}
+
+	return findWarmPool(ctx, conn, input)
 }
 
 func statusGroupCapacity(ctx context.Context, conn *autoscaling.Client, elbconn *elb.ELB, elbv2conn *elbv2.ELBV2, name string, cb func(int, int) error, startTime time.Time, ignoreFailedScalingActivities bool) retry.StateRefreshFunc {
@@ -2476,7 +2485,7 @@ func statusTrafficSourcesInStateCount(ctx context.Context, conn *autoscaling.Cli
 
 func statusWarmPool(ctx context.Context, conn *autoscaling.Client, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findWarmPool(ctx, conn, name)
+		output, err := findWarmPoolByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -2492,7 +2501,7 @@ func statusWarmPool(ctx context.Context, conn *autoscaling.Client, name string) 
 
 func statusWarmPoolInstanceCount(ctx context.Context, conn *autoscaling.Client, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findWarmPool(ctx, conn, name)
+		output, err := findWarmPoolByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
