@@ -70,10 +70,10 @@ func main() {
 		log.Fatal(err)
 	}
 
-	fmt.Printf("writing to: %s\n", out)
 	if err := os.WriteFile(out, b, 0644); err != nil {
 		log.Fatal(fmt.Errorf("writing patch file: %s", err))
 	}
+	log.Printf("patch written to: %s\n", out)
 }
 
 // getServiceData fetches service data from the names package
