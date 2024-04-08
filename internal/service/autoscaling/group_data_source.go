@@ -4,20 +4,17 @@
 package autoscaling
 
 import (
-	"bytes"
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// @SDKDataSource("aws_autoscaling_group")
-func DataSourceGroup() *schema.Resource {
+// @SDKDataSource("aws_autoscaling_group", name="Group")
+func dataSourceGroup() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceGroupRead,
 
@@ -487,16 +484,6 @@ func DataSourceGroup() *schema.Resource {
 						},
 					},
 				},
-				// This should be removable, but wait until other tags work is being done.
-				Set: func(v interface{}) int {
-					var buf bytes.Buffer
-					m := v.(map[string]interface{})
-					buf.WriteString(fmt.Sprintf("%s-", m["key"].(string)))
-					buf.WriteString(fmt.Sprintf("%s-", m["value"].(string)))
-					buf.WriteString(fmt.Sprintf("%t-", m["propagate_at_launch"].(bool)))
-
-					return create.StringHashcode(buf.String())
-				},
 			},
 			"target_group_arns": {
 				Type:     schema.TypeSet,
@@ -622,7 +609,7 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("service_linked_role_arn", group.ServiceLinkedRoleARN)
 	d.Set("status", group.Status)
 	d.Set("suspended_processes", flattenSuspendedProcesses(group.SuspendedProcesses))
-	if err := d.Set("tag", ListOfMap(KeyValueTags(ctx, group.Tags, d.Id(), TagResourceTypeGroup).IgnoreAWS().IgnoreConfig(ignoreTagsConfig))); err != nil {
+	if err := d.Set("tag", listOfMap(KeyValueTags(ctx, group.Tags, d.Id(), TagResourceTypeGroup).IgnoreAWS().IgnoreConfig(ignoreTagsConfig))); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tag: %s", err)
 	}
 	d.Set("target_group_arns", group.TargetGroupARNs)

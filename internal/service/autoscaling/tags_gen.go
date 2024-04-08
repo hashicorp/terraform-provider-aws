@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
@@ -100,28 +101,20 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier, res
 
 // []*SERVICE.Tag handling
 
-// ListOfMap returns a list of autoscaling in flattened map.
+// listOfMap returns a list of autoscaling tags in a flattened map.
 //
 // Compatible with setting Terraform state for strongly typed configuration blocks.
 //
 // This function strips tag resource identifier and type. Generally, this is
 // the desired behavior so the tag schema does not require those attributes.
-// Use (tftags.KeyValueTags).ListOfMap() for full tag information.
-func ListOfMap(tags tftags.KeyValueTags) []any {
-	var result []any
-
-	for _, key := range tags.Keys() {
-		m := map[string]any{
-			"key":   key,
-			"value": aws.ToString(tags.KeyValue(key)),
-
+func listOfMap(tags tftags.KeyValueTags) []any {
+	return tfslices.ApplyToAll(tags.Keys(), func(key string) any {
+		return map[string]any{
+			"key":                 key,
+			"value":               aws.ToString(tags.KeyValue(key)),
 			"propagate_at_launch": aws.ToBool(tags.KeyAdditionalBoolValue(key, "PropagateAtLaunch")),
 		}
-
-		result = append(result, m)
-	}
-
-	return result
+	})
 }
 
 // Tags returns autoscaling service tags.

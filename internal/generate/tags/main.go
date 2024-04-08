@@ -330,6 +330,7 @@ func main() {
 		SkipTypesImp:      *skipTypesImp,
 		TfLogPkg:          *updateTags,
 		TfResourcePkg:     *getTag || *waitForPropagation || *retryTagsListTagsType != "",
+		TfSlicesPkg:       *serviceTagsSlice && *tagTypeIDElem != "" && *tagTypeAddBoolElem != "",
 		TimePkg:           *waitForPropagation || *retryTagsListTagsType != "",
 
 		CreateTagsFunc:             createTagsFunc,

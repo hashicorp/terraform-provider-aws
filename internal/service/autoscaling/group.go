@@ -1317,7 +1317,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 	d.Set("warm_pool_size", g.WarmPoolSize)
 
-	if err := d.Set("tag", ListOfMap(KeyValueTags(ctx, g.Tags, d.Id(), TagResourceTypeGroup).IgnoreAWS().IgnoreConfig(ignoreTagsConfig))); err != nil {
+	if err := d.Set("tag", listOfMap(KeyValueTags(ctx, g.Tags, d.Id(), TagResourceTypeGroup).IgnoreAWS().IgnoreConfig(ignoreTagsConfig))); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tag: %s", err)
 	}
 
