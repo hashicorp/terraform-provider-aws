@@ -578,7 +578,7 @@ func dataSourceGroupRead(ctx context.Context, d *schema.ResourceData, meta inter
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	groupName := d.Get("name").(string)
-	group, err := FindGroupByName(ctx, conn, groupName)
+	group, err := findGroupByName(ctx, conn, groupName)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Auto Scaling Group (%s): %s", groupName, err)

@@ -120,6 +120,29 @@ func TestAccAutoScalingAttachment_multipleALBTargetGroups(t *testing.T) {
 	})
 }
 
+func TestAccAutoScalingAttachment_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_autoscaling_attachment.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.AutoScalingServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAttachmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAttachmentConfig_elb(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckAttachmentByLoadBalancerNameExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfautoscaling.ResourceAttachment(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingClient(ctx)

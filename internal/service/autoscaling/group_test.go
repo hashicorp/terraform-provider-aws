@@ -3958,10 +3958,6 @@ func testAccCheckGroupExists(ctx context.Context, n string, v *awstypes.AutoScal
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Auto Scaling Group ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingClient(ctx)
 
 		output, err := tfautoscaling.FindGroupByName(ctx, conn, rs.Primary.ID)

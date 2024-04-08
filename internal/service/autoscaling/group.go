@@ -1233,7 +1233,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	g, err := FindGroupByName(ctx, conn, d.Id())
+	g, err := findGroupByName(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Auto Scaling Group %s not found, removing from state", d.Id())
@@ -1777,7 +1777,7 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	forceDeleteGroup := d.Get("force_delete").(bool)
 	forceDeleteWarmPool := forceDeleteGroup || d.Get("force_delete_warm_pool").(bool)
 
-	group, err := FindGroupByName(ctx, conn, d.Id())
+	group, err := findGroupByName(ctx, conn, d.Id())
 
 	if tfresource.NotFound(err) {
 		return diags
@@ -1823,7 +1823,7 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta inter
 
 	_, err = tfresource.RetryUntilNotFound(ctx, d.Timeout(schema.TimeoutDelete),
 		func() (interface{}, error) {
-			return FindGroupByName(ctx, conn, d.Id())
+			return findGroupByName(ctx, conn, d.Id())
 		})
 
 	if err != nil {
@@ -2040,7 +2040,7 @@ func findGroups(ctx context.Context, conn *autoscaling.Client, input *autoscalin
 	return output, nil
 }
 
-func FindGroupByName(ctx context.Context, conn *autoscaling.Client, name string) (*awstypes.AutoScalingGroup, error) {
+func findGroupByName(ctx context.Context, conn *autoscaling.Client, name string) (*awstypes.AutoScalingGroup, error) {
 	input := &autoscaling.DescribeAutoScalingGroupsInput{
 		AutoScalingGroupNames: []string{name},
 	}
@@ -2286,7 +2286,7 @@ func statusGroupCapacity(ctx context.Context, conn *autoscaling.Client, elbconn 
 			}
 		}
 
-		g, err := FindGroupByName(ctx, conn, name)
+		g, err := findGroupByName(ctx, conn, name)
 
 		if err != nil {
 			return nil, "", fmt.Errorf("reading Auto Scaling Group (%s): %w", name, err)
@@ -2364,7 +2364,7 @@ func statusGroupCapacity(ctx context.Context, conn *autoscaling.Client, elbconn 
 
 func statusGroupInstanceCount(ctx context.Context, conn *autoscaling.Client, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindGroupByName(ctx, conn, name)
+		output, err := findGroupByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

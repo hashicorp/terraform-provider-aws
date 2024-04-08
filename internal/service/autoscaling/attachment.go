@@ -19,8 +19,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_autoscaling_attachment")
-func ResourceAttachment() *schema.Resource {
+// @SDKResource("aws_autoscaling_attachment", name="Attachment")
+func resourceAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAttachmentCreate,
 		ReadWithoutTimeout:   resourceAttachmentRead,
@@ -102,9 +102,9 @@ func resourceAttachmentRead(ctx context.Context, d *schema.ResourceData, meta in
 	var err error
 
 	if v, ok := d.GetOk("elb"); ok {
-		err = FindAttachmentByLoadBalancerName(ctx, conn, asgName, v.(string))
+		err = findAttachmentByLoadBalancerName(ctx, conn, asgName, v.(string))
 	} else {
-		err = FindAttachmentByTargetGroupARN(ctx, conn, asgName, d.Get("lb_target_group_arn").(string))
+		err = findAttachmentByTargetGroupARN(ctx, conn, asgName, d.Get("lb_target_group_arn").(string))
 	}
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -142,9 +142,10 @@ func resourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta 
 			return sdkdiag.AppendErrorf(diags, "detaching Auto Scaling Group (%s) load balancer (%s): %s", asgName, lbName, err)
 		}
 	} else {
+		lbTargetGroupARN := d.Get("lb_target_group_arn").(string)
 		input := &autoscaling.DetachLoadBalancerTargetGroupsInput{
 			AutoScalingGroupName: aws.String(asgName),
-			TargetGroupARNs:      []string{d.Get("lb_target_group_arn").(string)},
+			TargetGroupARNs:      []string{lbTargetGroupARN},
 		}
 
 		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, d.Timeout(schema.TimeoutCreate),
@@ -154,15 +155,15 @@ func resourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta 
 			errCodeValidationError, "update too many")
 
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "detaching Auto Scaling Group (%s) target group (%s): %s", asgName, d.Get("lb_target_group_arn").(string), err)
+			return sdkdiag.AppendErrorf(diags, "detaching Auto Scaling Group (%s) target group (%s): %s", asgName, lbTargetGroupARN, err)
 		}
 	}
 
 	return diags
 }
 
-func FindAttachmentByLoadBalancerName(ctx context.Context, conn *autoscaling.Client, asgName, loadBalancerName string) error {
-	asg, err := FindGroupByName(ctx, conn, asgName)
+func findAttachmentByLoadBalancerName(ctx context.Context, conn *autoscaling.Client, asgName, loadBalancerName string) error {
+	asg, err := findGroupByName(ctx, conn, asgName)
 
 	if err != nil {
 		return err
@@ -179,8 +180,8 @@ func FindAttachmentByLoadBalancerName(ctx context.Context, conn *autoscaling.Cli
 	}
 }
 
-func FindAttachmentByTargetGroupARN(ctx context.Context, conn *autoscaling.Client, asgName, targetGroupARN string) error {
-	asg, err := FindGroupByName(ctx, conn, asgName)
+func findAttachmentByTargetGroupARN(ctx context.Context, conn *autoscaling.Client, asgName, targetGroupARN string) error {
+	asg, err := findGroupByName(ctx, conn, asgName)
 
 	if err != nil {
 		return err

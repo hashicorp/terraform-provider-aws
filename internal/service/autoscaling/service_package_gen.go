@@ -42,8 +42,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceAttachment,
+			Factory:  resourceAttachment,
 			TypeName: "aws_autoscaling_attachment",
+			Name:     "Attachment",
 		},
 		{
 			Factory:  ResourceGroup,
