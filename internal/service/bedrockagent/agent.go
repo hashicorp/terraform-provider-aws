@@ -526,8 +526,3 @@ type ic struct {
 	TopK          types.Int64                       `tfsdk:"topk"`
 	TopP          types.Float64                     `tfsdk:"topp"`
 }
-
-func bedrockAgentHasChanges(_ context.Context, plan, state bedrockAgentResourceModel) bool {
-	return !plan.CustomerEncryptionKeyARN.Equal(state.CustomerEncryptionKeyARN) ||
-		!plan.Description.Equal(state.Description)
-}
