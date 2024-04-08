@@ -11,6 +11,7 @@ import (
 	amp_sdkv2 "github.com/aws/aws-sdk-go-v2/service/amp"
 	amplify_sdkv2 "github.com/aws/aws-sdk-go-v2/service/amplify"
 	apigateway_sdkv2 "github.com/aws/aws-sdk-go-v2/service/apigateway"
+	apigatewayv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
 	appconfig_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appconfig"
 	appfabric_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appfabric"
 	appflow_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appflow"
@@ -153,7 +154,6 @@ import (
 	wellarchitected_sdkv2 "github.com/aws/aws-sdk-go-v2/service/wellarchitected"
 	workspaces_sdkv2 "github.com/aws/aws-sdk-go-v2/service/workspaces"
 	xray_sdkv2 "github.com/aws/aws-sdk-go-v2/service/xray"
-	apigatewayv2_sdkv1 "github.com/aws/aws-sdk-go/service/apigatewayv2"
 	appintegrationsservice_sdkv1 "github.com/aws/aws-sdk-go/service/appintegrationsservice"
 	applicationautoscaling_sdkv1 "github.com/aws/aws-sdk-go/service/applicationautoscaling"
 	applicationinsights_sdkv1 "github.com/aws/aws-sdk-go/service/applicationinsights"
@@ -269,8 +269,8 @@ func (c *AWSClient) APIGatewayClient(ctx context.Context) *apigateway_sdkv2.Clie
 	return errs.Must(client[*apigateway_sdkv2.Client](ctx, c, names.APIGateway, make(map[string]any)))
 }
 
-func (c *AWSClient) APIGatewayV2Conn(ctx context.Context) *apigatewayv2_sdkv1.ApiGatewayV2 {
-	return errs.Must(conn[*apigatewayv2_sdkv1.ApiGatewayV2](ctx, c, names.APIGatewayV2, make(map[string]any)))
+func (c *AWSClient) APIGatewayV2Client(ctx context.Context) *apigatewayv2_sdkv2.Client {
+	return errs.Must(client[*apigatewayv2_sdkv2.Client](ctx, c, names.APIGatewayV2, make(map[string]any)))
 }
 
 func (c *AWSClient) AccessAnalyzerClient(ctx context.Context) *accessanalyzer_sdkv2.Client {
