@@ -75,6 +75,20 @@ default: build
 
 # Please keep targets in alphabetical order
 
+awssdkpatch-apply: awssdkpatch-gen ## Apply a patch generated with awssdkpatch
+	@gopatch -p awssdk.patch ./$(PKG_NAME)/...
+
+awssdkpatch-gen: ## Generate a patch file using awssdkpatch
+	@if [ "$(PKG)" = "" ]; then \
+		echo "PKG must be set. Try again like:" ; \
+		echo "PKG=foo make awssdkpatch-gen" ; \
+		exit 1 ; \
+	fi
+	@awssdkpatch -service $(PKG)
+
+awssdkpatch: prereq-go ## Install awssdkpatch
+	cd tools/awssdkpatch && $(GO_VER) install github.com/hashicorp/terraform-provider-aws/tools/awssdkpatch
+
 build: prereq-go fmtcheck ## Build provider
 	$(GO_VER) install
 	@echo "make: build complete"
