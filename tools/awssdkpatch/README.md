@@ -28,6 +28,7 @@ For most cases, the `awssdkpatch` executable is called as follows:
 ```console
 awssdkpatch -service xray
 ```
+
 This generates a patch file, `awssdk.patch`, in the root of the project.
 This patch can then be applied to the appropriate service directory with `gopatch`:
 
