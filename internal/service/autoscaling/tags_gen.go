@@ -18,12 +18,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// GetTag fetches an individual autoscaling service tag for a resource.
+// findTag fetches an individual autoscaling service tag for a resource.
 // Returns whether the key value and any errors. A NotFoundError is used to signal that no value was found.
 // This function will optimise the handling over listTags, if possible.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func GetTag(ctx context.Context, conn *autoscaling.Client, identifier, resourceType, key string, optFns ...func(*autoscaling.Options)) (*tftags.TagData, error) {
+func findTag(ctx context.Context, conn *autoscaling.Client, identifier, resourceType, key string, optFns ...func(*autoscaling.Options)) (*tftags.TagData, error) {
 	input := &autoscaling.DescribeTagsInput{
 		Filters: []awstypes.Filter{
 			{

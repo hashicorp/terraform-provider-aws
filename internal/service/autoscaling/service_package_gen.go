@@ -51,8 +51,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_autoscaling_group",
 		},
 		{
-			Factory:  ResourceGroupTag,
+			Factory:  resourceGroupTag,
 			TypeName: "aws_autoscaling_group_tag",
+			Name:     "Group Tag",
 		},
 		{
 			Factory:  ResourceLifecycleHook,

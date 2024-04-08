@@ -15,13 +15,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_autoscaling_group_tag")
-func ResourceGroupTag() *schema.Resource {
+// @SDKResource("aws_autoscaling_group_tag", name="Group Tag")
+func resourceGroupTag() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGroupTagCreate,
 		ReadWithoutTimeout:   resourceGroupTagRead,
 		UpdateWithoutTimeout: resourceGroupTagUpdate,
 		DeleteWithoutTimeout: resourceGroupTagDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -84,7 +85,7 @@ func resourceGroupTagRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading AutoScaling Group (%s) tag (%s): %s", identifier, key, err)
 	}
 
-	value, err := GetTag(ctx, conn, identifier, TagResourceTypeGroup, key)
+	value, err := findTag(ctx, conn, identifier, TagResourceTypeGroup, key)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] AutoScaling Group (%s) tag (%s), removing from state", identifier, key)
