@@ -6,12 +6,12 @@ require (
 	github.com/ProtonMail/go-crypto v1.1.0-alpha.2
 	github.com/YakDriver/go-version v0.1.0
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.51.15
+	github.com/aws/aws-sdk-go v1.51.16
 	github.com/aws/aws-sdk-go-v2 v1.26.1
-	github.com/aws/aws-sdk-go-v2/config v1.27.10
-	github.com/aws/aws-sdk-go-v2/credentials v1.17.10
+	github.com/aws/aws-sdk-go-v2/config v1.27.11
+	github.com/aws/aws-sdk-go-v2/credentials v1.17.11
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.16.1
-	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.16.14
+	github.com/aws/aws-sdk-go-v2/feature/s3/manager v1.16.15
 	github.com/aws/aws-sdk-go-v2/service/accessanalyzer v1.29.1
 	github.com/aws/aws-sdk-go-v2/service/account v1.16.4
 	github.com/aws/aws-sdk-go-v2/service/acm v1.25.4
@@ -128,7 +128,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.17.4
 	github.com/aws/aws-sdk-go-v2/service/rekognition v1.39.4
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.10.4
-	github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.21.4
+	github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.22.0
 	github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.21.4
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.10.0
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.23.4
@@ -149,15 +149,15 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssmcontacts v1.22.4
 	github.com/aws/aws-sdk-go-v2/service/ssmincidents v1.30.4
 	github.com/aws/aws-sdk-go-v2/service/ssmsap v1.12.4
-	github.com/aws/aws-sdk-go-v2/service/sso v1.20.4
-	github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.25.4
+	github.com/aws/aws-sdk-go-v2/service/sso v1.20.5
+	github.com/aws/aws-sdk-go-v2/service/ssoadmin v1.25.5
 	github.com/aws/aws-sdk-go-v2/service/sts v1.28.6
 	github.com/aws/aws-sdk-go-v2/service/swf v1.22.4
 	github.com/aws/aws-sdk-go-v2/service/synthetics v1.24.4
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.25.5
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.36.4
 	github.com/aws/aws-sdk-go-v2/service/transfer v1.45.0
-	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.12.0
+	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.13.0
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.7.4
 	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.29.4
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.38.4
