@@ -14,9 +14,11 @@ import (
 	"go/parser"
 	"go/token"
 	"os"
+	"path"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"text/template"
 
 	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
@@ -81,8 +83,34 @@ func main() {
 		foo.ProviderNameUpper = serviceRecord.ProviderNameUpper()
 		foo.ProviderPackage = servicePackage
 
-		if err := d.WriteTemplate("taggingtests", tmpl, foo); err != nil {
-			g.Fatalf("error generating XXX service package data: %s", err)
+		templates, err := template.New("taggingtests").Parse(tmpl)
+		if err != nil {
+			g.Fatalf("parsing base template: %w", err)
+		}
+
+		configTmplFile := path.Join("testdata", "tmpl", fmt.Sprintf("%s_tags.tmpl", sourceName))
+		var configTmpl string
+		if _, err := os.Stat(configTmplFile); err == nil {
+			b, err := os.ReadFile(configTmplFile)
+			if err != nil {
+				g.Fatalf("reading %q: %w", configTmplFile, err)
+			}
+			configTmpl = string(b)
+			foo.GenerateConfig = true
+		} else if errors.Is(err, os.ErrNotExist) {
+			// TODO: This will be an error when composed configurations are implemented.
+			g.Warnf("no tags template found for %s at %q", sourceName, configTmplFile)
+		} else {
+			g.Fatalf("opening config template %q: %w", configTmplFile, err)
+		}
+
+		_, err = templates.New("config").Parse(configTmpl)
+		if err != nil {
+			g.Fatalf("parsing config template %q: %w", configTmplFile, err)
+		}
+
+		if err := d.WriteTemplateSet(templates, foo); err != nil {
+			g.Fatalf("error generating %q service package data: %s", servicePackage, err)
 		}
 
 		if err := d.Write(); err != nil {
@@ -113,6 +141,7 @@ type ResourceDatum struct {
 	PreCheck          bool
 	SkipEmptyTags     bool // TODO: Remove when we have a strategy for resources that have a minimum tag value length of 1
 	GoImports         []goImport
+	GenerateConfig    bool
 }
 
 type goImport struct {

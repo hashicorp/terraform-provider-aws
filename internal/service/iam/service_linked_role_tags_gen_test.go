@@ -3,6 +3,7 @@
 package iam_test
 
 import (
+	"fmt"
 	"testing"
 
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -675,4 +676,54 @@ func TestAccIAMServiceLinkedRole_tags_DefaultTags_nullNonOverlappingResourceTag(
 			},
 		},
 	})
+}
+
+func testAccServiceLinkedRoleConfig_tags0(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_service_linked_role" "test" {
+  aws_service_name = "autoscaling.amazonaws.com"
+  custom_suffix    = %[1]q
+
+}
+`, rName)
+}
+
+func testAccServiceLinkedRoleConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_service_linked_role" "test" {
+  aws_service_name = "autoscaling.amazonaws.com"
+  custom_suffix    = %[1]q
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccServiceLinkedRoleConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_service_linked_role" "test" {
+  aws_service_name = "autoscaling.amazonaws.com"
+  custom_suffix    = %[1]q
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccServiceLinkedRoleConfig_tagsNull(rName, tagKey1 string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_service_linked_role" "test" {
+  aws_service_name = "autoscaling.amazonaws.com"
+  custom_suffix    = %[1]q
+
+  tags = {
+    %[2]q = null
+  }
+}
+`, rName, tagKey1)
 }

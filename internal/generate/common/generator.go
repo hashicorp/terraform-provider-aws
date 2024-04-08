@@ -57,6 +57,7 @@ type Destination interface {
 	Write() error
 	WriteBytes(body []byte) error
 	WriteTemplate(templateName, templateBody string, templateData any) error
+	WriteTemplateSet(templates *template.Template, templateData any) error
 }
 
 func (g *Generator) NewGoFileDestination(filename string) Destination {
@@ -142,8 +143,7 @@ func (d *baseDestination) WriteTemplate(templateName, templateBody string, templ
 		}
 	}
 
-	_, err = d.buffer.Write(body)
-	return err
+	return d.WriteBytes(body)
 }
 
 func parseTemplate(templateName, templateBody string, templateData any) ([]byte, error) {
@@ -156,12 +156,30 @@ func parseTemplate(templateName, templateBody string, templateData any) ([]byte,
 		return nil, fmt.Errorf("parsing function template: %w", err)
 	}
 
+	return executeTemplate(tmpl, templateData)
+}
+
+func executeTemplate(tmpl *template.Template, templateData any) ([]byte, error) {
 	var buffer bytes.Buffer
-	err = tmpl.Execute(&buffer, templateData)
+	err := tmpl.Execute(&buffer, templateData)
 
 	if err != nil {
 		return nil, fmt.Errorf("executing template: %w", err)
 	}
 
 	return buffer.Bytes(), nil
+}
+
+func (d *fileDestination) WriteTemplateSet(templates *template.Template, templateData any) error {
+	unformattedBody, err := executeTemplate(templates, templateData)
+	if err != nil {
+		return err
+	}
+
+	body, err := d.formatter(unformattedBody)
+	if err != nil {
+		return fmt.Errorf("formatting parsed template:\n%s\n%w", unformattedBody, err)
+	}
+
+	return d.WriteBytes(body)
 }

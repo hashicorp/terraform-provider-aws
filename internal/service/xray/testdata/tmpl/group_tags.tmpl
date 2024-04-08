@@ -1,0 +1,5 @@
+resource "aws_xray_group" "test" {
+  group_name        = %[1]q
+  filter_expression = "responsetime > 5"
+{{- template "tags" . }}
+}

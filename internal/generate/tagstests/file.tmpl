@@ -37,9 +37,30 @@
 {{ if .Serialize }}testAcc{{ else }}TestAcc{{ end }}{{ .ProviderNameUpper }}{{ .Name }}
 {{- end }}
 
+{{ define "tags" }}
+{{ if eq . "tags0" -}}
+{{- else if eq . "tags1" }}
+  tags = {
+    %[2]q = %[3]q
+  }
+{{- else if eq . "tags2" }}
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+{{- else if eq . "tagsNull" }}
+  tags = {
+    %[2]q = null
+  }
+{{- end -}}
+{{ end }}
+
 package {{ .ProviderPackage }}_test
 
 import (
+	{{ if .GenerateConfig -}}
+	"fmt"
+	{{- end }}
 	"testing"
 
     {{ if .ExistsTypePackage -}}
@@ -589,3 +610,29 @@ func {{ template "testname" . }}_tags_DefaultTags_nullNonOverlappingResourceTag(
 		},
 	})
 }
+
+{{ if .GenerateConfig }}
+func testAcc{{ .Name }}Config_tags0(rName string) string {
+	return fmt.Sprintf(`
+{{ template "config" "tags0" -}}
+`, rName)
+}
+
+func testAcc{{ .Name }}Config_tags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+{{ template "config" "tags1" -}}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAcc{{ .Name }}Config_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+{{ template "config" "tags2" -}}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAcc{{ .Name }}Config_tagsNull(rName, tagKey1 string) string {
+	return fmt.Sprintf(`
+{{ template "config"  "tagsNull" -}}
+`, rName, tagKey1)
+}
+{{ end }}

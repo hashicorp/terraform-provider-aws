@@ -3,6 +3,7 @@
 package xray_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/xray/types"
@@ -690,4 +691,54 @@ func TestAccXRayGroup_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.
 			},
 		},
 	})
+}
+
+func testAccGroupConfig_tags0(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_xray_group" "test" {
+  group_name        = %[1]q
+  filter_expression = "responsetime > 5"
+
+}
+`, rName)
+}
+
+func testAccGroupConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_xray_group" "test" {
+  group_name        = %[1]q
+  filter_expression = "responsetime > 5"
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccGroupConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_xray_group" "test" {
+  group_name        = %[1]q
+  filter_expression = "responsetime > 5"
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccGroupConfig_tagsNull(rName, tagKey1 string) string {
+	return fmt.Sprintf(`
+resource "aws_xray_group" "test" {
+  group_name        = %[1]q
+  filter_expression = "responsetime > 5"
+
+  tags = {
+    %[2]q = null
+  }
+}
+`, rName, tagKey1)
 }

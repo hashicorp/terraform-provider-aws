@@ -3,6 +3,7 @@
 package iam_test
 
 import (
+	"fmt"
 	"testing"
 
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -675,4 +676,74 @@ func TestAccIAMOpenIDConnectProvider_tags_DefaultTags_nullNonOverlappingResource
 			},
 		},
 	})
+}
+
+func testAccOpenIDConnectProviderConfig_tags0(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_openid_connect_provider" "test" {
+  url = "https://accounts.testle.com/%[1]s"
+
+  client_id_list = [
+    "266362248691-re108qaeld573ia0l6clj2i5ac7r7291.apps.testleusercontent.com",
+  ]
+
+  thumbprint_list = ["cf23df2207d99a74fbe169e3eba035e633b65d94"]
+
+}
+`, rName)
+}
+
+func testAccOpenIDConnectProviderConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_openid_connect_provider" "test" {
+  url = "https://accounts.testle.com/%[1]s"
+
+  client_id_list = [
+    "266362248691-re108qaeld573ia0l6clj2i5ac7r7291.apps.testleusercontent.com",
+  ]
+
+  thumbprint_list = ["cf23df2207d99a74fbe169e3eba035e633b65d94"]
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccOpenIDConnectProviderConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_openid_connect_provider" "test" {
+  url = "https://accounts.testle.com/%[1]s"
+
+  client_id_list = [
+    "266362248691-re108qaeld573ia0l6clj2i5ac7r7291.apps.testleusercontent.com",
+  ]
+
+  thumbprint_list = ["cf23df2207d99a74fbe169e3eba035e633b65d94"]
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccOpenIDConnectProviderConfig_tagsNull(rName, tagKey1 string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_openid_connect_provider" "test" {
+  url = "https://accounts.testle.com/%[1]s"
+
+  client_id_list = [
+    "266362248691-re108qaeld573ia0l6clj2i5ac7r7291.apps.testleusercontent.com",
+  ]
+
+  thumbprint_list = ["cf23df2207d99a74fbe169e3eba035e633b65d94"]
+
+  tags = {
+    %[2]q = null
+  }
+}
+`, rName, tagKey1)
 }

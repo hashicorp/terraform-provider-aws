@@ -1,0 +1,4 @@
+resource "aws_iam_user" "test" {
+  name = %[1]q
+{{- template "tags" . }}
+}

@@ -3,6 +3,7 @@
 package iam_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/iam/types"
@@ -768,4 +769,50 @@ func TestAccIAMVirtualMFADevice_tags_DefaultTags_nullNonOverlappingResourceTag(t
 			},
 		},
 	})
+}
+
+func testAccVirtualMFADeviceConfig_tags0(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_virtual_mfa_device" "test" {
+  virtual_mfa_device_name = %[1]q
+
+}
+`, rName)
+}
+
+func testAccVirtualMFADeviceConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_virtual_mfa_device" "test" {
+  virtual_mfa_device_name = %[1]q
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccVirtualMFADeviceConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_virtual_mfa_device" "test" {
+  virtual_mfa_device_name = %[1]q
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccVirtualMFADeviceConfig_tagsNull(rName, tagKey1 string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_virtual_mfa_device" "test" {
+  virtual_mfa_device_name = %[1]q
+
+  tags = {
+    %[2]q = null
+  }
+}
+`, rName, tagKey1)
 }

@@ -3,6 +3,7 @@
 package xray_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/xray/types"
@@ -690,4 +691,106 @@ func TestAccXRaySamplingRule_tags_DefaultTags_nullNonOverlappingResourceTag(t *t
 			},
 		},
 	})
+}
+
+func testAccSamplingRuleConfig_tags0(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_xray_sampling_rule" "test" {
+  rule_name      = %[1]q
+  priority       = 5
+  reservoir_size = 10
+  url_path       = "*"
+  host           = "*"
+  http_method    = "GET"
+  service_type   = "*"
+  service_name   = "*"
+  fixed_rate     = 0.3
+  resource_arn   = "*"
+  version        = 1
+
+  attributes = {
+    Hello = "World"
+  }
+
+}
+`, rName)
+}
+
+func testAccSamplingRuleConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_xray_sampling_rule" "test" {
+  rule_name      = %[1]q
+  priority       = 5
+  reservoir_size = 10
+  url_path       = "*"
+  host           = "*"
+  http_method    = "GET"
+  service_type   = "*"
+  service_name   = "*"
+  fixed_rate     = 0.3
+  resource_arn   = "*"
+  version        = 1
+
+  attributes = {
+    Hello = "World"
+  }
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccSamplingRuleConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_xray_sampling_rule" "test" {
+  rule_name      = %[1]q
+  priority       = 5
+  reservoir_size = 10
+  url_path       = "*"
+  host           = "*"
+  http_method    = "GET"
+  service_type   = "*"
+  service_name   = "*"
+  fixed_rate     = 0.3
+  resource_arn   = "*"
+  version        = 1
+
+  attributes = {
+    Hello = "World"
+  }
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccSamplingRuleConfig_tagsNull(rName, tagKey1 string) string {
+	return fmt.Sprintf(`
+resource "aws_xray_sampling_rule" "test" {
+  rule_name      = %[1]q
+  priority       = 5
+  reservoir_size = 10
+  url_path       = "*"
+  host           = "*"
+  http_method    = "GET"
+  service_type   = "*"
+  service_name   = "*"
+  fixed_rate     = 0.3
+  resource_arn   = "*"
+  version        = 1
+
+  attributes = {
+    Hello = "World"
+  }
+
+  tags = {
+    %[2]q = null
+  }
+}
+`, rName, tagKey1)
 }

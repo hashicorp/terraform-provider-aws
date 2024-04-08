@@ -3,6 +3,7 @@
 package batch_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/batch"
@@ -690,4 +691,70 @@ func TestAccBatchSchedulingPolicy_tags_DefaultTags_nullNonOverlappingResourceTag
 			},
 		},
 	})
+}
+
+func testAccSchedulingPolicyConfig_tags0(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_batch_scheduling_policy" "test" {
+  name = %[1]q
+
+  fair_share_policy {
+    compute_reservation = 0
+    share_decay_seconds = 0
+  }
+
+}
+`, rName)
+}
+
+func testAccSchedulingPolicyConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_batch_scheduling_policy" "test" {
+  name = %[1]q
+
+  fair_share_policy {
+    compute_reservation = 0
+    share_decay_seconds = 0
+  }
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccSchedulingPolicyConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_batch_scheduling_policy" "test" {
+  name = %[1]q
+
+  fair_share_policy {
+    compute_reservation = 0
+    share_decay_seconds = 0
+  }
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccSchedulingPolicyConfig_tagsNull(rName, tagKey1 string) string {
+	return fmt.Sprintf(`
+resource "aws_batch_scheduling_policy" "test" {
+  name = %[1]q
+
+  fair_share_policy {
+    compute_reservation = 0
+    share_decay_seconds = 0
+  }
+
+  tags = {
+    %[2]q = null
+  }
+}
+`, rName, tagKey1)
 }

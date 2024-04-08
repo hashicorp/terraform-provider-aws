@@ -3,6 +3,7 @@
 package iam_test
 
 import (
+	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/iam/types"
@@ -690,4 +691,106 @@ func TestAccIAMRole_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T)
 			},
 		},
 	})
+}
+
+func testAccRoleConfig_tags0(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Principal = {
+        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+      }
+      Effect = "Allow"
+      Sid    = ""
+    }]
+  })
+
+}
+`, rName)
+}
+
+func testAccRoleConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Principal = {
+        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+      }
+      Effect = "Allow"
+      Sid    = ""
+    }]
+  })
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccRoleConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Principal = {
+        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+      }
+      Effect = "Allow"
+      Sid    = ""
+    }]
+  })
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccRoleConfig_tagsNull(rName, tagKey1 string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Action = "sts:AssumeRole",
+      Principal = {
+        Service = "ec2.${data.aws_partition.current.dns_suffix}",
+      }
+      Effect = "Allow"
+      Sid    = ""
+    }]
+  })
+
+  tags = {
+    %[2]q = null
+  }
+}
+`, rName, tagKey1)
 }
