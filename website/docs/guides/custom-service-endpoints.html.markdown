@@ -94,6 +94,7 @@ provider "aws" {
   <li><code>autoscalingplans</code></li>
   <li><code>backup</code></li>
   <li><code>batch</code></li>
+  <li><code>bcmdataexports</code></li>
   <li><code>bedrock</code></li>
   <li><code>bedrockagent</code></li>
   <li><code>budgets</code></li>

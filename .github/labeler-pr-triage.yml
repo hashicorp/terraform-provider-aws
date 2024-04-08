@@ -160,6 +160,9 @@ service/backupgateway:
 service/batch:
   - 'internal/service/batch/**/*'
   - 'website/**/batch_*'
+service/bcmdataexports:
+  - 'internal/service/bcmdataexports/**/*'
+  - 'website/**/bcmdataexports_*'
 service/bedrock:
   - 'internal/service/bedrock/**/*'
   - 'website/**/bedrock_*'

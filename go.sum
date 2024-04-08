@@ -56,6 +56,8 @@ github.com/aws/aws-sdk-go-v2/service/amp v1.25.4 h1:TgkApdPnCVX7RtHMcsswmUYsDnnj
 github.com/aws/aws-sdk-go-v2/service/amp v1.25.4/go.mod h1:i5BA2ACkXa8Pzqinz/xEukdVJnMdfQLRcx7ftb5g0pk=
 github.com/aws/aws-sdk-go-v2/service/amplify v1.21.5 h1:2r72Kx6V0U6js4KZryjZO+tzxri7dQ5nT0BHPXoWxwg=
 github.com/aws/aws-sdk-go-v2/service/amplify v1.21.5/go.mod h1:DBFsAufxSC9f12Z3JCcqlErAAE6KHDGrHBe+KgNV1ZA=
+github.com/aws/aws-sdk-go-v2/service/apigateway v1.23.6 h1:YZ4tYuH59Xd5q3bYmDqKXt8fQVJ19WPoq4lKzW1iLMg=
+github.com/aws/aws-sdk-go-v2/service/apigateway v1.23.6/go.mod h1:3h9BDpayKgNNrpHZBvL7gCIeikqiE7oBxGGcrzmtLAM=
 github.com/aws/aws-sdk-go-v2/service/appconfig v1.29.2 h1:Nm1Pqug23c/Ib+/FgwYpFZiLJyuohWxy0bdCj28SFNE=
 github.com/aws/aws-sdk-go-v2/service/appconfig v1.29.2/go.mod h1:Z4uxjsQCQYIZQYOf5js8AN9B5ZCFfwRkEHuiihgjHWs=
 github.com/aws/aws-sdk-go-v2/service/appfabric v1.7.4 h1:xQyow1kdXLj4kcU9ja1MyZSFSlb1Ab4ZDYeTO/mSkRE=
@@ -72,6 +74,8 @@ github.com/aws/aws-sdk-go-v2/service/autoscalingplans v1.20.4 h1:LIQN+2GGZHwWksR
 github.com/aws/aws-sdk-go-v2/service/autoscalingplans v1.20.4/go.mod h1:5orNWB4auLR1UJ6MUrRpAwne7uZ84Y6cq/0sB6F6LA4=
 github.com/aws/aws-sdk-go-v2/service/batch v1.36.1 h1:OY9+Dt4FkK6q2VHKAB8zY4nEKOhkziVOtxCPnS94leM=
 github.com/aws/aws-sdk-go-v2/service/batch v1.36.1/go.mod h1:JuPGVm7DzXD73vZBQsZwlDzoJeZewN08swLBGiU47K8=
+github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.3.4 h1:WJEEIYSDCqNeG/q0OU99AovoS2lHTwyV+yYoQcwI+i8=
+github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.3.4/go.mod h1:QdNvYtC3DYswfkhnlWXa0Oib+8jugRL/a+5Nbhw4v/g=
 github.com/aws/aws-sdk-go-v2/service/bedrock v1.7.6 h1:PE4S1l5rdfcsjFM+LqmFWpkse3kAQXACLCRLjPwwUcg=
 github.com/aws/aws-sdk-go-v2/service/bedrock v1.7.6/go.mod h1:/D6V245MG0yEqSULoBf/zLdQk8lmsMZXR3d/vc2mOdo=
 github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.5.1 h1:LWEonf7hVyLqY4AK46rjEyNne9tWkQK07TPPfoq1PBI=

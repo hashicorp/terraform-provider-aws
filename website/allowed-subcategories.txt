@@ -22,6 +22,7 @@ Athena
 Audit Manager
 Auto Scaling
 Auto Scaling Plans
+BCM Data Exports
 Backup
 Batch
 CE (Cost Explorer)

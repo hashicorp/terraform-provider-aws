@@ -1,5 +1,11 @@
 ## 5.45.0 (Unreleased)
 
+ENHANCEMENTS:
+
+* resource/aws_api_gateway_documentation_part: Add `documentation_part_id` attribute ([#36445](https://github.com/hashicorp/terraform-provider-aws/issues/36445))
+* resource/aws_wafregional_web_acl_association: Add configurable timeouts ([#36445](https://github.com/hashicorp/terraform-provider-aws/issues/36445))
+* resource/aws_wafregional_web_acl_association: Add plan-time validation of `resource_arn` ([#36445](https://github.com/hashicorp/terraform-provider-aws/issues/36445))
+
 BUG FIXES:
 
 * resource/aws_securityhub_configuration_policy: Mark `configuration_policy.enabled_standard_arns` as Optional, fixing `InvalidInputException: Invalid semantics: Enabled standards and security control configurations must be configured when Security Hub is enabled` errors ([#36740](https://github.com/hashicorp/terraform-provider-aws/issues/36740))
