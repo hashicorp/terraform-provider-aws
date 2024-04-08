@@ -251,6 +251,20 @@ func resourceProject() *schema.Resource {
 							Required:         true,
 							ValidateDiagFunc: enum.Validate[types.ComputeType](),
 						},
+						"fleet": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"fleet_arn": {
+										Type:         schema.TypeString,
+										Optional:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+								},
+							},
+						},
 						"environment_variable": {
 							Type:     schema.TypeList,
 							Optional: true,
@@ -1330,6 +1344,18 @@ func expandProjectEnvironment(tfMap map[string]interface{}) *types.ProjectEnviro
 		apiObject.ComputeType = types.ComputeType(v)
 	}
 
+	if v, ok := tfMap["fleet"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		tfMap := v[0].(map[string]interface{})
+
+		projectFleet := &types.ProjectFleet{}
+
+		if v, ok := tfMap["fleet_arn"]; ok && v.(string) != "" {
+			projectFleet.FleetArn = aws.String(v.(string))
+		}
+
+		apiObject.Fleet = projectFleet
+	}
+
 	if v, ok := tfMap["image"].(string); ok && v != "" {
 		apiObject.Image = aws.String(v)
 	}
@@ -1797,6 +1823,7 @@ func flattenProjectEnvironment(apiObject *types.ProjectEnvironment) []interface{
 		"type":                        apiObject.Type,
 	}
 
+	tfMap["fleet"] = flattenFleet(apiObject.Fleet)
 	tfMap["image"] = aws.ToString(apiObject.Image)
 	tfMap["certificate"] = aws.ToString(apiObject.Certificate)
 	tfMap["privileged_mode"] = aws.ToBool(apiObject.PrivilegedMode)
@@ -1804,6 +1831,18 @@ func flattenProjectEnvironment(apiObject *types.ProjectEnvironment) []interface{
 
 	if apiObject.EnvironmentVariables != nil {
 		tfMap["environment_variable"] = flattenEnvironmentVariables(apiObject.EnvironmentVariables)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenFleet(apiObject *types.ProjectFleet) []interface{} {
+	if apiObject == nil {
+		return []interface{}{}
+	}
+
+	tfMap := map[string]interface{}{
+		"fleet_arn": aws.ToString(apiObject.FleetArn),
 	}
 
 	return []interface{}{tfMap}
