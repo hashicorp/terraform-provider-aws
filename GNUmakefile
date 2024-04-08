@@ -76,9 +76,10 @@ default: build
 # Please keep targets in alphabetical order
 
 awssdkpatch-apply: awssdkpatch-gen ## Apply a patch generated with awssdkpatch
+	@echo "Applying patch for $(PKG)..."
 	@gopatch -p awssdk.patch ./$(PKG_NAME)/...
 
-awssdkpatch-gen: ## Generate a patch file using awssdkpatch
+awssdkpatch-gen: awssdkpatch ## Generate a patch file using awssdkpatch
 	@if [ "$(PKG)" = "" ]; then \
 		echo "PKG must be set. Try again like:" ; \
 		echo "PKG=foo make awssdkpatch-gen" ; \
