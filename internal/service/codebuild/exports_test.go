@@ -11,6 +11,7 @@ var (
 	ResourceSourceCredential = resourceSourceCredential
 	ResourceWebhook          = resourceWebhook
 
+	FindFleetByARNOrNames      = findFleetByARNOrNames
 	FindProjectByNameOrARN     = findProjectByNameOrARN
 	FindReportGroupByARN       = findReportGroupByARN
 	FindResourcePolicyByARN    = findResourcePolicyByARN

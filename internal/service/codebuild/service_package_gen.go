@@ -23,11 +23,25 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
-	return []*types.ServicePackageSDKDataSource{}
+	return []*types.ServicePackageSDKDataSource{
+		{
+			Factory:  DataSourceFleet,
+			TypeName: "aws_codebuild_fleet",
+			Name:     "Fleet",
+		},
+	}
 }
 
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
+		{
+			Factory:  ResourceFleet,
+			TypeName: "aws_codebuild_fleet",
+			Name:     "Fleet",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
 		{
 			Factory:  resourceProject,
 			TypeName: "aws_codebuild_project",
