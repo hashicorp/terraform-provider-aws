@@ -31,6 +31,7 @@ const (
 	AppConfigEndpointID                  = "appconfig"
 	AmplifyEndpointID                    = "amplify"
 	APIGatewayID                         = "apigateway"
+	APIGatewayV2EndpointID               = "apigateway"
 	AthenaEndpointID                     = "athena"
 	AuditManagerEndpointID               = "auditmanager"
 	AutoScalingPlansEndpointID           = "autoscaling-plans"
