@@ -258,6 +258,7 @@ The following arguments are optional:
 
 * `containerProperties` - (Optional) A valid [container properties](http://docs.aws.amazon.com/batch/latest/APIReference/API_RegisterJobDefinition.html)
     provided as a single valid JSON document. This parameter is only valid if the `type` parameter is `container`.
+* `deregisterOnNewRevision` - (Optional) When updating a job definition a new revision is created. This parameter determines if the previous version is `deregistered` (`INACTIVE`) or left  `ACTIVE`. Defaults to `true`.
 * `nodeProperties` - (Optional) A valid [node properties](http://docs.aws.amazon.com/batch/latest/APIReference/API_RegisterJobDefinition.html)
     provided as a single valid JSON document. This parameter is required if the `type` parameter is `multinode`.
 * `eksProperties` - (Optional) A valid [eks properties](#eks_properties). This parameter is only valid if the `type` parameter is `container`.
@@ -371,4 +372,4 @@ Using `terraform import`, import Batch Job Definition using the `arn`. For examp
 % terraform import aws_batch_job_definition.test arn:aws:batch:us-east-1:123456789012:job-definition/sample
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-d04d679249d07878059f9a3f9cce22a396419b2a09d3b75a5ac88f8fd3961fb1 -->
+<!-- cache-key: cdktf-0.20.1 input-bd9147ef7f6fa35db163f0270a06f4b1163f2e6f23072ece378070600f017a0e -->
