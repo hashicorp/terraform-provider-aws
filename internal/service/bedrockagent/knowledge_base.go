@@ -25,14 +25,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkResource(name="Knowledge Base")
+// @Tags(identifierAttribute="arn")
 func newKnowledgeBaseResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &knowledgeBaseResource{}
 
@@ -53,8 +54,8 @@ type knowledgeBaseResource struct {
 	framework.WithTimeouts
 }
 
-func (r *knowledgeBaseResource) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_bedrockagent_knowledge_base"
+func (r *knowledgeBaseResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_bedrockagent_knowledge_base"
 }
 
 func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -74,6 +75,8 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
 			"knowledge_base_configuration": schema.ListNestedBlock{
@@ -138,7 +141,7 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 										CustomType: fwtypes.ARNType,
 									},
 									"namespace": schema.StringAttribute{
-										Required: true,
+										Optional: true,
 									},
 								},
 								Blocks: map[string]schema.Block{
@@ -190,16 +193,16 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 										NestedObject: schema.NestedBlockObject{
 											Attributes: map[string]schema.Attribute{
 												"metadata_field": schema.StringAttribute{
-													Optional: true,
+													Required: true,
 												},
 												"text_field": schema.StringAttribute{
-													Optional: true,
+													Required: true,
 												},
 												"vector_field": schema.StringAttribute{
-													Optional: true,
+													Required: true,
 												},
 												"primary_key_field": schema.StringAttribute{
-													Optional: true,
+													Required: true,
 												},
 											},
 										},
@@ -313,6 +316,9 @@ func (r *knowledgeBaseResource) Create(ctx context.Context, request resource.Cre
 		return
 	}
 
+	// Additional fields.
+	input.Tags = getTagsIn(ctx)
+
 	output, err := conn.CreateKnowledgeBase(ctx, input)
 	if err != nil {
 		response.Diagnostics.AddError(
@@ -330,8 +336,8 @@ func (r *knowledgeBaseResource) Create(ctx context.Context, request resource.Cre
 	}
 
 	knowledgebase := output.KnowledgeBase
-	data.KnowledgeBaseARN = flex.StringToFramework(ctx, output.KnowledgeBase.KnowledgeBaseArn)
-	data.KnowledgeBaseId = flex.StringToFramework(ctx, output.KnowledgeBase.KnowledgeBaseId)
+	data.KnowledgeBaseARN = fwflex.StringToFramework(ctx, knowledgebase.KnowledgeBaseArn)
+	data.KnowledgeBaseId = fwflex.StringToFramework(ctx, knowledgebase.KnowledgeBaseId)
 
 	createTimeout := r.CreateTimeout(ctx, data.Timeouts)
 	knowledgebase, err = waitKnowledgeBaseCreated(ctx, conn, data.KnowledgeBaseId.ValueString(), createTimeout)
@@ -401,7 +407,6 @@ func (r *knowledgeBaseResource) Update(ctx context.Context, request resource.Upd
 		!new.Description.Equal(old.Description) ||
 		!new.KnowledgeBaseConfiguration.Equal(old.KnowledgeBaseConfiguration) ||
 		!new.StorageConfiguration.Equal(old.StorageConfiguration) {
-
 		input := &bedrockagent.UpdateKnowledgeBaseInput{}
 		response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
 		if response.Diagnostics.HasError() {
@@ -431,12 +436,12 @@ func (r *knowledgeBaseResource) Update(ctx context.Context, request resource.Upd
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *knowledgeBaseResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *knowledgeBaseResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	conn := r.Meta().BedrockAgentClient(ctx)
 
 	var data knowledgeBaseResourceModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &data)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
@@ -450,7 +455,7 @@ func (r *knowledgeBaseResource) Delete(ctx context.Context, req resource.DeleteR
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return
 		}
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionDeleting, ResNameKnowledgeBase, data.KnowledgeBaseId.String(), err),
 			err.Error(),
 		)
@@ -460,7 +465,7 @@ func (r *knowledgeBaseResource) Delete(ctx context.Context, req resource.DeleteR
 	deleteTimeout := r.DeleteTimeout(ctx, data.Timeouts)
 	_, err = waitKnowledgeBaseDeleted(ctx, conn, data.KnowledgeBaseId.ValueString(), deleteTimeout)
 	if err != nil {
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionWaitingForDeletion, ResNameKnowledgeBase, data.KnowledgeBaseId.String(), err),
 			err.Error(),
 		)
@@ -468,8 +473,12 @@ func (r *knowledgeBaseResource) Delete(ctx context.Context, req resource.DeleteR
 	}
 }
 
-func (r *knowledgeBaseResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+func (r *knowledgeBaseResource) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), request, response)
+}
+
+func (r *knowledgeBaseResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+	r.SetTagsAll(ctx, request, response)
 }
 
 func waitKnowledgeBaseCreated(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.KnowledgeBase, error) {
@@ -492,7 +501,7 @@ func waitKnowledgeBaseCreated(ctx context.Context, conn *bedrockagent.Client, id
 
 func waitKnowledgeBaseUpdated(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.KnowledgeBase, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(awstypes.KnowledgeBaseStatusActive, awstypes.KnowledgeBaseStatusUpdating),
+		Pending:                   enum.Slice(awstypes.KnowledgeBaseStatusUpdating),
 		Target:                    enum.Slice(awstypes.KnowledgeBaseStatusActive),
 		Refresh:                   statusKnowledgeBase(ctx, conn, id),
 		Timeout:                   timeout,
@@ -565,12 +574,14 @@ func findKnowledgeBaseByID(ctx context.Context, conn *bedrockagent.Client, id st
 
 type knowledgeBaseResourceModel struct {
 	Description                types.String                                                     `tfsdk:"description"`
+	KnowledgeBaseARN           types.String                                                     `tfsdk:"arn"`
 	KnowledgeBaseConfiguration fwtypes.ListNestedObjectValueOf[knowledgeBaseConfigurationModel] `tfsdk:"knowledge_base_configuration"`
+	KnowledgeBaseId            types.String                                                     `tfsdk:"id"`
 	Name                       types.String                                                     `tfsdk:"name"`
 	RoleARN                    types.String                                                     `tfsdk:"role_arn"`
 	StorageConfiguration       fwtypes.ListNestedObjectValueOf[storageConfigurationModel]       `tfsdk:"storage_configuration"`
-	KnowledgeBaseARN           types.String                                                     `tfsdk:"arn"`
-	KnowledgeBaseId            types.String                                                     `tfsdk:"id"`
+	Tags                       types.Map                                                        `tfsdk:"tags"`
+	TagsAll                    types.Map                                                        `tfsdk:"tags_all"`
 	Timeouts                   timeouts.Value                                                   `tfsdk:"timeouts"`
 }
 
@@ -625,9 +636,9 @@ type rdsConfigurationModel struct {
 
 type rdsFieldMappingModel struct {
 	MetadataField   types.String `tfsdk:"metadata_field"`
+	PrimaryKeyField types.String `tfsdk:"primary_key_field"`
 	TextField       types.String `tfsdk:"text_field"`
 	VectorField     types.String `tfsdk:"vector_field"`
-	PrimaryKeyField types.String `tfsdk:"primary_key_field"`
 }
 
 type redisEnterpriseCloudConfigurationModel struct {

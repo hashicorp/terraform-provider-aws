@@ -187,6 +187,61 @@ func testAccKnowledgeBase_update(t *testing.T) {
 	})
 }
 
+func testAccKnowledgeBase_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	var knowledgebase types.KnowledgeBase
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagent_knowledge_base.test"
+	foundationModel := "amazon.titan-embed-g1-text-02"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKnowledgeBaseDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKnowledgeBase_base(rName, foundationModel),
+				// Withought Sleep role couldnt assumed.
+				Check: acctest.CheckSleep(t, 5*time.Second),
+			},
+			{
+				Config: testAccKnowledgeBaseConfig_tags1(rName, foundationModel, "key1", "value1"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{},
+			},
+			{
+				Config: testAccKnowledgeBaseConfig_tags2(rName, foundationModel, "key1", "value1updated", "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+			{
+				Config: testAccKnowledgeBaseConfig_tags1(rName, foundationModel, "key2", "value2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
+				),
+			},
+		},
+	})
+}
+
 func testAccCheckKnowledgeBaseDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentClient(ctx)
@@ -237,13 +292,13 @@ func testAccCheckKnowledgeBaseExists(ctx context.Context, n string, v *types.Kno
 func testAccKnowledgeBase_base(rName, model string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
-
+data "aws_partition" "current" {}
 data "aws_region" "current" {}
 
 resource "aws_iam_role" "test" {
-	name               = "AmazonBedrockExecutionRoleForKnowledgeBase_tf"
-	path               = "/service-role/"
-	assume_role_policy = <<POLICY
+  name               = "AmazonBedrockExecutionRoleForKnowledgeBase_tf"
+  path               = "/service-role/"
+  assume_role_policy = <<POLICY
 {
 	"Version": "2012-10-17",
 	"Statement": [{
@@ -258,9 +313,9 @@ POLICY
 }
 
 resource "aws_iam_role_policy" "policy" {
-	name = "AmazonBedrockExecutionRoleForKnowledgeBasePolicy"
-	role = aws_iam_role.test.name
-	policy = <<POLICY
+  name   = "AmazonBedrockExecutionRoleForKnowledgeBasePolicy"
+  role   = aws_iam_role.test.name
+  policy = <<POLICY
 {
 	"Version": "2012-10-17",
 	"Statement": [
@@ -271,7 +326,7 @@ resource "aws_iam_role_policy" "policy" {
 			"bedrock:InvokeModel"
 		],
 		"Resource": [
-			"arn:aws:bedrock:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:foundation-model/%[2]s"
+			"arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:foundation-model/%[2]s"
 		]
 	  },
 	  {
@@ -281,7 +336,7 @@ resource "aws_iam_role_policy" "policy" {
 		],
 		"Effect": "Allow",
 		"Resource": [
-			"arn:aws:aoss:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:collection/142bezjddq707i5stcrf"
+			"arn:${data.aws_partition.current.partition}:aoss:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:collection/142bezjddq707i5stcrf"
 		]
 	  }
 	]
@@ -289,28 +344,28 @@ resource "aws_iam_role_policy" "policy" {
 POLICY
 }
 
+
 `, rName, model)
 }
 
 func testAccKnowledgeBaseConfig_basic(rName, model string) string {
 	return acctest.ConfigCompose(testAccKnowledgeBase_base(rName, model), fmt.Sprintf(`
-	
 resource "aws_bedrockagent_knowledge_base" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.test.arn
   knowledge_base_configuration {
     vector_knowledge_base_configuration {
-      embedding_model_arn = "arn:aws:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s"
+      embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s"
     }
     type = "VECTOR"
   }
   storage_configuration {
     type = "OPENSEARCH_SERVERLESS"
     opensearch_serverless_configuration {
-      collection_arn    = "arn:aws:aoss:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:collection/142bezjddq707i5stcrf"
+      collection_arn    = "arn:${data.aws_partition.current.partition}:aoss:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:collection/142bezjddq707i5stcrf"
       vector_index_name = "bedrock-knowledge-base-default-index"
       field_mapping {
-		vector_field   = "bedrock-knowledge-base-default-vector"
+        vector_field   = "bedrock-knowledge-base-default-vector"
         text_field     = "AMAZON_BEDROCK_TEXT_CHUNK"
         metadata_field = "AMAZON_BEDROCK_METADATA"
       }
@@ -323,30 +378,99 @@ resource "aws_bedrockagent_knowledge_base" "test" {
 
 func testAccKnowledgeBaseConfig_update(rName, model string) string {
 	return acctest.ConfigCompose(testAccKnowledgeBase_base(rName, model), fmt.Sprintf(`
-	
 resource "aws_bedrockagent_knowledge_base" "test" {
-  name     = "updated-name"
+  name        = "updated-name"
   description = %[1]q
-  role_arn = aws_iam_role.test.arn
+  role_arn    = aws_iam_role.test.arn
   knowledge_base_configuration {
     vector_knowledge_base_configuration {
-      embedding_model_arn = "arn:aws:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s"
+      embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s"
     }
     type = "VECTOR"
   }
   storage_configuration {
     type = "OPENSEARCH_SERVERLESS"
     opensearch_serverless_configuration {
-      collection_arn    = "arn:aws:aoss:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:collection/142bezjddq707i5stcrf"
+      collection_arn    = "arn:${data.aws_partition.current.partition}:aoss:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:collection/142bezjddq707i5stcrf"
       vector_index_name = "bedrock-knowledge-base-default-index"
       field_mapping {
-		vector_field   = "bedrock-knowledge-base-default-vector"
+        vector_field   = "bedrock-knowledge-base-default-vector"
         text_field     = "AMAZON_BEDROCK_TEXT_CHUNK"
         metadata_field = "AMAZON_BEDROCK_METADATA"
       }
     }
   }
+
   depends_on = [aws_iam_role.test]
 }
 `, rName, model))
+}
+
+func testAccKnowledgeBaseConfig_tags1(rName, model, tag1Key, tag1Value string) string {
+	return acctest.ConfigCompose(testAccKnowledgeBase_base(rName, model), fmt.Sprintf(`
+resource "aws_bedrockagent_knowledge_base" "test" {
+  name        = "updated-name"
+  description = %[1]q
+  role_arn    = aws_iam_role.test.arn
+  knowledge_base_configuration {
+    vector_knowledge_base_configuration {
+      embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s"
+    }
+    type = "VECTOR"
+  }
+  storage_configuration {
+    type = "OPENSEARCH_SERVERLESS"
+    opensearch_serverless_configuration {
+      collection_arn    = "arn:${data.aws_partition.current.partition}:aoss:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:collection/142bezjddq707i5stcrf"
+      vector_index_name = "bedrock-knowledge-base-default-index"
+      field_mapping {
+        vector_field   = "bedrock-knowledge-base-default-vector"
+        text_field     = "AMAZON_BEDROCK_TEXT_CHUNK"
+        metadata_field = "AMAZON_BEDROCK_METADATA"
+      }
+    }
+  }
+
+  tags = {
+    %[3]q = %[4]q
+  }
+
+  depends_on = [aws_iam_role.test]
+}
+`, rName, model, tag1Key, tag1Value))
+}
+
+func testAccKnowledgeBaseConfig_tags2(rName, model, tag1Key, tag1Value, tag2Key, tag2Value string) string {
+	return acctest.ConfigCompose(testAccKnowledgeBase_base(rName, model), fmt.Sprintf(`
+resource "aws_bedrockagent_knowledge_base" "test" {
+  name        = "updated-name"
+  description = %[1]q
+  role_arn    = aws_iam_role.test.arn
+  knowledge_base_configuration {
+    vector_knowledge_base_configuration {
+      embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s"
+    }
+    type = "VECTOR"
+  }
+  storage_configuration {
+    type = "OPENSEARCH_SERVERLESS"
+    opensearch_serverless_configuration {
+      collection_arn    = "arn:${data.aws_partition.current.partition}:aoss:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:collection/142bezjddq707i5stcrf"
+      vector_index_name = "bedrock-knowledge-base-default-index"
+      field_mapping {
+        vector_field   = "bedrock-knowledge-base-default-vector"
+        text_field     = "AMAZON_BEDROCK_TEXT_CHUNK"
+        metadata_field = "AMAZON_BEDROCK_METADATA"
+      }
+    }
+  }
+
+  tags = {
+    %[3]q = %[4]q
+    %[5]q = %[6]q
+  }
+
+  depends_on = [aws_iam_role.test]
+}
+`, rName, model, tag1Key, tag1Value, tag2Key, tag2Value))
 }

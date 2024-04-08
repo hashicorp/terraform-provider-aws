@@ -17,6 +17,7 @@ func TestAccBedrockAgent_serial(t *testing.T) {
 			"basic":      testAccKnowledgeBase_basic,
 			"disappears": testAccKnowledgeBase_disappears,
 			"update":     testAccKnowledgeBase_update,
+			"tags":       testAccKnowledgeBase_tags,
 		},
 	}
 	acctest.RunSerialTests2Levels(t, testCases, 0)
