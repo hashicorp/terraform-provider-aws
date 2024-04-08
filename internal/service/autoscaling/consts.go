@@ -16,15 +16,15 @@ const (
 )
 
 const (
-	DefaultEnabledMetricsGranularity = "1Minute"
+	defaultEnabledMetricsGranularity = "1Minute"
 )
 
 const (
-	DefaultTerminationPolicy = "Default"
+	defaultTerminationPolicy = "Default"
 )
 
 const (
-	DefaultWarmPoolMaxGroupPreparedCapacity = -1
+	defaultWarmPoolMaxGroupPreparedCapacity = -1
 )
 
 const (
@@ -48,17 +48,19 @@ const (
 	LoadBalancerTargetGroupStateRemoved   = "Removed"
 )
 
+type desiredCapacityType string
+
 const (
-	DesiredCapacityTypeMemoryMiB = "memory-mib"
-	DesiredCapacityTypeUnits     = "units"
-	DesiredCapacityTypeVCPU      = "vcpu"
+	desiredCapacityTypeMemoryMiB desiredCapacityType = "memory-mib"
+	desiredCapacityTypeUnits     desiredCapacityType = "units"
+	desiredCapacityTypeVCPU      desiredCapacityType = "vcpu"
 )
 
-func DesiredCapacityType_Values() []string {
-	return []string{
-		DesiredCapacityTypeMemoryMiB,
-		DesiredCapacityTypeUnits,
-		DesiredCapacityTypeVCPU,
+func (desiredCapacityType) Values() []desiredCapacityType {
+	return []desiredCapacityType{
+		desiredCapacityTypeMemoryMiB,
+		desiredCapacityTypeUnits,
+		desiredCapacityTypeVCPU,
 	}
 }
 
@@ -90,25 +92,29 @@ const (
 	launchTemplateIDUnknown = "unknown"
 )
 
+type lifecycleHookDefaultResult string
+
 const (
-	lifecycleHookDefaultResultAbandon  = "ABANDON"
-	lifecycleHookDefaultResultContinue = "CONTINUE"
+	lifecycleHookDefaultResultAbandon  lifecycleHookDefaultResult = "ABANDON"
+	lifecycleHookDefaultResultContinue lifecycleHookDefaultResult = "CONTINUE"
 )
 
-func lifecycleHookDefaultResult_Values() []string {
-	return []string{
+func (lifecycleHookDefaultResult) Values() []lifecycleHookDefaultResult {
+	return []lifecycleHookDefaultResult{
 		lifecycleHookDefaultResultAbandon,
 		lifecycleHookDefaultResultContinue,
 	}
 }
 
+type lifecycleHookLifecycleTransition string
+
 const (
-	lifecycleHookLifecycleTransitionInstanceLaunching   = "autoscaling:EC2_INSTANCE_LAUNCHING"
-	lifecycleHookLifecycleTransitionInstanceTerminating = "autoscaling:EC2_INSTANCE_TERMINATING"
+	lifecycleHookLifecycleTransitionInstanceLaunching   lifecycleHookLifecycleTransition = "autoscaling:EC2_INSTANCE_LAUNCHING"
+	lifecycleHookLifecycleTransitionInstanceTerminating lifecycleHookLifecycleTransition = "autoscaling:EC2_INSTANCE_TERMINATING"
 )
 
-func lifecycleHookLifecycleTransition_Values() []string {
-	return []string{
+func (lifecycleHookLifecycleTransition) Values() []lifecycleHookLifecycleTransition {
+	return []lifecycleHookLifecycleTransition{
 		lifecycleHookLifecycleTransitionInstanceLaunching,
 		lifecycleHookLifecycleTransitionInstanceTerminating,
 	}

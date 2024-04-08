@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -44,10 +45,10 @@ func ResourceLifecycleHook() *schema.Resource {
 				Required: true,
 			},
 			"default_result": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(lifecycleHookDefaultResult_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ValidateDiagFunc: enum.Validate[lifecycleHookDefaultResult](),
 			},
 			"heartbeat_timeout": {
 				Type:         schema.TypeInt,
@@ -55,9 +56,9 @@ func ResourceLifecycleHook() *schema.Resource {
 				ValidateFunc: validation.IntBetween(30, 7200),
 			},
 			"lifecycle_transition": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(lifecycleHookLifecycleTransition_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: enum.Validate[lifecycleHookLifecycleTransition](),
 			},
 			"name": {
 				Type:     schema.TypeString,

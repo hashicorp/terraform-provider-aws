@@ -52,7 +52,7 @@ func sweepGroups(region string) error {
 		}
 
 		for _, v := range page.AutoScalingGroups {
-			r := ResourceGroup()
+			r := resourceGroup()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.AutoScalingGroupName))
 			d.Set("force_delete", true)

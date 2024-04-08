@@ -49,8 +49,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Attachment",
 		},
 		{
-			Factory:  ResourceGroup,
+			Factory:  resourceGroup,
 			TypeName: "aws_autoscaling_group",
+			Name:     "Group",
 		},
 		{
 			Factory:  resourceGroupTag,

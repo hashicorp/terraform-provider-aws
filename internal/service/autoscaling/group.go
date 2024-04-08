@@ -39,8 +39,8 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_autoscaling_group")
-func ResourceGroup() *schema.Resource {
+// @SDKResource("aws_autoscaling_group", name="Group")
+func resourceGroup() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceGroupCreate,
 		ReadWithoutTimeout:   resourceGroupRead,
@@ -100,9 +100,9 @@ func ResourceGroup() *schema.Resource {
 				Computed: true,
 			},
 			"desired_capacity_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(DesiredCapacityType_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[desiredCapacityType](),
 			},
 			"enabled_metrics": {
 				Type:     schema.TypeSet,
@@ -141,11 +141,11 @@ func ResourceGroup() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"default_result": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Computed:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringInSlice(lifecycleHookDefaultResult_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Computed:         true,
+							ForceNew:         true,
+							ValidateDiagFunc: enum.Validate[lifecycleHookDefaultResult](),
 						},
 						"heartbeat_timeout": {
 							Type:         schema.TypeInt,
@@ -154,10 +154,10 @@ func ResourceGroup() *schema.Resource {
 							ValidateFunc: validation.IntBetween(30, 7200),
 						},
 						"lifecycle_transition": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringInSlice(lifecycleHookLifecycleTransition_Values(), false),
+							Type:             schema.TypeString,
+							Required:         true,
+							ForceNew:         true,
+							ValidateDiagFunc: enum.Validate[lifecycleHookLifecycleTransition](),
 						},
 						"name": {
 							Type:     schema.TypeString,
@@ -268,7 +268,7 @@ func ResourceGroup() *schema.Resource {
 									"scale_in_protected_instances": {
 										Type:             schema.TypeString,
 										Optional:         true,
-										Default:          string(awstypes.ScaleInProtectedInstancesIgnore),
+										Default:          awstypes.ScaleInProtectedInstancesIgnore,
 										ValidateDiagFunc: enum.Validate[awstypes.ScaleInProtectedInstances](),
 									},
 									"skip_matching": {
@@ -279,7 +279,7 @@ func ResourceGroup() *schema.Resource {
 									"standby_instances": {
 										Type:             schema.TypeString,
 										Optional:         true,
-										Default:          string(awstypes.StandbyInstancesIgnore),
+										Default:          awstypes.StandbyInstancesIgnore,
 										ValidateDiagFunc: enum.Validate[awstypes.StandbyInstances](),
 									},
 								},
@@ -355,7 +355,7 @@ func ResourceGroup() *schema.Resource {
 			"metrics_granularity": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  DefaultEnabledMetricsGranularity,
+				Default:  defaultEnabledMetricsGranularity,
 			},
 			"min_elb_capacity": {
 				Type:     schema.TypeInt,
@@ -903,7 +903,7 @@ func ResourceGroup() *schema.Resource {
 						"max_group_prepared_capacity": {
 							Type:     schema.TypeInt,
 							Optional: true,
-							Default:  DefaultWarmPoolMaxGroupPreparedCapacity,
+							Default:  defaultWarmPoolMaxGroupPreparedCapacity,
 						},
 						"min_size": {
 							Type:     schema.TypeInt,
@@ -913,7 +913,7 @@ func ResourceGroup() *schema.Resource {
 						"pool_state": {
 							Type:             schema.TypeString,
 							Optional:         true,
-							Default:          string(awstypes.WarmPoolStateStopped),
+							Default:          awstypes.WarmPoolStateStopped,
 							ValidateDiagFunc: enum.Validate[awstypes.WarmPoolState](),
 						},
 					},
@@ -1004,11 +1004,11 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	startTime := time.Now()
 
 	asgName := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
-	createInput := &autoscaling.CreateAutoScalingGroupInput{
+	inputCASG := &autoscaling.CreateAutoScalingGroupInput{
 		AutoScalingGroupName:             aws.String(asgName),
 		NewInstancesProtectedFromScaleIn: aws.Bool(d.Get("protect_from_scale_in").(bool)),
 	}
-	updateInput := &autoscaling.UpdateAutoScalingGroupInput{
+	inputUASG := &autoscaling.UpdateAutoScalingGroupInput{
 		AutoScalingGroupName: aws.String(asgName),
 	}
 
@@ -1020,115 +1020,115 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	desiredCapacity := d.Get("desired_capacity").(int)
 
 	if twoPhases {
-		createInput.MaxSize = aws.Int32(0)
-		createInput.MinSize = aws.Int32(0)
+		inputCASG.MaxSize = aws.Int32(0)
+		inputCASG.MinSize = aws.Int32(0)
 
-		updateInput.MaxSize = aws.Int32(int32(maxSize))
-		updateInput.MinSize = aws.Int32(int32(minSize))
+		inputUASG.MaxSize = aws.Int32(int32(maxSize))
+		inputUASG.MinSize = aws.Int32(int32(minSize))
 
 		if desiredCapacity > 0 {
-			updateInput.DesiredCapacity = aws.Int32(int32(desiredCapacity))
+			inputUASG.DesiredCapacity = aws.Int32(int32(desiredCapacity))
 		}
 
 		if v, ok := d.GetOk("desired_capacity_type"); ok {
-			updateInput.DesiredCapacityType = aws.String(v.(string))
+			inputUASG.DesiredCapacityType = aws.String(v.(string))
 		}
 	} else {
-		createInput.MaxSize = aws.Int32(int32(maxSize))
-		createInput.MinSize = aws.Int32(int32(minSize))
+		inputCASG.MaxSize = aws.Int32(int32(maxSize))
+		inputCASG.MinSize = aws.Int32(int32(minSize))
 
 		if desiredCapacity > 0 {
-			createInput.DesiredCapacity = aws.Int32(int32(desiredCapacity))
+			inputCASG.DesiredCapacity = aws.Int32(int32(desiredCapacity))
 		}
 
 		if v, ok := d.GetOk("desired_capacity_type"); ok {
-			createInput.DesiredCapacityType = aws.String(v.(string))
+			inputCASG.DesiredCapacityType = aws.String(v.(string))
 		}
 	}
 
 	if v, ok := d.GetOk("availability_zones"); ok && v.(*schema.Set).Len() > 0 {
-		createInput.AvailabilityZones = flex.ExpandStringValueSet(v.(*schema.Set))
+		inputCASG.AvailabilityZones = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("capacity_rebalance"); ok {
-		createInput.CapacityRebalance = aws.Bool(v.(bool))
+		inputCASG.CapacityRebalance = aws.Bool(v.(bool))
 	}
 
 	if v, ok := d.GetOk("context"); ok {
-		createInput.Context = aws.String(v.(string))
+		inputCASG.Context = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("default_cooldown"); ok {
-		createInput.DefaultCooldown = aws.Int32(int32(v.(int)))
+		inputCASG.DefaultCooldown = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("default_instance_warmup"); ok {
-		createInput.DefaultInstanceWarmup = aws.Int32(int32(v.(int)))
+		inputCASG.DefaultInstanceWarmup = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("health_check_type"); ok {
-		createInput.HealthCheckType = aws.String(v.(string))
+		inputCASG.HealthCheckType = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("health_check_grace_period"); ok {
-		createInput.HealthCheckGracePeriod = aws.Int32(int32(v.(int)))
+		inputCASG.HealthCheckGracePeriod = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("instance_maintenance_policy"); ok {
-		createInput.InstanceMaintenancePolicy = expandInstanceMaintenancePolicy(v.([]interface{}))
+		inputCASG.InstanceMaintenancePolicy = expandInstanceMaintenancePolicy(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("launch_configuration"); ok {
-		createInput.LaunchConfigurationName = aws.String(v.(string))
+		inputCASG.LaunchConfigurationName = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("launch_template"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		createInput.LaunchTemplate = expandLaunchTemplateSpecification(v.([]interface{})[0].(map[string]interface{}), false)
+		inputCASG.LaunchTemplate = expandLaunchTemplateSpecification(v.([]interface{})[0].(map[string]interface{}), false)
 	}
 
 	if v, ok := d.GetOk("load_balancers"); ok && v.(*schema.Set).Len() > 0 {
-		createInput.LoadBalancerNames = flex.ExpandStringValueSet(v.(*schema.Set))
+		inputCASG.LoadBalancerNames = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("max_instance_lifetime"); ok {
-		createInput.MaxInstanceLifetime = aws.Int32(int32(v.(int)))
+		inputCASG.MaxInstanceLifetime = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := d.GetOk("mixed_instances_policy"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		createInput.MixedInstancesPolicy = expandMixedInstancesPolicy(v.([]interface{})[0].(map[string]interface{}), true)
+		inputCASG.MixedInstancesPolicy = expandMixedInstancesPolicy(v.([]interface{})[0].(map[string]interface{}), true)
 	}
 
 	if v, ok := d.GetOk("placement_group"); ok {
-		createInput.PlacementGroup = aws.String(v.(string))
+		inputCASG.PlacementGroup = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("service_linked_role_arn"); ok {
-		createInput.ServiceLinkedRoleARN = aws.String(v.(string))
+		inputCASG.ServiceLinkedRoleARN = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("tag"); ok {
-		createInput.Tags = Tags(KeyValueTags(ctx, v, asgName, TagResourceTypeGroup).IgnoreAWS())
+		inputCASG.Tags = Tags(KeyValueTags(ctx, v, asgName, TagResourceTypeGroup).IgnoreAWS())
 	}
 
 	if v, ok := d.GetOk("target_group_arns"); ok && len(v.(*schema.Set).List()) > 0 {
-		createInput.TargetGroupARNs = flex.ExpandStringValueSet(v.(*schema.Set))
+		inputCASG.TargetGroupARNs = flex.ExpandStringValueSet(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("termination_policies"); ok && len(v.([]interface{})) > 0 {
-		createInput.TerminationPolicies = flex.ExpandStringValueList(v.([]interface{}))
+		inputCASG.TerminationPolicies = flex.ExpandStringValueList(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("traffic_source"); ok && v.(*schema.Set).Len() > 0 {
-		createInput.TrafficSources = expandTrafficSourceIdentifiers(v.(*schema.Set).List())
+		inputCASG.TrafficSources = expandTrafficSourceIdentifiers(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("vpc_zone_identifier"); ok && v.(*schema.Set).Len() > 0 {
-		createInput.VPCZoneIdentifier = expandVPCZoneIdentifiers(v.(*schema.Set).List())
+		inputCASG.VPCZoneIdentifier = expandVPCZoneIdentifiers(v.(*schema.Set).List())
 	}
 
 	_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout,
 		func() (interface{}, error) {
-			return conn.CreateAutoScalingGroup(ctx, createInput)
+			return conn.CreateAutoScalingGroup(ctx, inputCASG)
 		},
 		// ValidationError: You must use a valid fully-formed launch template. Value (tf-acc-test-6643732652421074386) for parameter iamInstanceProfile.name is invalid. Invalid IAM Instance Profile name
 		errCodeValidationError, "Invalid IAM Instance Profile")
@@ -1141,7 +1141,10 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if twoPhases {
 		for _, input := range expandPutLifecycleHookInputs(asgName, initialLifecycleHooks) {
-			_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, 5*time.Minute,
+			const (
+				timeout = 5 * time.Minute
+			)
+			_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, timeout,
 				func() (interface{}, error) {
 					return conn.PutLifecycleHook(ctx, input)
 				},
@@ -1152,7 +1155,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 			}
 		}
 
-		_, err = conn.UpdateAutoScalingGroup(ctx, updateInput)
+		_, err = conn.UpdateAutoScalingGroup(ctx, inputUASG)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting Auto Scaling Group (%s) initial capacity: %s", d.Id(), err)
@@ -1258,7 +1261,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		d.Set("metrics_granularity", g.EnabledMetrics[0].Granularity)
 	} else {
 		d.Set("enabled_metrics", nil)
-		d.Set("metrics_granularity", DefaultEnabledMetricsGranularity)
+		d.Set("metrics_granularity", defaultEnabledMetricsGranularity)
 	}
 	d.Set("health_check_grace_period", g.HealthCheckGracePeriod)
 	d.Set("health_check_type", g.HealthCheckType)
@@ -1298,7 +1301,7 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	// If no termination polices are explicitly configured and the upstream state
 	// is only using the "Default" policy, clear the state to make it consistent
 	// with the default AWS Create API behavior.
-	if _, ok := d.GetOk("termination_policies"); !ok && len(g.TerminationPolicies) == 1 && g.TerminationPolicies[0] == DefaultTerminationPolicy {
+	if _, ok := d.GetOk("termination_policies"); !ok && len(g.TerminationPolicies) == 1 && g.TerminationPolicies[0] == defaultTerminationPolicy {
 		d.Set("termination_policies", nil)
 	} else {
 		d.Set("termination_policies", g.TerminationPolicies)
@@ -1446,7 +1449,7 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 			if v, ok := d.GetOk("termination_policies"); ok && len(v.([]interface{})) > 0 {
 				input.TerminationPolicies = flex.ExpandStringValueList(v.([]interface{}))
 			} else {
-				input.TerminationPolicies = []string{DefaultTerminationPolicy}
+				input.TerminationPolicies = []string{defaultTerminationPolicy}
 			}
 		}
 
@@ -1463,7 +1466,6 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if d.HasChanges("tag") {
 		oTagRaw, nTagRaw := d.GetChange("tag")
-
 		oldTags := Tags(KeyValueTags(ctx, oTagRaw, d.Id(), TagResourceTypeGroup))
 		newTags := Tags(KeyValueTags(ctx, nTagRaw, d.Id(), TagResourceTypeGroup))
 
@@ -1480,7 +1482,6 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		if n == nil {
 			n = new(schema.Set)
 		}
-
 		os := o.(*schema.Set)
 		ns := n.(*schema.Set)
 
@@ -2026,7 +2027,6 @@ func findGroups(ctx context.Context, conn *autoscaling.Client, input *autoscalin
 	var output []awstypes.AutoScalingGroup
 
 	pages := autoscaling.NewDescribeAutoScalingGroupsPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -2062,7 +2062,7 @@ func findGroupByName(ctx context.Context, conn *autoscaling.Client, name string)
 }
 
 func findInstanceRefresh(ctx context.Context, conn *autoscaling.Client, input *autoscaling.DescribeInstanceRefreshesInput) (*awstypes.InstanceRefresh, error) {
-	output, err := FindInstanceRefreshes(ctx, conn, input)
+	output, err := findInstanceRefreshes(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -2071,11 +2071,10 @@ func findInstanceRefresh(ctx context.Context, conn *autoscaling.Client, input *a
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func FindInstanceRefreshes(ctx context.Context, conn *autoscaling.Client, input *autoscaling.DescribeInstanceRefreshesInput) ([]awstypes.InstanceRefresh, error) {
+func findInstanceRefreshes(ctx context.Context, conn *autoscaling.Client, input *autoscaling.DescribeInstanceRefreshesInput) ([]awstypes.InstanceRefresh, error) {
 	var output []awstypes.InstanceRefresh
 
 	pages := autoscaling.NewDescribeInstanceRefreshesPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -2103,7 +2102,6 @@ func findLoadBalancerStates(ctx context.Context, conn *autoscaling.Client, name 
 	var output []awstypes.LoadBalancerState
 
 	pages := autoscaling.NewDescribeLoadBalancersPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -2131,7 +2129,6 @@ func findLoadBalancerTargetGroupStates(ctx context.Context, conn *autoscaling.Cl
 	var output []awstypes.LoadBalancerTargetGroupState
 
 	pages := autoscaling.NewDescribeLoadBalancerTargetGroupsPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -2156,7 +2153,6 @@ func findScalingActivities(ctx context.Context, conn *autoscaling.Client, input 
 	var output []awstypes.Activity
 
 	pages := autoscaling.NewDescribeScalingActivitiesPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -2193,7 +2189,6 @@ func findTrafficSourceStates(ctx context.Context, conn *autoscaling.Client, inpu
 	var output []awstypes.TrafficSourceState
 
 	pages := autoscaling.NewDescribeTrafficSourcesPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -2232,7 +2227,6 @@ func findWarmPool(ctx context.Context, conn *autoscaling.Client, name string) (*
 	var output *autoscaling.DescribeWarmPoolOutput
 
 	pages := autoscaling.NewDescribeWarmPoolPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -3895,7 +3889,7 @@ func flattenWarmPoolConfiguration(apiObject *awstypes.WarmPoolConfiguration) map
 	if v := apiObject.MaxGroupPreparedCapacity; v != nil {
 		tfMap["max_group_prepared_capacity"] = aws.ToInt32(v)
 	} else {
-		tfMap["max_group_prepared_capacity"] = int64(DefaultWarmPoolMaxGroupPreparedCapacity)
+		tfMap["max_group_prepared_capacity"] = int64(defaultWarmPoolMaxGroupPreparedCapacity)
 	}
 
 	if v := apiObject.MinSize; v != nil {
@@ -3988,7 +3982,7 @@ func validateGroupInstanceRefreshTriggerFields(i interface{}, path cty.Path) dia
 		}
 	}
 
-	schema := ResourceGroup().SchemaMap()
+	schema := resourceGroup().SchemaMap()
 	for attr, attrSchema := range schema {
 		if v == attr {
 			if attrSchema.Computed && !attrSchema.Optional {
