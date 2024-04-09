@@ -221,6 +221,49 @@ func testAccFeatureGroup_multipleFeatures(t *testing.T) {
 	})
 }
 
+func testAccFeatureGroup_featureDefinition_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	var featureGroup sagemaker.DescribeFeatureGroupOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_feature_group.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFeatureGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFeatureGroupConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFeatureGroupExists(ctx, resourceName, &featureGroup),
+					resource.TestCheckResourceAttr(resourceName, "feature_group_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "feature_definition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "feature_definition.0.feature_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "feature_definition.0.feature_type", "String"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccFeatureGroupConfig_multi(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFeatureGroupExists(ctx, resourceName, &featureGroup),
+					resource.TestCheckResourceAttr(resourceName, "feature_group_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "feature_definition.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "feature_definition.0.feature_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "feature_definition.0.feature_type", "String"),
+					resource.TestCheckResourceAttr(resourceName, "feature_definition.1.feature_name", fmt.Sprintf("%s-2", rName)),
+					resource.TestCheckResourceAttr(resourceName, "feature_definition.1.feature_type", "Integral"),
+				),
+			},
+		},
+	})
+}
+
 func testAccFeatureGroup_onlineConfigSecurityConfig(t *testing.T) {
 	ctx := acctest.Context(t)
 	var featureGroup sagemaker.DescribeFeatureGroupOutput
