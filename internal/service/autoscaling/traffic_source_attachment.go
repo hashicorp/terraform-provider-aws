@@ -23,8 +23,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_autoscaling_traffic_source_attachment")
-func ResourceTrafficSourceAttachment() *schema.Resource {
+// @SDKResource("aws_autoscaling_traffic_source_attachment", name="Traffic Source Attachment")
+func resourceTrafficSourceAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTrafficSourceAttachmentCreate,
 		ReadWithoutTimeout:   resourceTrafficSourceAttachmentRead,
@@ -100,13 +100,12 @@ func resourceTrafficSourceAttachmentRead(ctx context.Context, d *schema.Resource
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
-	asgName, trafficSourceType, trafficSourceID, err := TrafficSourceAttachmentParseResourceID(d.Id())
-
+	asgName, trafficSourceType, trafficSourceID, err := trafficSourceAttachmentParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	_, err = FindTrafficSourceAttachmentByThreePartKey(ctx, conn, asgName, trafficSourceType, trafficSourceID)
+	_, err = findTrafficSourceAttachmentByThreePartKey(ctx, conn, asgName, trafficSourceType, trafficSourceID)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Auto Scaling Traffic Source Attachment (%s) not found, removing from state", d.Id())
@@ -125,8 +124,7 @@ func resourceTrafficSourceAttachmentDelete(ctx context.Context, d *schema.Resour
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
-	asgName, trafficSourceType, trafficSourceID, err := TrafficSourceAttachmentParseResourceID(d.Id())
-
+	asgName, trafficSourceType, trafficSourceID, err := trafficSourceAttachmentParseResourceID(d.Id())
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -159,7 +157,7 @@ func trafficSourceAttachmentCreateResourceID(asgName, trafficSourceType, traffic
 	return id
 }
 
-func TrafficSourceAttachmentParseResourceID(id string) (string, string, string, error) {
+func trafficSourceAttachmentParseResourceID(id string) (string, string, string, error) {
 	parts := strings.Split(id, trafficSourceAttachmentIDSeparator)
 
 	if len(parts) == 3 && parts[0] != "" && parts[1] != "" && parts[2] != "" {
@@ -169,7 +167,7 @@ func TrafficSourceAttachmentParseResourceID(id string) (string, string, string, 
 	return "", "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected asg-name%[2]straffic-source-type%[2]straffic-source-id", id, trafficSourceAttachmentIDSeparator)
 }
 
-func FindTrafficSourceAttachmentByThreePartKey(ctx context.Context, conn *autoscaling.Client, asgName, trafficSourceType, trafficSourceID string) (*awstypes.TrafficSourceState, error) {
+func findTrafficSourceAttachmentByThreePartKey(ctx context.Context, conn *autoscaling.Client, asgName, trafficSourceType, trafficSourceID string) (*awstypes.TrafficSourceState, error) {
 	input := &autoscaling.DescribeTrafficSourcesInput{
 		AutoScalingGroupName: aws.String(asgName),
 		TrafficSourceType:    aws.String(trafficSourceType),
@@ -190,7 +188,7 @@ func FindTrafficSourceAttachmentByThreePartKey(ctx context.Context, conn *autosc
 
 func statusTrafficSourceAttachment(ctx context.Context, conn *autoscaling.Client, asgName, trafficSourceType, trafficSourceID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindTrafficSourceAttachmentByThreePartKey(ctx, conn, asgName, trafficSourceType, trafficSourceID)
+		output, err := findTrafficSourceAttachmentByThreePartKey(ctx, conn, asgName, trafficSourceType, trafficSourceID)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

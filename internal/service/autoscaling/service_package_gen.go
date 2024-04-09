@@ -80,8 +80,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Scheduled Action",
 		},
 		{
-			Factory:  ResourceTrafficSourceAttachment,
+			Factory:  resourceTrafficSourceAttachment,
 			TypeName: "aws_autoscaling_traffic_source_attachment",
+			Name:     "Traffic Source Attachment",
 		},
 		{
 			Factory:  resourceLaunchConfiguration,
