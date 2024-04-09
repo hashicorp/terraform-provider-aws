@@ -14,6 +14,8 @@ import (
 	"text/template"
 
 	"github.com/hashicorp/cli"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 )
 
 type Generator struct {
@@ -143,7 +145,7 @@ func (d *baseDestination) WriteTemplate(templateName, templateBody string, templ
 
 func parseTemplate(templateName, templateBody string, templateData any) ([]byte, error) {
 	funcMap := template.FuncMap{
-		"Title": strings.Title,
+		"Title": cases.Title(language.Und).String,
 	}
 	tmpl, err := template.New(templateName).Funcs(funcMap).Parse(templateBody)
 
