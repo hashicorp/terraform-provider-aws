@@ -206,17 +206,15 @@ func resourceLocationObjectStorageUpdate(ctx context.Context, d *schema.Resource
 			input.AgentArns = flex.ExpandStringValueSet(d.Get("agent_arns").(*schema.Set))
 
 			// Access key must be specified when updating agent ARNs
+			input.AccessKey = aws.String("")
 			if v, ok := d.GetOk("access_key"); ok {
 				input.AccessKey = aws.String(v.(string))
-			} else {
-				input.AccessKey = aws.String("")
 			}
 
 			// Secret key must be specified when updating agent ARNs
+			input.SecretKey = aws.String("")
 			if v, ok := d.GetOk("secret_key"); ok {
 				input.SecretKey = aws.String(v.(string))
-			} else {
-				input.SecretKey = aws.String("")
 			}
 		}
 
