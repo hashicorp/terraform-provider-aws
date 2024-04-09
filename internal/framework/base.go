@@ -13,10 +13,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
-	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tags"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -78,7 +79,7 @@ func (r *ResourceWithConfigure) SetTagsAll(ctx context.Context, request resource
 	defaultTagsConfig := r.Meta().DefaultTagsConfig
 	ignoreTagsConfig := r.Meta().IgnoreTagsConfig
 
-	var planTags types.Map
+	var planTags tags.MapValue
 
 	response.Diagnostics.Append(request.Plan.GetAttribute(ctx, path.Root(names.AttrTags), &planTags)...)
 
@@ -241,8 +242,9 @@ func (w *WithTimeouts) DeleteTimeout(ctx context.Context, timeouts timeouts.Valu
 	return timeout
 }
 
-func mapHasUnknownElements(m types.Map) bool {
-	for _, v := range m.Elements() {
+func mapHasUnknownElements(m basetypes.MapValuable) bool {
+	mv, _ := m.ToMapValue(context.TODO())
+	for _, v := range mv.Elements() {
 		if v.IsUnknown() {
 			return true
 		}

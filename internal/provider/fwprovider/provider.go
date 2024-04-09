@@ -421,8 +421,8 @@ func (p *fwprovider) Resources(ctx context.Context) []func() resource.Resource {
 				inner.Schema(ctx, resource.SchemaRequest{}, &schemaResponse)
 
 				if v, ok := schemaResponse.Schema.Attributes[names.AttrTags]; ok {
-					if v.IsComputed() {
-						errs = append(errs, fmt.Errorf("`%s` attribute cannot be Computed: %s", names.AttrTags, typeName))
+					if !v.IsComputed() {
+						errs = append(errs, fmt.Errorf("`%s` attribute must be Computed: %s", names.AttrTags, typeName))
 						continue
 					}
 				} else {

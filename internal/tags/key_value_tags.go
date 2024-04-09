@@ -650,6 +650,12 @@ func New(ctx context.Context, i interface{}) KeyValueTags {
 			return v == nil
 		})
 		return New(ctx, tags)
+	case MapValue:
+		tags := flex.ExpandFrameworkStringMap(ctx, value)
+		maps.DeleteFunc(tags, func(k string, v *string) bool {
+			return v == nil
+		})
+		return New(ctx, tags)
 	default:
 		return make(KeyValueTags)
 	}

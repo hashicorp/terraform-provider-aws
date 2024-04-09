@@ -31,6 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/tags"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -395,7 +396,7 @@ type resourceJobQueueData struct {
 	Priority                types.Int64                                              `tfsdk:"priority"`
 	SchedulingPolicyARN     fwtypes.ARN                                              `tfsdk:"scheduling_policy_arn"`
 	State                   types.String                                             `tfsdk:"state"`
-	Tags                    types.Map                                                `tfsdk:"tags"`
+	Tags                    tags.MapValue                                            `tfsdk:"tags"`
 	TagsAll                 types.Map                                                `tfsdk:"tags_all"`
 	Timeouts                timeouts.Value                                           `tfsdk:"timeouts"`
 }

@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/internal/tags"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/option"
@@ -338,7 +339,7 @@ func (r tagsResourceInterceptor) create(ctx context.Context, request resource.Cr
 
 	switch when {
 	case Before:
-		var planTags fwtypes.Map
+		var planTags tags.MapValue
 		diags.Append(request.Plan.GetAttribute(ctx, path.Root(names.AttrTags), &planTags)...)
 
 		if diags.HasError() {
@@ -452,11 +453,14 @@ func (r tagsResourceInterceptor) read(ctx context.Context, request resource.Read
 		apiTags := tagsInContext.TagsOut.UnwrapOrDefault()
 
 		// AWS APIs often return empty lists of tags when none have been configured.
-		stateTags := tftags.Null
+		// stateTags := tags.NewMapValueNull()
+		stateTags := tags.Empty
 		// Remove any provider configured ignore_tags and system tags from those returned from the service API.
 		// The resource's configured tags do not include any provider configured default_tags.
 		if v := apiTags.IgnoreSystem(inContext.ServicePackageName).IgnoreConfig(tagsInContext.IgnoreConfig).ResolveDuplicatesFramework(ctx, tagsInContext.DefaultConfig, tagsInContext.IgnoreConfig, response, diags).Map(); len(v) > 0 {
-			stateTags = flex.FlattenFrameworkStringValueMapLegacy(ctx, v)
+			stateTags = tags.MapValue{
+				MapValue: flex.FlattenFrameworkStringValueMapLegacy(ctx, v),
+			}
 		}
 		diags.Append(response.State.SetAttribute(ctx, path.Root(names.AttrTags), &stateTags)...)
 
@@ -508,7 +512,7 @@ func (r tagsResourceInterceptor) update(ctx context.Context, request resource.Up
 
 	switch when {
 	case Before:
-		var planTags fwtypes.Map
+		var planTags tags.MapValue
 		diags.Append(request.Plan.GetAttribute(ctx, path.Root(names.AttrTags), &planTags)...)
 
 		if diags.HasError() {

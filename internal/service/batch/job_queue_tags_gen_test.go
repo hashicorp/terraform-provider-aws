@@ -81,7 +81,7 @@ func TestAccBatchJobQueue_tags(t *testing.T) {
 }
 
 func TestAccBatchJobQueue_tags_null(t *testing.T) {
-	t.Skip("Tags with null values are not correctly handled with the Plugin Framework")
+	// t.Skip("Tags with null values are not correctly handled with the Plugin Framework")
 
 	ctx := acctest.Context(t)
 	var v batch.JobQueueDetail
@@ -98,13 +98,18 @@ func TestAccBatchJobQueue_tags_null(t *testing.T) {
 				Config: testAccJobQueueConfig_tagsNull(rName, "key1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					// resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
+					resource.TestCheckNoResourceAttr(resourceName, "tags.key1"),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"tags.%",
+				},
 			},
 			{
 				Config:             testAccJobQueueConfig_tags0(rName),
