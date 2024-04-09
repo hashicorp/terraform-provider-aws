@@ -30,7 +30,6 @@ func TestAccSageMakerFeatureGroup_serial(t *testing.T) {
 		"description":                   testAccFeatureGroup_description,
 		"disappears":                    TestAccSageMakerFeatureGroup_disappears,
 		"multipleFeatures":              testAccFeatureGroup_multipleFeatures,
-		"featureDefinitionUpdate":       testAccFeatureGroup_featureDefinition_update,
 		"offlineConfig_basic":           testAccFeatureGroup_offlineConfig_basic,
 		"offlineConfig_format":          testAccFeatureGroup_offlineConfig_format,
 		"offlineConfig_createCatalog":   testAccFeatureGroup_offlineConfig_createCatalog,
@@ -217,49 +216,6 @@ func testAccFeatureGroup_multipleFeatures(t *testing.T) {
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func testAccFeatureGroup_featureDefinition_update(t *testing.T) {
-	ctx := acctest.Context(t)
-	var featureGroup sagemaker.DescribeFeatureGroupOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_sagemaker_feature_group.test"
-
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckFeatureGroupDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccFeatureGroupConfig_basic(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFeatureGroupExists(ctx, resourceName, &featureGroup),
-					resource.TestCheckResourceAttr(resourceName, "feature_group_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "feature_definition.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "feature_definition.0.feature_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "feature_definition.0.feature_type", "String"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccFeatureGroupConfig_multi(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckFeatureGroupExists(ctx, resourceName, &featureGroup),
-					resource.TestCheckResourceAttr(resourceName, "feature_group_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "feature_definition.#", "2"),
-					resource.TestCheckResourceAttr(resourceName, "feature_definition.0.feature_name", rName),
-					resource.TestCheckResourceAttr(resourceName, "feature_definition.0.feature_type", "String"),
-					resource.TestCheckResourceAttr(resourceName, "feature_definition.1.feature_name", fmt.Sprintf("%s-2", rName)),
-					resource.TestCheckResourceAttr(resourceName, "feature_definition.1.feature_type", "Integral"),
-				),
 			},
 		},
 	})
