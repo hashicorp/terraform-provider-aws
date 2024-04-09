@@ -731,6 +731,80 @@ func TestExpandStringEnum(t *testing.T) {
 	runAutoExpandTestCases(ctx, t, testCases)
 }
 
+func TestExpandListOfStringEnum(t *testing.T) {
+	t.Parallel()
+
+	type testEnum string
+	var testEnumFoo testEnum = "foo"
+	var testEnumBar testEnum = "bar"
+
+	var testEnums []testEnum
+	testEnumsWant := []testEnum{testEnumFoo, testEnumBar}
+
+	ctx := context.Background()
+	testCases := autoFlexTestCases{
+		{
+			TestName: "valid value",
+			Source: types.ListValueMust(types.StringType, []attr.Value{
+				types.StringValue(string(testEnumFoo)),
+				types.StringValue(string(testEnumBar)),
+			}),
+			Target:     &testEnums,
+			WantTarget: &testEnumsWant,
+		},
+		{
+			TestName:   "empty value",
+			Source:     types.ListValueMust(types.StringType, []attr.Value{}),
+			Target:     &testEnums,
+			WantTarget: &testEnums,
+		},
+		{
+			TestName:   "null value",
+			Source:     types.ListNull(types.StringType),
+			Target:     &testEnums,
+			WantTarget: &testEnums,
+		},
+	}
+	runAutoExpandTestCases(ctx, t, testCases)
+}
+
+func TestExpandSetOfStringEnum(t *testing.T) {
+	t.Parallel()
+
+	type testEnum string
+	var testEnumFoo testEnum = "foo"
+	var testEnumBar testEnum = "bar"
+
+	var testEnums []testEnum
+	testEnumsWant := []testEnum{testEnumFoo, testEnumBar}
+
+	ctx := context.Background()
+	testCases := autoFlexTestCases{
+		{
+			TestName: "valid value",
+			Source: types.SetValueMust(types.StringType, []attr.Value{
+				types.StringValue(string(testEnumFoo)),
+				types.StringValue(string(testEnumBar)),
+			}),
+			Target:     &testEnums,
+			WantTarget: &testEnumsWant,
+		},
+		{
+			TestName:   "empty value",
+			Source:     types.SetValueMust(types.StringType, []attr.Value{}),
+			Target:     &testEnums,
+			WantTarget: &testEnums,
+		},
+		{
+			TestName:   "null value",
+			Source:     types.SetNull(types.StringType),
+			Target:     &testEnums,
+			WantTarget: &testEnums,
+		},
+	}
+	runAutoExpandTestCases(ctx, t, testCases)
+}
+
 func TestExpandSimpleNestedBlockWithStringEnum(t *testing.T) {
 	t.Parallel()
 
