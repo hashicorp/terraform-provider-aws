@@ -75,8 +75,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Policy",
 		},
 		{
-			Factory:  ResourceSchedule,
+			Factory:  resourceSchedule,
 			TypeName: "aws_autoscaling_schedule",
+			Name:     "Scheduled Action",
 		},
 		{
 			Factory:  ResourceTrafficSourceAttachment,

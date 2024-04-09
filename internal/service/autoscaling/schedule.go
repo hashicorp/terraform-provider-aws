@@ -23,8 +23,8 @@ import (
 
 const ScheduleTimeLayout = "2006-01-02T15:04:05Z"
 
-// @SDKResource("aws_autoscaling_schedule")
-func ResourceSchedule() *schema.Resource {
+// @SDKResource("aws_autoscaling_schedule", name="Scheduled Action")
+func resourceSchedule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSchedulePut,
 		ReadWithoutTimeout:   resourceScheduleRead,
@@ -140,14 +140,15 @@ func resourceSchedulePut(ctx context.Context, d *schema.ResourceData, meta inter
 		input.DesiredCapacity = aws.Int32(desiredCapacity)
 	}
 
-	log.Printf("[INFO] Putting Auto Scaling Scheduled Action: %s", input)
 	_, err := conn.PutScheduledUpdateGroupAction(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Auto Scaling Scheduled Action (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "putting Auto Scaling Scheduled Action (%s): %s", name, err)
 	}
 
-	d.SetId(name)
+	if d.IsNewResource() {
+		d.SetId(name)
+	}
 
 	return append(diags, resourceScheduleRead(ctx, d, meta)...)
 }
@@ -156,7 +157,7 @@ func resourceScheduleRead(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
-	sa, err := FindScheduledUpdateGroupAction(ctx, conn, d.Get("autoscaling_group_name").(string), d.Id())
+	sa, err := findScheduleByTwoPartKey(ctx, conn, d.Get("autoscaling_group_name").(string), d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Auto Scaling Scheduled Action %s not found, removing from state", d.Id())
@@ -239,15 +240,20 @@ func resourceScheduleImport(ctx context.Context, d *schema.ResourceData, meta in
 	return []*schema.ResourceData{d}, nil
 }
 
-func FindScheduledUpdateGroupAction(ctx context.Context, conn *autoscaling.Client, asgName, actionName string) (*awstypes.ScheduledUpdateGroupAction, error) {
-	input := &autoscaling.DescribeScheduledActionsInput{
-		AutoScalingGroupName: aws.String(asgName),
-		ScheduledActionNames: []string{actionName},
+func findSchedule(ctx context.Context, conn *autoscaling.Client, input *autoscaling.DescribeScheduledActionsInput) (*awstypes.ScheduledUpdateGroupAction, error) {
+	output, err := findSchedules(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
 	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findSchedules(ctx context.Context, conn *autoscaling.Client, input *autoscaling.DescribeScheduledActionsInput) ([]awstypes.ScheduledUpdateGroupAction, error) {
 	var output []awstypes.ScheduledUpdateGroupAction
 
 	pages := autoscaling.NewDescribeScheduledActionsPaginator(conn, input)
-
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
@@ -255,16 +261,19 @@ func FindScheduledUpdateGroupAction(ctx context.Context, conn *autoscaling.Clien
 			return nil, err
 		}
 
-		for _, v := range page.ScheduledUpdateGroupActions {
-			if aws.ToString(v.ScheduledActionName) != actionName {
-				continue
-			}
-
-			output = append(output, v)
-		}
+		output = append(output, page.ScheduledUpdateGroupActions...)
 	}
 
-	return tfresource.AssertSingleValueResult(output)
+	return output, nil
+}
+
+func findScheduleByTwoPartKey(ctx context.Context, conn *autoscaling.Client, asgName, actionName string) (*awstypes.ScheduledUpdateGroupAction, error) {
+	input := &autoscaling.DescribeScheduledActionsInput{
+		AutoScalingGroupName: aws.String(asgName),
+		ScheduledActionNames: []string{actionName},
+	}
+
+	return findSchedule(ctx, conn, input)
 }
 
 func validScheduleTimestamp(v interface{}, k string) (ws []string, errors []error) {

@@ -12,6 +12,7 @@ var (
 	ResourceLifecycleHook       = resourceLifecycleHook
 	ResourceNotification        = resourceNotification
 	ResourcePolicy              = resourcePolicy
+	ResourceSchedule            = resourceSchedule
 
 	FindAttachmentByLoadBalancerName = findAttachmentByLoadBalancerName
 	FindAttachmentByTargetGroupARN   = findAttachmentByTargetGroupARN
@@ -21,5 +22,6 @@ var (
 	FindLifecycleHookByTwoPartKey    = findLifecycleHookByTwoPartKey
 	FindNotificationsByTwoPartKey    = findNotificationsByTwoPartKey
 	FindScalingPolicyByTwoPartKey    = findScalingPolicyByTwoPartKey
+	FindScheduleByTwoPartKey         = findScheduleByTwoPartKey
 	FindTag                          = findTag
 )

@@ -200,7 +200,7 @@ func testAccCheckScalingScheduleExists(ctx context.Context, n string, v *awstype
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingClient(ctx)
 
-		output, err := tfautoscaling.FindScheduledUpdateGroupAction(ctx, conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.ID)
+		output, err := tfautoscaling.FindScheduleByTwoPartKey(ctx, conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -221,7 +221,7 @@ func testAccCheckScheduleDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfautoscaling.FindScheduledUpdateGroupAction(ctx, conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.ID)
+			_, err := tfautoscaling.FindScheduleByTwoPartKey(ctx, conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
