@@ -27,8 +27,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_autoscaling_lifecycle_hook")
-func ResourceLifecycleHook() *schema.Resource {
+// @SDKResource("aws_autoscaling_lifecycle_hook", name="Lifecycle Hook")
+func resourceLifecycleHook() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLifecycleHookPut,
 		ReadWithoutTimeout:   resourceLifecycleHookRead,
@@ -141,7 +141,7 @@ func resourceLifecycleHookRead(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
-	p, err := FindLifecycleHook(ctx, conn, d.Get("autoscaling_group_name").(string), d.Id())
+	p, err := findLifecycleHookByTwoPartKey(ctx, conn, d.Get("autoscaling_group_name").(string), d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Auto Scaling Lifecycle Hook %s not found, removing from state", d.Id())
@@ -185,7 +185,7 @@ func resourceLifecycleHookDelete(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func FindLifecycleHook(ctx context.Context, conn *autoscaling.Client, asgName, hookName string) (*awstypes.LifecycleHook, error) {
+func findLifecycleHookByTwoPartKey(ctx context.Context, conn *autoscaling.Client, asgName, hookName string) (*awstypes.LifecycleHook, error) {
 	input := &autoscaling.DescribeLifecycleHooksInput{
 		AutoScalingGroupName: aws.String(asgName),
 		LifecycleHookNames:   []string{hookName},

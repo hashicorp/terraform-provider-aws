@@ -107,7 +107,7 @@ func testAccCheckLifecycleHookExists(ctx context.Context, n string) resource.Tes
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingClient(ctx)
 
-		_, err := tfautoscaling.FindLifecycleHook(ctx, conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.ID)
+		_, err := tfautoscaling.FindLifecycleHookByTwoPartKey(ctx, conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.ID)
 
 		return err
 	}
@@ -122,7 +122,7 @@ func testAccCheckLifecycleHookDestroy(ctx context.Context) resource.TestCheckFun
 				continue
 			}
 
-			_, err := tfautoscaling.FindLifecycleHook(ctx, conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.ID)
+			_, err := tfautoscaling.FindLifecycleHookByTwoPartKey(ctx, conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue
