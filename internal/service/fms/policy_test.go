@@ -398,10 +398,6 @@ func testAccCheckPolicyExists(ctx context.Context, n string) resource.TestCheckF
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No FMS Policy ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).FMSClient(ctx)
 
 		_, err := tffms.FindPolicyByID(ctx, conn, rs.Primary.ID)

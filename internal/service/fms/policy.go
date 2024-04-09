@@ -215,7 +215,7 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	conn := meta.(*conns.AWSClient).FMSClient(ctx)
 
 	input := &fms.PutPolicyInput{
-		Policy:  resourcePolicyExpandPolicy(d),
+		Policy:  expandPolicy(d),
 		TagList: getTagsIn(ctx),
 	}
 
@@ -265,9 +265,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 		sdkdiag.AppendErrorf(diags, "setting resource_tags: %s", err)
 	}
 	d.Set("resource_type", policy.ResourceType)
-	if err := d.Set("resource_type_list", policy.ResourceTypeList); err != nil {
-		sdkdiag.AppendErrorf(diags, "setting resource_type_list: %s", err)
-	}
+	d.Set("resource_type_list", policy.ResourceTypeList)
 	securityServicePolicy := []map[string]interface{}{{
 		"type":                 string(policy.SecurityServicePolicyData.Type),
 		"managed_service_data": aws.ToString(policy.SecurityServicePolicyData.ManagedServiceData),
@@ -286,7 +284,7 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &fms.PutPolicyInput{
-			Policy: resourcePolicyExpandPolicy(d),
+			Policy: expandPolicy(d),
 		}
 
 		_, err := conn.PutPolicy(ctx, input)
@@ -345,7 +343,7 @@ func findPolicyByID(ctx context.Context, conn *fms.Client, id string) (*fms.GetP
 	return output, nil
 }
 
-func resourcePolicyExpandPolicy(d *schema.ResourceData) *awstypes.Policy {
+func expandPolicy(d *schema.ResourceData) *awstypes.Policy {
 	resourceType := aws.String("ResourceTypeList")
 	resourceTypeList := flex.ExpandStringSet(d.Get("resource_type_list").(*schema.Set))
 	if t, ok := d.GetOk("resource_type"); ok {
