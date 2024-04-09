@@ -45,7 +45,6 @@ func ResourceInvocation() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				ForceNew: true,
-				Default:  FunctionVersionLatest,
 			},
 			"result": {
 				Type:     schema.TypeString,
