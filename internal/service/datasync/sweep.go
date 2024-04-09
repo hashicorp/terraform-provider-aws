@@ -73,7 +73,6 @@ func sweepAgents(region string) error {
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
 	}
 
 	err = sweep.SweepOrchestrator(ctx, sweepResources)
