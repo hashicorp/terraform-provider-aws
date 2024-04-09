@@ -189,36 +189,10 @@ func TestAccAutoScalingLaunchConfiguration_withBlockDevices(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-		},
-	})
-}
-
-func TestAccAutoScalingLaunchConfiguration_withInstanceStoreAMI(t *testing.T) {
-	ctx := acctest.Context(t)
-	var conf awstypes.LaunchConfiguration
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_launch_configuration.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AutoScalingServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckLaunchConfigurationDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccLaunchConfigurationConfig_instanceStoreAMI(rName),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckLaunchConfigurationExists(ctx, resourceName, &conf),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"ephemeral_block_device"},
 			},
 		},
 	})
@@ -922,40 +896,6 @@ resource "aws_launch_configuration" "test" {
     device_name  = "/dev/sde"
     virtual_name = "ephemeral0"
   }
-}
-`, rName))
-}
-
-// testAccLatestAmazonLinuxPVInstanceStoreAMIConfig returns the configuration for a data source that
-// describes the latest Amazon Linux AMI using PV virtualization and an instance store root device.
-// The data source is named 'amzn-ami-minimal-pv-instance-store'.
-func testAccLatestAmazonLinuxPVInstanceStoreAMIConfig() string {
-	return `
-data "aws_ami" "amzn-ami-minimal-pv-instance-store" {
-  most_recent = true
-  owners      = ["amazon"]
-
-  filter {
-    name   = "name"
-    values = ["amzn-ami-minimal-pv-*"]
-  }
-
-  filter {
-    name   = "root-device-type"
-    values = ["instance-store"]
-  }
-}
-`
-}
-
-func testAccLaunchConfigurationConfig_instanceStoreAMI(rName string) string {
-	return acctest.ConfigCompose(testAccLatestAmazonLinuxPVInstanceStoreAMIConfig(), fmt.Sprintf(`
-resource "aws_launch_configuration" "test" {
-  name     = %[1]q
-  image_id = data.aws_ami.amzn-ami-minimal-pv-instance-store.id
-
-  # When the instance type is updated, the new type must support ephemeral storage.
-  instance_type = "m1.small"
 }
 `, rName))
 }

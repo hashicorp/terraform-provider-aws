@@ -174,7 +174,7 @@ func resourceLifecycleHookDelete(ctx context.Context, d *schema.ResourceData, me
 		LifecycleHookName:    aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
+	if tfawserr.ErrMessageContains(err, errCodeValidationError, "No Lifecycle Hook found") {
 		return diags
 	}
 

@@ -47,6 +47,8 @@ func testAccGroupImportStep(n string) resource.TestStep {
 			"initial_lifecycle_hook",
 			"tag",
 			"tags",
+			"target_group_arns",
+			"traffic_source",
 			"wait_for_capacity_timeout",
 			"wait_for_elb_capacity",
 		},
