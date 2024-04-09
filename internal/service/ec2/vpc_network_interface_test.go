@@ -71,6 +71,7 @@ func TestAccVPCNetworkInterface_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "interface_type", "interface"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "connection_tracking_specification_request.#", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "mac_address"),
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
@@ -972,6 +973,44 @@ func TestAccVPCNetworkInterface_privateIPList(t *testing.T) {
 	})
 }
 
+func TestAccVPCNetworkInterface_connectionTrackingSpecificationRequest(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf ec2.NetworkInterface
+	resourceName := "aws_network_interface.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckENIDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccVPCNetworkInterfaceConfig_connectionTrackingSpecificationRequest(rName, 120),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckENIExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "connection_tracking_specification_request.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "connection_tracking_specification_request.tcp_established_timeout", "120"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"private_ip_list_enabled", "ipv6_address_list_enabled"},
+			},
+			{
+				Config: testAccVPCNetworkInterfaceConfig_connectionTrackingSpecificationRequest(rName, 180),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckENIExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "connection_tracking_specification_request.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "connection_tracking_specification_request.tcp_established_timeout", "180`"),
+				),
+			},
+		},
+	})
+}
+
 // checkResourceAttrPrivateDNSName ensures the Terraform state exactly matches a private DNS name
 //
 // For example: ip-172-16-10-100.us-west-2.compute.internal
@@ -1555,4 +1594,15 @@ resource "aws_network_interface" "test" {
   private_ip_list         = ["%[1]s"]
 }
 `, strings.Join(privateIPs, `", "`)))
+}
+
+func testAccVPCNetworkInterfaceConfig_connectionTrackingSpecificationRequest(rName string, tcp_established_timeout int) string {
+	return acctest.ConfigCompose(testAccVPCNetworkInterfaceConfig_baseIPV4(rName), `
+resource "aws_network_interface" "test" {
+  subnet_id = aws_subnet.test.id
+  connection_tracking_specification_request = {
+  tcp_established_timeout = %[1]d
+  }
+}
+`, tcp_established_timeout)
 }

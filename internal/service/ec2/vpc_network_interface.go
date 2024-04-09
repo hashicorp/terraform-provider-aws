@@ -69,6 +69,33 @@ func ResourceNetworkInterface() *schema.Resource {
 					},
 				},
 			},
+			"connection_tracking_specification_request": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"tcp_established_timeout": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      432000,
+							ValidateFunc: validation.IntBetween(60, 432000),
+						},
+						"udp_stream_timeout": {
+							Type:         schema.TypeInt,
+							Optional:     true,
+							Default:      180,
+							ValidateFunc: validation.IntBetween(60, 180),
+						},
+						"udp_timeout": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      30,
+							ValidateFunc: validation.IntBetween(30, 60),
+						},
+					},
+				},
+			},
 			"description": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -357,6 +384,10 @@ func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData,
 		input.Ipv4Prefixes = expandIPv4PrefixSpecificationRequests(v.(*schema.Set).List())
 	}
 
+	if v, ok := tfMap["connection_tracking_specification_request"].([]interface{}); ok && len(v) > 0 {
+		apiObject.ConnectionTrackingSpecificationRequest = expandConnectionTrackingSpecificationRequest(v[0].(map[string]interface{}))
+	}
+
 	if v, ok := d.GetOk("ipv4_prefix_count"); ok {
 		input.Ipv4PrefixCount = aws.Int64(int64(v.(int)))
 	}
@@ -553,6 +584,9 @@ func resourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData, m
 	}
 	if err := d.Set("security_groups", FlattenGroupIdentifiers(eni.Groups)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting security_groups: %s", err)
+	}
+	if v := eni.ConnectionTrackingSpecificationRequest; v != nil {
+		tfMap["connection_tracking_specification_request"] = []interface{}{flattenConnectionTrackingSpecificationRequest(v)}
 	}
 	d.Set("source_dest_check", eni.SourceDestCheck)
 	d.Set("subnet_id", eni.SubnetId)
@@ -1034,6 +1068,19 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 		}
 	}
 
+	if d.HasChange("connection_tracking_specification_request") {
+		input := &ec2.ModifyNetworkInterfaceAttributeInput{
+			NetworkInterfaceId:                     aws.String(d.Id()),
+			ConnectionTrackingSpecificationRequest: expandConnectionTrackingSpecificationRequest(tfMap["connection_tracking_specification_request"].([]interface{})),
+		}
+
+		_, err := conn.ModifyNetworkInterfaceAttributeWithContext(ctx, input)
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "modifying EC2 Network Interface (%s) Description: %s", d.Id(), err)
+		}
+	}
+
 	return append(diags, resourceNetworkInterfaceRead(ctx, d, meta)...)
 }
 
@@ -1262,6 +1309,50 @@ func expandInstanceIPv6Addresses(tfList []interface{}) []*ec2.InstanceIpv6Addres
 	}
 
 	return apiObjects
+}
+
+func expandConnectionTrackingSpecificationRequest(tfMap map[string]interface{}) *ec2.ConnectionTrackingSpecificationRequest {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ec2.ConnectionTrackingSpecificationRequest{}
+
+	if v, ok := tfMap["tcp_established_timeout"].(int); ok {
+		apiObject.TcpEstablishedTimeout = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["udp_stream_timeout"].(int); ok {
+		apiObject.UdpStreamTimeout = aws.Int64(int64(v))
+	}
+
+	if v, ok := tfMap["udp_timeout"].(int); ok {
+		apiObject.UdpTimeout = aws.Int64(int64(v))
+	}
+
+	return apiObject
+}
+
+func flattenConnectionTrackingSpecificationRequest(apiObject *ec2.ConnectionTrackingSpecificationRequest) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.TcpEstablishedTimeout; v != nil {
+		tfMap["tcp_established_timeout"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.UdpStreamTimeout; v != nil {
+		tfMap["udp_stream_timeout"] = aws.Int64Value(v)
+	}
+
+	if v := apiObject.UdpTimeout; v != nil {
+		tfMap["udp_timeout"] = aws.Int64Value(v)
+	}
+
+	return tfMap
 }
 
 func flattenNetworkInterfacePrivateIPAddress(apiObject *ec2.NetworkInterfacePrivateIpAddress) string {
