@@ -407,52 +407,6 @@ func TestAccBatchJobQueue_state(t *testing.T) {
 	})
 }
 
-func TestAccBatchJobQueue_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var jobQueue batch.JobQueueDetail
-	resourceName := "aws_batch_job_queue.test"
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobQueueDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccJobQueueConfig_tags1(rName, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccJobQueueConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccJobQueueConfig_tags1(rName, "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckJobQueueExists(ctx, resourceName, &jobQueue),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-		},
-	})
-}
-
 func testAccCheckJobQueueExists(ctx context.Context, n string, jq *batch.JobQueueDetail) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -846,6 +800,19 @@ resource "aws_batch_compute_environment" "more" {
 `, rName, state))
 }
 
+func testAccJobQueueConfig_tags0(rName string) string {
+	return acctest.ConfigCompose(
+		testAccJobQueueConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_batch_job_queue" "test" {
+  compute_environments = [aws_batch_compute_environment.test.arn]
+  name                 = %[1]q
+  priority             = 1
+  state                = "DISABLED"
+}
+`, rName))
+}
+
 func testAccJobQueueConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(
 		testAccJobQueueConfigBase(rName),
@@ -879,6 +846,23 @@ resource "aws_batch_job_queue" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccJobQueueConfig_tagsNull(rName, tagKey1 string) string {
+	return acctest.ConfigCompose(
+		testAccJobQueueConfigBase(rName),
+		fmt.Sprintf(`
+resource "aws_batch_job_queue" "test" {
+  compute_environments = [aws_batch_compute_environment.test.arn]
+  name                 = %[1]q
+  priority             = 1
+  state                = "DISABLED"
+
+  tags = {
+    %[2]q = null
+  }
+}
+`, rName, tagKey1))
 }
 
 func testAccCheckLaunchTemplateDestroy(ctx context.Context) resource.TestCheckFunc {

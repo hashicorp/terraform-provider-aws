@@ -6,7 +6,7 @@ package autoscaling
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/service/autoscaling"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 )
@@ -216,7 +216,7 @@ func resourceGroupV0() *schema.Resource {
 			"metrics_granularity": {
 				Type:     schema.TypeString,
 				Optional: true,
-				Default:  DefaultEnabledMetricsGranularity,
+				Default:  defaultEnabledMetricsGranularity,
 			},
 			"min_elb_capacity": {
 				Type:     schema.TypeInt,
@@ -718,7 +718,7 @@ func resourceGroupV0() *schema.Resource {
 						"max_group_prepared_capacity": {
 							Type:     schema.TypeInt,
 							Optional: true,
-							Default:  DefaultWarmPoolMaxGroupPreparedCapacity,
+							Default:  defaultWarmPoolMaxGroupPreparedCapacity,
 						},
 						"min_size": {
 							Type:     schema.TypeInt,
@@ -728,7 +728,7 @@ func resourceGroupV0() *schema.Resource {
 						"pool_state": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  autoscaling.WarmPoolStateStopped,
+							Default:  awstypes.WarmPoolStateStopped,
 						},
 					},
 				},

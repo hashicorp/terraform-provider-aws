@@ -420,7 +420,7 @@ func resourcePermissionsCreate(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 
 	input := &lakeformation.GrantPermissionsInput{
-		Permissions: expandPermissions(d.Get("permissions").([]interface{})),
+		Permissions: flex.ExpandStringyValueList[awstypes.Permission](d.Get("permissions").([]interface{})),
 		Principal: &awstypes.DataLakePrincipal{
 			DataLakePrincipalIdentifier: aws.String(d.Get("principal").(string)),
 		},
@@ -436,7 +436,7 @@ func resourcePermissionsCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("permissions_with_grant_option"); ok {
-		input.PermissionsWithGrantOption = expandPermissions(v.([]interface{}))
+		input.PermissionsWithGrantOption = flex.ExpandStringyValueList[awstypes.Permission](v.([]interface{}))
 	}
 
 	if _, ok := d.GetOk("catalog_resource"); ok {
@@ -739,8 +739,8 @@ func resourcePermissionsDelete(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 
 	input := &lakeformation.RevokePermissionsInput{
-		Permissions:                expandPermissions(d.Get("permissions").([]interface{})),
-		PermissionsWithGrantOption: expandPermissions(d.Get("permissions_with_grant_option").([]interface{})),
+		Permissions:                flex.ExpandStringyValueList[awstypes.Permission](d.Get("permissions").([]interface{})),
+		PermissionsWithGrantOption: flex.ExpandStringyValueList[awstypes.Permission](d.Get("permissions_with_grant_option").([]interface{})),
 		Principal: &awstypes.DataLakePrincipal{
 			DataLakePrincipalIdentifier: aws.String(d.Get("principal").(string)),
 		},

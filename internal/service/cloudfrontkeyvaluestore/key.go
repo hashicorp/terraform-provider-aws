@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -82,10 +83,18 @@ func (r *keyResource) Create(ctx context.Context, request resource.CreateRequest
 
 	conn := r.Meta().CloudFrontKeyValueStoreClient(ctx)
 
-	etag, err := findETagByARN(ctx, conn, data.KvsARN.ValueString())
+	kvsARN := data.KvsARN.ValueString()
+
+	// Adding a key changes the etag of the key value store.
+	// Use a mutex serialize actions
+	mutexKey := kvsARN
+	conns.GlobalMutexKV.Lock(mutexKey)
+	defer conns.GlobalMutexKV.Unlock(mutexKey)
+
+	etag, err := findETagByARN(ctx, conn, kvsARN)
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading CloudFront KeyValueStore ETag (%s)", data.KvsARN.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading CloudFront KeyValueStore ETag (%s)", kvsARN), err.Error())
 
 		return
 	}
@@ -102,7 +111,7 @@ func (r *keyResource) Create(ctx context.Context, request resource.CreateRequest
 	output, err := conn.PutKey(ctx, input)
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("creating CloudFront KeyValueStore (%s) Key (%s)", data.KvsARN.ValueString(), data.Key.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("creating CloudFront KeyValueStore (%s) Key (%s)", kvsARN, data.Key.ValueString()), err.Error())
 
 		return
 	}
@@ -167,10 +176,18 @@ func (r *keyResource) Update(ctx context.Context, request resource.UpdateRequest
 	conn := r.Meta().CloudFrontKeyValueStoreClient(ctx)
 
 	if !new.Value.Equal(old.Value) {
-		etag, err := findETagByARN(ctx, conn, new.KvsARN.ValueString())
+		kvsARN := new.KvsARN.ValueString()
+
+		// Updating a key changes the etag of the key value store.
+		// Use a mutex serialize actions
+		mutexKey := kvsARN
+		conns.GlobalMutexKV.Lock(mutexKey)
+		defer conns.GlobalMutexKV.Unlock(mutexKey)
+
+		etag, err := findETagByARN(ctx, conn, kvsARN)
 
 		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("reading CloudFront KeyValueStore ETag (%s)", new.KvsARN.ValueString()), err.Error())
+			response.Diagnostics.AddError(fmt.Sprintf("reading CloudFront KeyValueStore ETag (%s)", kvsARN), err.Error())
 
 			return
 		}
@@ -187,7 +204,7 @@ func (r *keyResource) Update(ctx context.Context, request resource.UpdateRequest
 		output, err := conn.PutKey(ctx, input)
 
 		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("updating CloudFront KeyValueStore (%s) Key (%s)", new.KvsARN.ValueString(), new.Key.ValueString()), err.Error())
+			response.Diagnostics.AddError(fmt.Sprintf("updating CloudFront KeyValueStore (%s) Key (%s)", kvsARN, new.Key.ValueString()), err.Error())
 
 			return
 		}
@@ -208,10 +225,18 @@ func (r *keyResource) Delete(ctx context.Context, request resource.DeleteRequest
 
 	conn := r.Meta().CloudFrontKeyValueStoreClient(ctx)
 
-	etag, err := findETagByARN(ctx, conn, data.KvsARN.ValueString())
+	kvsARN := data.KvsARN.ValueString()
+
+	// Deleting a key changes the etag of the key value store.
+	// Use a mutex serialize actions
+	mutexKey := kvsARN
+	conns.GlobalMutexKV.Lock(mutexKey)
+	defer conns.GlobalMutexKV.Unlock(mutexKey)
+
+	etag, err := findETagByARN(ctx, conn, kvsARN)
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading CloudFront KeyValueStore ETag (%s)", data.KvsARN.ValueString()), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading CloudFront KeyValueStore ETag (%s)", kvsARN), err.Error())
 
 		return
 	}
