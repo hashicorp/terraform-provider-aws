@@ -6,6 +6,7 @@ package fms
 import (
 	"context"
 	"log"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -219,13 +220,21 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		TagList: getTagsIn(ctx),
 	}
 
-	output, err := conn.PutPolicy(ctx, input)
+	// System problems can arise during FMS policy updates (maybe also creation),
+	// so we set the following operation as retryable.
+	// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/23946.
+	const (
+		timeout = 1 * time.Minute
+	)
+	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.InternalErrorException](ctx, timeout, func() (interface{}, error) {
+		return conn.PutPolicy(ctx, input)
+	})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating FMS Policy: %s", err)
 	}
 
-	d.SetId(aws.ToString(output.Policy.PolicyId))
+	d.SetId(aws.ToString(outputRaw.(*fms.PutPolicyOutput).Policy.PolicyId))
 
 	return append(diags, resourcePolicyRead(ctx, d, meta)...)
 }
@@ -287,7 +296,15 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 			Policy: expandPolicy(d),
 		}
 
-		_, err := conn.PutPolicy(ctx, input)
+		// System problems can arise during FMS policy updates (maybe also creation),
+		// so we set the following operation as retryable.
+		// Reference: https://github.com/hashicorp/terraform-provider-aws/issues/23946.
+		const (
+			timeout = 1 * time.Minute
+		)
+		_, err := tfresource.RetryWhenIsA[*awstypes.InternalErrorException](ctx, timeout, func() (interface{}, error) {
+			return conn.PutPolicy(ctx, input)
+		})
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating FMS Policy (%s): %s", d.Id(), err)
