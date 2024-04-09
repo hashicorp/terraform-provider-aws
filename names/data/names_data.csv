@@ -29,7 +29,7 @@ appsync,appsync,appsync,appsync,,appsync,,,AppSync,AppSync,,1,,,aws_appsync_,,ap
 ,,,,,,,,,,,,,,,,,Artifact,AWS,x,,,,,,,,,No SDK support
 athena,athena,athena,athena,,athena,,,Athena,Athena,,,2,,aws_athena_,,athena_,Athena,Amazon,,,,,,,Athena,ListDataCatalogs,,
 auditmanager,auditmanager,auditmanager,auditmanager,,auditmanager,,,AuditManager,AuditManager,,,2,,aws_auditmanager_,,auditmanager_,Audit Manager,AWS,,,,,,,AuditManager,GetAccountStatus,,
-autoscaling,autoscaling,autoscaling,autoscaling,,autoscaling,,,AutoScaling,AutoScaling,,1,,aws_(autoscaling_|launch_configuration),aws_autoscaling_,,autoscaling_;launch_configuration,Auto Scaling,,,,,,,,Auto Scaling,DescribeAutoScalingGroups,,
+autoscaling,autoscaling,autoscaling,autoscaling,,autoscaling,,,AutoScaling,AutoScaling,,,2,aws_(autoscaling_|launch_configuration),aws_autoscaling_,,autoscaling_;launch_configuration,Auto Scaling,,,,,,,,Auto Scaling,DescribeAutoScalingGroups,,
 autoscaling-plans,autoscalingplans,autoscalingplans,autoscalingplans,,autoscalingplans,,,AutoScalingPlans,AutoScalingPlans,,,2,,aws_autoscalingplans_,,autoscalingplans_,Auto Scaling Plans,,,,,,,,Auto Scaling Plans,DescribeScalingPlans,,
 ,,,,,,,,,,,,,,,,,Backint Agent for SAP HANA,AWS,x,,,,,,,,,No SDK support
 backup,backup,backup,backup,,backup,,,Backup,Backup,,1,,,aws_backup_,,backup_,Backup,AWS,,,,,,,Backup,ListBackupPlans,,
