@@ -60,6 +60,77 @@ func TestAccDataSyncLocationObjectStorage_basic(t *testing.T) {
 	})
 }
 
+func TestAccDataSyncLocationObjectStorage_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v datasync.DescribeLocationObjectStorageOutput
+	resourceName := "aws_datasync_location_object_storage.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	domain := acctest.RandomDomainName()
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLocationObjectStorageDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLocationObjectStorageConfig_basic(rName, domain),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLocationObjectStorageExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "access_key", ""),
+					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexache.MustCompile(`location/loc-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "bucket_name", rName),
+					resource.TestCheckNoResourceAttr(resourceName, "secret_key"),
+					resource.TestCheckResourceAttr(resourceName, "server_certificate", ""),
+					resource.TestCheckResourceAttr(resourceName, "server_hostname", domain),
+					resource.TestCheckResourceAttr(resourceName, "server_port", "8080"),
+					resource.TestCheckResourceAttr(resourceName, "server_protocol", "HTTP"),
+					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "uri", fmt.Sprintf("object-storage://%s/%s/", domain, rName)),
+				),
+			},
+			{
+				Config: testAccLocationObjectStorageConfig_updateAddAgent(rName, domain),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLocationObjectStorageExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "access_key", ""),
+					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "2"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexache.MustCompile(`location/loc-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "bucket_name", rName),
+					resource.TestCheckNoResourceAttr(resourceName, "secret_key"),
+					resource.TestCheckResourceAttr(resourceName, "server_certificate", ""),
+					resource.TestCheckResourceAttr(resourceName, "server_hostname", domain),
+					resource.TestCheckResourceAttr(resourceName, "server_port", "8080"),
+					resource.TestCheckResourceAttr(resourceName, "server_protocol", "HTTP"),
+					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "uri", fmt.Sprintf("object-storage://%s/%s/", domain, rName)),
+				),
+			},
+			{
+				Config: testAccLocationObjectStorageConfig_updateRemoveAgent(rName, domain),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckLocationObjectStorageExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "access_key", ""),
+					resource.TestCheckResourceAttr(resourceName, "agent_arns.#", "1"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "datasync", regexache.MustCompile(`location/loc-.+`)),
+					resource.TestCheckResourceAttr(resourceName, "bucket_name", rName),
+					resource.TestCheckNoResourceAttr(resourceName, "secret_key"),
+					resource.TestCheckResourceAttr(resourceName, "server_certificate", ""),
+					resource.TestCheckResourceAttr(resourceName, "server_hostname", domain),
+					resource.TestCheckResourceAttr(resourceName, "server_port", "8080"),
+					resource.TestCheckResourceAttr(resourceName, "server_protocol", "HTTP"),
+					resource.TestCheckResourceAttr(resourceName, "subdirectory", "/"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttr(resourceName, "uri", fmt.Sprintf("object-storage://%s/%s/", domain, rName)),
+				),
+			},
+		},
+	})
+}
+
 func TestAccDataSyncLocationObjectStorage_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v datasync.DescribeLocationObjectStorageOutput
@@ -227,6 +298,55 @@ resource "aws_datasync_agent" "test" {
 
 func testAccLocationObjectStorageConfig_basic(rName, domain string) string {
 	return acctest.ConfigCompose(testAccLocationObjectStorageConfig_base(rName), fmt.Sprintf(`
+resource "aws_datasync_location_object_storage" "test" {
+  agent_arns      = [aws_datasync_agent.test.arn]
+  server_hostname = %[2]q
+  bucket_name     = %[1]q
+  server_protocol = "HTTP"
+  server_port     = 8080
+}
+`, rName, domain))
+}
+
+func testAccLocationObjectStorageConfig_baseUpdate(rName string) string {
+	return acctest.ConfigCompose(testAccLocationObjectStorageConfig_base(rName), fmt.Sprintf(`
+resource "aws_instance" "test2" {
+  depends_on = [aws_internet_gateway.test]
+
+  ami                         = data.aws_ssm_parameter.aws_service_datasync_ami.value
+  associate_public_ip_address = true
+  instance_type               = data.aws_ec2_instance_type_offering.available.instance_type
+  vpc_security_group_ids      = [aws_security_group.test.id]
+  subnet_id                   = aws_subnet.test[0].id
+
+  tags = {
+    Name = "%[1]s-2"
+  }
+}
+
+resource "aws_datasync_agent" "test2" {
+  ip_address = aws_instance.test2.public_ip
+  name       = "%[1]s-2"
+}
+`, rName))
+}
+
+func testAccLocationObjectStorageConfig_updateAddAgent(rName, domain string) string {
+	return acctest.ConfigCompose(testAccLocationObjectStorageConfig_baseUpdate(rName),
+		fmt.Sprintf(`
+resource "aws_datasync_location_object_storage" "test" {
+  agent_arns      = [aws_datasync_agent.test.arn, aws_datasync_agent.test2.arn]
+  server_hostname = %[2]q
+  bucket_name     = %[1]q
+  server_protocol = "HTTP"
+  server_port     = 8080
+}
+`, rName, domain))
+}
+
+func testAccLocationObjectStorageConfig_updateRemoveAgent(rName, domain string) string {
+	return acctest.ConfigCompose(testAccLocationObjectStorageConfig_baseUpdate(rName),
+		fmt.Sprintf(`
 resource "aws_datasync_location_object_storage" "test" {
   agent_arns      = [aws_datasync_agent.test.arn]
   server_hostname = %[2]q
