@@ -32,7 +32,7 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 )
 
 // @SDKResource("aws_launch_configuration", name="Launch Configuration")
-func ResourceLaunchConfiguration() *schema.Resource {
+func resourceLaunchConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceLaunchConfigurationCreate,
 		ReadWithoutTimeout:   resourceLaunchConfigurationRead,
@@ -400,7 +400,6 @@ func resourceLaunchConfigurationCreate(ctx context.Context, d *schema.ResourceDa
 		input.BlockDeviceMappings = blockDeviceMappings
 	}
 
-	log.Printf("[DEBUG] Creating Auto Scaling Launch Configuration: %s", input)
 	// IAM profiles can take ~10 seconds to propagate in AWS:
 	// http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/iam-roles-for-amazon-ec2.html#launch-instance-with-role-console
 	_, err = tfresource.RetryWhen(ctx, propagationTimeout,
@@ -430,7 +429,7 @@ func resourceLaunchConfigurationRead(ctx context.Context, d *schema.ResourceData
 	autoscalingconn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 	ec2conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	lc, err := FindLaunchConfigurationByName(ctx, autoscalingconn, d.Id())
+	lc, err := findLaunchConfigurationByName(ctx, autoscalingconn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Auto Scaling Launch Configuration %s not found, removing from state", d.Id())
@@ -810,7 +809,7 @@ func findLaunchConfigurations(ctx context.Context, conn *autoscaling.Client, inp
 	return output, nil
 }
 
-func FindLaunchConfigurationByName(ctx context.Context, conn *autoscaling.Client, name string) (*awstypes.LaunchConfiguration, error) {
+func findLaunchConfigurationByName(ctx context.Context, conn *autoscaling.Client, name string) (*awstypes.LaunchConfiguration, error) {
 	input := &autoscaling.DescribeLaunchConfigurationsInput{
 		LaunchConfigurationNames: []string{name},
 	}

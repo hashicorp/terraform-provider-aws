@@ -5,13 +5,15 @@ package autoscaling
 
 // Exports for use in tests only.
 var (
-	ResourceAttachment = resourceAttachment
-	ResourceGroup      = resourceGroup
-	ResourceGroupTag   = resourceGroupTag
+	ResourceAttachment          = resourceAttachment
+	ResourceGroup               = resourceGroup
+	ResourceGroupTag            = resourceGroupTag
+	ResourceLaunchConfiguration = resourceLaunchConfiguration
 
 	FindAttachmentByLoadBalancerName = findAttachmentByLoadBalancerName
 	FindAttachmentByTargetGroupARN   = findAttachmentByTargetGroupARN
 	FindGroupByName                  = findGroupByName
 	FindInstanceRefreshes            = findInstanceRefreshes
+	FindLaunchConfigurationByName    = findLaunchConfigurationByName
 	FindTag                          = findTag
 )

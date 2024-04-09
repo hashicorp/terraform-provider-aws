@@ -193,7 +193,7 @@ func dataSourceLaunchConfigurationRead(ctx context.Context, d *schema.ResourceDa
 	ec2conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	name := d.Get("name").(string)
-	lc, err := FindLaunchConfigurationByName(ctx, autoscalingconn, name)
+	lc, err := findLaunchConfigurationByName(ctx, autoscalingconn, name)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Auto Scaling Launch Configuration (%s): %s", name, err)

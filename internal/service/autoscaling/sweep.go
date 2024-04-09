@@ -95,7 +95,7 @@ func sweepLaunchConfigurations(region string) error {
 		}
 
 		for _, v := range page.LaunchConfigurations {
-			r := ResourceLaunchConfiguration()
+			r := resourceLaunchConfiguration()
 			d := r.Data(nil)
 			d.SetId(aws.ToString(v.LaunchConfigurationName))
 
