@@ -22,13 +22,6 @@ type Generator struct {
 	ui cli.Ui
 }
 
-type Destination interface {
-	CreateDirectories() error
-	Write() error
-	WriteBytes(body []byte) error
-	WriteTemplate(templateName, templateBody string, templateData any) error
-}
-
 func NewGenerator() *Generator {
 	return &Generator{
 		ui: &cli.BasicUi{
@@ -37,6 +30,34 @@ func NewGenerator() *Generator {
 			ErrorWriter: os.Stderr,
 		},
 	}
+}
+
+func (g *Generator) UI() cli.Ui {
+	return g.ui
+}
+
+func (g *Generator) Infof(format string, a ...interface{}) {
+	g.ui.Info(fmt.Sprintf(format, a...))
+}
+
+func (g *Generator) Warnf(format string, a ...interface{}) {
+	g.ui.Warn(fmt.Sprintf(format, a...))
+}
+
+func (g *Generator) Errorf(format string, a ...interface{}) {
+	g.ui.Error(fmt.Sprintf(format, a...))
+}
+
+func (g *Generator) Fatalf(format string, a ...interface{}) {
+	g.Errorf(format, a...)
+	os.Exit(1)
+}
+
+type Destination interface {
+	CreateDirectories() error
+	Write() error
+	WriteBytes(body []byte) error
+	WriteTemplate(templateName, templateBody string, templateData any) error
 }
 
 func (g *Generator) NewGoFileDestination(filename string) Destination {
@@ -161,21 +182,4 @@ func parseTemplate(templateName, templateBody string, templateData any) ([]byte,
 	}
 
 	return buffer.Bytes(), nil
-}
-
-func (g *Generator) Infof(format string, a ...interface{}) {
-	g.ui.Info(fmt.Sprintf(format, a...))
-}
-
-func (g *Generator) Warnf(format string, a ...interface{}) {
-	g.ui.Warn(fmt.Sprintf(format, a...))
-}
-
-func (g *Generator) Errorf(format string, a ...interface{}) {
-	g.ui.Error(fmt.Sprintf(format, a...))
-}
-
-func (g *Generator) Fatalf(format string, a ...interface{}) {
-	g.Errorf(format, a...)
-	os.Exit(1)
 }
