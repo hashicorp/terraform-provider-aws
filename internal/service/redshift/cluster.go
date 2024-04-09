@@ -363,7 +363,9 @@ func ResourceCluster() *schema.Resource {
 				ForceNew: true,
 			},
 			"snapshot_copy": {
-				Type:     schema.TypeList,
+				Type: schema.TypeList,
+				Deprecated: "Use the aws_redshift_snapshot_copy resource instead. " +
+					"This argument will be removed in a future major version.",
 				MaxItems: 1,
 				Optional: true,
 				Computed: true,
