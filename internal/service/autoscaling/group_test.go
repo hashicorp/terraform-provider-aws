@@ -45,6 +45,7 @@ func testAccGroupImportStep(n string) resource.TestStep {
 			"force_delete",
 			"ignore_failed_scaling_activities",
 			"initial_lifecycle_hook",
+			"load_balancers",
 			"tag",
 			"tags",
 			"target_group_arns",
