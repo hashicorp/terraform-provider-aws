@@ -5,7 +5,6 @@ package common
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"go/format"
 	"os"
@@ -73,10 +72,6 @@ func (g *Generator) NewUnformattedFileDestination(filename string) Destination {
 	}
 }
 
-func (g *Generator) NewUnformattedStdOutDestination() Destination {
-	return &stdOutDestination{}
-}
-
 type fileDestination struct {
 	baseDestination
 	append   bool
@@ -123,15 +118,6 @@ func (d *fileDestination) Write() error {
 
 type stdOutDestination struct {
 	baseDestination
-}
-
-func (d *stdOutDestination) CreateDirectories() error {
-	return errors.New("not implemented")
-}
-
-func (d *stdOutDestination) Write() error {
-	_, err := os.Stdout.WriteString(d.buffer.String())
-	return err
 }
 
 type baseDestination struct {
