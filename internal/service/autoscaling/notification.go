@@ -5,19 +5,23 @@ package autoscaling
 
 import (
 	"context"
-	"fmt"
+	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_autoscaling_notification")
-func ResourceNotification() *schema.Resource {
+// @SDKResource("aws_autoscaling_notification", name="Notification")
+func resourceNotification() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNotificationCreate,
 		ReadWithoutTimeout:   resourceNotificationRead,
@@ -47,71 +51,51 @@ func ResourceNotification() *schema.Resource {
 func resourceNotificationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
-	gl := flex.ExpandStringSet(d.Get("group_names").(*schema.Set))
-	nl := flex.ExpandStringSet(d.Get("notifications").(*schema.Set))
 
 	topic := d.Get("topic_arn").(string)
-	if err := addNotificationConfigToGroupsWithTopic(ctx, conn, gl, nl, topic); err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Autoscaling Group Notification (%s): %s", topic, err)
+	if err := addNotificationConfigToGroupsWithTopic(ctx, conn, flex.ExpandStringSet(d.Get("group_names").(*schema.Set)), flex.ExpandStringSet(d.Get("notifications").(*schema.Set)), topic); err != nil {
+		return sdkdiag.AppendErrorf(diags, "creating Auto Scaling Notification (%s): %s", topic, err)
 	}
 
 	// ARNs are unique, and these notifications are per ARN, so we re-use the ARN
-	// here as the ID
+	// here as the ID.
 	d.SetId(topic)
+
 	return append(diags, resourceNotificationRead(ctx, d, meta)...)
 }
 
 func resourceNotificationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
-	gl := flex.ExpandStringValueSet(d.Get("group_names").(*schema.Set))
 
-	opts := &autoscaling.DescribeNotificationConfigurationsInput{
-		AutoScalingGroupNames: gl,
+	notifications, err := findNotificationsByTwoPartKey(ctx, conn, flex.ExpandStringValueSet(d.Get("group_names").(*schema.Set)), d.Id())
+
+	if err == nil && len(notifications) == 0 {
+		err = tfresource.NewEmptyResultError(nil)
 	}
 
-	topic := d.Get("topic_arn").(string)
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Auto Scaling Notification %s not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Auto Scaling Notification (%s): %s", d.Id(), err)
+	}
+
 	// Grab all applicable notification configurations for this Topic.
 	// Each NotificationType will have a record, so 1 Group with 3 Types results
-	// in 3 records, all with the same Group name
-	gRaw := make(map[string]bool)
-	nRaw := make(map[string]bool)
-
-	pages := autoscaling.NewDescribeNotificationConfigurationsPaginator(conn, opts)
-
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Autoscaling Group Notification (%s): %s", topic, err)
-		}
-
-		for _, n := range page.NotificationConfigurations {
-			if aws.ToString(n.TopicARN) == topic {
-				gRaw[aws.ToString(n.AutoScalingGroupName)] = true
-				nRaw[aws.ToString(n.NotificationType)] = true
-			}
-		}
+	// in 3 records, all with the same Group name.
+	gRaw := make(map[string]struct{})
+	nRaw := make(map[string]struct{})
+	for _, n := range notifications {
+		gRaw[aws.ToString(n.AutoScalingGroupName)] = struct{}{}
+		nRaw[aws.ToString(n.NotificationType)] = struct{}{}
 	}
 
-	// Grab the keys here as the list of Groups
-	var gList []string
-	for k := range gRaw {
-		gList = append(gList, k)
-	}
-
-	// Grab the keys here as the list of Types
-	var nList []string
-	for k := range nRaw {
-		nList = append(nList, k)
-	}
-
-	if err := d.Set("group_names", gList); err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Autoscaling Group Notification (%s): %s", topic, err)
-	}
-	if err := d.Set("notifications", nList); err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Autoscaling Group Notification (%s): %s", topic, err)
-	}
+	d.Set("group_names", tfmaps.Keys(gRaw))
+	d.Set("notifications", tfmaps.Keys(nRaw))
 
 	return diags
 }
@@ -138,7 +122,7 @@ func resourceNotificationUpdate(ctx context.Context, d *schema.ResourceData, met
 	topic := d.Get("topic_arn").(string)
 
 	if err := removeNotificationConfigToGroupsWithTopic(ctx, conn, remove, topic); err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Autoscaling Group Notification (%s): %s", topic, err)
+		return sdkdiag.AppendErrorf(diags, "updating Auto Scaling Notification (%s): %s", topic, err)
 	}
 
 	var update []*string
@@ -149,24 +133,36 @@ func resourceNotificationUpdate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if err := addNotificationConfigToGroupsWithTopic(ctx, conn, update, nl, topic); err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Autoscaling Group Notification (%s): %s", topic, err)
+		return sdkdiag.AppendErrorf(diags, "updating Auto Scaling Notification (%s): %s", topic, err)
 	}
 
 	return append(diags, resourceNotificationRead(ctx, d, meta)...)
 }
 
-func addNotificationConfigToGroupsWithTopic(ctx context.Context, conn *autoscaling.Client, groups []*string, nl []*string, topic string) error {
+func resourceNotificationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
+
+	topic := d.Get("topic_arn").(string)
+	if err := removeNotificationConfigToGroupsWithTopic(ctx, conn, flex.ExpandStringSet(d.Get("group_names").(*schema.Set)), topic); err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting Auto Scaling Notification (%s): %s", topic, err)
+	}
+
+	return diags
+}
+
+func addNotificationConfigToGroupsWithTopic(ctx context.Context, conn *autoscaling.Client, groups, notificationTypes []*string, topic string) error {
 	for _, group := range groups {
-		opts := &autoscaling.PutNotificationConfigurationInput{
+		input := &autoscaling.PutNotificationConfigurationInput{
 			AutoScalingGroupName: group,
-			NotificationTypes:    aws.ToStringSlice(nl),
+			NotificationTypes:    aws.ToStringSlice(notificationTypes),
 			TopicARN:             aws.String(topic),
 		}
 
-		_, err := conn.PutNotificationConfiguration(ctx, opts)
+		_, err := conn.PutNotificationConfiguration(ctx, input)
 
 		if err != nil {
-			return fmt.Errorf("adding notifications for (%s): %w", aws.ToString(group), err)
+			return err
 		}
 	}
 
@@ -175,28 +171,48 @@ func addNotificationConfigToGroupsWithTopic(ctx context.Context, conn *autoscali
 
 func removeNotificationConfigToGroupsWithTopic(ctx context.Context, conn *autoscaling.Client, groups []*string, topic string) error {
 	for _, group := range groups {
-		opts := &autoscaling.DeleteNotificationConfigurationInput{
+		input := &autoscaling.DeleteNotificationConfigurationInput{
 			AutoScalingGroupName: group,
 			TopicARN:             aws.String(topic),
 		}
 
-		_, err := conn.DeleteNotificationConfiguration(ctx, opts)
+		_, err := conn.DeleteNotificationConfiguration(ctx, input)
+
 		if err != nil {
-			return fmt.Errorf("removing notifications for (%s): %w", aws.ToString(group), err)
+			return err
 		}
 	}
+
 	return nil
 }
 
-func resourceNotificationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
-
-	gl := flex.ExpandStringSet(d.Get("group_names").(*schema.Set))
-
-	topic := d.Get("topic_arn").(string)
-	if err := removeNotificationConfigToGroupsWithTopic(ctx, conn, gl, topic); err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Autoscaling Group Notification (%s): %s", topic, err)
+func findNotificationsByTwoPartKey(ctx context.Context, conn *autoscaling.Client, groups []string, topic string) ([]awstypes.NotificationConfiguration, error) {
+	input := &autoscaling.DescribeNotificationConfigurationsInput{
+		AutoScalingGroupNames: groups,
 	}
-	return diags
+
+	return findNotifications(ctx, conn, input, func(v *awstypes.NotificationConfiguration) bool {
+		return aws.ToString(v.TopicARN) == topic
+	})
+}
+
+func findNotifications(ctx context.Context, conn *autoscaling.Client, input *autoscaling.DescribeNotificationConfigurationsInput, filter tfslices.Predicate[*awstypes.NotificationConfiguration]) ([]awstypes.NotificationConfiguration, error) {
+	var output []awstypes.NotificationConfiguration
+
+	pages := autoscaling.NewDescribeNotificationConfigurationsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.NotificationConfigurations {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
+	}
+
+	return output, nil
 }

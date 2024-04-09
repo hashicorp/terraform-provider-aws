@@ -65,8 +65,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Lifecycle Hook",
 		},
 		{
-			Factory:  ResourceNotification,
+			Factory:  resourceNotification,
 			TypeName: "aws_autoscaling_notification",
+			Name:     "Notification",
 		},
 		{
 			Factory:  ResourcePolicy,
