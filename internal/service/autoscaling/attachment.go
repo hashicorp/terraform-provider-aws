@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -137,6 +138,10 @@ func resourceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta 
 				return conn.DetachLoadBalancers(ctx, input)
 			},
 			errCodeValidationError, "update too many")
+
+		if tfawserr.ErrMessageContains(err, errCodeValidationError, "Trying to remove Load Balancers that are not part of the group") {
+			return diags
+		}
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "detaching Auto Scaling Group (%s) load balancer (%s): %s", asgName, lbName, err)
