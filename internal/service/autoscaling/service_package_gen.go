@@ -35,8 +35,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Groups",
 		},
 		{
-			Factory:  DataSourceLaunchConfiguration,
+			Factory:  dataSourceLaunchConfiguration,
 			TypeName: "aws_launch_configuration",
+			Name:     "Launch Configuration",
 		},
 	}
 }
