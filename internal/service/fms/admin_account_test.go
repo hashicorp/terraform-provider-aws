@@ -34,7 +34,8 @@ func testAccAdminAccount_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAdminAccountConfig_basic,
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccAdminAccountExists(ctx, resourceName),
 					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
 				),
 			},
@@ -60,6 +61,7 @@ func testAccAdminAccount_disappears(t *testing.T) {
 			{
 				Config: testAccAdminAccountConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
+					testAccAdminAccountExists(ctx, resourceName),
 					acctest.CheckResourceAttrAccountID(resourceName, "account_id"),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tffms.ResourceAdminAccount(), resourceName),
 				),
@@ -92,6 +94,21 @@ func testAccCheckAdminAccountDestroy(ctx context.Context) resource.TestCheckFunc
 		}
 
 		return nil
+	}
+}
+
+func testAccAdminAccountExists(ctx context.Context, n string) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		_, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := acctest.Provider.Meta().(*conns.AWSClient).FMSClient(ctx)
+
+		_, err := tffms.FindAdminAccount(ctx, conn)
+
+		return err
 	}
 }
 

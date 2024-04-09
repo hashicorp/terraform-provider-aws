@@ -11,6 +11,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/fms"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/fms/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -22,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_fms_admin_account")
+// @SDKResource("aws_fms_admin_account", name="Admin Account")
 func resourceAdminAccount() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAdminAccountCreate,
@@ -133,9 +134,9 @@ func findAdminAccount(ctx context.Context, conn *fms.Client) (*fms.GetAdminAccou
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	if status := string(output.RoleStatus); status == string(awstypes.AccountRoleStatusDeleted) {
+	if status := output.RoleStatus; status == awstypes.AccountRoleStatusDeleted {
 		return nil, &retry.NotFoundError{
-			Message:     status,
+			Message:     string(status),
 			LastRequest: input,
 		}
 	}
@@ -161,9 +162,7 @@ func statusAssociateAdminAccount(ctx context.Context, conn *fms.Client, accountI
 
 		// FMS returns an AccessDeniedException if no account is associated,
 		// but does not define this in its error codes.
-
-		// if tfawserr.ErrMessageContains(err, "AccessDeniedException", "is not currently delegated by AWS FM") {
-		if errs.IsAErrorMessageContains[*awstypes.InvalidOperationException](err, "is not currently delegated by AWS FM") {
+		if tfawserr.ErrMessageContains(err, "AccessDeniedException", "is not currently delegated by AWS FM") {
 			return nil, "", nil
 		}
 
@@ -202,10 +201,10 @@ func statusAdminAccount(ctx context.Context, conn *fms.Client) retry.StateRefres
 func waitAdminAccountCreated(ctx context.Context, conn *fms.Client, accountID string, timeout time.Duration) (*fms.GetAdminAccountOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(
-			string(awstypes.AccountRoleStatusDeleted), // Recreating association can return this status.
-			string(awstypes.AccountRoleStatusCreating),
+			awstypes.AccountRoleStatusDeleted, // Recreating association can return this status.
+			awstypes.AccountRoleStatusCreating,
 		),
-		Target:  enum.Slice(string(awstypes.AccountRoleStatusReady)),
+		Target:  enum.Slice(awstypes.AccountRoleStatusReady),
 		Refresh: statusAssociateAdminAccount(ctx, conn, accountID),
 		Timeout: timeout,
 		Delay:   10 * time.Second,
@@ -223,9 +222,9 @@ func waitAdminAccountCreated(ctx context.Context, conn *fms.Client, accountID st
 func waitAdminAccountDeleted(ctx context.Context, conn *fms.Client, timeout time.Duration) (*fms.GetAdminAccountOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(
-			string(awstypes.AccountRoleStatusDeleting),
-			string(awstypes.AccountRoleStatusPendingDeletion),
-			string(awstypes.AccountRoleStatusReady),
+			awstypes.AccountRoleStatusDeleting,
+			awstypes.AccountRoleStatusPendingDeletion,
+			awstypes.AccountRoleStatusReady,
 		),
 		Target:  []string{},
 		Refresh: statusAdminAccount(ctx, conn),

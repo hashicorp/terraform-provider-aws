@@ -31,6 +31,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  resourceAdminAccount,
 			TypeName: "aws_fms_admin_account",
+			Name:     "Admin Account",
 		},
 		{
 			Factory:  resourcePolicy,
