@@ -70,8 +70,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Notification",
 		},
 		{
-			Factory:  ResourcePolicy,
+			Factory:  resourcePolicy,
 			TypeName: "aws_autoscaling_policy",
+			Name:     "Policy",
 		},
 		{
 			Factory:  ResourceSchedule,

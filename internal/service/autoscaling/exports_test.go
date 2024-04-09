@@ -11,6 +11,7 @@ var (
 	ResourceLaunchConfiguration = resourceLaunchConfiguration
 	ResourceLifecycleHook       = resourceLifecycleHook
 	ResourceNotification        = resourceNotification
+	ResourcePolicy              = resourcePolicy
 
 	FindAttachmentByLoadBalancerName = findAttachmentByLoadBalancerName
 	FindAttachmentByTargetGroupARN   = findAttachmentByTargetGroupARN
@@ -19,5 +20,6 @@ var (
 	FindLaunchConfigurationByName    = findLaunchConfigurationByName
 	FindLifecycleHookByTwoPartKey    = findLifecycleHookByTwoPartKey
 	FindNotificationsByTwoPartKey    = findNotificationsByTwoPartKey
+	FindScalingPolicyByTwoPartKey    = findScalingPolicyByTwoPartKey
 	FindTag                          = findTag
 )

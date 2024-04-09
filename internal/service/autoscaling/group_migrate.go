@@ -728,7 +728,7 @@ func resourceGroupV0() *schema.Resource {
 						"pool_state": {
 							Type:     schema.TypeString,
 							Optional: true,
-							Default:  string(awstypes.WarmPoolStateStopped),
+							Default:  awstypes.WarmPoolStateStopped,
 						},
 					},
 				},

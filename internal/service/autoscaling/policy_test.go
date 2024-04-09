@@ -548,13 +548,9 @@ func testAccCheckScalingPolicyExists(ctx context.Context, n string, v *awstypes.
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Auto Scaling Policy ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingClient(ctx)
 
-		output, err := tfautoscaling.FindScalingPolicy(ctx, conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.ID)
+		output, err := tfautoscaling.FindScalingPolicyByTwoPartKey(ctx, conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -575,7 +571,7 @@ func testAccCheckPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfautoscaling.FindScalingPolicy(ctx, conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.ID)
+			_, err := tfautoscaling.FindScalingPolicyByTwoPartKey(ctx, conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.ID)
 
 			if tfresource.NotFound(err) {
 				continue

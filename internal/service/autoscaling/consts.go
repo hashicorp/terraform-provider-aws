@@ -64,19 +64,21 @@ func (desiredCapacityType) Values() []desiredCapacityType {
 	}
 }
 
+type policyType string
+
 const (
-	PolicyTypePredictiveScaling     = "PredictiveScaling"
-	PolicyTypeSimpleScaling         = "SimpleScaling"
-	PolicyTypeStepScaling           = "StepScaling"
-	PolicyTypeTargetTrackingScaling = "TargetTrackingScaling"
+	policyTypePredictiveScaling     policyType = "PredictiveScaling"
+	policyTypeSimpleScaling         policyType = "SimpleScaling"
+	policyTypeStepScaling           policyType = "StepScaling"
+	policyTypeTargetTrackingScaling policyType = "TargetTrackingScaling"
 )
 
-func PolicyType_Values() []string {
-	return []string{
-		PolicyTypePredictiveScaling,
-		PolicyTypeSimpleScaling,
-		PolicyTypeStepScaling,
-		PolicyTypeTargetTrackingScaling,
+func (policyType) Values() []policyType {
+	return []policyType{
+		policyTypePredictiveScaling,
+		policyTypeSimpleScaling,
+		policyTypeStepScaling,
+		policyTypeTargetTrackingScaling,
 	}
 }
 

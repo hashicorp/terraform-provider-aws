@@ -736,7 +736,7 @@ func expandInstanceMetadataOptions(tfMap map[string]interface{}) *awstypes.Insta
 	if v, ok := tfMap["http_endpoint"].(string); ok && v != "" {
 		apiObject.HttpEndpoint = awstypes.InstanceMetadataEndpointState(v)
 
-		if v == string(awstypes.InstanceMetadataEndpointStateEnabled) {
+		if v := awstypes.InstanceMetadataEndpointState(v); v == awstypes.InstanceMetadataEndpointStateEnabled {
 			if v, ok := tfMap["http_tokens"].(string); ok && v != "" {
 				apiObject.HttpTokens = awstypes.InstanceMetadataHttpTokensState(v)
 			}
