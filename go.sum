@@ -22,8 +22,8 @@ github.com/apparentlymart/go-textseg/v15 v15.0.0 h1:uYvfpb3DyLSCGWnctWKGj857c6ew
 github.com/apparentlymart/go-textseg/v15 v15.0.0/go.mod h1:K8XmNZdhEBkdlyDdvbmmsvpAG721bKi0joRfFdHIWJ4=
 github.com/armon/go-radix v1.0.0 h1:F4z6KzEeeQIMeLFa97iZU6vupzoecKdU5TX24SNppXI=
 github.com/armon/go-radix v1.0.0/go.mod h1:ufUuZ+zHj4x4TnLV4JWEpy2hxWSpsRywHrMgIH9cCH8=
-github.com/aws/aws-sdk-go v1.51.16 h1:vnWKK8KjbftEkuPX8bRj3WHsLy1uhotn0eXptpvrxJI=
-github.com/aws/aws-sdk-go v1.51.16/go.mod h1:LF8svs817+Nz+DmiMQKTO3ubZ/6IaTpq3TjupRn3Eqk=
+github.com/aws/aws-sdk-go v1.51.17 h1:Cfa40lCdjv9OxC3X1Ks3a6O1Tu3gOANSyKHOSw/zuWU=
+github.com/aws/aws-sdk-go v1.51.17/go.mod h1:LF8svs817+Nz+DmiMQKTO3ubZ/6IaTpq3TjupRn3Eqk=
 github.com/aws/aws-sdk-go-v2 v1.26.1 h1:5554eUqIYVWpU0YmeeYZ0wU64H2VLBs8TlhRB2L+EkA=
 github.com/aws/aws-sdk-go-v2 v1.26.1/go.mod h1:ffIFB97e2yNsv4aTSGkqtHnppsIJzw7G7BReUZ3jCXM=
 github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.2 h1:x6xsQXGSmW6frevwDA+vi/wqhp1ct18mVXYN08/93to=
@@ -348,8 +348,8 @@ github.com/aws/aws-sdk-go-v2/service/transfer v1.45.0 h1:t8j8kiVkaRtffvv3rhu4dZD
 github.com/aws/aws-sdk-go-v2/service/transfer v1.45.0/go.mod h1:z3NpUj6ziVpg9XHEMdA0xpD/lgjPuZb9R/PBV6Mieb0=
 github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.13.0 h1:AQm+Igee4pjC8dnCLs9svavbQYJ0QyrFA8zECECQs1k=
 github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.13.0/go.mod h1:DKtR1LdOqG21jCPD/b7zMxAFxpelWoGb65rNVTpBaXs=
-github.com/aws/aws-sdk-go-v2/service/vpclattice v1.7.4 h1:JmHbN1cLgrSAj8+rkoCYY94TgTNHKAz7McITVjhQrV0=
-github.com/aws/aws-sdk-go-v2/service/vpclattice v1.7.4/go.mod h1:lwuOe4SF+wdRnUrcPt1tukhJCj4gklxBV6xlD03Uo/8=
+github.com/aws/aws-sdk-go-v2/service/vpclattice v1.7.5 h1:k7JPfsAWnc4vbO/6nksfKdz8lClDacQe5x6fen3vn1A=
+github.com/aws/aws-sdk-go-v2/service/vpclattice v1.7.5/go.mod h1:lwuOe4SF+wdRnUrcPt1tukhJCj4gklxBV6xlD03Uo/8=
 github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.29.4 h1:OuFs453KXWTLBkems7c8+Z4effS7gXB5dqJnDYT2ZqA=
 github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.29.4/go.mod h1:MRT/P9Cwn+7xCCVpD1sTvUESiWMAc9hA+FooRsW5fe8=
 github.com/aws/aws-sdk-go-v2/service/workspaces v1.38.4 h1:SvHYikdxmnyptMebU3zFfXbfU96SHzdUX+KXqa6pjYE=
