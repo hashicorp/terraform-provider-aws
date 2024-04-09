@@ -560,7 +560,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 	if err := d.Set("predictive_scaling_configuration", flattenPredictiveScalingConfig(p.PredictiveScalingConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting predictive_scaling_configuration: %s", err)
 	}
-	if err := d.Set("step_adjustment", FlattenStepAdjustments(p.StepAdjustments)); err != nil {
+	if err := d.Set("step_adjustment", flattenStepAdjustments(p.StepAdjustments)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting step_adjustment: %s", err)
 	}
 	if err := d.Set("target_tracking_configuration", flattenTargetTrackingConfiguration(p.TargetTrackingConfiguration)); err != nil {
@@ -732,7 +732,7 @@ func getPutScalingPolicyInput(d *schema.ResourceData) (*autoscaling.PutScalingPo
 
 	// This parameter is required if the policy type is StepScaling and not supported otherwise.
 	if v, ok := d.GetOk("step_adjustment"); ok {
-		steps, err := ExpandStepAdjustments(v.(*schema.Set).List())
+		steps, err := expandStepAdjustments(v.(*schema.Set).List())
 		if err != nil {
 			return params, fmt.Errorf("metric_interval_lower_bound and metric_interval_upper_bound must be strings!")
 		}

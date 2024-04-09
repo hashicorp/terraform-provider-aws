@@ -13,7 +13,7 @@ import (
 
 // Takes the result of flatmap.Expand for an array of step adjustments and
 // returns a []*awstypes.StepAdjustment.
-func ExpandStepAdjustments(configured []interface{}) ([]awstypes.StepAdjustment, error) {
+func expandStepAdjustments(configured []interface{}) ([]awstypes.StepAdjustment, error) {
 	var adjustments []awstypes.StepAdjustment
 
 	// Loop over our configured step adjustments and create an array
@@ -64,7 +64,7 @@ func ExpandStepAdjustments(configured []interface{}) ([]awstypes.StepAdjustment,
 }
 
 // Flattens step adjustments into a list of map[string]interface.
-func FlattenStepAdjustments(adjustments []awstypes.StepAdjustment) []map[string]interface{} {
+func flattenStepAdjustments(adjustments []awstypes.StepAdjustment) []map[string]interface{} {
 	result := make([]map[string]interface{}, 0, len(adjustments))
 	for _, raw := range adjustments {
 		a := map[string]interface{}{

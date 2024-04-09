@@ -21,7 +21,7 @@ func TestExpandStepAdjustments(t *testing.T) {
 			"scaling_adjustment":          1,
 		},
 	}
-	parameters, err := ExpandStepAdjustments(expanded)
+	parameters, err := expandStepAdjustments(expanded)
 	if err != nil {
 		t.Fatalf("bad: %#v", err)
 	}
@@ -51,7 +51,7 @@ func TestFlattenStepAdjustments(t *testing.T) {
 		},
 	}
 
-	result := FlattenStepAdjustments(expanded)[0]
+	result := flattenStepAdjustments(expanded)[0]
 	if result == nil {
 		t.Fatal("expected result to have value, but got nil")
 	}
