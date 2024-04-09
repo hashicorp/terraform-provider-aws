@@ -224,6 +224,7 @@ func ResourceCluster() *schema.Resource {
 				Type:             schema.TypeList,
 				MaxItems:         1,
 				Optional:         true,
+				Computed:         true,
 				DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{

@@ -41,6 +41,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:    "Data Share Consumer Association",
 		},
 		{
+			Factory: newResourceLogging,
+			Name:    "Logging",
+		},
+		{
 			Factory: newResourceSnapshotCopy,
 			Name:    "Snapshot Copy",
 		},
