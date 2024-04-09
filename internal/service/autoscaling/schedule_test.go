@@ -171,11 +171,11 @@ func TestAccAutoScalingSchedule_negativeOne(t *testing.T) {
 }
 
 func testAccScheduleValidEnd(t *testing.T) string {
-	return testAccScheduleTime(t, "2h")
+	return testAccScheduleTime(t, "12h")
 }
 
 func testAccScheduleValidStart(t *testing.T) string {
-	return testAccScheduleTime(t, "1h")
+	return testAccScheduleTime(t, "6h")
 }
 
 func testAccScheduleTime(t *testing.T, duration string) string {
@@ -192,10 +192,6 @@ func testAccCheckScalingScheduleExists(ctx context.Context, n string, v *awstype
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Auto Scaling Scheduled Action ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingClient(ctx)
@@ -319,8 +315,8 @@ resource "aws_autoscaling_schedule" "test" {
   max_size               = 3
   min_size               = 1
   desired_capacity       = -1
-  start_time             = "%s"
-  end_time               = "%s"
+  start_time             = %[2]q
+  end_time               = %[3]q
   autoscaling_group_name = aws_autoscaling_group.test.name
 }
 `, rName, startTime, endTime))

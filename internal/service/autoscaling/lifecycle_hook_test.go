@@ -101,10 +101,6 @@ func testAccCheckLifecycleHookExists(ctx context.Context, n string) resource.Tes
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Auto Scaling Lifecycle Hook ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingClient(ctx)
 
 		_, err := tfautoscaling.FindLifecycleHookByTwoPartKey(ctx, conn, rs.Primary.Attributes["autoscaling_group_name"], rs.Primary.ID)

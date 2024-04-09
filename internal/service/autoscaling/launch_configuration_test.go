@@ -775,10 +775,6 @@ func testAccCheckLaunchConfigurationExists(ctx context.Context, n string, v *aws
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Auto Scaling Launch Configuration ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingClient(ctx)
 
 		output, err := tfautoscaling.FindLaunchConfigurationByName(ctx, conn, rs.Primary.ID)
@@ -798,10 +794,6 @@ func testAccCheckAMIExists(ctx context.Context, n string, v *ec2.Image) resource
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EC2 AMI ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)

@@ -141,10 +141,6 @@ func testAccCheckGroupTagExists(ctx context.Context, n string) resource.TestChec
 			return fmt.Errorf("not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("%s: missing resource ID", n)
-		}
-
 		identifier, key, err := tftags.GetResourceID(rs.Primary.ID)
 
 		if err != nil {
