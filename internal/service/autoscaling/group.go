@@ -3905,7 +3905,7 @@ func flattenWarmPoolConfiguration(apiObject *awstypes.WarmPoolConfiguration) map
 		tfMap["min_size"] = aws.ToInt32(v)
 	}
 
-	tfMap["pool_state"] = awstypes.WarmPoolState(apiObject.PoolState)
+	tfMap["pool_state"] = apiObject.PoolState
 
 	return tfMap
 }
