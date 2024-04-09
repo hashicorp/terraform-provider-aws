@@ -317,12 +317,14 @@ func resourcePolicy() *schema.Resource {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"metric_interval_lower_bound": {
-								Type:     schema.TypeString,
-								Optional: true,
+								Type:         nullable.TypeNullableFloat,
+								Optional:     true,
+								ValidateFunc: nullable.ValidateTypeStringNullableFloat,
 							},
 							"metric_interval_upper_bound": {
-								Type:     schema.TypeString,
-								Optional: true,
+								Type:         nullable.TypeNullableFloat,
+								Optional:     true,
+								ValidateFunc: nullable.ValidateTypeStringNullableFloat,
 							},
 							"scaling_adjustment": {
 								Type:     schema.TypeInt,
@@ -730,15 +732,13 @@ func expandPutScalingPolicyInput(d *schema.ResourceData) (*autoscaling.PutScalin
 	}
 
 	// This parameter is required if the policy type is StepScaling and not supported otherwise.
-	if v, ok := d.GetOk("step_adjustment"); ok {
-		steps, err := expandStepAdjustments(v.(*schema.Set).List())
-		if err != nil {
-			return input, fmt.Errorf("metric_interval_lower_bound and metric_interval_upper_bound must be strings!")
-		}
-		input.StepAdjustments = steps
+	if v, ok := d.GetOk("step_adjustment"); ok && v.(*schema.Set).Len() > 0 {
+		steps := expandStepAdjustments(v.(*schema.Set).List())
 		if len(steps) != 0 && policyType != policyTypeStepScaling {
 			return input, fmt.Errorf("step_adjustment is only supported for policy type StepScaling")
 		}
+
+		input.StepAdjustments = expandStepAdjustments(v.(*schema.Set).List())
 	} else if !ok && policyType == policyTypeStepScaling {
 		return input, fmt.Errorf("step_adjustment is required for policy type StepScaling")
 	}
