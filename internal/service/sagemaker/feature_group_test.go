@@ -30,6 +30,7 @@ func TestAccSageMakerFeatureGroup_serial(t *testing.T) {
 		"description":                   testAccFeatureGroup_description,
 		"disappears":                    TestAccSageMakerFeatureGroup_disappears,
 		"multipleFeatures":              testAccFeatureGroup_multipleFeatures,
+		"featureDefinitionUpdate":       testAccFeatureGroup_featureDefinition_update,
 		"offlineConfig_basic":           testAccFeatureGroup_offlineConfig_basic,
 		"offlineConfig_format":          testAccFeatureGroup_offlineConfig_format,
 		"offlineConfig_createCatalog":   testAccFeatureGroup_offlineConfig_createCatalog,
