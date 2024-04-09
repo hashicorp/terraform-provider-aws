@@ -12,10 +12,12 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -65,6 +67,13 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 			"description": schema.StringAttribute{
 				Optional: true,
 			},
+			"created_at": schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"id": framework.IDAttribute(),
 			"name": schema.StringAttribute{
 				Required: true,
@@ -75,6 +84,19 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
+			"failure_reasons": schema.ListAttribute{
+				CustomType:  fwtypes.ListOfStringType,
+				ElementType: types.StringType,
+				Computed:    true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
+			},
+			"updated_at": schema.StringAttribute{
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
+			},
+
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
@@ -349,11 +371,14 @@ func (r *knowledgeBaseResource) Create(ctx context.Context, request resource.Cre
 		return
 	}
 
-	// var knowledgeBase knowledgeBaseResourceModel
 	response.Diagnostics.Append(fwflex.Flatten(ctx, knowledgebase, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	// Set values for unknowns after creation is complete.
+	data.CreatedAt = fwflex.TimeToFramework(ctx, knowledgebase.CreatedAt)
+	data.UpdatedAt = fwflex.TimeToFramework(ctx, knowledgebase.UpdatedAt)
 
 	response.Diagnostics.Append(response.State.Set(ctx, data)...)
 }
@@ -381,11 +406,14 @@ func (r *knowledgeBaseResource) Read(ctx context.Context, request resource.ReadR
 		return
 	}
 
-	// var knowledgeBase knowledgeBaseResourceModel
 	response.Diagnostics.Append(fwflex.Flatten(ctx, knowledgebase, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	// Set values for unknowns after creation is complete.
+	data.CreatedAt = fwflex.TimeToFramework(ctx, knowledgebase.CreatedAt)
+	data.UpdatedAt = fwflex.TimeToFramework(ctx, knowledgebase.UpdatedAt)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -424,7 +452,7 @@ func (r *knowledgeBaseResource) Update(ctx context.Context, request resource.Upd
 	}
 
 	updateTimeout := r.UpdateTimeout(ctx, new.Timeouts)
-	_, err := waitKnowledgeBaseUpdated(ctx, conn, new.KnowledgeBaseId.ValueString(), updateTimeout)
+	knowledgebase, err := waitKnowledgeBaseUpdated(ctx, conn, new.KnowledgeBaseId.ValueString(), updateTimeout)
 	if err != nil {
 		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionWaitingForUpdate, ResNameKnowledgeBase, new.KnowledgeBaseId.String(), err),
@@ -432,6 +460,15 @@ func (r *knowledgeBaseResource) Update(ctx context.Context, request resource.Upd
 		)
 		return
 	}
+
+	response.Diagnostics.Append(fwflex.Flatten(ctx, knowledgebase, &new)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	// Set values for unknowns after update is complete.
+	new.CreatedAt = fwflex.TimeToFramework(ctx, knowledgebase.CreatedAt)
+	new.UpdatedAt = fwflex.TimeToFramework(ctx, knowledgebase.UpdatedAt)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
@@ -573,7 +610,10 @@ func findKnowledgeBaseByID(ctx context.Context, conn *bedrockagent.Client, id st
 }
 
 type knowledgeBaseResourceModel struct {
+	CreatedAt                  timetypes.RFC3339                                                `tfsdk:"created_at"`
+	UpdatedAt                  timetypes.RFC3339                                                `tfsdk:"updated_at"`
 	Description                types.String                                                     `tfsdk:"description"`
+	FailureReasons             fwtypes.ListValueOf[types.String]                                `tfsdk:"failure_reasons"`
 	KnowledgeBaseARN           types.String                                                     `tfsdk:"arn"`
 	KnowledgeBaseConfiguration fwtypes.ListNestedObjectValueOf[knowledgeBaseConfigurationModel] `tfsdk:"knowledge_base_configuration"`
 	KnowledgeBaseId            types.String                                                     `tfsdk:"id"`
