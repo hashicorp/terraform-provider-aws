@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"go/format"
 	"os"
+	"path"
 	"strings"
 	"text/template"
 
@@ -19,6 +20,7 @@ type Generator struct {
 }
 
 type Destination interface {
+	CreateDirectories() error
 	Write() error
 	WriteBytes(body []byte) error
 	WriteTemplate(templateName, templateBody string, templateData any) error
@@ -36,23 +38,35 @@ func NewGenerator() *Generator {
 
 func (g *Generator) NewGoFileDestination(filename string) Destination {
 	return &fileDestination{
-		filename:  filename,
-		formatter: format.Source,
+		baseDestination: baseDestination{formatter: format.Source},
+		filename:        filename,
 	}
 }
 
 func (g *Generator) NewUnformattedFileDestination(filename string) Destination {
 	return &fileDestination{
-		filename:  filename,
-		formatter: func(b []byte) ([]byte, error) { return b, nil },
+		filename: filename,
 	}
 }
 
 type fileDestination struct {
-	append    bool
-	filename  string
-	formatter func([]byte) ([]byte, error)
-	buffer    strings.Builder
+	baseDestination
+	append   bool
+	filename string
+}
+
+func (d *fileDestination) CreateDirectories() error {
+	const (
+		perm os.FileMode = 0755
+	)
+	dirname := path.Dir(d.filename)
+	err := os.MkdirAll(dirname, perm)
+
+	if err != nil {
+		return fmt.Errorf("creating target directory %s: %w", dirname, err)
+	}
+
+	return nil
 }
 
 func (d *fileDestination) Write() error {
@@ -79,22 +93,34 @@ func (d *fileDestination) Write() error {
 	return nil
 }
 
-func (d *fileDestination) WriteBytes(body []byte) error {
+type stdOutDestination struct {
+	baseDestination
+}
+
+type baseDestination struct {
+	formatter func([]byte) ([]byte, error)
+	buffer    strings.Builder
+}
+
+func (d *baseDestination) WriteBytes(body []byte) error {
 	_, err := d.buffer.Write(body)
 	return err
 }
 
-func (d *fileDestination) WriteTemplate(templateName, templateBody string, templateData any) error {
-	unformattedBody, err := parseTemplate(templateName, templateBody, templateData)
+func (d *baseDestination) WriteTemplate(templateName, templateBody string, templateData any) error {
+	body, err := parseTemplate(templateName, templateBody, templateData)
 
 	if err != nil {
 		return err
 	}
 
-	body, err := d.formatter(unformattedBody)
+	if d.formatter != nil {
+		unformattedBody := body
+		body, err = d.formatter(unformattedBody)
 
-	if err != nil {
-		return fmt.Errorf("formatting parsed template:\n%s\n%w", unformattedBody, err)
+		if err != nil {
+			return fmt.Errorf("formatting parsed template:\n%s\n%w", unformattedBody, err)
+		}
 	}
 
 	_, err = d.buffer.Write(body)
