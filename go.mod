@@ -63,6 +63,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.23.4
 	github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.4.4
 	github.com/aws/aws-sdk-go-v2/service/customerprofiles v1.36.4
+	github.com/aws/aws-sdk-go-v2/service/datasync v1.36.4
 	github.com/aws/aws-sdk-go-v2/service/datazone v1.8.0
 	github.com/aws/aws-sdk-go-v2/service/dax v1.19.4
 	github.com/aws/aws-sdk-go-v2/service/devopsguru v1.30.4

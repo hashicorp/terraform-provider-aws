@@ -10,8 +10,9 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/datasync"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/datasync"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/datasync/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -205,7 +206,7 @@ func TestAccDataSyncAgent_vpcEndpointID(t *testing.T) {
 
 func testAccCheckAgentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_datasync_agent" {
@@ -236,7 +237,7 @@ func testAccCheckAgentExists(ctx context.Context, n string, v *datasync.Describe
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncClient(ctx)
 
 		output, err := tfdatasync.FindAgentByARN(ctx, conn, rs.Primary.ID)
 
@@ -252,7 +253,7 @@ func testAccCheckAgentExists(ctx context.Context, n string, v *datasync.Describe
 
 func testAccCheckAgentNotRecreated(i, j *datasync.DescribeAgentOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if !aws.TimeValue(i.CreationTime).Equal(aws.TimeValue(j.CreationTime)) {
+		if !aws.ToTime(i.CreationTime).Equal(aws.ToTime(j.CreationTime)) {
 			return errors.New("DataSync Agent was recreated")
 		}
 
