@@ -8,11 +8,12 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ecr"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfecr "github.com/hashicorp/terraform-provider-aws/internal/service/ecr"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -21,6 +22,7 @@ func TestAccECRReplicationConfiguration_serial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		"basic":            testAccReplicationConfiguration_basic,
+		"disappears":       testAccReplicationConfiguration_disappears,
 		"repositoryFilter": testAccReplicationConfiguration_repositoryFilter,
 	}
 
@@ -87,6 +89,28 @@ func testAccReplicationConfiguration_basic(t *testing.T) {
 	})
 }
 
+func testAccReplicationConfiguration_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_ecr_replication_configuration.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECRServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationConfigurationDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationConfigurationConfig_basic(acctest.AlternateRegion()),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckReplicationConfigurationExists(ctx, resourceName),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfecr.ResourceReplicationConfiguration(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccReplicationConfiguration_repositoryFilter(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ecr_replication_configuration.test"
@@ -146,44 +170,41 @@ func testAccReplicationConfiguration_repositoryFilter(t *testing.T) {
 	})
 }
 
-func testAccCheckReplicationConfigurationExists(ctx context.Context, name string) resource.TestCheckFunc {
+func testAccCheckReplicationConfigurationExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		_, ok := s.RootModule().Resources[name]
+		_, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", name)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn(ctx)
-		out, err := conn.DescribeRegistryWithContext(ctx, &ecr.DescribeRegistryInput{})
-		if err != nil {
-			return fmt.Errorf("ECR replication rules not found: %w", err)
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRClient(ctx)
 
-		if len(out.ReplicationConfiguration.Rules) == 0 {
-			return fmt.Errorf("ECR replication rules not found")
-		}
+		_, err := tfecr.FindReplicationConfiguration(ctx, conn)
 
-		return nil
+		return err
 	}
 }
 
 func testAccCheckReplicationConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ECRClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_ecr_replication_configuration" {
 				continue
 			}
 
-			out, err := conn.DescribeRegistryWithContext(ctx, &ecr.DescribeRegistryInput{})
+			_, err := tfecr.FindReplicationConfiguration(ctx, conn)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
 			if err != nil {
 				return err
 			}
 
-			if len(out.ReplicationConfiguration.Rules) != 0 {
-				return fmt.Errorf("ECR replication rules found")
-			}
+			return fmt.Errorf("ECR Replication Configuration %s still exists", rs.Primary.ID)
 		}
 
 		return nil

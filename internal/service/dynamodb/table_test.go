@@ -2663,17 +2663,7 @@ func testAccCheckReplicaExists(ctx context.Context, n string, region string, v *
 			return fmt.Errorf("no DynamoDB table name specified!")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn(ctx)
-		terraformVersion := acctest.Provider.Meta().(*conns.AWSClient).TerraformVersion
-
-		if aws.StringValue(conn.Config.Region) != region {
-			session, err := conns.NewSessionForRegion(&conn.Config, region, terraformVersion)
-			if err != nil {
-				return create.Error(names.DynamoDB, create.ErrActionChecking, tfdynamodb.ResNameTable, rs.Primary.ID, err)
-			}
-
-			conn = dynamodb.New(session)
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConnForRegion(ctx, region)
 
 		output, err := tfdynamodb.FindTableByName(ctx, conn, rs.Primary.ID)
 
@@ -2698,17 +2688,7 @@ func testAccCheckReplicaHasTags(ctx context.Context, n string, region string, co
 			return fmt.Errorf("no DynamoDB table name specified!")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConn(ctx)
-		terraformVersion := acctest.Provider.Meta().(*conns.AWSClient).TerraformVersion
-
-		if aws.StringValue(conn.Config.Region) != region {
-			session, err := conns.NewSessionForRegion(&conn.Config, region, terraformVersion)
-			if err != nil {
-				return create.Error(names.DynamoDB, create.ErrActionChecking, tfdynamodb.ResNameTable, rs.Primary.ID, err)
-			}
-
-			conn = dynamodb.New(session)
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DynamoDBConnForRegion(ctx, region)
 
 		newARN, err := tfdynamodb.ARNForNewRegion(rs.Primary.Attributes[names.AttrARN], region)
 

@@ -91,6 +91,13 @@ func main() {
 	}
 }
 
+type implementation string
+
+const (
+	implementationFramework implementation = "framework"
+	implementationSDK       implementation = "sdk"
+)
+
 type ResourceDatum struct {
 	ProviderPackage   string
 	ProviderNameUpper string
@@ -101,6 +108,7 @@ type ResourceDatum struct {
 	FileName          string
 	Generator         string
 	ImportIgnore      []string
+	Implementation    implementation
 }
 
 //go:embed file.tmpl
@@ -174,6 +182,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		if m := annotation.FindStringSubmatch(line); len(m) > 0 {
 			switch annotationName := m[1]; annotationName {
 			case "FrameworkResource":
+				d.Implementation = implementationFramework
 				args := common.ParseArgs(m[3])
 				if len(args.Positional) == 0 {
 					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
@@ -185,6 +194,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 
 			case "SDKResource":
+				d.Implementation = implementationSDK
 				args := common.ParseArgs(m[3])
 				if len(args.Positional) == 0 {
 					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))

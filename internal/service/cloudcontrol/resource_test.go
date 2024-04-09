@@ -316,7 +316,7 @@ func TestAccCloudControlResource_DesiredState_objectValueAdded(t *testing.T) {
 			{
 				Config: testAccResourceConfig_desiredStateObjectValueRemoved(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "properties", regexache.MustCompile(`"Name":`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexache.MustCompile(`"ClusterName":`)),
 				),
 			},
 			{
@@ -349,7 +349,7 @@ func TestAccCloudControlResource_DesiredState_objectValueRemoved(t *testing.T) {
 			{
 				Config: testAccResourceConfig_desiredStateObjectValueRemoved(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestMatchResourceAttr(resourceName, "properties", regexache.MustCompile(`"Name":`)),
+					resource.TestMatchResourceAttr(resourceName, "properties", regexache.MustCompile(`"ClusterName":`)),
 				),
 			},
 		},
@@ -753,7 +753,7 @@ resource "aws_cloudcontrolapi_resource" "test" {
   desired_state = jsonencode({
     Role    = aws_iam_role.test.arn
     Handler = "index.main"
-    Runtime = "python3.7"
+    Runtime = "python3.12"
     Timeout = 300
     Code    = { ZipFile = "def main(event, context): pass" }
   })

@@ -1156,7 +1156,7 @@ func expandAlarms(tfMap map[string]interface{}) *ecs.DeploymentAlarms {
 		apiObject.Enable = aws.Bool(v)
 	}
 
-	if v, ok := tfMap["enable"].(bool); ok {
+	if v, ok := tfMap["rollback"].(bool); ok {
 		apiObject.Rollback = aws.Bool(v)
 	}
 

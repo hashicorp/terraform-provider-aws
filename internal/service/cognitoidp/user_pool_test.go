@@ -1500,6 +1500,12 @@ func TestAccCognitoIDPUserPool_withVerificationMessageTemplate(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cognito_user_pool.test"
 
+	emailMessage := "foo {####} bar"
+	emailMessageByLink := "{##foobar##}"
+	emailSubject := "foobar {####}"
+	emailSubjectByLink := "foobar"
+	smsMessage := "{####} baz"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
@@ -1507,22 +1513,22 @@ func TestAccCognitoIDPUserPool_withVerificationMessageTemplate(t *testing.T) {
 		CheckDestroy:             testAccCheckUserPoolDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccUserPoolConfig_verificationMessageTemplate(rName),
+				Config: testAccUserPoolConfig_verificationMessageTemplate(rName, emailMessage, emailMessageByLink, emailSubject, emailSubjectByLink, smsMessage),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckUserPoolExists(ctx, resourceName, &pool),
 					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.default_email_option", "CONFIRM_WITH_LINK"),
-					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.email_message", "foo {####} bar"),
-					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.email_message_by_link", "{##foobar##}"),
-					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.email_subject", "foobar {####}"),
-					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.email_subject_by_link", "foobar"),
-					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.sms_message", "{####} baz"),
+					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.email_message", emailMessage),
+					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.email_message_by_link", emailMessageByLink),
+					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.email_subject", emailSubject),
+					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.email_subject_by_link", emailSubjectByLink),
+					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.sms_message", smsMessage),
 
 					/* Setting Verification template attributes like EmailMessage, EmailSubject or SmsMessage
 					will implicitly set EmailVerificationMessage, EmailVerificationSubject and SmsVerificationMessage attributes.
 					*/
-					resource.TestCheckResourceAttr(resourceName, "email_verification_message", "foo {####} bar"),
-					resource.TestCheckResourceAttr(resourceName, "email_verification_subject", "foobar {####}"),
-					resource.TestCheckResourceAttr(resourceName, "sms_verification_message", "{####} baz"),
+					resource.TestCheckResourceAttr(resourceName, "email_verification_message", emailMessage),
+					resource.TestCheckResourceAttr(resourceName, "email_verification_subject", emailSubject),
+					resource.TestCheckResourceAttr(resourceName, "sms_verification_message", smsMessage),
 				),
 			},
 			{
@@ -1531,19 +1537,81 @@ func TestAccCognitoIDPUserPool_withVerificationMessageTemplate(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccUserPoolConfig_verificationMessageTemplateDefaultEmailOption(rName),
+				Config: testAccUserPoolConfig_verificationMessageTemplateDefaultEmailOption(rName, emailMessage, emailSubject, smsMessage),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.default_email_option", "CONFIRM_WITH_CODE"),
-					resource.TestCheckResourceAttr(resourceName, "email_verification_message", "{####} Baz"),
-					resource.TestCheckResourceAttr(resourceName, "email_verification_subject", "BazBaz {####}"),
-					resource.TestCheckResourceAttr(resourceName, "sms_verification_message", "{####} BazBazBar?"),
+					resource.TestCheckResourceAttr(resourceName, "email_verification_message", emailMessage),
+					resource.TestCheckResourceAttr(resourceName, "email_verification_subject", emailSubject),
+					resource.TestCheckResourceAttr(resourceName, "sms_verification_message", smsMessage),
 
 					/* Setting EmailVerificationMessage, EmailVerificationSubject and SmsVerificationMessage attributes
 					will implicitly set verification template attributes like EmailMessage, EmailSubject or SmsMessage.
 					*/
-					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.email_message", "{####} Baz"),
-					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.email_subject", "BazBaz {####}"),
-					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.sms_message", "{####} BazBazBar?"),
+					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.email_message", emailMessage),
+					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.email_subject", emailSubject),
+					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.sms_message", smsMessage),
+				),
+			},
+		},
+	})
+}
+
+func TestAccCognitoIDPUserPool_withVerificationMessageTemplateUTF8(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pool cognitoidentityprovider.UserPoolType
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cognito_user_pool.test"
+
+	emailMessage := "{####}" + strings.Repeat("あ", 994)             // = 1000
+	emailMessageByLink := "{##foobar##}" + strings.Repeat("い", 988) // = 1000
+	emailSubject := strings.Repeat("う", 140)
+	emailSubjectByLink := strings.Repeat("え", 140)
+	smsMessage := "{####}" + strings.Repeat("お", 134) // = 140
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckIdentityProvider(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CognitoIDPServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckUserPoolDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccUserPoolConfig_verificationMessageTemplate(rName, emailMessage, emailMessageByLink, emailSubject, emailSubjectByLink, smsMessage),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckUserPoolExists(ctx, resourceName, &pool),
+					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.default_email_option", "CONFIRM_WITH_LINK"),
+					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.email_message", emailMessage),
+					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.email_message_by_link", emailMessageByLink),
+					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.email_subject", emailSubject),
+					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.email_subject_by_link", emailSubjectByLink),
+					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.sms_message", smsMessage),
+
+					/* Setting Verification template attributes like EmailMessage, EmailSubject or SmsMessage
+					will implicitly set EmailVerificationMessage, EmailVerificationSubject and SmsVerificationMessage attributes.
+					*/
+					resource.TestCheckResourceAttr(resourceName, "email_verification_message", emailMessage),
+					resource.TestCheckResourceAttr(resourceName, "email_verification_subject", emailSubject),
+					resource.TestCheckResourceAttr(resourceName, "sms_verification_message", smsMessage),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccUserPoolConfig_verificationMessageTemplateDefaultEmailOption(rName, emailMessage, emailSubject, smsMessage),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.default_email_option", "CONFIRM_WITH_CODE"),
+					resource.TestCheckResourceAttr(resourceName, "email_verification_message", emailMessage),
+					resource.TestCheckResourceAttr(resourceName, "email_verification_subject", emailSubject),
+					resource.TestCheckResourceAttr(resourceName, "sms_verification_message", smsMessage),
+
+					/* Setting EmailVerificationMessage, EmailVerificationSubject and SmsVerificationMessage attributes
+					will implicitly set verification template attributes like EmailMessage, EmailSubject or SmsMessage.
+					*/
+					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.email_message", emailMessage),
+					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.email_subject", emailSubject),
+					resource.TestCheckResourceAttr(resourceName, "verification_message_template.0.sms_message", smsMessage),
 				),
 			},
 		},
@@ -2657,7 +2725,7 @@ resource "aws_cognito_user_pool" "test" {
 `, name)
 }
 
-func testAccUserPoolConfig_verificationMessageTemplate(name string) string {
+func testAccUserPoolConfig_verificationMessageTemplate(name, emailMessage, emailMessageByLink, emailSubject, emailSubjectByLink, smsMessage string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q
@@ -2668,30 +2736,30 @@ resource "aws_cognito_user_pool" "test" {
 
   verification_message_template {
     default_email_option  = "CONFIRM_WITH_LINK"
-    email_message         = "foo {####} bar"
-    email_message_by_link = "{##foobar##}"
-    email_subject         = "foobar {####}"
-    email_subject_by_link = "foobar"
-    sms_message           = "{####} baz"
+    email_message         = %[2]q
+    email_message_by_link = %[3]q
+    email_subject         = %[4]q
+    email_subject_by_link = %[5]q
+    sms_message           = %[6]q
   }
 }
-`, name)
+`, name, emailMessage, emailMessageByLink, emailSubject, emailSubjectByLink, smsMessage)
 }
 
-func testAccUserPoolConfig_verificationMessageTemplateDefaultEmailOption(name string) string {
+func testAccUserPoolConfig_verificationMessageTemplateDefaultEmailOption(name, emailVerificationMessage, emailVerificationSubject, smsVerificationMessage string) string {
 	return fmt.Sprintf(`
 resource "aws_cognito_user_pool" "test" {
   name = %[1]q
 
-  email_verification_message = "{####} Baz"
-  email_verification_subject = "BazBaz {####}"
-  sms_verification_message   = "{####} BazBazBar?"
+  email_verification_message = %[2]q
+  email_verification_subject = %[3]q
+  sms_verification_message   = %[4]q
 
   verification_message_template {
     default_email_option = "CONFIRM_WITH_CODE"
   }
 }
-`, name)
+`, name, emailVerificationMessage, emailVerificationSubject, smsVerificationMessage)
 }
 
 func testAccUserPoolConfig_update(name string, mfaconfig, smsAuthMsg string) string {

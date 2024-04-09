@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
@@ -127,6 +128,14 @@ func FlattenStringValueList(list []string) []interface{} {
 	return vs
 }
 
+func FlattenStringyValueList[E ~string](configured []E) []any {
+	vs := make([]interface{}, 0, len(configured))
+	for _, v := range configured {
+		vs = append(vs, string(v))
+	}
+	return vs
+}
+
 // Expands a map of string to interface to a map of string to int32
 func ExpandInt32Map(m map[string]interface{}) map[string]int32 {
 	return tfmaps.ApplyToAllValues(m, func(v any) int32 {
@@ -207,6 +216,14 @@ func FlattenStringValueSet(list []string) *schema.Set {
 	return schema.NewSet(schema.HashString, FlattenStringValueList(list)) // nosemgrep: helper-schema-Set-extraneous-NewSet-with-FlattenStringList
 }
 
+func FlattenStringValueSetCaseInsensitive(list []string) *schema.Set {
+	return schema.NewSet(sdkv2.StringCaseInsensitiveSetFunc, FlattenStringValueList(list)) // nosemgrep: helper-schema-Set-extraneous-NewSet-with-FlattenStringList
+}
+
+func FlattenStringyValueSet[E ~string](list []E) *schema.Set {
+	return schema.NewSet(schema.HashString, FlattenStringyValueList[E](list))
+}
+
 func FlattenStringMap(m map[string]*string) map[string]interface{} {
 	return tfmaps.ApplyToAllValues(m, func(v *string) any {
 		return aws.StringValue(v)
@@ -220,6 +237,14 @@ func ExpandInt64Set(configured *schema.Set) []*int64 {
 
 func FlattenInt64Set(list []*int64) *schema.Set {
 	return schema.NewSet(schema.HashInt, FlattenInt64List(list))
+}
+
+// Takes the result of flatmap.Expand for an array of int32
+// and returns a []int32
+func ExpandInt32ValueList(configured []interface{}) []int32 {
+	return tfslices.ApplyToAll(configured, func(v any) int32 {
+		return int32(v.(int))
+	})
 }
 
 // Takes the result of flatmap.Expand for an array of int64
@@ -339,6 +364,11 @@ func Float64ToStringValue(v *float64) string {
 // IntValueToString converts a Go int value to a string pointer.
 func IntValueToString(v int) *string {
 	return aws.String(strconv.Itoa(v))
+}
+
+// Int64ToStringValue converts an int64 pointer to a Go string value.
+func Int32ToStringValue(v *int32) string {
+	return strconv.FormatInt(int64(aws.Int32Value(v)), 10)
 }
 
 // Int64ToStringValue converts an int64 pointer to a Go string value.
