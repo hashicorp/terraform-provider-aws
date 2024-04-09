@@ -76,7 +76,7 @@ func ResourceNetworkInterface() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"tcp_established_timeout": {
-							Type:         schema.TypeString,
+							Type:         schema.TypeInt,
 							Optional:     true,
 							Default:      432000,
 							ValidateFunc: validation.IntBetween(60, 432000),
@@ -88,7 +88,7 @@ func ResourceNetworkInterface() *schema.Resource {
 							ValidateFunc: validation.IntBetween(60, 180),
 						},
 						"udp_timeout": {
-							Type:         schema.TypeString,
+							Type:         schema.TypeInt,
 							Optional:     true,
 							Default:      30,
 							ValidateFunc: validation.IntBetween(30, 60),
