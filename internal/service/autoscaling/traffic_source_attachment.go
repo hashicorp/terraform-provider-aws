@@ -13,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -136,6 +137,10 @@ func resourceTrafficSourceAttachmentDelete(ctx context.Context, d *schema.Resour
 		AutoScalingGroupName: aws.String(asgName),
 		TrafficSources:       []awstypes.TrafficSourceIdentifier{trafficSource},
 	})
+
+	if tfawserr.ErrMessageContains(err, errCodeValidationError, "not found") {
+		return diags
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Auto Scaling Traffic Source Attachment (%s): %s", d.Id(), err)
