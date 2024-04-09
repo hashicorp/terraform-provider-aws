@@ -3594,7 +3594,7 @@ func flattenInstanceRequirements(apiObject *awstypes.InstanceRequirements) map[s
 	}
 
 	if apiObject.AcceleratorManufacturers != nil {
-		tfMap["accelerator_manufacturers"] = apiObject.AcceleratorNames
+		tfMap["accelerator_manufacturers"] = apiObject.AcceleratorManufacturers
 	}
 
 	if apiObject.AcceleratorNames != nil {
@@ -3656,7 +3656,7 @@ func flattenInstanceRequirements(apiObject *awstypes.InstanceRequirements) map[s
 	}
 
 	if v := apiObject.OnDemandMaxPricePercentageOverLowestPrice; v != nil {
-		tfMap["on_demand_max_price_percentage_over_lowest_price"] = flex.Int32ToStringValue(v)
+		tfMap["on_demand_max_price_percentage_over_lowest_price"] = aws.ToInt32(v)
 	}
 
 	if v := apiObject.RequireHibernateSupport; v != nil {
@@ -3664,7 +3664,7 @@ func flattenInstanceRequirements(apiObject *awstypes.InstanceRequirements) map[s
 	}
 
 	if v := apiObject.SpotMaxPricePercentageOverLowestPrice; v != nil {
-		tfMap["spot_max_price_percentage_over_lowest_price"] = flex.Int32ToStringValue(v)
+		tfMap["spot_max_price_percentage_over_lowest_price"] = aws.ToInt32(v)
 	}
 
 	if v := apiObject.TotalLocalStorageGB; v != nil {
