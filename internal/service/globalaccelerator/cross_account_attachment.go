@@ -53,8 +53,14 @@ func (r *resourceCrossAccountAttachment) Metadata(_ context.Context, req resourc
 func (r *resourceCrossAccountAttachment) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	resp.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"attachment_arn": framework.ARNAttributeComputedOnly(),
-			"id":             framework.IDAttribute(),
+			"arn": framework.ARNAttributeComputedOnly(),
+			"created_time": schema.StringAttribute{
+				Computed: true,
+			},
+			"id": framework.IDAttribute(),
+			"last_modified_time": schema.StringAttribute{
+				Computed: true,
+			},
 			"name": schema.StringAttribute{
 				Required: true,
 				PlanModifiers: []planmodifier.String{
@@ -68,12 +74,6 @@ func (r *resourceCrossAccountAttachment) Schema(ctx context.Context, req resourc
 			"resources": schema.ListAttribute{
 				Optional:    true,
 				ElementType: ResourceDataElementType,
-			},
-			"created_time": schema.StringAttribute{
-				Computed: true,
-			},
-			"last_modified_time": schema.StringAttribute{
-				Computed: true,
 			},
 		},
 	}
@@ -517,7 +517,7 @@ func diffSlices(oldSlice, newSlice []string) (toAdd, toRemove map[string]struct{
 
 type resourceCrossAccountAttachmentData struct {
 	ID               types.String `tfsdk:"id"`
-	ARN              types.String `tfsdk:"attachment_arn"`
+	ARN              types.String `tfsdk:"arn"`
 	Name             types.String `tfsdk:"name"`
 	Principals       types.List   `tfsdk:"principals"`
 	Resources        types.List   `tfsdk:"resources"`
