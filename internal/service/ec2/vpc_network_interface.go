@@ -384,8 +384,8 @@ func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData,
 		input.Ipv4Prefixes = expandIPv4PrefixSpecificationRequests(v.(*schema.Set).List())
 	}
 
-	if v, ok := tfMap["connection_tracking_specification_request"].([]interface{}); ok && len(v) > 0 {
-		apiObject.ConnectionTrackingSpecificationRequest = expandConnectionTrackingSpecificationRequest(v[0].(map[string]interface{}))
+	if v, ok := d.GetOk("connection_tracking_specification_request"); ok && v.(*schema.Set).Len() > 0 {
+		input.ConnectionTrackingSpecification = expandConnectionTrackingSpecificationRequest(v.(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("ipv4_prefix_count"); ok {
@@ -585,8 +585,8 @@ func resourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData, m
 	if err := d.Set("security_groups", FlattenGroupIdentifiers(eni.Groups)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting security_groups: %s", err)
 	}
-	if v := eni.ConnectionTrackingSpecificationRequest; v != nil {
-		tfMap["connection_tracking_specification_request"] = []interface{}{flattenConnectionTrackingSpecificationRequest(v)}
+	if err := d.Set("connection_tracking_specification_request", flattenConnectionTrackingConfiguration(eni.ConnectionTrackingConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting connection_tracking_specification_request: %s", err)
 	}
 	d.Set("source_dest_check", eni.SourceDestCheck)
 	d.Set("subnet_id", eni.SubnetId)
@@ -1070,8 +1070,8 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 
 	if d.HasChange("connection_tracking_specification_request") {
 		input := &ec2.ModifyNetworkInterfaceAttributeInput{
-			NetworkInterfaceId:                     aws.String(d.Id()),
-			ConnectionTrackingSpecificationRequest: expandConnectionTrackingSpecificationRequestUpdate(tfMap["connection_tracking_specification_request"].([]interface{})),
+			NetworkInterfaceId:              aws.String(d.Id()),
+			ConnectionTrackingSpecification: expandConnectionTrackingSpecificationRequestUpdate(d.Get("connection_tracking_specification_request").([]interface{})),
 		}
 
 		_, err := conn.ModifyNetworkInterfaceAttributeWithContext(ctx, input)
@@ -1342,22 +1342,22 @@ func expandConnectionTrackingSpecificationRequestUpdate(l []interface{}) *ec2.Co
 
 	apiObject := &ec2.ConnectionTrackingSpecificationRequest{}
 
-	if v, ok := tfMap["tcp_established_timeout"].(int); ok {
+	if v, ok := m["tcp_established_timeout"].(int); ok {
 		apiObject.TcpEstablishedTimeout = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["udp_stream_timeout"].(int); ok {
+	if v, ok := m["udp_stream_timeout"].(int); ok {
 		apiObject.UdpStreamTimeout = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["udp_timeout"].(int); ok {
+	if v, ok := m["udp_timeout"].(int); ok {
 		apiObject.UdpTimeout = aws.Int64(int64(v))
 	}
 
 	return apiObject
 }
 
-func flattenConnectionTrackingSpecificationRequest(apiObject *ec2.ConnectionTrackingSpecificationRequest) map[string]interface{} {
+func flattenConnectionTrackingConfiguration(apiObject *ec2.ConnectionTrackingConfiguration) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}

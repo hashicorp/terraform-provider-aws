@@ -986,7 +986,7 @@ func TestAccVPCNetworkInterface_connectionTrackingSpecificationRequest(t *testin
 		CheckDestroy:             testAccCheckENIDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccVPCNetworkInterfaceConfig_connectionTrackingSpecificationRequest(rName, 120),
+				Config: testAccVPCNetworkInterfaceConfig_connectionTrackingSpecificationRequest(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckENIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "connection_tracking_specification_request.#", "1"),
@@ -1000,7 +1000,7 @@ func TestAccVPCNetworkInterface_connectionTrackingSpecificationRequest(t *testin
 				ImportStateVerifyIgnore: []string{"private_ip_list_enabled", "ipv6_address_list_enabled"},
 			},
 			{
-				Config: testAccVPCNetworkInterfaceConfig_connectionTrackingSpecificationRequest(rName, 180),
+				Config: testAccVPCNetworkInterfaceConfig_connectionTrackingSpecificationRequestUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckENIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "connection_tracking_specification_request.#", "2"),
@@ -1596,13 +1596,25 @@ resource "aws_network_interface" "test" {
 `, strings.Join(privateIPs, `", "`)))
 }
 
-func testAccVPCNetworkInterfaceConfig_connectionTrackingSpecificationRequest(rName string, tcp_established_timeout int) string {
+func testAccVPCNetworkInterfaceConfig_connectionTrackingSpecificationRequest(rName string) string {
 	return acctest.ConfigCompose(testAccVPCNetworkInterfaceConfig_baseIPV4(rName), `
 resource "aws_network_interface" "test" {
   subnet_id = aws_subnet.test.id
   connection_tracking_specification_request = {
-  tcp_established_timeout = %[1]d
+  tcp_established_timeout = 120
+  udp_stream_timeout = 120
   }
 }
-`, tcp_established_timeout)
+`)
+}
+
+func testAccVPCNetworkInterfaceConfig_connectionTrackingSpecificationRequestUpdated(rName string) string {
+	return acctest.ConfigCompose(testAccVPCNetworkInterfaceConfig_baseIPV4(rName), `
+resource "aws_network_interface" "test" {
+  subnet_id = aws_subnet.test.id
+  connection_tracking_specification_request = {
+  tcp_established_timeout = 180
+  }
+}
+`)
 }
