@@ -103,6 +103,10 @@ func resourceAdminAccountDelete(ctx context.Context, d *schema.ResourceData, met
 
 	_, err := conn.DisassociateAdminAccount(ctx, &fms.DisassociateAdminAccountInput{})
 
+	if tfawserr.ErrMessageContains(err, errCodeAccessDeniedException, "No default admin could be found for account") {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "disassociating FMS Admin Account (%s): %s", d.Id(), err)
 	}
@@ -162,7 +166,7 @@ func statusAssociateAdminAccount(ctx context.Context, conn *fms.Client, accountI
 
 		// FMS returns an AccessDeniedException if no account is associated,
 		// but does not define this in its error codes.
-		if tfawserr.ErrMessageContains(err, "AccessDeniedException", "is not currently delegated by AWS FM") {
+		if tfawserr.ErrMessageContains(err, errCodeAccessDeniedException, "is not currently delegated by AWS FM") {
 			return nil, "", nil
 		}
 
