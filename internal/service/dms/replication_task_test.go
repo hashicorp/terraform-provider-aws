@@ -46,13 +46,8 @@ func TestAccDMSReplicationTask_basic(t *testing.T) {
 				Config: testAccReplicationTaskConfig_basic(rName, tags),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationTaskExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "replication_task_arn"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "replication_task_arn", "dms", regexache.MustCompile(`task:[A-Z0-9]{26}`)),
 				),
-			},
-			{
-				Config:             testAccReplicationTaskConfig_basic(rName, tags),
-				PlanOnly:           true,
-				ExpectNonEmptyPlan: false,
 			},
 			{
 				ResourceName:            resourceName,
@@ -85,7 +80,6 @@ func TestAccDMSReplicationTask_update(t *testing.T) {
 				Config: testAccReplicationTaskConfig_update(rName, "full-load", 1024, "ZedsDead"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationTaskExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "replication_task_arn"),
 					resource.TestCheckResourceAttr(resourceName, "migration_type", "full-load"),
 					resource.TestMatchResourceAttr(resourceName, "replication_task_settings", regexache.MustCompile("MemoryLimitTotal\":1024")),
 					resource.TestMatchResourceAttr(resourceName, "table_mappings", regexache.MustCompile("rule-name\":\"ZedsDead")),
@@ -109,7 +103,6 @@ func TestAccDMSReplicationTask_update(t *testing.T) {
 				Config: testAccReplicationTaskConfig_update(rName, "full-load", 1248, "ZedsDead"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationTaskExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "replication_task_arn"),
 					resource.TestCheckResourceAttr(resourceName, "migration_type", "full-load"),
 					resource.TestMatchResourceAttr(resourceName, "replication_task_settings", regexache.MustCompile("MemoryLimitTotal\":1248")),
 					resource.TestMatchResourceAttr(resourceName, "table_mappings", regexache.MustCompile("rule-name\":\"ZedsDead")),
@@ -133,7 +126,6 @@ func TestAccDMSReplicationTask_update(t *testing.T) {
 				Config: testAccReplicationTaskConfig_update(rName, "full-load", 1248, "ZedsDead"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationTaskExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "replication_task_arn"),
 					resource.TestCheckResourceAttr(resourceName, "migration_type", "full-load"),
 					resource.TestMatchResourceAttr(resourceName, "replication_task_settings", regexache.MustCompile("MemoryLimitTotal\":1248")),
 					resource.TestMatchResourceAttr(resourceName, "table_mappings", regexache.MustCompile("rule-name\":\"ZedsDead")),
