@@ -44,7 +44,7 @@ func TestAccDMSReplicationTask_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationTaskConfig_basic(rName, tags),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationTaskExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "replication_task_arn"),
 				),
@@ -62,7 +62,7 @@ func TestAccDMSReplicationTask_basic(t *testing.T) {
 			},
 			{
 				Config: testAccReplicationTaskConfig_basic(rName, updatedTags),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationTaskExists(ctx, resourceName),
 				),
 			},
@@ -83,7 +83,7 @@ func TestAccDMSReplicationTask_update(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationTaskConfig_update(rName, "full-load", 1024, "ZedsDead"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationTaskExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "replication_task_arn"),
 					resource.TestCheckResourceAttr(resourceName, "migration_type", "full-load"),
@@ -93,7 +93,7 @@ func TestAccDMSReplicationTask_update(t *testing.T) {
 			},
 			{
 				Config: testAccReplicationTaskConfig_update(rName, "full-load", 1024, "EMBRZ"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationTaskExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "migration_type", "full-load"),
 					resource.TestMatchResourceAttr(resourceName, "replication_task_settings", regexache.MustCompile("MemoryLimitTotal\":1024")),
@@ -107,7 +107,7 @@ func TestAccDMSReplicationTask_update(t *testing.T) {
 			},
 			{
 				Config: testAccReplicationTaskConfig_update(rName, "full-load", 1248, "ZedsDead"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationTaskExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "replication_task_arn"),
 					resource.TestCheckResourceAttr(resourceName, "migration_type", "full-load"),
@@ -117,7 +117,7 @@ func TestAccDMSReplicationTask_update(t *testing.T) {
 			},
 			{
 				Config: testAccReplicationTaskConfig_update(rName, "full-load", 1024, "ZedsDead"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationTaskExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "migration_type", "full-load"),
 					resource.TestMatchResourceAttr(resourceName, "replication_task_settings", regexache.MustCompile("MemoryLimitTotal\":1024")),
@@ -131,7 +131,7 @@ func TestAccDMSReplicationTask_update(t *testing.T) {
 			},
 			{
 				Config: testAccReplicationTaskConfig_update(rName, "full-load", 1248, "ZedsDead"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationTaskExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "replication_task_arn"),
 					resource.TestCheckResourceAttr(resourceName, "migration_type", "full-load"),
@@ -141,7 +141,7 @@ func TestAccDMSReplicationTask_update(t *testing.T) {
 			},
 			{
 				Config: testAccReplicationTaskConfig_update(rName, "full-load", 1024, "EMBRZ"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationTaskExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "migration_type", "full-load"),
 					resource.TestMatchResourceAttr(resourceName, "replication_task_settings", regexache.MustCompile("MemoryLimitTotal\":1024")),
@@ -170,7 +170,7 @@ func TestAccDMSReplicationTask_cdcStartPosition(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationTaskConfig_cdcStartPosition(rName, "mysql-bin-changelog.000024:373"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationTaskExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cdc_start_position", "mysql-bin-changelog.000024:373"),
 				),
@@ -230,7 +230,7 @@ func TestAccDMSReplicationTask_startReplicationTask(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationTaskConfig_start(rName, true, "testrule"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationTaskExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "status", "running"),
 				),
@@ -243,14 +243,14 @@ func TestAccDMSReplicationTask_startReplicationTask(t *testing.T) {
 			},
 			{
 				Config: testAccReplicationTaskConfig_start(rName, true, "changedtestrule"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationTaskExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "status", "running"),
 				),
 			},
 			{
 				Config: testAccReplicationTaskConfig_start(rName, false, "changedtestrule"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationTaskExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "status", "stopped"),
 				),
@@ -274,7 +274,7 @@ func TestAccDMSReplicationTask_s3ToRDS(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationTaskConfig_s3ToRDS(rName),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationTaskExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "replication_task_arn"),
 				),
@@ -305,7 +305,7 @@ func TestAccDMSReplicationTask_disappears(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationTaskConfig_basic(rName, tags),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationTaskExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdms.ResourceReplicationTask(), resourceName),
 				),
@@ -332,7 +332,7 @@ func TestAccDMSReplicationTask_cdcStartTime_rfc3339_date(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationTaskConfig_cdcStartTime(rName, rfc3339Time),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationTaskExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cdc_start_position", awsDmsExpectedOutput),
 				),
@@ -365,7 +365,7 @@ func TestAccDMSReplicationTask_cdcStartTime_unix_timestamp(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationTaskConfig_cdcStartTime(rName, unixDateTime),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationTaskExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "cdc_start_position", awsDmsExpectedOutput),
 				),
@@ -394,7 +394,7 @@ func TestAccDMSReplicationTask_move(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config: testAccReplicationTaskConfig_move(rName, "aws_dms_replication_instance.test.replication_instance_arn"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "replication_task_arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "replication_instance_arn", instanceOne, "replication_instance_arn"),
@@ -402,7 +402,7 @@ func TestAccDMSReplicationTask_move(t *testing.T) {
 			},
 			{
 				Config: testAccReplicationTaskConfig_move(rName, "aws_dms_replication_instance.test2.replication_instance_arn"),
-				Check: resource.ComposeTestCheckFunc(
+				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationInstanceExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "replication_task_arn"),
 					resource.TestCheckResourceAttrPair(resourceName, "replication_instance_arn", instanceTwo, "replication_instance_arn"),
