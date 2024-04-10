@@ -53,3 +53,27 @@ func reportSettingTemplate_Values() []string {
 		reportSettingTemplateRestoreJobReport,
 	}
 }
+
+const (
+	restoreTestingRecoveryPointSelectionAlgorithmLatestWithinWindow = "LATEST_WITHIN_WINDOW"
+	restoreTestingRecoveryPointSelectionAlgorithmRandomWithinWindow = "RANDOM_WITHIN_WINDOW"
+)
+
+func restoreTestingRecoveryPointSelectionAlgorithm_Values() []string {
+	return []string{
+		restoreTestingRecoveryPointSelectionAlgorithmLatestWithinWindow,
+		restoreTestingRecoveryPointSelectionAlgorithmRandomWithinWindow,
+	}
+}
+
+const (
+	restoreTestingRecoveryPointTypeContinuous = "CONTINUOUS"
+	restoreTestingRecoveryPointTypeSnapshot   = "SNAPSHOT"
+)
+
+func restoreTestingRecoveryPointType_Values() []string {
+	return []string{
+		restoreTestingRecoveryPointTypeContinuous,
+		restoreTestingRecoveryPointTypeSnapshot,
+	}
+}

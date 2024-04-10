@@ -83,6 +83,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
+			Factory:  ResourceRestoreTestingPlan,
+			TypeName: "aws_backup_restore_testing_plan",
+			Name:     "RestoreTestingPlan",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
 			Factory:  ResourceSelection,
 			TypeName: "aws_backup_selection",
 		},
