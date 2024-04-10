@@ -58,7 +58,6 @@ const (
 
 // @FrameworkResource(name="Role")
 // @Tags(identifierAttribute="id", resourceType="Role")
-// @Testing(existsType="github.com/aws/aws-sdk-go/service/iam.Role")
 func NewResourceRole(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceIamRole{}
 	r.SetMigratedFromPluginSDK(true)
