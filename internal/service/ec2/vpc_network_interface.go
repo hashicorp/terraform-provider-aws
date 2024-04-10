@@ -70,7 +70,7 @@ func ResourceNetworkInterface() *schema.Resource {
 				},
 			},
 			"connection_tracking_specification_request": {
-				Type:     schema.TypeSet,
+				Type:     schema.TypeList,
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
@@ -384,7 +384,7 @@ func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData,
 		input.Ipv4Prefixes = expandIPv4PrefixSpecificationRequests(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("connection_tracking_specification_request"); ok && v.(*schema.Set).Len() > 0 {
+	if v, ok := d.GetOk("connection_tracking_specification_request"); ok {
 		input.ConnectionTrackingSpecification = expandConnectionTrackingSpecificationRequest(v.(map[string]interface{}))
 	}
 
