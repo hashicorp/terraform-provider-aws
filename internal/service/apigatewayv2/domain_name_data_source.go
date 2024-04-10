@@ -18,6 +18,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+// Function annotations are used for datasource registration to the Provider. DO NOT EDIT.
+// @FrameworkDataSource(name="Domain Name")
 func newDataSourceDomainName(context.Context) (datasource.DataSourceWithConfigure, error) {
 	return &dataSourceDomainName{}, nil
 }
