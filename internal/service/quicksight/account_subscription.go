@@ -107,6 +107,11 @@ func ResourceAccountSubscription() *schema.Resource {
 					Optional: true,
 					ForceNew: true,
 				},
+				"iam_identity_center_instance_arn": {
+					Type:     schema.TypeString,
+					Optional: true,
+					ForceNew: true,
+				},
 				"last_name": {
 					Type:     schema.TypeString,
 					Optional: true,
@@ -186,6 +191,10 @@ func resourceAccountSubscriptionCreate(ctx context.Context, d *schema.ResourceDa
 		in.FirstName = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("iam_identity_center_instance_arn"); ok {
+		in.IAMIdentityCenterInstanceArn = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("last_name"); ok {
 		in.LastName = aws.String(v.(string))
 	}
@@ -237,6 +246,7 @@ func resourceAccountSubscriptionRead(ctx context.Context, d *schema.ResourceData
 	d.Set("edition", out.Edition)
 	d.Set("notification_email", out.NotificationEmail)
 	d.Set("account_subscription_status", out.AccountSubscriptionStatus)
+	d.Set("iam_identity_center_instance_arn", out.IAMIdentityCenterInstanceArn)
 
 	return nil
 }
