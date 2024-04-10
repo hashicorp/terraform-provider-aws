@@ -56,8 +56,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)IoTAnalytics"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: iotanalytics-in-test-name
     languages:
@@ -115,8 +115,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)IoTEvents"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: iotevents-in-test-name
     languages:
@@ -189,8 +189,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)IVS"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: ivs-in-test-name
     languages:
@@ -248,8 +248,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)IVSChat"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: ivschat-in-test-name
     languages:
@@ -307,8 +307,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)Kafka"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: kafka-in-test-name
     languages:
@@ -366,8 +366,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)KafkaConnect"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: kafkaconnect-in-test-name
     languages:
@@ -425,8 +425,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)Kendra"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: kendra-in-test-name
     languages:
@@ -484,8 +484,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)Keyspaces"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: keyspaces-in-test-name
     languages:
@@ -543,8 +543,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)Kinesis"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: kinesis-in-test-name
     languages:
@@ -602,8 +602,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)KinesisAnalytics"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: kinesisanalytics-in-test-name
     languages:
@@ -661,8 +661,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)KinesisAnalyticsV2"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: kinesisanalyticsv2-in-test-name
     languages:
@@ -720,8 +720,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)KinesisVideo"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: kinesisvideo-in-test-name
     languages:
@@ -779,8 +779,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)KMS"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: kms-in-test-name
     languages:
@@ -838,8 +838,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)LakeFormation"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: lakeformation-in-test-name
     languages:
@@ -897,8 +897,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)Lambda"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: lambda-in-test-name
     languages:
@@ -956,8 +956,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)LaunchWizard"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: launchwizard-in-test-name
     languages:
@@ -1015,8 +1015,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)lex"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: lex-in-const-name
     languages:
@@ -1059,8 +1059,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)lexmodelbuilding"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: lexmodelbuilding-in-const-name
     languages:
@@ -1103,8 +1103,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)lexmodelbuildingservice"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: lexmodelbuildingservice-in-const-name
     languages:
@@ -1147,8 +1147,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)LexModels"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: lexmodels-in-test-name
     languages:
@@ -1206,8 +1206,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)lexmodelsv2"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: lexmodelsv2-in-const-name
     languages:
@@ -1250,8 +1250,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)LexV2Models"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: lexv2models-in-test-name
     languages:
@@ -1309,8 +1309,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)LicenseManager"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: licensemanager-in-test-name
     languages:
@@ -1368,8 +1368,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)Lightsail"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: lightsail-in-test-name
     languages:
@@ -1427,8 +1427,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)Location"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: location-in-test-name
     languages:
@@ -1486,8 +1486,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)locationservice"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: locationservice-in-const-name
     languages:
@@ -1530,8 +1530,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)Logs"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: logs-in-test-name
     languages:
@@ -1589,8 +1589,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)LookoutMetrics"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: lookoutmetrics-in-test-name
     languages:
@@ -1648,8 +1648,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)M2"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: m2-in-test-name
     languages:
@@ -1707,8 +1707,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)Macie2"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: macie2-in-test-name
     languages:
@@ -1766,8 +1766,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)managedgrafana"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: managedgrafana-in-const-name
     languages:
@@ -1810,8 +1810,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)MediaConnect"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: mediaconnect-in-test-name
     languages:
@@ -1869,8 +1869,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)MediaConvert"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: mediaconvert-in-test-name
     languages:
@@ -1928,8 +1928,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)MediaLive"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: medialive-in-test-name
     languages:
@@ -1987,8 +1987,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)MediaPackage"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: mediapackage-in-test-name
     languages:
@@ -2046,8 +2046,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)MediaPackageV2"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: mediapackagev2-in-test-name
     languages:
@@ -2105,8 +2105,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)MediaStore"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: mediastore-in-test-name
     languages:
@@ -2164,8 +2164,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)MemoryDB"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: memorydb-in-test-name
     languages:
@@ -2223,8 +2223,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)Meta"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: meta-in-test-name
     languages:
@@ -2282,8 +2282,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)MQ"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: mq-in-test-name
     languages:
@@ -2341,8 +2341,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)msk"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: msk-in-const-name
     languages:
@@ -2385,8 +2385,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)MWAA"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: mwaa-in-test-name
     languages:
@@ -2444,8 +2444,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)Neptune"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: neptune-in-test-name
     languages:
@@ -2503,8 +2503,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)NeptuneGraph"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: neptunegraph-in-test-name
     languages:
@@ -2562,8 +2562,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)NetworkFirewall"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: networkfirewall-in-test-name
     languages:
@@ -2621,8 +2621,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)NetworkManager"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: networkmanager-in-test-name
     languages:
@@ -2680,8 +2680,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)ObservabilityAccessManager"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: oam-in-test-name
     languages:
@@ -2739,8 +2739,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)OpenSearch"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: opensearch-in-test-name
     languages:
@@ -2798,8 +2798,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)opensearchingestion"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: opensearchingestion-in-const-name
     languages:
@@ -2842,8 +2842,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)OpenSearchServerless"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: opensearchserverless-in-test-name
     languages:
@@ -2901,8 +2901,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)opensearchservice"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: opensearchservice-in-const-name
     languages:
@@ -2945,8 +2945,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)OpsWorks"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: opsworks-in-test-name
     languages:
@@ -3004,8 +3004,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)Organizations"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: organizations-in-test-name
     languages:
@@ -3063,8 +3063,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)OpenSearchIngestion"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: osis-in-test-name
     languages:
@@ -3122,8 +3122,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)Outposts"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: outposts-in-test-name
     languages:
@@ -3181,8 +3181,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)PaymentCryptography"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: paymentcryptography-in-test-name
     languages:
@@ -3240,8 +3240,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)PCAConnectorAD"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: pcaconnectorad-in-test-name
     languages:
@@ -3299,8 +3299,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)Pinpoint"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: pinpoint-in-test-name
     languages:
@@ -3359,8 +3359,8 @@ rules:
           patterns:
             - pattern-regex: "(?i)Pipes"
             - pattern-not-regex: ^.+Pipe[sS].*$
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: pipes-in-test-name
     languages:
@@ -3420,8 +3420,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)Polly"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: polly-in-test-name
     languages:
@@ -3479,8 +3479,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)Pricing"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: pricing-in-test-name
     languages:
@@ -3538,8 +3538,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)prometheus"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: prometheus-in-const-name
     languages:
@@ -3582,8 +3582,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)prometheusservice"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: prometheusservice-in-const-name
     languages:
@@ -3626,8 +3626,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)QBusiness"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: qbusiness-in-test-name
     languages:
@@ -3685,8 +3685,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)QLDB"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: qldb-in-test-name
     languages:
@@ -3744,8 +3744,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)QuickSight"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: quicksight-in-test-name
     languages:
@@ -3804,8 +3804,8 @@ rules:
           patterns:
             - pattern-regex: "(?i)RAM"
             - pattern-not-regex: Framework
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: ram-in-test-name
     languages:
@@ -3865,8 +3865,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)RBin"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: rbin-in-test-name
     languages:
@@ -3924,8 +3924,8 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)RDS"
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
   - id: rds-in-test-name
     languages:

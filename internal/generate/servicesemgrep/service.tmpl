@@ -40,8 +40,8 @@
             {{- if eq .ServiceAlias "WAF" }}
             - pattern-not-regex: ^testAccWAFRateBasedRule.+
             {{- end }}
-            - pattern-not-regex: ^TestAcc.*
       - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
     severity: WARNING
 {{- end }}
 {{- if .MainAlias }}
