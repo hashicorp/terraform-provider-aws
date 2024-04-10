@@ -6,7 +6,7 @@ require (
 	github.com/ProtonMail/go-crypto v1.1.0-alpha.2
 	github.com/YakDriver/go-version v0.1.0
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.51.17
+	github.com/aws/aws-sdk-go v1.51.18
 	github.com/aws/aws-sdk-go-v2 v1.26.1
 	github.com/aws/aws-sdk-go-v2/config v1.27.11
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.11
@@ -46,7 +46,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.37.0
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.35.1
 	github.com/aws/aws-sdk-go-v2/service/codeartifact v1.26.1
-	github.com/aws/aws-sdk-go-v2/service/codebuild v1.33.0
+	github.com/aws/aws-sdk-go-v2/service/codebuild v1.34.0
 	github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.13.1
 	github.com/aws/aws-sdk-go-v2/service/codecommit v1.22.4
 	github.com/aws/aws-sdk-go-v2/service/codedeploy v1.25.4
@@ -104,7 +104,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/lookoutmetrics v1.27.4
 	github.com/aws/aws-sdk-go-v2/service/m2 v1.12.4
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.28.4
-	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.52.5
+	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.53.0
 	github.com/aws/aws-sdk-go-v2/service/medialive v1.50.0
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.30.5
 	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.10.2
@@ -123,12 +123,12 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.4.4
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.21.4
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.16.4
-	github.com/aws/aws-sdk-go-v2/service/rds v1.76.1
+	github.com/aws/aws-sdk-go-v2/service/rds v1.77.0
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.43.5
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.25.4
 	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.17.4
 	github.com/aws/aws-sdk-go-v2/service/rekognition v1.39.4
-	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.10.4
+	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.10.5
 	github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.22.0
 	github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.21.4
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.10.0
