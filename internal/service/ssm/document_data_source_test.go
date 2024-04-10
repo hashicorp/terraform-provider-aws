@@ -53,6 +53,8 @@ func TestAccSSMDocumentDataSource_basic(t *testing.T) {
 func TestAccSSMDocumentDataSource_managed(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_ssm_document.test"
+	nameWithAWSPrefix := "AWS-StartEC2Instance"
+	nameWithAWSSSOPrefix := "AWSSSO-CreateSSOUser"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -60,10 +62,17 @@ func TestAccSSMDocumentDataSource_managed(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccDocumentDataSourceConfig_managed(),
+				Config: testAccDocumentDataSourceConfig_managed(nameWithAWSPrefix),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					resource.TestCheckResourceAttr(dataSourceName, "name", "AWS-StartEC2Instance"),
-					resource.TestCheckResourceAttr(dataSourceName, "arn", "AWS-StartEC2Instance"),
+					resource.TestCheckResourceAttr(dataSourceName, "name", nameWithAWSPrefix),
+					acctest.CheckResourceAttrRegionalARNNoAccount(dataSourceName, "arn", "ssm", fmt.Sprintf("document/%s", nameWithAWSPrefix)),
+				),
+			},
+			{
+				Config: testAccDocumentDataSourceConfig_managed(nameWithAWSSSOPrefix),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					resource.TestCheckResourceAttr(dataSourceName, "name", nameWithAWSSSOPrefix),
+					acctest.CheckResourceAttrRegionalARNNoAccount(dataSourceName, "arn", "ssm", fmt.Sprintf("document/%s", nameWithAWSSSOPrefix)),
 				),
 			},
 		},
@@ -104,10 +113,10 @@ data "aws_ssm_document" "test" {
 `, rName, documentFormat)
 }
 
-func testAccDocumentDataSourceConfig_managed() string {
-	return `
+func testAccDocumentDataSourceConfig_managed(name string) string {
+	return fmt.Sprintf(`
 data "aws_ssm_document" "test" {
-  name = "AWS-StartEC2Instance"
+  name = %[1]q
 }
-`
+`, name)
 }

@@ -76,7 +76,15 @@ func dataDocumentRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 	d.SetId(aws.StringValue(output.Name))
 
-	if !strings.HasPrefix(name, "AWS-") {
+	if strings.HasPrefix(name, "AWS-") || strings.HasPrefix(name, "AWSSSO-") {
+		arn := arn.ARN{
+			Partition: meta.(*conns.AWSClient).Partition,
+			Service:   "ssm",
+			Region:    meta.(*conns.AWSClient).Region,
+			Resource:  fmt.Sprintf("document/%s", name),
+		}.String()
+		d.Set("arn", arn)
+	} else {
 		arn := arn.ARN{
 			Partition: meta.(*conns.AWSClient).Partition,
 			Service:   "ssm",
@@ -85,8 +93,6 @@ func dataDocumentRead(ctx context.Context, d *schema.ResourceData, meta interfac
 			Resource:  fmt.Sprintf("document/%s", name),
 		}.String()
 		d.Set("arn", arn)
-	} else {
-		d.Set("arn", name)
 	}
 	d.Set("content", output.Content)
 	d.Set("document_format", output.DocumentFormat)

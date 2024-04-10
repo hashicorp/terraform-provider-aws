@@ -46,6 +46,8 @@ This data source supports the following arguments:
 
 This data source exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the document. If the document is an AWS managed document, this value will be set to the name of the document instead.
+* `arn` - ARN of the document.
+  
+  **NOTE:** The ARN of an AWS managed document does not have the account ID partition (for example, `arn:aws:ssm:us-east-1::document/AWS-GatherSoftwareInventory`).
 * `content` - Contents of the document.
 * `document_type` - Type of the document.
