@@ -11,13 +11,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_ce_cost_category")
-func DataSourceCostCategory() *schema.Resource {
+// @SDKDataSource("aws_ce_cost_category", name="Cost Category")
+func dataSourceCostCategory() *schema.Resource {
 	schemaCostCategoryRuleExpressionComputed := func() *schema.Resource {
 		return &schema.Resource{
 			Schema: map[string]*schema.Schema{
@@ -318,38 +317,37 @@ func DataSourceCostCategory() *schema.Resource {
 
 func dataSourceCostCategoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).CEClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	costCategory, err := findCostCategoryByARN(ctx, conn, d.Get("cost_category_arn").(string))
+	arn := d.Get("cost_category_arn").(string)
+	costCategory, err := findCostCategoryByARN(ctx, conn, arn)
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.CE, create.ErrActionReading, ResNameCostCategory, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Cost Explorer Cost Category (%s): %s", arn, err)
 	}
 
+	d.SetId(aws.ToString(costCategory.CostCategoryArn))
 	d.Set("default_value", costCategory.DefaultValue)
 	d.Set("effective_end", costCategory.EffectiveEnd)
 	d.Set("effective_start", costCategory.EffectiveStart)
 	d.Set("name", costCategory.Name)
 	if err = d.Set("rule", flattenCostCategoryRules(costCategory.Rules)); err != nil {
-		return create.AppendDiagError(diags, names.CE, "setting rule", ResNameCostCategory, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
 	}
 	d.Set("rule_version", costCategory.RuleVersion)
 	if err = d.Set("split_charge_rule", flattenCostCategorySplitChargeRules(costCategory.SplitChargeRules)); err != nil {
-		return create.AppendDiagError(diags, names.CE, "setting split_charge_rule", ResNameCostCategory, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting split_charge_rule: %s", err)
 	}
-
-	d.SetId(aws.ToString(costCategory.CostCategoryArn))
 
 	tags, err := listTags(ctx, conn, d.Id())
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.CE, "listing tags", ResNameCostCategory, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "listing Cost Explorer Cost Category (%s) tags: %s", d.Id(), err)
 	}
 
 	if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return create.AppendDiagError(diags, names.CE, "setting tags", ResNameCostCategory, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting split_charge_rule: %s", err)
 	}
 
 	return diags

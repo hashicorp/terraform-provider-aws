@@ -25,8 +25,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceCostCategory,
+			Factory:  dataSourceCostCategory,
 			TypeName: "aws_ce_cost_category",
+			Name:     "Cost Category",
 		},
 		{
 			Factory:  DataSourceTags,
