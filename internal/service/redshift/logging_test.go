@@ -49,6 +49,10 @@ func TestAccRedshiftLogging_basic(t *testing.T) {
 					testAccCheckLoggingExists(ctx, resourceName, &log),
 					resource.TestCheckResourceAttrPair(resourceName, "cluster_identifier", clusterResourceName, "id"),
 					resource.TestCheckResourceAttr(resourceName, "log_destination_type", string(types.LogDestinationTypeCloudwatch)),
+					resource.TestCheckResourceAttr(resourceName, "log_exports.#", "3"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "log_exports.*", string(tfredshift.LogExportsConnectionLog)),
+					resource.TestCheckTypeSetElemAttr(resourceName, "log_exports.*", string(tfredshift.LogExportsUserActivityLog)),
+					resource.TestCheckTypeSetElemAttr(resourceName, "log_exports.*", string(tfredshift.LogExportsUserLog)),
 				),
 			},
 			{
