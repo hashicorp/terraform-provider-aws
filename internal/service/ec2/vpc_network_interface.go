@@ -585,7 +585,7 @@ func resourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData, m
 	if err := d.Set("security_groups", FlattenGroupIdentifiers(eni.Groups)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting security_groups: %s", err)
 	}
-	if err := d.Set("connection_tracking_specification_request", flattenConnectionTrackingConfiguration(eni.ConnectionTrackingConfiguration)); err != nil {
+	if err := d.Set("connection_tracking_specification_request", []interface{}(flattenConnectionTrackingConfiguration(eni.ConnectionTrackingConfiguration))); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting connection_tracking_specification_request: %s", err)
 	}
 	d.Set("source_dest_check", eni.SourceDestCheck)
