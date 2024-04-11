@@ -221,7 +221,9 @@ func ResourceCluster() *schema.Resource {
 				ValidateFunc: verify.ValidARN,
 			},
 			"logging": {
-				Type:             schema.TypeList,
+				Type: schema.TypeList,
+				Deprecated: "Use the aws_redshift_logging resource instead. " +
+					"This argument will be removed in a future major version.",
 				MaxItems:         1,
 				Optional:         true,
 				Computed:         true,
