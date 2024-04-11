@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_securitylake_data_lake: Updating meta_store_role_arn no longer requires a replacement
+```
