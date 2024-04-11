@@ -322,7 +322,7 @@ func dataSourceCostCategoryRead(ctx context.Context, d *schema.ResourceData, met
 	conn := meta.(*conns.AWSClient).CEClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	costCategory, err := FindCostCategoryByARN(ctx, conn, d.Get("cost_category_arn").(string))
+	costCategory, err := findCostCategoryByARN(ctx, conn, d.Get("cost_category_arn").(string))
 
 	if err != nil {
 		return create.AppendDiagError(diags, names.CE, create.ErrActionReading, ResNameCostCategory, d.Id(), err)

@@ -234,10 +234,6 @@ func testAccCheckCostCategoryExists(ctx context.Context, n string, v *awstypes.C
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No CE Cost Category ID is set")
-		}
-
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CEClient(ctx)
 
 		output, err := tfce.FindCostCategoryByARN(ctx, conn, rs.Primary.ID)

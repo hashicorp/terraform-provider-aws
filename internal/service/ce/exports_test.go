@@ -8,8 +8,10 @@ var (
 	ResourceAnomalyMonitor      = resourceAnomalyMonitor
 	ResourceAnomalySubscription = resourceAnomalySubscription
 	ResourceCostAllocationTag   = resourceCostAllocationTag
+	ResourceCostCategory        = resourceCostCategory
 
 	FindAnomalyMonitorByARN       = findAnomalyMonitorByARN
 	FindAnomalySubscriptionByARN  = findAnomalySubscriptionByARN
 	FindCostAllocationTagByTagKey = findCostAllocationTagByTagKey
+	FindCostCategoryByARN         = findCostCategoryByARN
 )

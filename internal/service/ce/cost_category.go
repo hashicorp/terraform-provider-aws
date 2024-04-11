@@ -5,18 +5,20 @@ package ce
 
 import (
 	"context"
+	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/costexplorer"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/costexplorer/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -27,7 +29,7 @@ import (
 
 // @SDKResource("aws_ce_cost_category", name="Cost Category")
 // @Tags(identifierAttribute="id")
-func ResourceCostCategory() *schema.Resource {
+func resourceCostCategory() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCostCategoryCreate,
 		ReadWithoutTimeout:   resourceCostCategoryRead,
@@ -381,11 +383,11 @@ func schemaCostCategoryRuleExpression() *schema.Resource {
 
 func resourceCostCategoryCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).CEClient(ctx)
 
+	name := d.Get("name").(string)
 	input := &costexplorer.CreateCostCategoryDefinitionInput{
-		Name:         aws.String(d.Get("name").(string)),
+		Name:         aws.String(name),
 		ResourceTags: getTagsIn(ctx),
 		Rules:        expandCostCategoryRules(d.Get("rule").(*schema.Set).List()),
 		RuleVersion:  awstypes.CostCategoryRuleVersion(d.Get("rule_version").(string)),
@@ -395,12 +397,12 @@ func resourceCostCategoryCreate(ctx context.Context, d *schema.ResourceData, met
 		input.DefaultValue = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("split_charge_rule"); ok {
-		input.SplitChargeRules = expandCostCategorySplitChargeRules(v.(*schema.Set).List())
-	}
-
 	if v, ok := d.GetOk("effective_start"); ok {
 		input.EffectiveStart = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("split_charge_rule"); ok {
+		input.SplitChargeRules = expandCostCategorySplitChargeRules(v.(*schema.Set).List())
 	}
 
 	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.ResourceNotFoundException](ctx, d.Timeout(schema.TimeoutCreate),
@@ -409,7 +411,7 @@ func resourceCostCategoryCreate(ctx context.Context, d *schema.ResourceData, met
 		})
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.CE, create.ErrActionCreating, ResNameCostCategory, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "creating Cost Explorer Cost Category (%s): %s", name, err)
 	}
 
 	d.SetId(aws.ToString(outputRaw.(*costexplorer.CreateCostCategoryDefinitionOutput).CostCategoryArn))
@@ -419,18 +421,18 @@ func resourceCostCategoryCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceCostCategoryRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).CEClient(ctx)
 
-	costCategory, err := FindCostCategoryByARN(ctx, conn, d.Id())
+	costCategory, err := findCostCategoryByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Cost Explorer Cost Category (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.CE, create.ErrActionReading, ResNameCostCategory, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Cost Explorer Cost Category (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", costCategory.CostCategoryArn)
@@ -439,11 +441,11 @@ func resourceCostCategoryRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("effective_start", costCategory.EffectiveStart)
 	d.Set("name", costCategory.Name)
 	if err = d.Set("rule", flattenCostCategoryRules(costCategory.Rules)); err != nil {
-		return create.AppendDiagError(diags, names.CE, "setting rule", ResNameCostCategory, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting rule: %s", err)
 	}
 	d.Set("rule_version", costCategory.RuleVersion)
 	if err = d.Set("split_charge_rule", flattenCostCategorySplitChargeRules(costCategory.SplitChargeRules)); err != nil {
-		return create.AppendDiagError(diags, names.CE, "setting split_charge_rule", ResNameCostCategory, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting split_charge_rule: %s", err)
 	}
 
 	return diags
@@ -451,7 +453,6 @@ func resourceCostCategoryRead(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceCostCategoryUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).CEClient(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -473,7 +474,7 @@ func resourceCostCategoryUpdate(ctx context.Context, d *schema.ResourceData, met
 		_, err := conn.UpdateCostCategoryDefinition(ctx, input)
 
 		if err != nil {
-			return create.AppendDiagError(diags, names.CE, create.ErrActionUpdating, ResNameCostCategory, d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Cost Explorer Cost Category (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -485,6 +486,7 @@ func resourceCostCategoryDelete(ctx context.Context, d *schema.ResourceData, met
 
 	conn := meta.(*conns.AWSClient).CEClient(ctx)
 
+	log.Printf("[DEBUG] Deleting Cost Explorer Cost Category: %s", d.Id())
 	_, err := conn.DeleteCostCategoryDefinition(ctx, &costexplorer.DeleteCostCategoryDefinitionInput{
 		CostCategoryArn: aws.String(d.Id()),
 	})
@@ -494,10 +496,35 @@ func resourceCostCategoryDelete(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.CE, create.ErrActionDeleting, ResNameCostCategory, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Cost Explorer Cost Category (%s): %s", d.Id(), err)
 	}
 
 	return diags
+}
+
+func findCostCategoryByARN(ctx context.Context, conn *costexplorer.Client, arn string) (*awstypes.CostCategory, error) {
+	input := &costexplorer.DescribeCostCategoryDefinitionInput{
+		CostCategoryArn: aws.String(arn),
+	}
+
+	output, err := conn.DescribeCostCategoryDefinition(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.CostCategory == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.CostCategory, nil
 }
 
 func expandCostCategoryRule(tfMap map[string]interface{}) awstypes.CostCategoryRule {
