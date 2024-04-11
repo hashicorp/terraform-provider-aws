@@ -173,7 +173,7 @@ func resourceLagRead(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("name", lag.LagName)
 	d.Set("owner_account_id", lag.OwnerAccount)
 	d.Set("provider_name", lag.ProviderName)
-	d.Set("request_macsec", lag.RequestMACSec)
+	d.Set("request_macsec", lag.MacSecCapable)
 
 	return diags
 }
