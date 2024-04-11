@@ -269,7 +269,7 @@ resource "aws_bedrockagent_agent" "test" {
   agent_resource_role_arn = aws_iam_role.test.arn
   idle_ttl                = 500
   foundation_model        = %[2]q
-  
+
   tags = {
     %[3]q = %[4]q
   }
@@ -284,7 +284,7 @@ resource "aws_bedrockagent_agent" "test" {
   agent_resource_role_arn = aws_iam_role.test.arn
   idle_ttl                = 500
   foundation_model        = %[2]q
-  
+
   tags = {
     %[3]q = %[4]q
     %[5]q = %[6]q
@@ -296,84 +296,85 @@ resource "aws_bedrockagent_agent" "test" {
 func testAccBedrockAgentConfig_full(rName, model, desc string) string {
 	return acctest.ConfigCompose(testAccBedrockRole(rName, model), fmt.Sprintf(`
 resource "aws_bedrockagent_agent" "test" {
-  agent_name                    = %[1]q
-  agent_resource_role_arn       = aws_iam_role.test.arn
-  description                   = %[3]q
-  idle_ttl                      = 500
-  foundation_model              = %[2]q
+  agent_name              = %[1]q
+  agent_resource_role_arn = aws_iam_role.test.arn
+  description             = %[3]q
+  idle_ttl                = 500
+  foundation_model        = %[2]q
   prompt_override_configuration {
-      override_lambda       = null
-      prompt_configurations = [
-        {
-          base_prompt_template    = file("${path.module}/test-fixtures/pre-processing.txt")
-          inference_configuration = [
-            {
-              max_length     = 2048
-              stop_sequences = ["Human:"]
-              temperature    = 0
-              topk           = 250
-              topp           = 1
-            },
-          ]
-          parser_mode          = "DEFAULT"
-          prompt_creation_mode = "OVERRIDDEN"
-          prompt_state         = "ENABLED"
-          prompt_type          = "PRE_PROCESSING"
-        },
-        {
-          base_prompt_template    = file("${path.module}/test-fixtures/knowledge-base-response-generation.txt")
-          inference_configuration = [
-            {
-              max_length     = 2048
-              stop_sequences = ["Human:"]
-              temperature    = 0
-              topk           = 250
-              topp           = 1
-            },
-          ]
-          parser_mode          = "DEFAULT"
-          prompt_creation_mode = "OVERRIDDEN"
-          prompt_state         = "ENABLED"
-          prompt_type          = "KNOWLEDGE_BASE_RESPONSE_GENERATION"
-        },
-        {
-          base_prompt_template    = file("${path.module}/test-fixtures/orchestration.txt")
-          inference_configuration = [
-            {
-              max_length     = 2048
-              stop_sequences = [
-                "</function_call>",
-                "</answer>",
-                "</error>",
-              ]
-              temperature = 0
-              topk        = 250
-              topp        = 1
-            },
-          ]
-          parser_mode          = "DEFAULT"
-          prompt_creation_mode = "OVERRIDDEN"
-          prompt_state         = "ENABLED"
-          prompt_type          = "ORCHESTRATION"
-        },
-        {
-          base_prompt_template    = file("${path.module}/test-fixtures/post-processing.txt")
-          inference_configuration = [
-            {
-              max_length     = 2048
-              stop_sequences = ["Human:"]
-              temperature    = 0
-              topk           = 250
-              topp           = 1
-            },
-          ]
-          parser_mode          = "DEFAULT"
-          prompt_creation_mode = "OVERRIDDEN"
-          prompt_state         = "DISABLED"
-          prompt_type          = "POST_PROCESSING"
-        },
-      ]
-    }
+    override_lambda = null
+    prompt_configurations = [
+      {
+        base_prompt_template = file("${path.module}/test-fixtures/pre-processing.txt")
+        inference_configuration = [
+          {
+            max_length     = 2048
+            stop_sequences = ["Human:"]
+            temperature    = 0
+            topk           = 250
+            topp           = 1
+          },
+        ]
+        parser_mode          = "DEFAULT"
+        prompt_creation_mode = "OVERRIDDEN"
+        prompt_state         = "ENABLED"
+        prompt_type          = "PRE_PROCESSING"
+      },
+      {
+        base_prompt_template = file("${path.module}/test-fixtures/knowledge-base-response-generation.txt")
+        inference_configuration = [
+          {
+            max_length     = 2048
+            stop_sequences = ["Human:"]
+            temperature    = 0
+            topk           = 250
+            topp           = 1
+          },
+        ]
+        parser_mode          = "DEFAULT"
+        prompt_creation_mode = "OVERRIDDEN"
+        prompt_state         = "ENABLED"
+        prompt_type          = "KNOWLEDGE_BASE_RESPONSE_GENERATION"
+      },
+      {
+        base_prompt_template = file("${path.module}/test-fixtures/orchestration.txt")
+        inference_configuration = [
+          {
+            max_length = 2048
+            stop_sequences = [
+              "</function_call>",
+              "</answer>",
+              "</error>",
+            ]
+            temperature = 0
+            topk        = 250
+            topp        = 1
+          },
+        ]
+        parser_mode          = "DEFAULT"
+        prompt_creation_mode = "OVERRIDDEN"
+        prompt_state         = "ENABLED"
+        prompt_type          = "ORCHESTRATION"
+      },
+      {
+        base_prompt_template = file("${path.module}/test-fixtures/post-processing.txt")
+        inference_configuration = [
+          {
+            max_length     = 2048
+            stop_sequences = ["Human:"]
+            temperature    = 0
+            topk           = 250
+            topp           = 1
+          },
+        ]
+        parser_mode          = "DEFAULT"
+        prompt_creation_mode = "OVERRIDDEN"
+        prompt_state         = "DISABLED"
+        prompt_type          = "POST_PROCESSING"
+      },
+    ]
+  }
+
 }
 `, rName, model, desc))
 }
@@ -382,7 +383,7 @@ func testAccBedrockRole(rName, model string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   assume_role_policy = data.aws_iam_policy_document.test_agent_trust.json
-  name_prefix               = "AmazonBedrockExecutionRoleForAgents_tf"
+  name_prefix        = "AmazonBedrockExecutionRoleForAgents_tf"
 }
 
 data "aws_iam_policy_document" "test_agent_trust" {
@@ -410,8 +411,8 @@ data "aws_iam_policy_document" "test_agent_permissions" {
   statement {
     actions = ["bedrock:InvokeModel"]
     resources = [
-        "arn:aws:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s",
-      ]
+      "arn:aws:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s",
+    ]
   }
 }
 
