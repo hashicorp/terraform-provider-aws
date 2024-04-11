@@ -1362,7 +1362,7 @@ func flattenConnectionTrackingConfiguration(apiObject *ec2.ConnectionTrackingCon
 		return nil
 	}
 
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]interface{}
 
 	if v := apiObject.TcpEstablishedTimeout; v != nil {
 		tfMap["tcp_established_timeout"] = aws.Int64Value(v)
