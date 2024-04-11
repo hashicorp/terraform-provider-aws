@@ -7,7 +7,9 @@ package redshift
 var (
 	ResourceDataShareAuthorization       = newResourceDataShareAuthorization
 	ResourceDataShareConsumerAssociation = newResourceDataShareConsumerAssociation
+	ResourceSnapshotCopy                 = newResourceSnapshotCopy
 
 	FindDataShareAuthorizationByID       = findDataShareAuthorizationByID
 	FindDataShareConsumerAssociationByID = findDataShareConsumerAssociationByID
+	FindSnapshotCopyByID                 = findSnapshotCopyByID
 )

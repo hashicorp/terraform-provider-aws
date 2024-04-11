@@ -4802,6 +4802,9 @@ var awsPartition = partition{
 					Region: "ap-southeast-1",
 				}: endpoint{},
 				endpointKey{
+					Region: "ap-southeast-2",
+				}: endpoint{},
+				endpointKey{
 					Region: "bedrock-ap-northeast-1",
 				}: endpoint{
 					Hostname: "bedrock.ap-northeast-1.amazonaws.com",
@@ -4815,6 +4818,14 @@ var awsPartition = partition{
 					Hostname: "bedrock.ap-southeast-1.amazonaws.com",
 					CredentialScope: credentialScope{
 						Region: "ap-southeast-1",
+					},
+				},
+				endpointKey{
+					Region: "bedrock-ap-southeast-2",
+				}: endpoint{
+					Hostname: "bedrock.ap-southeast-2.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "ap-southeast-2",
 					},
 				},
 				endpointKey{
@@ -4863,6 +4874,14 @@ var awsPartition = partition{
 					Hostname: "bedrock-runtime.ap-southeast-1.amazonaws.com",
 					CredentialScope: credentialScope{
 						Region: "ap-southeast-1",
+					},
+				},
+				endpointKey{
+					Region: "bedrock-runtime-ap-southeast-2",
+				}: endpoint{
+					Hostname: "bedrock-runtime.ap-southeast-2.amazonaws.com",
+					CredentialScope: credentialScope{
+						Region: "ap-southeast-2",
 					},
 				},
 				endpointKey{
