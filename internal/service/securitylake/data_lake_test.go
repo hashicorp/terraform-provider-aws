@@ -361,6 +361,53 @@ func testAccDataLake_lifeCycleUpdate(t *testing.T) {
 	})
 }
 
+func testAccDataLake_metaStoreUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	var datalake types.DataLakeResource
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_securitylake_data_lake.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.SecurityLake)
+			testAccPreCheck(ctx, t)
+			testAccDeleteGlueDatabase(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.SecurityLakeServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckDataLakeDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDataLakeConfig_metaStore(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataLakeExists(ctx, resourceName, &datalake),
+					resource.TestCheckResourceAttrPair(resourceName, "meta_store_manager_role_arn", "aws_iam_role.meta_store_manager", "arn"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"meta_store_manager_role_arn"},
+			},
+			{
+				Config: testAccDataLakeConfig_metaStoreUpdate(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDataLakeExists(ctx, resourceName, &datalake),
+					resource.TestCheckResourceAttrPair(resourceName, "meta_store_manager_role_arn", "aws_iam_role.meta_store_manager_v1", "arn"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"meta_store_manager_role_arn"},
+			},
+		},
+	})
+}
+
 func testAccDataLake_replication(t *testing.T) {
 	ctx := acctest.Context(t)
 	var datalake types.DataLakeResource
@@ -573,6 +620,31 @@ POLICY
 const testAccDataLakeConfigConfig_base_iam = `
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
+
+resource "aws_iam_role" "meta_store_manager_v1" {
+  name               = "AmazonSecurityLakeMetaStoreManagerV1"
+  path               = "/service-role/"
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Sid": "AllowLambda",
+    "Effect": "Allow",
+    "Principal": {
+      "Service": [
+        "lambda.amazonaws.com"
+      ]
+    },
+    "Action": "sts:AssumeRole"
+  }]
+}
+POLICY
+}
+
+resource "aws_iam_role_policy_attachment" "datalake_v1" {
+  role       = aws_iam_role.meta_store_manager_v1.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/service-role/AmazonSecurityLakeMetastoreManager"
+}
 
 resource "aws_iam_role" "meta_store_manager" {
   name               = "AmazonSecurityLakeMetaStoreManagerV2"
@@ -809,6 +881,43 @@ resource "aws_securitylake_data_lake" "test" {
   }
 
   depends_on = [aws_iam_role_policy_attachment.datalake]
+}
+`, rName, acctest.Region()))
+}
+
+func testAccDataLakeConfig_metaStore(rName string) string {
+	return acctest.ConfigCompose(testAccDataLakeConfigConfig_base, fmt.Sprintf(`
+resource "aws_securitylake_data_lake" "test" {
+  meta_store_manager_role_arn = aws_iam_role.meta_store_manager.arn
+
+  configuration {
+    region = %[2]q
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+
+  depends_on = [aws_iam_role.meta_store_manager]
+}
+`, rName, acctest.Region()))
+}
+
+func testAccDataLakeConfig_metaStoreUpdate(rName string) string {
+	return acctest.ConfigCompose(testAccDataLakeConfigConfig_base,
+		fmt.Sprintf(`
+resource "aws_securitylake_data_lake" "test" {
+  meta_store_manager_role_arn = aws_iam_role.meta_store_manager_v1.arn
+
+  configuration {
+    region = %[2]q
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+
+  depends_on = [aws_iam_role.meta_store_manager_v1]
 }
 `, rName, acctest.Region()))
 }
