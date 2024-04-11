@@ -170,7 +170,7 @@ require (
 	github.com/gertd/go-pluralize v0.2.1
 	github.com/google/go-cmp v0.6.0
 	github.com/hashicorp/aws-cloudformation-resource-schema-sdk-go v0.22.0
-	github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.51.0.20240410155501-01548aca2dcd
+	github.com/hashicorp/aws-sdk-go-base/v2 v2.0.0-beta.51
 	github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2 v2.0.0-beta.52
 	github.com/hashicorp/awspolicyequivalence v1.6.0
 	github.com/hashicorp/cli v1.1.6
