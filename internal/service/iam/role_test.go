@@ -9,9 +9,9 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -26,7 +27,7 @@ import (
 
 func TestAccIAMRole_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf iam.Role
+	var conf awstypes.Role
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_role.test"
 
@@ -57,7 +58,7 @@ func TestAccIAMRole_basic(t *testing.T) {
 
 func TestAccIAMRole_MigrateFromPluginSDK_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf iam.Role
+	var conf awstypes.Role
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_role.test"
 
@@ -104,7 +105,7 @@ func TestAccIAMRole_MigrateFromPluginSDK_basic(t *testing.T) {
 
 func TestAccIAMRole_description(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf iam.Role
+	var conf awstypes.Role
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_role.test"
 
@@ -149,7 +150,7 @@ func TestAccIAMRole_description(t *testing.T) {
 
 func TestAccIAMRole_nameGenerated(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf iam.Role
+	var conf awstypes.Role
 	resourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -177,7 +178,7 @@ func TestAccIAMRole_nameGenerated(t *testing.T) {
 
 func TestAccIAMRole_namePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf iam.Role
+	var conf awstypes.Role
 	resourceName := "aws_iam_role.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -205,7 +206,7 @@ func TestAccIAMRole_namePrefix(t *testing.T) {
 
 func TestAccIAMRole_testNameChange(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf iam.Role
+	var conf awstypes.Role
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_role.test"
 
@@ -241,7 +242,7 @@ func TestAccIAMRole_testNameChange(t *testing.T) {
 // // https://github.com/hashicorp/terraform-provider-aws/issues/28833
 func TestAccIAMRole_diffsNoCondition(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf iam.Role
+	var conf awstypes.Role
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_role.test"
 
@@ -384,7 +385,7 @@ func TestAccIAMRole_diffsNoCondition(t *testing.T) {
 // // https://github.com/hashicorp/terraform-provider-aws/issues/28835
 func TestAccIAMRole_diffsCondition(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf iam.Role
+	var conf awstypes.Role
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_role.test"
 
@@ -448,7 +449,7 @@ func TestAccIAMRole_badJSON(t *testing.T) {
 
 func TestAccIAMRole_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var role iam.Role
+	var role awstypes.Role
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_role.test"
@@ -473,7 +474,7 @@ func TestAccIAMRole_disappears(t *testing.T) {
 
 func TestAccIAMRole_policiesForceDetach(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf iam.Role
+	var conf awstypes.Role
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_role.test"
 
@@ -502,7 +503,7 @@ func TestAccIAMRole_policiesForceDetach(t *testing.T) {
 
 func TestAccIAMRole_maxSessionDuration(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf iam.Role
+	var conf awstypes.Role
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_role.test"
 
@@ -550,7 +551,7 @@ func TestAccIAMRole_maxSessionDuration(t *testing.T) {
 
 func TestAccIAMRole_permissionsBoundary(t *testing.T) {
 	ctx := acctest.Context(t)
-	var role iam.Role
+	var role awstypes.Role
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_role.test"
@@ -619,13 +620,13 @@ func TestAccIAMRole_permissionsBoundary(t *testing.T) {
 			{
 				PreConfig: func() {
 					// delete the boundary manually
-					conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+					conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 					input := &iam.DeleteRolePermissionsBoundaryInput{
 						RoleName: role.RoleName,
 					}
-					_, err := conn.DeleteRolePermissionsBoundaryWithContext(ctx, input)
+					_, err := conn.DeleteRolePermissionsBoundary(ctx, input)
 					if err != nil {
-						t.Fatalf("Failed to delete permission_boundary from role (%s): %s", aws.StringValue(role.RoleName), err)
+						t.Fatalf("Failed to delete permission_boundary from role (%s): %s", aws.ToString(role.RoleName), err)
 					}
 				},
 				Config: testAccRoleConfig_permissionsBoundary(rName, permissionsBoundary1),
@@ -642,7 +643,7 @@ func TestAccIAMRole_permissionsBoundary(t *testing.T) {
 
 func TestAccIAMRole_InlinePolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var role iam.Role
+	var role awstypes.Role
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	policyName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	policyName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -697,7 +698,7 @@ func TestAccIAMRole_InlinePolicy_basic(t *testing.T) {
 
 func TestAccIAMRole_MigrateFromPluginSDK_InlinePolicy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var role iam.Role
+	var role awstypes.Role
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	policyName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_role.test"
@@ -759,7 +760,7 @@ func TestAccIAMRole_InlinePolicy_badJSON(t *testing.T) {
 // // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/19444
 func TestAccIAMRole_InlinePolicy_ignoreOrder(t *testing.T) {
 	ctx := acctest.Context(t)
-	var role iam.Role
+	var role awstypes.Role
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_role.test"
 
@@ -797,7 +798,7 @@ func TestAccIAMRole_InlinePolicy_ignoreOrder(t *testing.T) {
 
 func TestAccIAMRole_InlinePolicy_empty(t *testing.T) {
 	ctx := acctest.Context(t)
-	var role iam.Role
+	var role awstypes.Role
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_role.test"
 
@@ -819,7 +820,7 @@ func TestAccIAMRole_InlinePolicy_empty(t *testing.T) {
 
 func TestAccIAMRole_ManagedPolicy_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var role iam.Role
+	var role awstypes.Role
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	policyName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	policyName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -890,7 +891,7 @@ func TestAccIAMRole_ManagedPolicy_badARN(t *testing.T) {
 // out of band, it should be reattached.
 func TestAccIAMRole_ManagedPolicy_outOfBandRemovalAddedBack(t *testing.T) {
 	ctx := acctest.Context(t)
-	var role iam.Role
+	var role awstypes.Role
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	policyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_role.test"
@@ -924,7 +925,7 @@ func TestAccIAMRole_ManagedPolicy_outOfBandRemovalAddedBack(t *testing.T) {
 // out of band, it should be recreated.
 func TestAccIAMRole_InlinePolicy_outOfBandRemovalAddedBack(t *testing.T) {
 	ctx := acctest.Context(t)
-	var role iam.Role
+	var role awstypes.Role
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	policyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_role.test"
@@ -958,7 +959,7 @@ func TestAccIAMRole_InlinePolicy_outOfBandRemovalAddedBack(t *testing.T) {
 // // exists and is non-empty, policy attached out of band should be removed
 func TestAccIAMRole_ManagedPolicy_outOfBandAdditionRemoved(t *testing.T) {
 	ctx := acctest.Context(t)
-	var role iam.Role
+	var role awstypes.Role
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	policyName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	policyName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -993,7 +994,7 @@ func TestAccIAMRole_ManagedPolicy_outOfBandAdditionRemoved(t *testing.T) {
 // // exists and is non-empty, policy added out of band should be removed
 func TestAccIAMRole_InlinePolicy_outOfBandAdditionRemoved(t *testing.T) {
 	ctx := acctest.Context(t)
-	var role iam.Role
+	var role awstypes.Role
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	policyName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	policyName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1029,7 +1030,7 @@ func TestAccIAMRole_InlinePolicy_outOfBandAdditionRemoved(t *testing.T) {
 // inline_policy attribute, out of band changes should be ignored.
 func TestAccIAMRole_InlinePolicy_outOfBandAdditionIgnored(t *testing.T) {
 	ctx := acctest.Context(t)
-	var role iam.Role
+	var role awstypes.Role
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	policyName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	policyName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -1071,7 +1072,7 @@ func TestAccIAMRole_InlinePolicy_outOfBandAdditionIgnored(t *testing.T) {
 // // managed_policy_arns attribute, out of band changes should be ignored.
 func TestAccIAMRole_ManagedPolicy_outOfBandAdditionIgnored(t *testing.T) {
 	ctx := acctest.Context(t)
-	var role iam.Role
+	var role awstypes.Role
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	policyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_role.test"
@@ -1104,7 +1105,7 @@ func TestAccIAMRole_ManagedPolicy_outOfBandAdditionIgnored(t *testing.T) {
 // // out of band with empty inline arg, should be removed
 func TestAccIAMRole_InlinePolicy_outOfBandAdditionRemovedEmpty(t *testing.T) {
 	ctx := acctest.Context(t)
-	var role iam.Role
+	var role awstypes.Role
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	policyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_role.test"
@@ -1139,7 +1140,7 @@ func TestAccIAMRole_InlinePolicy_outOfBandAdditionRemovedEmpty(t *testing.T) {
 // // out of band with empty managed arg, should be detached
 func TestAccIAMRole_ManagedPolicy_outOfBandAdditionRemovedEmpty(t *testing.T) {
 	ctx := acctest.Context(t)
-	var role iam.Role
+	var role awstypes.Role
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	policyName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_iam_role.test"
@@ -1170,7 +1171,7 @@ func TestAccIAMRole_ManagedPolicy_outOfBandAdditionRemovedEmpty(t *testing.T) {
 
 func testAccCheckRoleDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iam_role" {
@@ -1194,7 +1195,7 @@ func testAccCheckRoleDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckRoleExists(ctx context.Context, n string, v *iam.Role) resource.TestCheckFunc {
+func testAccCheckRoleExists(ctx context.Context, n string, v *awstypes.Role) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -1205,7 +1206,7 @@ func testAccCheckRoleExists(ctx context.Context, n string, v *iam.Role) resource
 			return fmt.Errorf("No IAM Role ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
 		output, err := tfiam.FindRoleByName(ctx, conn, rs.Primary.ID)
 
@@ -1230,7 +1231,7 @@ func testAccAddRolePolicy(ctx context.Context, n string) resource.TestCheckFunc 
 			return fmt.Errorf("No Role name is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
 		input := &iam.PutRolePolicyInput{
 			RoleName: aws.String(rs.Primary.ID),
@@ -1245,12 +1246,12 @@ func testAccAddRolePolicy(ctx context.Context, n string) resource.TestCheckFunc 
 			PolicyName: aws.String(id.UniqueId()),
 		}
 
-		_, err := conn.PutRolePolicyWithContext(ctx, input)
+		_, err := conn.PutRolePolicy(ctx, input)
 		return err
 	}
 }
 
-func testAccCheckRolePermissionsBoundary(role *iam.Role, expectedPermissionsBoundaryArn string) resource.TestCheckFunc {
+func testAccCheckRolePermissionsBoundary(role *awstypes.Role, expectedPermissionsBoundaryArn string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		actualPermissionsBoundaryArn := ""
 
@@ -1266,32 +1267,40 @@ func testAccCheckRolePermissionsBoundary(role *iam.Role, expectedPermissionsBoun
 	}
 }
 
-func testAccCheckRolePolicyDetachManagedPolicy(ctx context.Context, role *iam.Role, policyName string) resource.TestCheckFunc {
+func testAccCheckRolePolicyDetachManagedPolicy(ctx context.Context, role *awstypes.Role, policyName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
 		var managedARN string
 		input := &iam.ListAttachedRolePoliciesInput{
 			RoleName: role.RoleName,
 		}
 
-		err := conn.ListAttachedRolePoliciesPagesWithContext(ctx, input, func(page *iam.ListAttachedRolePoliciesOutput, lastPage bool) bool {
+		pages := iam.NewListAttachedRolePoliciesPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx)
+
+			if err != nil && !errs.IsA[*awstypes.NoSuchEntityException](err) {
+				return fmt.Errorf("finding managed policy (%s): %w", policyName, err)
+			}
+
+			if err != nil {
+				return err
+			}
+
 			for _, v := range page.AttachedPolicies {
 				if *v.PolicyName == policyName {
 					managedARN = *v.PolicyArn
 					break
 				}
 			}
-			return !lastPage
-		})
-		if err != nil && !tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-			return fmt.Errorf("finding managed policy (%s): %w", policyName, err)
 		}
+
 		if managedARN == "" {
 			return fmt.Errorf("managed policy (%s) not found", policyName)
 		}
 
-		_, err = conn.DetachRolePolicyWithContext(ctx, &iam.DetachRolePolicyInput{
+		_, err := conn.DetachRolePolicy(ctx, &iam.DetachRolePolicyInput{
 			PolicyArn: aws.String(managedARN),
 			RoleName:  role.RoleName,
 		})
@@ -1300,34 +1309,42 @@ func testAccCheckRolePolicyDetachManagedPolicy(ctx context.Context, role *iam.Ro
 	}
 }
 
-func testAccCheckRolePolicyAttachManagedPolicy(ctx context.Context, role *iam.Role, policyName string) resource.TestCheckFunc {
+func testAccCheckRolePolicyAttachManagedPolicy(ctx context.Context, role *awstypes.Role, policyName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
 		var managedARN string
 		input := &iam.ListPoliciesInput{
 			PathPrefix:        aws.String("/tf-testing/"),
-			PolicyUsageFilter: aws.String("PermissionsPolicy"),
-			Scope:             aws.String("Local"),
+			PolicyUsageFilter: awstypes.PolicyUsageType("PermissionsPolicy"),
+			Scope:             awstypes.PolicyScopeType("Local"),
 		}
 
-		err := conn.ListPoliciesPagesWithContext(ctx, input, func(page *iam.ListPoliciesOutput, lastPage bool) bool {
+		pages := iam.NewListPoliciesPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx)
+
+			if err != nil && !errs.IsA[*awstypes.NoSuchEntityException](err) {
+				return fmt.Errorf("finding managed policy (%s): %w", policyName, err)
+			}
+
+			if err != nil {
+				return err
+			}
+
 			for _, v := range page.Policies {
 				if *v.PolicyName == policyName {
 					managedARN = *v.Arn
 					break
 				}
 			}
-			return !lastPage
-		})
-		if err != nil && !tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-			return fmt.Errorf("finding managed policy (%s): %w", policyName, err)
 		}
+
 		if managedARN == "" {
 			return fmt.Errorf("managed policy (%s) not found", policyName)
 		}
 
-		_, err = conn.AttachRolePolicyWithContext(ctx, &iam.AttachRolePolicyInput{
+		_, err := conn.AttachRolePolicy(ctx, &iam.AttachRolePolicyInput{
 			PolicyArn: aws.String(managedARN),
 			RoleName:  role.RoleName,
 		})
@@ -1336,11 +1353,11 @@ func testAccCheckRolePolicyAttachManagedPolicy(ctx context.Context, role *iam.Ro
 	}
 }
 
-func testAccCheckRolePolicyAddInlinePolicy(ctx context.Context, role *iam.Role, inlinePolicy string) resource.TestCheckFunc {
+func testAccCheckRolePolicyAddInlinePolicy(ctx context.Context, role *awstypes.Role, inlinePolicy string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
-		_, err := conn.PutRolePolicyWithContext(ctx, &iam.PutRolePolicyInput{
+		_, err := conn.PutRolePolicy(ctx, &iam.PutRolePolicyInput{
 			PolicyDocument: aws.String(testAccRolePolicyExtraInlineConfig()),
 			PolicyName:     aws.String(inlinePolicy),
 			RoleName:       role.RoleName,
@@ -1350,11 +1367,11 @@ func testAccCheckRolePolicyAddInlinePolicy(ctx context.Context, role *iam.Role, 
 	}
 }
 
-func testAccCheckRolePolicyRemoveInlinePolicy(ctx context.Context, role *iam.Role, inlinePolicy string) resource.TestCheckFunc {
+func testAccCheckRolePolicyRemoveInlinePolicy(ctx context.Context, role *awstypes.Role, inlinePolicy string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
-		_, err := conn.DeleteRolePolicyWithContext(ctx, &iam.DeleteRolePolicyInput{
+		_, err := conn.DeleteRolePolicy(ctx, &iam.DeleteRolePolicyInput{
 			PolicyName: aws.String(inlinePolicy),
 			RoleName:   role.RoleName,
 		})

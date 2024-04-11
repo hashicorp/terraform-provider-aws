@@ -8,4 +8,6 @@ var (
 	ResourceRole            = NewResourceRole
 	DeleteServiceLinkedRole = deleteServiceLinkedRole
 	FindRoleByName          = findRoleByName
+	ListGroupsForUserPages  = listGroupsForUserPages
+	AttachPolicyToUser      = attachPolicyToUser
 )

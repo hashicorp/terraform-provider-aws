@@ -154,53 +154,12 @@ func testAccRegexPatternSet_disappears(t *testing.T) {
 				Config: testAccRegexPatternSetConfig_basic(patternSetName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRegexPatternSetExists(ctx, resourceName, &patternSet),
-					testAccCheckRegexPatternSetDisappears(ctx, &patternSet),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfwafregional.ResourceRegexPatternSet(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
 		},
 	})
-}
-
-func testAccCheckRegexPatternSetDisappears(ctx context.Context, set *waf.RegexPatternSet) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn(ctx)
-		region := acctest.Provider.Meta().(*conns.AWSClient).Region
-
-		wr := tfwafregional.NewRetryer(conn, region)
-		_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
-			req := &waf.UpdateRegexPatternSetInput{
-				ChangeToken:       token,
-				RegexPatternSetId: set.RegexPatternSetId,
-			}
-
-			for _, pattern := range set.RegexPatternStrings {
-				update := &waf.RegexPatternSetUpdate{
-					Action:             aws.String("DELETE"),
-					RegexPatternString: pattern,
-				}
-				req.Updates = append(req.Updates, update)
-			}
-
-			return conn.UpdateRegexPatternSetWithContext(ctx, req)
-		})
-		if err != nil {
-			return fmt.Errorf("Failed updating WAF Regional Regex Pattern Set: %s", err)
-		}
-
-		_, err = wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
-			opts := &waf.DeleteRegexPatternSetInput{
-				ChangeToken:       token,
-				RegexPatternSetId: set.RegexPatternSetId,
-			}
-			return conn.DeleteRegexPatternSetWithContext(ctx, opts)
-		})
-		if err != nil {
-			return fmt.Errorf("Failed deleting WAF Regional Regex Pattern Set: %s", err)
-		}
-
-		return nil
-	}
 }
 
 func testAccCheckRegexPatternSetExists(ctx context.Context, n string, patternSet *waf.RegexPatternSet) resource.TestCheckFunc {

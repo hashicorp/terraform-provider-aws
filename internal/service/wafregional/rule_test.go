@@ -156,7 +156,7 @@ func TestAccWAFRegionalRule_disappears(t *testing.T) {
 				Config: testAccRuleConfig_basic(wafRuleName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v),
-					testAccCheckRuleDisappears(ctx, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfwafregional.ResourceRule(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -264,50 +264,6 @@ func computeRulePredicate(dataId **string, negated bool, pType string, idx *int)
 		f := schema.HashResource(predicateResource)
 		*idx = f(m)
 
-		return nil
-	}
-}
-
-func testAccCheckRuleDisappears(ctx context.Context, v *waf.Rule) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn(ctx)
-		region := acctest.Provider.Meta().(*conns.AWSClient).Region
-
-		wr := tfwafregional.NewRetryer(conn, region)
-		_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
-			req := &waf.UpdateRuleInput{
-				ChangeToken: token,
-				RuleId:      v.RuleId,
-			}
-
-			for _, predicate := range v.Predicates {
-				predicate := &waf.RuleUpdate{
-					Action: aws.String("DELETE"),
-					Predicate: &waf.Predicate{
-						Negated: predicate.Negated,
-						Type:    predicate.Type,
-						DataId:  predicate.DataId,
-					},
-				}
-				req.Updates = append(req.Updates, predicate)
-			}
-
-			return conn.UpdateRuleWithContext(ctx, req)
-		})
-		if err != nil {
-			return fmt.Errorf("Error Updating WAF Rule: %s", err)
-		}
-
-		_, err = wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
-			opts := &waf.DeleteRuleInput{
-				ChangeToken: token,
-				RuleId:      v.RuleId,
-			}
-			return conn.DeleteRuleWithContext(ctx, opts)
-		})
-		if err != nil {
-			return fmt.Errorf("Error Deleting WAF Rule: %s", err)
-		}
 		return nil
 	}
 }

@@ -10,8 +10,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -239,7 +239,7 @@ func testAccCheckUserPolicyExists(ctx context.Context, n string, v *string) reso
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
 		output, err := tfiam.FindUserPolicyByTwoPartKey(ctx, conn, userName, policyName)
 
@@ -255,7 +255,7 @@ func testAccCheckUserPolicyExists(ctx context.Context, n string, v *string) reso
 
 func testAccCheckUserPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iam_user_policy" {
@@ -291,25 +291,22 @@ func testAccCheckUserPolicyExpectedPolicies(ctx context.Context, n string, want 
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
 		var got int
 
 		input := &iam.ListUserPoliciesInput{
 			UserName: aws.String(rs.Primary.ID),
 		}
-		err := conn.ListUserPoliciesPagesWithContext(ctx, input, func(page *iam.ListUserPoliciesOutput, lastPage bool) bool {
-			if page == nil {
-				return !lastPage
+
+		pages := iam.NewListUserPoliciesPaginator(conn, input)
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx)
+			if err != nil {
+				return err
 			}
 
 			got += len(page.PolicyNames)
-
-			return !lastPage
-		})
-
-		if err != nil {
-			return err
 		}
 
 		if got != want {

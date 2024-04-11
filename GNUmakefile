@@ -75,6 +75,21 @@ default: build
 
 # Please keep targets in alphabetical order
 
+awssdkpatch-apply: awssdkpatch-gen ## Apply a patch generated with awssdkpatch
+	@echo "Applying patch for $(PKG)..."
+	@gopatch -p awssdk.patch ./$(PKG_NAME)/...
+
+awssdkpatch-gen: awssdkpatch ## Generate a patch file using awssdkpatch
+	@if [ "$(PKG)" = "" ]; then \
+		echo "PKG must be set. Try again like:" ; \
+		echo "PKG=foo make awssdkpatch-gen" ; \
+		exit 1 ; \
+	fi
+	@awssdkpatch -service $(PKG)
+
+awssdkpatch: prereq-go ## Install awssdkpatch
+	cd tools/awssdkpatch && $(GO_VER) install github.com/hashicorp/terraform-provider-aws/tools/awssdkpatch
+
 build: prereq-go fmtcheck ## Build provider
 	$(GO_VER) install
 	@echo "make: build complete"
@@ -381,7 +396,7 @@ sweep: prereq-go ## Run sweepers
 
 sweeper: prereq-go ## Run sweepers with failures allowed
 	@echo "WARNING: This will destroy infrastructure. Use only in development accounts."
-	$(GO_VER) test $(SWEEP_DIR) -v -tags=sweep -sweep=$(SWEEP) -sweep-allow-failures -timeout $(SWEEP_TIMEOUT)
+	$(GO_VER) test $(SWEEP_DIR) -v -sweep=$(SWEEP) -sweep-allow-failures -timeout $(SWEEP_TIMEOUT)
 
 t: prereq-go fmtcheck
 	TF_ACC=1 $(GO_VER) test ./$(PKG_NAME)/... -v -count $(TEST_COUNT) -parallel $(ACCTEST_PARALLELISM) $(RUNARGS) $(TESTARGS) -timeout $(ACCTEST_TIMEOUT)
@@ -441,6 +456,7 @@ tools: prereq-go ## Install tools
 	cd .ci/tools && $(GO_VER) install github.com/hashicorp/go-changelog/cmd/changelog-build
 	cd .ci/tools && $(GO_VER) install github.com/hashicorp/copywrite
 	cd .ci/tools && $(GO_VER) install github.com/rhysd/actionlint/cmd/actionlint
+	cd .ci/tools && $(GO_VER) install github.com/uber-go/gopatch
 	cd .ci/tools && $(GO_VER) install mvdan.cc/gofumpt
 	@echo "make: tools installed"
 

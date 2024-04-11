@@ -27,7 +27,7 @@ func TestAccACMPCACertificateDataSource_basic(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccCertificateDataSourceConfig_nonExistent,
-				ExpectError: regexache.MustCompile(`ResourceNotFoundException`),
+				ExpectError: regexache.MustCompile(`couldn't find resource`),
 			},
 			{
 				Config: testAccCertificateDataSourceConfig_arn(domain),
