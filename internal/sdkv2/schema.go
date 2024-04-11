@@ -46,6 +46,14 @@ func DataSourcePropertyFromResourceProperty(rs *schema.Schema) *schema.Schema {
 	return ds
 }
 
+func DataSourceElemFromResourceElem(rs *schema.Resource) *schema.Resource {
+	ds := &schema.Resource{
+		Schema: dataSourceSchemaFromResourceSchema(rs.Schema),
+	}
+
+	return ds
+}
+
 func dataSourceSchemaFromResourceSchema(rs map[string]*schema.Schema) map[string]*schema.Schema {
 	ds := make(map[string]*schema.Schema, len(rs))
 
