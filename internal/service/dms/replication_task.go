@@ -76,6 +76,7 @@ func ResourceReplicationTask() *schema.Resource {
 			"replication_task_settings": {
 				Type:                  schema.TypeString,
 				Optional:              true,
+				Computed:              true,
 				ValidateFunc:          validation.StringIsJSON,
 				DiffSuppressFunc:      suppressEquivalentTaskSettings,
 				DiffSuppressOnRefresh: true,
