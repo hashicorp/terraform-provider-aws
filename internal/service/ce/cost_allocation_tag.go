@@ -5,6 +5,7 @@ package ce
 
 import (
 	"context"
+	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/costexplorer"
@@ -13,19 +14,19 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_ce_cost_allocation_tag")
-func ResourceCostAllocationTag() *schema.Resource {
+// @SDKResource("aws_ce_cost_allocation_tag", name="Cost Allocation Tag")
+func resourceCostAllocationTag() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCostAllocationTagUpdate,
 		ReadWithoutTimeout:   resourceCostAllocationTagRead,
 		UpdateWithoutTimeout: resourceCostAllocationTagUpdate,
 		DeleteWithoutTimeout: resourceCostAllocationTagDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -50,68 +51,82 @@ func ResourceCostAllocationTag() *schema.Resource {
 
 func resourceCostAllocationTagRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).CEClient(ctx)
 
-	costAllocTag, err := FindCostAllocationTagByKey(ctx, conn, d.Id())
+	tag, err := findCostAllocationTagByTagKey(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		create.LogNotFoundRemoveState(names.CE, create.ErrActionReading, ResNameCostAllocationTag, d.Id())
+		log.Printf("[WARN] Cost Explorer Cost Allocation Tag (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.CE, create.ErrActionReading, ResNameCostAllocationTag, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Cost Explorer Cost Allocation Tag (%s): %s", d.Id(), err)
 	}
 
-	d.Set("tag_key", costAllocTag.TagKey)
-	d.Set("status", costAllocTag.Status)
-	d.Set("type", costAllocTag.Type)
+	d.Set("status", tag.Status)
+	d.Set("tag_key", tag.TagKey)
+	d.Set("type", tag.Type)
 
 	return diags
 }
 
 func resourceCostAllocationTagUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
+	conn := meta.(*conns.AWSClient).CEClient(ctx)
 
-	key := d.Get("tag_key").(string)
+	tagKey := d.Get("tag_key").(string)
 
-	updateTagStatus(ctx, d, meta, false)
+	if err := updateCostAllocationTagStatus(ctx, conn, tagKey, awstypes.CostAllocationTagStatus(d.Get("status").(string))); err != nil {
+		return sdkdiag.AppendErrorf(diags, "updating Cost Explorer Cost Allocation Tag (%s): %s", tagKey, err)
+	}
 
-	d.SetId(key)
+	d.SetId(tagKey)
 
 	return append(diags, resourceCostAllocationTagRead(ctx, d, meta)...)
 }
 
 func resourceCostAllocationTagDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	return updateTagStatus(ctx, d, meta, true)
-}
-
-func updateTagStatus(ctx context.Context, d *schema.ResourceData, meta interface{}, delete bool) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).CEClient(ctx)
 
-	key := d.Get("tag_key").(string)
-	tagStatus := awstypes.CostAllocationTagStatusEntry{
-		TagKey: aws.String(key),
-		Status: awstypes.CostAllocationTagStatus(d.Get("status").(string)),
+	log.Printf("[DEBUG] Deleting Cost Explorer Cost Allocation Tag: %s", d.Id())
+	if err := updateCostAllocationTagStatus(ctx, conn, d.Id(), awstypes.CostAllocationTagStatusInactive); err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting Cost Explorer Cost Allocation Tag (%s): %s", d.Id(), err)
 	}
 
-	if delete {
-		tagStatus.Status = awstypes.CostAllocationTagStatusInactive
-	}
+	return diags
+}
 
+func updateCostAllocationTagStatus(ctx context.Context, conn *costexplorer.Client, tagKey string, status awstypes.CostAllocationTagStatus) error {
 	input := &costexplorer.UpdateCostAllocationTagsStatusInput{
-		CostAllocationTagsStatus: []awstypes.CostAllocationTagStatusEntry{tagStatus},
+		CostAllocationTagsStatus: []awstypes.CostAllocationTagStatusEntry{{
+			Status: status,
+			TagKey: aws.String(tagKey),
+		}},
 	}
 
 	_, err := conn.UpdateCostAllocationTagsStatus(ctx, input)
 
-	if err != nil {
-		return create.AppendDiagError(diags, names.CE, create.ErrActionUpdating, ResNameCostAllocationTag, d.Id(), err)
+	return err
+}
+
+func findCostAllocationTagByTagKey(ctx context.Context, conn *costexplorer.Client, tagKey string) (*awstypes.CostAllocationTag, error) {
+	input := &costexplorer.ListCostAllocationTagsInput{
+		TagKeys:    []string{tagKey},
+		MaxResults: aws.Int32(1),
 	}
 
-	return diags
+	output, err := conn.ListCostAllocationTags(ctx, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || len(output.CostAllocationTags) == 0 {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return &output.CostAllocationTags[0], nil
 }

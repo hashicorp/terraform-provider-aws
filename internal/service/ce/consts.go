@@ -4,7 +4,6 @@
 package ce
 
 const (
-	ResNameCostCategory      = "Cost Category"
-	ResNameCostAllocationTag = "Cost Allocation Tags"
-	DSNameTags               = "Tags Data Source"
+	ResNameCostCategory = "Cost Category"
+	DSNameTags          = "Tags Data Source"
 )

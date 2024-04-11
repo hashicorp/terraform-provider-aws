@@ -14,32 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindCostAllocationTagByKey(ctx context.Context, conn *costexplorer.Client, key string) (*awstypes.CostAllocationTag, error) {
-	in := &costexplorer.ListCostAllocationTagsInput{
-		TagKeys:    []string{key},
-		MaxResults: aws.Int32(1),
-	}
-
-	out, err := conn.ListCostAllocationTags(ctx, in)
-
-	if errs.IsA[*awstypes.UnknownMonitorException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if out == nil || len(out.CostAllocationTags) == 0 {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-
-	return &out.CostAllocationTags[0], nil
-}
-
 func FindCostCategoryByARN(ctx context.Context, conn *costexplorer.Client, arn string) (*awstypes.CostCategory, error) {
 	in := &costexplorer.DescribeCostCategoryDefinitionInput{
 		CostCategoryArn: aws.String(arn),

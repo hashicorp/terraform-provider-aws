@@ -54,8 +54,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceCostAllocationTag,
+			Factory:  resourceCostAllocationTag,
 			TypeName: "aws_ce_cost_allocation_tag",
+			Name:     "Cost Allocation Tag",
 		},
 		{
 			Factory:  ResourceCostCategory,

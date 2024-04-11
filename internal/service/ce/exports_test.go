@@ -7,7 +7,9 @@ package ce
 var (
 	ResourceAnomalyMonitor      = resourceAnomalyMonitor
 	ResourceAnomalySubscription = resourceAnomalySubscription
+	ResourceCostAllocationTag   = resourceCostAllocationTag
 
-	FindAnomalyMonitorByARN      = findAnomalyMonitorByARN
-	FindAnomalySubscriptionByARN = findAnomalySubscriptionByARN
+	FindAnomalyMonitorByARN       = findAnomalyMonitorByARN
+	FindAnomalySubscriptionByARN  = findAnomalySubscriptionByARN
+	FindCostAllocationTagByTagKey = findCostAllocationTagByTagKey
 )
