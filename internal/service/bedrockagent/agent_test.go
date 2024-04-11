@@ -401,7 +401,7 @@ data "aws_iam_policy_document" "test_agent_trust" {
 
     condition {
       test     = "ArnLike"
-      values   = ["arn:aws:bedrock:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:agent/*"]
+      values   = ["arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:agent/*"]
       variable = "AWS:SourceArn"
     }
   }
@@ -411,7 +411,7 @@ data "aws_iam_policy_document" "test_agent_permissions" {
   statement {
     actions = ["bedrock:InvokeModel"]
     resources = [
-      "arn:aws:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s",
+      "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s",
     ]
   }
 }
@@ -424,5 +424,7 @@ resource "aws_iam_role_policy" "test" {
 data "aws_caller_identity" "current" {}
 
 data "aws_region" "current" {}
+
+data "aws_partition" "current" {}
 `, rName, model)
 }
