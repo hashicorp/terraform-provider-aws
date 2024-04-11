@@ -75,10 +75,10 @@ resource "aws_iam_policy_attachment" "test-attach" {
 This resource supports the following arguments:
 
 * `name`    (Required) - Name of the attachment. This cannot be an empty string.
-* `users`   (Optional) - User(s) the policy should be applied to
-* `roles`   (Optional) - Role(s) the policy should be applied to
-* `groups`  (Optional) - Group(s) the policy should be applied to
-* `policy_arn`  (Required) - ARN of the policy you want to apply
+* `users`   (Optional) - User(s) the policy should be applied to.
+* `roles`   (Optional) - Role(s) the policy should be applied to.
+* `groups`  (Optional) - Group(s) the policy should be applied to.
+* `policy_arn`  (Required) - ARN of the policy you want to apply. Typically this should be a reference to the ARN of another reference to ensure dependency ordering, such as `aws_iam_policy.example.arn`.
 
 ## Attribute Reference
 
