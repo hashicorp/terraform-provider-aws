@@ -133,3 +133,24 @@ func FindContributorInsights(ctx context.Context, conn *dynamodb.DynamoDB, table
 
 	return output, nil
 }
+
+func FindTableExportByID(ctx context.Context, conn *dynamodb.DynamoDB, id string) (*dynamodb.DescribeExportOutput, error) {
+	input := &dynamodb.DescribeExportInput{
+		ExportArn: aws.String(id),
+	}
+
+	out, err := conn.DescribeExportWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if out == nil || out.ExportDescription == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return out, nil
+}

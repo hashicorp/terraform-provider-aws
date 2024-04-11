@@ -8,9 +8,11 @@ import (
 	"errors"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/autoscalingplans"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/autoscalingplans"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/autoscalingplans/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -20,10 +22,10 @@ const (
 	scalingPlanUpdatedTimeout = 5 * time.Minute
 )
 
-func waitScalingPlanCreated(ctx context.Context, conn *autoscalingplans.AutoScalingPlans, scalingPlanName string, scalingPlanVersion int) (*autoscalingplans.ScalingPlan, error) {
+func waitScalingPlanCreated(ctx context.Context, conn *autoscalingplans.Client, scalingPlanName string, scalingPlanVersion int) (*awstypes.ScalingPlan, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{autoscalingplans.ScalingPlanStatusCodeCreationInProgress},
-		Target:  []string{autoscalingplans.ScalingPlanStatusCodeActive, autoscalingplans.ScalingPlanStatusCodeActiveWithProblems},
+		Pending: enum.Slice(awstypes.ScalingPlanStatusCodeCreationInProgress),
+		Target:  enum.Slice(awstypes.ScalingPlanStatusCodeActive, awstypes.ScalingPlanStatusCodeActiveWithProblems),
 		Refresh: statusScalingPlanCode(ctx, conn, scalingPlanName, scalingPlanVersion),
 		Timeout: scalingPlanCreatedTimeout,
 		Delay:   10 * time.Second,
@@ -31,9 +33,9 @@ func waitScalingPlanCreated(ctx context.Context, conn *autoscalingplans.AutoScal
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*autoscalingplans.ScalingPlan); ok {
-		if statusCode := aws.StringValue(output.StatusCode); statusCode == autoscalingplans.ScalingPlanStatusCodeCreationFailed {
-			tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusMessage)))
+	if output, ok := outputRaw.(*awstypes.ScalingPlan); ok {
+		if output.StatusCode == awstypes.ScalingPlanStatusCodeCreationFailed {
+			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 		}
 
 		return output, err
@@ -42,9 +44,9 @@ func waitScalingPlanCreated(ctx context.Context, conn *autoscalingplans.AutoScal
 	return nil, err
 }
 
-func waitScalingPlanDeleted(ctx context.Context, conn *autoscalingplans.AutoScalingPlans, scalingPlanName string, scalingPlanVersion int) (*autoscalingplans.ScalingPlan, error) {
+func waitScalingPlanDeleted(ctx context.Context, conn *autoscalingplans.Client, scalingPlanName string, scalingPlanVersion int) (*awstypes.ScalingPlan, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{autoscalingplans.ScalingPlanStatusCodeDeletionInProgress},
+		Pending: enum.Slice(awstypes.ScalingPlanStatusCodeDeletionInProgress),
 		Target:  []string{},
 		Refresh: statusScalingPlanCode(ctx, conn, scalingPlanName, scalingPlanVersion),
 		Timeout: scalingPlanDeletedTimeout,
@@ -53,9 +55,9 @@ func waitScalingPlanDeleted(ctx context.Context, conn *autoscalingplans.AutoScal
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*autoscalingplans.ScalingPlan); ok {
-		if statusCode := aws.StringValue(output.StatusCode); statusCode == autoscalingplans.ScalingPlanStatusCodeDeletionFailed {
-			tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusMessage)))
+	if output, ok := outputRaw.(*awstypes.ScalingPlan); ok {
+		if output.StatusCode == awstypes.ScalingPlanStatusCodeDeletionFailed {
+			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 		}
 
 		return output, err
@@ -64,10 +66,10 @@ func waitScalingPlanDeleted(ctx context.Context, conn *autoscalingplans.AutoScal
 	return nil, err
 }
 
-func waitScalingPlanUpdated(ctx context.Context, conn *autoscalingplans.AutoScalingPlans, scalingPlanName string, scalingPlanVersion int) (*autoscalingplans.ScalingPlan, error) {
+func waitScalingPlanUpdated(ctx context.Context, conn *autoscalingplans.Client, scalingPlanName string, scalingPlanVersion int) (*awstypes.ScalingPlan, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{autoscalingplans.ScalingPlanStatusCodeUpdateInProgress},
-		Target:  []string{autoscalingplans.ScalingPlanStatusCodeActive, autoscalingplans.ScalingPlanStatusCodeActiveWithProblems},
+		Pending: enum.Slice(awstypes.ScalingPlanStatusCodeUpdateInProgress),
+		Target:  enum.Slice(awstypes.ScalingPlanStatusCodeActive, awstypes.ScalingPlanStatusCodeActiveWithProblems),
 		Refresh: statusScalingPlanCode(ctx, conn, scalingPlanName, scalingPlanVersion),
 		Timeout: scalingPlanUpdatedTimeout,
 		Delay:   10 * time.Second,
@@ -75,9 +77,9 @@ func waitScalingPlanUpdated(ctx context.Context, conn *autoscalingplans.AutoScal
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*autoscalingplans.ScalingPlan); ok {
-		if statusCode := aws.StringValue(output.StatusCode); statusCode == autoscalingplans.ScalingPlanStatusCodeUpdateFailed {
-			tfresource.SetLastError(err, errors.New(aws.StringValue(output.StatusMessage)))
+	if output, ok := outputRaw.(*awstypes.ScalingPlan); ok {
+		if output.StatusCode == awstypes.ScalingPlanStatusCodeUpdateFailed {
+			tfresource.SetLastError(err, errors.New(aws.ToString(output.StatusMessage)))
 		}
 
 		return output, err

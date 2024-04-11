@@ -6,7 +6,7 @@ package iam
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -44,7 +44,7 @@ func dataSourceUsers() *schema.Resource {
 
 func dataSourceUsersRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 
 	nameRegex := d.Get("name_regex").(string)
 	pathPrefix := d.Get("path_prefix").(string)
@@ -60,8 +60,8 @@ func dataSourceUsersRead(ctx context.Context, d *schema.ResourceData, meta inter
 	var arns, names []string
 
 	for _, r := range results {
-		names = append(names, aws.StringValue(r.UserName))
-		arns = append(arns, aws.StringValue(r.Arn))
+		names = append(names, aws.ToString(r.UserName))
+		arns = append(arns, aws.ToString(r.Arn))
 	}
 
 	if err := d.Set("names", names); err != nil {

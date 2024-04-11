@@ -447,6 +447,18 @@ func TestAccImageBuilderDistributionConfiguration_DistributionAMIDistribution_na
 					}),
 				),
 			},
+			{
+				Config: testAccDistributionConfigurationConfig_amiName(rName, "AmazonLinux2-EKS-1.27-{{ imagebuilder:buildDate }}"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDistributionConfigurationExists(ctx, resourceName),
+					acctest.CheckResourceAttrRFC3339(resourceName, "date_updated"),
+					resource.TestCheckResourceAttr(resourceName, "distribution.#", "1"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "distribution.*", map[string]string{
+						"ami_distribution_configuration.#":      "1",
+						"ami_distribution_configuration.0.name": "AmazonLinux2-EKS-1.27-{{ imagebuilder:buildDate }}",
+					}),
+				),
+			},
 		},
 	})
 }

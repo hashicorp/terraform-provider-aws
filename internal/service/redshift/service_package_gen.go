@@ -23,6 +23,10 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 			Factory: newDataSourceDataShares,
 			Name:    "Data Shares",
 		},
+		{
+			Factory: newDataSourceProducerDataShares,
+			Name:    "Producer Data Shares",
+		},
 	}
 }
 

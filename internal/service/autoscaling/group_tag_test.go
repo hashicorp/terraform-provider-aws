@@ -104,7 +104,7 @@ func TestAccAutoScalingGroupTag_value(t *testing.T) {
 
 func testAccCheckGroupTagDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_autoscaling_group_tag" {
@@ -117,7 +117,7 @@ func testAccCheckGroupTagDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			_, err = tfautoscaling.GetTag(ctx, conn, identifier, tfautoscaling.TagResourceTypeGroup, key)
+			_, err = tfautoscaling.FindTag(ctx, conn, identifier, tfautoscaling.TagResourceTypeGroup, key)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -141,19 +141,15 @@ func testAccCheckGroupTagExists(ctx context.Context, n string) resource.TestChec
 			return fmt.Errorf("not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("%s: missing resource ID", n)
-		}
-
 		identifier, key, err := tftags.GetResourceID(rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingClient(ctx)
 
-		_, err = tfautoscaling.GetTag(ctx, conn, identifier, tfautoscaling.TagResourceTypeGroup, key)
+		_, err = tfautoscaling.FindTag(ctx, conn, identifier, tfautoscaling.TagResourceTypeGroup, key)
 
 		return err
 	}

@@ -156,3 +156,18 @@ jobs:
 
             * If you are interested in working on this issue, please leave a comment.
             * If this would be your first contribution, please review the [contribution guide](https://hashicorp.github.io/terraform-provider-aws/).
+
+  closed_issue_comment:
+    name: 'Closed Issue Comment'
+    if: github.event.action == 'closed'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Add comment on closed issues'
+        uses: peter-evans/create-or-update-comment@71345be0265236311c031f5c7866368bd1eff043 # v4.0.0
+        with:
+          issue-number: ${{ github.event.issue.number }}
+          body: |
+            > [!WARNING]
+            > This issue has been closed, meaning that any additional comments are hard for our team to see. Please assume that the maintainers will not see them.
+            >
+            > Ongoing conversations amongst community members are welcome, however, the issue will be locked after 30 days. Moving conversations to another venue, such as the [AWS Provider forum](https://discuss.hashicorp.com/c/terraform-providers/tf-aws/33), is recommended. If you have additional concerns, please open a new issue, referencing this one where needed.

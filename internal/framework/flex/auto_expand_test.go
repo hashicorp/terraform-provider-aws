@@ -731,6 +731,74 @@ func TestExpandStringEnum(t *testing.T) {
 	runAutoExpandTestCases(ctx, t, testCases)
 }
 
+func TestExpandListOfStringEnum(t *testing.T) {
+	t.Parallel()
+
+	type testEnum string
+	var testEnumFoo testEnum = "foo"
+	var testEnumBar testEnum = "bar"
+
+	ctx := context.Background()
+	testCases := autoFlexTestCases{
+		{
+			TestName: "valid value",
+			Source: types.ListValueMust(types.StringType, []attr.Value{
+				types.StringValue(string(testEnumFoo)),
+				types.StringValue(string(testEnumBar)),
+			}),
+			Target:     &[]testEnum{},
+			WantTarget: &[]testEnum{testEnumFoo, testEnumBar},
+		},
+		{
+			TestName:   "empty value",
+			Source:     types.ListValueMust(types.StringType, []attr.Value{}),
+			Target:     &[]testEnum{},
+			WantTarget: &[]testEnum{},
+		},
+		{
+			TestName:   "null value",
+			Source:     types.ListNull(types.StringType),
+			Target:     &[]testEnum{},
+			WantTarget: &[]testEnum{},
+		},
+	}
+	runAutoExpandTestCases(ctx, t, testCases)
+}
+
+func TestExpandSetOfStringEnum(t *testing.T) {
+	t.Parallel()
+
+	type testEnum string
+	var testEnumFoo testEnum = "foo"
+	var testEnumBar testEnum = "bar"
+
+	ctx := context.Background()
+	testCases := autoFlexTestCases{
+		{
+			TestName: "valid value",
+			Source: types.SetValueMust(types.StringType, []attr.Value{
+				types.StringValue(string(testEnumFoo)),
+				types.StringValue(string(testEnumBar)),
+			}),
+			Target:     &[]testEnum{},
+			WantTarget: &[]testEnum{testEnumFoo, testEnumBar},
+		},
+		{
+			TestName:   "empty value",
+			Source:     types.SetValueMust(types.StringType, []attr.Value{}),
+			Target:     &[]testEnum{},
+			WantTarget: &[]testEnum{},
+		},
+		{
+			TestName:   "null value",
+			Source:     types.SetNull(types.StringType),
+			Target:     &[]testEnum{},
+			WantTarget: &[]testEnum{},
+		},
+	}
+	runAutoExpandTestCases(ctx, t, testCases)
+}
+
 func TestExpandSimpleNestedBlockWithStringEnum(t *testing.T) {
 	t.Parallel()
 

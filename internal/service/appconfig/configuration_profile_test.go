@@ -9,14 +9,15 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/appconfig"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/appconfig"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/appconfig/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfappconfig "github.com/hashicorp/terraform-provider-aws/internal/service/appconfig"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -118,7 +119,7 @@ func TestAccAppConfigConfigurationProfile_Validators_json(t *testing.T) {
 					testAccCheckConfigurationProfileExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "validator.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "validator.*", map[string]string{
-						"type": appconfig.ValidatorTypeJsonSchema,
+						"type": string(awstypes.ValidatorTypeJsonSchema),
 					}),
 				),
 			},
@@ -134,7 +135,7 @@ func TestAccAppConfigConfigurationProfile_Validators_json(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "validator.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "validator.*", map[string]string{
 						"content": "",
-						"type":    appconfig.ValidatorTypeJsonSchema,
+						"type":    string(awstypes.ValidatorTypeJsonSchema),
 					}),
 				),
 			},
@@ -173,7 +174,7 @@ func TestAccAppConfigConfigurationProfile_Validators_lambda(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "validator.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "validator.*.content", "aws_lambda_function.test", "arn"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "validator.*", map[string]string{
-						"type": appconfig.ValidatorTypeLambda,
+						"type": string(awstypes.ValidatorTypeLambda),
 					}),
 				),
 			},
@@ -212,11 +213,11 @@ func TestAccAppConfigConfigurationProfile_Validators_multiple(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "validator.#", "2"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "validator.*", map[string]string{
 						"content": "{\"$schema\":\"http://json-schema.org/draft-05/schema#\",\"description\":\"BasicFeatureToggle-1\",\"title\":\"$id$\"}",
-						"type":    appconfig.ValidatorTypeJsonSchema,
+						"type":    string(awstypes.ValidatorTypeJsonSchema),
 					}),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "validator.*.content", "aws_lambda_function.test", "arn"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "validator.*", map[string]string{
-						"type": appconfig.ValidatorTypeLambda,
+						"type": string(awstypes.ValidatorTypeLambda),
 					}),
 				),
 			},
@@ -351,7 +352,7 @@ func TestAccAppConfigConfigurationProfile_tags(t *testing.T) {
 
 func testAccCheckConfigurationProfileDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_appconfig_configuration_profile" {
@@ -369,9 +370,9 @@ func testAccCheckConfigurationProfileDestroy(ctx context.Context) resource.TestC
 				ConfigurationProfileId: aws.String(confProfID),
 			}
 
-			output, err := conn.GetConfigurationProfileWithContext(ctx, input)
+			output, err := conn.GetConfigurationProfile(ctx, input)
 
-			if tfawserr.ErrCodeEquals(err, appconfig.ErrCodeResourceNotFoundException) {
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				continue
 			}
 
@@ -405,9 +406,9 @@ func testAccCheckConfigurationProfileExists(ctx context.Context, resourceName st
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AppConfigClient(ctx)
 
-		output, err := conn.GetConfigurationProfileWithContext(ctx, &appconfig.GetConfigurationProfileInput{
+		output, err := conn.GetConfigurationProfile(ctx, &appconfig.GetConfigurationProfileInput{
 			ApplicationId:          aws.String(appID),
 			ConfigurationProfileId: aws.String(confProfID),
 		})

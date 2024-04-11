@@ -68,15 +68,7 @@ func ResourceEmailIdentity() *schema.Resource {
 							RequiredWith: []string{"dkim_signing_attributes.0.domain_signing_selector"},
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(1, 20480),
-								func(v interface{}, name string) (warns []string, errs []error) {
-									s := v.(string)
-									if !verify.IsBase64Encoded([]byte(s)) {
-										errs = append(errs, fmt.Errorf(
-											"%s: must be base64-encoded", name,
-										))
-									}
-									return
-								},
+								verify.ValidBase64String,
 							),
 						},
 						"domain_signing_selector": {

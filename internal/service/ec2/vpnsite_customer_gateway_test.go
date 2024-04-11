@@ -10,7 +10,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/acmpca"
+	acmpca_types "github.com/aws/aws-sdk-go-v2/service/acmpca/types"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -184,8 +184,8 @@ func TestAccSiteVPNCustomerGateway_4ByteASN(t *testing.T) {
 func TestAccSiteVPNCustomerGateway_certificate(t *testing.T) {
 	ctx := acctest.Context(t)
 	var gateway ec2.CustomerGateway
-	var caRoot acmpca.CertificateAuthority
-	var caSubordinate acmpca.CertificateAuthority
+	var caRoot acmpca_types.CertificateAuthority
+	var caSubordinate acmpca_types.CertificateAuthority
 	rBgpAsn := sdkacctest.RandIntRange(64512, 65534)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_customer_gateway.test"

@@ -22,22 +22,30 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
+	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory: newCustomDomainAssociationResource,
+			Name:    "Custom Domain Association",
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceCredentials,
+			Factory:  dataSourceCredentials,
 			TypeName: "aws_redshiftserverless_credentials",
+			Name:     "Credentials",
 		},
 		{
-			Factory:  DataSourceNamespace,
+			Factory:  dataSourceNamespace,
 			TypeName: "aws_redshiftserverless_namespace",
+			Name:     "Namespace",
 		},
 		{
-			Factory:  DataSourceWorkgroup,
+			Factory:  dataSourceWorkgroup,
 			TypeName: "aws_redshiftserverless_workgroup",
+			Name:     "Workgroup",
 		},
 	}
 }
@@ -45,12 +53,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceEndpointAccess,
+			Factory:  resourceEndpointAccess,
 			TypeName: "aws_redshiftserverless_endpoint_access",
 			Name:     "Endpoint Access",
 		},
 		{
-			Factory:  ResourceNamespace,
+			Factory:  resourceNamespace,
 			TypeName: "aws_redshiftserverless_namespace",
 			Name:     "Namespace",
 			Tags: &types.ServicePackageResourceTags{
@@ -58,19 +66,22 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceResourcePolicy,
+			Factory:  resourceResourcePolicy,
 			TypeName: "aws_redshiftserverless_resource_policy",
+			Name:     "Resource Policy",
 		},
 		{
-			Factory:  ResourceSnapshot,
+			Factory:  resourceSnapshot,
 			TypeName: "aws_redshiftserverless_snapshot",
+			Name:     "Snapshot",
 		},
 		{
-			Factory:  ResourceUsageLimit,
+			Factory:  resourceUsageLimit,
 			TypeName: "aws_redshiftserverless_usage_limit",
+			Name:     "Usage Limit",
 		},
 		{
-			Factory:  ResourceWorkgroup,
+			Factory:  resourceWorkgroup,
 			TypeName: "aws_redshiftserverless_workgroup",
 			Name:     "Workgroup",
 			Tags: &types.ServicePackageResourceTags{

@@ -466,6 +466,7 @@ func (p *fwprovider) Functions(_ context.Context) []func() function.Function {
 	return []func() function.Function{
 		tffunction.NewARNBuildFunction,
 		tffunction.NewARNParseFunction,
+		tffunction.NewTrimIAMRolePathFunction,
 	}
 }
 

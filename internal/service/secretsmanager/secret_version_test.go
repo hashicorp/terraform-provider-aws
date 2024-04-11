@@ -17,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsecretsmanager "github.com/hashicorp/terraform-provider-aws/internal/service/secretsmanager"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -71,7 +71,7 @@ func TestAccSecretsManagerSecretVersion_base64Binary(t *testing.T) {
 				Config: testAccSecretVersionConfig_binary(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckSecretVersionExists(ctx, resourceName, &version),
-					resource.TestCheckResourceAttr(resourceName, "secret_binary", verify.Base64Encode([]byte("test-binary"))),
+					resource.TestCheckResourceAttr(resourceName, "secret_binary", itypes.Base64EncodeOnce([]byte("test-binary"))),
 					resource.TestCheckResourceAttrSet(resourceName, "version_id"),
 					resource.TestCheckResourceAttr(resourceName, "version_stages.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "version_stages.*", "AWSCURRENT"),
