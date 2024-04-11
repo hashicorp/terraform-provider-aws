@@ -5,7 +5,6 @@ package ce_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -16,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfce "github.com/hashicorp/terraform-provider-aws/internal/service/ce"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -276,30 +274,22 @@ func TestAccCEAnomalySubscription_Tags(t *testing.T) {
 	})
 }
 
-func testAccCheckAnomalySubscriptionExists(ctx context.Context, n string, anomalySubscription *awstypes.AnomalySubscription) resource.TestCheckFunc {
+func testAccCheckAnomalySubscriptionExists(ctx context.Context, n string, v *awstypes.AnomalySubscription) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CEClient(ctx)
-
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Cost Explorer Anomaly Subscription is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CEClient(ctx)
 
-		resp, err := tfce.FindAnomalySubscriptionByARN(ctx, conn, rs.Primary.ID)
+		output, err := tfce.FindAnomalySubscriptionByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if resp == nil {
-			return fmt.Errorf("Cost Explorer %q does not exist", rs.Primary.ID)
-		}
-
-		*anomalySubscription = *resp
+		*v = *output
 
 		return nil
 	}
@@ -324,8 +314,9 @@ func testAccCheckAnomalySubscriptionDestroy(ctx context.Context) resource.TestCh
 				return err
 			}
 
-			return create.Error(names.CE, create.ErrActionCheckingDestroyed, tfce.ResNameAnomalySubscription, rs.Primary.ID, errors.New("still exists"))
+			return fmt.Errorf("Cost Explorer Anomaly Subscription %s still exists", rs.Primary.ID)
 		}
+
 		return nil
 	}
 }

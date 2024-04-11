@@ -5,7 +5,9 @@ package ce
 
 // Exports for use in tests only.
 var (
-	ResourceAnomalyMonitor = resourceAnomalyMonitor
+	ResourceAnomalyMonitor      = resourceAnomalyMonitor
+	ResourceAnomalySubscription = resourceAnomalySubscription
 
-	FindAnomalyMonitorByARN = findAnomalyMonitorByARN
+	FindAnomalyMonitorByARN      = findAnomalyMonitorByARN
+	FindAnomalySubscriptionByARN = findAnomalySubscriptionByARN
 )

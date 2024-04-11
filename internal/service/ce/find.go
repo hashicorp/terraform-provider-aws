@@ -14,32 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindAnomalySubscriptionByARN(ctx context.Context, conn *costexplorer.Client, arn string) (*awstypes.AnomalySubscription, error) {
-	in := &costexplorer.GetAnomalySubscriptionsInput{
-		SubscriptionArnList: []string{arn},
-		MaxResults:          aws.Int32(1),
-	}
-
-	out, err := conn.GetAnomalySubscriptions(ctx, in)
-
-	if errs.IsA[*awstypes.UnknownMonitorException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if out == nil || len(out.AnomalySubscriptions) == 0 {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-
-	return &out.AnomalySubscriptions[0], nil
-}
-
 func FindCostAllocationTagByKey(ctx context.Context, conn *costexplorer.Client, key string) (*awstypes.CostAllocationTag, error) {
 	in := &costexplorer.ListCostAllocationTagsInput{
 		TagKeys:    []string{key},
