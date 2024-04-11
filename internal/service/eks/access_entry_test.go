@@ -236,6 +236,8 @@ func TestAccEKSAccessEntry_username(t *testing.T) {
 				Config: testAccAccessEntryConfig_username(rName, "user1"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessEntryExists(ctx, resourceName, &accessentry),
+					resource.TestCheckResourceAttr(resourceName, "kubernetes_groups.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "kubernetes_groups.*", "ae-test"),
 					resource.TestCheckResourceAttr(resourceName, "type", "STANDARD"),
 					resource.TestCheckResourceAttr(resourceName, "user_name", "user1"),
 				),
@@ -249,6 +251,8 @@ func TestAccEKSAccessEntry_username(t *testing.T) {
 				Config: testAccAccessEntryConfig_username(rName, "user2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAccessEntryExists(ctx, resourceName, &accessentry),
+					resource.TestCheckResourceAttr(resourceName, "kubernetes_groups.#", "1"),
+					resource.TestCheckTypeSetElemAttr(resourceName, "kubernetes_groups.*", "ae-test"),
 					resource.TestCheckResourceAttr(resourceName, "type", "STANDARD"),
 					resource.TestCheckResourceAttr(resourceName, "user_name", "user2"),
 				),
@@ -528,6 +532,8 @@ resource "aws_eks_access_entry" "test" {
 
   type      = "STANDARD"
   user_name = %[2]q
+
+  kubernetes_groups = ["ae-test"]
 }
 `, rName, username))
 }

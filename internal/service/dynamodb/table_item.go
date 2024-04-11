@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -273,12 +274,12 @@ func buildTableItemID(tableName string, hashKey string, rangeKey string, attrs m
 	id := []string{tableName, hashKey}
 
 	if hashVal, ok := attrs[hashKey]; ok {
-		id = append(id, verify.Base64Encode(hashVal.B))
+		id = append(id, itypes.Base64EncodeOnce(hashVal.B))
 		id = append(id, aws.StringValue(hashVal.S))
 		id = append(id, aws.StringValue(hashVal.N))
 	}
 	if rangeVal, ok := attrs[rangeKey]; ok && rangeKey != "" {
-		id = append(id, rangeKey, verify.Base64Encode(rangeVal.B))
+		id = append(id, rangeKey, itypes.Base64EncodeOnce(rangeVal.B))
 		id = append(id, aws.StringValue(rangeVal.S))
 		id = append(id, aws.StringValue(rangeVal.N))
 	}

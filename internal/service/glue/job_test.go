@@ -976,7 +976,7 @@ func testAccJobConfig_versionNumberOfWorkers(rName, glueVersion string) string {
 resource "aws_glue_job" "test" {
   glue_version      = %[1]q
   name              = %[2]q
-  number_of_workers = 2
+  number_of_workers = 1
   role_arn          = aws_iam_role.test.arn
   worker_type       = "Standard"
 
@@ -1102,7 +1102,7 @@ func testAccJobConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccJobConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_job" "test" {
   name              = %[1]q
-  number_of_workers = 2
+  number_of_workers = 1
   role_arn          = aws_iam_role.test.arn
   worker_type       = "Standard"
 
@@ -1123,7 +1123,7 @@ func testAccJobConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string
 	return acctest.ConfigCompose(testAccJobConfig_base(rName), fmt.Sprintf(`
 resource "aws_glue_job" "test" {
   name              = %[1]q
-  number_of_workers = 2
+  number_of_workers = 1
   role_arn          = aws_iam_role.test.arn
   worker_type       = "Standard"
 

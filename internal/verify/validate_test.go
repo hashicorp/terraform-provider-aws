@@ -392,10 +392,6 @@ func TestValidIAMPolicyJSONString(t *testing.T) {
 			WantError: `"json" is an empty string, which is not a valid JSON value`,
 		},
 		{
-			Value:     `    {"xyz": "foo"}`,
-			WantError: `"json" contains an invalid JSON policy: leading space characters are not allowed`,
-		},
-		{
 			Value:     `"blub"`,
 			WantError: `"json" contains an invalid JSON policy: contains a JSON-encoded string, not a JSON-encoded object`,
 		},

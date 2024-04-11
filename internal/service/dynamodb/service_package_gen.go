@@ -22,7 +22,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
+	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory: newResourcePolicyResource,
+			Name:    "Resource Policy",
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
@@ -60,6 +65,10 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "arn",
 			},
+		},
+		{
+			Factory:  ResourceTableExport,
+			TypeName: "aws_dynamodb_table_export",
 		},
 		{
 			Factory:  ResourceTableItem,

@@ -88,32 +88,6 @@ func FindFieldLevelEncryptionProfileByID(ctx context.Context, conn *cloudfront.C
 	return output, nil
 }
 
-func FindFunctionByNameAndStage(ctx context.Context, conn *cloudfront.CloudFront, name, stage string) (*cloudfront.DescribeFunctionOutput, error) {
-	input := &cloudfront.DescribeFunctionInput{
-		Name:  aws.String(name),
-		Stage: aws.String(stage),
-	}
-
-	output, err := conn.DescribeFunctionWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchFunctionExists) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.FunctionSummary == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output, nil
-}
-
 func FindMonitoringSubscriptionByDistributionID(ctx context.Context, conn *cloudfront.CloudFront, id string) (*cloudfront.GetMonitoringSubscriptionOutput, error) {
 	input := &cloudfront.GetMonitoringSubscriptionInput{
 		DistributionId: aws.String(id),

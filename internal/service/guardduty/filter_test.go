@@ -9,14 +9,16 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/service/acmpca"
+	acmpca_types "github.com/aws/aws-sdk-go-v2/service/acmpca/types"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/acmpca"
 	"github.com/aws/aws-sdk-go/service/guardduty"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfguardduty "github.com/hashicorp/terraform-provider-aws/internal/service/guardduty"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -434,7 +436,7 @@ resource "aws_guardduty_detector" "test" {
 
 func testAccCheckACMPCACertificateAuthorityDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_acmpca_certificate_authority" {
@@ -445,17 +447,17 @@ func testAccCheckACMPCACertificateAuthorityDestroy(ctx context.Context) resource
 				CertificateAuthorityArn: aws.String(rs.Primary.ID),
 			}
 
-			output, err := conn.DescribeCertificateAuthorityWithContext(ctx, input)
+			output, err := conn.DescribeCertificateAuthority(ctx, input)
 
 			if err != nil {
-				if tfawserr.ErrCodeEquals(err, acmpca.ErrCodeResourceNotFoundException) {
+				if errs.IsA[*acmpca_types.ResourceNotFoundException](err) {
 					return nil
 				}
 				return err
 			}
 
-			if output != nil && output.CertificateAuthority != nil && aws.StringValue(output.CertificateAuthority.Arn) == rs.Primary.ID && aws.StringValue(output.CertificateAuthority.Status) != acmpca.CertificateAuthorityStatusDeleted {
-				return fmt.Errorf("ACM PCA Certificate Authority %q still exists in non-DELETED state: %s", rs.Primary.ID, aws.StringValue(output.CertificateAuthority.Status))
+			if output != nil && output.CertificateAuthority != nil && aws.StringValue(output.CertificateAuthority.Arn) == rs.Primary.ID && output.CertificateAuthority.Status != acmpca_types.CertificateAuthorityStatusDeleted {
+				return fmt.Errorf("ACM PCA Certificate Authority %q still exists in non-DELETED state: %s", rs.Primary.ID, string(output.CertificateAuthority.Status))
 			}
 		}
 
