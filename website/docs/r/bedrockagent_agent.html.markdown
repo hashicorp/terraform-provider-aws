@@ -5,14 +5,6 @@ page_title: "AWS: aws_bedrockagent_agent"
 description: |-
   Terraform resource for managing an AWS Agents for Amazon Bedrock Agent.
 ---
-<!---
-TIP: A few guiding principles for writing documentation:
-1. Use simple language while avoiding jargon and figures of speech.
-2. Focus on brevity and clarity to keep a reader's attention.
-3. Use active voice and present tense whenever you can.
-4. Document your feature as it exists now; do not mention the future or past if you can help it.
-5. Use accessible and inclusive language.
---->`
 # Resource: aws_bedrockagent_agent
 
 Terraform resource for managing an AWS Agents for Amazon Bedrock Agent.
@@ -22,7 +14,55 @@ Terraform resource for managing an AWS Agents for Amazon Bedrock Agent.
 ### Basic Usage
 
 ```terraform
-resource "aws_bedrockagent_agent" "example" {
+resource "aws_iam_role" "example" {
+  assume_role_policy = data.aws_iam_policy_document.example_agent_trust.json
+  name_prefix        = "AmazonBedrockExecutionRoleForAgents_"
+}
+
+data "aws_iam_policy_document" "example_agent_trust" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      identifiers = ["bedrock.amazonaws.com"]
+      type        = "Service"
+    }
+    condition {
+      test     = "StringEquals"
+      values   = [data.aws_caller_identity.current.account_id]
+      variable = "aws:SourceAccount"
+    }
+
+    condition {
+      test     = "ArnLike"
+      values   = ["arn:aws:bedrock:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:agent/*"]
+      variable = "AWS:SourceArn"
+    }
+  }
+}
+
+data "aws_iam_policy_document" "example_agent_permissions" {
+  statement {
+    actions = ["bedrock:InvokeModel"]
+    resources = [
+      "arn:aws:bedrock:${data.aws_region.current.name}::foundation-model/anthropic.claude-v2",
+    ]
+  }
+}
+
+resource "aws_iam_role_policy" "example" {
+  policy = data.aws_iam_policy_document.example_agent_permissions.json
+  role   = aws_iam_role.example.id
+}
+
+data "aws_caller_identity" "current" {}
+
+data "aws_region" "current" {}
+
+resource "aws_bedrockagent_agent" "test" {
+  agent_name              = "my-agent-name"
+  agent_resource_role_arn = aws_iam_role.example.arn
+  idle_ttl                = 500
+  foundation_model        = "anthropic.claude-v2"
 }
 ```
 
@@ -30,26 +70,73 @@ resource "aws_bedrockagent_agent" "example" {
 
 The following arguments are required:
 
-* `example_arg` - (Required) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `agent_name` - (Required) Name for the agent.
+* `agent_resource_role_arn` - (Required) ARN of the Role for the agent.
+* `foundation_model` - (Required) Foundation model for the agent to use.
+* `idle_ttl` - (Required) TTL in seconds for the agent to idle.
 
 The following arguments are optional:
 
-* `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `customer_encryption_key_arn` - (Optional) ARN of customer manager key to use for encryption.
+* `description` - (Optional) Description of the agent.
+* `instruction` - (Optional) Instructions to tell agent what it should do.
+* `prompt_override_configuration` (Optional) Prompt Override Configuration
+* `tags` - (Optional) Key-value tags for the place index. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+
+### prompt_override_configuration
+
+This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
+
+The following arguments are required:
+* `prompt_configurations` - (Required) List of prompt configurations.
+
+The following arguments are optional:
+* `override_lambda` - (Optional) ARN of Lambda to use when parsing the raw foundation model output.
+
+### prompt_configurations
+
+This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
+
+The following arguments are required:
+* `base_prompt_template` - (Required) Prompt template to replace default. 
+* `parser_mode` - (Required) DEFAULT or OVERRIDDEN to control if the `override_lambda` is used.
+* `prompt_creation_mode` - (Required) DEFAULT or OVERRIDDEN to control if the default or provided `base_prompt_template` is used,
+* `prompt_state` - (Required) ENABLED or DISABLED to allow the agent to carry out the step in `prompt_type`.
+* `prompt_type` - (Required) The step this prompt applies to. PRE_PROCESSING | ORCHESTRATION | POST_PROCESSING | KNOWLEDGE_BASE_RESPONSE_GENERATION 
+* `inference_configuration` - (Required) Configures inference for the agent
+
+### inference_configuration
+This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
+
+The following arguments are required:
+* `max_length` - (Required) Maximum number of tokens in the response between 0 and 4096.
+* `stop_sequences` - (Required) List of stop sequences that cause the model to stop generating the response.
+* `temperature` - (Required) Likelihood of model selecting higher-probability options when generating a response.
+* `topk` - (Required) Defines the number of most-likely candidates the model chooses the next token from.
+* `topp` - (Required) Defines the number of most-likely candidates the model chooses the next token from.
+
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Agent. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
-* `example_attribute` - Concise description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
+* `agent_arn` - ARN of the Agent.
+* `agent_id` - ID of the Agent.
+* `agent_status` - Status of the Agent.
+* `agent_version` - Version of the Agent.
+* `created_at` - Timestamp the Agent was created at.
+* `failure_reasons` - Failure reasons for the Agent.
+* `prepared_at` - Timestamp the Agent was prepared at.
+* `recommended_actions` - Recommended actions to make your Agent to succeed.
+* `updated_at` - Timestamp the Agent was updated at.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
-* `delete` - (Default `90m`)
+* `create` - (Default `5m`)
+* `update` - (Default `5m`)
+* `delete` - (Default `5m`)
 
 ## Import
 
@@ -58,12 +145,12 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 ```terraform
 import {
   to = aws_bedrockagent_agent.example
-  id = "agent-id-12345678"
+  id = "abcdef1234"
 }
 ```
 
-Using `terraform import`, import Agents for Amazon Bedrock Agent using the `example_id_arg`. For example:
+Using `terraform import`, import Agents for Amazon Bedrock Agent using the `abcdef1234`. For example:
 
 ```console
-% terraform import aws_bedrockagent_agent.example agent-id-12345678
+% terraform import aws_bedrockagent_agent.example abcdef1234
 ```
