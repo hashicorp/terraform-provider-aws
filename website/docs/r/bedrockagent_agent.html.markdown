@@ -101,14 +101,15 @@ This argument is processed in [attribute-as-blocks mode](https://www.terraform.i
 
 The following arguments are required:
 
-* `base_prompt_template` - (Required) Prompt template to replace default. 
+* `base_prompt_template` - (Required) Prompt template to replace default.
 * `parser_mode` - (Required) DEFAULT or OVERRIDDEN to control if the `override_lambda` is used.
 * `prompt_creation_mode` - (Required) DEFAULT or OVERRIDDEN to control if the default or provided `base_prompt_template` is used,
 * `prompt_state` - (Required) ENABLED or DISABLED to allow the agent to carry out the step in `prompt_type`.
-* `prompt_type` - (Required) The step this prompt applies to. PRE_PROCESSING | ORCHESTRATION | POST_PROCESSING | KNOWLEDGE_BASE_RESPONSE_GENERATION 
+* `prompt_type` - (Required) The step this prompt applies to. PRE_PROCESSING | ORCHESTRATION | POST_PROCESSING | KNOWLEDGE_BASE_RESPONSE_GENERATION
 * `inference_configuration` - (Required) Configures inference for the agent
 
 ### inference_configuration
+
 This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
 
 The following arguments are required:
@@ -118,7 +119,6 @@ The following arguments are required:
 * `temperature` - (Required) Likelihood of model selecting higher-probability options when generating a response.
 * `topk` - (Required) Defines the number of most-likely candidates the model chooses the next token from.
 * `topp` - (Required) Defines the number of most-likely candidates the model chooses the next token from.
-
 
 ## Attribute Reference
 
