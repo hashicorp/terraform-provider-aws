@@ -13,18 +13,15 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// @SDKDataSource("aws_ce_tags")
-func DataSourceTags() *schema.Resource {
+// @SDKDataSource("aws_ce_tags", name="Tags")
+func dataSourceTags() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceTagsRead,
-		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
-		},
+
 		Schema: map[string]*schema.Schema{
 			"filter": {
 				Type:     schema.TypeList,
@@ -94,7 +91,6 @@ func DataSourceTags() *schema.Resource {
 
 func dataSourceTagsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-
 	conn := meta.(*conns.AWSClient).CEClient(ctx)
 
 	input := &costexplorer.GetTagsInput{
@@ -117,15 +113,14 @@ func dataSourceTagsRead(ctx context.Context, d *schema.ResourceData, meta interf
 		input.TagKey = aws.String(v.(string))
 	}
 
-	resp, err := conn.GetTags(ctx, input)
+	output, err := conn.GetTags(ctx, input)
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.CE, create.ErrActionReading, DSNameTags, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Cost Explorer Tags: %s", err)
 	}
 
-	d.Set("tags", resp.Tags)
-
 	d.SetId(meta.(*conns.AWSClient).AccountID)
+	d.Set("tags", output.Tags)
 
 	return diags
 }

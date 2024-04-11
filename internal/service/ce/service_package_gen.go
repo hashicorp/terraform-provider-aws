@@ -30,8 +30,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Cost Category",
 		},
 		{
-			Factory:  DataSourceTags,
+			Factory:  dataSourceTags,
 			TypeName: "aws_ce_tags",
+			Name:     "Tags",
 		},
 	}
 }
