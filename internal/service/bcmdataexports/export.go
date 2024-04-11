@@ -233,7 +233,7 @@ func (r *resourceExport) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	// export,_ := state.Export.ToPtr(ctx)
+	// export, _ := state.Export.ToPtr(ctx)
 
 	out, err := findExportByID(ctx, conn, state.ID.ValueString())
 	if tfresource.NotFound(err) {
@@ -248,7 +248,7 @@ func (r *resourceExport) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	state.ID = flex.StringToFramework(ctx, out.ExportArn)
+	state.ID = flex.StringToFramework(ctx, out.Export.ExportArn)
 
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
@@ -417,7 +417,7 @@ func statusExport(ctx context.Context, conn *bcmdataexports.Client, id string) r
 	}
 }
 
-func findExportByID(ctx context.Context, conn *bcmdataexports.Client, exportArn string) (*awstypes.Export, error) {
+func findExportByID(ctx context.Context, conn *bcmdataexports.Client, exportArn string) (*bcmdataexports.GetExportOutput, error) {
 	in := &bcmdataexports.GetExportInput{
 		ExportArn: aws.String(exportArn),
 	}
@@ -438,7 +438,7 @@ func findExportByID(ctx context.Context, conn *bcmdataexports.Client, exportArn 
 		return nil, tfresource.NewEmptyResultError(in)
 	}
 
-	return out.Export, nil
+	return out, nil
 }
 
 type resourceExportData struct {

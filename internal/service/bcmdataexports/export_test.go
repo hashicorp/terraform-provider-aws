@@ -9,8 +9,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bcmdataexports"
 	"github.com/aws/aws-sdk-go-v2/service/bcmdataexports/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -20,27 +18,24 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/names"
-
 	tfbcmdataexports "github.com/hashicorp/terraform-provider-aws/internal/service/bcmdataexports"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccBCMDataExportsExport_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	// TIP: This is a long-running test guard for tests that run longer than
-	// 300s (5 min) generally.
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var export bcmdataexports.DescribeExportResponse
+	var export bcmdataexports.GetExportOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bcmdataexports_export.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BCMDataExportsEndpointID)
+			acctest.PreCheckPartitionHasService(t, names.BCMDataExportsServiceID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BCMDataExportsServiceID),
@@ -51,22 +46,13 @@ func TestAccBCMDataExportsExport_basic(t *testing.T) {
 				Config: testAccExportConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExportExists(ctx, resourceName, &export),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
-						"console_access": "false",
-						"groups.#":       "0",
-						"username":       "Test",
-						"password":       "TestTest1234",
-					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "bcmdataexports", regexache.MustCompile(`export:+.`)),
+					resource.TestCheckResourceAttrSet(resourceName, "export"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -78,30 +64,23 @@ func TestAccBCMDataExportsExport_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var export bcmdataexports.DescribeExportResponse
+	var export bcmdataexports.GetExportOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bcmdataexports_export.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BCMDataExportsEndpointID)
-			testAccPreCheck(t)
+			acctest.PreCheckPartitionHasService(t, names.BCMDataExportsServiceID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BCMDataExportsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckExportDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccExportConfig_basic(rName, testAccExportVersionNewer),
+				Config: testAccExportConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExportExists(ctx, resourceName, &export),
-					// TIP: The Plugin-Framework disappears helper is similar to the Plugin-SDK version,
-					// but expects a new resource factory function as the third argument. To expose this
-					// private function to the testing package, you may need to add a line like the following
-					// to exports_test.go:
-					//
-					//   var ResourceExport = newResourceExport
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbcmdataexports.ResourceExport, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -119,17 +98,12 @@ func testAccCheckExportDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			input := &bcmdataexports.DescribeExportInput{
-				ExportId: aws.String(rs.Primary.ID),
-			}
-			_, err := conn.DescribeExport(ctx, &bcmdataexports.DescribeExportInput{
-				ExportId: aws.String(rs.Primary.ID),
-			})
+			_, err := tfbcmdataexports.FindExportByID(ctx, conn, rs.Primary.ID)
 			if errs.IsA[*types.ResourceNotFoundException](err) {
 				return nil
 			}
 			if err != nil {
-				return create.Error(names.BCMDataExports, create.ErrActionCheckingDestroyed, tfbcmdataexports.ResNameExport, rs.Primary.ID, err)
+				return err
 			}
 
 			return create.Error(names.BCMDataExports, create.ErrActionCheckingDestroyed, tfbcmdataexports.ResNameExport, rs.Primary.ID, errors.New("not destroyed"))
@@ -139,7 +113,7 @@ func testAccCheckExportDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckExportExists(ctx context.Context, name string, export *bcmdataexports.DescribeExportResponse) resource.TestCheckFunc {
+func testAccCheckExportExists(ctx context.Context, name string, export *bcmdataexports.GetExportOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -151,9 +125,7 @@ func testAccCheckExportExists(ctx context.Context, name string, export *bcmdatae
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BCMDataExportsClient(ctx)
-		resp, err := conn.DescribeExport(ctx, &bcmdataexports.DescribeExportInput{
-			ExportId: aws.String(rs.Primary.ID),
-		})
+		resp, err := tfbcmdataexports.FindExportByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return create.Error(names.BCMDataExports, create.ErrActionCheckingExistence, tfbcmdataexports.ResNameExport, rs.Primary.ID, err)
@@ -168,8 +140,8 @@ func testAccCheckExportExists(ctx context.Context, name string, export *bcmdatae
 func testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).BCMDataExportsClient(ctx)
 
-	input := &bcmdataexports.ListExportsInput{}
-	_, err := conn.ListExports(ctx, input)
+	input := &bcmdataexports.GetExportInput{}
+	_, err := conn.GetExport(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -179,17 +151,7 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccCheckExportNotRecreated(before, after *bcmdataexports.DescribeExportResponse) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.ExportId), aws.ToString(after.ExportId); before != after {
-			return create.Error(names.BCMDataExports, create.ErrActionCheckingNotRecreated, tfbcmdataexports.ResNameExport, aws.ToString(before.ExportId), errors.New("recreated"))
-		}
-
-		return nil
-	}
-}
-
-func testAccExportConfig_basic(rName, version string) string {
+func testAccExportConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 
 resource "aws_s3_bucket" "test" {
@@ -198,7 +160,7 @@ resource "aws_s3_bucket" "test" {
 
 resource "aws_bcmdataexports_export" "test" {
   export {
-    name = "exampleexportname"
+    name = %[1]q
     data_query {
       query_statement = "SELECT identity_line_item_id, identity_time_interval, line_item_product_code,line_item_unblended_cost FROM COST_AND_USAGE_REPORT"
       table_configurations {
@@ -227,5 +189,5 @@ resource "aws_bcmdataexports_export" "test" {
     }
   }
 }
-`, rName, version)
+`, rName)
 }
