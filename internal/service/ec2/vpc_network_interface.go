@@ -385,7 +385,7 @@ func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if v, ok := d.GetOk("connection_tracking_specification_request"); ok {
-		input.ConnectionTrackingSpecification = expandConnectionTrackingSpecificationRequest(v.(map[string]interface{}))
+		input.ConnectionTrackingSpecification = expandConnectionTrackingSpecificationRequest(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("ipv4_prefix_count"); ok {
@@ -1312,33 +1312,35 @@ func expandInstanceIPv6Addresses(tfList []interface{}) []*ec2.InstanceIpv6Addres
 }
 
 func expandConnectionTrackingSpecificationRequest(tfMap map[string]interface{}) *ec2.ConnectionTrackingSpecificationRequest {
-	if tfMap == nil {
+	if len(tfMap) == 0 || tfMap[0] == nil {
 		return nil
 	}
 
 	apiObject := &ec2.ConnectionTrackingSpecificationRequest{}
 
-	if v, ok := tfMap["tcp_established_timeout"].(int); ok {
+	m := tfMap[0].(map[string]interface{})
+
+	if v, ok := m["tcp_established_timeout"].(int); ok {
 		apiObject.TcpEstablishedTimeout = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["udp_stream_timeout"].(int); ok {
+	if v, ok := m["udp_stream_timeout"].(int); ok {
 		apiObject.UdpStreamTimeout = aws.Int64(int64(v))
 	}
 
-	if v, ok := tfMap["udp_timeout"].(int); ok {
+	if v, ok := m["udp_timeout"].(int); ok {
 		apiObject.UdpTimeout = aws.Int64(int64(v))
 	}
 
 	return apiObject
 }
 
-func expandConnectionTrackingSpecificationRequestUpdate(l []interface{}) *ec2.ConnectionTrackingSpecificationRequest {
-	if len(l) == 0 || l[0] == nil {
+func expandConnectionTrackingSpecificationRequestUpdate(tfMap []interface{}) *ec2.ConnectionTrackingSpecificationRequest {
+	if len(tfMap) == 0 || tfMap[0] == nil {
 		return nil
 	}
 
-	m := l[0].(map[string]interface{})
+	m := tfMap[0].(map[string]interface{})
 
 	apiObject := &ec2.ConnectionTrackingSpecificationRequest{}
 
