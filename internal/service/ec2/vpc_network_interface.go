@@ -74,7 +74,7 @@ func ResourceNetworkInterface() *schema.Resource {
 				Optional: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
-					Schema: map[int]*schema.Schema{
+					Schema: map[string]*schema.Schema{
 						"tcp_established_timeout": {
 							Type:         schema.TypeInt,
 							Optional:     true,
@@ -1318,18 +1318,18 @@ func expandConnectionTrackingSpecificationRequest(tfMap map[string]interface{}) 
 
 	apiObject := &ec2.ConnectionTrackingSpecificationRequest{}
 
-	m := tfMap[0].(map[int]interface{})
+	m := tfMap[0].(map[string]interface{})
 
 	if v, ok := m["tcp_established_timeout"].(int); ok {
-		apiObject.TcpEstablishedTimeout = aws.Int64(int64(v))
+		apiObject.TcpEstablishedTimeout = aws.Int32(int32(v))
 	}
 
 	if v, ok := m["udp_stream_timeout"].(int); ok {
-		apiObject.UdpStreamTimeout = aws.Int64(int64(v))
+		apiObject.UdpStreamTimeout = aws.Int32(int32(v))
 	}
 
 	if v, ok := m["udp_timeout"].(int); ok {
-		apiObject.UdpTimeout = aws.Int64(int64(v))
+		apiObject.UdpTimeout = aws.Int32(int32(v))
 	}
 
 	return apiObject
@@ -1345,15 +1345,15 @@ func expandConnectionTrackingSpecificationRequestUpdate(tfMap []interface{}) *ec
 	apiObject := &ec2.ConnectionTrackingSpecificationRequest{}
 
 	if v, ok := m["tcp_established_timeout"].(int); ok {
-		apiObject.TcpEstablishedTimeout = aws.Int64(int64(v))
+		apiObject.TcpEstablishedTimeout = aws.Int32(int32(v))
 	}
 
 	if v, ok := m["udp_stream_timeout"].(int); ok {
-		apiObject.UdpStreamTimeout = aws.Int64(int64(v))
+		apiObject.UdpStreamTimeout = aws.Int32(int32(v))
 	}
 
 	if v, ok := m["udp_timeout"].(int); ok {
-		apiObject.UdpTimeout = aws.Int64(int64(v))
+		apiObject.UdpTimeout = aws.Int32(int32(v))
 	}
 
 	return apiObject
@@ -1364,18 +1364,18 @@ func flattenConnectionTrackingConfiguration(apiObject *ec2.ConnectionTrackingCon
 		return nil
 	}
 
-	tfMap := map[int]interface{}{}
+	tfMap := map[string]interface{}{}
 
 	if v := apiObject.TcpEstablishedTimeout; v != nil {
-		tfMap["tcp_established_timeout"] = aws.Int64Value(v)
+		tfMap["tcp_established_timeout"] = v
 	}
 
 	if v := apiObject.UdpStreamTimeout; v != nil {
-		tfMap["udp_stream_timeout"] = aws.Int64Value(v)
+		tfMap["udp_stream_timeout"] = v
 	}
 
 	if v := apiObject.UdpTimeout; v != nil {
-		tfMap["udp_timeout"] = aws.Int64Value(v)
+		tfMap["udp_timeout"] = v
 	}
 
 	return tfMap
