@@ -237,7 +237,7 @@ func (r *agentResource) Read(ctx context.Context, request resource.ReadRequest, 
 	conn := r.Meta().BedrockAgentClient(ctx)
 
 	AgentId := data.ID.ValueString()
-	output, err := findBedrockAgentByID(ctx, conn, AgentId)
+	output, err := findAgentByID(ctx, conn, AgentId)
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -379,7 +379,7 @@ func (r *agentResource) ModifyPlan(ctx context.Context, request resource.ModifyP
 	r.SetTagsAll(ctx, request, response)
 }
 
-func findBedrockAgentByID(ctx context.Context, conn *bedrockagent.Client, id string) (*bedrockagent.GetAgentOutput, error) {
+func findAgentByID(ctx context.Context, conn *bedrockagent.Client, id string) (*bedrockagent.GetAgentOutput, error) {
 	input := &bedrockagent.GetAgentInput{
 		AgentId: aws.String(id),
 	}
@@ -406,7 +406,7 @@ func findBedrockAgentByID(ctx context.Context, conn *bedrockagent.Client, id str
 
 func statusAgent(ctx context.Context, conn *bedrockagent.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findBedrockAgentByID(ctx, conn, id)
+		output, err := findAgentByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
