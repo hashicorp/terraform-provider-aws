@@ -12,6 +12,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -19,6 +21,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -60,10 +64,11 @@ func testAccCheckAgentAliasDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := conn.GetAgentAlias(ctx, &bedrockagent.GetAgentAliasInput{
-				AgentAliasId: aws.String(rs.Primary.ID),
-				AgentId:      aws.String(rs.Primary.Attributes["agent_id"]),
-			})
+			// _, err := conn.GetAgentAlias(ctx, &bedrockagent.GetAgentAliasInput{
+			// 	AgentAliasId: aws.String(rs.Primary.ID),
+			// 	AgentId:      aws.String(rs.Primary.Attributes["agent_id"]),
+			// })
+			_, err := findAgentAliasByID(ctx, conn, rs.Primary.ID)
 
 			if errs.IsA[*types.ResourceNotFoundException](err) {
 				return nil
@@ -88,10 +93,11 @@ func testAccCheckAgentAliasExists(ctx context.Context, n string, v *bedrockagent
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentClient(ctx)
 
-		output, err := conn.GetAgentAlias(ctx, &bedrockagent.GetAgentAliasInput{
-			AgentAliasId: aws.String(rs.Primary.ID),
-			AgentId:      aws.String(rs.Primary.Attributes["agent_id"]),
-		})
+		// output, err := conn.GetAgentAlias(ctx, &bedrockagent.GetAgentAliasInput{
+		// 	AgentAliasId: aws.String(rs.Primary.ID),
+		// 	AgentId:      aws.String(rs.Primary.Attributes["agent_id"]),
+		// })
+		output, err := findAgentAliasByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -101,6 +107,36 @@ func testAccCheckAgentAliasExists(ctx context.Context, n string, v *bedrockagent
 
 		return nil
 	}
+}
+
+func findAgentAliasByID(ctx context.Context, conn *bedrockagent.Client, id string) (*bedrockagent.GetAgentAliasOutput, error) {
+	parts, err := intflex.ExpandResourceId(id, 2, false)
+	if err != nil {
+		return nil, err
+	}
+	input := &bedrockagent.GetAgentAliasInput{
+		AgentAliasId: aws.String(parts[0]),
+		AgentId:      aws.String(parts[1]),
+	}
+
+	output, err := conn.GetAgentAlias(ctx, input)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output, nil
 }
 
 func testAccAgentAliasConfig_basic(rName string) string {
