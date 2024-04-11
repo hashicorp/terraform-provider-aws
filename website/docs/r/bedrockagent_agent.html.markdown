@@ -88,9 +88,11 @@ The following arguments are optional:
 This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
 
 The following arguments are required:
+
 * `prompt_configurations` - (Required) List of prompt configurations.
 
 The following arguments are optional:
+
 * `override_lambda` - (Optional) ARN of Lambda to use when parsing the raw foundation model output.
 
 ### prompt_configurations
@@ -98,6 +100,7 @@ The following arguments are optional:
 This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
 
 The following arguments are required:
+
 * `base_prompt_template` - (Required) Prompt template to replace default. 
 * `parser_mode` - (Required) DEFAULT or OVERRIDDEN to control if the `override_lambda` is used.
 * `prompt_creation_mode` - (Required) DEFAULT or OVERRIDDEN to control if the default or provided `base_prompt_template` is used,
@@ -109,6 +112,7 @@ The following arguments are required:
 This argument is processed in [attribute-as-blocks mode](https://www.terraform.io/docs/configuration/attr-as-blocks.html).
 
 The following arguments are required:
+
 * `max_length` - (Required) Maximum number of tokens in the response between 0 and 4096.
 * `stop_sequences` - (Required) List of stop sequences that cause the model to stop generating the response.
 * `temperature` - (Required) Likelihood of model selecting higher-probability options when generating a response.
