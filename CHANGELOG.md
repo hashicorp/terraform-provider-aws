@@ -1,13 +1,25 @@
 ## 5.45.0 (Unreleased)
 
+NOTES:
+
+* resource/aws_redshift_cluster: The `snapshot_copy` argument is now deprecated. Use the `aws_redshift_snapshot_copy` resource instead. ([#36810](https://github.com/hashicorp/terraform-provider-aws/issues/36810))
+
+FEATURES:
+
+* **New Resource:** `aws_redshift_snapshot_copy` ([#36810](https://github.com/hashicorp/terraform-provider-aws/issues/36810))
+
 ENHANCEMENTS:
 
+* data-source/aws_sagemaker_prebuilt_ecr_image: Add `registry_id` for `af-south-1` AWS Region ([#36803](https://github.com/hashicorp/terraform-provider-aws/issues/36803))
 * resource/aws_api_gateway_documentation_part: Add `documentation_part_id` attribute ([#36445](https://github.com/hashicorp/terraform-provider-aws/issues/36445))
 * resource/aws_wafregional_web_acl_association: Add configurable timeouts ([#36445](https://github.com/hashicorp/terraform-provider-aws/issues/36445))
 * resource/aws_wafregional_web_acl_association: Add plan-time validation of `resource_arn` ([#36445](https://github.com/hashicorp/terraform-provider-aws/issues/36445))
 
 BUG FIXES:
 
+* provider: Change the default AWS SDK for Go v2 API client [`MaxBackoff`](https://aws.github.io/aws-sdk-go-v2/docs/configuring-sdk/retries-timeouts/#limiting-the-max-back-off-delay) value to 300 seconds so that services migrated to AWS SDK for Go v2 maintain behavioral compatibility with AWS SDK for Go v1 ([#36855](https://github.com/hashicorp/terraform-provider-aws/issues/36855))
+* resource/aws_datasync_location_object_storage: Allow update to `agent_arns` ([#36819](https://github.com/hashicorp/terraform-provider-aws/issues/36819))
+* resource/aws_devopsguru_notification_channel: Fix persistent diff when `filters.message_types` or `filters.severities` contains multiple elements ([#36804](https://github.com/hashicorp/terraform-provider-aws/issues/36804))
 * resource/aws_securityhub_configuration_policy: Mark `configuration_policy.enabled_standard_arns` as Optional, fixing `InvalidInputException: Invalid semantics: Enabled standards and security control configurations must be configured when Security Hub is enabled` errors ([#36740](https://github.com/hashicorp/terraform-provider-aws/issues/36740))
 
 ## 5.44.0 (April  4, 2024)

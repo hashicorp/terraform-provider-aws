@@ -157,6 +157,7 @@ Managed Streaming for Kafka Connect
 MemoryDB for Redis
 Meta Data Sources
 Neptune
+Neptune Analytics
 Network Firewall
 Network Manager
 OpenSearch
