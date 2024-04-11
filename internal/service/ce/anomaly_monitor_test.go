@@ -5,7 +5,6 @@ package ce_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -16,7 +15,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	tfce "github.com/hashicorp/terraform-provider-aws/internal/service/ce"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -192,7 +190,7 @@ func TestAccCEAnomalyMonitor_Dimensional(t *testing.T) {
 	})
 }
 
-func testAccCheckAnomalyMonitorExists(ctx context.Context, n string, anomalyMonitor *awstypes.AnomalyMonitor) resource.TestCheckFunc {
+func testAccCheckAnomalyMonitorExists(ctx context.Context, n string, v *awstypes.AnomalyMonitor) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CEClient(ctx)
 
@@ -201,21 +199,13 @@ func testAccCheckAnomalyMonitorExists(ctx context.Context, n string, anomalyMoni
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Cost Explorer Anomaly Monitor is set")
-		}
-
-		resp, err := tfce.FindAnomalyMonitorByARN(ctx, conn, rs.Primary.ID)
+		output, err := tfce.FindAnomalyMonitorByARN(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
 		}
 
-		if resp == nil {
-			return fmt.Errorf("Cost Explorer %q does not exist", rs.Primary.ID)
-		}
-
-		*anomalyMonitor = *resp
+		*v = *output
 
 		return nil
 	}
@@ -240,7 +230,7 @@ func testAccCheckAnomalyMonitorDestroy(ctx context.Context) resource.TestCheckFu
 				return err
 			}
 
-			return create.Error(names.CE, create.ErrActionCheckingDestroyed, tfce.ResNameAnomalyMonitor, rs.Primary.ID, errors.New("still exists"))
+			return fmt.Errorf("Cost Explorer Anomaly Monitor %s still exists", rs.Primary.ID)
 		}
 
 		return nil

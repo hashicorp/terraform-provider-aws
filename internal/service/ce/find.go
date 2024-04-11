@@ -14,32 +14,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindAnomalyMonitorByARN(ctx context.Context, conn *costexplorer.Client, arn string) (*awstypes.AnomalyMonitor, error) {
-	in := &costexplorer.GetAnomalyMonitorsInput{
-		MonitorArnList: []string{arn},
-		MaxResults:     aws.Int32(1),
-	}
-
-	out, err := conn.GetAnomalyMonitors(ctx, in)
-
-	if errs.IsA[*awstypes.UnknownMonitorException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: in,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if out == nil || len(out.AnomalyMonitors) == 0 {
-		return nil, tfresource.NewEmptyResultError(in)
-	}
-
-	return &out.AnomalyMonitors[0], nil
-}
-
 func FindAnomalySubscriptionByARN(ctx context.Context, conn *costexplorer.Client, arn string) (*awstypes.AnomalySubscription, error) {
 	in := &costexplorer.GetAnomalySubscriptionsInput{
 		SubscriptionArnList: []string{arn},
