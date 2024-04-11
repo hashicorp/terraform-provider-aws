@@ -33,6 +33,7 @@ This resource supports the following arguments:
 * `connection_id` - (Optional) The ID of an existing dedicated connection to migrate to the LAG.
 * `force_destroy` - (Optional, Default:false) A boolean that indicates all connections associated with the LAG should be deleted so that the LAG can be destroyed without error. These objects are *not* recoverable.
 * `provider_name` - (Optional) The name of the service provider associated with the LAG.
+* `request_macsec` - (Optional) Indicates whether the connection will support MAC Security (MACsec).
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
