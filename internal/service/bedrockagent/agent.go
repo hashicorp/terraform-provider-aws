@@ -39,8 +39,8 @@ import (
 
 // @FrameworkResource(name="Bedrock Agent")
 // @Tags(identifierAttribute="agent_arn")
-func newBedrockAgentResource(context.Context) (resource.ResourceWithConfigure, error) {
-	r := &bedrockAgentResource{}
+func newAgentResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &agentResource{}
 
 	r.SetDefaultCreateTimeout(5 * time.Minute)
 	r.SetDefaultUpdateTimeout(5 * time.Minute)
@@ -49,17 +49,17 @@ func newBedrockAgentResource(context.Context) (resource.ResourceWithConfigure, e
 	return r, nil
 }
 
-type bedrockAgentResource struct {
+type agentResource struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *bedrockAgentResource) Metadata(_ context.Context, request resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *agentResource) Metadata(_ context.Context, request resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = "aws_bedrockagent_agent"
 }
 
-func (r *bedrockAgentResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *agentResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"agent_arn": framework.ARNAttributeComputedOnly(),
@@ -180,7 +180,7 @@ func (r *bedrockAgentResource) Schema(ctx context.Context, request resource.Sche
 	}
 }
 
-func (r *bedrockAgentResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+func (r *agentResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data bedrockAgentResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
@@ -221,7 +221,7 @@ func (r *bedrockAgentResource) Create(ctx context.Context, request resource.Crea
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *bedrockAgentResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+func (r *agentResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var data bedrockAgentResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
@@ -261,7 +261,7 @@ func (r *bedrockAgentResource) Read(ctx context.Context, request resource.ReadRe
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *bedrockAgentResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+func (r *agentResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	var old, new bedrockAgentResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
 	if response.Diagnostics.HasError() {
@@ -342,7 +342,7 @@ func (r *bedrockAgentResource) Update(ctx context.Context, request resource.Upda
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *bedrockAgentResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+func (r *agentResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var data bedrockAgentResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
@@ -375,7 +375,7 @@ func (r *bedrockAgentResource) Delete(ctx context.Context, request resource.Dele
 	}
 }
 
-func (r *bedrockAgentResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+func (r *agentResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
 	r.SetTagsAll(ctx, request, response)
 }
 
