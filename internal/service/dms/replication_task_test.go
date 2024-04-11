@@ -43,7 +43,7 @@ func TestAccDMSReplicationTask_basic(t *testing.T) {
 					resource.TestCheckNoResourceAttr(resourceName, "cdc_start_time"),
 					resource.TestCheckResourceAttr(resourceName, "migration_type", "full-load"),
 					resource.TestCheckResourceAttrPair(resourceName, "replication_instance_arn", "aws_dms_replication_instance.test", "replication_instance_arn"),
-					acctest.CheckResourceAttrEquivalentJSON(resourceName, "replication_task_settings", defaultReplicationTaskConfig),
+					acctest.CheckResourceAttrEquivalentJSON(resourceName, "replication_task_settings", defaultReplicationTaskSettings),
 					resource.TestCheckResourceAttrPair(resourceName, "source_endpoint_arn", "aws_dms_endpoint.source", "endpoint_arn"),
 					resource.TestCheckResourceAttr(resourceName, "start_replication_task", "false"),
 					resource.TestCheckResourceAttr(resourceName, "status", "ready"),
@@ -884,7 +884,7 @@ resource "aws_dms_replication_instance" "test2" {
 `, rName, arn))
 }
 
-const defaultReplicationTaskConfig = `{
+const defaultReplicationTaskSettings = `{
   "Logging": {
     "EnableLogging": false,
     "EnableLogContext": false,

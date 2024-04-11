@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -34,6 +35,7 @@ func TestAccDMSReplicationConfig_basic(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationConfigExists(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "dms", regexache.MustCompile(`replication-config:[A-Z0-9]{26}`)),
 					resource.TestCheckResourceAttr(resourceName, "compute_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "compute_config.0.availability_zone", ""),
 					resource.TestCheckResourceAttr(resourceName, "compute_config.0.dns_name_servers", ""),
@@ -46,14 +48,16 @@ func TestAccDMSReplicationConfig_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "compute_config.0.vpc_security_group_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "replication_config_identifier", rName),
 					resource.TestCheckResourceAttrSet(resourceName, "replication_settings"),
+					acctest.CheckResourceAttrEquivalentJSON(resourceName, "replication_settings", defaultReplicationConfigSettings),
 					resource.TestCheckResourceAttr(resourceName, "replication_type", "cdc"),
 					resource.TestCheckNoResourceAttr(resourceName, "resource_identifier"),
-					resource.TestCheckResourceAttrSet(resourceName, "source_endpoint_arn"),
+					resource.TestCheckResourceAttrPair(resourceName, "source_endpoint_arn", "aws_dms_endpoint.source", "endpoint_arn"),
 					resource.TestCheckResourceAttr(resourceName, "start_replication", "false"),
 					resource.TestCheckResourceAttr(resourceName, "supplemental_settings", ""),
-					resource.TestCheckResourceAttrSet(resourceName, "table_mappings"),
+					acctest.CheckResourceAttrJMES(resourceName, "table_mappings", "length(rules)", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "target_endpoint_arn", "aws_dms_endpoint.target", "endpoint_arn"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "target_endpoint_arn"),
+					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
 				),
 			},
 			{
@@ -439,7 +443,6 @@ resource "aws_dms_replication_config" "test" {
   source_endpoint_arn           = aws_dms_endpoint.source.endpoint_arn
   target_endpoint_arn           = aws_dms_endpoint.target.endpoint_arn
   table_mappings                = "{\"rules\":[{\"rule-type\":\"selection\",\"rule-id\":\"1\",\"rule-name\":\"1\",\"object-locator\":{\"schema-name\":\"%%\",\"table-name\":\"%%\"},\"rule-action\":\"include\"}]}"
-  replication_settings          = "{\"BeforeImageSettings\":null,\"ChangeProcessingDdlHandlingPolicy\":{\"HandleSourceTableAltered\":true,\"HandleSourceTableDropped\":true,\"HandleSourceTableTruncated\":true},\"ChangeProcessingTuning\":{\"BatchApplyMemoryLimit\":500,\"BatchApplyPreserveTransaction\":true,\"BatchApplyTimeoutMax\":30,\"BatchApplyTimeoutMin\":1,\"BatchSplitSize\":0,\"CommitTimeout\":1,\"MemoryKeepTime\":60,\"MemoryLimitTotal\":1024,\"MinTransactionSize\":1000,\"StatementCacheSize\":50},\"CharacterSetSettings\":null,\"ControlTablesSettings\":{\"CommitPositionTableEnabled\":false,\"ControlSchema\":\"\",\"FullLoadExceptionTableEnabled\":false,\"HistoryTableEnabled\":false,\"HistoryTimeslotInMinutes\":5,\"StatusTableEnabled\":false,\"SuspendedTablesTableEnabled\":false},\"ErrorBehavior\":{\"ApplyErrorDeletePolicy\":\"IGNORE_RECORD\",\"ApplyErrorEscalationCount\":0,\"ApplyErrorEscalationPolicy\":\"LOG_ERROR\",\"ApplyErrorFailOnTruncationDdl\":false,\"ApplyErrorInsertPolicy\":\"LOG_ERROR\",\"ApplyErrorUpdatePolicy\":\"LOG_ERROR\",\"DataErrorEscalationCount\":0,\"DataErrorEscalationPolicy\":\"SUSPEND_TABLE\",\"DataErrorPolicy\":\"LOG_ERROR\",\"DataTruncationErrorPolicy\":\"LOG_ERROR\",\"EventErrorPolicy\":\"IGNORE\",\"FailOnNoTablesCaptured\":false,\"FailOnTransactionConsistencyBreached\":false,\"FullLoadIgnoreConflicts\":true,\"RecoverableErrorCount\":-1,\"RecoverableErrorInterval\":5,\"RecoverableErrorStopRetryAfterThrottlingMax\":false,\"RecoverableErrorThrottling\":true,\"RecoverableErrorThrottlingMax\":1800,\"TableErrorEscalationCount\":0,\"TableErrorEscalationPolicy\":\"STOP_TASK\",\"TableErrorPolicy\":\"SUSPEND_TABLE\"},\"FailTaskWhenCleanTaskResourceFailed\":false,\"FullLoadSettings\":{\"CommitRate\":10000,\"CreatePkAfterFullLoad\":false,\"MaxFullLoadSubTasks\":8,\"StopTaskCachedChangesApplied\":false,\"StopTaskCachedChangesNotApplied\":false,\"TargetTablePrepMode\":\"DROP_AND_CREATE\",\"TransactionConsistencyTimeout\":600},\"Logging\":{\"EnableLogging\":false,\"LogComponents\":[{\"Id\":\"TRANSFORMATION\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"},{\"Id\":\"SOURCE_UNLOAD\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"},{\"Id\":\"IO\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"},{\"Id\":\"TARGET_LOAD\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"},{\"Id\":\"PERFORMANCE\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"},{\"Id\":\"SOURCE_CAPTURE\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"},{\"Id\":\"SORTER\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"},{\"Id\":\"REST_SERVER\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"},{\"Id\":\"VALIDATOR_EXT\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"},{\"Id\":\"TARGET_APPLY\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"},{\"Id\":\"TASK_MANAGER\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"},{\"Id\":\"TABLES_MANAGER\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"},{\"Id\":\"METADATA_MANAGER\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"},{\"Id\":\"FILE_FACTORY\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"},{\"Id\":\"COMMON\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"},{\"Id\":\"ADDONS\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"},{\"Id\":\"DATA_STRUCTURE\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"},{\"Id\":\"COMMUNICATION\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"},{\"Id\":\"FILE_TRANSFER\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"}]},\"LoopbackPreventionSettings\":null,\"PostProcessingRules\":null,\"StreamBufferSettings\":{\"CtrlStreamBufferSizeInMB\":5,\"StreamBufferCount\":3,\"StreamBufferSizeInMB\":8},\"TTSettings\":{\"EnableTT\":false,\"FailTaskOnTTFailure\":false,\"TTRecordSettings\":null,\"TTS3Settings\":null},\"TargetMetadata\":{\"BatchApplyEnabled\":false,\"FullLobMode\":false,\"InlineLobMaxSize\":0,\"LimitedSizeLobMode\":true,\"LoadMaxFileSize\":0,\"LobChunkSize\":0,\"LobMaxSize\":32,\"ParallelApplyBufferSize\":0,\"ParallelApplyQueuesPerThread\":0,\"ParallelApplyThreads\":0,\"ParallelLoadBufferSize\":0,\"ParallelLoadQueuesPerThread\":0,\"ParallelLoadThreads\":0,\"SupportLobs\":true,\"TargetSchema\":\"\",\"TaskRecoveryTableEnabled\":false}}"
 
   compute_config {
     replication_subnet_group_id  = aws_dms_replication_subnet_group.test.replication_subnet_group_id
@@ -559,3 +562,185 @@ resource "aws_dms_replication_config" "test" {
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
+
+const defaultReplicationConfigSettings = `{
+  "Logging": {
+    "EnableLogging": false,
+    "EnableLogContext": false,
+    "LogComponents": [
+      {
+        "Severity": "LOGGER_SEVERITY_DEFAULT",
+        "Id": "DATA_STRUCTURE"
+      },
+      {
+        "Severity": "LOGGER_SEVERITY_DEFAULT",
+        "Id": "COMMUNICATION"
+      },
+      {
+        "Severity": "LOGGER_SEVERITY_DEFAULT",
+        "Id": "IO"
+      },
+      {
+        "Severity": "LOGGER_SEVERITY_DEFAULT",
+        "Id": "COMMON"
+      },
+      {
+        "Severity": "LOGGER_SEVERITY_DEFAULT",
+        "Id": "FILE_FACTORY"
+      },
+      {
+        "Severity": "LOGGER_SEVERITY_DEFAULT",
+        "Id": "FILE_TRANSFER"
+      },
+      {
+        "Severity": "LOGGER_SEVERITY_DEFAULT",
+        "Id": "REST_SERVER"
+      },
+      {
+        "Severity": "LOGGER_SEVERITY_DEFAULT",
+        "Id": "ADDONS"
+      },
+      {
+        "Severity": "LOGGER_SEVERITY_DEFAULT",
+        "Id": "TARGET_LOAD"
+      },
+      {
+        "Severity": "LOGGER_SEVERITY_DEFAULT",
+        "Id": "TARGET_APPLY"
+      },
+      {
+        "Severity": "LOGGER_SEVERITY_DEFAULT",
+        "Id": "SOURCE_UNLOAD"
+      },
+      {
+        "Severity": "LOGGER_SEVERITY_DEFAULT",
+        "Id": "SOURCE_CAPTURE"
+      },
+      {
+        "Severity": "LOGGER_SEVERITY_DEFAULT",
+        "Id": "TRANSFORMATION"
+      },
+      {
+        "Severity": "LOGGER_SEVERITY_DEFAULT",
+        "Id": "SORTER"
+      },
+      {
+        "Severity": "LOGGER_SEVERITY_DEFAULT",
+        "Id": "TASK_MANAGER"
+      },
+      {
+        "Severity": "LOGGER_SEVERITY_DEFAULT",
+        "Id": "TABLES_MANAGER"
+      },
+      {
+        "Severity": "LOGGER_SEVERITY_DEFAULT",
+        "Id": "METADATA_MANAGER"
+      },
+      {
+        "Severity": "LOGGER_SEVERITY_DEFAULT",
+        "Id": "PERFORMANCE"
+      },
+      {
+        "Severity": "LOGGER_SEVERITY_DEFAULT",
+        "Id": "VALIDATOR_EXT"
+      }
+    ],
+    "CloudWatchLogGroup": null,
+    "CloudWatchLogStream": null
+  },
+  "StreamBufferSettings": {
+    "StreamBufferCount": 3,
+    "CtrlStreamBufferSizeInMB": 5,
+    "StreamBufferSizeInMB": 8
+  },
+  "ErrorBehavior": {
+    "FailOnNoTablesCaptured": true,
+    "ApplyErrorUpdatePolicy": "LOG_ERROR",
+    "FailOnTransactionConsistencyBreached": false,
+    "RecoverableErrorThrottlingMax": 1800,
+    "DataErrorEscalationPolicy": "SUSPEND_TABLE",
+    "ApplyErrorEscalationCount": 0,
+    "RecoverableErrorStopRetryAfterThrottlingMax": true,
+    "RecoverableErrorThrottling": true,
+    "ApplyErrorFailOnTruncationDdl": false,
+    "DataMaskingErrorPolicy": "STOP_TASK",
+    "DataTruncationErrorPolicy": "LOG_ERROR",
+    "ApplyErrorInsertPolicy": "LOG_ERROR",
+    "EventErrorPolicy": "IGNORE",
+    "ApplyErrorEscalationPolicy": "LOG_ERROR",
+    "RecoverableErrorCount": -1,
+    "DataErrorEscalationCount": 0,
+    "TableErrorEscalationPolicy": "STOP_TASK",
+    "RecoverableErrorInterval": 5,
+    "ApplyErrorDeletePolicy": "IGNORE_RECORD",
+    "TableErrorEscalationCount": 0,
+    "FullLoadIgnoreConflicts": true,
+    "DataErrorPolicy": "LOG_ERROR",
+    "TableErrorPolicy": "SUSPEND_TABLE"
+  },
+  "TTSettings": {
+    "TTS3Settings": null,
+    "TTRecordSettings": null,
+    "FailTaskOnTTFailure": false,
+    "EnableTT": false
+  },
+  "FullLoadSettings": {
+    "CommitRate": 10000,
+    "StopTaskCachedChangesApplied": false,
+    "StopTaskCachedChangesNotApplied": false,
+    "MaxFullLoadSubTasks": 8,
+    "TransactionConsistencyTimeout": 600,
+    "CreatePkAfterFullLoad": false,
+    "TargetTablePrepMode": "DO_NOTHING"
+  },
+  "TargetMetadata": {
+    "ParallelApplyBufferSize": 0,
+    "ParallelApplyQueuesPerThread": 0,
+    "ParallelApplyThreads": 0,
+    "TargetSchema": "",
+    "InlineLobMaxSize": 0,
+    "ParallelLoadQueuesPerThread": 0,
+    "SupportLobs": true,
+    "LobChunkSize": 64,
+    "TaskRecoveryTableEnabled": false,
+    "ParallelLoadThreads": 0,
+    "LobMaxSize": 32,
+    "BatchApplyEnabled": false,
+    "FullLobMode": false,
+    "LimitedSizeLobMode": true,
+    "LoadMaxFileSize": 0,
+    "ParallelLoadBufferSize": 0
+  },
+  "BeforeImageSettings": null,
+  "ControlTablesSettings": {
+    "historyTimeslotInMinutes": 5,
+    "CommitPositionTableEnabled": false,
+    "HistoryTimeslotInMinutes": 5,
+    "StatusTableEnabled": false,
+    "SuspendedTablesTableEnabled": false,
+    "HistoryTableEnabled": false,
+    "ControlSchema": "",
+    "FullLoadExceptionTableEnabled": false
+  },
+  "LoopbackPreventionSettings": null,
+  "CharacterSetSettings": null,
+  "FailTaskWhenCleanTaskResourceFailed": false,
+  "ChangeProcessingTuning": {
+    "StatementCacheSize": 50,
+    "CommitTimeout": 1,
+    "BatchApplyPreserveTransaction": true,
+    "BatchApplyTimeoutMin": 1,
+    "BatchSplitSize": 0,
+    "BatchApplyTimeoutMax": 30,
+    "MinTransactionSize": 1000,
+    "MemoryKeepTime": 60,
+    "BatchApplyMemoryLimit": 500,
+    "MemoryLimitTotal": 1024
+  },
+  "ChangeProcessingDdlHandlingPolicy": {
+    "HandleSourceTableDropped": true,
+    "HandleSourceTableTruncated": true,
+    "HandleSourceTableAltered": true
+  },
+  "PostProcessingRules": null
+}`
