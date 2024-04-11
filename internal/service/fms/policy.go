@@ -362,43 +362,47 @@ func findPolicyByID(ctx context.Context, conn *fms.Client, id string) (*fms.GetP
 
 func expandPolicy(d *schema.ResourceData) *awstypes.Policy {
 	resourceType := aws.String("ResourceTypeList")
-	resourceTypeList := flex.ExpandStringSet(d.Get("resource_type_list").(*schema.Set))
-	if t, ok := d.GetOk("resource_type"); ok {
-		resourceType = aws.String(t.(string))
+	if v, ok := d.GetOk("resource_type"); ok {
+		resourceType = aws.String(v.(string))
 	}
 
-	fmsPolicy := &awstypes.Policy{
+	apiObject := &awstypes.Policy{
 		DeleteUnusedFMManagedResources: d.Get("delete_unused_fm_managed_resources").(bool),
+		ExcludeMap:                     expandPolicyMap(d.Get("exclude_map").([]interface{})),
 		ExcludeResourceTags:            d.Get("exclude_resource_tags").(bool),
+		IncludeMap:                     expandPolicyMap(d.Get("include_map").([]interface{})),
 		PolicyDescription:              aws.String(d.Get("description").(string)),
 		PolicyName:                     aws.String(d.Get("name").(string)),
 		RemediationEnabled:             d.Get("remediation_enabled").(bool),
 		ResourceType:                   resourceType,
-		ResourceTypeList:               aws.ToStringSlice(resourceTypeList),
+		ResourceTypeList:               flex.ExpandStringValueSet(d.Get("resource_type_list").(*schema.Set)),
 	}
 
 	if d.Id() != "" {
-		fmsPolicy.PolicyId = aws.String(d.Id())
-		fmsPolicy.PolicyUpdateToken = aws.String(d.Get("policy_update_token").(string))
+		apiObject.PolicyId = aws.String(d.Id())
+		apiObject.PolicyUpdateToken = aws.String(d.Get("policy_update_token").(string))
 	}
 
-	fmsPolicy.ExcludeMap = expandPolicyMap(d.Get("exclude_map").([]interface{}))
-
-	fmsPolicy.IncludeMap = expandPolicyMap(d.Get("include_map").([]interface{}))
-
-	fmsPolicy.ResourceTags = constructResourceTags(d.Get("resource_tags"))
-
-	securityServicePolicy := d.Get("security_service_policy_data").([]interface{})[0].(map[string]interface{})
-	fmsPolicy.SecurityServicePolicyData = &awstypes.SecurityServicePolicyData{
-		ManagedServiceData: aws.String(securityServicePolicy["managed_service_data"].(string)),
-		Type:               awstypes.SecurityServiceType(securityServicePolicy["type"].(string)),
+	if v, ok := d.GetOk("resource_tags"); ok && len(v.(map[string]interface{})) > 0 {
+		for k, v := range flex.ExpandStringValueMap(v.(map[string]interface{})) {
+			apiObject.ResourceTags = append(apiObject.ResourceTags, awstypes.ResourceTag{
+				Key:   aws.String(k),
+				Value: aws.String(v),
+			})
+		}
 	}
 
-	if v, ok := securityServicePolicy["policy_option"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
-		fmsPolicy.SecurityServicePolicyData.PolicyOption = expandPolicyOption(v[0].(map[string]interface{}))
+	tfMap := d.Get("security_service_policy_data").([]interface{})[0].(map[string]interface{})
+	apiObject.SecurityServicePolicyData = &awstypes.SecurityServicePolicyData{
+		ManagedServiceData: aws.String(tfMap["managed_service_data"].(string)),
+		Type:               awstypes.SecurityServiceType(tfMap["type"].(string)),
 	}
 
-	return fmsPolicy
+	if v, ok := tfMap["policy_option"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.SecurityServicePolicyData.PolicyOption = expandPolicyOption(v[0].(map[string]interface{}))
+	}
+
+	return apiObject
 }
 
 func expandPolicyOption(tfMap map[string]interface{}) *awstypes.PolicyOption {
@@ -447,44 +451,44 @@ func expandPolicyOptionThirdPartyFirewall(tfMap map[string]interface{}) *awstype
 	return apiObject
 }
 
-func expandPolicyMap(set []interface{}) map[string][]string {
-	fmsPolicyMap := map[string][]string{}
-	if len(set) > 0 {
-		if _, ok := set[0].(map[string]interface{}); !ok {
-			return fmsPolicyMap
-		}
-		for key, listValue := range set[0].(map[string]interface{}) {
-			var flatKey string
-			switch key {
-			case "account":
-				flatKey = "ACCOUNT"
-			case "orgunit":
-				flatKey = "ORG_UNIT"
-			}
+func expandPolicyMap(tfList []interface{}) map[string][]string {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
 
-			for _, value := range listValue.(*schema.Set).List() {
-				fmsPolicyMap[flatKey] = append(fmsPolicyMap[flatKey], aws.ToString(value.(*string)))
-			}
+	tfMap := tfList[0].(map[string]interface{})
+
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := map[string][]string{}
+
+	for k, v := range tfMap {
+		switch v := flex.ExpandStringValueSet(v.(*schema.Set)); k {
+		case "account":
+			apiObject["ACCOUNT"] = v
+		case "orgunit":
+			apiObject["ORG_UNIT"] = v
 		}
 	}
-	return fmsPolicyMap
+
+	return apiObject
 }
 
-func flattenPolicyMap(fmsPolicyMap map[string][]string) []interface{} {
-	flatPolicyMap := map[string]interface{}{}
+func flattenPolicyMap(apiObject map[string][]string) []interface{} {
+	tfMap := map[string]interface{}{}
 
-	for key, value := range fmsPolicyMap {
-		switch key {
+	for k, v := range apiObject {
+		switch k {
 		case "ACCOUNT":
-			flatPolicyMap["account"] = value
+			tfMap["account"] = v
 		case "ORG_UNIT":
-			flatPolicyMap["orgunit"] = value
-		default:
-			log.Printf("[WARNING] Unexpected key (%q) found in FMS policy", key)
+			tfMap["orgunit"] = v
 		}
 	}
 
-	return []interface{}{flatPolicyMap}
+	return []interface{}{tfMap}
 }
 
 func flattenPolicyOption(fmsPolicyOption *awstypes.PolicyOption) []interface{} {
@@ -533,22 +537,12 @@ func flattenPolicyOptionThirdPartyFirewall(fmsThirdPartyFirewallPolicy *awstypes
 	return []interface{}{tfMap}
 }
 
-func flattenResourceTags(resourceTags []awstypes.ResourceTag) map[string]interface{} {
-	resTags := map[string]interface{}{}
+func flattenResourceTags(apiObjects []awstypes.ResourceTag) map[string]interface{} {
+	tfMap := map[string]interface{}{}
 
-	for _, v := range resourceTags {
-		resTags[*v.Key] = v.Value
-	}
-	return resTags
-}
-
-func constructResourceTags(rTags interface{}) []awstypes.ResourceTag {
-	var rTagList []awstypes.ResourceTag
-
-	tags := rTags.(map[string]interface{})
-	for k, v := range tags {
-		rTagList = append(rTagList, awstypes.ResourceTag{Key: aws.String(k), Value: aws.String(v.(string))})
+	for _, v := range apiObjects {
+		tfMap[aws.ToString(v.Key)] = aws.ToString(v.Value)
 	}
 
-	return rTagList
+	return tfMap
 }
