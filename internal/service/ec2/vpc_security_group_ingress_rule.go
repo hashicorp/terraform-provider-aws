@@ -120,12 +120,41 @@ func (r *securityGroupIngressRuleResource) moveStateResourceSecurityGroupRule(ct
 		return
 	}
 
-	// TODO Check rule type (ingress/egress).
-	// TODO Ensure that only a single CIDR/PL ID etc. is set.
+	// TODO: Need to find the security group rule ID.
 
-	target := &securityGroupRuleResourceModel{}
+	// if typ := source.Type.ValueEnum(); typ != securityGroupRuleTypeIngress {
+	// 	response.Diagnostics.AddError("Incorrect Type", string(typ))
+	// 	return
+	// }
 
-	response.Diagnostics.Append(response.TargetState.Set(ctx, target)...)
+	// nCIDRs := 0
+	// if !source.CIDRBlocks.IsNull() {
+	// 	nCIDRs += len(source.CIDRBlocks.Elements())
+	// }
+	// nIPv6CIDRs := 0
+	// if !source.IPv6CIDRBlocksBlocks.IsNull() {
+	// 	nIPv6CIDRs += len(source.IPv6CIDRBlocksBlocks.Elements())
+	// }
+	// nPrefxListIDs := 0
+	// if !source.PrefixListIDs.IsNull() {
+	// 	nPrefxListIDs += len(source.PrefixListIDs.Elements())
+	// }
+	// nSourceSecurityGroupIDs := 0
+	// if !source.SourceSecurityGroupID.IsNull() && source.SourceSecurityGroupID.ValueString() != "" {
+	// 	nSourceSecurityGroupIDs = 1
+	// }
+
+	// if nCIDRs+nIPv6CIDRs+nPrefxListIDs+nSourceSecurityGroupIDs > 1 {
+	// 	response.Diagnostics.AddError("Multiple Sources", "Only one source is allowed")
+	// 	return
+	// }
+
+	// target := &securityGroupRuleResourceModel{
+	// 	// ARN: 				  r.securityGroupRuleARN(ctx, securityGroupRuleID),
+	// 	Description: fwflex.EmptyStringAsNull(source.Description),
+	// }
+
+	// response.Diagnostics.Append(response.TargetState.Set(ctx, target)...)
 }
 
 // Base structure and methods for VPC security group rules.
