@@ -96,6 +96,38 @@ func TestAccTransferConnector_sftpConfig(t *testing.T) {
 	})
 }
 
+func TestAccTransferConnector_securityPolicyName(t *testing.T) {
+	ctx := acctest.Context(t)
+	var conf transfer.DescribedConnector
+	resourceName := "aws_transfer_connector.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, transfer.EndpointsID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckConnectorDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConnectorConfig_securityPolicyName(rName, "http://www.example.com"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckConnectorExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "security_policy_name", "TransferSFTPConnectorSecurityPolicy-2024-03"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccTransferConnector_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	var conf transfer.DescribedConnector
@@ -289,6 +321,18 @@ resource "aws_transfer_connector" "test" {
     partner_profile_id    = aws_transfer_profile.partner.profile_id
     signing_algorithm     = "NONE"
   }
+
+  url = %[2]q
+}
+`, rName, url))
+}
+
+func testAccConnectorConfig_securityPolicyName(rName, url string) string {
+	return acctest.ConfigCompose(testAccConnectorConfig_base(rName), fmt.Sprintf(`
+resource "aws_transfer_connector" "test" {
+  access_role = aws_iam_role.test.arn
+
+  security_policy_name = "TransferSFTPConnectorSecurityPolicy-2024-03"
 
   url = %[2]q
 }
