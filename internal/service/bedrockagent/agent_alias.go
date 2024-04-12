@@ -7,6 +7,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-framework/path"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -82,9 +84,6 @@ func (r *agentAliasResource) Schema(ctx context.Context, request resource.Schema
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"client_token": schema.StringAttribute{
-				Computed: true,
-			},
 			"created_at": schema.StringAttribute{
 				Computed:   true,
 				CustomType: timetypes.RFC3339Type{},
@@ -119,22 +118,6 @@ func (r *agentAliasResource) Schema(ctx context.Context, request resource.Schema
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			// "routing_configuration": schema.ListNestedBlock{
-			// 	CustomType: fwtypes.NewListNestedObjectTypeOf[roc](ctx),
-			// 	PlanModifiers: []planmodifier.List{
-			// 		listplanmodifier.UseStateForUnknown(),
-			// 	},
-			// 	Validators: []validator.List{
-			// 		listvalidator.SizeAtMost(1),
-			// 	},
-			// 	NestedObject: schema.NestedBlockObject{
-			// 		Attributes: map[string]schema.Attribute{
-			// 			"agent_version": schema.StringAttribute{
-			// 				Required: true,
-			// 			},
-			// 		},
-			// 	},
-			// },
 			"agent_alias_history_events": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[history](ctx),
 				Validators: []validator.List{
@@ -192,6 +175,7 @@ func (r *agentAliasResource) Create(ctx context.Context, request resource.Create
 		return
 	}
 
+	input.ClientToken = aws.String(id.UniqueId())
 	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateAgentAlias(ctx, input)
@@ -209,22 +193,14 @@ func (r *agentAliasResource) Create(ctx context.Context, request resource.Create
 	id, _ := intflex.FlattenResourceId(idParts, 2, false)
 	data.ID = types.StringValue(id)
 
-	data.AgentAliasARN = fwflex.StringToFramework(ctx, output.AgentAlias.AgentAliasArn)
-	data.AgentAliasId = fwflex.StringToFramework(ctx, output.AgentAlias.AgentAliasId)
-	data.AgentId = fwflex.StringToFramework(ctx, output.AgentAlias.AgentId)
 	alias, err := waitAliasCreated(ctx, conn, id, r.CreateTimeout(ctx, data.Timeouts))
-	// data.ID = data.AgentAliasId
-	// data.AgentId = fwflex.StringToFramework(ctx, output.AgentAlias.AgentId)
-	// alias, err := waitAliasCreated(ctx, conn, data.ID.ValueString(), data.AgentId.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for Alias Agent (%s) create", data.ID.ValueString()), err.Error())
 
 		return
 	}
 
-	//response.Diagnostics.Append(fwflex.Flatten(ctx, output.AgentAlias, &data)...)
 	response.Diagnostics.Append(fwflex.Flatten(ctx, alias.AgentAlias, &data)...)
-	//data.AgentId = fwflex.StringToFramework(ctx, alias.AgentAlias.AgentId)
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
@@ -243,11 +219,6 @@ func (r *agentAliasResource) Read(ctx context.Context, request resource.ReadRequ
 
 	conn := r.Meta().BedrockAgentClient(ctx)
 
-	// AliasId := data.ID.ValueString()
-	// AgentId := data.AgentId.ValueString()
-
-	// output, err := findAgentAliasByID(ctx, conn, AliasId, AgentId)
-
 	output, err := findAgentAliasByID(ctx, conn, data.ID.ValueString())
 
 	if tfresource.NotFound(err) {
@@ -262,8 +233,6 @@ func (r *agentAliasResource) Read(ctx context.Context, request resource.ReadRequ
 
 		return
 	}
-	data.AgentId = fwflex.StringToFramework(ctx, output.AgentAlias.AgentId)
-	data.AgentAliasId = fwflex.StringToFramework(ctx, output.AgentAlias.AgentAliasId)
 	response.Diagnostics.Append(fwflex.Flatten(ctx, output.AgentAlias, &data)...)
 
 	if response.Diagnostics.HasError() {
@@ -304,7 +273,6 @@ func (r *agentAliasResource) Update(ctx context.Context, request resource.Update
 		}
 	}
 
-	//out, err := findAgentAliasByID(ctx, conn, old.ID.ValueString(), old.AgentId.ValueString())
 	out, err := findAgentAliasByID(ctx, conn, old.ID.ValueString())
 	if err != nil {
 		response.Diagnostics.AddError(
@@ -331,8 +299,6 @@ func (r *agentAliasResource) Delete(ctx context.Context, request resource.Delete
 	conn := r.Meta().BedrockAgentClient(ctx)
 
 	if !data.AgentAliasId.IsNull() {
-		//AgentId := data.AgentId.ValueString()
-		//AgentAliasId := data.ID.ValueString()
 		_, err := conn.DeleteAgentAlias(ctx, &bedrockagent.DeleteAgentAliasInput{
 			AgentId:      fwflex.StringFromFramework(ctx, data.AgentId),
 			AgentAliasId: fwflex.StringFromFramework(ctx, data.AgentAliasId),
@@ -354,11 +320,9 @@ func (r *agentAliasResource) ModifyPlan(ctx context.Context, request resource.Mo
 	r.SetTagsAll(ctx, request, response)
 }
 
-// func (r *agentAliasResource) ImportState(ctx context.Context, request resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-// 	resource.ImportStatePassthroughID(ctx, path.Root("id"), request, resp)
-// }
-
-//
+func (r *agentAliasResource) ImportState(ctx context.Context, request resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), request, resp)
+}
 
 func findAgentAliasByID(ctx context.Context, conn *bedrockagent.Client, id string) (*bedrockagent.GetAgentAliasOutput, error) {
 	parts, err := intflex.ExpandResourceId(id, 2, false)
@@ -410,7 +374,6 @@ func waitAliasCreated(ctx context.Context, conn *bedrockagent.Client, id string,
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AgentAliasStatusCreating),
 		Target:  enum.Slice(awstypes.AgentAliasStatusPrepared),
-		//Refresh: statusAlias(ctx, conn, id, agent),
 		Refresh: statusAlias(ctx, conn, id),
 		Timeout: timeout,
 	}
@@ -433,7 +396,6 @@ type bedrockAliasResourceModel struct {
 	AgentAliasStatus     types.String                             `tfsdk:"agent_alias_status"`
 	AgentAliasHistory    fwtypes.ListNestedObjectValueOf[history] `tfsdk:"agent_alias_history_events"`
 	AgentId              types.String                             `tfsdk:"agent_id"`
-	ClientToken          types.String                             `tfsdk:"client_token"`
 	CreatedAt            timetypes.RFC3339                        `tfsdk:"created_at"`
 	Description          types.String                             `tfsdk:"description"`
 	ID                   types.String                             `tfsdk:"id"`
