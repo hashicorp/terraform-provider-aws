@@ -15,7 +15,7 @@ import (
 	"text/template"
 
 	"github.com/YakDriver/regexache"
-	"github.com/hashicorp/terraform-provider-aws/skaff/resource"
+	"github.com/hashicorp/terraform-provider-aws/skaff/convert"
 )
 
 //go:embed function.tmpl
@@ -45,7 +45,7 @@ func Create(name, snakeName, description string, comments, force bool) error {
 		return fmt.Errorf("snake name should be all lower case with underscores, if needed (e.g., arn_build)")
 	}
 
-	snakeName = resource.ToSnakeCase(name, snakeName)
+	snakeName = convert.ToSnakeCase(name, snakeName)
 
 	templateData := TemplateData{
 		Function:        name,

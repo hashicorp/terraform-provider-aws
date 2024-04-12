@@ -1,7 +1,7 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-package resource
+package convert
 
 import (
 	"testing"
@@ -56,7 +56,7 @@ func TestToSnakeName(t *testing.T) {
 	}
 }
 
-func TestHumanResName(t *testing.T) {
+func TestToHumanResName(t *testing.T) {
 	testCases := []struct {
 		TestName string
 		Input    string
@@ -96,7 +96,7 @@ func TestHumanResName(t *testing.T) {
 
 	for _, testCase := range testCases {
 		t.Run(testCase.TestName, func(t *testing.T) {
-			got := HumanResName(testCase.Input)
+			got := ToHumanResName(testCase.Input)
 
 			if got != testCase.Expected {
 				t.Errorf("got %s, expected %s", got, testCase.Expected)
