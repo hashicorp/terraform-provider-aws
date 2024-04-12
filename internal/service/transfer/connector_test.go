@@ -334,6 +334,17 @@ resource "aws_transfer_connector" "test" {
 
   security_policy_name = "TransferSFTPConnectorSecurityPolicy-2024-03"
 
+  as2_config {
+    compression           = "DISABLED"
+    encryption_algorithm  = "AES128_CBC"
+    message_subject       = %[1]q
+    local_profile_id      = aws_transfer_profile.local.profile_id
+    mdn_response          = "NONE"
+    mdn_signing_algorithm = "NONE"
+    partner_profile_id    = aws_transfer_profile.partner.profile_id
+    signing_algorithm     = "NONE"
+  }
+
   url = %[2]q
 }
 `, rName, url))
