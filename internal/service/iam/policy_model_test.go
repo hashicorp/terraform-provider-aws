@@ -393,6 +393,8 @@ func TestIAMPolicyStatementConditionSet_MarshalJSON(t *testing.T) { // nosemgrep
 }
 
 func TestPolicyUnmarshalServicePrincipalOrder(t *testing.T) {
+	t.Parallel()
+
 	policy1 := `
 		  {
 			"Action": "sts:AssumeRole",
