@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"testing"
 
+	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -18,6 +19,7 @@ func TestAccDMSReplicationTaskDataSource_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_task.test"
 	dataSourceName := "data.aws_dms_replication_task.test"
+	var v dms.ReplicationTask
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -28,7 +30,7 @@ func TestAccDMSReplicationTaskDataSource_basic(t *testing.T) {
 			{
 				Config: testAccReplicationTaskDataSourceConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationTaskExists(ctx, resourceName),
+					testAccCheckReplicationTaskExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrPair(dataSourceName, "replication_task_id", resourceName, "replication_task_id"),
 				),
 			},

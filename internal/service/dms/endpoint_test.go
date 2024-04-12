@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -2211,6 +2212,7 @@ func TestAccDMSEndpoint_pauseReplicationTasks(t *testing.T) {
 	endpointNameSource := "aws_dms_endpoint.source"
 	endpointNameTarget := "aws_dms_endpoint.target"
 	replicationTaskName := "aws_dms_replication_task.test"
+	var task dms.ReplicationTask
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -2223,7 +2225,7 @@ func TestAccDMSEndpoint_pauseReplicationTasks(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, endpointNameSource),
 					testAccCheckEndpointExists(ctx, endpointNameTarget),
-					testAccCheckReplicationTaskExists(ctx, replicationTaskName),
+					testAccCheckReplicationTaskExists(ctx, replicationTaskName, &task),
 					resource.TestCheckResourceAttr(replicationTaskName, "status", "running"),
 				),
 			},
@@ -2232,7 +2234,7 @@ func TestAccDMSEndpoint_pauseReplicationTasks(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEndpointExists(ctx, endpointNameSource),
 					testAccCheckEndpointExists(ctx, endpointNameTarget),
-					testAccCheckReplicationTaskExists(ctx, replicationTaskName),
+					testAccCheckReplicationTaskExists(ctx, replicationTaskName, &task),
 					resource.TestCheckResourceAttr(replicationTaskName, "status", "running"),
 				),
 			},

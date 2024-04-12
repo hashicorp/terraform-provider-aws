@@ -29,6 +29,7 @@ func TestAccDMSReplicationConfig_basic(t *testing.T) {
 			ctx := acctest.Context(t)
 			rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 			resourceName := "aws_dms_replication_config.test"
+			var v dms.ReplicationConfig
 
 			resource.ParallelTest(t, resource.TestCase{
 				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -39,7 +40,7 @@ func TestAccDMSReplicationConfig_basic(t *testing.T) {
 					{
 						Config: testAccReplicationConfigConfig_basic(rName, migrationType),
 						Check: resource.ComposeAggregateTestCheckFunc(
-							testAccCheckReplicationConfigExists(ctx, resourceName),
+							testAccCheckReplicationConfigExists(ctx, resourceName, &v),
 							resource.TestCheckResourceAttrSet(resourceName, "arn"),
 							acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "dms", regexache.MustCompile(`replication-config:[A-Z0-9]{26}`)),
 							resource.TestCheckResourceAttr(resourceName, "compute_config.#", "1"),
@@ -129,6 +130,7 @@ func TestAccDMSReplicationConfig_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_config.test"
+	var v dms.ReplicationConfig
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -139,7 +141,7 @@ func TestAccDMSReplicationConfig_disappears(t *testing.T) {
 			{
 				Config: testAccReplicationConfigConfig_basic(rName, "cdc"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicationConfigExists(ctx, resourceName),
+					testAccCheckReplicationConfigExists(ctx, resourceName, &v),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdms.ResourceReplicationConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -152,6 +154,7 @@ func TestAccDMSReplicationConfig_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_config.test"
+	var v dms.ReplicationConfig
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -162,7 +165,7 @@ func TestAccDMSReplicationConfig_tags(t *testing.T) {
 			{
 				Config: testAccReplicationConfigConfig_tags1(rName, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationConfigExists(ctx, resourceName),
+					testAccCheckReplicationConfigExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -170,7 +173,7 @@ func TestAccDMSReplicationConfig_tags(t *testing.T) {
 			{
 				Config: testAccReplicationConfigConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationConfigExists(ctx, resourceName),
+					testAccCheckReplicationConfigExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
@@ -179,7 +182,7 @@ func TestAccDMSReplicationConfig_tags(t *testing.T) {
 			{
 				Config: testAccReplicationConfigConfig_tags1(rName, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationConfigExists(ctx, resourceName),
+					testAccCheckReplicationConfigExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -192,6 +195,7 @@ func TestAccDMSReplicationConfig_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_config.test"
+	var v dms.ReplicationConfig
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -202,7 +206,7 @@ func TestAccDMSReplicationConfig_update(t *testing.T) {
 			{
 				Config: testAccReplicationConfigConfig_update(rName, "cdc", 2, 16),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationConfigExists(ctx, resourceName),
+					testAccCheckReplicationConfigExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "replication_type", "cdc"),
 					resource.TestCheckResourceAttr(resourceName, "compute_config.0.max_capacity_units", "16"),
@@ -212,7 +216,7 @@ func TestAccDMSReplicationConfig_update(t *testing.T) {
 			{
 				Config: testAccReplicationConfigConfig_update(rName, "cdc", 4, 32),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationConfigExists(ctx, resourceName),
+					testAccCheckReplicationConfigExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "replication_type", "cdc"),
 					resource.TestCheckResourceAttr(resourceName, "compute_config.0.max_capacity_units", "32"),
@@ -228,6 +232,7 @@ func TestAccDMSReplicationConfig_startReplication(t *testing.T) {
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_config.test"
+	var v dms.ReplicationConfig
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -238,7 +243,7 @@ func TestAccDMSReplicationConfig_startReplication(t *testing.T) {
 			{
 				Config: testAccReplicationConfigConfig_startReplication(rName, true),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationConfigExists(ctx, resourceName),
+					testAccCheckReplicationConfigExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "start_replication", "true"),
 				),
 			},
@@ -251,7 +256,7 @@ func TestAccDMSReplicationConfig_startReplication(t *testing.T) {
 			{
 				Config: testAccReplicationConfigConfig_startReplication(rName, false),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationConfigExists(ctx, resourceName),
+					testAccCheckReplicationConfigExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "start_replication", "false"),
 				),
 			},
@@ -259,7 +264,7 @@ func TestAccDMSReplicationConfig_startReplication(t *testing.T) {
 	})
 }
 
-func testAccCheckReplicationConfigExists(ctx context.Context, n string) resource.TestCheckFunc {
+func testAccCheckReplicationConfigExists(ctx context.Context, n string, v *dms.ReplicationConfig) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -268,9 +273,15 @@ func testAccCheckReplicationConfigExists(ctx context.Context, n string) resource
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DMSConn(ctx)
 
-		_, err := tfdms.FindReplicationConfigByARN(ctx, conn, rs.Primary.ID)
+		output, err := tfdms.FindReplicationConfigByARN(ctx, conn, rs.Primary.ID)
 
-		return err
+		if err != nil {
+			return err
+		}
+
+		*v = *output
+
+		return nil
 	}
 }
 
