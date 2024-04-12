@@ -473,11 +473,19 @@ func TestAccSiteVPNConnection_tunnel1InsideIPv6CIDR(t *testing.T) {
 		CheckDestroy:             testAccCheckVPNConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccSiteVPNConnectionConfig_tunnel1InsideIPv6CIDR(rName, rBgpAsn, "fd00:2001:db8:2:2d1:81ff:fe41:d200/126", "fd00:2001:db8:2:2d1:81ff:fe41:d204/126"),
+				Config:      testAccSiteVPNConnectionConfig_tunnel1InsideIPv6CIDR(rName, rBgpAsn, "fd00:2001:db8::1:0/125", "fd00:2001:db8::2:0/125"),
+				ExpectError: regexache.MustCompile(`expected "\w+" to contain a network Value with between 126 and 126 significant bits`),
+			},
+			{
+				Config:      testAccSiteVPNConnectionConfig_tunnel1InsideIPv6CIDR(rName, rBgpAsn, "fcff:2001:db8:2:2d1:81ff:fe41:d200/126", "fcff:2001:db8:2:2d1:81ff:fe41:0/126"),
+				ExpectError: regexache.MustCompile(`must be within fd00::/8`),
+			},
+			{
+				Config: testAccSiteVPNConnectionConfig_tunnel1InsideIPv6CIDR(rName, rBgpAsn, "fd00:2001:db8:2:2d1:81ff:fe41:d200/126", "fdff:2001:db8:2:2d1:81ff:fe41:d204/126"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccVPNConnectionExists(ctx, resourceName, &vpn),
 					resource.TestCheckResourceAttr(resourceName, "tunnel1_inside_ipv6_cidr", "fd00:2001:db8:2:2d1:81ff:fe41:d200/126"),
-					resource.TestCheckResourceAttr(resourceName, "tunnel2_inside_ipv6_cidr", "fd00:2001:db8:2:2d1:81ff:fe41:d204/126"),
+					resource.TestCheckResourceAttr(resourceName, "tunnel2_inside_ipv6_cidr", "fdff:2001:db8:2:2d1:81ff:fe41:d204/126"),
 				),
 			},
 			// NOTE: Import does not currently have access to the Terraform configuration,
@@ -2366,10 +2374,6 @@ resource "aws_vpn_connection" "test" {
 
 func testAccSiteVPNConnectionConfig_tunnel1InsideIPv6CIDR(rName string, rBgpAsn int, tunnel1InsideIpv6Cidr string, tunnel2InsideIpv6Cidr string) string {
 	return fmt.Sprintf(`
-resource "aws_ec2_transit_gateway" "test" {
-  description = %[1]q
-}
-
 resource "aws_customer_gateway" "test" {
   bgp_asn    = %[2]d
   ip_address = "178.0.0.1"
@@ -2382,7 +2386,6 @@ resource "aws_customer_gateway" "test" {
 
 resource "aws_vpn_connection" "test" {
   customer_gateway_id      = aws_customer_gateway.test.id
-  transit_gateway_id       = aws_ec2_transit_gateway.test.id
   tunnel_inside_ip_version = "ipv6"
   tunnel1_inside_ipv6_cidr = %[3]q
   tunnel2_inside_ipv6_cidr = %[4]q

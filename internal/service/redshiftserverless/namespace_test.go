@@ -250,6 +250,7 @@ func testAccCheckNamespaceDestroy(ctx context.Context) resource.TestCheckFunc {
 			if rs.Type != "aws_redshiftserverless_namespace" {
 				continue
 			}
+
 			_, err := tfredshiftserverless.FindNamespaceByName(ctx, conn, rs.Primary.ID)
 
 			if tfresource.NotFound(err) {

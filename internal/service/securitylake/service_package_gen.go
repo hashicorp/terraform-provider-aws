@@ -36,6 +36,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			},
 		},
 		{
+			Factory: newSubscriberNotificationResource,
+			Name:    "Subscriber Notification",
+		},
+		{
 			Factory: newSubscriberResource,
 			Name:    "Subscriber",
 			Tags: &types.ServicePackageResourceTags{

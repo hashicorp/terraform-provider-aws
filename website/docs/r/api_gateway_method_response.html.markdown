@@ -99,7 +99,7 @@ resource "aws_api_gateway_method_response" "response_200" {
   http_method = aws_api_gateway_method.MyDemoMethod.http_method
   status_code = "200"
   response_models = {
-    "application-json" = "MyDemoResponseModel"
+    "application/json" = "MyDemoResponseModel"
   }
   response_parameters = {
     "method.response.header.Content-Type"     = false

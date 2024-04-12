@@ -94,6 +94,7 @@ provider "aws" {
   <li><code>autoscalingplans</code></li>
   <li><code>backup</code></li>
   <li><code>batch</code></li>
+  <li><code>bcmdataexports</code></li>
   <li><code>bedrock</code></li>
   <li><code>bedrockagent</code></li>
   <li><code>budgets</code></li>
@@ -134,10 +135,12 @@ provider "aws" {
   <li><code>dataexchange</code></li>
   <li><code>datapipeline</code></li>
   <li><code>datasync</code></li>
+  <li><code>datazone</code></li>
   <li><code>dax</code></li>
   <li><code>deploy</code> (or <code>codedeploy</code>)</li>
   <li><code>detective</code></li>
   <li><code>devicefarm</code></li>
+  <li><code>devopsguru</code></li>
   <li><code>directconnect</code></li>
   <li><code>dlm</code></li>
   <li><code>dms</code> (or <code>databasemigration</code> or <code>databasemigrationservice</code>)</li>
@@ -218,6 +221,7 @@ provider "aws" {
   <li><code>mq</code></li>
   <li><code>mwaa</code></li>
   <li><code>neptune</code></li>
+  <li><code>neptunegraph</code></li>
   <li><code>networkfirewall</code></li>
   <li><code>networkmanager</code></li>
   <li><code>oam</code> (or <code>cloudwatchobservabilityaccessmanager</code>)</li>
@@ -227,6 +231,7 @@ provider "aws" {
   <li><code>organizations</code></li>
   <li><code>osis</code> (or <code>opensearchingestion</code>)</li>
   <li><code>outposts</code></li>
+  <li><code>paymentcryptography</code></li>
   <li><code>pcaconnectorad</code></li>
   <li><code>pinpoint</code></li>
   <li><code>pipes</code></li>

@@ -369,8 +369,7 @@ resource "aws_securityhub_configuration_policy" "test" {
   description = %[2]q
 
   configuration_policy {
-    service_enabled       = false
-    enabled_standard_arns = []
+    service_enabled = false
   }
 
   depends_on = [aws_securityhub_organization_configuration.test]

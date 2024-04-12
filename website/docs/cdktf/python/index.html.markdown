@@ -13,7 +13,7 @@ Use the Amazon Web Services (AWS) provider to interact with the
 many resources supported by AWS. You must configure the provider
 with the proper credentials before you can use it.
 
-Use the navigation to the left to read about the available resources. There are currently 1332 resources and 547 data sources available in the provider.
+Use the navigation to the left to read about the available resources. There are currently 1355 resources and 553 data sources available in the provider.
 
 To learn the basics of Terraform using this provider, follow the
 hands-on [get started tutorials](https://learn.hashicorp.com/tutorials/terraform/infrastructure-as-code?in=terraform/aws-get-started&utm_source=WEBSITE&utm_medium=WEB_IO&utm_offer=ARTICLE_PAGE&utm_content=DOCS). Interact with AWS services,
@@ -554,7 +554,7 @@ In addition to [generic `provider` arguments](https://www.terraform.io/docs/conf
     - [`aws_waf_xss_match_set` resource](/docs/providers/aws/r/waf_xss_match_set.html)
 * `sts_region` - (Optional) AWS Region for STS. If unset, AWS will use the same Region for STS as other non-STS operations.
 * `token` - (Optional) Session token for validating temporary credentials. Typically provided after successful identity federation or Multi-Factor Authentication (MFA) login. With MFA login, this is the session token provided afterward, not the 6 digit MFA code used to get temporary credentials.  Can also be set with the `AWS_SESSION_TOKEN` environment variable.
-* `token_bucket_rate_limiter_capacity` - (Optional) The capacity of the AWS SDK's token bucket retry rate limiter. By default each service's bucket has a capacity of 500 tokens.
+* `token_bucket_rate_limiter_capacity` - (Optional) The capacity of the AWS SDK's token bucket retry rate limiter. If no value is specified then client-side rate limiting is disabled. If a value is specified there is a greater likelihood of `retry quota exceeded` errors being raised.
 * `use_dualstack_endpoint` - (Optional) Force the provider to resolve endpoints with DualStack capability. Can also be set with the `AWS_USE_DUALSTACK_ENDPOINT` environment variable or in a shared config file (`use_dualstack_endpoint`).
 * `use_fips_endpoint` - (Optional) Force the provider to resolve endpoints with FIPS capability. Can also be set with the `AWS_USE_FIPS_ENDPOINT` environment variable or in a shared config file (`use_fips_endpoint`).
 
@@ -804,4 +804,4 @@ Approaches differ per authentication providers:
       There used to be no better way to get account ID out of the API
       when using the federated account until `sts:GetCallerIdentity` was introduced.
 
-<!-- cache-key: cdktf-0.20.1 input-d9ccb1ab6923446c14cf00adea3a728eed4d73e5812846bf27f3014820d53754 -->
+<!-- cache-key: cdktf-0.20.1 input-255a09694d6e520ef37d4d29cb214ab91b86069acf621ee57e0ceb7fa1e2fbf6 -->

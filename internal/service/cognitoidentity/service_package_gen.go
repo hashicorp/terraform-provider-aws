@@ -25,7 +25,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourcePool,
+			Factory:  dataSourcePool,
 			TypeName: "aws_cognito_identity_pool",
 			Name:     "Pool",
 			Tags: &types.ServicePackageResourceTags{
@@ -38,7 +38,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourcePool,
+			Factory:  resourcePool,
 			TypeName: "aws_cognito_identity_pool",
 			Name:     "Pool",
 			Tags: &types.ServicePackageResourceTags{
@@ -46,12 +46,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourcePoolProviderPrincipalTag,
+			Factory:  resourcePoolProviderPrincipalTag,
 			TypeName: "aws_cognito_identity_pool_provider_principal_tag",
+			Name:     "Provider Principal Tags",
 		},
 		{
-			Factory:  ResourcePoolRolesAttachment,
+			Factory:  resourcePoolRolesAttachment,
 			TypeName: "aws_cognito_identity_pool_roles_attachment",
+			Name:     "Pool Roles Association",
 		},
 	}
 }

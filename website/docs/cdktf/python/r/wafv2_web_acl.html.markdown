@@ -659,6 +659,9 @@ The `rate_based_statement` block supports the following arguments:
 
 * `aggregate_key_type` - (Optional) Setting that indicates how to aggregate the request counts. Valid values include: `CONSTANT`, `CUSTOM_KEYS`, `FORWARDED_IP`, or `IP`. Default: `IP`.
 * `custom_key` - (Optional) Aggregate the request counts using one or more web request components as the aggregate keys. See [`custom_key`](#custom_key-block) below for details.
+* `evaluation_window_sec` - (Optional) The amount of time, in seconds, that AWS WAF should include in its request counts, looking back from the current time. Valid values are `60`, `120`, `300`, and `600`. Defaults to `300` (5 minutes).
+
+  **NOTE:** This setting doesn't determine how often AWS WAF checks the rate, but how far back it looks each time it checks. AWS WAF checks the rate about every 10 seconds.
 * `forwarded_ip_config` - (Optional) Configuration for inspecting IP addresses in an HTTP header that you specify, instead of using the IP address that's reported by the web request origin. If `aggregate_key_type` is set to `FORWARDED_IP`, this block is required. See [`forwarded_ip_config`](#forwarded_ip_config-block) below for details.
 * `limit` - (Required) Limit on requests per 5-minute period for a single originating IP address.
 * `scope_down_statement` - (Optional) Optional nested statement that narrows the scope of the rate-based statement to matching web requests. This can be any nestable statement, and you can nest statements at any level below this scope-down statement. See [`statement`](#statement-block) above for details. If `aggregate_key_type` is set to `CONSTANT`, this block is required.
@@ -764,17 +767,32 @@ The `managed_rule_group_configs` block support the following arguments:
 
 ### `request_inspection` Block
 
+* `address_fields` (Optional) The names of the fields in the request payload that contain your customer's primary physical address. See [`address_fields`](#address_fields-block) for more details.
+* `email_field` (Optional) The name of the field in the request payload that contains your customer's email. See [`email_field`](#email_field-block) for more details.
+* `password_field` (Optional) Details about your login page password field. See [`password_field`](#password_field-block) for more details.
 * `payload_type` (Required) The payload type for your login endpoint, either JSON or form encoded.
-* `username_field` (Required) Details about your login page username field. See [`username_field`](#username_field-block) for more details.
-* `password_field` (Required) Details about your login page password field. See [`password_field`](#password_field-block) for more details.
+* `phone_number_fields` (Optional) The names of the fields in the request payload that contain your customer's primary phone number. See [`phone_number_fields`](#phone_number_fields-block) for more details.
+* `username_field` (Optional) Details about your login page username field. See [`username_field`](#username_field-block) for more details.
+
+### `address_fields` Block
+
+* `identifier` - (Required) The name of a single primary address field.
+
+### `email_field` Block
+
+* `identifier` - (Required) The name of the field in the request payload that contains your customer's email.
 
 ### `password_field` Block
 
-* `identifier` - (Optional) The name of the password field.
+* `identifier` - (Required) The name of the password field.
+
+### `phone_number_fields` Block
+
+* `identifier` - (Required) The name of a single primary phone number field.
 
 ### `username_field` Block
 
-* `identifier` - (Optional) The name of the username field.
+* `identifier` - (Required) The name of the username field.
 
 ### `response_inspection` Block
 
@@ -1078,4 +1096,4 @@ Using `terraform import`, import WAFv2 Web ACLs using `ID/Name/Scope`. For examp
 % terraform import aws_wafv2_web_acl.example a1b2c3d4-d5f6-7777-8888-9999aaaabbbbcccc/example/REGIONAL
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-ee72dd1c3082d58b9cc191279c4ee365ed1e5a7cb9e849d37c14c434ecbc744e -->
+<!-- cache-key: cdktf-0.20.1 input-634d5847255912d7ff836d946ccf0f9066065a5f808a6e96c042f64ae7680c29 -->
