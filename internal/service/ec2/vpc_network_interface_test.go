@@ -71,7 +71,7 @@ func TestAccVPCNetworkInterface_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "interface_type", "interface"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "connection_tracking_specification_request.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "connection_tracking_specification_request.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "mac_address"),
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
@@ -991,6 +991,7 @@ func TestAccVPCNetworkInterface_connectionTrackingSpecificationRequest(t *testin
 					testAccCheckENIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "connection_tracking_specification_request.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "connection_tracking_specification_request.tcp_established_timeout", "120"),
+					resource.TestCheckResourceAttr(resourceName, "connection_tracking_specification_request.udp_stream_timeout", "120"),
 				),
 			},
 			{
@@ -1003,7 +1004,7 @@ func TestAccVPCNetworkInterface_connectionTrackingSpecificationRequest(t *testin
 				Config: testAccVPCNetworkInterfaceConfig_connectionTrackingSpecificationRequestUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckENIExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "connection_tracking_specification_request.#", "2"),
+					resource.TestCheckResourceAttr(resourceName, "connection_tracking_specification_request.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "connection_tracking_specification_request.tcp_established_timeout", "180`"),
 				),
 			},
