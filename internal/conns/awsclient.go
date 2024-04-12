@@ -13,10 +13,10 @@ import (
 
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	config_sdkv2 "github.com/aws/aws-sdk-go-v2/config"
+	apigatewayv2_types "github.com/aws/aws-sdk-go-v2/service/apigatewayv2/types"
 	s3_sdkv2 "github.com/aws/aws-sdk-go-v2/service/s3"
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	apigatewayv2_sdkv1 "github.com/aws/aws-sdk-go/service/apigatewayv2"
 	directoryservice_sdkv1 "github.com/aws/aws-sdk-go/service/directoryservice"
 	dynamodb_sdkv1 "github.com/aws/aws-sdk-go/service/dynamodb"
 	efs_sdkv1 "github.com/aws/aws-sdk-go/service/efs"
@@ -192,8 +192,8 @@ func (c *AWSClient) APIGatewayInvokeURL(ctx context.Context, restAPIID, stageNam
 // APIGatewayV2InvokeURL returns the Amazon API Gateway v2 (WebSocket & HTTP APIs) invoke URL for the configured AWS Region.
 // See https://docs.aws.amazon.com/apigateway/latest/developerguide/http-api-publish.html and
 // https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-set-up-websocket-deployment.html.
-func (c *AWSClient) APIGatewayV2InvokeURL(ctx context.Context, protocolType, apiID, stageName string) string {
-	if protocolType == apigatewayv2_sdkv1.ProtocolTypeWebsocket {
+func (c *AWSClient) APIGatewayV2InvokeURL(ctx context.Context, protocolType apigatewayv2_types.ProtocolType, apiID, stageName string) string {
+	if protocolType == apigatewayv2_types.ProtocolTypeWebsocket {
 		return fmt.Sprintf("wss://%s/%s", c.RegionalHostname(ctx, fmt.Sprintf("%s.execute-api", apiID)), stageName)
 	}
 

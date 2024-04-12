@@ -10,8 +10,9 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/datasync"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/datasync"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/datasync/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -896,7 +897,7 @@ func TestAccDataSyncTask_tags(t *testing.T) {
 
 func testAccCheckTaskDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_datasync_task" {
@@ -927,7 +928,7 @@ func testAccCheckTaskExists(ctx context.Context, resourceName string, task *data
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncClient(ctx)
 
 		output, err := tfdatasync.FindTaskByARN(ctx, conn, rs.Primary.ID)
 
@@ -935,9 +936,9 @@ func testAccCheckTaskExists(ctx context.Context, resourceName string, task *data
 			return err
 		}
 
-		if aws.StringValue(output.Status) != datasync.TaskStatusAvailable && aws.StringValue(output.Status) != datasync.TaskStatusRunning {
+		if output.Status != awstypes.TaskStatusAvailable && output.Status != awstypes.TaskStatusRunning {
 			return fmt.Errorf("Task %q not available or running: last status (%s), error code (%s), error detail: %s",
-				rs.Primary.ID, aws.StringValue(output.Status), aws.StringValue(output.ErrorCode), aws.StringValue(output.ErrorDetail))
+				rs.Primary.ID, string(output.Status), aws.ToString(output.ErrorCode), aws.ToString(output.ErrorDetail))
 		}
 
 		*task = *output
@@ -948,7 +949,7 @@ func testAccCheckTaskExists(ctx context.Context, resourceName string, task *data
 
 func testAccCheckTaskNotRecreated(i, j *datasync.DescribeTaskOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.StringValue(i.TaskArn) != aws.StringValue(j.TaskArn) {
+		if aws.ToString(i.TaskArn) != aws.ToString(j.TaskArn) {
 			return errors.New("DataSync Task was recreated")
 		}
 
@@ -957,13 +958,13 @@ func testAccCheckTaskNotRecreated(i, j *datasync.DescribeTaskOutput) resource.Te
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncClient(ctx)
 
 	input := &datasync.ListTasksInput{
-		MaxResults: aws.Int64(1),
+		MaxResults: aws.Int32(1),
 	}
 
-	_, err := conn.ListTasksWithContext(ctx, input)
+	_, err := conn.ListTasks(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

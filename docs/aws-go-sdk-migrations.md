@@ -28,6 +28,25 @@ Be sure to preserve alphabetical order.
 The AWS SDK for Go V1 previously exposed these as constants, but V2 does not.
 This constant is used in common acceptance testing pre-checks, such as `acctest.PreCheckPartitionHasService`.
 
+### Patch Generation
+
+The `awssdkpatch` tool can be used to automate parts of the AWS SDK migration.
+Applying the generated patch will likely leave the provider in a state which does not compile.
+As such, __this step is optional__ but can significantly reduce the amount of time spent on the steps below by applying changes without any manual intervention.
+
+To apply a patch use the `awssdkpatch-apply` target, with the service to be migrated set to the `PKG` variable:
+
+```console
+PKG=ec2 make awssdkpatch-apply
+```
+
+You may also optionally generate the patch and use [`gopatch`](https://github.com/uber-go/gopatch) to preview differences before modfiying any files.
+
+```console
+PKG=ec2 make awssdkpatch-gen
+gopatch -d -p awssdk.patch ./internal/service/ec2/...
+```
+
 ## Imports
 
 In each go source file with a V1 SDK import, the library should be replaced with V2:
