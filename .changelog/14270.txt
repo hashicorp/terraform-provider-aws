@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_cloudformation_stack: CRLF line endings in `template_body` no longer cause erroneous diffs
+```
