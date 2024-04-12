@@ -6887,12 +6887,12 @@ func FindSnapshotTierStatusBySnapshotID(ctx context.Context, conn *ec2.EC2, id s
 
 func FindNetworkPerformanceMetricSubscriptions(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.DescribeAwsNetworkPerformanceMetricSubscriptionsInput) ([]awstypes.Subscription, error) {
 	var output []awstypes.Subscription
-	paginator := ec2_sdkv2.NewDescribeAwsNetworkPerformanceMetricSubscriptionsPaginator(conn, input, func(o *ec2_sdkv2.DescribeAwsNetworkPerformanceMetricSubscriptionsPaginatorOptions) {
+
+	pages := ec2_sdkv2.NewDescribeAwsNetworkPerformanceMetricSubscriptionsPaginator(conn, input, func(o *ec2_sdkv2.DescribeAwsNetworkPerformanceMetricSubscriptionsPaginatorOptions) {
 		o.Limit = 100
 	})
-
-	for paginator.HasMorePages() {
-		page, err := paginator.NextPage(ctx)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
 		if err != nil {
 			return nil, err
@@ -6973,10 +6973,10 @@ func FindInstanceConnectEndpoint(ctx context.Context, conn *ec2_sdkv2.Client, in
 
 func FindInstanceConnectEndpoints(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.DescribeInstanceConnectEndpointsInput) ([]awstypes.Ec2InstanceConnectEndpoint, error) {
 	var output []awstypes.Ec2InstanceConnectEndpoint
-	paginator := ec2_sdkv2.NewDescribeInstanceConnectEndpointsPaginator(conn, input)
 
-	for paginator.HasMorePages() {
-		page, err := paginator.NextPage(ctx)
+	pages := ec2_sdkv2.NewDescribeInstanceConnectEndpointsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
 		if tfawserr_sdkv2.ErrCodeEquals(err, errCodeInvalidInstanceConnectEndpointIdNotFound) {
 			return nil, &retry.NotFoundError{
@@ -7082,10 +7082,10 @@ func FindVerifiedAccessGroup(ctx context.Context, conn *ec2_sdkv2.Client, input 
 
 func FindVerifiedAccessGroups(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.DescribeVerifiedAccessGroupsInput) ([]awstypes.VerifiedAccessGroup, error) {
 	var output []awstypes.VerifiedAccessGroup
-	paginator := ec2_sdkv2.NewDescribeVerifiedAccessGroupsPaginator(conn, input)
 
-	for paginator.HasMorePages() {
-		page, err := paginator.NextPage(ctx)
+	pages := ec2_sdkv2.NewDescribeVerifiedAccessGroupsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
 		if tfawserr_sdkv2.ErrCodeEquals(err, errCodeInvalidVerifiedAccessGroupIdNotFound) {
 			return nil, &retry.NotFoundError{
@@ -7136,10 +7136,10 @@ func FindVerifiedAccessInstance(ctx context.Context, conn *ec2_sdkv2.Client, inp
 
 func FindVerifiedAccessInstances(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.DescribeVerifiedAccessInstancesInput) ([]awstypes.VerifiedAccessInstance, error) {
 	var output []awstypes.VerifiedAccessInstance
-	paginator := ec2_sdkv2.NewDescribeVerifiedAccessInstancesPaginator(conn, input)
 
-	for paginator.HasMorePages() {
-		page, err := paginator.NextPage(ctx)
+	pages := ec2_sdkv2.NewDescribeVerifiedAccessInstancesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
 		if tfawserr_sdkv2.ErrCodeEquals(err, errCodeInvalidVerifiedAccessInstanceIdNotFound) {
 			return nil, &retry.NotFoundError{
@@ -7190,10 +7190,10 @@ func FindVerifiedAccessInstanceLoggingConfiguration(ctx context.Context, conn *e
 
 func FindVerifiedAccessInstanceLoggingConfigurations(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.DescribeVerifiedAccessInstanceLoggingConfigurationsInput) ([]awstypes.VerifiedAccessInstanceLoggingConfiguration, error) {
 	var output []awstypes.VerifiedAccessInstanceLoggingConfiguration
-	paginator := ec2_sdkv2.NewDescribeVerifiedAccessInstanceLoggingConfigurationsPaginator(conn, input)
 
-	for paginator.HasMorePages() {
-		page, err := paginator.NextPage(ctx)
+	pages := ec2_sdkv2.NewDescribeVerifiedAccessInstanceLoggingConfigurationsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
 		if tfawserr_sdkv2.ErrCodeEquals(err, errCodeInvalidVerifiedAccessInstanceIdNotFound) {
 			return nil, &retry.NotFoundError{
@@ -7262,10 +7262,10 @@ func FindVerifiedAccessTrustProvider(ctx context.Context, conn *ec2_sdkv2.Client
 
 func FindVerifiedAccessTrustProviders(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.DescribeVerifiedAccessTrustProvidersInput) ([]awstypes.VerifiedAccessTrustProvider, error) {
 	var output []awstypes.VerifiedAccessTrustProvider
-	paginator := ec2_sdkv2.NewDescribeVerifiedAccessTrustProvidersPaginator(conn, input)
 
-	for paginator.HasMorePages() {
-		page, err := paginator.NextPage(ctx)
+	pages := ec2_sdkv2.NewDescribeVerifiedAccessTrustProvidersPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
 		if tfawserr_sdkv2.ErrCodeEquals(err, errCodeInvalidVerifiedAccessTrustProviderIdNotFound) {
 			return nil, &retry.NotFoundError{
@@ -7331,10 +7331,10 @@ func FindVerifiedAccessEndpoint(ctx context.Context, conn *ec2_sdkv2.Client, inp
 
 func FindVerifiedAccessEndpoints(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.DescribeVerifiedAccessEndpointsInput) ([]awstypes.VerifiedAccessEndpoint, error) {
 	var output []awstypes.VerifiedAccessEndpoint
-	paginator := ec2_sdkv2.NewDescribeVerifiedAccessEndpointsPaginator(conn, input)
 
-	for paginator.HasMorePages() {
-		page, err := paginator.NextPage(ctx)
+	pages := ec2_sdkv2.NewDescribeVerifiedAccessEndpointsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 
 		if tfawserr_sdkv2.ErrCodeEquals(err, errCodeInvalidVerifiedAccessEndpointIdNotFound) {
 			return nil, &retry.NotFoundError{
