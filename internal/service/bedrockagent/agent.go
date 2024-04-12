@@ -324,6 +324,10 @@ func (r *agentResource) Update(ctx context.Context, request resource.UpdateReque
 		update = true
 	}
 
+	if !old.Instruction.Equal(new.Instruction) {
+		update = true
+	}
+
 	if !old.CustomerEncryptionKeyARN.Equal(new.CustomerEncryptionKeyARN) {
 		input.CustomerEncryptionKeyArn = fwflex.StringFromFramework(ctx, new.CustomerEncryptionKeyARN)
 		update = true
@@ -368,7 +372,7 @@ func (r *agentResource) Update(ctx context.Context, request resource.UpdateReque
 		return
 	}
 
-	if new.PrepareAgent.ValueBool() && !old.PrepareAgent.ValueBool() {
+	if new.PrepareAgent.ValueBool() {
 		prepareInput := &bedrockagent.PrepareAgentInput{}
 		prepareInput.AgentId = out.Agent.AgentId
 		_, err := conn.PrepareAgent(ctx, prepareInput)
@@ -492,7 +496,7 @@ func waitAgentCreated(ctx context.Context, conn *bedrockagent.Client, id string,
 
 func waitAgentUpdated(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*bedrockagent.GetAgentOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(awstypes.AgentAliasStatusUpdating),
+		Pending: enum.Slice(awstypes.AgentStatusUpdating),
 		Target:  enum.Slice(awstypes.AgentStatusNotPrepared, awstypes.AgentStatusPrepared),
 		Refresh: statusAgent(ctx, conn, id),
 		Timeout: timeout,
@@ -512,7 +516,7 @@ func waitAgentUpdated(ctx context.Context, conn *bedrockagent.Client, id string,
 func waitAgentPrepared(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*bedrockagent.GetAgentOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AgentStatusNotPrepared, awstypes.AgentStatusPreparing),
-		Target:  enum.Slice(awstypes.AgentAliasStatusPrepared),
+		Target:  enum.Slice(awstypes.AgentStatusPrepared),
 		Refresh: statusAgent(ctx, conn, id),
 		Timeout: timeout,
 	}
