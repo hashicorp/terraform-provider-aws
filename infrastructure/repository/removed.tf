@@ -1,3 +1,7 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
+
 # TODO: delete after removal
 # https://developer.hashicorp.com/terraform/language/resources/syntax#removing-resources
 
