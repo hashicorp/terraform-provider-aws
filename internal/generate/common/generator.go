@@ -116,10 +116,6 @@ func (d *fileDestination) Write() error {
 	return nil
 }
 
-type stdOutDestination struct {
-	baseDestination
-}
-
 type baseDestination struct {
 	formatter func([]byte) ([]byte, error)
 	buffer    strings.Builder
@@ -152,7 +148,7 @@ func (d *baseDestination) WriteTemplate(templateName, templateBody string, templ
 
 func parseTemplate(templateName, templateBody string, templateData any) ([]byte, error) {
 	funcMap := template.FuncMap{
-		"Title": cases.Title(language.Und).String,
+		"Title": cases.Title(language.Und, cases.NoLower).String,
 	}
 	tmpl, err := template.New(templateName).Funcs(funcMap).Parse(templateBody)
 
