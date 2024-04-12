@@ -72,6 +72,9 @@ func TestAccVPCNetworkInterface_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "ipv6_address_count", "0"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "connection_tracking_specification_request.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "connection_tracking_specification_request.0.tcp_established_timeout", "432000"),
+					resource.TestCheckResourceAttr(resourceName, "connection_tracking_specification_request.0.udp_stream_timeout", "180"),
+					resource.TestCheckResourceAttr(resourceName, "connection_tracking_specification_request.0.udp_timeout", "30"),
 					resource.TestCheckResourceAttrSet(resourceName, "mac_address"),
 					resource.TestCheckResourceAttr(resourceName, "outpost_arn", ""),
 					acctest.CheckResourceAttrAccountID(resourceName, "owner_id"),
@@ -1006,7 +1009,7 @@ func TestAccVPCNetworkInterface_connectionTrackingSpecificationRequest(t *testin
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckENIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "connection_tracking_specification_request.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "connection_tracking_specification_request.0.tcp_established_timeout", "180"),
+					resource.TestCheckResourceAttr(resourceName, "connection_tracking_specification_request.0.tcp_established_timeout", "240"),
 					resource.TestCheckResourceAttr(resourceName, "connection_tracking_specification_request.0.udp_stream_timeout", "180"),
 					resource.TestCheckResourceAttr(resourceName, "connection_tracking_specification_request.0.udp_timeout", "30"),
 				),
@@ -1617,7 +1620,7 @@ func testAccVPCNetworkInterfaceConfig_connectionTrackingSpecificationRequestUpda
 resource "aws_network_interface" "test" {
   subnet_id = aws_subnet.test.id
   connection_tracking_specification_request {
-    tcp_established_timeout = 180
+    tcp_established_timeout = 240
   }
 }
 `)
