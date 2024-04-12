@@ -256,6 +256,7 @@ resource "aws_bedrockagent_agent" "test" {
   agent_resource_role_arn = aws_iam_role.test.arn
   description             = %[3]q
   idle_ttl                = 500
+  instruction             = file("${path.module}/test-fixtures/instruction.txt")
   foundation_model        = %[2]q
 }
 `, rName, model, description))
@@ -267,6 +268,7 @@ resource "aws_bedrockagent_agent" "test" {
   agent_name              = %[1]q
   agent_resource_role_arn = aws_iam_role.test.arn
   idle_ttl                = 500
+  instruction             = file("${path.module}/test-fixtures/instruction.txt")
   foundation_model        = %[2]q
 
   tags = {
@@ -282,6 +284,7 @@ resource "aws_bedrockagent_agent" "test" {
   agent_name              = %[1]q
   agent_resource_role_arn = aws_iam_role.test.arn
   idle_ttl                = 500
+  instruction             = file("${path.module}/test-fixtures/instruction.txt")
   foundation_model        = %[2]q
 
   tags = {
@@ -299,6 +302,7 @@ resource "aws_bedrockagent_agent" "test" {
   agent_resource_role_arn = aws_iam_role.test.arn
   description             = %[3]q
   idle_ttl                = 500
+  instruction             = file("${path.module}/test-fixtures/instruction.txt")
   foundation_model        = %[2]q
   prompt_override_configuration {
     override_lambda = null
