@@ -251,7 +251,7 @@ resource "aws_ce_anomaly_monitor" "test" {
 	"Not": null,
 	"Or": null,
 	"Tags": {
-		"Key": "CostCenter",
+		"Key": "user:CostCenter",
 		"MatchOptions": null,
 		"Values": [
 			"10000"
@@ -277,7 +277,7 @@ resource "aws_ce_anomaly_monitor" "test" {
 	"Not": null,
 	"Or": null,
 	"Tags": {
-		"Key": "CostCenter",
+		"Key": "user:CostCenter",
 		"MatchOptions": null,
 		"Values": [
 			"10000"
@@ -307,7 +307,7 @@ resource "aws_ce_anomaly_monitor" "test" {
 	"Not": null,
 	"Or": null,
 	"Tags": {
-		"Key": "CostCenter",
+		"Key": "user:CostCenter",
 		"MatchOptions": null,
 		"Values": [
 			"10000"
