@@ -35,7 +35,7 @@ class MyConvertedCode extends TerraformStack {
     new LightsailInstance(this, "gitlab_test", {
       availabilityZone: "us-east-1b",
       blueprintId: "amazon_linux_2",
-      bundleId: "nano_3_0",
+      bundleId: "nano_1_0",
       keyPairName: "some_key_name",
       name: "custom_gitlab",
       tags: {
@@ -66,7 +66,7 @@ class MyConvertedCode extends TerraformStack {
     new LightsailInstance(this, "custom", {
       availabilityZone: "us-east-1b",
       blueprintId: "amazon_linux_2",
-      bundleId: "nano_3_0",
+      bundleId: "nano_1_0",
       name: "custom",
       userData:
         "sudo yum install -y httpd && sudo systemctl start httpd && sudo systemctl enable httpd && echo '<h1>Deployed via Terraform</h1>' | sudo tee /var/www/html/index.html",
@@ -98,7 +98,7 @@ class MyConvertedCode extends TerraformStack {
       },
       availabilityZone: "us-east-1b",
       blueprintId: "amazon_linux_2",
-      bundleId: "nano_3_0",
+      bundleId: "nano_1_0",
       name: "custom_instance",
       tags: {
         foo: "bar",

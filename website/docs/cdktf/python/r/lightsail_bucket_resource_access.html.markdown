@@ -42,7 +42,7 @@ class MyConvertedCode(TerraformStack):
         aws_lightsail_instance_test = LightsailInstance(self, "test_2",
             availability_zone="us-east-1b",
             blueprint_id="amazon_linux_2",
-            bundle_id="nano_3_0",
+            bundle_id="nano_1_0",
             name="mytestinstance"
         )
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.

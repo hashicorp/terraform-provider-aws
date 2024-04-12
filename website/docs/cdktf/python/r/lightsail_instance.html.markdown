@@ -35,7 +35,7 @@ class MyConvertedCode(TerraformStack):
         LightsailInstance(self, "gitlab_test",
             availability_zone="us-east-1b",
             blueprint_id="amazon_linux_2",
-            bundle_id="nano_3_0",
+            bundle_id="nano_1_0",
             key_pair_name="some_key_name",
             name="custom_gitlab",
             tags={
@@ -63,7 +63,7 @@ class MyConvertedCode(TerraformStack):
         LightsailInstance(self, "custom",
             availability_zone="us-east-1b",
             blueprint_id="amazon_linux_2",
-            bundle_id="nano_3_0",
+            bundle_id="nano_1_0",
             name="custom",
             user_data="sudo yum install -y httpd && sudo systemctl start httpd && sudo systemctl enable httpd && echo '<h1>Deployed via Terraform</h1>' | sudo tee /var/www/html/index.html"
         )
@@ -91,7 +91,7 @@ class MyConvertedCode(TerraformStack):
             ),
             availability_zone="us-east-1b",
             blueprint_id="amazon_linux_2",
-            bundle_id="nano_3_0",
+            bundle_id="nano_1_0",
             name="custom_instance",
             tags={
                 "foo": "bar"

@@ -34,7 +34,7 @@ class MyConvertedCode extends TerraformStack {
     const test = new LightsailInstance(this, "test", {
       availabilityZone: Token.asString(Fn.lookupNested(available.names, ["0"])),
       blueprintId: "amazon_linux_2",
-      bundleId: "nano_3_0",
+      bundleId: "nano_1_0",
       name: "yak_sail",
     });
     const awsLightsailInstancePublicPortsTest =

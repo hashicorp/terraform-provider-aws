@@ -42,7 +42,7 @@ class MyConvertedCode extends TerraformStack {
     const awsLightsailInstanceTest = new LightsailInstance(this, "test_2", {
       availabilityZone: "us-east-1b",
       blueprintId: "amazon_linux_2",
-      bundleId: "nano_3_0",
+      bundleId: "nano_1_0",
       name: "mytestinstance",
     });
     /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
