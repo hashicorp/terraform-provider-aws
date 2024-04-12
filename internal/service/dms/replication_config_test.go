@@ -5,10 +5,12 @@ package dms_test
 
 import (
 	"context"
+	_ "embed"
 	"fmt"
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -20,53 +22,59 @@ import (
 )
 
 func TestAccDMSReplicationConfig_basic(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_dms_replication_config.test"
+	t.Parallel()
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicationConfigDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccReplicationConfigConfig_basic(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicationConfigExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "dms", regexache.MustCompile(`replication-config:[A-Z0-9]{26}`)),
-					resource.TestCheckResourceAttr(resourceName, "compute_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "compute_config.0.availability_zone", ""),
-					resource.TestCheckResourceAttr(resourceName, "compute_config.0.dns_name_servers", ""),
-					resource.TestCheckResourceAttr(resourceName, "compute_config.0.kms_key_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "compute_config.0.max_capacity_units", "128"),
-					resource.TestCheckResourceAttr(resourceName, "compute_config.0.min_capacity_units", "2"),
-					resource.TestCheckResourceAttr(resourceName, "compute_config.0.multi_az", "false"),
-					resource.TestCheckResourceAttr(resourceName, "compute_config.0.preferred_maintenance_window", "sun:23:45-mon:00:30"),
-					resource.TestCheckResourceAttrSet(resourceName, "compute_config.0.replication_subnet_group_id"),
-					resource.TestCheckResourceAttr(resourceName, "compute_config.0.vpc_security_group_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "replication_config_identifier", rName),
-					acctest.CheckResourceAttrEquivalentJSON(resourceName, "replication_settings", defaultReplicationConfigSettings),
-					resource.TestCheckResourceAttr(resourceName, "replication_type", "cdc"),
-					resource.TestCheckNoResourceAttr(resourceName, "resource_identifier"),
-					resource.TestCheckResourceAttrPair(resourceName, "source_endpoint_arn", "aws_dms_endpoint.source", "endpoint_arn"),
-					resource.TestCheckResourceAttr(resourceName, "start_replication", "false"),
-					resource.TestCheckResourceAttr(resourceName, "supplemental_settings", ""),
-					acctest.CheckResourceAttrJMES(resourceName, "table_mappings", "length(rules)", "1"),
-					resource.TestCheckResourceAttrPair(resourceName, "target_endpoint_arn", "aws_dms_endpoint.target", "endpoint_arn"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"start_replication", "resource_identifier"},
-			},
-		},
-	})
+	for _, migrationType := range dms.MigrationTypeValue_Values() {
+		t.Run(migrationType, func(t *testing.T) {
+			ctx := acctest.Context(t)
+			rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+			resourceName := "aws_dms_replication_config.test"
+
+			resource.ParallelTest(t, resource.TestCase{
+				PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+				ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				CheckDestroy:             testAccCheckReplicationConfigDestroy(ctx),
+				Steps: []resource.TestStep{
+					{
+						Config: testAccReplicationConfigConfig_basic(rName, migrationType),
+						Check: resource.ComposeAggregateTestCheckFunc(
+							testAccCheckReplicationConfigExists(ctx, resourceName),
+							resource.TestCheckResourceAttrSet(resourceName, "arn"),
+							acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "dms", regexache.MustCompile(`replication-config:[A-Z0-9]{26}`)),
+							resource.TestCheckResourceAttr(resourceName, "compute_config.#", "1"),
+							resource.TestCheckResourceAttr(resourceName, "compute_config.0.availability_zone", ""),
+							resource.TestCheckResourceAttr(resourceName, "compute_config.0.dns_name_servers", ""),
+							resource.TestCheckResourceAttr(resourceName, "compute_config.0.kms_key_id", ""),
+							resource.TestCheckResourceAttr(resourceName, "compute_config.0.max_capacity_units", "128"),
+							resource.TestCheckResourceAttr(resourceName, "compute_config.0.min_capacity_units", "2"),
+							resource.TestCheckResourceAttr(resourceName, "compute_config.0.multi_az", "false"),
+							resource.TestCheckResourceAttr(resourceName, "compute_config.0.preferred_maintenance_window", "sun:23:45-mon:00:30"),
+							resource.TestCheckResourceAttrSet(resourceName, "compute_config.0.replication_subnet_group_id"),
+							resource.TestCheckResourceAttr(resourceName, "compute_config.0.vpc_security_group_ids.#", "0"),
+							resource.TestCheckResourceAttr(resourceName, "replication_config_identifier", rName),
+							acctest.CheckResourceAttrEquivalentJSON(resourceName, "replication_settings", defaultReplicationConfigSettings[migrationType]),
+							resource.TestCheckResourceAttr(resourceName, "replication_type", migrationType),
+							resource.TestCheckNoResourceAttr(resourceName, "resource_identifier"),
+							resource.TestCheckResourceAttrPair(resourceName, "source_endpoint_arn", "aws_dms_endpoint.source", "endpoint_arn"),
+							resource.TestCheckResourceAttr(resourceName, "start_replication", "false"),
+							resource.TestCheckResourceAttr(resourceName, "supplemental_settings", ""),
+							acctest.CheckResourceAttrJMES(resourceName, "table_mappings", "length(rules)", "1"),
+							resource.TestCheckResourceAttrPair(resourceName, "target_endpoint_arn", "aws_dms_endpoint.target", "endpoint_arn"),
+							resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+							resource.TestCheckResourceAttr(resourceName, "tags_all.%", "0"),
+						),
+					},
+					{
+						ResourceName:            resourceName,
+						ImportState:             true,
+						ImportStateVerify:       true,
+						ImportStateVerifyIgnore: []string{"start_replication", "resource_identifier"},
+					},
+				},
+			})
+		})
+	}
 }
 
 // func TestAccDMSReplicationConfig_noChangeOnDefault(t *testing.T) {
@@ -129,7 +137,7 @@ func TestAccDMSReplicationConfig_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckReplicationConfigDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccReplicationConfigConfig_basic(rName),
+				Config: testAccReplicationConfigConfig_basic(rName, "cdc"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationConfigExists(ctx, resourceName),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdms.ResourceReplicationConfig(), resourceName),
@@ -342,13 +350,13 @@ resource "aws_dms_replication_subnet_group" "test" {
 `, rName))
 }
 
-func testAccReplicationConfigConfig_basic(rName string) string {
+func testAccReplicationConfigConfig_basic(rName, migrationType string) string {
 	return acctest.ConfigCompose(
 		testAccReplicationConfigConfig_base_DummyDatabase(rName),
 		fmt.Sprintf(`
 resource "aws_dms_replication_config" "test" {
   replication_config_identifier = %[1]q
-  replication_type              = "cdc"
+  replication_type              = %[2]q
   source_endpoint_arn           = aws_dms_endpoint.source.endpoint_arn
   target_endpoint_arn           = aws_dms_endpoint.target.endpoint_arn
   table_mappings                = "{\"rules\":[{\"rule-type\":\"selection\",\"rule-id\":\"1\",\"rule-name\":\"1\",\"object-locator\":{\"schema-name\":\"%%\",\"table-name\":\"%%\"},\"rule-action\":\"include\"}]}"
@@ -360,7 +368,7 @@ resource "aws_dms_replication_config" "test" {
     preferred_maintenance_window = "sun:23:45-mon:00:30"
   }
 }
-`, rName))
+`, rName, migrationType))
 }
 
 func testAccReplicationConfigConfig_noChangeOnDefault(rName string) string {
@@ -482,184 +490,19 @@ resource "aws_dms_replication_config" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-const defaultReplicationConfigSettings = `{
-  "Logging": {
-    "EnableLogging": false,
-    "EnableLogContext": false,
-    "LogComponents": [
-      {
-        "Severity": "LOGGER_SEVERITY_DEFAULT",
-        "Id": "DATA_STRUCTURE"
-      },
-      {
-        "Severity": "LOGGER_SEVERITY_DEFAULT",
-        "Id": "COMMUNICATION"
-      },
-      {
-        "Severity": "LOGGER_SEVERITY_DEFAULT",
-        "Id": "IO"
-      },
-      {
-        "Severity": "LOGGER_SEVERITY_DEFAULT",
-        "Id": "COMMON"
-      },
-      {
-        "Severity": "LOGGER_SEVERITY_DEFAULT",
-        "Id": "FILE_FACTORY"
-      },
-      {
-        "Severity": "LOGGER_SEVERITY_DEFAULT",
-        "Id": "FILE_TRANSFER"
-      },
-      {
-        "Severity": "LOGGER_SEVERITY_DEFAULT",
-        "Id": "REST_SERVER"
-      },
-      {
-        "Severity": "LOGGER_SEVERITY_DEFAULT",
-        "Id": "ADDONS"
-      },
-      {
-        "Severity": "LOGGER_SEVERITY_DEFAULT",
-        "Id": "TARGET_LOAD"
-      },
-      {
-        "Severity": "LOGGER_SEVERITY_DEFAULT",
-        "Id": "TARGET_APPLY"
-      },
-      {
-        "Severity": "LOGGER_SEVERITY_DEFAULT",
-        "Id": "SOURCE_UNLOAD"
-      },
-      {
-        "Severity": "LOGGER_SEVERITY_DEFAULT",
-        "Id": "SOURCE_CAPTURE"
-      },
-      {
-        "Severity": "LOGGER_SEVERITY_DEFAULT",
-        "Id": "TRANSFORMATION"
-      },
-      {
-        "Severity": "LOGGER_SEVERITY_DEFAULT",
-        "Id": "SORTER"
-      },
-      {
-        "Severity": "LOGGER_SEVERITY_DEFAULT",
-        "Id": "TASK_MANAGER"
-      },
-      {
-        "Severity": "LOGGER_SEVERITY_DEFAULT",
-        "Id": "TABLES_MANAGER"
-      },
-      {
-        "Severity": "LOGGER_SEVERITY_DEFAULT",
-        "Id": "METADATA_MANAGER"
-      },
-      {
-        "Severity": "LOGGER_SEVERITY_DEFAULT",
-        "Id": "PERFORMANCE"
-      },
-      {
-        "Severity": "LOGGER_SEVERITY_DEFAULT",
-        "Id": "VALIDATOR_EXT"
-      }
-    ],
-    "CloudWatchLogGroup": null,
-    "CloudWatchLogStream": null
-  },
-  "StreamBufferSettings": {
-    "StreamBufferCount": 3,
-    "CtrlStreamBufferSizeInMB": 5,
-    "StreamBufferSizeInMB": 8
-  },
-  "ErrorBehavior": {
-    "FailOnNoTablesCaptured": true,
-    "ApplyErrorUpdatePolicy": "LOG_ERROR",
-    "FailOnTransactionConsistencyBreached": false,
-    "RecoverableErrorThrottlingMax": 1800,
-    "DataErrorEscalationPolicy": "SUSPEND_TABLE",
-    "ApplyErrorEscalationCount": 0,
-    "RecoverableErrorStopRetryAfterThrottlingMax": true,
-    "RecoverableErrorThrottling": true,
-    "ApplyErrorFailOnTruncationDdl": false,
-    "DataMaskingErrorPolicy": "STOP_TASK",
-    "DataTruncationErrorPolicy": "LOG_ERROR",
-    "ApplyErrorInsertPolicy": "LOG_ERROR",
-    "EventErrorPolicy": "IGNORE",
-    "ApplyErrorEscalationPolicy": "LOG_ERROR",
-    "RecoverableErrorCount": -1,
-    "DataErrorEscalationCount": 0,
-    "TableErrorEscalationPolicy": "STOP_TASK",
-    "RecoverableErrorInterval": 5,
-    "ApplyErrorDeletePolicy": "IGNORE_RECORD",
-    "TableErrorEscalationCount": 0,
-    "FullLoadIgnoreConflicts": true,
-    "DataErrorPolicy": "LOG_ERROR",
-    "TableErrorPolicy": "SUSPEND_TABLE"
-  },
-  "TTSettings": {
-    "TTS3Settings": null,
-    "TTRecordSettings": null,
-    "FailTaskOnTTFailure": false,
-    "EnableTT": false
-  },
-  "FullLoadSettings": {
-    "CommitRate": 10000,
-    "StopTaskCachedChangesApplied": false,
-    "StopTaskCachedChangesNotApplied": false,
-    "MaxFullLoadSubTasks": 8,
-    "TransactionConsistencyTimeout": 600,
-    "CreatePkAfterFullLoad": false,
-    "TargetTablePrepMode": "DO_NOTHING"
-  },
-  "TargetMetadata": {
-    "ParallelApplyBufferSize": 0,
-    "ParallelApplyQueuesPerThread": 0,
-    "ParallelApplyThreads": 0,
-    "TargetSchema": "",
-    "InlineLobMaxSize": 0,
-    "ParallelLoadQueuesPerThread": 0,
-    "SupportLobs": true,
-    "LobChunkSize": 64,
-    "TaskRecoveryTableEnabled": false,
-    "ParallelLoadThreads": 0,
-    "LobMaxSize": 32,
-    "BatchApplyEnabled": false,
-    "FullLobMode": false,
-    "LimitedSizeLobMode": true,
-    "LoadMaxFileSize": 0,
-    "ParallelLoadBufferSize": 0
-  },
-  "BeforeImageSettings": null,
-  "ControlTablesSettings": {
-    "historyTimeslotInMinutes": 5,
-    "CommitPositionTableEnabled": false,
-    "HistoryTimeslotInMinutes": 5,
-    "StatusTableEnabled": false,
-    "SuspendedTablesTableEnabled": false,
-    "HistoryTableEnabled": false,
-    "ControlSchema": "",
-    "FullLoadExceptionTableEnabled": false
-  },
-  "LoopbackPreventionSettings": null,
-  "CharacterSetSettings": null,
-  "FailTaskWhenCleanTaskResourceFailed": false,
-  "ChangeProcessingTuning": {
-    "StatementCacheSize": 50,
-    "CommitTimeout": 1,
-    "BatchApplyPreserveTransaction": true,
-    "BatchApplyTimeoutMin": 1,
-    "BatchSplitSize": 0,
-    "BatchApplyTimeoutMax": 30,
-    "MinTransactionSize": 1000,
-    "MemoryKeepTime": 60,
-    "BatchApplyMemoryLimit": 500,
-    "MemoryLimitTotal": 1024
-  },
-  "ChangeProcessingDdlHandlingPolicy": {
-    "HandleSourceTableDropped": true,
-    "HandleSourceTableTruncated": true,
-    "HandleSourceTableAltered": true
-  },
-  "PostProcessingRules": null
-}`
+var (
+	defaultReplicationConfigSettings = map[string]string{
+		"cdc":               defaultReplicationConfigCdcSettings,
+		"full-load":         defaultReplicationConfigFullLoadSettings,
+		"full-load-and-cdc": defaultReplicationConfigFullLoadAndCdcSettings,
+	}
+
+	//go:embed testdata/replication_config/defaults/cdc.json
+	defaultReplicationConfigCdcSettings string
+
+	//go:embed testdata/replication_config/defaults/full-load.json
+	defaultReplicationConfigFullLoadSettings string
+
+	//go:embed testdata/replication_config/defaults/full-load-and-cdc.json
+	defaultReplicationConfigFullLoadAndCdcSettings string
+)
