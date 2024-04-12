@@ -577,8 +577,8 @@ func (m *bedrockAgentResourceModel) setId() {
 }
 
 type poc struct {
-	OverrideLambda       fwtypes.ARN                         `tfsdk:"override_lambda"`
-	PromptConfigurations fwtypes.ListNestedObjectValueOf[pc] `tfsdk:"prompt_configurations"`
+	OverrideLambda       fwtypes.ARN                        `tfsdk:"override_lambda"`
+	PromptConfigurations fwtypes.SetNestedObjectValueOf[pc] `tfsdk:"prompt_configurations"`
 }
 
 type pc struct {
