@@ -102,6 +102,7 @@ func ResourceConnector() *schema.Resource {
 			"security_policy_name": {
 				Type:     schema.TypeString,
 				Optional: true,
+				Computed: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(0, 100),
 					validation.StringMatch(regexache.MustCompile(`^TransferSFTPConnectorSecurityPolicy-[A-Za-z0-9-]+$`), "must be in the format matching TransferSFTPConnectorSecurityPolicy-[A-Za-z0-9-]+"),
