@@ -40,7 +40,7 @@ bedrock-agent,bedrockagent,bedrockagent,bedrockagent,,bedrockagent,,,BedrockAgen
 bcmdataexports,bcmdataexports,bcmdataexports,bcmdataexports,,bcmdataexports,,,BCMDataExports,BCMDataExports,,,2,,aws_bcmdataexports_,,bcmdataexports_,BCM Data Exports,Amazon,,,,,,,BCM Data Exports,ListExports,,
 billingconductor,billingconductor,billingconductor,,,billingconductor,,,BillingConductor,BillingConductor,,1,,,aws_billingconductor_,,billingconductor_,Billing Conductor,AWS,,x,,,,,billingconductor,,,
 braket,braket,braket,braket,,braket,,,Braket,Braket,,1,,,aws_braket_,,braket_,Braket,Amazon,,x,,,,,Braket,,,
-ce,ce,costexplorer,costexplorer,,ce,,costexplorer,CE,CostExplorer,,1,,,aws_ce_,,ce_,CE (Cost Explorer),AWS,,,,,,,Cost Explorer,ListCostCategoryDefinitions,,
+ce,ce,costexplorer,costexplorer,,ce,,costexplorer,CE,CostExplorer,,,2,,aws_ce_,,ce_,CE (Cost Explorer),AWS,,,,,,,Cost Explorer,ListCostCategoryDefinitions,,
 ,,,,,,,,,,,,,,,,,Chatbot,AWS,x,,,,,,,,,No SDK support
 chime,chime,chime,chime,,chime,,,Chime,Chime,,1,,,aws_chime_,,chime_,Chime,Amazon,,,,,,,Chime,ListAccounts,,
 chime-sdk-identity,chimesdkidentity,chimesdkidentity,chimesdkidentity,,chimesdkidentity,,,ChimeSDKIdentity,ChimeSDKIdentity,,1,,,aws_chimesdkidentity_,,chimesdkidentity_,Chime SDK Identity,Amazon,,x,,,,,Chime SDK Identity,,,
