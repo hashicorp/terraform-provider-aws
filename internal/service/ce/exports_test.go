@@ -5,10 +5,10 @@ package ce
 
 // Exports for use in tests only.
 var (
-	ResourceAnomalyMonitor      = resourceAnomalyMonitor
-	ResourceAnomalySubscription = resourceAnomalySubscription
-	ResourceCostAllocationTag   = resourceCostAllocationTag
-	ResourceCostCategory        = resourceCostCategory
+	ResourceAnomalyMonitor      = resourceAnomalyMonitor      // nosemgrep:ci.ce-in-var-name
+	ResourceAnomalySubscription = resourceAnomalySubscription // nosemgrep:ci.ce-in-var-name
+	ResourceCostAllocationTag   = resourceCostAllocationTag   // nosemgrep:ci.ce-in-var-name
+	ResourceCostCategory        = resourceCostCategory        // nosemgrep:ci.ce-in-var-name
 
 	FindAnomalyMonitorByARN       = findAnomalyMonitorByARN
 	FindAnomalySubscriptionByARN  = findAnomalySubscriptionByARN
