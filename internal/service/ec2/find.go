@@ -6923,3 +6923,54 @@ func FindVerifiedAccessEndpointByID(ctx context.Context, conn *ec2_sdkv2.Client,
 
 	return output, nil
 }
+
+func findFastSnapshotRestore(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.DescribeFastSnapshotRestoresInput) (*awstypes.DescribeFastSnapshotRestoreSuccessItem, error) {
+	output, err := findFastSnapshotRestores(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findFastSnapshotRestores(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.DescribeFastSnapshotRestoresInput) ([]awstypes.DescribeFastSnapshotRestoreSuccessItem, error) {
+	var output []awstypes.DescribeFastSnapshotRestoreSuccessItem
+
+	pages := ec2_sdkv2.NewDescribeFastSnapshotRestoresPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.FastSnapshotRestores...)
+	}
+
+	return output, nil
+}
+
+func findFastSnapshotRestoreByTwoPartKey(ctx context.Context, conn *ec2_sdkv2.Client, availabilityZone, snapshotID string) (*awstypes.DescribeFastSnapshotRestoreSuccessItem, error) {
+	input := &ec2_sdkv2.DescribeFastSnapshotRestoresInput{
+		Filters: newAttributeFilterListV2(map[string]string{
+			"availability-zone": availabilityZone,
+			"snapshot-id":       snapshotID,
+		}),
+	}
+
+	output, err := findFastSnapshotRestore(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if state := output.State; state == awstypes.FastSnapshotRestoreStateCodeDisabled {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}

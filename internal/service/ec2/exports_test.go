@@ -8,8 +8,8 @@ var (
 	ResourceCustomerGateway                 = resourceCustomerGateway
 	ResourceDefaultNetworkACL               = resourceDefaultNetworkACL
 	ResourceDefaultRouteTable               = resourceDefaultRouteTable
-	ResourceEBSFastSnapshotRestore          = newResourceEBSFastSnapshotRestore
-	ResourceInstanceConnectEndpoint         = newResourceInstanceConnectEndpoint
+	ResourceEBSFastSnapshotRestore          = newEBSFastSnapshotRestoreResource
+	ResourceInstanceConnectEndpoint         = newInstanceConnectEndpointResource
 	ResourceInstanceMetadataDefaults        = newInstanceMetadataDefaultsResource
 	ResourceNetworkACL                      = resourceNetworkACL
 	ResourceNetworkACLRule                  = resourceNetworkACLRule
@@ -25,17 +25,17 @@ var (
 	ResourceVPNGatewayAttachment            = resourceVPNGatewayAttachment
 	ResourceVPNGatewayRoutePropagation      = resourceVPNGatewayRoutePropagation
 
-	CustomFiltersSchema            = customFiltersSchema
-	FindEBSFastSnapshotRestoreByID = findEBSFastSnapshotRestoreByID
-	FindInstanceMetadataDefaults   = findInstanceMetadataDefaults
-	FindNetworkACLByIDV2           = findNetworkACLByIDV2
-	NewAttributeFilterList         = newAttributeFilterList
-	NewCustomFilterList            = newCustomFilterList
-	NewTagFilterList               = newTagFilterList
-	ProtocolForValue               = protocolForValue
-	StopInstance                   = stopInstance
-	UpdateTags                     = updateTags
-	UpdateTagsV2                   = updateTagsV2
+	CustomFiltersSchema                 = customFiltersSchema
+	FindFastSnapshotRestoreByTwoPartKey = findFastSnapshotRestoreByTwoPartKey
+	FindInstanceMetadataDefaults        = findInstanceMetadataDefaults
+	FindNetworkACLByIDV2                = findNetworkACLByIDV2
+	NewAttributeFilterList              = newAttributeFilterList
+	NewCustomFilterList                 = newCustomFilterList
+	NewTagFilterList                    = newTagFilterList
+	ProtocolForValue                    = protocolForValue
+	StopInstance                        = stopInstance
+	UpdateTags                          = updateTags
+	UpdateTagsV2                        = updateTagsV2
 )
 
 type (

@@ -13,6 +13,7 @@ import (
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -3191,6 +3192,40 @@ func WaitVerifiedAccessEndpointDeleted(ctx context.Context, conn *ec2_sdkv2.Clie
 	if output, ok := outputRaw.(*types.VerifiedAccessEndpoint); ok {
 		tfresource.SetLastError(err, errors.New(aws_sdkv2.ToString(output.Status.Message)))
 
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitFastSnapshotRestoreCreated(ctx context.Context, conn *ec2_sdkv2.Client, availabilityZone, snapshotID string, timeout time.Duration) (*awstypes.DescribeFastSnapshotRestoreSuccessItem, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.FastSnapshotRestoreStateCodeEnabling, types.FastSnapshotRestoreStateCodeOptimizing),
+		Target:  enum.Slice(types.FastSnapshotRestoreStateCodeEnabled),
+		Refresh: statusFastSnapshotRestore(ctx, conn, availabilityZone, snapshotID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.DescribeFastSnapshotRestoreSuccessItem); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitFastSnapshotRestoreDeleted(ctx context.Context, conn *ec2_sdkv2.Client, availabilityZone, snapshotID string, timeout time.Duration) (*awstypes.DescribeFastSnapshotRestoreSuccessItem, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.FastSnapshotRestoreStateCodeDisabling, types.FastSnapshotRestoreStateCodeOptimizing, types.FastSnapshotRestoreStateCodeEnabled),
+		Target:  []string{},
+		Refresh: statusFastSnapshotRestore(ctx, conn, availabilityZone, snapshotID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.DescribeFastSnapshotRestoreSuccessItem); ok {
 		return output, err
 	}
 
