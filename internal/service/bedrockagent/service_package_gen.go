@@ -21,6 +21,13 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
+			Factory: newAgentAliasResource,
+			Name:    "Bedrock Agent Alias",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "agent_alias_arn",
+			},
+		},
+		{
 			Factory: newAgentResource,
 			Name:    "Bedrock Agent",
 			Tags: &types.ServicePackageResourceTags{

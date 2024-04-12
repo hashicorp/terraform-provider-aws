@@ -39,8 +39,8 @@ import (
 
 // @FrameworkResource(name="Bedrock Agent Alias")
 // @Tags(identifierAttribute="agent_alias_arn")
-func newBedrockAgentAliasResource(context.Context) (resource.ResourceWithConfigure, error) {
-	r := &bedrockAgentAliasResource{}
+func newAgentAliasResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &agentAliasResource{}
 
 	r.SetDefaultCreateTimeout(5 * time.Minute)
 	r.SetDefaultUpdateTimeout(5 * time.Minute)
@@ -49,17 +49,17 @@ func newBedrockAgentAliasResource(context.Context) (resource.ResourceWithConfigu
 	return r, nil
 }
 
-type bedrockAgentAliasResource struct {
+type agentAliasResource struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *bedrockAgentAliasResource) Metadata(_ context.Context, request resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *agentAliasResource) Metadata(_ context.Context, request resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = "aws_bedrock_agent_alias"
 }
 
-func (r *bedrockAgentAliasResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *agentAliasResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"agent_alias_arn": framework.ARNAttributeComputedOnly(),
@@ -177,7 +177,7 @@ func (r *bedrockAgentAliasResource) Schema(ctx context.Context, request resource
 	}
 }
 
-func (r *bedrockAgentAliasResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+func (r *agentAliasResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data bedrockAliasResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
@@ -228,7 +228,7 @@ func (r *bedrockAgentAliasResource) Create(ctx context.Context, request resource
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *bedrockAgentAliasResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+func (r *agentAliasResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var data bedrockAliasResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
@@ -273,7 +273,7 @@ func (r *bedrockAgentAliasResource) Read(ctx context.Context, request resource.R
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *bedrockAgentAliasResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+func (r *agentAliasResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	var old, new bedrockAliasResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
 	if response.Diagnostics.HasError() {
@@ -321,7 +321,7 @@ func (r *bedrockAgentAliasResource) Update(ctx context.Context, request resource
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *bedrockAgentAliasResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+func (r *agentAliasResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var data bedrockAliasResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
@@ -350,11 +350,11 @@ func (r *bedrockAgentAliasResource) Delete(ctx context.Context, request resource
 	}
 }
 
-func (r *bedrockAgentAliasResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+func (r *agentAliasResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
 	r.SetTagsAll(ctx, request, response)
 }
 
-// func (r *bedrockAgentAliasResource) ImportState(ctx context.Context, request resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+// func (r *agentAliasResource) ImportState(ctx context.Context, request resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 // 	resource.ImportStatePassthroughID(ctx, path.Root("id"), request, resp)
 // }
 

@@ -26,7 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestAccAgentAlias_basic(t *testing.T) {
+func TestAccBedrockAgentAlias_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrock_agent_alias.test"
@@ -140,11 +140,10 @@ func findAgentAliasByID(ctx context.Context, conn *bedrockagent.Client, id strin
 }
 
 func testAccAgentAliasConfig_basic(rName string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAgentConfig_basic(rName, "anthropic.claude-v2", "basic claude"), fmt.Sprintf(`
 resource "aws_bedrock_agent_alias" "test" {
   agent_alias_name = %[1]q
-  agent_id         = "TLJ2L6TKGM"
-  
+  agent_id         = aws_bedrockagent_agent.test.agent_id
 }
-`, rName)
+`, rName))
 }
