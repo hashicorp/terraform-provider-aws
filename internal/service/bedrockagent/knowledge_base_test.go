@@ -145,7 +145,7 @@ func testAccKnowledgeBase_update(t *testing.T) {
 				Config: testAccKnowledgeBaseConfig_update(rName, foundationModel),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
-					resource.TestCheckResourceAttr(resourceName, "name", "updated-name"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName+"-updated"),
 					resource.TestCheckResourceAttr(resourceName, "description", rName),
 					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "knowledge_base_configuration.#", "1"),
@@ -270,12 +270,34 @@ func testAccCheckKnowledgeBaseExists(ctx context.Context, n string, v *types.Kno
 
 func testAccKnowledgeBase_base(rName, model string) string {
 	return fmt.Sprintf(`
-data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 data "aws_region" "current" {}
 
+resource "aws_opensearchserverless_security_policy" "test" {
+  name = %[1]q
+  type = "encryption"
+
+  policy = jsonencode({
+    "Rules" = [
+      {
+        "Resource" = [
+          "collection/%[1]s"
+        ],
+        "ResourceType" = "collection"
+      }
+    ],
+    "AWSOwnedKey" = true
+  })
+}
+
+resource "aws_opensearchserverless_collection" "test" {
+  name = %[1]q
+
+  depends_on = [aws_opensearchserverless_security_policy.test]
+}
+
 resource "aws_iam_role" "test" {
-  name               = "AmazonBedrockExecutionRoleForKnowledgeBase_tf"
+  name               = %[1]q
   path               = "/service-role/"
   assume_role_policy = <<POLICY
 {
@@ -291,39 +313,44 @@ resource "aws_iam_role" "test" {
 POLICY
 }
 
-resource "aws_iam_role_policy" "policy" {
-  name   = "AmazonBedrockExecutionRoleForKnowledgeBasePolicy"
+# See https://docs.aws.amazon.com/bedrock/latest/userguide/kb-permissions.html.
+resource "aws_iam_role_policy" "test" {
+  name   = %[1]q
   role   = aws_iam_role.test.name
   policy = <<POLICY
 {
-	"Version": "2012-10-17",
-	"Statement": [
-	  {
-		"Sid": "BedrockInvokeModelStatement",
-		"Effect": "Allow",
-		"Action": [
-			"bedrock:InvokeModel"
-		],
-		"Resource": [
-			"arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:foundation-model/%[2]s"
-		]
-	  },
-	  {
-		"Sid": "OpenSearchServerlessAPIAccessAllStatement",
-		"Action": [
-			"aoss:APIAccessAll"
-		],
-		"Effect": "Allow",
-		"Resource": [
-			"arn:${data.aws_partition.current.partition}:aoss:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:collection/142bezjddq707i5stcrf"
-		]
-	  }
-	]
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "bedrock:ListFoundationModels",
+        "bedrock:ListCustomModels"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "bedrock:InvokeModel"
+      ],
+      "Resource": [
+        "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s"
+      ]
+    },
+    {
+      "Action": [
+        "aoss:APIAccessAll"
+      ],
+      "Effect": "Allow",
+      "Resource": [
+        "${aws_opensearchserverless_collection.test.arn}"
+      ]
+    }
+  ]
 }
 POLICY
 }
-
-
 `, rName, model)
 }
 
@@ -332,16 +359,18 @@ func testAccKnowledgeBaseConfig_basic(rName, model string) string {
 resource "aws_bedrockagent_knowledge_base" "test" {
   name     = %[1]q
   role_arn = aws_iam_role.test.arn
+
   knowledge_base_configuration {
     vector_knowledge_base_configuration {
       embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s"
     }
     type = "VECTOR"
   }
+
   storage_configuration {
     type = "OPENSEARCH_SERVERLESS"
     opensearch_serverless_configuration {
-      collection_arn    = "arn:${data.aws_partition.current.partition}:aoss:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:collection/142bezjddq707i5stcrf"
+      collection_arn    = aws_opensearchserverless_collection.test.arn
       vector_index_name = "bedrock-knowledge-base-default-index"
       field_mapping {
         vector_field   = "bedrock-knowledge-base-default-vector"
@@ -350,7 +379,8 @@ resource "aws_bedrockagent_knowledge_base" "test" {
       }
     }
   }
-  depends_on = [aws_iam_role.test]
+
+  depends_on = [aws_iam_role_policy.test]
 }
 `, rName, model))
 }
@@ -358,19 +388,21 @@ resource "aws_bedrockagent_knowledge_base" "test" {
 func testAccKnowledgeBaseConfig_update(rName, model string) string {
 	return acctest.ConfigCompose(testAccKnowledgeBase_base(rName, model), fmt.Sprintf(`
 resource "aws_bedrockagent_knowledge_base" "test" {
-  name        = "updated-name"
+  name        = "%[1]s-updated"
   description = %[1]q
   role_arn    = aws_iam_role.test.arn
+
   knowledge_base_configuration {
     vector_knowledge_base_configuration {
       embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s"
     }
     type = "VECTOR"
   }
+
   storage_configuration {
     type = "OPENSEARCH_SERVERLESS"
     opensearch_serverless_configuration {
-      collection_arn    = "arn:${data.aws_partition.current.partition}:aoss:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:collection/142bezjddq707i5stcrf"
+      collection_arn    = aws_opensearchserverless_collection.test.arn
       vector_index_name = "bedrock-knowledge-base-default-index"
       field_mapping {
         vector_field   = "bedrock-knowledge-base-default-vector"
@@ -380,7 +412,7 @@ resource "aws_bedrockagent_knowledge_base" "test" {
     }
   }
 
-  depends_on = [aws_iam_role.test]
+  depends_on = [aws_iam_role_policy.test]
 }
 `, rName, model))
 }
@@ -388,19 +420,20 @@ resource "aws_bedrockagent_knowledge_base" "test" {
 func testAccKnowledgeBaseConfig_tags1(rName, model, tag1Key, tag1Value string) string {
 	return acctest.ConfigCompose(testAccKnowledgeBase_base(rName, model), fmt.Sprintf(`
 resource "aws_bedrockagent_knowledge_base" "test" {
-  name        = "updated-name"
-  description = %[1]q
-  role_arn    = aws_iam_role.test.arn
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
   knowledge_base_configuration {
     vector_knowledge_base_configuration {
       embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s"
     }
     type = "VECTOR"
   }
+
   storage_configuration {
     type = "OPENSEARCH_SERVERLESS"
     opensearch_serverless_configuration {
-      collection_arn    = "arn:${data.aws_partition.current.partition}:aoss:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:collection/142bezjddq707i5stcrf"
+      collection_arn    = aws_opensearchserverless_collection.test.arn
       vector_index_name = "bedrock-knowledge-base-default-index"
       field_mapping {
         vector_field   = "bedrock-knowledge-base-default-vector"
@@ -414,7 +447,7 @@ resource "aws_bedrockagent_knowledge_base" "test" {
     %[3]q = %[4]q
   }
 
-  depends_on = [aws_iam_role.test]
+  depends_on = [aws_iam_role_policy.test]
 }
 `, rName, model, tag1Key, tag1Value))
 }
@@ -422,19 +455,20 @@ resource "aws_bedrockagent_knowledge_base" "test" {
 func testAccKnowledgeBaseConfig_tags2(rName, model, tag1Key, tag1Value, tag2Key, tag2Value string) string {
 	return acctest.ConfigCompose(testAccKnowledgeBase_base(rName, model), fmt.Sprintf(`
 resource "aws_bedrockagent_knowledge_base" "test" {
-  name        = "updated-name"
-  description = %[1]q
-  role_arn    = aws_iam_role.test.arn
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
   knowledge_base_configuration {
     vector_knowledge_base_configuration {
       embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s"
     }
     type = "VECTOR"
   }
+
   storage_configuration {
     type = "OPENSEARCH_SERVERLESS"
     opensearch_serverless_configuration {
-      collection_arn    = "arn:${data.aws_partition.current.partition}:aoss:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:collection/142bezjddq707i5stcrf"
+      collection_arn    = aws_opensearchserverless_collection.test.arn
       vector_index_name = "bedrock-knowledge-base-default-index"
       field_mapping {
         vector_field   = "bedrock-knowledge-base-default-vector"
@@ -449,7 +483,7 @@ resource "aws_bedrockagent_knowledge_base" "test" {
     %[5]q = %[6]q
   }
 
-  depends_on = [aws_iam_role.test]
+  depends_on = [aws_iam_role_policy.test]
 }
 `, rName, model, tag1Key, tag1Value, tag2Key, tag2Value))
 }
