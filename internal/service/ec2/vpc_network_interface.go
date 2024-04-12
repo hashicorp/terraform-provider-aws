@@ -72,7 +72,6 @@ func ResourceNetworkInterface() *schema.Resource {
 			"connection_tracking_specification_request": {
 				Type:     schema.TypeList,
 				Optional: true,
-				Computed: true,
 				MaxItems: 1,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{

@@ -51,6 +51,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `attachment` - (Optional) Configuration block to define the attachment of the ENI. See [Attachment](#attachment) below for more details!
+* `connection_tracking_specification_request` - (Optional) A connection tracking specification for the network interface. See [connection_tracking_specification_request](#connection_tracking_specification_request) below for more details!
 * `description` - (Optional) Description for the network interface.
 * `interface_type` - (Optional) Type of network interface to create. Set to `efa` for Elastic Fabric Adapter. Changing `interface_type` will cause the resource to be destroyed and re-created.
 * `ipv4_prefix_count` - (Optional) Number of IPv4 prefixes that AWS automatically assigns to the network interface.
@@ -75,6 +76,14 @@ The `attachment` block supports the following:
 
 * `instance` - (Required) ID of the instance to attach to.
 * `device_index` - (Required) Integer to define the devices index.
+
+### connection_tracking_specification_request
+
+The `connection_tracking_specification_request` block supports the following:
+
+* `tcp_established_timeout` - (Optional) Timeout (in seconds) for idle TCP connections in an established state. Min value is `60`. Max value is `432000`. Defaults to `432000`.
+* `udp_stream_timeout` - (Optional) Timeout (in seconds) for idle UDP flows classified as streams which have seen more than one request-response transaction. Min value is `60`. Max value is `180`. Defaults to `180`.
+* `udp_timeout` - (Optional) Timeout (in seconds) for idle UDP flows that have seen traffic only in a single direction or a single request-response transaction. Min value is `30`. Max value is `60`. Defaults to `30`.
 
 ## Attribute Reference
 
