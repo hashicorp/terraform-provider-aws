@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/costexplorer/types"
@@ -55,6 +56,12 @@ func TestAccCECostCategory_effectiveStart(t *testing.T) {
 	var output awstypes.CostCategory
 	resourceName := "aws_ce_cost_category.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	firstDayOfMonth := func(v time.Time) string {
+		return time.Date(v.Year(), v.Month(), 1, 0, 0, 0, 0, time.UTC).Format(time.RFC3339)
+	}
+	now := time.Now()
+	firstOfThisMonth := firstDayOfMonth(now)
+	firstOfLastMonth := firstDayOfMonth(now.AddDate(0, -1, 0))
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -63,11 +70,11 @@ func TestAccCECostCategory_effectiveStart(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, names.CEServiceID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccCostCategoryConfig_effectiveStart(rName, "2022-11-01T00:00:00Z"),
+				Config: testAccCostCategoryConfig_effectiveStart(rName, firstOfThisMonth),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCostCategoryExists(ctx, resourceName, &output),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "effective_start", "2022-11-01T00:00:00Z"),
+					resource.TestCheckResourceAttr(resourceName, "effective_start", firstOfThisMonth),
 				),
 			},
 			{
@@ -76,11 +83,11 @@ func TestAccCECostCategory_effectiveStart(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccCostCategoryConfig_effectiveStart(rName, "2022-10-01T00:00:00Z"),
+				Config: testAccCostCategoryConfig_effectiveStart(rName, firstOfLastMonth),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckCostCategoryExists(ctx, resourceName, &output),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
-					resource.TestCheckResourceAttr(resourceName, "effective_start", "2022-10-01T00:00:00Z"),
+					resource.TestCheckResourceAttr(resourceName, "effective_start", firstOfLastMonth),
 				),
 			},
 		},
