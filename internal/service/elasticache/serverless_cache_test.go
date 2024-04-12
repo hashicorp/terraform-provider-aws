@@ -130,6 +130,11 @@ func TestAccElastiCacheServerlessCache_full(t *testing.T) {
 					testAccCheckServerlessCacheExists(ctx, resourceName, &serverlessElasticCache),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttrSet(resourceName, "cache_usage_limits.#"),
+					resource.TestCheckResourceAttr(resourceName, "cache_usage_limits.0.data_storage.0.maximum", "10"),
+					resource.TestCheckResourceAttr(resourceName, "cache_usage_limits.0.data_storage.0.minimum", "1"),
+					resource.TestCheckResourceAttr(resourceName, "cache_usage_limits.0.data_storage.0.unit", "GB"),
+					resource.TestCheckResourceAttr(resourceName, "cache_usage_limits.0.ecpu_per_second.0.maximum", "10000"),
+					resource.TestCheckResourceAttr(resourceName, "cache_usage_limits.0.ecpu_per_second.0.minimum", "1000"),
 					resource.TestCheckResourceAttrSet(resourceName, "create_time"),
 					resource.TestCheckResourceAttrSet(resourceName, "endpoint.#"),
 					resource.TestCheckResourceAttrSet(resourceName, "engine"),
@@ -484,10 +489,12 @@ resource "aws_elasticache_serverless_cache" "test" {
   cache_usage_limits {
     data_storage {
       maximum = 10
+      minimum = 1
       unit    = "GB"
     }
     ecpu_per_second {
-      maximum = 1000
+      maximum = 10000
+      minimum = 1000
     }
   }
 
