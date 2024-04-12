@@ -1592,6 +1592,65 @@ rules:
           patterns:
             - pattern-regex: "(?i)Batch"
     severity: WARNING
+  - id: bcmdataexports-in-func-name
+    languages:
+      - go
+    message: Do not use "BCMDataExports" in func name inside bcmdataexports package
+    paths:
+      include:
+        - internal/service/bcmdataexports
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)BCMDataExports"
+            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+    severity: WARNING
+  - id: bcmdataexports-in-test-name
+    languages:
+      - go
+    message: Include "BCMDataExports" in test name
+    paths:
+      include:
+        - internal/service/bcmdataexports/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccBCMDataExports"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: bcmdataexports-in-const-name
+    languages:
+      - go
+    message: Do not use "BCMDataExports" in const name inside bcmdataexports package
+    paths:
+      include:
+        - internal/service/bcmdataexports
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)BCMDataExports"
+    severity: WARNING
+  - id: bcmdataexports-in-var-name
+    languages:
+      - go
+    message: Do not use "BCMDataExports" in var name inside bcmdataexports package
+    paths:
+      include:
+        - internal/service/bcmdataexports
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)BCMDataExports"
+    severity: WARNING
   - id: beanstalk-in-func-name
     languages:
       - go
@@ -3897,35 +3956,4 @@ rules:
           metavariable: $NAME
           patterns:
             - pattern-regex: "(?i)ConfigService"
-    severity: WARNING
-  - id: configservice-in-var-name
-    languages:
-      - go
-    message: Do not use "ConfigService" in var name inside configservice package
-    paths:
-      include:
-        - internal/service/configservice
-    patterns:
-      - pattern: var $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)ConfigService"
-    severity: WARNING
-  - id: connect-in-func-name
-    languages:
-      - go
-    message: Do not use "Connect" in func name inside connect package
-    paths:
-      include:
-        - internal/service/connect
-    patterns:
-      - pattern: func $NAME( ... ) { ... }
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)Connect"
-            - pattern-not-regex: .*uickConnect.*
-            - pattern-not-regex: ^TestAcc.*
-      - focus-metavariable: $NAME
     severity: WARNING

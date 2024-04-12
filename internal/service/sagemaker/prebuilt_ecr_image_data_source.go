@@ -260,6 +260,7 @@ var PrebuiltECRImageIDByRegion_sparkML = map[string]string{
 // https://github.com/aws/sagemaker-tensorflow-serving-container
 
 var prebuiltECRImageIDByRegion_deepLearning = map[string]string{
+	endpoints.AfSouth1RegionID:     "626614931356",
 	endpoints.ApEast1RegionID:      "871362719292",
 	endpoints.ApNortheast1RegionID: "763104351884",
 	endpoints.ApNortheast2RegionID: "763104351884",
