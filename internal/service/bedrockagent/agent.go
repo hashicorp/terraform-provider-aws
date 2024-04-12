@@ -7,6 +7,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -116,6 +118,14 @@ func (r *agentResource) Schema(ctx context.Context, request resource.SchemaReque
 				Optional: true,
 				Computed: true,
 			},
+			"prepare_agent": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(true),
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"prepared_at": schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
@@ -217,6 +227,24 @@ func (r *agentResource) Create(ctx context.Context, request resource.CreateReque
 		return
 	}
 
+	if data.PrepareAgent.ValueBool() {
+		prepareInput := &bedrockagent.PrepareAgentInput{}
+		prepareInput.AgentId = output.Agent.AgentId
+		_, err := conn.PrepareAgent(ctx, prepareInput)
+		if err != nil {
+			response.Diagnostics.AddError("preparing Bedrock Agent", err.Error())
+
+			return
+		}
+		agent, err = waitAgentPrepared(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+
+		if err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent (%s) prepare", data.ID.ValueString()), err.Error())
+
+			return
+		}
+	}
+
 	response.Diagnostics.Append(fwflex.Flatten(ctx, agent.Agent, &data)...)
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -254,6 +282,10 @@ func (r *agentResource) Read(ctx context.Context, request resource.ReadRequest, 
 
 	response.Diagnostics.Append(fwflex.Flatten(ctx, output.Agent, &data)...)
 
+	if output.Agent.AgentStatus == awstypes.AgentStatusPrepared {
+		data.PrepareAgent = types.BoolValue(true)
+	}
+
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -282,6 +314,7 @@ func (r *agentResource) Update(ctx context.Context, request resource.UpdateReque
 	input.IdleSessionTTLInSeconds = fwflex.Int32FromFramework(ctx, new.IdleSessionTTLInSeconds)
 	input.AgentName = fwflex.StringFromFramework(ctx, new.AgentName)
 	input.Description = fwflex.StringFromFramework(ctx, new.Description)
+	input.Instruction = fwflex.StringFromFramework(ctx, new.Instruction)
 
 	if !old.AgentName.Equal(new.AgentName) {
 		update = true
@@ -334,6 +367,24 @@ func (r *agentResource) Update(ctx context.Context, request resource.UpdateReque
 		)
 		return
 	}
+
+	if new.PrepareAgent.ValueBool() && !old.PrepareAgent.ValueBool() {
+		prepareInput := &bedrockagent.PrepareAgentInput{}
+		prepareInput.AgentId = out.Agent.AgentId
+		_, err := conn.PrepareAgent(ctx, prepareInput)
+		if err != nil {
+			response.Diagnostics.AddError("preparing Bedrock Agent", err.Error())
+
+			return
+		}
+		out, err = waitAgentPrepared(ctx, conn, new.ID.ValueString(), r.CreateTimeout(ctx, new.Timeouts))
+		if err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent (%s) prepare", new.ID.ValueString()), err.Error())
+
+			return
+		}
+	}
+
 	response.Diagnostics.Append(fwflex.Flatten(ctx, out.Agent, &new)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -442,7 +493,26 @@ func waitAgentCreated(ctx context.Context, conn *bedrockagent.Client, id string,
 func waitAgentUpdated(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*bedrockagent.GetAgentOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AgentAliasStatusUpdating),
-		Target:  enum.Slice(awstypes.AgentStatusNotPrepared),
+		Target:  enum.Slice(awstypes.AgentStatusNotPrepared, awstypes.AgentStatusPrepared),
+		Refresh: statusAgent(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*bedrockagent.GetAgentOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString((*string)(&output.Agent.AgentStatus))))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitAgentPrepared(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*bedrockagent.GetAgentOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.AgentStatusNotPrepared, awstypes.AgentStatusPreparing),
+		Target:  enum.Slice(awstypes.AgentAliasStatusPrepared),
 		Refresh: statusAgent(ctx, conn, id),
 		Timeout: timeout,
 	}
@@ -493,6 +563,7 @@ type bedrockAgentResourceModel struct {
 	IdleSessionTTLInSeconds     types.Int64                          `tfsdk:"idle_ttl"`
 	Instruction                 types.String                         `tfsdk:"instruction"`
 	PreparedAt                  timetypes.RFC3339                    `tfsdk:"prepared_at"`
+	PrepareAgent                types.Bool                           `tfsdk:"prepare_agent"`
 	PromptOverrideConfiguration fwtypes.ListNestedObjectValueOf[poc] `tfsdk:"prompt_override_configuration"`
 	RecommendedActions          types.List                           `tfsdk:"recommended_actions"`
 	UpdatedAt                   timetypes.RFC3339                    `tfsdk:"updated_at"`
