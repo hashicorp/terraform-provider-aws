@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_lightsail_distribution: Set `certificate_name` in CreateDistributionInput
+```
