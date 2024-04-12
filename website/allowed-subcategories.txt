@@ -22,6 +22,7 @@ Athena
 Audit Manager
 Auto Scaling
 Auto Scaling Plans
+BCM Data Exports
 Backup
 Batch
 CE (Cost Explorer)
@@ -156,6 +157,7 @@ Managed Streaming for Kafka Connect
 MemoryDB for Redis
 Meta Data Sources
 Neptune
+Neptune Analytics
 Network Firewall
 Network Manager
 OpenSearch

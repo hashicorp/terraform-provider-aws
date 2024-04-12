@@ -22,8 +22,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_emr_instance_fleet")
-func ResourceInstanceFleet() *schema.Resource {
+// @SDKResource("aws_emr_instance_fleet", name="Instance Fleet")
+func resourceInstanceFleet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceInstanceFleetCreate,
 		ReadWithoutTimeout:   resourceInstanceFleetRead,
@@ -252,7 +252,7 @@ func resourceInstanceFleetRead(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
-	fleet, err := FindInstanceFleetByTwoPartKey(ctx, conn, d.Get("cluster_id").(string), d.Id())
+	fleet, err := findInstanceFleetByTwoPartKey(ctx, conn, d.Get("cluster_id").(string), d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EMR Instance Fleet (%s) not found, removing from state", d.Id())
@@ -347,7 +347,7 @@ func resourceInstanceFleetDelete(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func FindInstanceFleetByTwoPartKey(ctx context.Context, conn *emr.EMR, clusterID, fleetID string) (*emr.InstanceFleet, error) {
+func findInstanceFleetByTwoPartKey(ctx context.Context, conn *emr.EMR, clusterID, fleetID string) (*emr.InstanceFleet, error) {
 	input := &emr.ListInstanceFleetsInput{
 		ClusterId: aws.String(clusterID),
 	}
@@ -382,7 +382,7 @@ func FindInstanceFleetByTwoPartKey(ctx context.Context, conn *emr.EMR, clusterID
 
 func statusInstanceFleet(ctx context.Context, conn *emr.EMR, clusterID, fleetID string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindInstanceFleetByTwoPartKey(ctx, conn, clusterID, fleetID)
+		output, err := findInstanceFleetByTwoPartKey(ctx, conn, clusterID, fleetID)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

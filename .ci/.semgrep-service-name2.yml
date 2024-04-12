@@ -2490,6 +2490,65 @@ rules:
           patterns:
             - pattern-regex: "(?i)Neptune"
     severity: WARNING
+  - id: neptunegraph-in-func-name
+    languages:
+      - go
+    message: Do not use "NeptuneGraph" in func name inside neptunegraph package
+    paths:
+      include:
+        - internal/service/neptunegraph
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)NeptuneGraph"
+            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+    severity: WARNING
+  - id: neptunegraph-in-test-name
+    languages:
+      - go
+    message: Include "NeptuneGraph" in test name
+    paths:
+      include:
+        - internal/service/neptunegraph/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccNeptuneGraph"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: neptunegraph-in-const-name
+    languages:
+      - go
+    message: Do not use "NeptuneGraph" in const name inside neptunegraph package
+    paths:
+      include:
+        - internal/service/neptunegraph
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)NeptuneGraph"
+    severity: WARNING
+  - id: neptunegraph-in-var-name
+    languages:
+      - go
+    message: Do not use "NeptuneGraph" in var name inside neptunegraph package
+    paths:
+      include:
+        - internal/service/neptunegraph
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)NeptuneGraph"
+    severity: WARNING
   - id: networkfirewall-in-func-name
     languages:
       - go
@@ -3882,32 +3941,4 @@ rules:
           patterns:
             - pattern-not-regex: "^TestAccRDS"
             - pattern-regex: ^TestAcc.*
-    severity: WARNING
-  - id: rds-in-const-name
-    languages:
-      - go
-    message: Do not use "RDS" in const name inside rds package
-    paths:
-      include:
-        - internal/service/rds
-    patterns:
-      - pattern: const $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)RDS"
-    severity: WARNING
-  - id: rds-in-var-name
-    languages:
-      - go
-    message: Do not use "RDS" in var name inside rds package
-    paths:
-      include:
-        - internal/service/rds
-    patterns:
-      - pattern: var $NAME = ...
-      - metavariable-pattern:
-          metavariable: $NAME
-          patterns:
-            - pattern-regex: "(?i)RDS"
     severity: WARNING
