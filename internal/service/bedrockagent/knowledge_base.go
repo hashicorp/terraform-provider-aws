@@ -5,7 +5,6 @@ package bedrockagent
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -343,7 +342,10 @@ func (r *knowledgeBaseResource) Create(ctx context.Context, request resource.Cre
 	// Additional fields.
 	input.Tags = getTagsIn(ctx)
 
-	output, err := conn.CreateKnowledgeBase(ctx, input)
+	outputRaw, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+		return conn.CreateKnowledgeBase(ctx, input)
+	}, errCodeValidationException, "cannot assume role")
+
 	if err != nil {
 		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionCreating, ResNameKnowledgeBase, data.Name.String(), err),
@@ -351,15 +353,8 @@ func (r *knowledgeBaseResource) Create(ctx context.Context, request resource.Cre
 		)
 		return
 	}
-	if output == nil || output.KnowledgeBase == nil {
-		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionCreating, ResNameKnowledgeBase, data.Name.String(), nil),
-			errors.New("empty output").Error(),
-		)
-		return
-	}
 
-	knowledgebase := output.KnowledgeBase
+	knowledgebase := outputRaw.(*bedrockagent.CreateKnowledgeBaseOutput).KnowledgeBase
 	data.KnowledgeBaseARN = fwflex.StringToFramework(ctx, knowledgebase.KnowledgeBaseArn)
 	data.KnowledgeBaseID = fwflex.StringToFramework(ctx, knowledgebase.KnowledgeBaseId)
 
@@ -443,7 +438,10 @@ func (r *knowledgeBaseResource) Update(ctx context.Context, request resource.Upd
 			return
 		}
 
-		_, err := conn.UpdateKnowledgeBase(ctx, input)
+		_, err := tfresource.RetryWhenAWSErrMessageContains(ctx, propagationTimeout, func() (interface{}, error) {
+			return conn.UpdateKnowledgeBase(ctx, input)
+		}, errCodeValidationException, "cannot assume role")
+
 		if err != nil {
 			response.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionUpdating, ResNameKnowledgeBase, new.KnowledgeBaseID.String(), err),

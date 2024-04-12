@@ -7,7 +7,6 @@ import (
 	"context"
 	"fmt"
 	"testing"
-	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -35,11 +34,6 @@ func testAccKnowledgeBase_basic(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckKnowledgeBaseDestroy(ctx),
 		Steps: []resource.TestStep{
-			{
-				Config: testAccKnowledgeBase_base(rName, foundationModel),
-				// Withought Sleep role couldnt assumed.
-				Check: acctest.CheckSleep(t, 5*time.Second),
-			},
 			{
 				Config: testAccKnowledgeBaseConfig_basic(rName, foundationModel),
 				Check: resource.ComposeTestCheckFunc(
@@ -84,11 +78,6 @@ func testAccKnowledgeBase_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckKnowledgeBaseDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKnowledgeBase_base(rName, foundationModel),
-				// Withought Sleep role couldnt assumed.
-				Check: acctest.CheckSleep(t, 5*time.Second),
-			},
-			{
 				Config: testAccKnowledgeBaseConfig_basic(rName, foundationModel),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKnowledgeBaseExists(ctx, resourceName, &knowledgebase),
@@ -127,11 +116,6 @@ func testAccKnowledgeBase_update(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckKnowledgeBaseDestroy(ctx),
 		Steps: []resource.TestStep{
-			{
-				Config: testAccKnowledgeBase_base(rName, foundationModel),
-				// Withought Sleep role couldnt assumed.
-				Check: acctest.CheckSleep(t, 5*time.Second),
-			},
 			{
 				Config: testAccKnowledgeBaseConfig_basic(rName, foundationModel),
 				Check: resource.ComposeTestCheckFunc(
@@ -202,11 +186,6 @@ func testAccKnowledgeBase_tags(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckKnowledgeBaseDestroy(ctx),
 		Steps: []resource.TestStep{
-			{
-				Config: testAccKnowledgeBase_base(rName, foundationModel),
-				// Withought Sleep role couldnt assumed.
-				Check: acctest.CheckSleep(t, 5*time.Second),
-			},
 			{
 				Config: testAccKnowledgeBaseConfig_tags1(rName, foundationModel, "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
