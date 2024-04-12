@@ -241,7 +241,7 @@ func TestAccCEAnomalySubscription_Tags(t *testing.T) {
 		ErrorCheck:               acctest.ErrorCheck(t, names.CEServiceID),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAnomalySubscriptionConfig_tags1(rName, "key1", "value1", address),
+				Config: testAccAnomalySubscriptionConfig_tags1(rName, address, "key1", "value1"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAnomalySubscriptionExists(ctx, resourceName, &subscription),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -254,7 +254,7 @@ func TestAccCEAnomalySubscription_Tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccAnomalySubscriptionConfig_tags2(rName, "key1", "value1updated", "key2", "value2", address),
+				Config: testAccAnomalySubscriptionConfig_tags2(rName, address, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAnomalySubscriptionExists(ctx, resourceName, &subscription),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -263,7 +263,7 @@ func TestAccCEAnomalySubscription_Tags(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccAnomalySubscriptionConfig_tags1(rName, "key2", "value2", address),
+				Config: testAccAnomalySubscriptionConfig_tags1(rName, address, "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAnomalySubscriptionExists(ctx, resourceName, &subscription),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -321,7 +321,7 @@ func testAccCheckAnomalySubscriptionDestroy(ctx context.Context) resource.TestCh
 	}
 }
 
-func testAccAnomalySubscriptionConfigBase(rName string) string {
+func testAccAnomalySubscriptionConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ce_anomaly_monitor" "test" {
   name         = %[1]q
@@ -335,7 +335,7 @@ resource "aws_ce_anomaly_monitor" "test" {
 	"Not": null,
 	"Or": null,
 	"Tags": {
-		"Key": "CostCenter",
+		"Key": "user:CostCenter",
 		"MatchOptions": null,
 		"Values": [
 			"10000"
@@ -347,10 +347,8 @@ JSON
 `, rName)
 }
 
-func testAccAnomalySubscriptionConfig_basic(rName string, address string) string {
-	return acctest.ConfigCompose(
-		testAccAnomalySubscriptionConfigBase(rName),
-		fmt.Sprintf(`
+func testAccAnomalySubscriptionConfig_basic(rName, address string) string {
+	return acctest.ConfigCompose(testAccAnomalySubscriptionConfig_base(rName), fmt.Sprintf(`
 resource "aws_ce_anomaly_subscription" "test" {
   name      = %[1]q
   frequency = "DAILY"
@@ -375,10 +373,8 @@ resource "aws_ce_anomaly_subscription" "test" {
 `, rName, address))
 }
 
-func testAccAnomalySubscriptionConfig_monitorARNList(rName string, rName2 string, address string) string {
-	return acctest.ConfigCompose(
-		testAccAnomalySubscriptionConfigBase(rName),
-		fmt.Sprintf(`
+func testAccAnomalySubscriptionConfig_monitorARNList(rName, rName2, address string) string {
+	return acctest.ConfigCompose(testAccAnomalySubscriptionConfig_base(rName), fmt.Sprintf(`
 resource "aws_ce_anomaly_monitor" "test2" {
   name         = %[2]q
   monitor_type = "CUSTOM"
@@ -391,7 +387,7 @@ resource "aws_ce_anomaly_monitor" "test2" {
 	  "Not": null,
 	  "Or": null,
 	  "Tags": {
-		  "Key": "CostCenter",
+		  "Key": "user:CostCenter",
 		  "MatchOptions": null,
 		  "Values": [
 			  "10000"
@@ -426,10 +422,8 @@ resource "aws_ce_anomaly_subscription" "test" {
 `, rName, rName2, address))
 }
 
-func testAccAnomalySubscriptionConfig_frequency(rName string, rFrequency string, address string) string {
-	return acctest.ConfigCompose(
-		testAccAnomalySubscriptionConfigBase(rName),
-		fmt.Sprintf(`
+func testAccAnomalySubscriptionConfig_frequency(rName, rFrequency, address string) string {
+	return acctest.ConfigCompose(testAccAnomalySubscriptionConfig_base(rName), fmt.Sprintf(`
 resource "aws_ce_anomaly_subscription" "test" {
   name      = %[1]q
   frequency = %[2]q
@@ -454,10 +448,8 @@ resource "aws_ce_anomaly_subscription" "test" {
 `, rName, rFrequency, address))
 }
 
-func testAccAnomalySubscriptionConfig_subscriber2(rName string, address1 string, address2 string) string {
-	return acctest.ConfigCompose(
-		testAccAnomalySubscriptionConfigBase(rName),
-		fmt.Sprintf(`
+func testAccAnomalySubscriptionConfig_subscriber2(rName, address1, address2 string) string {
+	return acctest.ConfigCompose(testAccAnomalySubscriptionConfig_base(rName), fmt.Sprintf(`
 resource "aws_ce_anomaly_subscription" "test" {
   name      = %[1]q
   frequency = "WEEKLY"
@@ -488,9 +480,7 @@ resource "aws_ce_anomaly_subscription" "test" {
 }
 
 func testAccAnomalySubscriptionConfig_subscriberSNS(rName string) string {
-	return acctest.ConfigCompose(
-		testAccAnomalySubscriptionConfigBase(rName),
-		fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAnomalySubscriptionConfig_base(rName), fmt.Sprintf(`
 resource "aws_sns_topic" "test" {
   name = %[1]q
 }
@@ -590,10 +580,8 @@ resource "aws_ce_anomaly_subscription" "test" {
 `, rName))
 }
 
-func testAccAnomalySubscriptionConfig_tags1(rName string, tagKey1, tagValue1 string, address string) string {
-	return acctest.ConfigCompose(
-		testAccAnomalySubscriptionConfigBase(rName),
-		fmt.Sprintf(`
+func testAccAnomalySubscriptionConfig_tags1(rName, address, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccAnomalySubscriptionConfig_base(rName), fmt.Sprintf(`
 resource "aws_ce_anomaly_subscription" "test" {
   name      = %[1]q
   frequency = "DAILY"
@@ -622,10 +610,8 @@ resource "aws_ce_anomaly_subscription" "test" {
 `, rName, tagKey1, tagValue1, address))
 }
 
-func testAccAnomalySubscriptionConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string, address string) string {
-	return acctest.ConfigCompose(
-		testAccAnomalySubscriptionConfigBase(rName),
-		fmt.Sprintf(`
+func testAccAnomalySubscriptionConfig_tags2(rName, address, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccAnomalySubscriptionConfig_base(rName), fmt.Sprintf(`
 resource "aws_ce_anomaly_subscription" "test" {
   name      = %[1]q
   frequency = "DAILY"

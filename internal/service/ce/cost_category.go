@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/slices"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -531,144 +531,164 @@ func findCostCategoryByARN(ctx context.Context, conn *costexplorer.Client, arn s
 
 func expandCostCategoryRule(tfMap map[string]interface{}) awstypes.CostCategoryRule {
 	apiObject := awstypes.CostCategoryRule{}
-	if v, ok := tfMap["inherited_value"]; ok {
-		apiObject.InheritedValue = expandCostCategoryInheritedValue(v.([]interface{}))
+
+	if v, ok := tfMap["inherited_value"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.InheritedValue = expandCostCategoryInheritedValueDimension(v[0].(map[string]interface{}))
 	}
-	if v, ok := tfMap["rule"]; ok {
-		apiObject.Rule = expandCostExpressions(v.([]interface{}))[0]
+
+	if v, ok := tfMap["rule"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Rule = expandCostExpression(v[0].(map[string]interface{}))
 	}
-	if v, ok := tfMap["type"]; ok {
-		apiObject.Type = awstypes.CostCategoryRuleType(v.(string))
+
+	if v, ok := tfMap["type"].(string); ok && v != "" {
+		apiObject.Type = awstypes.CostCategoryRuleType(v)
 	}
-	if v, ok := tfMap["value"]; ok {
-		apiObject.Value = aws.String(v.(string))
+
+	if v, ok := tfMap["value"].(string); ok && v != "" {
+		apiObject.Value = aws.String(v)
 	}
 
 	return apiObject
 }
 
-func expandCostCategoryInheritedValue(tfList []interface{}) *awstypes.CostCategoryInheritedValueDimension {
-	if len(tfList) == 0 {
+func expandCostCategoryInheritedValueDimension(tfMap map[string]interface{}) *awstypes.CostCategoryInheritedValueDimension {
+	if tfMap == nil {
 		return nil
 	}
 
-	tfMap := tfList[0].(map[string]interface{})
-
 	apiObject := &awstypes.CostCategoryInheritedValueDimension{}
-	if v, ok := tfMap["dimension_key"]; ok {
-		apiObject.DimensionKey = aws.String(v.(string))
+
+	if v, ok := tfMap["dimension_key"].(string); ok && v != "" {
+		apiObject.DimensionKey = aws.String(v)
 	}
-	if v, ok := tfMap["dimension_name"]; ok {
-		apiObject.DimensionName = awstypes.CostCategoryInheritedValueDimensionName(v.(string))
+
+	if v, ok := tfMap["dimension_name"].(string); ok && v != "" {
+		apiObject.DimensionName = awstypes.CostCategoryInheritedValueDimensionName(v)
 	}
 
 	return apiObject
 }
 
 func expandCostExpression(tfMap map[string]interface{}) *awstypes.Expression {
+	if tfMap == nil {
+		return nil
+	}
+
 	apiObject := &awstypes.Expression{}
-	if v, ok := tfMap["and"]; ok {
-		apiObject.And = slices.Values(expandCostExpressions(v.(*schema.Set).List()))
+
+	if v, ok := tfMap["and"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.And = expandCostExpressions(v.List())
 	}
-	if v, ok := tfMap["cost_category"]; ok {
-		apiObject.CostCategories = expandCostExpressionCostCategory(v.([]interface{}))
+
+	if v, ok := tfMap["cost_category"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.CostCategories = expandCostCategoryValues(v[0].(map[string]interface{}))
 	}
-	if v, ok := tfMap["dimension"]; ok {
-		apiObject.Dimensions = expandCostExpressionDimension(v.([]interface{}))
+
+	if v, ok := tfMap["dimension"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Dimensions = expandDimensionValues(v[0].(map[string]interface{}))
 	}
-	if v, ok := tfMap["not"]; ok && len(v.([]interface{})) > 0 {
-		apiObject.Not = expandCostExpressions(v.([]interface{}))[0]
+
+	if v, ok := tfMap["not"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Not = expandCostExpression(v[0].(map[string]interface{}))
 	}
-	if v, ok := tfMap["or"]; ok {
-		apiObject.Or = slices.Values(expandCostExpressions(v.(*schema.Set).List()))
+
+	if v, ok := tfMap["or"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.Or = expandCostExpressions(v.List())
 	}
-	if v, ok := tfMap["tags"]; ok {
-		apiObject.Tags = expandCostExpressionTag(v.([]interface{}))
+
+	if v, ok := tfMap["tags"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.Tags = expandTagValues(v[0].(map[string]interface{}))
 	}
 
 	return apiObject
 }
 
-func expandCostExpressionCostCategory(tfList []interface{}) *awstypes.CostCategoryValues {
-	if len(tfList) == 0 {
+func expandCostCategoryValues(tfMap map[string]interface{}) *awstypes.CostCategoryValues {
+	if tfMap == nil {
 		return nil
 	}
-
-	tfMap := tfList[0].(map[string]interface{})
 
 	apiObject := &awstypes.CostCategoryValues{}
-	if v, ok := tfMap["key"]; ok {
-		apiObject.Key = aws.String(v.(string))
+
+	if v, ok := tfMap["key"].(string); ok && v != "" {
+		apiObject.Key = aws.String(v)
 	}
-	if v, ok := tfMap["match_options"]; ok {
-		apiObject.MatchOptions = flex.ExpandStringyValueSet[awstypes.MatchOption](v.(*schema.Set))
+
+	if v, ok := tfMap["match_options"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.MatchOptions = flex.ExpandStringyValueSet[awstypes.MatchOption](v)
 	}
-	if v, ok := tfMap["values"]; ok {
-		apiObject.Values = flex.ExpandStringValueSet(v.(*schema.Set))
+
+	if v, ok := tfMap["values"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.Values = flex.ExpandStringValueSet(v)
 	}
 
 	return apiObject
 }
 
-func expandCostExpressionDimension(tfList []interface{}) *awstypes.DimensionValues {
-	if len(tfList) == 0 {
+func expandDimensionValues(tfMap map[string]interface{}) *awstypes.DimensionValues {
+	if tfMap == nil {
 		return nil
 	}
-
-	tfMap := tfList[0].(map[string]interface{})
 
 	apiObject := &awstypes.DimensionValues{}
-	if v, ok := tfMap["key"]; ok {
-		apiObject.Key = awstypes.Dimension(v.(string))
+
+	if v, ok := tfMap["key"].(string); ok && v != "" {
+		apiObject.Key = awstypes.Dimension(v)
 	}
-	if v, ok := tfMap["match_options"]; ok {
-		apiObject.MatchOptions = flex.ExpandStringyValueSet[awstypes.MatchOption](v.(*schema.Set))
+
+	if v, ok := tfMap["match_options"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.MatchOptions = flex.ExpandStringyValueSet[awstypes.MatchOption](v)
 	}
-	if v, ok := tfMap["values"]; ok {
-		apiObject.Values = flex.ExpandStringValueSet(v.(*schema.Set))
+
+	if v, ok := tfMap["values"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.Values = flex.ExpandStringValueSet(v)
 	}
 
 	return apiObject
 }
 
-func expandCostExpressionTag(tfList []interface{}) *awstypes.TagValues {
-	if len(tfList) == 0 {
+func expandTagValues(tfMap map[string]interface{}) *awstypes.TagValues {
+	if tfMap == nil {
 		return nil
 	}
-
-	tfMap := tfList[0].(map[string]interface{})
 
 	apiObject := &awstypes.TagValues{}
-	if v, ok := tfMap["key"]; ok {
-		apiObject.Key = aws.String(v.(string))
+
+	if v, ok := tfMap["key"].(string); ok && v != "" {
+		apiObject.Key = aws.String(v)
 	}
-	if v, ok := tfMap["match_options"]; ok {
-		apiObject.MatchOptions = flex.ExpandStringyValueSet[awstypes.MatchOption](v.(*schema.Set))
+
+	if v, ok := tfMap["match_options"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.MatchOptions = flex.ExpandStringyValueSet[awstypes.MatchOption](v)
 	}
-	if v, ok := tfMap["values"]; ok {
-		apiObject.Values = flex.ExpandStringValueSet(v.(*schema.Set))
+
+	if v, ok := tfMap["values"].(*schema.Set); ok && v.Len() > 0 {
+		apiObject.Values = flex.ExpandStringValueSet(v)
 	}
 
 	return apiObject
 }
 
-func expandCostExpressions(tfList []interface{}) []*awstypes.Expression {
+func expandCostExpressions(tfList []interface{}) []awstypes.Expression {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []*awstypes.Expression
+	var apiObjects []awstypes.Expression
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
-
 		if !ok {
 			continue
 		}
 
 		apiObject := expandCostExpression(tfMap)
 
-		apiObjects = append(apiObjects, apiObject)
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, *apiObject)
 	}
 
 	return apiObjects
@@ -798,11 +818,11 @@ func flattenCostCategoryRuleExpression(apiObject *awstypes.Expression) map[strin
 	}
 
 	tfMap := map[string]interface{}{}
-	tfMap["and"] = flattenCostCategoryRuleOperandExpressions(slices.ToPointers[[]awstypes.Expression](apiObject.And))
+	tfMap["and"] = flattenCostCategoryRuleOperandExpressions(tfslices.ToPointers[[]awstypes.Expression](apiObject.And))
 	tfMap["cost_category"] = flattenCostCategoryRuleExpressionCostCategory(apiObject.CostCategories)
 	tfMap["dimension"] = flattenCostCategoryRuleExpressionDimension(apiObject.Dimensions)
 	tfMap["not"] = flattenCostCategoryRuleOperandExpressions([]*awstypes.Expression{apiObject.Not})
-	tfMap["or"] = flattenCostCategoryRuleOperandExpressions(slices.ToPointers[[]awstypes.Expression](apiObject.Or))
+	tfMap["or"] = flattenCostCategoryRuleOperandExpressions(tfslices.ToPointers[[]awstypes.Expression](apiObject.Or))
 	tfMap["tags"] = flattenCostCategoryRuleExpressionTag(apiObject.Tags)
 
 	return tfMap

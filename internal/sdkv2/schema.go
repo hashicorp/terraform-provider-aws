@@ -34,9 +34,7 @@ func DataSourcePropertyFromResourceProperty(rs *schema.Schema) *schema.Schema {
 		switch elem := rs.Elem.(type) {
 		case *schema.Resource:
 			// handle the case where the Element is a sub-resource
-			ds.Elem = &schema.Resource{
-				Schema: dataSourceSchemaFromResourceSchema(elem.Schema),
-			}
+			ds.Elem = DataSourceElemFromResourceElem(elem)
 		case *schema.Schema:
 			// handle simple primitive case
 			ds.Elem = &schema.Schema{Type: elem.Type}
@@ -48,13 +46,13 @@ func DataSourcePropertyFromResourceProperty(rs *schema.Schema) *schema.Schema {
 
 func DataSourceElemFromResourceElem(rs *schema.Resource) *schema.Resource {
 	ds := &schema.Resource{
-		Schema: dataSourceSchemaFromResourceSchema(rs.Schema),
+		Schema: DataSourceSchemaFromResourceSchema(rs.Schema),
 	}
 
 	return ds
 }
 
-func dataSourceSchemaFromResourceSchema(rs map[string]*schema.Schema) map[string]*schema.Schema {
+func DataSourceSchemaFromResourceSchema(rs map[string]*schema.Schema) map[string]*schema.Schema {
 	ds := make(map[string]*schema.Schema, len(rs))
 
 	for k, v := range rs {

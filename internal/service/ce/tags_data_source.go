@@ -97,8 +97,8 @@ func dataSourceTagsRead(ctx context.Context, d *schema.ResourceData, meta interf
 		TimePeriod: expandTagsTimePeriod(d.Get("time_period").([]interface{})[0].(map[string]interface{})),
 	}
 
-	if v, ok := d.GetOk("filter"); ok {
-		input.Filter = expandCostExpressions(v.([]interface{}))[0]
+	if v, ok := d.GetOk("filter"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		input.Filter = expandCostExpression(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("search_string"); ok {

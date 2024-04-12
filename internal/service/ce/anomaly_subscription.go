@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -111,8 +112,8 @@ func resourceAnomalySubscriptionCreate(ctx context.Context, d *schema.ResourceDa
 	input := &costexplorer.CreateAnomalySubscriptionInput{
 		AnomalySubscription: &awstypes.AnomalySubscription{
 			Frequency:        awstypes.AnomalySubscriptionFrequency(d.Get("frequency").(string)),
-			MonitorArnList:   expandAnomalySubscriptionMonitorARNList(d.Get("monitor_arn_list").([]interface{})),
-			Subscribers:      expandAnomalySubscriptionSubscribers(d.Get("subscriber").(*schema.Set).List()),
+			MonitorArnList:   flex.ExpandStringValueList(d.Get("monitor_arn_list").([]interface{})),
+			Subscribers:      expandSubscribers(d.Get("subscriber").(*schema.Set).List()),
 			SubscriptionName: aws.String(name),
 		},
 		ResourceTags: getTagsIn(ctx),
@@ -158,7 +159,7 @@ func resourceAnomalySubscriptionRead(ctx context.Context, d *schema.ResourceData
 	d.Set("frequency", subscription.Frequency)
 	d.Set("monitor_arn_list", subscription.MonitorArnList)
 	d.Set("name", subscription.SubscriptionName)
-	d.Set("subscriber", flattenAnomalySubscriptionSubscribers(subscription.Subscribers))
+	d.Set("subscriber", flattenSubscribers(subscription.Subscribers))
 	if err := d.Set("threshold_expression", []interface{}{flattenCostCategoryRuleExpression(subscription.ThresholdExpression)}); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting threshold_expression: %s", err)
 	}
@@ -181,11 +182,11 @@ func resourceAnomalySubscriptionUpdate(ctx context.Context, d *schema.ResourceDa
 		}
 
 		if d.HasChange("monitor_arn_list") {
-			input.MonitorArnList = expandAnomalySubscriptionMonitorARNList(d.Get("monitor_arn_list").([]interface{}))
+			input.MonitorArnList = flex.ExpandStringValueList(d.Get("monitor_arn_list").([]interface{}))
 		}
 
 		if d.HasChange("subscriber") {
-			input.Subscribers = expandAnomalySubscriptionSubscribers(d.Get("subscriber").(*schema.Set).List())
+			input.Subscribers = expandSubscribers(d.Get("subscriber").(*schema.Set).List())
 		}
 
 		if d.HasChange("threshold_expression") {
@@ -211,7 +212,7 @@ func resourceAnomalySubscriptionDelete(ctx context.Context, d *schema.ResourceDa
 		SubscriptionArn: aws.String(d.Id()),
 	})
 
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+	if errs.IsA[*awstypes.UnknownSubscriptionException](err) {
 		return diags
 	}
 
@@ -248,50 +249,41 @@ func findAnomalySubscriptionByARN(ctx context.Context, conn *costexplorer.Client
 	return &output.AnomalySubscriptions[0], nil
 }
 
-func expandAnomalySubscriptionMonitorARNList(rawMonitorArnList []interface{}) []string {
-	if len(rawMonitorArnList) == 0 {
+func expandSubscribers(tfList []interface{}) []awstypes.Subscriber {
+	if len(tfList) == 0 {
 		return nil
 	}
 
-	var monitorArns []string
+	var apiObjects []awstypes.Subscriber
 
-	for _, arn := range rawMonitorArnList {
-		monitorArns = append(monitorArns, arn.(string))
-	}
-
-	return monitorArns
-}
-
-func expandAnomalySubscriptionSubscribers(rawSubscribers []interface{}) []awstypes.Subscriber {
-	if len(rawSubscribers) == 0 {
-		return nil
-	}
-
-	var subscribers []awstypes.Subscriber
-
-	for _, sub := range rawSubscribers {
-		rawSubMap := sub.(map[string]interface{})
-		subscriber := awstypes.Subscriber{Address: aws.String(rawSubMap["address"].(string)), Type: awstypes.SubscriberType(rawSubMap["type"].(string))}
-		subscribers = append(subscribers, subscriber)
-	}
-
-	return subscribers
-}
-
-func flattenAnomalySubscriptionSubscribers(subscribers []awstypes.Subscriber) []interface{} {
-	if subscribers == nil {
-		return []interface{}{}
-	}
-
-	var rawSubscribers []interface{}
-	for _, subscriber := range subscribers {
-		rawSubscriber := map[string]interface{}{
-			"address": aws.ToString(subscriber.Address),
-			"type":    string(subscriber.Type),
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+		if !ok {
+			continue
 		}
 
-		rawSubscribers = append(rawSubscribers, rawSubscriber)
+		apiObjects = append(apiObjects, awstypes.Subscriber{
+			Address: aws.String(tfMap["address"].(string)),
+			Type:    awstypes.SubscriberType(tfMap["type"].(string)),
+		})
 	}
 
-	return rawSubscribers
+	return apiObjects
+}
+
+func flattenSubscribers(apiObjects []awstypes.Subscriber) []interface{} {
+	if len(apiObjects) == 0 {
+		return nil
+	}
+
+	var tfList []interface{}
+
+	for _, apiObject := range apiObjects {
+		tfList = append(tfList, map[string]interface{}{
+			"address": aws.ToString(apiObject.Address),
+			"type":    apiObject.Type,
+		})
+	}
+
+	return tfList
 }
