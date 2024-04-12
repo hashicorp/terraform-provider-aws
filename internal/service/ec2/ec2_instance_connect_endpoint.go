@@ -35,6 +35,7 @@ import (
 // @Tags(identifierAttribute="id")
 func newResourceInstanceConnectEndpoint(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceInstanceConnectEndpoint{}
+
 	r.SetDefaultCreateTimeout(10 * time.Minute)
 	r.SetDefaultDeleteTimeout(10 * time.Minute)
 
@@ -43,6 +44,7 @@ func newResourceInstanceConnectEndpoint(context.Context) (resource.ResourceWithC
 
 type resourceInstanceConnectEndpoint struct {
 	framework.ResourceWithConfigure
+	framework.WithNoOpUpdate[resourceInstanceConnectEndpointData]
 	framework.WithImportByID
 	framework.WithTimeouts
 }
@@ -134,25 +136,22 @@ func (r *resourceInstanceConnectEndpoint) Schema(ctx context.Context, req resour
 
 func (r *resourceInstanceConnectEndpoint) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data resourceInstanceConnectEndpointData
-
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	conn := r.Meta().EC2Client(ctx)
 
-	input := &ec2.CreateInstanceConnectEndpointInput{
-		ClientToken:       aws.String(id.UniqueId()),
-		TagSpecifications: getTagSpecificationsInV2(ctx, awstypes.ResourceTypeInstanceConnectEndpoint),
-	}
-
+	input := &ec2.CreateInstanceConnectEndpointInput{}
 	response.Diagnostics.Append(flex.Expand(ctx, &data, input)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	// Additional fields.
+	input.ClientToken = aws.String(id.UniqueId())
+	input.TagSpecifications = getTagSpecificationsInV2(ctx, awstypes.ResourceTypeInstanceConnectEndpoint)
 
 	output, err := conn.CreateInstanceConnectEndpoint(ctx, input)
 
@@ -165,8 +164,8 @@ func (r *resourceInstanceConnectEndpoint) Create(ctx context.Context, request re
 	data.InstanceConnectEndpointId = types.StringPointerValue(output.InstanceConnectEndpoint.InstanceConnectEndpointId)
 	id := data.InstanceConnectEndpointId.ValueString()
 
-	createTimeout := r.CreateTimeout(ctx, data.Timeouts)
-	instanceConnectEndpoint, err := WaitInstanceConnectEndpointCreated(ctx, conn, id, createTimeout)
+	instanceConnectEndpoint, err := WaitInstanceConnectEndpointCreated(ctx, conn, id, r.CreateTimeout(ctx, data.Timeouts))
+
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for EC2 Instance Connect Endpoint (%s) create", id), err.Error())
 
@@ -175,7 +174,6 @@ func (r *resourceInstanceConnectEndpoint) Create(ctx context.Context, request re
 
 	// Set values for unknowns.
 	response.Diagnostics.Append(flex.Flatten(ctx, instanceConnectEndpoint, &data)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -185,9 +183,7 @@ func (r *resourceInstanceConnectEndpoint) Create(ctx context.Context, request re
 
 func (r *resourceInstanceConnectEndpoint) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var data resourceInstanceConnectEndpointData
-
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -211,7 +207,6 @@ func (r *resourceInstanceConnectEndpoint) Read(ctx context.Context, request reso
 	}
 
 	response.Diagnostics.Append(flex.Flatten(ctx, instanceConnectEndpoint, &data)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -221,15 +216,9 @@ func (r *resourceInstanceConnectEndpoint) Read(ctx context.Context, request reso
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *resourceInstanceConnectEndpoint) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	// Tags only.
-}
-
 func (r *resourceInstanceConnectEndpoint) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var data resourceInstanceConnectEndpointData
-
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
-
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -252,8 +241,7 @@ func (r *resourceInstanceConnectEndpoint) Delete(ctx context.Context, request re
 		return
 	}
 
-	deleteTimeout := r.DeleteTimeout(ctx, data.Timeouts)
-	if _, err := WaitInstanceConnectEndpointDeleted(ctx, conn, id, deleteTimeout); err != nil {
+	if _, err := WaitInstanceConnectEndpointDeleted(ctx, conn, id, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for EC2 Instance Connect Endpoint (%s) delete", id), err.Error())
 
 		return
