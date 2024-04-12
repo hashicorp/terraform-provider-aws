@@ -28,7 +28,7 @@ resource "aws_bedrockagent_knowledge_base" "test" {
       collection_arn    = "arn:aws:aoss:us-west-2:1234567890:collection/142bezjddq707i5stcrf"
       vector_index_name = "bedrock-knowledge-base-default-index"
       field_mapping {
-		vector_field   = "bedrock-knowledge-base-default-vector"
+        vector_field   = "bedrock-knowledge-base-default-vector"
         text_field     = "AMAZON_BEDROCK_TEXT_CHUNK"
         metadata_field = "AMAZON_BEDROCK_METADATA"
       }
