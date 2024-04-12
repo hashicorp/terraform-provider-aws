@@ -92,3 +92,15 @@ func StringFromFrameworkLegacy(_ context.Context, v types.String) *string {
 
 	return aws.String(s)
 }
+
+func EmptyStringAsNull(v types.String) types.String {
+	if v.IsNull() || v.IsUnknown() {
+		return v
+	}
+
+	if v.ValueString() == "" {
+		return types.StringNull()
+	}
+
+	return v
+}
