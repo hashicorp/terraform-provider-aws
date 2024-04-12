@@ -47,7 +47,6 @@ func TestAccDMSReplicationConfig_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "compute_config.0.replication_subnet_group_id"),
 					resource.TestCheckResourceAttr(resourceName, "compute_config.0.vpc_security_group_ids.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "replication_config_identifier", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "replication_settings"),
 					acctest.CheckResourceAttrEquivalentJSON(resourceName, "replication_settings", defaultReplicationConfigSettings),
 					resource.TestCheckResourceAttr(resourceName, "replication_type", "cdc"),
 					resource.TestCheckNoResourceAttr(resourceName, "resource_identifier"),
