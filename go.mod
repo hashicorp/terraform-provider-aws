@@ -6,7 +6,7 @@ require (
 	github.com/ProtonMail/go-crypto v1.1.0-alpha.2
 	github.com/YakDriver/go-version v0.1.0
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.51.19
+	github.com/aws/aws-sdk-go v1.51.20
 	github.com/aws/aws-sdk-go-v2 v1.26.1
 	github.com/aws/aws-sdk-go-v2/config v1.27.11
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.11
@@ -28,7 +28,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.32.4
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.40.5
 	github.com/aws/aws-sdk-go-v2/service/autoscalingplans v1.20.4
-	github.com/aws/aws-sdk-go-v2/service/batch v1.36.1
+	github.com/aws/aws-sdk-go-v2/service/batch v1.37.0
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.3.4
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.7.7
 	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.5.1
@@ -38,15 +38,15 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cleanrooms v1.12.0
 	github.com/aws/aws-sdk-go-v2/service/cloud9 v1.24.4
 	github.com/aws/aws-sdk-go-v2/service/cloudcontrol v1.18.4
-	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.35.4
+	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.36.0
 	github.com/aws/aws-sdk-go-v2/service/cloudfrontkeyvaluestore v1.4.4
 	github.com/aws/aws-sdk-go-v2/service/cloudhsmv2 v1.21.4
 	github.com/aws/aws-sdk-go-v2/service/cloudsearch v1.22.4
 	github.com/aws/aws-sdk-go-v2/service/cloudtrail v1.39.2
-	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.37.0
+	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.38.0
 	github.com/aws/aws-sdk-go-v2/service/cloudwatchlogs v1.35.1
 	github.com/aws/aws-sdk-go-v2/service/codeartifact v1.26.1
-	github.com/aws/aws-sdk-go-v2/service/codebuild v1.34.0
+	github.com/aws/aws-sdk-go-v2/service/codebuild v1.34.1
 	github.com/aws/aws-sdk-go-v2/service/codecatalyst v1.13.1
 	github.com/aws/aws-sdk-go-v2/service/codecommit v1.22.4
 	github.com/aws/aws-sdk-go-v2/service/codedeploy v1.25.4
@@ -90,7 +90,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.22.4
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.27.0
 	github.com/aws/aws-sdk-go-v2/service/healthlake v1.23.4
-	github.com/aws/aws-sdk-go-v2/service/iam v1.31.4
+	github.com/aws/aws-sdk-go-v2/service/iam v1.32.0
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.23.5
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.24.4
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.13.0
@@ -108,7 +108,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/m2 v1.12.4
 	github.com/aws/aws-sdk-go-v2/service/mediaconnect v1.28.4
 	github.com/aws/aws-sdk-go-v2/service/mediaconvert v1.53.0
-	github.com/aws/aws-sdk-go-v2/service/medialive v1.50.0
+	github.com/aws/aws-sdk-go-v2/service/medialive v1.51.0
 	github.com/aws/aws-sdk-go-v2/service/mediapackage v1.30.5
 	github.com/aws/aws-sdk-go-v2/service/mediapackagev2 v1.10.2
 	github.com/aws/aws-sdk-go-v2/service/mediastore v1.20.4
@@ -126,7 +126,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.4.4
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.21.4
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.16.4
-	github.com/aws/aws-sdk-go-v2/service/rds v1.77.0
+	github.com/aws/aws-sdk-go-v2/service/rds v1.77.1
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.43.5
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.25.4
 	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.17.4
@@ -137,7 +137,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.10.0
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.23.4
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.53.1
-	github.com/aws/aws-sdk-go-v2/service/s3control v1.44.4
+	github.com/aws/aws-sdk-go-v2/service/s3control v1.44.5
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.8.4
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.28.6
 	github.com/aws/aws-sdk-go-v2/service/securityhub v1.47.2
@@ -161,7 +161,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.25.5
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.36.4
 	github.com/aws/aws-sdk-go-v2/service/transfer v1.45.0
-	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.13.0
+	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.13.1
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.7.5
 	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.29.4
 	github.com/aws/aws-sdk-go-v2/service/workspaces v1.38.4
