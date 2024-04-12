@@ -381,6 +381,7 @@ func (r *resourceLifecyclePolicy) Read(ctx context.Context, req resource.ReadReq
 
 	if tfresource.NotFound(err) {
 		resp.State.RemoveResource(ctx)
+		return
 	}
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -513,15 +514,16 @@ func (r *resourceLifecyclePolicy) Delete(ctx context.Context, req resource.Delet
 	_, err := conn.DeleteLifecyclePolicy(ctx, &imagebuilder.DeleteLifecyclePolicyInput{
 		LifecyclePolicyArn: aws.String(state.ID.ValueString()),
 	})
+
 	if err != nil {
-		var nfe *awstypes.ResourceNotFoundException
-		if errors.As(err, &nfe) {
+		if errs.MessageContains(err, ResourceNotFoundException, "cannot be found") {
 			return
 		}
 		resp.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.ImageBuilder, create.ErrActionDeleting, ResNameLifecyclePolicy, state.Name.String(), nil),
+			create.ProblemStandardMessage(names.ImageBuilder, create.ErrActionDeleting, ResNameLifecyclePolicy, state.ID.String(), nil),
 			err.Error(),
 		)
+		return
 	}
 }
 

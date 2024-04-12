@@ -35,6 +35,8 @@ func TestAccImageBuilderLifecyclePolicy_basic(t *testing.T) {
 				Config: testAccLifecyclePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLifecyclePolicyExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "resource_type", "AMI_IMAGE"),
 				),
 			},
 			{
@@ -86,6 +88,29 @@ func TestAccImageBuilderLifecyclePolicy_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
+			},
+		},
+	})
+}
+
+func TestAccImageBuilderLifecyclePolicy_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_imagebuilder_lifecycle_policy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLifecyclePolicyConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLifecyclePolicyExists(ctx, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfimagebuilder.ResourceLifecyclePolicy, resourceName),
+				),
+				ExpectNonEmptyPlan: true,
 			},
 		},
 	})

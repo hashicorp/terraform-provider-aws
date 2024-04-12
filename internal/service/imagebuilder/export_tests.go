@@ -4,7 +4,6 @@
 package imagebuilder
 
 // Exports for use in tests only.
-
 var (
 	ResourceLifecyclePolicy = newResourceLifecyclePolicy
 
