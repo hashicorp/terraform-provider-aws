@@ -4680,7 +4680,7 @@ resource "aws_kms_key" "test" {
 }
 
 func testAccEndpointConfig_pauseReplicationTasks(rName string, pause bool) string {
-	return acctest.ConfigCompose(testAccRDSClustersConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccEndpointConfig_rdsClusterBase(rName), fmt.Sprintf(`
 resource "aws_dms_endpoint" "source" {
   database_name           = "tftest"
   endpoint_id             = "%[1]s-source"
@@ -4741,4 +4741,114 @@ resource "aws_dms_replication_task" "test" {
   depends_on = [aws_rds_cluster_instance.source, aws_rds_cluster_instance.target]
 }
 `, rName, pause))
+}
+
+// testAccEndpointConfig_rdsClusterBase configures a pair of Aurora RDS clusters (and instances) ready for replication.
+func testAccEndpointConfig_rdsClusterBase(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
+resource "aws_db_subnet_group" "test" {
+  name       = %[1]q
+  subnet_ids = aws_subnet.test[*].id
+}
+
+resource "aws_security_group" "test" {
+  name   = %[1]q
+  vpc_id = aws_vpc.test.id
+
+  ingress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = -1
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+data "aws_rds_engine_version" "default" {
+  engine = "aurora-mysql"
+}
+
+data "aws_rds_orderable_db_instance" "test" {
+  engine                     = data.aws_rds_engine_version.default.engine
+  engine_version             = data.aws_rds_engine_version.default.version
+  preferred_instance_classes = ["db.t3.small", "db.t3.medium", "db.t3.large"]
+}
+
+resource "aws_rds_cluster_parameter_group" "test" {
+  name        = "%[1]s-pg-cluster"
+  family      = data.aws_rds_engine_version.default.parameter_group_family
+  description = "DMS cluster parameter group"
+
+  parameter {
+    name         = "binlog_format"
+    value        = "ROW"
+    apply_method = "pending-reboot"
+  }
+
+  parameter {
+    name         = "binlog_row_image"
+    value        = "Full"
+    apply_method = "pending-reboot"
+  }
+
+  parameter {
+    name         = "binlog_checksum"
+    value        = "NONE"
+    apply_method = "pending-reboot"
+  }
+}
+
+resource "aws_rds_cluster" "source" {
+  cluster_identifier              = "%[1]s-aurora-cluster-source"
+  engine                          = data.aws_rds_orderable_db_instance.test.engine
+  engine_version                  = data.aws_rds_orderable_db_instance.test.engine_version
+  database_name                   = "tftest"
+  master_username                 = "tftest"
+  master_password                 = "mustbeeightcharaters"
+  skip_final_snapshot             = true
+  vpc_security_group_ids          = [aws_security_group.test.id]
+  db_subnet_group_name            = aws_db_subnet_group.test.name
+  db_cluster_parameter_group_name = aws_rds_cluster_parameter_group.test.name
+}
+
+resource "aws_rds_cluster_instance" "source" {
+  identifier           = "%[1]s-source-primary"
+  cluster_identifier   = aws_rds_cluster.source.id
+  engine               = data.aws_rds_orderable_db_instance.test.engine
+  engine_version       = data.aws_rds_orderable_db_instance.test.engine_version
+  instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
+  db_subnet_group_name = aws_db_subnet_group.test.name
+}
+
+resource "aws_rds_cluster" "target" {
+  cluster_identifier     = "%[1]s-aurora-cluster-target"
+  engine                 = data.aws_rds_orderable_db_instance.test.engine
+  engine_version         = data.aws_rds_orderable_db_instance.test.engine_version
+  database_name          = "tftest"
+  master_username        = "tftest"
+  master_password        = "mustbeeightcharaters"
+  skip_final_snapshot    = true
+  vpc_security_group_ids = [aws_security_group.test.id]
+  db_subnet_group_name   = aws_db_subnet_group.test.name
+}
+
+resource "aws_rds_cluster_instance" "target" {
+  identifier           = "%[1]s-target-primary"
+  cluster_identifier   = aws_rds_cluster.target.id
+  engine               = data.aws_rds_orderable_db_instance.test.engine
+  engine_version       = data.aws_rds_orderable_db_instance.test.engine_version
+  instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
+  db_subnet_group_name = aws_db_subnet_group.test.name
+}
+`, rName))
 }

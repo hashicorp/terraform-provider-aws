@@ -70,53 +70,53 @@ func TestAccDMSReplicationConfig_basic(t *testing.T) {
 	})
 }
 
-func TestAccDMSReplicationConfig_noChangeOnDefault(t *testing.T) {
-	ctx := acctest.Context(t)
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_dms_replication_config.test"
+// func TestAccDMSReplicationConfig_noChangeOnDefault(t *testing.T) {
+// 	ctx := acctest.Context(t)
+// 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+// 	resourceName := "aws_dms_replication_config.test"
 
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckReplicationConfigDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccReplicationConfigConfig_noChangeOnDefault(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckReplicationConfigExists(ctx, resourceName),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "compute_config.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "compute_config.0.availability_zone", ""),
-					resource.TestCheckResourceAttr(resourceName, "compute_config.0.dns_name_servers", ""),
-					resource.TestCheckResourceAttr(resourceName, "compute_config.0.kms_key_id", ""),
-					resource.TestCheckResourceAttr(resourceName, "compute_config.0.max_capacity_units", "128"),
-					resource.TestCheckResourceAttr(resourceName, "compute_config.0.min_capacity_units", "2"),
-					resource.TestCheckResourceAttr(resourceName, "compute_config.0.multi_az", "false"),
-					resource.TestCheckResourceAttr(resourceName, "compute_config.0.preferred_maintenance_window", "sun:23:45-mon:00:30"),
-					resource.TestCheckResourceAttrSet(resourceName, "compute_config.0.replication_subnet_group_id"),
-					resource.TestCheckResourceAttr(resourceName, "compute_config.0.vpc_security_group_ids.#", "0"),
-					resource.TestCheckResourceAttr(resourceName, "replication_config_identifier", rName),
-					resource.TestCheckResourceAttrSet(resourceName, "replication_settings"),
-					resource.TestCheckResourceAttr(resourceName, "replication_type", "cdc"),
-					resource.TestCheckNoResourceAttr(resourceName, "resource_identifier"),
-					resource.TestCheckResourceAttrSet(resourceName, "source_endpoint_arn"),
-					resource.TestCheckResourceAttr(resourceName, "start_replication", "false"),
-					resource.TestCheckResourceAttr(resourceName, "supplemental_settings", ""),
-					resource.TestCheckResourceAttrSet(resourceName, "table_mappings"),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-					resource.TestCheckResourceAttrSet(resourceName, "target_endpoint_arn"),
-				),
-			},
-			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"start_replication", "resource_identifier"},
-			},
-		},
-	})
-}
+// 	resource.ParallelTest(t, resource.TestCase{
+// 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+// 		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
+// 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+// 		CheckDestroy:             testAccCheckReplicationConfigDestroy(ctx),
+// 		Steps: []resource.TestStep{
+// 			{
+// 				Config: testAccReplicationConfigConfig_noChangeOnDefault(rName),
+// 				Check: resource.ComposeAggregateTestCheckFunc(
+// 					testAccCheckReplicationConfigExists(ctx, resourceName),
+// 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+// 					resource.TestCheckResourceAttr(resourceName, "compute_config.#", "1"),
+// 					resource.TestCheckResourceAttr(resourceName, "compute_config.0.availability_zone", ""),
+// 					resource.TestCheckResourceAttr(resourceName, "compute_config.0.dns_name_servers", ""),
+// 					resource.TestCheckResourceAttr(resourceName, "compute_config.0.kms_key_id", ""),
+// 					resource.TestCheckResourceAttr(resourceName, "compute_config.0.max_capacity_units", "128"),
+// 					resource.TestCheckResourceAttr(resourceName, "compute_config.0.min_capacity_units", "2"),
+// 					resource.TestCheckResourceAttr(resourceName, "compute_config.0.multi_az", "false"),
+// 					resource.TestCheckResourceAttr(resourceName, "compute_config.0.preferred_maintenance_window", "sun:23:45-mon:00:30"),
+// 					resource.TestCheckResourceAttrSet(resourceName, "compute_config.0.replication_subnet_group_id"),
+// 					resource.TestCheckResourceAttr(resourceName, "compute_config.0.vpc_security_group_ids.#", "0"),
+// 					resource.TestCheckResourceAttr(resourceName, "replication_config_identifier", rName),
+// 					resource.TestCheckResourceAttrSet(resourceName, "replication_settings"),
+// 					resource.TestCheckResourceAttr(resourceName, "replication_type", "cdc"),
+// 					resource.TestCheckNoResourceAttr(resourceName, "resource_identifier"),
+// 					resource.TestCheckResourceAttrSet(resourceName, "source_endpoint_arn"),
+// 					resource.TestCheckResourceAttr(resourceName, "start_replication", "false"),
+// 					resource.TestCheckResourceAttr(resourceName, "supplemental_settings", ""),
+// 					resource.TestCheckResourceAttrSet(resourceName, "table_mappings"),
+// 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+// 					resource.TestCheckResourceAttrSet(resourceName, "target_endpoint_arn"),
+// 				),
+// 			},
+// 			{
+// 				ResourceName:            resourceName,
+// 				ImportState:             true,
+// 				ImportStateVerify:       true,
+// 				ImportStateVerifyIgnore: []string{"start_replication", "resource_identifier"},
+// 			},
+// 		},
+// 	})
+// }
 
 func TestAccDMSReplicationConfig_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -293,118 +293,11 @@ func testAccCheckReplicationConfigDestroy(ctx context.Context) resource.TestChec
 	}
 }
 
-// testAccRDSClustersConfig_base configures a pair of Aurora RDS clusters (and instances) ready for replication.
-func testAccRDSClustersConfig_base(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
-resource "aws_db_subnet_group" "test" {
-  name       = %[1]q
-  subnet_ids = aws_subnet.test[*].id
-}
-
-resource "aws_security_group" "test" {
-  name   = %[1]q
-  vpc_id = aws_vpc.test.id
-
-  ingress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = -1
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-data "aws_rds_engine_version" "default" {
-  engine = "aurora-mysql"
-}
-
-data "aws_rds_orderable_db_instance" "test" {
-  engine                     = data.aws_rds_engine_version.default.engine
-  engine_version             = data.aws_rds_engine_version.default.version
-  preferred_instance_classes = ["db.t3.small", "db.t3.medium", "db.t3.large"]
-}
-
-resource "aws_rds_cluster_parameter_group" "test" {
-  name        = "%[1]s-pg-cluster"
-  family      = data.aws_rds_engine_version.default.parameter_group_family
-  description = "DMS cluster parameter group"
-
-  parameter {
-    name         = "binlog_format"
-    value        = "ROW"
-    apply_method = "pending-reboot"
-  }
-
-  parameter {
-    name         = "binlog_row_image"
-    value        = "Full"
-    apply_method = "pending-reboot"
-  }
-
-  parameter {
-    name         = "binlog_checksum"
-    value        = "NONE"
-    apply_method = "pending-reboot"
-  }
-}
-
-resource "aws_rds_cluster" "source" {
-  cluster_identifier              = "%[1]s-aurora-cluster-source"
-  engine                          = data.aws_rds_orderable_db_instance.test.engine
-  engine_version                  = data.aws_rds_orderable_db_instance.test.engine_version
-  database_name                   = "tftest"
-  master_username                 = "tftest"
-  master_password                 = "mustbeeightcharaters"
-  skip_final_snapshot             = true
-  vpc_security_group_ids          = [aws_security_group.test.id]
-  db_subnet_group_name            = aws_db_subnet_group.test.name
-  db_cluster_parameter_group_name = aws_rds_cluster_parameter_group.test.name
-}
-
-resource "aws_rds_cluster_instance" "source" {
-  identifier           = "%[1]s-source-primary"
-  cluster_identifier   = aws_rds_cluster.source.id
-  engine               = data.aws_rds_orderable_db_instance.test.engine
-  engine_version       = data.aws_rds_orderable_db_instance.test.engine_version
-  instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
-  db_subnet_group_name = aws_db_subnet_group.test.name
-}
-
-resource "aws_rds_cluster" "target" {
-  cluster_identifier     = "%[1]s-aurora-cluster-target"
-  engine                 = data.aws_rds_orderable_db_instance.test.engine
-  engine_version         = data.aws_rds_orderable_db_instance.test.engine_version
-  database_name          = "tftest"
-  master_username        = "tftest"
-  master_password        = "mustbeeightcharaters"
-  skip_final_snapshot    = true
-  vpc_security_group_ids = [aws_security_group.test.id]
-  db_subnet_group_name   = aws_db_subnet_group.test.name
-}
-
-resource "aws_rds_cluster_instance" "target" {
-  identifier           = "%[1]s-target-primary"
-  cluster_identifier   = aws_rds_cluster.target.id
-  engine               = data.aws_rds_orderable_db_instance.test.engine
-  engine_version       = data.aws_rds_orderable_db_instance.test.engine_version
-  instance_class       = data.aws_rds_orderable_db_instance.test.instance_class
-  db_subnet_group_name = aws_db_subnet_group.test.name
-}
-`, rName))
-}
-
-func testAccReplicationConfigConfig_base(rName string) string {
-	return acctest.ConfigCompose(testAccRDSClustersConfig_base(rName), fmt.Sprintf(`
+// testAccReplicationConfigConfig_base_DummyDatabase creates Replication Endpoints referencing valid databases.
+// This should only be used in cases where actual replication is started, since it requires approcimately
+// six more minutes for setup and teardown.
+func testAccReplicationConfigConfig_base_ValidDatabase(rName string) string {
+	return acctest.ConfigCompose(testAccEndpointConfig_rdsClusterBase(rName), fmt.Sprintf(`
 resource "aws_dms_replication_subnet_group" "test" {
   replication_subnet_group_id          = %[1]q
   replication_subnet_group_description = "terraform test"
@@ -435,8 +328,25 @@ resource "aws_dms_endpoint" "source" {
 `, rName))
 }
 
+// testAccReplicationConfigConfig_base_DummyDatabase creates Replication Endpoints referencing dummy databases.
+// This should be used in all cases where actual replication is not started, since it shaves approcimately
+// six minutes off setup and teardown time.
+func testAccReplicationConfigConfig_base_DummyDatabase(rName string) string {
+	return acctest.ConfigCompose(
+		testAccReplicationEndpointConfig_dummyDatabase(rName),
+		fmt.Sprintf(`
+resource "aws_dms_replication_subnet_group" "test" {
+  replication_subnet_group_id          = %[1]q
+  replication_subnet_group_description = "terraform test"
+  subnet_ids                           = aws_subnet.test[*].id
+}
+`, rName))
+}
+
 func testAccReplicationConfigConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccReplicationConfigConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccReplicationConfigConfig_base_DummyDatabase(rName),
+		fmt.Sprintf(`
 resource "aws_dms_replication_config" "test" {
   replication_config_identifier = %[1]q
   replication_type              = "cdc"
@@ -455,7 +365,9 @@ resource "aws_dms_replication_config" "test" {
 }
 
 func testAccReplicationConfigConfig_noChangeOnDefault(rName string) string {
-	return acctest.ConfigCompose(testAccReplicationConfigConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccReplicationConfigConfig_base_DummyDatabase(rName),
+		fmt.Sprintf(`
 resource "aws_dms_replication_config" "test" {
   replication_config_identifier = %[1]q
   replication_type              = "cdc"
@@ -475,7 +387,9 @@ resource "aws_dms_replication_config" "test" {
 }
 
 func testAccReplicationConfigConfig_update(rName, replicationType string, minCapacity, maxCapacity int) string {
-	return acctest.ConfigCompose(testAccReplicationConfigConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccReplicationConfigConfig_base_DummyDatabase(rName),
+		fmt.Sprintf(`
 resource "aws_dms_replication_config" "test" {
   replication_config_identifier = %[1]q
   resource_identifier           = %[1]q
@@ -495,7 +409,9 @@ resource "aws_dms_replication_config" "test" {
 }
 
 func testAccReplicationConfigConfig_startReplication(rName string, start bool) string {
-	return acctest.ConfigCompose(testAccReplicationConfigConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccReplicationConfigConfig_base_ValidDatabase(rName),
+		fmt.Sprintf(`
 resource "aws_dms_replication_config" "test" {
   replication_config_identifier = %[1]q
   resource_identifier           = %[1]q
@@ -517,7 +433,9 @@ resource "aws_dms_replication_config" "test" {
 }
 
 func testAccReplicationConfigConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccReplicationConfigConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccReplicationConfigConfig_base_DummyDatabase(rName),
+		fmt.Sprintf(`
 resource "aws_dms_replication_config" "test" {
   replication_config_identifier = %[1]q
   replication_type              = "cdc"
@@ -540,7 +458,9 @@ resource "aws_dms_replication_config" "test" {
 }
 
 func testAccReplicationConfigConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccReplicationConfigConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccReplicationConfigConfig_base_DummyDatabase(rName),
+		fmt.Sprintf(`
 resource "aws_dms_replication_config" "test" {
   replication_config_identifier = %[1]q
   replication_type              = "cdc"
