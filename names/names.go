@@ -54,6 +54,7 @@ const (
 	EKSEndpointID                        = "eks"
 	EMREndpointID                        = "elasticmapreduce"
 	EvidentlyEndpointID                  = "evidently"
+	FMSEndpointID                        = "fms"
 	IdentityStoreEndpointID              = "identitystore"
 	Inspector2EndpointID                 = "inspector2"
 	IVSChatEndpointID                    = "ivschat"

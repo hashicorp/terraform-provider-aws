@@ -164,7 +164,7 @@ schemas,schemas,schemas,schemas,,schemas,,,Schemas,Schemas,,1,,,aws_schemas_,,sc
 fis,fis,fis,fis,,fis,,,FIS,FIS,,,2,,aws_fis_,,fis_,FIS (Fault Injection Simulator),AWS,,,,,,,fis,ListExperiments,,
 finspace,finspace,finspace,finspace,,finspace,,,FinSpace,Finspace,,,2,,aws_finspace_,,finspace_,FinSpace,Amazon,,,,,,,finspace,ListEnvironments,,
 finspace-data,finspacedata,finspacedata,finspacedata,,finspacedata,,,FinSpaceData,FinSpaceData,,1,,,aws_finspacedata_,,finspacedata_,FinSpace Data,Amazon,,x,,,,,finspace data,,,
-fms,fms,fms,fms,,fms,,,FMS,FMS,,1,,,aws_fms_,,fms_,FMS (Firewall Manager),AWS,,,,,,,FMS,ListAppsLists,,
+fms,fms,fms,fms,,fms,,,FMS,FMS,x,,2,,aws_fms_,,fms_,FMS (Firewall Manager),AWS,,,,,,,FMS,ListAppsLists,MaxResults: aws_sdkv2.Int32(1),
 forecast,forecast,forecastservice,forecast,,forecast,,forecastservice,Forecast,ForecastService,,1,,,aws_forecast_,,forecast_,Forecast,Amazon,,x,,,,,forecast,,,
 forecastquery,forecastquery,forecastqueryservice,forecastquery,,forecastquery,,forecastqueryservice,ForecastQuery,ForecastQueryService,,1,,,aws_forecastquery_,,forecastquery_,Forecast Query,Amazon,,x,,,,,forecastquery,,,
 frauddetector,frauddetector,frauddetector,frauddetector,,frauddetector,,,FraudDetector,FraudDetector,,1,,,aws_frauddetector_,,frauddetector_,Fraud Detector,Amazon,,x,,,,,FraudDetector,,,
