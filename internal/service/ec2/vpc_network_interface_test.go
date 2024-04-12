@@ -990,8 +990,9 @@ func TestAccVPCNetworkInterface_connectionTrackingSpecificationRequest(t *testin
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckENIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "connection_tracking_specification_request.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "connection_tracking_specification_request.tcp_established_timeout", "120"),
-					resource.TestCheckResourceAttr(resourceName, "connection_tracking_specification_request.udp_stream_timeout", "120"),
+					resource.TestCheckResourceAttr(resourceName, "connection_tracking_specification_request.0.tcp_established_timeout", "120"),
+					resource.TestCheckResourceAttr(resourceName, "connection_tracking_specification_request.0.udp_stream_timeout", "120"),
+					resource.TestCheckResourceAttr(resourceName, "connection_tracking_specification_request.0.udp_timeout", "30"),
 				),
 			},
 			{
@@ -1005,7 +1006,9 @@ func TestAccVPCNetworkInterface_connectionTrackingSpecificationRequest(t *testin
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckENIExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "connection_tracking_specification_request.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "connection_tracking_specification_request.tcp_established_timeout", "180`"),
+					resource.TestCheckResourceAttr(resourceName, "connection_tracking_specification_request.0.tcp_established_timeout", "180"),
+					resource.TestCheckResourceAttr(resourceName, "connection_tracking_specification_request.0.udp_stream_timeout", "180"),
+					resource.TestCheckResourceAttr(resourceName, "connection_tracking_specification_request.0.udp_timeout", "30"),
 				),
 			},
 		},
@@ -1601,7 +1604,7 @@ func testAccVPCNetworkInterfaceConfig_connectionTrackingSpecificationRequest(rNa
 	return acctest.ConfigCompose(testAccVPCNetworkInterfaceConfig_baseIPV4(rName), `
 resource "aws_network_interface" "test" {
   subnet_id = aws_subnet.test.id
-  connection_tracking_specification_request = {
+  connection_tracking_specification_request {
     tcp_established_timeout = 120
     udp_stream_timeout      = 120
   }
@@ -1613,7 +1616,7 @@ func testAccVPCNetworkInterfaceConfig_connectionTrackingSpecificationRequestUpda
 	return acctest.ConfigCompose(testAccVPCNetworkInterfaceConfig_baseIPV4(rName), `
 resource "aws_network_interface" "test" {
   subnet_id = aws_subnet.test.id
-  connection_tracking_specification_request = {
+  connection_tracking_specification_request {
     tcp_established_timeout = 180
   }
 }
