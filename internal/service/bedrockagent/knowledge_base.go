@@ -56,17 +56,14 @@ type knowledgeBaseResource struct {
 	framework.WithTimeouts
 }
 
-func (r *knowledgeBaseResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+func (*knowledgeBaseResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
 	response.TypeName = "aws_bedrockagent_knowledge_base"
 }
 
 func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
-			"arn": framework.ARNAttributeComputedOnly(),
-			"description": schema.StringAttribute{
-				Optional: true,
-			},
+			names.AttrARN: framework.ARNAttributeComputedOnly(),
 			"created_at": schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
@@ -74,15 +71,8 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"id": framework.IDAttribute(),
-			"name": schema.StringAttribute{
-				Required: true,
-			},
-			"role_arn": schema.StringAttribute{
-				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
+			"description": schema.StringAttribute{
+				Optional: true,
 			},
 			"failure_reasons": schema.ListAttribute{
 				CustomType:  fwtypes.ListOfStringType,
@@ -92,13 +82,23 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 					listplanmodifier.UseStateForUnknown(),
 				},
 			},
+			names.AttrID: framework.IDAttribute(),
+			"name": schema.StringAttribute{
+				Required: true,
+			},
+			"role_arn": schema.StringAttribute{
+				CustomType: fwtypes.ARNType,
+				Required:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"updated_at": schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
 			},
-
-			names.AttrTags:    tftags.TagsAttribute(),
-			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
 			"knowledge_base_configuration": schema.ListNestedBlock{
@@ -159,8 +159,8 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 										Required: true,
 									},
 									"credentials_secret_arn": schema.StringAttribute{
-										Required:   true,
 										CustomType: fwtypes.ARNType,
+										Required:   true,
 									},
 									"namespace": schema.StringAttribute{
 										Optional: true,
@@ -194,13 +194,15 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"credentials_secret_arn": schema.StringAttribute{
-										Required: true,
+										CustomType: fwtypes.ARNType,
+										Required:   true,
 									},
 									"database_name": schema.StringAttribute{
 										Required: true,
 									},
 									"resource_arn": schema.StringAttribute{
-										Required: true,
+										CustomType: fwtypes.ARNType,
+										Required:   true,
 									},
 									"table_name": schema.StringAttribute{
 										Required: true,
@@ -217,13 +219,13 @@ func (r *knowledgeBaseResource) Schema(ctx context.Context, request resource.Sch
 												"metadata_field": schema.StringAttribute{
 													Required: true,
 												},
+												"primary_key_field": schema.StringAttribute{
+													Required: true,
+												},
 												"text_field": schema.StringAttribute{
 													Required: true,
 												},
 												"vector_field": schema.StringAttribute{
-													Required: true,
-												},
-												"primary_key_field": schema.StringAttribute{
 													Required: true,
 												},
 											},
@@ -359,10 +361,10 @@ func (r *knowledgeBaseResource) Create(ctx context.Context, request resource.Cre
 
 	knowledgebase := output.KnowledgeBase
 	data.KnowledgeBaseARN = fwflex.StringToFramework(ctx, knowledgebase.KnowledgeBaseArn)
-	data.KnowledgeBaseId = fwflex.StringToFramework(ctx, knowledgebase.KnowledgeBaseId)
+	data.KnowledgeBaseID = fwflex.StringToFramework(ctx, knowledgebase.KnowledgeBaseId)
 
 	createTimeout := r.CreateTimeout(ctx, data.Timeouts)
-	knowledgebase, err = waitKnowledgeBaseCreated(ctx, conn, data.KnowledgeBaseId.ValueString(), createTimeout)
+	knowledgebase, err = waitKnowledgeBaseCreated(ctx, conn, data.KnowledgeBaseID.ValueString(), createTimeout)
 	if err != nil {
 		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionWaitingForCreation, ResNameKnowledgeBase, data.Name.String(), err),
@@ -392,7 +394,7 @@ func (r *knowledgeBaseResource) Read(ctx context.Context, request resource.ReadR
 		return
 	}
 
-	knowledgebase, err := findKnowledgeBaseByID(ctx, conn, data.KnowledgeBaseId.ValueString())
+	knowledgebase, err := findKnowledgeBaseByID(ctx, conn, data.KnowledgeBaseID.ValueString())
 
 	if tfresource.NotFound(err) {
 		response.State.RemoveResource(ctx)
@@ -400,7 +402,7 @@ func (r *knowledgeBaseResource) Read(ctx context.Context, request resource.ReadR
 	}
 	if err != nil {
 		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionSetting, ResNameKnowledgeBase, data.KnowledgeBaseId.String(), err),
+			create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionSetting, ResNameKnowledgeBase, data.KnowledgeBaseID.String(), err),
 			err.Error(),
 		)
 		return
@@ -444,7 +446,7 @@ func (r *knowledgeBaseResource) Update(ctx context.Context, request resource.Upd
 		_, err := conn.UpdateKnowledgeBase(ctx, input)
 		if err != nil {
 			response.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionUpdating, ResNameKnowledgeBase, new.KnowledgeBaseId.String(), err),
+				create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionUpdating, ResNameKnowledgeBase, new.KnowledgeBaseID.String(), err),
 				err.Error(),
 			)
 			return
@@ -452,10 +454,10 @@ func (r *knowledgeBaseResource) Update(ctx context.Context, request resource.Upd
 	}
 
 	updateTimeout := r.UpdateTimeout(ctx, new.Timeouts)
-	knowledgebase, err := waitKnowledgeBaseUpdated(ctx, conn, new.KnowledgeBaseId.ValueString(), updateTimeout)
+	knowledgebase, err := waitKnowledgeBaseUpdated(ctx, conn, new.KnowledgeBaseID.ValueString(), updateTimeout)
 	if err != nil {
 		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionWaitingForUpdate, ResNameKnowledgeBase, new.KnowledgeBaseId.String(), err),
+			create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionWaitingForUpdate, ResNameKnowledgeBase, new.KnowledgeBaseID.String(), err),
 			err.Error(),
 		)
 		return
@@ -483,7 +485,7 @@ func (r *knowledgeBaseResource) Delete(ctx context.Context, request resource.Del
 	}
 
 	in := &bedrockagent.DeleteKnowledgeBaseInput{
-		KnowledgeBaseId: aws.String(data.KnowledgeBaseId.ValueString()),
+		KnowledgeBaseId: aws.String(data.KnowledgeBaseID.ValueString()),
 	}
 
 	_, err := conn.DeleteKnowledgeBase(ctx, in)
@@ -493,17 +495,17 @@ func (r *knowledgeBaseResource) Delete(ctx context.Context, request resource.Del
 			return
 		}
 		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionDeleting, ResNameKnowledgeBase, data.KnowledgeBaseId.String(), err),
+			create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionDeleting, ResNameKnowledgeBase, data.KnowledgeBaseID.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
 	deleteTimeout := r.DeleteTimeout(ctx, data.Timeouts)
-	_, err = waitKnowledgeBaseDeleted(ctx, conn, data.KnowledgeBaseId.ValueString(), deleteTimeout)
+	_, err = waitKnowledgeBaseDeleted(ctx, conn, data.KnowledgeBaseID.ValueString(), deleteTimeout)
 	if err != nil {
 		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionWaitingForDeletion, ResNameKnowledgeBase, data.KnowledgeBaseId.String(), err),
+			create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionWaitingForDeletion, ResNameKnowledgeBase, data.KnowledgeBaseID.String(), err),
 			err.Error(),
 		)
 		return
@@ -611,18 +613,18 @@ func findKnowledgeBaseByID(ctx context.Context, conn *bedrockagent.Client, id st
 
 type knowledgeBaseResourceModel struct {
 	CreatedAt                  timetypes.RFC3339                                                `tfsdk:"created_at"`
-	UpdatedAt                  timetypes.RFC3339                                                `tfsdk:"updated_at"`
 	Description                types.String                                                     `tfsdk:"description"`
 	FailureReasons             fwtypes.ListValueOf[types.String]                                `tfsdk:"failure_reasons"`
 	KnowledgeBaseARN           types.String                                                     `tfsdk:"arn"`
 	KnowledgeBaseConfiguration fwtypes.ListNestedObjectValueOf[knowledgeBaseConfigurationModel] `tfsdk:"knowledge_base_configuration"`
-	KnowledgeBaseId            types.String                                                     `tfsdk:"id"`
+	KnowledgeBaseID            types.String                                                     `tfsdk:"id"`
 	Name                       types.String                                                     `tfsdk:"name"`
-	RoleARN                    types.String                                                     `tfsdk:"role_arn"`
+	RoleARN                    fwtypes.ARN                                                      `tfsdk:"role_arn"`
 	StorageConfiguration       fwtypes.ListNestedObjectValueOf[storageConfigurationModel]       `tfsdk:"storage_configuration"`
 	Tags                       types.Map                                                        `tfsdk:"tags"`
 	TagsAll                    types.Map                                                        `tfsdk:"tags_all"`
 	Timeouts                   timeouts.Value                                                   `tfsdk:"timeouts"`
+	UpdatedAt                  timetypes.RFC3339                                                `tfsdk:"updated_at"`
 }
 
 type knowledgeBaseConfigurationModel struct {
@@ -631,19 +633,19 @@ type knowledgeBaseConfigurationModel struct {
 }
 
 type vectorKnowledgeBaseConfigurationModel struct {
-	EmbeddingModelARN types.String `tfsdk:"embedding_model_arn"`
+	EmbeddingModelARN fwtypes.ARN `tfsdk:"embedding_model_arn"`
 }
 
 type storageConfigurationModel struct {
 	OpensearchServerlessConfiguration fwtypes.ListNestedObjectValueOf[opensearchServerlessConfigurationModel] `tfsdk:"opensearch_serverless_configuration"`
 	PineconeConfiguration             fwtypes.ListNestedObjectValueOf[pineconeConfigurationModel]             `tfsdk:"pinecone_configuration"`
-	RdsConfiguration                  fwtypes.ListNestedObjectValueOf[rdsConfigurationModel]                  `tfsdk:"rds_configuration"`
+	RDSConfiguration                  fwtypes.ListNestedObjectValueOf[rdsConfigurationModel]                  `tfsdk:"rds_configuration"`
 	RedisEnterpriseCloudConfiguration fwtypes.ListNestedObjectValueOf[redisEnterpriseCloudConfigurationModel] `tfsdk:"redis_enterprise_cloud_configuration"`
 	Type                              types.String                                                            `tfsdk:"type"`
 }
 
 type opensearchServerlessConfigurationModel struct {
-	CollectionArn   types.String                                                           `tfsdk:"collection_arn"`
+	CollectionARN   fwtypes.ARN                                                            `tfsdk:"collection_arn"`
 	FieldMapping    fwtypes.ListNestedObjectValueOf[opensearchServerlessFieldMappingModel] `tfsdk:"field_mapping"`
 	VectorIndexName types.String                                                           `tfsdk:"vector_index_name"`
 }
@@ -656,7 +658,7 @@ type opensearchServerlessFieldMappingModel struct {
 
 type pineconeConfigurationModel struct {
 	ConnectionString     types.String                                               `tfsdk:"connection_string"`
-	CredentialsSecretARN types.String                                               `tfsdk:"credentials_secret_arn"`
+	CredentialsSecretARN fwtypes.ARN                                                `tfsdk:"credentials_secret_arn"`
 	FieldMapping         fwtypes.ListNestedObjectValueOf[pineconeFieldMappingModel] `tfsdk:"field_mapping"`
 	Namespace            types.String                                               `tfsdk:"namespace"`
 }
@@ -667,10 +669,10 @@ type pineconeFieldMappingModel struct {
 }
 
 type rdsConfigurationModel struct {
-	CredentialsSecretArn types.String                                          `tfsdk:"credentials_secret_arn"`
+	CredentialsSecretARN fwtypes.ARN                                           `tfsdk:"credentials_secret_arn"`
 	DatabaseName         types.String                                          `tfsdk:"database_name"`
 	FieldMapping         fwtypes.ListNestedObjectValueOf[rdsFieldMappingModel] `tfsdk:"field_mapping"`
-	ResourceArn          types.String                                          `tfsdk:"resource_arn"`
+	ResourceARN          fwtypes.ARN                                           `tfsdk:"resource_arn"`
 	TableName            types.String                                          `tfsdk:"table_name"`
 }
 
@@ -682,7 +684,7 @@ type rdsFieldMappingModel struct {
 }
 
 type redisEnterpriseCloudConfigurationModel struct {
-	CredentialsSecretArn types.String                                                           `tfsdk:"credentials_secret_arn"`
+	CredentialsSecretARN fwtypes.ARN                                                            `tfsdk:"credentials_secret_arn"`
 	Endpoint             types.String                                                           `tfsdk:"endpoint"`
 	FieldMapping         fwtypes.ListNestedObjectValueOf[redisEnterpriseCloudFieldMappingModel] `tfsdk:"field_mapping"`
 	VectorIndexName      types.String                                                           `tfsdk:"vector_index_name"`

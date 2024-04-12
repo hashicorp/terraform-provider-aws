@@ -20,5 +20,6 @@ func TestAccBedrockAgent_serial(t *testing.T) {
 			"tags":       testAccKnowledgeBase_tags,
 		},
 	}
+
 	acctest.RunSerialTests2Levels(t, testCases, 0)
 }

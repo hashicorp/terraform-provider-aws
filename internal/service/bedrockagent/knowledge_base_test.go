@@ -261,7 +261,7 @@ func testAccCheckKnowledgeBaseDestroy(ctx context.Context) resource.TestCheckFun
 				return err
 			}
 
-			return fmt.Errorf("Bedrock Agent knowledge base %s still exists", rs.Primary.ID)
+			return fmt.Errorf("Bedrock Agent Knowledge Base %s still exists", rs.Primary.ID)
 		}
 
 		return nil
