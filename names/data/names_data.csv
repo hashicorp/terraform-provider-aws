@@ -40,7 +40,7 @@ bedrock-agent,bedrockagent,bedrockagent,bedrockagent,,bedrockagent,,,BedrockAgen
 bcmdataexports,bcmdataexports,bcmdataexports,bcmdataexports,,bcmdataexports,,,BCMDataExports,BCMDataExports,,,2,,aws_bcmdataexports_,,bcmdataexports_,BCM Data Exports,Amazon,,,,,,,BCM Data Exports,ListExports,,
 billingconductor,billingconductor,billingconductor,,,billingconductor,,,BillingConductor,BillingConductor,,1,,,aws_billingconductor_,,billingconductor_,Billing Conductor,AWS,,x,,,,,billingconductor,,,
 braket,braket,braket,braket,,braket,,,Braket,Braket,,1,,,aws_braket_,,braket_,Braket,Amazon,,x,,,,,Braket,,,
-ce,ce,costexplorer,costexplorer,,ce,,costexplorer,CE,CostExplorer,,1,,,aws_ce_,,ce_,CE (Cost Explorer),AWS,,,,,,,Cost Explorer,ListCostCategoryDefinitions,,
+ce,ce,costexplorer,costexplorer,,ce,,costexplorer,CE,CostExplorer,,,2,,aws_ce_,,ce_,CE (Cost Explorer),AWS,,,,,,,Cost Explorer,ListCostCategoryDefinitions,,
 ,,,,,,,,,,,,,,,,,Chatbot,AWS,x,,,,,,,,,No SDK support
 chime,chime,chime,chime,,chime,,,Chime,Chime,,1,,,aws_chime_,,chime_,Chime,Amazon,,,,,,,Chime,ListAccounts,,
 chime-sdk-identity,chimesdkidentity,chimesdkidentity,chimesdkidentity,,chimesdkidentity,,,ChimeSDKIdentity,ChimeSDKIdentity,,1,,,aws_chimesdkidentity_,,chimesdkidentity_,Chime SDK Identity,Amazon,,x,,,,,Chime SDK Identity,,,
@@ -109,7 +109,7 @@ cur,cur,costandusagereportservice,costandusagereportservice,,cur,,costandusagere
 ,,,,,,,,,,,,,,,,,Cryptographic Services Overview,AWS,x,,,,,,,,,No SDK support
 dataexchange,dataexchange,dataexchange,dataexchange,,dataexchange,,,DataExchange,DataExchange,,1,,,aws_dataexchange_,,dataexchange_,Data Exchange,AWS,,,,,,,DataExchange,ListDataSets,,
 datapipeline,datapipeline,datapipeline,datapipeline,,datapipeline,,,DataPipeline,DataPipeline,,1,,,aws_datapipeline_,,datapipeline_,Data Pipeline,AWS,,,,,,,Data Pipeline,ListPipelines,,
-datasync,datasync,datasync,datasync,,datasync,,,DataSync,DataSync,,1,,,aws_datasync_,,datasync_,DataSync,AWS,,,,,,,DataSync,ListAgents,,
+datasync,datasync,datasync,datasync,,datasync,,,DataSync,DataSync,,,2,,aws_datasync_,,datasync_,DataSync,AWS,,,,,,,DataSync,ListAgents,,
 datazone,datazone,datazone,datazone,,datazone,,,DataZone,DataZone,,,2,,aws_datazone_,,datazone_,DataZone,Amazon,,,,,,,DataZone,ListDomains,,
 ,,,,,,,,,,,,,,,,,Deep Learning AMIs,AWS,x,,,,,,,,,No SDK support
 ,,,,,,,,,,,,,,,,,Deep Learning Containers,AWS,x,,,,,,,,,No SDK support
@@ -164,7 +164,7 @@ schemas,schemas,schemas,schemas,,schemas,,,Schemas,Schemas,,1,,,aws_schemas_,,sc
 fis,fis,fis,fis,,fis,,,FIS,FIS,,,2,,aws_fis_,,fis_,FIS (Fault Injection Simulator),AWS,,,,,,,fis,ListExperiments,,
 finspace,finspace,finspace,finspace,,finspace,,,FinSpace,Finspace,,,2,,aws_finspace_,,finspace_,FinSpace,Amazon,,,,,,,finspace,ListEnvironments,,
 finspace-data,finspacedata,finspacedata,finspacedata,,finspacedata,,,FinSpaceData,FinSpaceData,,1,,,aws_finspacedata_,,finspacedata_,FinSpace Data,Amazon,,x,,,,,finspace data,,,
-fms,fms,fms,fms,,fms,,,FMS,FMS,,1,,,aws_fms_,,fms_,FMS (Firewall Manager),AWS,,,,,,,FMS,ListAppsLists,,
+fms,fms,fms,fms,,fms,,,FMS,FMS,x,,2,,aws_fms_,,fms_,FMS (Firewall Manager),AWS,,,,,,,FMS,ListAppsLists,MaxResults: aws_sdkv2.Int32(1),
 forecast,forecast,forecastservice,forecast,,forecast,,forecastservice,Forecast,ForecastService,,1,,,aws_forecast_,,forecast_,Forecast,Amazon,,x,,,,,forecast,,,
 forecastquery,forecastquery,forecastqueryservice,forecastquery,,forecastquery,,forecastqueryservice,ForecastQuery,ForecastQueryService,,1,,,aws_forecastquery_,,forecastquery_,Forecast Query,Amazon,,x,,,,,forecastquery,,,
 frauddetector,frauddetector,frauddetector,frauddetector,,frauddetector,,,FraudDetector,FraudDetector,,1,,,aws_frauddetector_,,frauddetector_,Fraud Detector,Amazon,,x,,,,,FraudDetector,,,

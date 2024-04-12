@@ -738,9 +738,6 @@ func TestExpandListOfStringEnum(t *testing.T) {
 	var testEnumFoo testEnum = "foo"
 	var testEnumBar testEnum = "bar"
 
-	var testEnums []testEnum
-	testEnumsWant := []testEnum{testEnumFoo, testEnumBar}
-
 	ctx := context.Background()
 	testCases := autoFlexTestCases{
 		{
@@ -749,20 +746,20 @@ func TestExpandListOfStringEnum(t *testing.T) {
 				types.StringValue(string(testEnumFoo)),
 				types.StringValue(string(testEnumBar)),
 			}),
-			Target:     &testEnums,
-			WantTarget: &testEnumsWant,
+			Target:     &[]testEnum{},
+			WantTarget: &[]testEnum{testEnumFoo, testEnumBar},
 		},
 		{
 			TestName:   "empty value",
 			Source:     types.ListValueMust(types.StringType, []attr.Value{}),
-			Target:     &testEnums,
-			WantTarget: &testEnums,
+			Target:     &[]testEnum{},
+			WantTarget: &[]testEnum{},
 		},
 		{
 			TestName:   "null value",
 			Source:     types.ListNull(types.StringType),
-			Target:     &testEnums,
-			WantTarget: &testEnums,
+			Target:     &[]testEnum{},
+			WantTarget: &[]testEnum{},
 		},
 	}
 	runAutoExpandTestCases(ctx, t, testCases)
@@ -775,9 +772,6 @@ func TestExpandSetOfStringEnum(t *testing.T) {
 	var testEnumFoo testEnum = "foo"
 	var testEnumBar testEnum = "bar"
 
-	var testEnums []testEnum
-	testEnumsWant := []testEnum{testEnumFoo, testEnumBar}
-
 	ctx := context.Background()
 	testCases := autoFlexTestCases{
 		{
@@ -786,20 +780,20 @@ func TestExpandSetOfStringEnum(t *testing.T) {
 				types.StringValue(string(testEnumFoo)),
 				types.StringValue(string(testEnumBar)),
 			}),
-			Target:     &testEnums,
-			WantTarget: &testEnumsWant,
+			Target:     &[]testEnum{},
+			WantTarget: &[]testEnum{testEnumFoo, testEnumBar},
 		},
 		{
 			TestName:   "empty value",
 			Source:     types.SetValueMust(types.StringType, []attr.Value{}),
-			Target:     &testEnums,
-			WantTarget: &testEnums,
+			Target:     &[]testEnum{},
+			WantTarget: &[]testEnum{},
 		},
 		{
 			TestName:   "null value",
 			Source:     types.SetNull(types.StringType),
-			Target:     &testEnums,
-			WantTarget: &testEnums,
+			Target:     &[]testEnum{},
+			WantTarget: &[]testEnum{},
 		},
 	}
 	runAutoExpandTestCases(ctx, t, testCases)

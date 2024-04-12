@@ -44,7 +44,7 @@ func main() {
 		fmt.Fprintf(flag.CommandLine.Output(), "Usage: %s [flags]\n\nFlags:\n", os.Args[0])
 		flag.PrintDefaults()
 	}
-	flag.StringVar(&out, "out", "awssdk.patch", `output file (optional, defaults to "awssdk.patch")`)
+	flag.StringVar(&out, "out", "awssdk.patch", "output file (optional)")
 	flag.StringVar(&service, "service", "", "service to migrate (required)")
 	flag.Parse()
 

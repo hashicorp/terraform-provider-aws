@@ -16,7 +16,7 @@ Usage: awssdkpatch [flags]
 
 Flags:
   -out string
-        output file (optional, defaults to "awssdk.patch") (default "awssdk.patch")
+        output file (optional) (default "awssdk.patch")
   -service string
         service to migrate (required)
 ```
