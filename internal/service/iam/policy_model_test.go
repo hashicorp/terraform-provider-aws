@@ -1,5 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
+
 package iam_test
 
 import (
@@ -8,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 )
 
 func TestPolicyHasValidAWSPrincipals(t *testing.T) { // nosemgrep:ci.aws-in-func-name
@@ -207,7 +209,7 @@ func TestPolicyHasValidAWSPrincipals(t *testing.T) { // nosemgrep:ci.aws-in-func
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			valid, err := PolicyHasValidAWSPrincipals(testcase.json)
+			valid, err := tfiam.PolicyHasValidAWSPrincipals(testcase.json)
 
 			if testcase.err == nil {
 				if err != nil {
@@ -257,7 +259,7 @@ func TestIsValidAWSPrincipal(t *testing.T) { // nosemgrep:ci.aws-in-func-name
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			a := isValidPolicyAWSPrincipal(testcase.value)
+			a := tfiam.IsValidPolicyAWSPrincipal(testcase.value)
 
 			if e := testcase.valid; a != e {
 				t.Fatalf("expected %t, got %t", e, a)
@@ -270,45 +272,45 @@ func TestIAMPolicyStatementConditionSet_MarshalJSON(t *testing.T) { // nosemgrep
 	t.Parallel()
 
 	testcases := map[string]struct {
-		cs      IAMPolicyStatementConditionSet
+		cs      tfiam.IAMPolicyStatementConditionSet
 		want    []byte
 		wantErr bool
 	}{
 		"invalid value type": {
-			cs: IAMPolicyStatementConditionSet{
+			cs: tfiam.IAMPolicyStatementConditionSet{
 				{Test: "StringLike", Variable: "s3:prefix", Values: 1},
 			},
 			wantErr: true,
 		},
 		"single condition single value": {
-			cs: IAMPolicyStatementConditionSet{
+			cs: tfiam.IAMPolicyStatementConditionSet{
 				{Test: "StringLike", Variable: "s3:prefix", Values: "one/"},
 			},
 			want: []byte(`{"StringLike":{"s3:prefix":"one/"}}`),
 		},
 		"single condition multiple values": {
-			cs: IAMPolicyStatementConditionSet{
+			cs: tfiam.IAMPolicyStatementConditionSet{
 				{Test: "StringLike", Variable: "s3:prefix", Values: []string{"one/", "two/"}},
 			},
 			want: []byte(`{"StringLike":{"s3:prefix":["one/","two/"]}}`),
 		},
 		// Multiple distinct conditions
 		"multiple condition single value": {
-			cs: IAMPolicyStatementConditionSet{
+			cs: tfiam.IAMPolicyStatementConditionSet{
 				{Test: "ArnNotLike", Variable: "aws:PrincipalArn", Values: "1"},
 				{Test: "StringLike", Variable: "s3:prefix", Values: "one/"},
 			},
 			want: []byte(`{"ArnNotLike":{"aws:PrincipalArn":"1"},"StringLike":{"s3:prefix":"one/"}}`),
 		},
 		"multiple condition multiple values": {
-			cs: IAMPolicyStatementConditionSet{
+			cs: tfiam.IAMPolicyStatementConditionSet{
 				{Test: "ArnNotLike", Variable: "aws:PrincipalArn", Values: []string{"1", "2"}},
 				{Test: "StringLike", Variable: "s3:prefix", Values: []string{"one/", "two/"}},
 			},
 			want: []byte(`{"ArnNotLike":{"aws:PrincipalArn":["1","2"]},"StringLike":{"s3:prefix":["one/","two/"]}}`),
 		},
 		"multiple condition mixed value lengths": {
-			cs: IAMPolicyStatementConditionSet{
+			cs: tfiam.IAMPolicyStatementConditionSet{
 				{Test: "ArnNotLike", Variable: "aws:PrincipalArn", Values: "1"},
 				{Test: "StringLike", Variable: "s3:prefix", Values: []string{"one/", "two/"}},
 			},
@@ -316,28 +318,28 @@ func TestIAMPolicyStatementConditionSet_MarshalJSON(t *testing.T) { // nosemgrep
 		},
 		// Multiple conditions with duplicated `test` arguments
 		"duplicate condition test single value": {
-			cs: IAMPolicyStatementConditionSet{
+			cs: tfiam.IAMPolicyStatementConditionSet{
 				{Test: "StringLike", Variable: "s3:prefix", Values: "one/"},
 				{Test: "StringLike", Variable: "s3:versionid", Values: "abc123"},
 			},
 			want: []byte(`{"StringLike":{"s3:prefix":"one/","s3:versionid":"abc123"}}`),
 		},
 		"duplicate condition test multiple values": {
-			cs: IAMPolicyStatementConditionSet{
+			cs: tfiam.IAMPolicyStatementConditionSet{
 				{Test: "StringLike", Variable: "s3:prefix", Values: []string{"one/", "two/"}},
 				{Test: "StringLike", Variable: "s3:versionid", Values: []string{"abc123", "def456"}},
 			},
 			want: []byte(`{"StringLike":{"s3:prefix":["one/","two/"],"s3:versionid":["abc123","def456"]}}`),
 		},
 		"duplicate condition test mixed value lengths": {
-			cs: IAMPolicyStatementConditionSet{
+			cs: tfiam.IAMPolicyStatementConditionSet{
 				{Test: "StringLike", Variable: "s3:prefix", Values: "one/"},
 				{Test: "StringLike", Variable: "s3:versionid", Values: []string{"abc123", "def456"}},
 			},
 			want: []byte(`{"StringLike":{"s3:prefix":"one/","s3:versionid":["abc123","def456"]}}`),
 		},
 		"duplicate condition test mixed value lengths reversed": {
-			cs: IAMPolicyStatementConditionSet{
+			cs: tfiam.IAMPolicyStatementConditionSet{
 				{Test: "StringLike", Variable: "s3:prefix", Values: []string{"one/", "two/"}},
 				{Test: "StringLike", Variable: "s3:versionid", Values: "abc123"},
 			},
@@ -345,28 +347,28 @@ func TestIAMPolicyStatementConditionSet_MarshalJSON(t *testing.T) { // nosemgrep
 		},
 		// Multiple conditions with duplicated `test` and `variable` arguments
 		"duplicate condition test and variable single value": {
-			cs: IAMPolicyStatementConditionSet{
+			cs: tfiam.IAMPolicyStatementConditionSet{
 				{Test: "StringLike", Variable: "s3:prefix", Values: "one/"},
 				{Test: "StringLike", Variable: "s3:prefix", Values: "two/"},
 			},
 			want: []byte(`{"StringLike":{"s3:prefix":["one/","two/"]}}`),
 		},
 		"duplicate condition test and variable multiple values": {
-			cs: IAMPolicyStatementConditionSet{
+			cs: tfiam.IAMPolicyStatementConditionSet{
 				{Test: "StringLike", Variable: "s3:prefix", Values: []string{"one/", "two/"}},
 				{Test: "StringLike", Variable: "s3:prefix", Values: []string{"three/", "four/"}},
 			},
 			want: []byte(`{"StringLike":{"s3:prefix":["one/","two/","three/","four/"]}}`),
 		},
 		"duplicate condition test and variable mixed value lengths": {
-			cs: IAMPolicyStatementConditionSet{
+			cs: tfiam.IAMPolicyStatementConditionSet{
 				{Test: "StringLike", Variable: "s3:prefix", Values: "one/"},
 				{Test: "StringLike", Variable: "s3:prefix", Values: []string{"three/", "four/"}},
 			},
 			want: []byte(`{"StringLike":{"s3:prefix":["one/","three/","four/"]}}`),
 		},
 		"duplicate condition test and variable mixed value lengths reversed": {
-			cs: IAMPolicyStatementConditionSet{
+			cs: tfiam.IAMPolicyStatementConditionSet{
 				{Test: "StringLike", Variable: "s3:prefix", Values: []string{"one/", "two/"}},
 				{Test: "StringLike", Variable: "s3:prefix", Values: "three/"},
 			},
@@ -387,9 +389,10 @@ func TestIAMPolicyStatementConditionSet_MarshalJSON(t *testing.T) { // nosemgrep
 				t.Errorf("IAMPolicyStatementConditionSet.MarshalJSON() = %v, want %v", string(got), string(tc.want))
 			}
 		})
-)
+	}
+}
 
-func TestUnMarshallOrderOfPrincipalsShouldNotMatter(t *testing.T) {
+func TestPolicyUnmarshalServicePrincipalOrder(t *testing.T) {
 	policy1 := `
 		  {
 			"Action": "sts:AssumeRole",
