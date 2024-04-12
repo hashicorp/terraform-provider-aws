@@ -351,6 +351,10 @@ func resourceDistributionCreate(ctx context.Context, d *schema.ResourceData, met
 		in.IpAddressType = types.IpAddressType(v.(string))
 	}
 
+	if v, ok := d.GetOk("certificate_name"); ok {
+		in.CertificateName = aws.String(v.(string))
+	}
+
 	out, err := conn.CreateDistribution(ctx, in)
 
 	if err != nil {
