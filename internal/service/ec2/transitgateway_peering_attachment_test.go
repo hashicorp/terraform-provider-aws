@@ -45,6 +45,7 @@ func testAccTransitGatewayPeeringAttachment_basic(t *testing.T, semaphore tfsync
 					testAccCheckTransitGatewayPeeringAttachmentExists(ctx, resourceName, &transitGatewayPeeringAttachment),
 					acctest.CheckResourceAttrAccountID(resourceName, "peer_account_id"),
 					resource.TestCheckResourceAttr(resourceName, "peer_region", acctest.AlternateRegion()),
+					resource.TestCheckResourceAttr(resourceName, "options.#", "0"),
 					resource.TestCheckResourceAttrPair(resourceName, "peer_transit_gateway_id", transitGatewayResourceNamePeer, "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "state"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -53,6 +54,45 @@ func testAccTransitGatewayPeeringAttachment_basic(t *testing.T, semaphore tfsync
 			},
 			{
 				Config:            testAccTransitGatewayPeeringAttachmentConfig_sameAccount(rName),
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func testAccTransitGatewayPeeringAttachment_options(t *testing.T, semaphore tfsync.Semaphore) {
+	ctx := acctest.Context(t)
+	var transitGatewayPeeringAttachment ec2.TransitGatewayPeeringAttachment
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ec2_transit_gateway_peering_attachment.test"
+	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
+	transitGatewayResourceNamePeer := "aws_ec2_transit_gateway.peer"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckTransitGateway(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
+		CheckDestroy:             testAccCheckTransitGatewayPeeringAttachmentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccTransitGatewayPeeringAttachmentConfig_options_sameAccount(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckTransitGatewayPeeringAttachmentExists(ctx, resourceName, &transitGatewayPeeringAttachment),
+					acctest.CheckResourceAttrAccountID(resourceName, "peer_account_id"),
+					resource.TestCheckResourceAttr(resourceName, "peer_region", acctest.AlternateRegion()),
+					resource.TestCheckResourceAttr(resourceName, "options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "options.dynamic_routing", "enable"),
+				),
+			},
+			{
+				Config:            testAccTransitGatewayPeeringAttachmentConfig_options_sameAccount(rName),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -280,6 +320,19 @@ resource "aws_ec2_transit_gateway_peering_attachment" "test" {
   peer_region             = %[1]q
   peer_transit_gateway_id = aws_ec2_transit_gateway.peer.id
   transit_gateway_id      = aws_ec2_transit_gateway.test.id
+}
+`, acctest.AlternateRegion()))
+}
+
+func testAccTransitGatewayPeeringAttachmentConfig_options_sameAccount(rName string) string {
+	return acctest.ConfigCompose(testAccTransitGatewayPeeringAttachmentConfig_sameAccount_base(rName), fmt.Sprintf(`
+resource "aws_ec2_transit_gateway_peering_attachment" "test" {
+  peer_region             = %[1]q
+  peer_transit_gateway_id = aws_ec2_transit_gateway.peer.id
+  transit_gateway_id      = aws_ec2_transit_gateway.test.id
+  options {
+    dynamic_routing = "enable"
+  }
 }
 `, acctest.AlternateRegion()))
 }
