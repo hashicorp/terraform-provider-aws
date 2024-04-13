@@ -305,7 +305,7 @@ var testAccIPAMPoolConfig_cascade = acctest.ConfigCompose(testAccIPAMPoolConfig_
 resource "aws_vpc_ipam_pool" "test" {
   address_family = "ipv4"
   ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
-  cascade = true
+  cascade        = true
 }
 `)
 
