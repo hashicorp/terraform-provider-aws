@@ -63,6 +63,52 @@ func TestAccImageBuilderLifecyclePolicy_basic(t *testing.T) {
 	})
 }
 
+func TestAccImageBuilderLifecyclePolicy_policyDetails(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_imagebuilder_lifecycle_policy.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLifecyclePolicyConfig_policyDetails(rName, "DISABLE", "AGE", "6", "5"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLifecyclePolicyExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.action.0.type", "DISABLE"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.filter.0.type", "AGE"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.filter.0.value", "6"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.filter.0.retain_at_least", "5"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.filter.0.unit", "YEARS"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccLifecyclePolicyConfig_policyDetailsUpdated(rName, "DELETE", "COUNT", "10"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLifecyclePolicyExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.action.0.type", "DELETE"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.filter.0.type", "COUNT"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.filter.0.value", "10"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccImageBuilderLifecyclePolicy_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -231,6 +277,68 @@ resource "aws_imagebuilder_lifecycle_policy" "test" {
   depends_on = [aws_iam_role_policy_attachment.test]
 }
 `, rName))
+}
+
+func testAccLifecyclePolicyConfig_policyDetails(rName, actionType, filterType, filterValue, retainAtLeast string) string {
+	return acctest.ConfigCompose(
+		testAccLifecyclePolicyBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_imagebuilder_lifecycle_policy" "test" {
+  name           = %[1]q
+  description    = "Used for setting lifecycle policies"
+  execution_role = aws_iam_role.test.arn
+  resource_type  = "AMI_IMAGE"
+  policy_details {
+    action {
+      type = %[2]q
+    }
+    filter {
+      type            = %[3]q
+      value           = %[4]q
+      retain_at_least = %[5]q
+      unit            = "YEARS"
+    }
+  }
+  resource_selection {
+    tag_map = {
+      "key1" = "value1"
+      "key2" = "value2"
+    }
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+`, rName, actionType, filterType, filterValue, retainAtLeast))
+}
+
+func testAccLifecyclePolicyConfig_policyDetailsUpdated(rName, actionType, filterType, filterValue string) string {
+	return acctest.ConfigCompose(
+		testAccLifecyclePolicyBaseConfig(rName),
+		fmt.Sprintf(`
+resource "aws_imagebuilder_lifecycle_policy" "test" {
+  name           = %[1]q
+  description    = "Used for setting lifecycle policies"
+  execution_role = aws_iam_role.test.arn
+  resource_type  = "AMI_IMAGE"
+  policy_details {
+    action {
+      type = %[2]q
+    }
+    filter {
+      type  = %[3]q
+      value = %[4]q
+    }
+  }
+  resource_selection {
+    tag_map = {
+      "key1" = "value1"
+      "key2" = "value2"
+    }
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+`, rName, actionType, filterType, filterValue))
 }
 
 func testAccLifecyclePolicyConfig_tags1(rName string, tagKey1 string, tagValue1 string) string {

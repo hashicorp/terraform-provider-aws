@@ -430,16 +430,17 @@ func (r *resourceLifecyclePolicy) Update(ctx context.Context, req resource.Updat
 		!plan.ResourceType.Equal(state.ResourceType) ||
 		!plan.Status.Equal(state.Status) {
 		in := &imagebuilder.UpdateLifecyclePolicyInput{
-			ExecutionRole: aws.String(plan.ExecutionRole.ValueString()),
-			ResourceType:  awstypes.LifecyclePolicyResourceType(plan.ResourceType.ValueString()),
-			Status:        awstypes.LifecyclePolicyStatus(plan.Status.ValueString()),
+			LifecyclePolicyArn: aws.String(plan.ID.ValueString()),
+			ExecutionRole:      aws.String(plan.ExecutionRole.ValueString()),
+			ResourceType:       awstypes.LifecyclePolicyResourceType(plan.ResourceType.ValueString()),
+			Status:             awstypes.LifecyclePolicyStatus(plan.Status.ValueString()),
 		}
 
-		if !plan.Description.Equal(state.Description) {
+		if !plan.Description.IsNull() {
 			in.Description = aws.String(plan.Description.ValueString())
 		}
 
-		if !plan.PolicyDetails.Equal(state.PolicyDetails) {
+		if !plan.PolicyDetails.IsNull() {
 			var tfList []resourcePolicyDetailsData
 			resp.Diagnostics.Append(plan.PolicyDetails.ElementsAs(ctx, &tfList, false)...)
 			if resp.Diagnostics.HasError() {
@@ -454,7 +455,7 @@ func (r *resourceLifecyclePolicy) Update(ctx context.Context, req resource.Updat
 			in.PolicyDetails = policyDetails
 		}
 
-		if !plan.ResourceSelection.Equal(state.ResourceSelection) {
+		if !plan.ResourceSelection.IsNull() {
 			var tfList []resourceResourceSelectionData
 			resp.Diagnostics.Append(plan.ResourceSelection.ElementsAs(ctx, &tfList, false)...)
 			if resp.Diagnostics.HasError() {
