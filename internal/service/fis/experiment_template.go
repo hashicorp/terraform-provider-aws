@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -172,6 +173,26 @@ func ResourceExperimentTemplate() *schema.Resource {
 					},
 				},
 			},
+			"experiment_options": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Computed: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"account_targeting": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[types.AccountTargeting](),
+						},
+						"empty_target_resolution_mode": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[types.EmptyTargetResolutionMode](),
+						},
+					},
+				},
+			},
 			"role_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -298,6 +319,10 @@ func resourceExperimentTemplateCreate(ctx context.Context, d *schema.ResourceDat
 		Tags:             getTagsIn(ctx),
 	}
 
+	if v, ok := d.GetOk("experiment_options"); ok {
+		input.ExperimentOptions = expandCreateExperimentTemplateExperimentOptionsInput(v.([]interface{}))
+	}
+
 	targets, err := expandExperimentTemplateTargets(d.Get("target").(*schema.Set))
 	if err != nil {
 		return create.AppendDiagError(diags, names.FIS, create.ErrActionCreating, ResNameExperimentTemplate, d.Get("description").(string), err)
@@ -356,6 +381,10 @@ func resourceExperimentTemplateRead(ctx context.Context, d *schema.ResourceData,
 		return create.AppendDiagSettingError(diags, names.FIS, ResNameExperimentTemplate, d.Id(), "log_configuration", err)
 	}
 
+	if err := d.Set("experiment_options", flattenExperimentTemplateExperimentOptions(experimentTemplate.ExperimentOptions)); err != nil {
+		return create.AppendDiagSettingError(diags, names.FIS, ResNameExperimentTemplate, d.Id(), "experiment_options", err)
+	}
+
 	if err := d.Set("stop_condition", flattenExperimentTemplateStopConditions(experimentTemplate.StopConditions)); err != nil {
 		return create.AppendDiagSettingError(diags, names.FIS, ResNameExperimentTemplate, d.Id(), "stop_condition", err)
 	}
@@ -406,6 +435,14 @@ func resourceExperimentTemplateUpdate(ctx context.Context, d *schema.ResourceDat
 				return create.AppendDiagError(diags, names.FIS, create.ErrActionUpdating, ResNameExperimentTemplate, d.Id(), err)
 			}
 			input.Targets = targets
+		}
+
+		if d.HasChange("experiment_options") {
+			experimentOptions, err := expandUpdateExperimentTemplateExperimentOptionsInput(d.Get("experiment_options").([]interface{}))
+			if err != nil {
+				return create.AppendDiagError(diags, names.FIS, create.ErrActionUpdating, ResNameExperimentTemplate, d.Id(), err)
+			}
+			input.ExperimentOptions = experimentOptions
 		}
 
 		_, err := conn.UpdateExperimentTemplate(ctx, input)
@@ -816,6 +853,60 @@ func expandExperimentTemplateTargetResourceTags(l *schema.Set) map[string]string
 	}
 
 	return attrs
+}
+
+func expandCreateExperimentTemplateExperimentOptionsInput(tfMap []interface{}) *types.CreateExperimentTemplateExperimentOptionsInput {
+	if len(tfMap) == 0 || tfMap[0] == nil {
+		return nil
+	}
+
+	apiObject := &types.CreateExperimentTemplateExperimentOptionsInput{}
+
+	m := tfMap[0].(map[string]interface{})
+
+	if v, ok := m["account_targeting"].(string); ok {
+		apiObject.AccountTargeting = types.AccountTargeting(v)
+	}
+
+	if v, ok := m["empty_target_resolution_mode"].(string); ok {
+		apiObject.EmptyTargetResolutionMode = types.EmptyTargetResolutionMode(v)
+	}
+
+	return apiObject
+}
+
+func expandUpdateExperimentTemplateExperimentOptionsInput(tfMap []interface{}) (*types.UpdateExperimentTemplateExperimentOptionsInput, error) {
+	if len(tfMap) == 0 || tfMap[0] == nil {
+		return nil, nil
+	}
+
+	m := tfMap[0].(map[string]interface{})
+
+	apiObject := &types.UpdateExperimentTemplateExperimentOptionsInput{}
+
+	if v, ok := m["empty_target_resolution_mode"].(string); ok {
+		apiObject.EmptyTargetResolutionMode = types.EmptyTargetResolutionMode(v)
+	}
+
+	return apiObject, nil
+}
+
+func flattenExperimentTemplateExperimentOptions(apiObject *types.ExperimentTemplateExperimentOptions) []map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := make([]map[string]interface{}, 1)
+	tfMap[0] = make(map[string]interface{})
+	if v := apiObject.AccountTargeting; v != "" {
+		tfMap[0]["account_targeting"] = types.AccountTargeting(v)
+	}
+
+	if v := apiObject.EmptyTargetResolutionMode; v != "" {
+		tfMap[0]["empty_target_resolution_mode"] = types.EmptyTargetResolutionMode(v)
+	}
+
+	return tfMap
 }
 
 func flattenExperimentTemplateActions(configured map[string]types.ExperimentTemplateAction) []map[string]interface{} {

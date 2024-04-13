@@ -51,6 +51,7 @@ func TestAccFISExperimentTemplate_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "action.0.target.0.value", "to-terminate-1"),
 					resource.TestCheckResourceAttr(resourceName, "action.0.target.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "experiment_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.name", "to-terminate-1"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.resource_type", "aws:ec2:instance"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.selection_mode", "COUNT(1)"),
@@ -154,6 +155,44 @@ func TestAccFISExperimentTemplate_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "target.0.resource_tag.0.key", "env2"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.resource_tag.0.value", "test2"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.resource_tag.#", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccFISExperimentTemplate_updateExperimentOptions(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_fis_experiment_template.test"
+	var conf types.ExperimentTemplate
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, fis.ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckExperimentTemplateDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccExperimentTemplateConfig_ExperimentOptions(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccExperimentTemplateExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "experiment_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "experiment_options.0.account_targeting", "single-account"),
+					resource.TestCheckResourceAttr(resourceName, "experiment_options.0.empty_target_resolution_mode", "skip"),
+				),
+			},
+			{
+				Config: testAccExperimentTemplateConfig_updateExperimentOptions(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccExperimentTemplateExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "experiment_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "experiment_options.0.empty_target_resolution_mode", "fail"),
 				),
 			},
 			{
@@ -518,6 +557,124 @@ resource "aws_fis_experiment_template" "test" {
   }
 }
 `, rName, desc, actionName, actionDesc, actionID, actionTargetK, actionTargetV, targetResType, targetSelectMode, targetResTagK, targetResTagV)
+}
+
+func testAccExperimentTemplateConfig_ExperimentOptions(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = [
+          "fis.${data.aws_partition.current.dns_suffix}",
+        ]
+      }
+    }]
+    Version = "2012-10-17"
+  })
+}
+
+resource "aws_fis_experiment_template" "test" {
+  description = "An experiment template for testing"
+  role_arn    = aws_iam_role.test.arn
+
+  stop_condition {
+    source = "none"
+  }
+
+  experiment_options {
+    account_targeting            = "single-account"
+    empty_target_resolution_mode = "skip"
+  }
+
+  action {
+    name        = "test-action-1"
+    description = ""
+    action_id   = "aws:ec2:terminate-instances"
+
+    target {
+      key   = "Instances"
+      value = "to-terminate-1"
+    }
+  }
+
+  target {
+    name           = "to-terminate-1"
+    resource_type  = "aws:ec2:instance"
+    selection_mode = "ALL"
+
+    resource_tag {
+      key   = "env2"
+      value = "test2"
+    }
+  }
+}
+`, rName)
+}
+
+func testAccExperimentTemplateConfig_updateExperimentOptions(rName string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = [
+          "fis.${data.aws_partition.current.dns_suffix}",
+        ]
+      }
+    }]
+    Version = "2012-10-17"
+  })
+}
+
+resource "aws_fis_experiment_template" "test" {
+  description = "An experiment template for testing"
+  role_arn    = aws_iam_role.test.arn
+
+  stop_condition {
+    source = "none"
+  }
+
+  experiment_options {
+    account_targeting            = "single-account"
+    empty_target_resolution_mode = "fail"
+  }
+
+  action {
+    name        = "test-action-1"
+    description = ""
+    action_id   = "aws:ec2:terminate-instances"
+
+    target {
+      key   = "Instances"
+      value = "to-terminate-1"
+    }
+  }
+
+  target {
+    name           = "to-terminate-1"
+    resource_type  = "aws:ec2:instance"
+    selection_mode = "ALL"
+
+    resource_tag {
+      key   = "env2"
+      value = "test2"
+    }
+  }
+}
+`, rName)
 }
 
 func testAccExperimentTemplateConfig_actionParameter(rName, desc, actionName, actionDesc, actionID, actionTargetK, actionTargetV, paramK, paramV, targetResType, targetSelectMode, targetResTagK, targetResTagV string) string {
