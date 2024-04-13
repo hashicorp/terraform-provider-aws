@@ -79,6 +79,11 @@ func ResourceReplicationTask() *schema.Resource {
 				DiffSuppressFunc:      suppressEquivalentTaskSettings,
 				DiffSuppressOnRefresh: true,
 			},
+			"resource_identifier": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+			},
 			"source_endpoint_arn": {
 				Type:         schema.TypeString,
 				Required:     true,
@@ -144,6 +149,10 @@ func resourceReplicationTaskCreate(ctx context.Context, d *schema.ResourceData, 
 
 	if v, ok := d.GetOk("replication_task_settings"); ok {
 		input.ReplicationTaskSettings = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("resource_identifier"); ok {
+		input.ResourceIdentifier = aws.String(v.(string))
 	}
 
 	_, err := conn.CreateReplicationTaskWithContext(ctx, input)
