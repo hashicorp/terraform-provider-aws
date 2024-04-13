@@ -438,10 +438,7 @@ func resourceExperimentTemplateUpdate(ctx context.Context, d *schema.ResourceDat
 		}
 
 		if d.HasChange("experiment_options") {
-			experimentOptions, err := expandUpdateExperimentTemplateExperimentOptionsInput(d.Get("experiment_options").([]interface{}))
-			if err != nil {
-				return create.AppendDiagError(diags, names.FIS, create.ErrActionUpdating, ResNameExperimentTemplate, d.Id(), err)
-			}
+			experimentOptions := expandUpdateExperimentTemplateExperimentOptionsInput(d.Get("experiment_options").([]interface{}))
 			input.ExperimentOptions = experimentOptions
 		}
 
@@ -875,9 +872,9 @@ func expandCreateExperimentTemplateExperimentOptionsInput(tfMap []interface{}) *
 	return apiObject
 }
 
-func expandUpdateExperimentTemplateExperimentOptionsInput(tfMap []interface{}) (*types.UpdateExperimentTemplateExperimentOptionsInput, error) {
+func expandUpdateExperimentTemplateExperimentOptionsInput(tfMap []interface{}) *types.UpdateExperimentTemplateExperimentOptionsInput {
 	if len(tfMap) == 0 || tfMap[0] == nil {
-		return nil, nil
+		return nil
 	}
 
 	m := tfMap[0].(map[string]interface{})
@@ -888,7 +885,7 @@ func expandUpdateExperimentTemplateExperimentOptionsInput(tfMap []interface{}) (
 		apiObject.EmptyTargetResolutionMode = types.EmptyTargetResolutionMode(v)
 	}
 
-	return apiObject, nil
+	return apiObject
 }
 
 func flattenExperimentTemplateExperimentOptions(apiObject *types.ExperimentTemplateExperimentOptions) []map[string]interface{} {
@@ -899,11 +896,11 @@ func flattenExperimentTemplateExperimentOptions(apiObject *types.ExperimentTempl
 	tfMap := make([]map[string]interface{}, 1)
 	tfMap[0] = make(map[string]interface{})
 	if v := apiObject.AccountTargeting; v != "" {
-		tfMap[0]["account_targeting"] = types.AccountTargeting(v)
+		tfMap[0]["account_targeting"] = v
 	}
 
 	if v := apiObject.EmptyTargetResolutionMode; v != "" {
-		tfMap[0]["empty_target_resolution_mode"] = types.EmptyTargetResolutionMode(v)
+		tfMap[0]["empty_target_resolution_mode"] = v
 	}
 
 	return tfMap
