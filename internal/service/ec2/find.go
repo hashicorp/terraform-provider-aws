@@ -3265,6 +3265,16 @@ func FindVPNGatewayByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.Vpn
 }
 
 func FindVPNGateway(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeVpnGatewaysInput) (*ec2.VpnGateway, error) {
+	output, err := FindVPNGateways(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func FindVPNGateways(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeVpnGatewaysInput) ([]*ec2.VpnGateway, error) {
 	output, err := conn.DescribeVpnGatewaysWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidVPNGatewayIDNotFound) {
@@ -3278,15 +3288,11 @@ func FindVPNGateway(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeVpnGa
 		return nil, err
 	}
 
-	if output == nil || len(output.VpnGateways) == 0 || output.VpnGateways[0] == nil {
+	if output == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	if count := len(output.VpnGateways); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return output.VpnGateways[0], nil
+	return output.VpnGateways, nil
 }
 
 func FindCustomerGateway(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeCustomerGatewaysInput) (*ec2.CustomerGateway, error) {
@@ -4384,7 +4390,7 @@ func FindTransitGatewayRoutes(ctx context.Context, conn *ec2.EC2, input *ec2.Sea
 		return nil, err
 	}
 
-	if output == nil || len(output.Routes) == 0 {
+	if output == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
@@ -6064,11 +6070,17 @@ func FindNATGatewayAddressByNATGatewayIDAndPrivateIP(ctx context.Context, conn *
 	return nil, &retry.NotFoundError{}
 }
 
-func FindPlacementGroupByName(ctx context.Context, conn *ec2.EC2, name string) (*ec2.PlacementGroup, error) {
-	input := &ec2.DescribePlacementGroupsInput{
-		GroupNames: aws.StringSlice([]string{name}),
+func FindPlacementGroup(ctx context.Context, conn *ec2.EC2, input *ec2.DescribePlacementGroupsInput) (*ec2.PlacementGroup, error) {
+	output, err := FindPlacementGroups(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
 	}
 
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func FindPlacementGroups(ctx context.Context, conn *ec2.EC2, input *ec2.DescribePlacementGroupsInput) ([]*ec2.PlacementGroup, error) {
 	output, err := conn.DescribePlacementGroupsWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidPlacementGroupUnknown) {
@@ -6082,24 +6094,32 @@ func FindPlacementGroupByName(ctx context.Context, conn *ec2.EC2, name string) (
 		return nil, err
 	}
 
-	if output == nil || len(output.PlacementGroups) == 0 || output.PlacementGroups[0] == nil {
+	if output == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	if count := len(output.PlacementGroups); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
+	return output.PlacementGroups, nil
+}
+
+func FindPlacementGroupByName(ctx context.Context, conn *ec2.EC2, name string) (*ec2.PlacementGroup, error) {
+	input := &ec2.DescribePlacementGroupsInput{
+		GroupNames: aws.StringSlice([]string{name}),
 	}
 
-	placementGroup := output.PlacementGroups[0]
+	output, err := FindPlacementGroup(ctx, conn, input)
 
-	if state := aws.StringValue(placementGroup.State); state == ec2.PlacementGroupStateDeleted {
+	if err != nil {
+		return nil, err
+	}
+
+	if state := aws.StringValue(output.State); state == ec2.PlacementGroupStateDeleted {
 		return nil, &retry.NotFoundError{
 			Message:     state,
 			LastRequest: input,
 		}
 	}
 
-	return placementGroup, nil
+	return output, nil
 }
 
 func FindPrefixList(ctx context.Context, conn *ec2.EC2, input *ec2.DescribePrefixListsInput) (*ec2.PrefixList, error) {
@@ -6466,13 +6486,32 @@ func FindNetworkPerformanceMetricSubscriptionByFourPartKey(ctx context.Context, 
 	return nil, &retry.NotFoundError{}
 }
 
-func FindInstanceStateByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.InstanceState, error) {
-	input := &ec2.DescribeInstanceStatusInput{
-		InstanceIds:         aws.StringSlice([]string{id}),
-		IncludeAllInstances: aws.Bool(true),
+func FindInstanceStatus(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeInstanceStatusInput) (*ec2.InstanceStatus, error) {
+	output, err := FindInstanceStatuses(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
 	}
 
-	output, err := conn.DescribeInstanceStatusWithContext(ctx, input)
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func FindInstanceStatuses(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeInstanceStatusInput) ([]*ec2.InstanceStatus, error) {
+	var output []*ec2.InstanceStatus
+
+	err := conn.DescribeInstanceStatusPagesWithContext(ctx, input, func(page *ec2.DescribeInstanceStatusOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.InstanceStatuses {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidInstanceIDNotFound) {
 		return nil, &retry.NotFoundError{
@@ -6485,24 +6524,43 @@ func FindInstanceStateByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.
 		return nil, err
 	}
 
-	if output == nil || len(output.InstanceStatuses) == 0 {
+	return output, nil
+}
+
+func FindInstanceState(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeInstanceStatusInput) (*ec2.InstanceState, error) {
+	output, err := FindInstanceStatus(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output.InstanceState == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	instanceState := output.InstanceStatuses[0].InstanceState
+	return output.InstanceState, nil
+}
 
-	if instanceState == nil || aws.StringValue(instanceState.Name) == ec2.InstanceStateNameTerminated {
-		return nil, tfresource.NewEmptyResultError(input)
+func FindInstanceStateByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.InstanceState, error) {
+	input := &ec2.DescribeInstanceStatusInput{
+		InstanceIds:         aws.StringSlice([]string{id}),
+		IncludeAllInstances: aws.Bool(true),
 	}
 
-	// Eventual consistency check.
-	if aws.StringValue(output.InstanceStatuses[0].InstanceId) != id {
+	output, err := FindInstanceState(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if name := aws.StringValue(output.Name); name == ec2.InstanceStateNameTerminated {
 		return nil, &retry.NotFoundError{
+			Message:     name,
 			LastRequest: input,
 		}
 	}
 
-	return instanceState, nil
+	return output, nil
 }
 
 func FindInstanceConnectEndpoint(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.DescribeInstanceConnectEndpointsInput) (*awstypes.Ec2InstanceConnectEndpoint, error) {
