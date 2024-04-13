@@ -67,8 +67,6 @@ func testAccTransitGatewayPeeringAttachment_options(t *testing.T, semaphore tfsy
 	var transitGatewayPeeringAttachment ec2.TransitGatewayPeeringAttachment
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_ec2_transit_gateway_peering_attachment.test"
-	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
-	transitGatewayResourceNamePeer := "aws_ec2_transit_gateway.peer"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
