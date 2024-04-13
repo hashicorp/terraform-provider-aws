@@ -99,12 +99,12 @@ func resourceTransitGatewayPeeringAttachmentCreate(ctx context.Context, d *schem
 		TransitGatewayId:     aws.String(d.Get("transit_gateway_id").(string)),
 	}
 
-	log.Printf("[DEBUG] Creating EC2 Transit Gateway Peering Attachment: %s", input)
-	output, err := conn.CreateTransitGatewayPeeringAttachmentWithContext(ctx, input)
-
 	if v, ok := d.GetOk("options"); ok {
 		input.Options = expandCreateTransitGatewayPeeringAttachmentRequestOptions(v.([]interface{}))
 	}
+
+	log.Printf("[DEBUG] Creating EC2 Transit Gateway Peering Attachment: %s", input)
+	output, err := conn.CreateTransitGatewayPeeringAttachmentWithContext(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 Transit Gateway Peering Attachment: %s", err)
