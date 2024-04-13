@@ -35,7 +35,22 @@ func TestAccImageBuilderLifecyclePolicy_basic(t *testing.T) {
 				Config: testAccLifecyclePolicyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLifecyclePolicyExists(ctx, resourceName),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "imagebuilder", fmt.Sprintf("lifecycle-policy/%s", rName)),
+					resource.TestCheckResourceAttr(resourceName, "description", "Used for setting lifecycle policies"),
+					resource.TestCheckResourceAttrSet(resourceName, "execution_role"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.action.0.type", "DELETE"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.filter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.filter.0.type", "AGE"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.filter.0.value", "6"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.filter.0.retain_at_least", "10"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.filter.0.unit", "YEARS"),
+					resource.TestCheckResourceAttr(resourceName, "resource_selection.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "resource_selection.0.tag_map.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "resource_selection.0.tag_map.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "resource_selection.0.tag_map.key2", "value2"),
 					resource.TestCheckResourceAttr(resourceName, "resource_type", "AMI_IMAGE"),
 				),
 			},
@@ -192,6 +207,7 @@ func testAccLifecyclePolicyConfig_basic(rName string) string {
 		fmt.Sprintf(`
 resource "aws_imagebuilder_lifecycle_policy" "test" {
   name           = %[1]q
+  description    = "Used for setting lifecycle policies"
   execution_role = aws_iam_role.test.arn
   resource_type  = "AMI_IMAGE"
   policy_details {
@@ -199,14 +215,16 @@ resource "aws_imagebuilder_lifecycle_policy" "test" {
       type = "DELETE"
     }
     filter {
-      type  = "AGE"
-      value = 6
-      unit  = "YEARS"
+      type            = "AGE"
+      value           = 6
+      retain_at_least = 10
+      unit            = "YEARS"
     }
   }
   resource_selection {
     tag_map = {
-      "key" = "value"
+      "key1" = "value1"
+      "key2" = "value2"
     }
   }
 
