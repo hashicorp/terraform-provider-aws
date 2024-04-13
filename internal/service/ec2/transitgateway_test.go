@@ -84,6 +84,7 @@ func TestAccTransitGateway_serial(t *testing.T) {
 		},
 		"PeeringAttachment": {
 			"basic":            testAccTransitGatewayPeeringAttachment_basic,
+			"options":          testAccTransitGatewayPeeringAttachment_options,
 			"disappears":       testAccTransitGatewayPeeringAttachment_disappears,
 			"tags":             testAccTransitGatewayPeeringAttachment_tags,
 			"DifferentAccount": testAccTransitGatewayPeeringAttachment_differentAccount,
