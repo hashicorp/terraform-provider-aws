@@ -175,7 +175,7 @@ func TestAccIPAMPool_cascade(t *testing.T) {
 				Config: testAccIPAMPoolConfig_cascade,
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIPAMPoolExists(ctx, resourceName, &pool),
-					testAccCheckIPAMPoolCidrCreate(ctx, &pool),
+					testAccCheckIPAMPoolCIDRCreate(ctx, &pool),
 				),
 			},
 			{
@@ -344,7 +344,7 @@ resource "aws_vpc_ipam_pool" "test" {
 }
 `)
 
-func testAccCheckIPAMPoolCidrCreate(ctx context.Context, ipampool *ec2.IpamPool) resource.TestCheckFunc {
+func testAccCheckIPAMPoolCIDRCreate(ctx context.Context, ipampool *ec2.IpamPool) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
 
