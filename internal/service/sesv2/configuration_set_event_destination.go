@@ -118,7 +118,7 @@ func ResourceConfigurationSetEventDestination() *schema.Resource {
 							},
 						},
 						"matching_event_types": {
-							Type:     schema.TypeList,
+							Type:     schema.TypeSet,
 							Required: true,
 							Elem: &schema.Schema{
 								Type:             schema.TypeString,
@@ -460,8 +460,8 @@ func expandEventDestination(tfMap map[string]interface{}) *types.EventDestinatio
 		a.KinesisFirehoseDestination = expandKinesisFirehoseDestination(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["matching_event_types"].([]interface{}); ok && len(v) > 0 {
-		a.MatchingEventTypes = stringsToEventTypes(flex.ExpandStringList(v))
+	if v, ok := tfMap["matching_event_types"].(*schema.Set); ok && v.Len() > 0 {
+		a.MatchingEventTypes = stringsToEventTypes(flex.ExpandStringSet(v))
 	}
 
 	if v, ok := tfMap["pinpoint_destination"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
