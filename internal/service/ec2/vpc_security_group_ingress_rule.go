@@ -461,75 +461,75 @@ func (model *securityGroupRuleResourceModel) setID() {
 	model.ID = model.SecurityGroupRuleID
 }
 
-func (d *securityGroupRuleResourceModel) expandIPPermission(ctx context.Context) *ec2.IpPermission {
+func (model *securityGroupRuleResourceModel) expandIPPermission(ctx context.Context) *ec2.IpPermission {
 	apiObject := &ec2.IpPermission{
-		FromPort:   fwflex.Int64FromFramework(ctx, d.FromPort),
-		IpProtocol: fwflex.StringFromFramework(ctx, d.IPProtocol),
-		ToPort:     fwflex.Int64FromFramework(ctx, d.ToPort),
+		FromPort:   fwflex.Int64FromFramework(ctx, model.FromPort),
+		IpProtocol: fwflex.StringFromFramework(ctx, model.IPProtocol),
+		ToPort:     fwflex.Int64FromFramework(ctx, model.ToPort),
 	}
 
-	if !d.CIDRIPv4.IsNull() {
+	if !model.CIDRIPv4.IsNull() {
 		apiObject.IpRanges = []*ec2.IpRange{{
-			CidrIp:      fwflex.StringFromFramework(ctx, d.CIDRIPv4),
-			Description: fwflex.StringFromFramework(ctx, d.Description),
+			CidrIp:      fwflex.StringFromFramework(ctx, model.CIDRIPv4),
+			Description: fwflex.StringFromFramework(ctx, model.Description),
 		}}
 	}
 
-	if !d.CIDRIPv6.IsNull() {
+	if !model.CIDRIPv6.IsNull() {
 		apiObject.Ipv6Ranges = []*ec2.Ipv6Range{{
-			CidrIpv6:    fwflex.StringFromFramework(ctx, d.CIDRIPv6),
-			Description: fwflex.StringFromFramework(ctx, d.Description),
+			CidrIpv6:    fwflex.StringFromFramework(ctx, model.CIDRIPv6),
+			Description: fwflex.StringFromFramework(ctx, model.Description),
 		}}
 	}
 
-	if !d.PrefixListID.IsNull() {
+	if !model.PrefixListID.IsNull() {
 		apiObject.PrefixListIds = []*ec2.PrefixListId{{
-			PrefixListId: fwflex.StringFromFramework(ctx, d.PrefixListID),
-			Description:  fwflex.StringFromFramework(ctx, d.Description),
+			PrefixListId: fwflex.StringFromFramework(ctx, model.PrefixListID),
+			Description:  fwflex.StringFromFramework(ctx, model.Description),
 		}}
 	}
 
-	if !d.ReferencedSecurityGroupID.IsNull() {
+	if !model.ReferencedSecurityGroupID.IsNull() {
 		apiObject.UserIdGroupPairs = []*ec2.UserIdGroupPair{{
-			Description: fwflex.StringFromFramework(ctx, d.Description),
+			Description: fwflex.StringFromFramework(ctx, model.Description),
 		}}
 
 		// [UserID/]GroupID.
-		if parts := strings.Split(d.ReferencedSecurityGroupID.ValueString(), "/"); len(parts) == 2 {
+		if parts := strings.Split(model.ReferencedSecurityGroupID.ValueString(), "/"); len(parts) == 2 {
 			apiObject.UserIdGroupPairs[0].GroupId = aws.String(parts[1])
 			apiObject.UserIdGroupPairs[0].UserId = aws.String(parts[0])
 		} else {
-			apiObject.UserIdGroupPairs[0].GroupId = fwflex.StringFromFramework(ctx, d.ReferencedSecurityGroupID)
+			apiObject.UserIdGroupPairs[0].GroupId = fwflex.StringFromFramework(ctx, model.ReferencedSecurityGroupID)
 		}
 	}
 
 	return apiObject
 }
 
-func (d *securityGroupRuleResourceModel) expandSecurityGroupRuleRequest(ctx context.Context) *ec2.SecurityGroupRuleRequest {
+func (model *securityGroupRuleResourceModel) expandSecurityGroupRuleRequest(ctx context.Context) *ec2.SecurityGroupRuleRequest {
 	apiObject := &ec2.SecurityGroupRuleRequest{
-		CidrIpv4:          fwflex.StringFromFramework(ctx, d.CIDRIPv4),
-		CidrIpv6:          fwflex.StringFromFramework(ctx, d.CIDRIPv6),
-		Description:       fwflex.StringFromFramework(ctx, d.Description),
-		FromPort:          fwflex.Int64FromFramework(ctx, d.FromPort),
-		IpProtocol:        fwflex.StringFromFramework(ctx, d.IPProtocol),
-		PrefixListId:      fwflex.StringFromFramework(ctx, d.PrefixListID),
-		ReferencedGroupId: fwflex.StringFromFramework(ctx, d.ReferencedSecurityGroupID),
-		ToPort:            fwflex.Int64FromFramework(ctx, d.ToPort),
+		CidrIpv4:          fwflex.StringFromFramework(ctx, model.CIDRIPv4),
+		CidrIpv6:          fwflex.StringFromFramework(ctx, model.CIDRIPv6),
+		Description:       fwflex.StringFromFramework(ctx, model.Description),
+		FromPort:          fwflex.Int64FromFramework(ctx, model.FromPort),
+		IpProtocol:        fwflex.StringFromFramework(ctx, model.IPProtocol),
+		PrefixListId:      fwflex.StringFromFramework(ctx, model.PrefixListID),
+		ReferencedGroupId: fwflex.StringFromFramework(ctx, model.ReferencedSecurityGroupID),
+		ToPort:            fwflex.Int64FromFramework(ctx, model.ToPort),
 	}
 
 	return apiObject
 }
 
-func (d *securityGroupRuleResourceModel) sourceAttributeName() string {
+func (model *securityGroupRuleResourceModel) sourceAttributeName() string {
 	switch {
-	case !d.CIDRIPv4.IsNull():
+	case !model.CIDRIPv4.IsNull():
 		return "cidr_ipv4"
-	case !d.CIDRIPv6.IsNull():
+	case !model.CIDRIPv6.IsNull():
 		return "cidr_ipv6"
-	case !d.PrefixListID.IsNull():
+	case !model.PrefixListID.IsNull():
 		return "prefix_list_id"
-	case !d.ReferencedSecurityGroupID.IsNull():
+	case !model.ReferencedSecurityGroupID.IsNull():
 		return "referenced_security_group_id"
 	}
 
