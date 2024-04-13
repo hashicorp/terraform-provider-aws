@@ -80,6 +80,11 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_rds_cluster",
 		},
 		{
+			Factory:  DataSourceClusterInstance,
+			TypeName: "aws_rds_cluster_instance",
+			Name:     "Cluster Instance",
+		},
+		{
 			Factory:  DataSourceClusters,
 			TypeName: "aws_rds_clusters",
 		},
