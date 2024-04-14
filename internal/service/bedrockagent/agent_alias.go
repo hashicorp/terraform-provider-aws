@@ -58,7 +58,7 @@ type agentAliasResource struct {
 }
 
 func (r *agentAliasResource) Metadata(_ context.Context, request resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_bedrockagent_alias"
+	resp.TypeName = "aws_bedrockagent_agent_alias"
 }
 
 func (r *agentAliasResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {

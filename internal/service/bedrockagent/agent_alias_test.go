@@ -29,7 +29,7 @@ import (
 func TestAccBedrockAgentAlias_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_bedrockagent_alias.test"
+	resourceName := "aws_bedrockagent_agent_alias.test"
 	var v bedrockagent.GetAgentAliasOutput
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -65,7 +65,7 @@ func TestAccBedrockAgentAlias_basic(t *testing.T) {
 func TestAccBedrockAgentAlias_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_bedrockagent_alias.test"
+	resourceName := "aws_bedrockagent_agent_alias.test"
 	var v bedrockagent.GetAgentAliasOutput
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -91,7 +91,7 @@ func TestAccBedrockAgentAlias_update(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	descriptionOld := "Agent Alias Before Update"
 	descriptionNew := "Agent Alias After Update"
-	resourceName := "aws_bedrockagent_alias.test"
+	resourceName := "aws_bedrockagent_agent_alias.test"
 	var v bedrockagent.GetAgentAliasOutput
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -144,7 +144,7 @@ func TestAccBedrockAgentAlias_update(t *testing.T) {
 func TestAccBedrockAgentAlias_routingUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_bedrockagent_alias.test"
+	resourceName := "aws_bedrockagent_agent_alias.test"
 	var v bedrockagent.GetAgentAliasOutput
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -197,7 +197,7 @@ func TestAccBedrockAgentAlias_routingUpdate(t *testing.T) {
 func TestAccBedrockAgentAlias_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_bedrockagent_alias.test"
+	resourceName := "aws_bedrockagent_agent_alias.test"
 	var v bedrockagent.GetAgentAliasOutput
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -245,7 +245,7 @@ func testAccCheckAgentAliasDestroy(ctx context.Context) resource.TestCheckFunc {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_bedrockagent_alias" {
+			if rs.Type != "aws_bedrockagent_agent_alias" {
 				continue
 			}
 
@@ -322,7 +322,7 @@ func testAccAgentAliasConfig_basic(rName string) string {
 
 func testAccAgentAliasConfig_alias(name string) string {
 	return fmt.Sprintf(`
-resource "aws_bedrockagent_alias" "test" {
+resource "aws_bedrockagent_agent_alias" "test" {
   agent_alias_name = %[1]q
   agent_id         = aws_bedrockagent_agent.test.agent_id
   description      = "Test ALias"
@@ -332,7 +332,7 @@ resource "aws_bedrockagent_alias" "test" {
 
 func testAccAgentAliasConfig_routing(name, version string) string {
 	return fmt.Sprintf(`
-resource "aws_bedrockagent_alias" "test" {
+resource "aws_bedrockagent_agent_alias" "test" {
   agent_alias_name = %[1]q
   agent_id         = aws_bedrockagent_agent.test.agent_id
   description      = "Test ALias"
@@ -348,11 +348,11 @@ func testAccagentAliasConfig_routingUpdateOne(rName string) string {
 		testAccAgentConfig_basic(rName, "anthropic.claude-v2", "basic claude"),
 		testAccAgentAliasConfig_alias(rName),
 		fmt.Sprintf(`
-resource "aws_bedrockagent_alias" "second" {
+resource "aws_bedrockagent_agent_alias" "second" {
   agent_alias_name = %[1]q
   agent_id         = aws_bedrockagent_agent.test.agent_id
   description      = "Test ALias"
-  depends_on       = [aws_bedrockagent_alias.test]
+  depends_on       = [aws_bedrockagent_agent_alias.test]
 }
 `, rName+"2"),
 	)
@@ -367,7 +367,7 @@ func testAccagentAliasConfig_routingUpdateTwo(rName string) string {
 
 func testAccAgentAliasConfig_update(rName, desc string) string {
 	return acctest.ConfigCompose(testAccAgentConfig_basic(rName, "anthropic.claude-v2", "basic claude"), fmt.Sprintf(`
-resource "aws_bedrockagent_alias" "test" {
+resource "aws_bedrockagent_agent_alias" "test" {
   agent_alias_name = %[1]q
   agent_id         = aws_bedrockagent_agent.test.agent_id
   description      = %[2]q
@@ -377,7 +377,7 @@ resource "aws_bedrockagent_alias" "test" {
 
 func testAccAgentAliasConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccAgentConfig_basic(rName, "anthropic.claude-v2", "basic claude"), fmt.Sprintf(`
-resource "aws_bedrockagent_alias" "test" {
+resource "aws_bedrockagent_agent_alias" "test" {
   agent_alias_name = %[1]q
   agent_id         = aws_bedrockagent_agent.test.agent_id
   description      = "Test ALias"
@@ -390,7 +390,7 @@ resource "aws_bedrockagent_alias" "test" {
 
 func testAccAgentAliasConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(testAccAgentConfig_basic(rName, "anthropic.claude-v2", "basic claude"), fmt.Sprintf(`
-resource "aws_bedrockagent_alias" "test" {
+resource "aws_bedrockagent_agent_alias" "test" {
   agent_alias_name = %[1]q
   agent_id         = aws_bedrockagent_agent.test.agent_id
   description      = "Test ALias"
