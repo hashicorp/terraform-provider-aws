@@ -74,6 +74,7 @@ import (
 	elasticloadbalancingv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	emr_sdkv2 "github.com/aws/aws-sdk-go-v2/service/emr"
 	emrserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/emrserverless"
+	eventbridge_sdkv2 "github.com/aws/aws-sdk-go-v2/service/eventbridge"
 	evidently_sdkv2 "github.com/aws/aws-sdk-go-v2/service/evidently"
 	finspace_sdkv2 "github.com/aws/aws-sdk-go-v2/service/finspace"
 	firehose_sdkv2 "github.com/aws/aws-sdk-go-v2/service/firehose"
@@ -192,7 +193,6 @@ import (
 	elbv2_sdkv1 "github.com/aws/aws-sdk-go/service/elbv2"
 	emr_sdkv1 "github.com/aws/aws-sdk-go/service/emr"
 	emrcontainers_sdkv1 "github.com/aws/aws-sdk-go/service/emrcontainers"
-	eventbridge_sdkv1 "github.com/aws/aws-sdk-go/service/eventbridge"
 	fsx_sdkv1 "github.com/aws/aws-sdk-go/service/fsx"
 	gamelift_sdkv1 "github.com/aws/aws-sdk-go/service/gamelift"
 	globalaccelerator_sdkv1 "github.com/aws/aws-sdk-go/service/globalaccelerator"
@@ -662,8 +662,8 @@ func (c *AWSClient) ElasticsearchConn(ctx context.Context) *elasticsearchservice
 	return errs.Must(conn[*elasticsearchservice_sdkv1.ElasticsearchService](ctx, c, names.Elasticsearch, make(map[string]any)))
 }
 
-func (c *AWSClient) EventsConn(ctx context.Context) *eventbridge_sdkv1.EventBridge {
-	return errs.Must(conn[*eventbridge_sdkv1.EventBridge](ctx, c, names.Events, make(map[string]any)))
+func (c *AWSClient) EventsClient(ctx context.Context) *eventbridge_sdkv2.Client {
+	return errs.Must(client[*eventbridge_sdkv2.Client](ctx, c, names.Events, make(map[string]any)))
 }
 
 func (c *AWSClient) EvidentlyClient(ctx context.Context) *evidently_sdkv2.Client {
