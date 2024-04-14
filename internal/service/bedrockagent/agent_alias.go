@@ -65,7 +65,6 @@ func (r *agentAliasResource) Schema(ctx context.Context, request resource.Schema
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"agent_alias_arn": framework.ARNAttributeComputedOnly(),
-			//"agent_alias_id":  framework.IDAttribute(),
 			"agent_alias_id": schema.StringAttribute{
 				Computed: true,
 			},
@@ -121,7 +120,7 @@ func (r *agentAliasResource) Schema(ctx context.Context, request resource.Schema
 			"agent_alias_history_events": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[history](ctx),
 				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
+					listvalidator.SizeAtMost(10),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
@@ -194,6 +193,7 @@ func (r *agentAliasResource) Create(ctx context.Context, request resource.Create
 	data.ID = types.StringValue(id)
 
 	alias, err := waitAliasCreated(ctx, conn, id, r.CreateTimeout(ctx, data.Timeouts))
+
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for Alias Agent (%s) create", data.ID.ValueString()), err.Error())
 
@@ -218,7 +218,6 @@ func (r *agentAliasResource) Read(ctx context.Context, request resource.ReadRequ
 	}
 
 	conn := r.Meta().BedrockAgentClient(ctx)
-
 	output, err := findAgentAliasByID(ctx, conn, data.ID.ValueString())
 
 	if tfresource.NotFound(err) {
@@ -243,50 +242,53 @@ func (r *agentAliasResource) Read(ctx context.Context, request resource.ReadRequ
 }
 
 func (r *agentAliasResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var old, new bedrockAliasResourceModel
-	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	var plan, state bedrockAliasResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
-	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	conn := r.Meta().BedrockAgentClient(ctx)
 
-	if bedrockAliasHasChanges(ctx, old, new) {
+	if bedrockAliasHasChanges(ctx, plan, state) {
 		input := &bedrockagent.UpdateAgentAliasInput{}
-		response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
+		response.Diagnostics.Append(fwflex.Expand(ctx, plan, input)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
+		input.AgentAliasId = fwflex.StringFromFramework(ctx, state.AgentAliasId)
+		input.AgentId = fwflex.StringFromFramework(ctx, plan.AgentId)
+		input.AgentAliasName = fwflex.StringFromFramework(ctx, plan.AgentAliasName)
 
 		_, err := conn.UpdateAgentAlias(ctx, input)
 
 		if err != nil {
 			response.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionUpdating, "Bedrock Agent", old.AgentId.ValueString(), err),
+				create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionUpdating, "Bedrock Agent", plan.AgentId.ValueString(), err),
 				err.Error(),
 			)
 			return
 		}
 	}
 
-	out, err := findAgentAliasByID(ctx, conn, old.ID.ValueString())
+	out, err := findAgentAliasByID(ctx, conn, plan.ID.ValueString())
 	if err != nil {
 		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionUpdating, "Bedrock Agent", old.AgentId.ValueString(), err),
+			create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionUpdating, "Bedrock Agent", plan.AgentId.ValueString(), err),
 			err.Error(),
 		)
 		return
 	}
-	response.Diagnostics.Append(fwflex.Flatten(ctx, out, &new)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, out.AgentAlias, &plan)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
 }
 
 func (r *agentAliasResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
@@ -418,5 +420,7 @@ type history struct {
 
 func bedrockAliasHasChanges(_ context.Context, plan, state bedrockAliasResourceModel) bool {
 	return !plan.AgentAliasName.Equal(state.AgentAliasName) ||
-		!plan.Description.Equal(state.Description)
+		!plan.Description.Equal(state.Description) ||
+		!plan.AgentAliasId.Equal(state.AgentAliasId) ||
+		!plan.RoutingConfiguration.Equal(state.RoutingConfiguration)
 }
