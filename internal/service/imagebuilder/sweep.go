@@ -13,7 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 )
 
 func RegisterSweepers() {
@@ -51,6 +51,11 @@ func RegisterSweepers() {
 		Name: "aws_imagebuilder_infrastructure_configuration",
 		F:    sweepInfrastructureConfigurations,
 	})
+
+	resource.AddTestSweepers("aws_imagebuilder_lifecycle_policy", &resource.Sweeper{
+		Name: "aws_imagebuilder_lifecycle_policy",
+		F:    sweepLifecyclePolicies,
+	})
 }
 
 func sweepComponents(region string) error {
@@ -81,19 +86,9 @@ func sweepComponents(region string) error {
 		}
 
 		for _, v := range page.ComponentVersionList {
-			arn := aws.ToString(v.Arn)
-
-			if tfresource.NotFound(err) {
-				continue
-			}
-
-			if err != nil {
-				return fmt.Errorf("error reading ImageBuilder Components (%s): %w", arn, err)
-			}
-
 			r := ResourceComponent()
 			d := r.Data(nil)
-			d.SetId(arn)
+			d.SetId(aws.ToString(v.Arn))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -133,19 +128,9 @@ func sweepDistributionConfigurations(region string) error {
 		}
 
 		for _, v := range page.DistributionConfigurationSummaryList {
-			arn := aws.ToString(v.Arn)
-
-			if tfresource.NotFound(err) {
-				continue
-			}
-
-			if err != nil {
-				return fmt.Errorf("error reading ImageBuilder Distribution Configuration Summary (%s): %w", arn, err)
-			}
-
 			r := ResourceDistributionConfiguration()
 			d := r.Data(nil)
-			d.SetId(arn)
+			d.SetId(aws.ToString(v.Arn))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -185,19 +170,9 @@ func sweepImagePipelines(region string) error {
 		}
 
 		for _, v := range page.ImagePipelineList {
-			arn := aws.ToString(v.Arn)
-
-			if tfresource.NotFound(err) {
-				continue
-			}
-
-			if err != nil {
-				return fmt.Errorf("error reading ImageBuilder Image Pipelines (%s): %w", arn, err)
-			}
-
 			r := ResourceImagePipeline()
 			d := r.Data(nil)
-			d.SetId(arn)
+			d.SetId(aws.ToString(v.Arn))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -237,19 +212,9 @@ func sweepImageRecipes(region string) error {
 		}
 
 		for _, v := range page.ImageRecipeSummaryList {
-			arn := aws.ToString(v.Arn)
-
-			if tfresource.NotFound(err) {
-				continue
-			}
-
-			if err != nil {
-				return fmt.Errorf("error reading ImageBuilder Image Recipes (%s): %w", arn, err)
-			}
-
 			r := ResourceImageRecipe()
 			d := r.Data(nil)
-			d.SetId(arn)
+			d.SetId(aws.ToString(v.Arn))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -289,19 +254,9 @@ func sweepContainerRecipes(region string) error {
 		}
 
 		for _, v := range page.ContainerRecipeSummaryList {
-			arn := aws.ToString(v.Arn)
-
-			if tfresource.NotFound(err) {
-				continue
-			}
-
-			if err != nil {
-				return fmt.Errorf("error reading ImageBuilder Container Recipes (%s): %w", arn, err)
-			}
-
 			r := ResourceContainerRecipe()
 			d := r.Data(nil)
-			d.SetId(arn)
+			d.SetId(aws.ToString(v.Arn))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -343,19 +298,9 @@ func sweepImages(region string) error {
 		}
 
 		for _, v := range page.ImageVersionList {
-			arn := aws.ToString(v.Arn)
-
-			if tfresource.NotFound(err) {
-				continue
-			}
-
-			if err != nil {
-				return fmt.Errorf("error reading ImageBuilder Images (%s): %w", arn, err)
-			}
-
 			r := ResourceImage()
 			d := r.Data(nil)
-			d.SetId(arn)
+			d.SetId(aws.ToString(v.Arn))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -395,19 +340,9 @@ func sweepInfrastructureConfigurations(region string) error {
 		}
 
 		for _, v := range page.InfrastructureConfigurationSummaryList {
-			arn := aws.ToString(v.Arn)
-
-			if tfresource.NotFound(err) {
-				continue
-			}
-
-			if err != nil {
-				return fmt.Errorf("error reading ImageBuilder Infrastructure Configurations (%s): %w", arn, err)
-			}
-
 			r := ResourceInfrastructureConfiguration()
 			d := r.Data(nil)
-			d.SetId(arn)
+			d.SetId(aws.ToString(v.Arn))
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
@@ -417,6 +352,48 @@ func sweepInfrastructureConfigurations(region string) error {
 
 	if err != nil {
 		return fmt.Errorf("error sweeping ImageBuilder Infrastructure Configurations (%s): %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepLifecyclePolicies(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.ImageBuilderClient(ctx)
+
+	input := &imagebuilder.ListLifecyclePoliciesInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	pages := imagebuilder.NewListLifecyclePoliciesPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping ImageBuilder Lifecycle Policies sweep for %s: %s", region, err)
+			return nil
+		}
+
+		if err != nil {
+			return fmt.Errorf("error listing ImageBuilder Lifecycle Policies (%s): %w", region, err)
+		}
+
+		for _, v := range page.LifecyclePolicySummaryList {
+			r := ResourceInfrastructureConfiguration()
+			d := r.Data(nil)
+			d.SetId(aws.ToString(v.Arn))
+
+			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceLifecyclePolicy, client))
+		}
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping ImageBuilder Lifecycle Policies (%s): %w", region, err)
 	}
 
 	return nil
