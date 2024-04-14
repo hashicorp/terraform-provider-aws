@@ -290,9 +290,9 @@ func flattenEndPoints(apiObjects []awstypes.EndPoint) []interface{} {
 	}
 
 	var tfList []interface{}
-
+	emptyObj := awstypes.EndPoint{}
 	for _, apiObject := range apiObjects {
-		if &apiObject == nil {
+		if apiObject == emptyObj {
 			continue
 		}
 

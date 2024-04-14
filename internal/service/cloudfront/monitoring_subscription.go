@@ -191,8 +191,8 @@ func flattenRealtimeMetricsSubscriptionConfig(apiObject *awstypes.RealtimeMetric
 
 	tfMap := map[string]interface{}{}
 
-	if v := apiObject.RealtimeMetricsSubscriptionStatus; &v != nil {
-		tfMap["realtime_metrics_subscription_status"] = awstypes.RealtimeMetricsSubscriptionStatus(v)
+	if v := apiObject.RealtimeMetricsSubscriptionStatus; v != awstypes.RealtimeMetricsSubscriptionStatus("") {
+		tfMap["realtime_metrics_subscription_status"] = v
 	}
 
 	return tfMap

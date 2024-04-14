@@ -462,7 +462,7 @@ func flattenCachePolicyCookiesConfig(apiObject *awstypes.CachePolicyCookiesConfi
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.CookieBehavior; v != awstypes.CachePolicyCookieBehavior("") {
-		tfMap["cookie_behavior"] = awstypes.CachePolicyCookieBehavior(v)
+		tfMap["cookie_behavior"] = v
 	}
 
 	if v := flattenCookieNames(apiObject.Cookies); len(v) > 0 {
@@ -494,7 +494,7 @@ func flattenCachePolicyHeadersConfig(apiObject *awstypes.CachePolicyHeadersConfi
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.HeaderBehavior; v != awstypes.CachePolicyHeaderBehavior("") {
-		tfMap["header_behavior"] = awstypes.CachePolicyHeaderBehavior(v)
+		tfMap["header_behavior"] = v
 	}
 
 	if v := flattenHeaders(apiObject.Headers); len(v) > 0 {
@@ -526,7 +526,7 @@ func flattenCachePolicyQueryStringsConfig(apiObject *awstypes.CachePolicyQuerySt
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.QueryStringBehavior; v != awstypes.CachePolicyQueryStringBehavior("") {
-		tfMap["query_string_behavior"] = awstypes.CachePolicyQueryStringBehavior(v)
+		tfMap["query_string_behavior"] = v
 	}
 
 	if v := flattenQueryStringNames(apiObject.QueryStrings); len(v) > 0 {

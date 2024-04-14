@@ -19,7 +19,7 @@ import (
 // listTags lists cloudfront service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func listTags(ctx context.Context, conn *cloudfront.Client, identifier string) (tftags.KeyValueTags, error) {
+func listTags(ctx context.Context, conn cloudfront.Client, identifier string) (tftags.KeyValueTags, error) {
 	input := &cloudfront.ListTagsForResourceInput{
 		Resource: aws.String(identifier),
 	}
@@ -36,7 +36,7 @@ func listTags(ctx context.Context, conn *cloudfront.Client, identifier string) (
 // ListTags lists cloudfront service tags and set them in Context.
 // It is called from outside this package.
 func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier string) error {
-	tags, err := listTags(ctx, meta.(*conns.AWSClient).CloudFrontClient(ctx), identifier)
+	tags, err := listTags(ctx, *meta.(*conns.AWSClient).CloudFrontClient(ctx), identifier)
 
 	if err != nil {
 		return err
@@ -52,19 +52,19 @@ func (p *servicePackage) ListTags(ctx context.Context, meta any, identifier stri
 // []*SERVICE.Tag handling
 
 // Tags returns cloudfront service tags.
-func Tags(tags tftags.KeyValueTags) []awstypes.Tag {
+func Tags(tags tftags.KeyValueTags) *awstypes.Tags {
 	result := make([]awstypes.Tag, 0, len(tags))
 
 	for k, v := range tags.Map() {
-		tag := &awstypes.Tag{
+		tag := awstypes.Tag{
 			Key:   aws.String(k),
 			Value: aws.String(v),
 		}
 
-		result = append(result, *tag)
+		result = append(result, tag)
 	}
 
-	return result
+	return &awstypes.Tags{Items: result}
 }
 
 // KeyValueTags creates tftags.KeyValueTags from cloudfront service tags.
@@ -81,9 +81,12 @@ func KeyValueTags(ctx context.Context, tags []awstypes.Tag) tftags.KeyValueTags 
 // getTagsIn returns cloudfront service tags from Context.
 // nil is returned if there are no input tags.
 func getTagsIn(ctx context.Context) []awstypes.Tag {
+	tagsResult := make([]awstypes.Tag, 0)
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
-			return tags
+		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags.Items) > 0 {
+			for _, t := range tags.Items {
+				tagsResult = append(tagsResult, t)
+			}
 		}
 	}
 
@@ -100,7 +103,8 @@ func setTagsOut(ctx context.Context, tags []awstypes.Tag) {
 // updateTags updates cloudfront service tags.
 // The identifier is typically the Amazon Resource Name (ARN), although
 // it may also be a different identifier depending on the service.
-func updateTags(ctx context.Context, conn cloudfront.Client, identifier string, oldTagsMap, newTagsMap any) error {
+func updateTags(ctx context.Context, conn *cloudfront.Client, identifier string, oldTagsMap, newTagsMap any) error {
+
 	oldTags := tftags.New(ctx, oldTagsMap)
 	newTags := tftags.New(ctx, newTagsMap)
 
@@ -108,10 +112,11 @@ func updateTags(ctx context.Context, conn cloudfront.Client, identifier string, 
 
 	removedTags := oldTags.Removed(newTags)
 	removedTags = removedTags.IgnoreSystem(names.CloudFront)
+	removedTagKeys := removedTags.Keys()
 	if len(removedTags) > 0 {
 		input := &cloudfront.UntagResourceInput{
 			Resource: aws.String(identifier),
-			TagKeys:  &awstypes.TagKeys{Items: removedTags.Keys()},
+			TagKeys:  &awstypes.TagKeys{Items: removedTagKeys},
 		}
 
 		_, err := conn.UntagResource(ctx, input)
@@ -126,7 +131,7 @@ func updateTags(ctx context.Context, conn cloudfront.Client, identifier string, 
 	if len(updatedTags) > 0 {
 		input := &cloudfront.TagResourceInput{
 			Resource: aws.String(identifier),
-			Tags:     &awstypes.Tags{Items: Tags(updatedTags)},
+			Tags:     Tags(updatedTags),
 		}
 
 		_, err := conn.TagResource(ctx, input)
@@ -142,5 +147,5 @@ func updateTags(ctx context.Context, conn cloudfront.Client, identifier string, 
 // UpdateTags updates cloudfront service tags.
 // It is called from outside this package.
 func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
-	return updateTags(ctx, *meta.(*conns.AWSClient).CloudFrontClient(ctx), identifier, oldTags, newTags)
+	return updateTags(ctx, meta.(*conns.AWSClient).CloudFrontClient(ctx), identifier, oldTags, newTags)
 }

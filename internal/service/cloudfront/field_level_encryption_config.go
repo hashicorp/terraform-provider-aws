@@ -413,7 +413,8 @@ func expandQueryArgProfileItems(tfList []interface{}) []awstypes.QueryArgProfile
 
 		apiObject := *expandQueryArgProfile(tfMap)
 
-		if &apiObject == nil {
+		emptyObj := awstypes.QueryArgProfile{}
+		if apiObject == emptyObj {
 			continue
 		}
 
@@ -450,7 +451,8 @@ func flattenContentTypeProfiles(apiObject *awstypes.ContentTypeProfiles) map[str
 
 	tfmapItems := make([]*awstypes.ContentTypeProfile, 0)
 	for _, v := range apiObject.Items {
-		tfmapItems = append(tfmapItems, &v)
+		item := v
+		tfmapItems = append(tfmapItems, &item)
 	}
 
 	if v := apiObject.Items; len(v) > 0 {
@@ -472,7 +474,7 @@ func flattenContentTypeProfile(apiObject *awstypes.ContentTypeProfile) map[strin
 	}
 
 	if v := apiObject.Format; v != awstypes.Format("") {
-		tfMap["format"] = awstypes.Format(v)
+		tfMap["format"] = v
 	}
 
 	if v := apiObject.ProfileId; v != nil {
@@ -559,8 +561,9 @@ func flattenQueryArgProfileItems(apiObjects []awstypes.QueryArgProfile) []interf
 
 	var tfList []interface{}
 
+	emptyObj := awstypes.QueryArgProfile{}
 	for _, apiObject := range apiObjects {
-		if &apiObject == nil {
+		if apiObject == emptyObj {
 			continue
 		}
 

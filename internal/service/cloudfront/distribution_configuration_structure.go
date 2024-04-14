@@ -145,13 +145,13 @@ func flattenDistributionConfig(d *schema.ResourceData, distributionConfig *awsty
 			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
-	if *aws.Int32(*distributionConfig.Origins.Quantity) > 0 {
+	if aws.ToInt32(distributionConfig.Origins.Quantity) > 0 {
 		err = d.Set("origin", FlattenOrigins(distributionConfig.Origins))
 		if err != nil {
 			return err // nosemgrep:ci.bare-error-returns
 		}
 	}
-	if *aws.Int32(*distributionConfig.OriginGroups.Quantity) > 0 {
+	if aws.ToInt32(distributionConfig.OriginGroups.Quantity) > 0 {
 		err = d.Set("origin_group", FlattenOriginGroups(distributionConfig.OriginGroups))
 		if err != nil {
 			return err // nosemgrep:ci.bare-error-returns
@@ -336,7 +336,7 @@ func flattenDefaultCacheBehavior(dcb *awstypes.DefaultCacheBehavior) map[string]
 		m["smooth_streaming"] = aws.Bool(*dcb.SmoothStreaming)
 	}
 	if dcb.DefaultTTL != nil {
-		m["default_ttl"] = int(*dcb.DefaultTTL)
+		m["default_ttl"] = aws.Int64(*dcb.DefaultTTL)
 	}
 	if dcb.AllowedMethods != nil {
 		m["allowed_methods"] = FlattenAllowedMethods(dcb.AllowedMethods)
@@ -377,13 +377,13 @@ func flattenCacheBehavior(cb *awstypes.CacheBehavior) map[string]interface{} {
 		m["function_association"] = FlattenFunctionAssociations(cb.FunctionAssociations)
 	}
 	if cb.MaxTTL != nil {
-		m["max_ttl"] = int(*aws.Int64(*cb.MaxTTL))
+		m["max_ttl"] = int(aws.ToInt64(cb.MaxTTL))
 	}
 	if cb.SmoothStreaming != nil {
 		m["smooth_streaming"] = cb.SmoothStreaming
 	}
 	if cb.DefaultTTL != nil {
-		m["default_ttl"] = int(*aws.Int64(*cb.DefaultTTL))
+		m["default_ttl"] = int(aws.ToInt64(cb.DefaultTTL))
 	}
 	if cb.AllowedMethods != nil {
 		m["allowed_methods"] = FlattenAllowedMethods(cb.AllowedMethods)
@@ -524,10 +524,11 @@ func FlattenLambdaFunctionAssociations(lfa *awstypes.LambdaFunctionAssociations)
 
 func flattenLambdaFunctionAssociation(lfa *awstypes.LambdaFunctionAssociation) map[string]interface{} {
 	m := map[string]interface{}{}
-	if lfa != nil {
-		m["event_type"] = awstypes.EventType(lfa.EventType)
+	emptyAssociations := awstypes.LambdaFunctionAssociation{}
+	if *lfa != emptyAssociations {
+		m["event_type"] = aws.ToString((*string)(&lfa.EventType))
 		m["lambda_arn"] = aws.ToString(lfa.LambdaFunctionARN)
-		m["include_body"] = aws.Bool(*lfa.IncludeBody)
+		m["include_body"] = aws.ToBool(lfa.IncludeBody)
 	}
 	return m
 }
@@ -543,7 +544,8 @@ func FlattenFunctionAssociations(fa *awstypes.FunctionAssociations) *schema.Set 
 func flattenFunctionAssociation(fa *awstypes.FunctionAssociation) map[string]interface{} {
 	m := map[string]interface{}{}
 	eventType := string(fa.EventType)
-	if fa != nil {
+	emptyAssociations := awstypes.FunctionAssociation{}
+	if *fa != emptyAssociations {
 		m["event_type"] = aws.ToString(&eventType)
 		m["function_arn"] = aws.ToString(fa.FunctionARN)
 	}
@@ -625,7 +627,7 @@ func ExpandCookiePreference(m map[string]interface{}) *awstypes.CookiePreference
 
 func FlattenCookiePreference(cp *awstypes.CookiePreference) map[string]interface{} {
 	m := make(map[string]interface{})
-	m["forward"] = awstypes.ItemSelection(cp.Forward)
+	m["forward"] = string(cp.Forward)
 	if cp.WhitelistedNames != nil {
 		m["whitelisted_names"] = schema.NewSet(schema.HashString, FlattenCookieNames(cp.WhitelistedNames))
 	}
@@ -647,7 +649,7 @@ func FlattenCookieNames(cn *awstypes.CookieNames) []interface{} {
 }
 
 func ExpandAllowedMethods(s *schema.Set) *awstypes.AllowedMethods {
-	items := make([]awstypes.Method, 0)
+	items := []awstypes.Method{}
 	for _, v := range flex.ExpandStringSet(s) {
 		items = append(items, awstypes.Method(*v))
 	}
@@ -658,8 +660,8 @@ func ExpandAllowedMethods(s *schema.Set) *awstypes.AllowedMethods {
 }
 
 func FlattenAllowedMethods(am *awstypes.AllowedMethods) *schema.Set {
-	items := make([]*string, 0)
-	return flex.FlattenStringSet(items)
+	items := FlattenMethods(am.Items)
+	return flex.FlattenStringValueSet(items)
 }
 
 func ExpandCachedMethods(s *schema.Set) *awstypes.CachedMethods {
@@ -704,6 +706,14 @@ func FlattenOrigins(ors *awstypes.Origins) *schema.Set {
 		s = append(s, FlattenOrigin(&v))
 	}
 	return schema.NewSet(OriginHash, s)
+}
+
+func FlattenMethods(items []awstypes.Method) []string {
+	s := make([]string, 0)
+	for _, item := range items {
+		s = append(s, string(item))
+	}
+	return s
 }
 
 func ExpandOrigin(m map[string]interface{}) awstypes.Origin {
@@ -761,10 +771,10 @@ func FlattenOrigin(or *awstypes.Origin) map[string]interface{} {
 	m["origin_id"] = aws.ToString(or.Id)
 	m["domain_name"] = aws.ToString(or.DomainName)
 	if or.ConnectionAttempts != nil {
-		m["connection_attempts"] = int(*aws.Int32(*or.ConnectionAttempts))
+		m["connection_attempts"] = int(aws.ToInt32(or.ConnectionAttempts))
 	}
 	if or.ConnectionTimeout != nil {
-		m["connection_timeout"] = int(*aws.Int32(*or.ConnectionTimeout))
+		m["connection_timeout"] = int(aws.ToInt32(or.ConnectionTimeout))
 	}
 	if or.CustomHeaders != nil {
 		m["custom_header"] = FlattenCustomHeaders(or.CustomHeaders)
@@ -851,7 +861,7 @@ func flattenOriginGroupFailoverCriteria(ogfc *awstypes.OriginGroupFailoverCriter
 	if ogfc.StatusCodes.Items != nil {
 		l := []interface{}{}
 		for _, i := range ogfc.StatusCodes.Items {
-			l = append(l, int(*aws.Int32(i)))
+			l = append(l, int(aws.ToInt32(&i)))
 		}
 		m["status_codes"] = schema.NewSet(schema.HashInt, l)
 	}
@@ -1037,12 +1047,12 @@ func ExpandCustomOriginConfig(m map[string]interface{}) *awstypes.CustomOriginCo
 
 func FlattenCustomOriginConfig(cor *awstypes.CustomOriginConfig) map[string]interface{} {
 	customOrigin := map[string]interface{}{
-		"origin_protocol_policy":   awstypes.OriginProtocolPolicy(cor.OriginProtocolPolicy),
-		"http_port":                int(*aws.Int32(*cor.HTTPPort)),
-		"https_port":               int(*aws.Int32(*cor.HTTPSPort)),
+		"origin_protocol_policy":   string(cor.OriginProtocolPolicy),
+		"http_port":                int(aws.ToInt32(cor.HTTPPort)),
+		"https_port":               int(aws.ToInt32(cor.HTTPSPort)),
 		"origin_ssl_protocols":     FlattenCustomOriginConfigSSL(cor.OriginSslProtocols),
-		"origin_read_timeout":      int(*aws.Int32(*cor.OriginReadTimeout)),
-		"origin_keepalive_timeout": int(*aws.Int32(*cor.OriginKeepaliveTimeout)),
+		"origin_read_timeout":      int(aws.ToInt32(cor.OriginReadTimeout)),
+		"origin_keepalive_timeout": int(aws.ToInt32(cor.OriginKeepaliveTimeout)),
 	}
 
 	return customOrigin
@@ -1067,7 +1077,7 @@ func customOriginConfigHash(v interface{}) int {
 
 func ExpandCustomOriginConfigSSL(s []interface{}) *awstypes.OriginSslProtocols {
 	items := flex.ExpandStringList(s)
-	ospItems := make([]awstypes.SslProtocol, len(items))
+	ospItems := []awstypes.SslProtocol{}
 	for _, v := range items {
 		ospItems = append(ospItems, awstypes.SslProtocol(*v))
 	}
@@ -1107,7 +1117,7 @@ func FlattenS3OriginConfig(s3o *awstypes.S3OriginConfig) map[string]interface{} 
 func FlattenOriginShield(o *awstypes.OriginShield) map[string]interface{} {
 	return map[string]interface{}{
 		"origin_shield_region": aws.ToString(o.OriginShieldRegion),
-		"enabled":              aws.Bool(*o.Enabled),
+		"enabled":              aws.ToBool(o.Enabled),
 	}
 }
 
@@ -1170,9 +1180,9 @@ func ExpandCustomErrorResponse(m map[string]interface{}) *awstypes.CustomErrorRe
 
 func FlattenCustomErrorResponse(er *awstypes.CustomErrorResponse) map[string]interface{} {
 	m := make(map[string]interface{})
-	m["error_code"] = int(*aws.Int32(*er.ErrorCode))
+	m["error_code"] = int(aws.ToInt32(er.ErrorCode))
 	if er.ErrorCachingMinTTL != nil {
-		m["error_caching_min_ttl"] = int64(*aws.Int64(*er.ErrorCachingMinTTL))
+		m["error_caching_min_ttl"] = int(aws.ToInt64(er.ErrorCachingMinTTL))
 	}
 	if er.ResponseCode != nil {
 		m["response_code"], _ = strconv.Atoi(aws.ToString(er.ResponseCode))
@@ -1281,7 +1291,7 @@ func ExpandGeoRestriction(m map[string]interface{}) *awstypes.GeoRestriction {
 func FlattenGeoRestriction(gr *awstypes.GeoRestriction) map[string]interface{} {
 	m := make(map[string]interface{})
 
-	m["restriction_type"] = gr.RestrictionType
+	m["restriction_type"] = string(gr.RestrictionType)
 	if gr.Items != nil {
 		m["locations"] = flex.FlattenStringValueSet(gr.Items)
 	}
@@ -1310,17 +1320,17 @@ func flattenViewerCertificate(vc *awstypes.ViewerCertificate) []interface{} {
 
 	if vc.IAMCertificateId != nil {
 		m["iam_certificate_id"] = aws.ToString(vc.IAMCertificateId)
-		m["ssl_support_method"] = awstypes.SSLSupportMethod(vc.SSLSupportMethod)
+		m["ssl_support_method"] = vc.SSLSupportMethod
 	}
 	if vc.ACMCertificateArn != nil {
 		m["acm_certificate_arn"] = aws.ToString(vc.ACMCertificateArn)
-		m["ssl_support_method"] = awstypes.SSLSupportMethod(vc.SSLSupportMethod)
+		m["ssl_support_method"] = vc.SSLSupportMethod
 	}
 	if vc.CloudFrontDefaultCertificate != nil {
 		m["cloudfront_default_certificate"] = aws.ToBool(vc.CloudFrontDefaultCertificate)
 	}
 	if vc.MinimumProtocolVersion != awstypes.MinimumProtocolVersion("") {
-		m["minimum_protocol_version"] = awstypes.MinimumProtocolVersion(vc.MinimumProtocolVersion)
+		m["minimum_protocol_version"] = vc.MinimumProtocolVersion
 	}
 	return []interface{}{m}
 }
@@ -1332,7 +1342,8 @@ func flattenActiveTrustedKeyGroups(atkg *awstypes.ActiveTrustedKeyGroups) []inte
 
 	items := make([]*awstypes.KGKeyPairIds, 0, len(atkg.Items))
 	for _, v := range atkg.Items {
-		items = append(items, &v)
+		keyPairIds := v
+		items = append(items, &keyPairIds)
 	}
 	m := map[string]interface{}{
 		"enabled": aws.ToBool(atkg.Enabled),
@@ -1363,7 +1374,8 @@ func flattenActiveTrustedSigners(ats *awstypes.ActiveTrustedSigners) []interface
 	}
 	items := make([]*awstypes.Signer, 0, len(ats.Items))
 	for _, v := range ats.Items {
-		items = append(items, &v)
+		item := v
+		items = append(items, &item)
 	}
 	m := map[string]interface{}{
 		"enabled": aws.ToBool(ats.Enabled),
