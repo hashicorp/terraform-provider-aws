@@ -880,13 +880,13 @@ func flattenTargetContainerRepository(apiObject *awstypes.TargetContainerReposit
 }
 
 func flattenLaunchTemplateConfiguration(apiObject awstypes.LaunchTemplateConfiguration) map[string]interface{} {
-	tfMap := map[string]interface{}{}
+	tfMap := map[string]interface{}{
+		"default": apiObject.SetDefaultVersion,
+	}
 
 	if v := apiObject.LaunchTemplateId; v != nil {
 		tfMap["launch_template_id"] = aws.ToString(v)
 	}
-
-	tfMap["default"] = aws.Bool(apiObject.SetDefaultVersion)
 
 	if v := apiObject.AccountId; v != nil {
 		tfMap["account_id"] = aws.ToString(v)
