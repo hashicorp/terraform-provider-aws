@@ -42,8 +42,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceAPIDestination,
+			Factory:  resourceAPIDestination,
 			TypeName: "aws_cloudwatch_event_api_destination",
+			Name:     "API Destination",
 		},
 		{
 			Factory:  ResourceArchive,
