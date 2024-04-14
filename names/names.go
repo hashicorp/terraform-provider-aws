@@ -54,6 +54,7 @@ const (
 	ECREndpointID                        = "api.ecr"
 	EKSEndpointID                        = "eks"
 	EMREndpointID                        = "elasticmapreduce"
+	EventsEndpointID                     = "events"
 	EvidentlyEndpointID                  = "evidently"
 	FMSEndpointID                        = "fms"
 	IdentityStoreEndpointID              = "identitystore"
