@@ -382,11 +382,7 @@ func sweepLifecyclePolicies(region string) error {
 		}
 
 		for _, v := range page.LifecyclePolicySummaryList {
-			r := ResourceInfrastructureConfiguration()
-			d := r.Data(nil)
-			d.SetId(aws.ToString(v.Arn))
-
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceLifecyclePolicy, client))
+			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceLifecyclePolicy, client, framework.NewAttribute("arn", v.Arn)))
 		}
 	}
 
