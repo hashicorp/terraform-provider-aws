@@ -1,3 +1,3 @@
 ```release-note:enhancement
-resource/aws_sagemaker_prebuilt_ecr_image: Add `aws_db_instance` argument
+resource/aws_db_instance: Add `aws_db_instance` argument
 ```
