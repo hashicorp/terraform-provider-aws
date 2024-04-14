@@ -47,8 +47,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "API Destination",
 		},
 		{
-			Factory:  ResourceArchive,
+			Factory:  resourceArchive,
 			TypeName: "aws_cloudwatch_event_archive",
+			Name:     "Archive",
 		},
 		{
 			Factory:  ResourceBus,
