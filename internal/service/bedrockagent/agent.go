@@ -532,6 +532,25 @@ func waitAgentPrepared(ctx context.Context, conn *bedrockagent.Client, id string
 	return nil, err
 }
 
+func waitAgentVersioned(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*bedrockagent.GetAgentOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.AgentStatusVersioning),
+		Target:  enum.Slice(awstypes.AgentStatusPrepared),
+		Refresh: statusAgent(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*bedrockagent.GetAgentOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString((*string)(&output.Agent.AgentStatus))))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
 func waitAgentDeleted(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*bedrockagent.GetAgentOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AgentStatusDeleting, awstypes.AgentStatusCreating),

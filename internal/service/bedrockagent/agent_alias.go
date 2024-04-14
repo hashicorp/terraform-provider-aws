@@ -200,7 +200,16 @@ func (r *agentAliasResource) Create(ctx context.Context, request resource.Create
 		return
 	}
 
+	_, err = waitAgentVersioned(ctx, conn, *alias.AgentAlias.AgentId, r.CreateTimeout(ctx, data.Timeouts))
+
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Alias Agent (%s) create", data.ID.ValueString()), err.Error())
+
+		return
+	}
+
 	response.Diagnostics.Append(fwflex.Flatten(ctx, alias.AgentAlias, &data)...)
+
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 

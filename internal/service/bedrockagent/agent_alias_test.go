@@ -48,7 +48,6 @@ func TestAccBedrockAgentAlias_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "agent_alias_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "agent_alias_status"),
 					resource.TestCheckResourceAttrSet(resourceName, "agent_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "client_token"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "description"),
 					resource.TestCheckResourceAttr(resourceName, "routing_configuration.#", "1"),
@@ -64,7 +63,7 @@ func TestAccBedrockAgentAlias_basic(t *testing.T) {
 	})
 }
 
-func TestAccAgentAlias_disappears(t *testing.T) {
+func TestAccBedrockAgentAlias_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrock_agent_alias.test"
@@ -88,7 +87,7 @@ func TestAccAgentAlias_disappears(t *testing.T) {
 	})
 }
 
-func TestAccAgentAlias_update(t *testing.T) {
+func TestAccBedrockAgentAlias_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	descriptionOld := "Agent Alias Before Update"
@@ -111,10 +110,10 @@ func TestAccAgentAlias_update(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "agent_alias_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "agent_alias_status"),
 					resource.TestCheckResourceAttrSet(resourceName, "agent_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "client_token"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttr(resourceName, "description", descriptionOld),
 					resource.TestCheckResourceAttr(resourceName, "routing_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "routing_configuration.0.agent_version", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -132,9 +131,60 @@ func TestAccAgentAlias_update(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "agent_alias_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "agent_alias_status"),
 					resource.TestCheckResourceAttrSet(resourceName, "agent_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "client_token"),
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttr(resourceName, "description", descriptionNew),
+					resource.TestCheckResourceAttr(resourceName, "routing_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "routing_configuration.0.agent_version", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgentAlias_routingUpdate(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrock_agent_alias.test"
+	var v bedrockagent.GetAgentAliasOutput
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAgentAliasDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccagentAliasConfig_routingUpdateOne(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentAliasExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "agent_alias_name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "agent_alias_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "agent_alias_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "agent_alias_status"),
+					resource.TestCheckResourceAttrSet(resourceName, "agent_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
+					resource.TestCheckResourceAttr(resourceName, "description", "Test ALias"),
+					resource.TestCheckResourceAttr(resourceName, "routing_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccagentAliasConfig_routingUpdateTwo(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentAliasExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "agent_alias_name", rName),
+					resource.TestCheckResourceAttrSet(resourceName, "agent_alias_arn"),
+					resource.TestCheckResourceAttrSet(resourceName, "agent_alias_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "agent_alias_status"),
+					resource.TestCheckResourceAttrSet(resourceName, "agent_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
+					resource.TestCheckResourceAttr(resourceName, "description", "Test ALias"),
 					resource.TestCheckResourceAttr(resourceName, "routing_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
@@ -143,7 +193,7 @@ func TestAccAgentAlias_update(t *testing.T) {
 	})
 }
 
-func TestAccAgentAlias_tags(t *testing.T) {
+func TestAccBedrockAgentAlias_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrock_agent_alias.test"
@@ -266,60 +316,87 @@ func findAgentAliasByID(ctx context.Context, conn *bedrockagent.Client, id strin
 }
 
 func testAccAgentAliasConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccAgentConfig_basic(rName, "anthropic.claude-v2", "basic claude"), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAgentConfig_basic(rName, "anthropic.claude-v2", "basic claude"), testAccAgentAliasConfig_alias(rName))
+}
+
+func testAccAgentAliasConfig_alias(name string) string {
+	return fmt.Sprintf(`
 resource "aws_bedrock_agent_alias" "test" {
   agent_alias_name = %[1]q
-  agent_id         = "aws_bedrockagent_agent.test.agent_id
+  agent_id         = aws_bedrockagent_agent.test.agent_id
+  description      = "Test ALias"
+}
+`, name)
+}
+
+func testAccAgentAliasConfig_routing(name, version string) string {
+	return fmt.Sprintf(`
+resource "aws_bedrock_agent_alias" "test" {
+  agent_alias_name = %[1]q
+  agent_id         = aws_bedrockagent_agent.test.agent_id
   description      = "Test ALias"
   routing_configuration {
-	agent_version = "46"
+	agent_version = %[2]q
   }
 }
-`, rName))
+`, name, version)
+}
+
+func testAccagentAliasConfig_routingUpdateOne(rName string) string {
+	return acctest.ConfigCompose(
+		testAccAgentConfig_basic(rName, "anthropic.claude-v2", "basic claude"),
+		testAccAgentAliasConfig_alias(rName),
+		fmt.Sprintf(`
+resource "aws_bedrock_agent_alias" "second" {
+  agent_alias_name = %[1]q
+  agent_id         = aws_bedrockagent_agent.test.agent_id
+  description      = "Test ALias"
+  depends_on       = [ aws_bedrock_agent_alias.test ]
+}
+`, rName+"2"),
+	)
+}
+
+func testAccagentAliasConfig_routingUpdateTwo(rName string) string {
+	return acctest.ConfigCompose(
+		testAccAgentConfig_basic(rName, "anthropic.claude-v2", "basic claude"),
+		testAccAgentAliasConfig_routing(rName, "2"),
+	)
 }
 
 func testAccAgentAliasConfig_update(rName, desc string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAgentConfig_basic(rName, "anthropic.claude-v2", "basic claude"), fmt.Sprintf(`
 resource "aws_bedrock_agent_alias" "test" {
   agent_alias_name = %[1]q
-  agent_id         = "TLJ2L6TKGM"
+  agent_id         = aws_bedrockagent_agent.test.agent_id
   description      = %[2]q
-  routing_configuration {
-	agent_version = "46"
-  }
 }
-`, rName, desc)
+`, rName, desc))
 }
 
 func testAccAgentAliasConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAgentConfig_basic(rName, "anthropic.claude-v2", "basic claude"), fmt.Sprintf(`
 resource "aws_bedrock_agent_alias" "test" {
   agent_alias_name = %[1]q
-  agent_id         = "TLJ2L6TKGM"
+  agent_id         = aws_bedrockagent_agent.test.agent_id
   description      = "Test ALias"
-  routing_configuration {
-	agent_version = "46"
-  }
   tags = {
     %[2]q = %[3]q
   }
 }
-`, rName, tagKey1, tagValue1)
+`, rName, tagKey1, tagValue1))
 }
 
 func testAccAgentAliasConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAgentConfig_basic(rName, "anthropic.claude-v2", "basic claude"), fmt.Sprintf(`
 resource "aws_bedrock_agent_alias" "test" {
   agent_alias_name = %[1]q
-  agent_id         = "TLJ2L6TKGM"
+  agent_id         = aws_bedrockagent_agent.test.agent_id
   description      = "Test ALias"
-  routing_configuration {
-	agent_version = "46"
-  }
   tags = {
     %[2]q = %[3]q
     %[4]q = %[5]q
   }
 }
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
