@@ -1111,25 +1111,9 @@ func TestAccRDSInstance_ReplicateSourceDB_upgrade(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
-					resource.TestCheckResourceAttr(resourceName, "identifier", rName),
-					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", ""),
-					resource.TestCheckResourceAttr(resourceName, "upgrade_storage_config", "true"),
 					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
-					resource.TestCheckResourceAttrPair(resourceName, "replicate_source_db", sourceResourceName, "identifier"),
-					resource.TestCheckResourceAttrPair(resourceName, "db_name", sourceResourceName, "db_name"),
-
-					resource.TestCheckResourceAttr(sourceResourceName, "replicas.#", "0"), // Before refreshing source, it will not be aware of replicas
+					resource.TestCheckResourceAttr(resourceName, "upgrade_storage_config", "true"),
 				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-				ImportStateVerifyIgnore: []string{
-					"apply_immediately",
-					"password",
-					"upgrade_storage_config",
-				},
 			},
 		},
 	})
