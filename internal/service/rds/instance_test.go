@@ -1088,6 +1088,53 @@ func TestAccRDSInstance_ReplicateSourceDB_basic(t *testing.T) {
 	})
 }
 
+func TestAccRDSInstance_ReplicateSourceDB_upgrade(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var dbInstance, sourceDbInstance rds.DBInstance
+
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	sourceResourceName := "aws_db_instance.source"
+	resourceName := "aws_db_instance.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckInstanceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccInstanceConfig_ReplicateSourceDB_upgrade(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckInstanceExists(ctx, sourceResourceName, &sourceDbInstance),
+					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
+					resource.TestCheckResourceAttr(resourceName, "identifier", rName),
+					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", ""),
+					resource.TestCheckResourceAttrPair(resourceName, "replicate_source_db", sourceResourceName, "identifier"),
+					resource.TestCheckResourceAttrPair(resourceName, "db_name", sourceResourceName, "db_name"),
+					resource.TestCheckResourceAttrPair(sourceResourceName, "instance_class", "data.aws_rds_orderable_db_instance.test", "instance_class"),
+					resource.TestCheckResourceAttrPair(resourceName, "instance_class", "data.aws_rds_orderable_db_instance.test_upgrade", "instance_class"),
+
+					resource.TestCheckResourceAttr(sourceResourceName, "replicas.#", "0"), // Before refreshing source, it will not be aware of replicas
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"apply_immediately",
+					"password",
+					"upgrade_storage_config",
+				},
+			},
+		},
+	})
+}
+
 func TestAccRDSInstance_ReplicateSourceDB_namePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -6482,12 +6529,33 @@ data "aws_rds_orderable_db_instance" "test" {
 `, engine, license, storage, mainInstanceClasses)
 }
 
+func testAccInstanceConfig_orderableClass_upgrade(engine, license, storage string) string {
+	return fmt.Sprintf(`
+data "aws_rds_engine_version" "default_upgrade" {
+  engine = %[1]q
+}
+
+data "aws_rds_orderable_db_instance" "test_upgrade" {
+  engine         = data.aws_rds_engine_version.default.engine
+  engine_version = data.aws_rds_engine_version.default.version
+  license_model  = %[2]q
+  storage_type   = %[3]q
+
+  preferred_instance_classes = ["db.t4g.small"]
+}
+`, engine, license, storage)
+}
+
 func testAccInstanceConfig_orderableClassDB2() string {
 	return testAccInstanceConfig_orderableClass(tfrds.InstanceEngineDB2Standard, "bring-your-own-license", "gp3")
 }
 
 func testAccInstanceConfig_orderableClassMySQL() string {
 	return testAccInstanceConfig_orderableClass(tfrds.InstanceEngineMySQL, "general-public-license", "standard")
+}
+
+func testAccInstanceConfig_orderableClassMySQL_upgrade() string {
+	return testAccInstanceConfig_orderableClass_upgrade(tfrds.InstanceEngineMySQL, "general-public-license", "standard")
 }
 
 func testAccInstanceConfig_orderableClassMySQLGP3() string {
@@ -8589,6 +8657,32 @@ resource "aws_db_instance" "test" {
   identifier          = %[1]q
   instance_class      = aws_db_instance.source.instance_class
   skip_final_snapshot = true
+}
+`, rName))
+}
+
+func testAccInstanceConfig_ReplicateSourceDB_upgrade(rName string) string {
+	return acctest.ConfigCompose(
+		testAccInstanceConfig_orderableClassMySQL(),
+		testAccInstanceConfig_orderableClassMySQL_upgrade(),
+		fmt.Sprintf(`
+resource "aws_db_instance" "source" {
+  allocated_storage       = 5
+  backup_retention_period = 1
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  identifier              = "%[1]s-source"
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  password                = "avoid-plaintext-passwords"
+  username                = "tfacctest"
+  skip_final_snapshot     = true
+}
+
+resource "aws_db_instance" "test" {
+  identifier             = %[1]q
+  instance_class         = data.aws_rds_orderable_db_instance.test_upgrade.instance_class
+  replicate_source_db    = aws_db_instance.source.identifier
+  skip_final_snapshot    = true
+  upgrade_storage_config = true
 }
 `, rName))
 }
