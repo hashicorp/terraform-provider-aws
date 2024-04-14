@@ -325,9 +325,9 @@ resource "aws_imagebuilder_lifecycle_policy" "test" {
           unit  = "DAYS"
           value = 7
         }
-		tag_map = {
-			"key1" = "value1"
-		}
+        tag_map = {
+          "key1" = "value1"
+        }
       }
     }
     filter {
@@ -369,15 +369,15 @@ resource "aws_imagebuilder_lifecycle_policy" "test" {
     exclusion_rules {
       amis {
         is_public = true
-		regions = [%[2]q]
+        regions   = [%[2]q]
         last_launched {
           unit  = "WEEKS"
           value = 2
         }
-		tag_map = {
-			"key1" = "value1"
-			"key2" = "value2"
-		}
+        tag_map = {
+          "key1" = "value1"
+          "key2" = "value2"
+        }
       }
     }
     filter {
