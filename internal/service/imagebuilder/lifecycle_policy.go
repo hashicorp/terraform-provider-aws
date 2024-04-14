@@ -824,7 +824,7 @@ func expandResourceSelectionRecipes(tfList []resourceRecipesData) []awstypes.Lif
 		apiObject := awstypes.LifecyclePolicyResourceSelectionRecipe{}
 
 		if !tfObj.Name.IsNull() {
-			apiObject.SemanticVersion = aws.String(tfObj.Name.ValueString())
+			apiObject.Name = aws.String(tfObj.Name.ValueString())
 		}
 		if !tfObj.SemanticVersion.IsNull() {
 			apiObject.SemanticVersion = aws.String(tfObj.SemanticVersion.ValueString())

@@ -104,7 +104,7 @@ func TestAccImageBuilderLifecyclePolicy_policyDetails(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccLifecyclePolicyConfig_policyDetailsUpdated(rName, acctest.Region()),
+				Config: testAccLifecyclePolicyConfig_policyDetailsUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLifecyclePolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.#", "1"),
@@ -126,6 +126,46 @@ func TestAccImageBuilderLifecyclePolicy_policyDetails(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.filter.0.type", "COUNT"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.filter.0.value", "10"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccImageBuilderLifecyclePolicy_resourceSelection(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_imagebuilder_lifecycle_policy.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ImageBuilderServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccLifecyclePolicyConfig_resourceSelection(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLifecyclePolicyExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "resource_selection.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "resource_selection.0.recipes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "resource_selection.0.recipes.0.name", rName),
+					resource.TestCheckResourceAttr(resourceName, "resource_selection.0.recipes.0.semantic_version", "1.0.0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccLifecyclePolicyConfig_resourceSelectionUpdated(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckLifecyclePolicyExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "resource_selection.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "resource_selection.0.recipes.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "resource_selection.0.recipes.0.name", rName),
+					resource.TestCheckResourceAttr(resourceName, "resource_selection.0.recipes.0.semantic_version", "2.0.0"),
 				),
 			},
 		},
@@ -247,6 +287,8 @@ func testAccCheckLifecyclePolicyDestroy(ctx context.Context) resource.TestCheckF
 
 func testAccLifecyclePolicyBaseConfig(rName string) string {
 	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
@@ -268,6 +310,30 @@ resource "aws_iam_role_policy_attachment" "test" {
   role       = aws_iam_role.test.name
 }
 `, rName)
+}
+
+func testAccLifecyclePolicyBaseConfigComponent(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_imagebuilder_component" "test" {
+	data = yamlencode({
+	  phases = [{
+		name = "build"
+		steps = [{
+		  action = "ExecuteBash"
+		  inputs = {
+			commands = ["echo 'hello world'"]
+		  }
+		  name      = "example"
+		  onFailure = "Continue"
+		}]
+	  }]
+	  schemaVersion = 1.0
+	})
+	name     = %[1]q
+	platform = "Linux"
+	version  = "1.0.0"
+  }
+  `, rName)
 }
 
 func testAccLifecyclePolicyConfig_basic(rName string) string {
@@ -349,7 +415,7 @@ resource "aws_imagebuilder_lifecycle_policy" "test" {
 `, rName))
 }
 
-func testAccLifecyclePolicyConfig_policyDetailsUpdated(rName, region string) string {
+func testAccLifecyclePolicyConfig_policyDetailsUpdated(rName string) string {
 	return acctest.ConfigCompose(
 		testAccLifecyclePolicyBaseConfig(rName),
 		fmt.Sprintf(`
@@ -369,7 +435,7 @@ resource "aws_imagebuilder_lifecycle_policy" "test" {
     exclusion_rules {
       amis {
         is_public = true
-        regions   = [%[2]q]
+        regions   = ["${data.aws_region.current.name}"]
         last_launched {
           unit  = "WEEKS"
           value = 2
@@ -394,7 +460,93 @@ resource "aws_imagebuilder_lifecycle_policy" "test" {
 
   depends_on = [aws_iam_role_policy_attachment.test]
 }
-`, rName, region))
+`, rName))
+}
+
+func testAccLifecyclePolicyConfig_resourceSelection(rName string) string {
+	return acctest.ConfigCompose(
+		testAccLifecyclePolicyBaseConfig(rName),
+		testAccLifecyclePolicyBaseConfigComponent(rName),
+		fmt.Sprintf(`
+resource "aws_imagebuilder_image_recipe" "test" {
+  component {
+    component_arn = aws_imagebuilder_component.test.arn
+  }
+
+  name         = %[1]q
+  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-2-x86/x.x.x"
+  version      = "1.0.0"
+}
+
+resource "aws_imagebuilder_lifecycle_policy" "test" {
+  name           = %[1]q
+  description    = "Used for setting lifecycle policies"
+  execution_role = aws_iam_role.test.arn
+  resource_type  = "AMI_IMAGE"
+  policy_details {
+    action {
+      type = "DELETE"
+    }
+    filter {
+      type            = "AGE"
+      value           = 6
+      retain_at_least = 10
+      unit            = "YEARS"
+    }
+  }
+  resource_selection {
+    recipes {
+      name             = aws_imagebuilder_image_recipe.test.name
+      semantic_version = aws_imagebuilder_image_recipe.test.version
+    }
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+`, rName))
+}
+
+func testAccLifecyclePolicyConfig_resourceSelectionUpdated(rName string) string {
+	return acctest.ConfigCompose(
+		testAccLifecyclePolicyBaseConfig(rName),
+		testAccLifecyclePolicyBaseConfigComponent(rName),
+		fmt.Sprintf(`
+resource "aws_imagebuilder_image_recipe" "test" {
+  component {
+    component_arn = aws_imagebuilder_component.test.arn
+  }
+
+  name         = %[1]q
+  parent_image = "arn:${data.aws_partition.current.partition}:imagebuilder:${data.aws_region.current.name}:aws:image/amazon-linux-2-x86/x.x.x"
+  version      = "2.0.0"
+}
+
+resource "aws_imagebuilder_lifecycle_policy" "test" {
+  name           = %[1]q
+  description    = "Used for setting lifecycle policies"
+  execution_role = aws_iam_role.test.arn
+  resource_type  = "AMI_IMAGE"
+  policy_details {
+    action {
+      type = "DELETE"
+    }
+    filter {
+      type            = "AGE"
+      value           = 6
+      retain_at_least = 10
+      unit            = "YEARS"
+    }
+  }
+  resource_selection {
+    recipes {
+      name             = aws_imagebuilder_image_recipe.test.name
+      semantic_version = aws_imagebuilder_image_recipe.test.version
+    }
+  }
+
+  depends_on = [aws_iam_role_policy_attachment.test]
+}
+`, rName))
 }
 
 func testAccLifecyclePolicyConfig_tags1(rName string, tagKey1 string, tagValue1 string) string {
