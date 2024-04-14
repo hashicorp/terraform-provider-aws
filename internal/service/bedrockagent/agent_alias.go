@@ -284,15 +284,15 @@ func (r *agentAliasResource) Update(ctx context.Context, request resource.Update
 		}
 	}
 
-	out, err := findAgentAliasByID(ctx, conn, plan.ID.ValueString())
+	alias, err := waitAliasUpdated(ctx, conn, plan.ID.ValueString(), r.CreateTimeout(ctx, plan.Timeouts))
+
 	if err != nil {
-		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionUpdating, "Bedrock Agent", plan.AgentId.ValueString(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Alias Agent (%s) update", plan.ID.ValueString()), err.Error())
+
 		return
 	}
-	response.Diagnostics.Append(fwflex.Flatten(ctx, out.AgentAlias, &plan)...)
+
+	response.Diagnostics.Append(fwflex.Flatten(ctx, alias.AgentAlias, &plan)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -384,6 +384,25 @@ func statusAlias(ctx context.Context, conn *bedrockagent.Client, id string) retr
 func waitAliasCreated(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*bedrockagent.GetAgentAliasOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AgentAliasStatusCreating),
+		Target:  enum.Slice(awstypes.AgentAliasStatusPrepared),
+		Refresh: statusAlias(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*bedrockagent.GetAgentAliasOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString((*string)(&output.AgentAlias.AgentAliasStatus))))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitAliasUpdated(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*bedrockagent.GetAgentAliasOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.AgentAliasStatusUpdating),
 		Target:  enum.Slice(awstypes.AgentAliasStatusPrepared),
 		Refresh: statusAlias(ctx, conn, id),
 		Timeout: timeout,
