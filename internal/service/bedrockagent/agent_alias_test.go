@@ -336,7 +336,7 @@ resource "aws_bedrock_agent_alias" "test" {
   agent_id         = aws_bedrockagent_agent.test.agent_id
   description      = "Test ALias"
   routing_configuration {
-	agent_version = %[2]q
+    agent_version = %[2]q
   }
 }
 `, name, version)
@@ -351,7 +351,7 @@ resource "aws_bedrock_agent_alias" "second" {
   agent_alias_name = %[1]q
   agent_id         = aws_bedrockagent_agent.test.agent_id
   description      = "Test ALias"
-  depends_on       = [ aws_bedrock_agent_alias.test ]
+  depends_on       = [aws_bedrock_agent_alias.test]
 }
 `, rName+"2"),
 	)
