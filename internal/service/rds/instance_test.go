@@ -6529,33 +6529,12 @@ data "aws_rds_orderable_db_instance" "test" {
 `, engine, license, storage, mainInstanceClasses)
 }
 
-func testAccInstanceConfig_orderableClass_upgrade(engine, license, storage string) string {
-	return fmt.Sprintf(`
-data "aws_rds_engine_version" "default_upgrade" {
-  engine = %[1]q
-}
-
-data "aws_rds_orderable_db_instance" "test_upgrade" {
-  engine         = data.aws_rds_engine_version.default.engine
-  engine_version = data.aws_rds_engine_version.default.version
-  license_model  = %[2]q
-  storage_type   = %[3]q
-
-  preferred_instance_classes = ["db.t3.micro"]
-}
-`, engine, license, storage)
-}
-
 func testAccInstanceConfig_orderableClassDB2() string {
 	return testAccInstanceConfig_orderableClass(tfrds.InstanceEngineDB2Standard, "bring-your-own-license", "gp3")
 }
 
 func testAccInstanceConfig_orderableClassMySQL() string {
 	return testAccInstanceConfig_orderableClass(tfrds.InstanceEngineMySQL, "general-public-license", "standard")
-}
-
-func testAccInstanceConfig_orderableClassMySQL_upgrade() string {
-	return testAccInstanceConfig_orderableClass_upgrade(tfrds.InstanceEngineMySQL, "general-public-license", "standard")
 }
 
 func testAccInstanceConfig_orderableClassMySQLGP3() string {
@@ -8663,14 +8642,14 @@ resource "aws_db_instance" "test" {
 
 func testAccInstanceConfig_ReplicateSourceDB_upgrade(rName string) string {
 	return acctest.ConfigCompose(
-		testAccInstanceConfig_orderableClassMySQL_upgrade(),
+		testAccInstanceConfig_orderableClassMySQL(),
 		fmt.Sprintf(`
 resource "aws_db_instance" "source" {
   allocated_storage       = 5
   backup_retention_period = 1
-  engine                  = data.aws_rds_orderable_db_instance.test_upgrade.engine
+  engine                  = data.aws_rds_orderable_db_instance.test.engine
   identifier              = "%[1]s-source"
-  instance_class          = data.aws_rds_orderable_db_instance.test_upgrade.instance_class
+  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
   password                = "avoid-plaintext-passwords"
   username                = "tfacctest"
   skip_final_snapshot     = true
@@ -8678,7 +8657,7 @@ resource "aws_db_instance" "source" {
 
 resource "aws_db_instance" "test" {
   identifier             = %[1]q
-  instance_class         = data.aws_rds_orderable_db_instance.test_upgrade.instance_class
+  instance_class         = aws_db_instance.source.instance_class
   replicate_source_db    = aws_db_instance.source.identifier
   skip_final_snapshot    = true
   upgrade_storage_config = true
