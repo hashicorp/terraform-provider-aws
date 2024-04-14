@@ -1113,10 +1113,10 @@ func TestAccRDSInstance_ReplicateSourceDB_upgrade(t *testing.T) {
 					testAccCheckInstanceExists(ctx, resourceName, &dbInstance),
 					resource.TestCheckResourceAttr(resourceName, "identifier", rName),
 					resource.TestCheckResourceAttr(resourceName, "identifier_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "upgrade_storage_config", "true"),
+					testAccCheckInstanceReplicaAttributes(&sourceDbInstance, &dbInstance),
 					resource.TestCheckResourceAttrPair(resourceName, "replicate_source_db", sourceResourceName, "identifier"),
 					resource.TestCheckResourceAttrPair(resourceName, "db_name", sourceResourceName, "db_name"),
-					resource.TestCheckResourceAttrPair(sourceResourceName, "instance_class", "data.aws_rds_orderable_db_instance.test", "instance_class"),
-					resource.TestCheckResourceAttrPair(resourceName, "instance_class", "data.aws_rds_orderable_db_instance.test_upgrade", "instance_class"),
 
 					resource.TestCheckResourceAttr(sourceResourceName, "replicas.#", "0"), // Before refreshing source, it will not be aware of replicas
 				),
@@ -6541,7 +6541,7 @@ data "aws_rds_orderable_db_instance" "test_upgrade" {
   license_model  = %[2]q
   storage_type   = %[3]q
 
-  preferred_instance_classes = ["db.t4g.small"]
+  preferred_instance_classes = ["db.t3.micro"]
 }
 `, engine, license, storage)
 }
@@ -8663,15 +8663,14 @@ resource "aws_db_instance" "test" {
 
 func testAccInstanceConfig_ReplicateSourceDB_upgrade(rName string) string {
 	return acctest.ConfigCompose(
-		testAccInstanceConfig_orderableClassMySQL(),
 		testAccInstanceConfig_orderableClassMySQL_upgrade(),
 		fmt.Sprintf(`
 resource "aws_db_instance" "source" {
   allocated_storage       = 5
   backup_retention_period = 1
-  engine                  = data.aws_rds_orderable_db_instance.test.engine
+  engine                  = data.aws_rds_orderable_db_instance.test_upgrade.engine
   identifier              = "%[1]s-source"
-  instance_class          = data.aws_rds_orderable_db_instance.test.instance_class
+  instance_class          = data.aws_rds_orderable_db_instance.test_upgrade.instance_class
   password                = "avoid-plaintext-passwords"
   username                = "tfacctest"
   skip_final_snapshot     = true
@@ -8683,6 +8682,9 @@ resource "aws_db_instance" "test" {
   replicate_source_db    = aws_db_instance.source.identifier
   skip_final_snapshot    = true
   upgrade_storage_config = true
+  timeouts {
+    update = "120m"
+  }
 }
 `, rName))
 }
