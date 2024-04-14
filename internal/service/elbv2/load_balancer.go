@@ -101,6 +101,12 @@ func ResourceLoadBalancer() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"client_keep_alive": {
+				Type:             schema.TypeInt,
+				Optional:         true,
+				Default:          3600,
+				DiffSuppressFunc: suppressIfLBTypeNot(elbv2.LoadBalancerTypeEnumApplication),
+			},
 			"connection_logs": {
 				Type:             schema.TypeList,
 				Optional:         true,
@@ -433,6 +439,13 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
 				Key:   aws.String(loadBalancerAttributeConnectionLogsS3Enabled),
 				Value: flex.BoolValueToString(false),
+			})
+		}
+
+		if v, ok := d.GetOk("client_keep_alive"); ok {
+			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
+				Key:   aws.String(loadBalancerAttributeConnectionSettingsClientKeepAliveTimeoutSeconds),
+				Value: flex.IntValueToString(v.(int)),
 			})
 		}
 	}
