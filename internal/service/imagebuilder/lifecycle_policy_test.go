@@ -315,24 +315,24 @@ resource "aws_iam_role_policy_attachment" "test" {
 func testAccLifecyclePolicyBaseConfigComponent(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_imagebuilder_component" "test" {
-	data = yamlencode({
-	  phases = [{
-		name = "build"
-		steps = [{
-		  action = "ExecuteBash"
-		  inputs = {
-			commands = ["echo 'hello world'"]
-		  }
-		  name      = "example"
-		  onFailure = "Continue"
-		}]
-	  }]
-	  schemaVersion = 1.0
-	})
-	name     = %[1]q
-	platform = "Linux"
-	version  = "1.0.0"
-  }
+  data = yamlencode({
+    phases = [{
+      name = "build"
+      steps = [{
+        action = "ExecuteBash"
+        inputs = {
+          commands = ["echo 'hello world'"]
+        }
+        name      = "example"
+        onFailure = "Continue"
+      }]
+    }]
+    schemaVersion = 1.0
+  })
+  name     = %[1]q
+  platform = "Linux"
+  version  = "1.0.0"
+}
   `, rName)
 }
 
