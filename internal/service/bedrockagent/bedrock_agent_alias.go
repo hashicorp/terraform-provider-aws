@@ -63,7 +63,6 @@ func (r *bedrockAgentAliasResource) Schema(ctx context.Context, request resource
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"agent_alias_arn": framework.ARNAttributeComputedOnly(),
-			//"agent_alias_id":  framework.IDAttribute(),
 			"agent_alias_id": schema.StringAttribute{
 				Computed: true,
 			},
@@ -119,26 +118,10 @@ func (r *bedrockAgentAliasResource) Schema(ctx context.Context, request resource
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			// "routing_configuration": schema.ListNestedBlock{
-			// 	CustomType: fwtypes.NewListNestedObjectTypeOf[roc](ctx),
-			// 	PlanModifiers: []planmodifier.List{
-			// 		listplanmodifier.UseStateForUnknown(),
-			// 	},
-			// 	Validators: []validator.List{
-			// 		listvalidator.SizeAtMost(1),
-			// 	},
-			// 	NestedObject: schema.NestedBlockObject{
-			// 		Attributes: map[string]schema.Attribute{
-			// 			"agent_version": schema.StringAttribute{
-			// 				Required: true,
-			// 			},
-			// 		},
-			// 	},
-			// },
 			"agent_alias_history_events": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[history](ctx),
 				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
+					listvalidator.SizeAtMost(10),
 				},
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
@@ -213,18 +196,14 @@ func (r *bedrockAgentAliasResource) Create(ctx context.Context, request resource
 	data.AgentAliasId = fwflex.StringToFramework(ctx, output.AgentAlias.AgentAliasId)
 	data.AgentId = fwflex.StringToFramework(ctx, output.AgentAlias.AgentId)
 	alias, err := waitAliasCreated(ctx, conn, id, r.CreateTimeout(ctx, data.Timeouts))
-	// data.ID = data.AgentAliasId
-	// data.AgentId = fwflex.StringToFramework(ctx, output.AgentAlias.AgentId)
-	// alias, err := waitAliasCreated(ctx, conn, data.ID.ValueString(), data.AgentId.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for Alias Agent (%s) create", data.ID.ValueString()), err.Error())
 
 		return
 	}
 
-	//response.Diagnostics.Append(fwflex.Flatten(ctx, output.AgentAlias, &data)...)
 	response.Diagnostics.Append(fwflex.Flatten(ctx, alias.AgentAlias, &data)...)
-	//data.AgentId = fwflex.StringToFramework(ctx, alias.AgentAlias.AgentId)
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
@@ -242,12 +221,6 @@ func (r *bedrockAgentAliasResource) Read(ctx context.Context, request resource.R
 	}
 
 	conn := r.Meta().BedrockAgentClient(ctx)
-
-	// AliasId := data.ID.ValueString()
-	// AgentId := data.AgentId.ValueString()
-
-	// output, err := findAgentAliasByID(ctx, conn, AliasId, AgentId)
-
 	output, err := findAgentAliasByID(ctx, conn, data.ID.ValueString())
 
 	if tfresource.NotFound(err) {
@@ -274,51 +247,54 @@ func (r *bedrockAgentAliasResource) Read(ctx context.Context, request resource.R
 }
 
 func (r *bedrockAgentAliasResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var old, new bedrockAliasResourceModel
-	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	var plan, state bedrockAliasResourceModel
+	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
-	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
 	conn := r.Meta().BedrockAgentClient(ctx)
 
-	if bedrockAliasHasChanges(ctx, old, new) {
+	if bedrockAliasHasChanges(ctx, plan, state) {
 		input := &bedrockagent.UpdateAgentAliasInput{}
-		response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
+		response.Diagnostics.Append(fwflex.Expand(ctx, plan, input)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
+		input.AgentAliasId = fwflex.StringFromFramework(ctx, state.AgentAliasId)
+		input.AgentId = fwflex.StringFromFramework(ctx, plan.AgentId)
+		input.AgentAliasName = fwflex.StringFromFramework(ctx, plan.AgentAliasName)
 
 		_, err := conn.UpdateAgentAlias(ctx, input)
 
 		if err != nil {
 			response.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionUpdating, "Bedrock Agent", old.AgentId.ValueString(), err),
+				create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionUpdating, "Bedrock Agent", plan.AgentId.ValueString(), err),
 				err.Error(),
 			)
 			return
 		}
+
 	}
 
-	//out, err := findAgentAliasByID(ctx, conn, old.ID.ValueString(), old.AgentId.ValueString())
-	out, err := findAgentAliasByID(ctx, conn, old.ID.ValueString())
+	out, err := findAgentAliasByID(ctx, conn, plan.ID.ValueString())
 	if err != nil {
 		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionUpdating, "Bedrock Agent", old.AgentId.ValueString(), err),
+			create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionUpdating, "Bedrock Agent", plan.AgentId.ValueString(), err),
 			err.Error(),
 		)
 		return
 	}
-	response.Diagnostics.Append(fwflex.Flatten(ctx, out, &new)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, out.AgentAlias, &plan)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
 }
 
 func (r *bedrockAgentAliasResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
@@ -331,8 +307,6 @@ func (r *bedrockAgentAliasResource) Delete(ctx context.Context, request resource
 	conn := r.Meta().BedrockAgentClient(ctx)
 
 	if !data.AgentAliasId.IsNull() {
-		//AgentId := data.AgentId.ValueString()
-		//AgentAliasId := data.ID.ValueString()
 		_, err := conn.DeleteAgentAlias(ctx, &bedrockagent.DeleteAgentAliasInput{
 			AgentId:      fwflex.StringFromFramework(ctx, data.AgentId),
 			AgentAliasId: fwflex.StringFromFramework(ctx, data.AgentAliasId),
@@ -353,12 +327,6 @@ func (r *bedrockAgentAliasResource) Delete(ctx context.Context, request resource
 func (r *bedrockAgentAliasResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
 	r.SetTagsAll(ctx, request, response)
 }
-
-// func (r *bedrockAgentAliasResource) ImportState(ctx context.Context, request resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-// 	resource.ImportStatePassthroughID(ctx, path.Root("id"), request, resp)
-// }
-
-//
 
 func findAgentAliasByID(ctx context.Context, conn *bedrockagent.Client, id string) (*bedrockagent.GetAgentAliasOutput, error) {
 	parts, err := intflex.ExpandResourceId(id, 2, false)
@@ -410,7 +378,6 @@ func waitAliasCreated(ctx context.Context, conn *bedrockagent.Client, id string,
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AgentAliasStatusCreating),
 		Target:  enum.Slice(awstypes.AgentAliasStatusPrepared),
-		//Refresh: statusAlias(ctx, conn, id, agent),
 		Refresh: statusAlias(ctx, conn, id),
 		Timeout: timeout,
 	}
@@ -456,5 +423,7 @@ type history struct {
 
 func bedrockAliasHasChanges(_ context.Context, plan, state bedrockAliasResourceModel) bool {
 	return !plan.AgentAliasName.Equal(state.AgentAliasName) ||
-		!plan.Description.Equal(state.Description)
+		!plan.Description.Equal(state.Description) ||
+		!plan.AgentAliasId.Equal(state.AgentAliasId) ||
+		!plan.RoutingConfiguration.Equal(state.RoutingConfiguration)
 }
