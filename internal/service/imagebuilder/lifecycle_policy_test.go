@@ -75,12 +75,22 @@ func TestAccImageBuilderLifecyclePolicy_policyDetails(t *testing.T) {
 		CheckDestroy:             testAccCheckLifecyclePolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccLifecyclePolicyConfig_policyDetails(rName, "DISABLE", "AGE", "6", "5"),
+				Config: testAccLifecyclePolicyConfig_policyDetails(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLifecyclePolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.action.0.type", "DISABLE"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.action.0.include_resources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.action.0.include_resources.0.amis", "true"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.exclusion_rules.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.exclusion_rules.0.amis.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.exclusion_rules.0.amis.0.is_public", "false"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.exclusion_rules.0.amis.0.last_launched.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.exclusion_rules.0.amis.0.last_launched.0.unit", "DAYS"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.exclusion_rules.0.amis.0.last_launched.0.value", "7"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.exclusion_rules.0.amis.0.tag_map.%", "1"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.exclusion_rules.0.amis.0.tag_map.key1", "value1"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.filter.0.type", "AGE"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.filter.0.value", "6"),
@@ -94,12 +104,25 @@ func TestAccImageBuilderLifecyclePolicy_policyDetails(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccLifecyclePolicyConfig_policyDetailsUpdated(rName, "DELETE", "COUNT", "10"),
+				Config: testAccLifecyclePolicyConfig_policyDetailsUpdated(rName, acctest.Region()),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckLifecyclePolicyExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.action.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.action.0.type", "DELETE"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.action.0.include_resources.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.action.0.include_resources.0.amis", "true"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.action.0.include_resources.0.snapshots", "true"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.exclusion_rules.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.exclusion_rules.0.amis.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.exclusion_rules.0.amis.0.is_public", "true"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.exclusion_rules.0.amis.0.regions.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.exclusion_rules.0.amis.0.last_launched.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.exclusion_rules.0.amis.0.last_launched.0.unit", "WEEKS"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.exclusion_rules.0.amis.0.last_launched.0.value", "2"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.exclusion_rules.0.amis.0.tag_map.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.exclusion_rules.0.amis.0.tag_map.key1", "value1"),
+					resource.TestCheckResourceAttr(resourceName, "policy_details.0.exclusion_rules.0.amis.0.tag_map.key2", "value2"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.filter.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.filter.0.type", "COUNT"),
 					resource.TestCheckResourceAttr(resourceName, "policy_details.0.filter.0.value", "10"),
@@ -279,7 +302,7 @@ resource "aws_imagebuilder_lifecycle_policy" "test" {
 `, rName))
 }
 
-func testAccLifecyclePolicyConfig_policyDetails(rName, actionType, filterType, filterValue, retainAtLeast string) string {
+func testAccLifecyclePolicyConfig_policyDetails(rName string) string {
 	return acctest.ConfigCompose(
 		testAccLifecyclePolicyBaseConfig(rName),
 		fmt.Sprintf(`
@@ -290,12 +313,27 @@ resource "aws_imagebuilder_lifecycle_policy" "test" {
   resource_type  = "AMI_IMAGE"
   policy_details {
     action {
-      type = %[2]q
+      type = "DISABLE"
+      include_resources {
+        amis = true
+      }
+    }
+    exclusion_rules {
+      amis {
+        is_public = false
+        last_launched {
+          unit  = "DAYS"
+          value = 7
+        }
+		tag_map = {
+			"key1" = "value1"
+		}
+      }
     }
     filter {
-      type            = %[3]q
-      value           = %[4]q
-      retain_at_least = %[5]q
+      type            = "AGE"
+      value           = "6"
+      retain_at_least = "5"
       unit            = "YEARS"
     }
   }
@@ -308,10 +346,10 @@ resource "aws_imagebuilder_lifecycle_policy" "test" {
 
   depends_on = [aws_iam_role_policy_attachment.test]
 }
-`, rName, actionType, filterType, filterValue, retainAtLeast))
+`, rName))
 }
 
-func testAccLifecyclePolicyConfig_policyDetailsUpdated(rName, actionType, filterType, filterValue string) string {
+func testAccLifecyclePolicyConfig_policyDetailsUpdated(rName, region string) string {
 	return acctest.ConfigCompose(
 		testAccLifecyclePolicyBaseConfig(rName),
 		fmt.Sprintf(`
@@ -322,11 +360,29 @@ resource "aws_imagebuilder_lifecycle_policy" "test" {
   resource_type  = "AMI_IMAGE"
   policy_details {
     action {
-      type = %[2]q
+      type = "DELETE"
+      include_resources {
+        amis      = true
+        snapshots = true
+      }
+    }
+    exclusion_rules {
+      amis {
+        is_public = true
+		regions = [%[2]q]
+        last_launched {
+          unit  = "WEEKS"
+          value = 2
+        }
+		tag_map = {
+			"key1" = "value1"
+			"key2" = "value2"
+		}
+      }
     }
     filter {
-      type  = %[3]q
-      value = %[4]q
+      type  = "COUNT"
+      value = "10"
     }
   }
   resource_selection {
@@ -338,7 +394,7 @@ resource "aws_imagebuilder_lifecycle_policy" "test" {
 
   depends_on = [aws_iam_role_policy_attachment.test]
 }
-`, rName, actionType, filterType, filterValue))
+`, rName, region))
 }
 
 func testAccLifecyclePolicyConfig_tags1(rName string, tagKey1 string, tagValue1 string) string {

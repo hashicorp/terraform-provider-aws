@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -125,12 +126,24 @@ func (r *resourceLifecyclePolicy) Schema(ctx context.Context, req resource.Schem
 											Attributes: map[string]schema.Attribute{
 												"amis": schema.BoolAttribute{
 													Optional: true,
+													Computed: true,
+													PlanModifiers: []planmodifier.Bool{
+														boolplanmodifier.UseStateForUnknown(),
+													},
 												},
 												"containers": schema.BoolAttribute{
 													Optional: true,
+													Computed: true,
+													PlanModifiers: []planmodifier.Bool{
+														boolplanmodifier.UseStateForUnknown(),
+													},
 												},
 												"snapshots": schema.BoolAttribute{
 													Optional: true,
+													Computed: true,
+													PlanModifiers: []planmodifier.Bool{
+														boolplanmodifier.UseStateForUnknown(),
+													},
 												},
 											},
 										},
@@ -364,6 +377,10 @@ func (r *resourceLifecyclePolicy) Create(ctx context.Context, req resource.Creat
 
 	plan.Status = flex.StringValueToFramework(ctx, readOut.Status)
 	plan.ResourceType = flex.StringValueToFramework(ctx, readOut.ResourceType)
+
+	policyDetails, d := flattenPolicyDetails(ctx, readOut.PolicyDetails)
+	resp.Diagnostics.Append(d...)
+	plan.PolicyDetails = policyDetails
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
@@ -646,18 +663,10 @@ func expandPolicyDetailAction(ctx context.Context, tfList []resourceActionData) 
 func expandPolicyDetailActionIncludeResources(tfList []resourceIncludeResourcesData) *awstypes.LifecyclePolicyDetailActionIncludeResources {
 	tfObj := tfList[0]
 
-	apiObject := awstypes.LifecyclePolicyDetailActionIncludeResources{}
-
-	if !tfObj.Amis.IsNull() {
-		apiObject.Amis = aws.ToBool(tfObj.Amis.ValueBoolPointer())
-	}
-
-	if !tfObj.Containers.IsNull() {
-		apiObject.Containers = aws.ToBool(tfObj.Containers.ValueBoolPointer())
-	}
-
-	if !tfObj.Snapshots.IsNull() {
-		apiObject.Snapshots = aws.ToBool(tfObj.Snapshots.ValueBoolPointer())
+	apiObject := awstypes.LifecyclePolicyDetailActionIncludeResources{
+		Amis:       tfObj.Amis.ValueBool(),
+		Containers: tfObj.Containers.ValueBool(),
+		Snapshots:  tfObj.Snapshots.ValueBool(),
 	}
 
 	return &apiObject
@@ -750,11 +759,11 @@ func expandPolicyDetailExclusionRulesAMIS(ctx context.Context, tfList []resource
 	}
 
 	if !tfObj.Regions.IsNull() {
-		apiObject.Regions = flex.ExpandFrameworkStringValueList(ctx, tfObj.LastLaunched)
+		apiObject.Regions = flex.ExpandFrameworkStringValueList(ctx, tfObj.Regions)
 	}
 
 	if !tfObj.SharedAccounts.IsNull() {
-		apiObject.Regions = flex.ExpandFrameworkStringValueList(ctx, tfObj.SharedAccounts)
+		apiObject.SharedAccounts = flex.ExpandFrameworkStringValueList(ctx, tfObj.SharedAccounts)
 	}
 
 	if !tfObj.TagMap.IsNull() {
@@ -898,9 +907,9 @@ func flattenIncludeResources(ctx context.Context, apiObject *awstypes.LifecycleP
 	}
 
 	obj := map[string]attr.Value{
-		"amis":       flex.BoolToFramework(ctx, &apiObject.Amis),
-		"containers": flex.BoolToFramework(ctx, &apiObject.Containers),
-		"snapshots":  flex.BoolToFramework(ctx, &apiObject.Snapshots),
+		"amis":       flex.BoolToFramework(ctx, aws.Bool(apiObject.Amis)),
+		"containers": flex.BoolToFramework(ctx, aws.Bool(apiObject.Containers)),
+		"snapshots":  flex.BoolToFramework(ctx, aws.Bool(apiObject.Snapshots)),
 	}
 
 	objVal, d := types.ObjectValue(resourceIncludeResourcesAttrTypes, obj)
@@ -973,7 +982,7 @@ func flattenExclusionRulesAMIS(ctx context.Context, apiObject *awstypes.Lifecycl
 	diags.Append(d...)
 
 	obj := map[string]attr.Value{
-		"is_public":       flex.BoolToFramework(ctx, &apiObject.IsPublic),
+		"is_public":       flex.BoolToFramework(ctx, aws.Bool(apiObject.IsPublic)),
 		"regions":         flex.FlattenFrameworkStringValueList(ctx, apiObject.Regions),
 		"shared_accounts": flex.FlattenFrameworkStringValueList(ctx, apiObject.SharedAccounts),
 		"tag_map":         flex.FlattenFrameworkStringValueMap(ctx, apiObject.TagMap),
@@ -1113,7 +1122,7 @@ type resourceFilterData struct {
 }
 
 type resourceExclusionRulesData struct {
-	AMIs   types.List `tfsdk:"ami"`
+	AMIs   types.List `tfsdk:"amis"`
 	TagMap types.Map  `tfsdk:"tag_map"`
 }
 
