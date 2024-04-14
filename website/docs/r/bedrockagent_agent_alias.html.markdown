@@ -111,17 +111,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Agents for Amazon Bedrock Agent Alias using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Agents for Amazon Bedrock Agent Alias using the `ABCDE12345,FGHIJ67890`. For example:
 
 ```terraform
 import {
   to = aws_bedrockagent_agent_alias.example
-  id = "agent_alias-id-12345678"
+  id = "ABCDE12345,FGHIJ67890"
 }
 ```
 
-Using `terraform import`, import Agents for Amazon Bedrock Agent Alias using the `example_id_arg`. For example:
+Using `terraform import`, import Agents for Amazon Bedrock Agent Alias using the `AGENT_ID,ALIAS_ID`. For example:
 
 ```console
-% terraform import aws_bedrockagent_agent_alias.example agent_alias-id-12345678
+% terraform import aws_bedrockagent_agent_alias.example AGENT_ID,ALIAS_ID
 ```
