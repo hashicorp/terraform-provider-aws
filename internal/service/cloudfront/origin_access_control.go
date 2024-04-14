@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
-	"github.com/aws/aws-sdk-go-v2/service/route53domains/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -175,7 +174,7 @@ func resourceOriginAccessControlDelete(ctx context.Context, d *schema.ResourceDa
 		IfMatch: aws.String(d.Get("etag").(string)),
 	})
 
-	if errs.IsAErrorMessageContains[*types.InvalidInput](err, "not found") {
+	if errs.IsA[*awstypes.NoSuchOriginAccessControl](err) {
 		return diags
 	}
 

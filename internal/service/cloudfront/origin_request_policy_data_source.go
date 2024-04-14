@@ -130,11 +130,9 @@ func dataSourceOriginRequestPolicyRead(ctx context.Context, d *schema.ResourceDa
 		input := &cloudfront.ListOriginRequestPoliciesInput{}
 
 		err := ListOriginRequestPoliciesPages(ctx, input, func(page *cloudfront.ListOriginRequestPoliciesOutput, lastPage bool) bool {
-
 			if page == nil {
 				return !lastPage
 			}
-
 			for _, policySummary := range page.OriginRequestPolicyList.Items {
 				if originRequestPolicy := policySummary.OriginRequestPolicy; aws.ToString(originRequestPolicy.OriginRequestPolicyConfig.Name) == name {
 					originRequestPolicyID = aws.ToString(originRequestPolicy.Id)
@@ -142,7 +140,6 @@ func dataSourceOriginRequestPolicyRead(ctx context.Context, d *schema.ResourceDa
 					return false
 				}
 			}
-
 			return !lastPage
 		}, meta)
 

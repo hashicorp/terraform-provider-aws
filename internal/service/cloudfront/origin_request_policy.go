@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
-	"github.com/aws/aws-sdk-go-v2/service/route53domains/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -270,7 +269,7 @@ func resourceOriginRequestPolicyDelete(ctx context.Context, d *schema.ResourceDa
 		IfMatch: aws.String(d.Get("etag").(string)),
 	})
 
-	if errs.IsAErrorMessageContains[*types.InvalidInput](err, "not found") {
+	if errs.IsA[*awstypes.NoSuchOriginRequestPolicy](err) {
 		return diags
 	}
 
@@ -343,7 +342,7 @@ func flattenOriginRequestPolicyCookiesConfig(apiObject *awstypes.OriginRequestPo
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.CookieBehavior; v != awstypes.OriginRequestPolicyCookieBehavior("") {
-		tfMap["cookie_behavior"] = awstypes.OriginRequestPolicyCookieBehavior(v)
+		tfMap["cookie_behavior"] = v
 	}
 
 	if v := flattenCookieNames(apiObject.Cookies); len(v) > 0 {
@@ -361,7 +360,7 @@ func flattenOriginRequestPolicyHeadersConfig(apiObject *awstypes.OriginRequestPo
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.HeaderBehavior; v != awstypes.OriginRequestPolicyHeaderBehavior("") {
-		tfMap["header_behavior"] = awstypes.OriginRequestPolicyHeaderBehavior(v)
+		tfMap["header_behavior"] = v
 	}
 
 	if v := flattenHeaders(apiObject.Headers); len(v) > 0 {
@@ -379,7 +378,7 @@ func flattenOriginRequestPolicyQueryStringsConfig(apiObject *awstypes.OriginRequ
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.QueryStringBehavior; v != awstypes.OriginRequestPolicyQueryStringBehavior("") {
-		tfMap["query_string_behavior"] = awstypes.OriginRequestPolicyQueryStringBehavior(v)
+		tfMap["query_string_behavior"] = v
 	}
 
 	if v := flattenQueryStringNames(apiObject.QueryStrings); len(v) > 0 {

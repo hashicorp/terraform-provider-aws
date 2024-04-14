@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
-	"github.com/aws/aws-sdk-go-v2/service/route53domains/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -177,7 +176,7 @@ func resourcePublicKeyDelete(ctx context.Context, d *schema.ResourceData, meta i
 		IfMatch: aws.String(d.Get("etag").(string)),
 	})
 
-	if errs.IsAErrorMessageContains[*types.InvalidInput](err, "not found") {
+	if errs.IsA[*awstypes.NoSuchPublicKey](err) {
 		return diags
 	}
 
@@ -188,15 +187,14 @@ func resourcePublicKeyDelete(ctx context.Context, d *schema.ResourceData, meta i
 	return diags
 }
 
-func findPublicKeyByID(ctx context.Context, meta interface{}, id string) (*cloudfront.GetPublicKeyOutput, error) {
-	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
+func findPublicKeyByID(ctx context.Context, conn *cloudfront.Client, id string) (*cloudfront.GetPublicKeyOutput, error) {
 	input := &cloudfront.GetPublicKeyInput{
 		Id: aws.String(id),
 	}
 
 	output, err := conn.GetPublicKey(ctx, input)
 
-	if errs.IsAErrorMessageContains[*types.InvalidInput](err, "not found") {
+	if errs.IsA[*awstypes.NoSuchPublicKey](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

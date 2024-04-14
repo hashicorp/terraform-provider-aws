@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
-	"github.com/aws/aws-sdk-go-v2/service/route53domains/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -126,7 +125,7 @@ func resourceMonitoringSubscriptionDelete(ctx context.Context, d *schema.Resourc
 		DistributionId: aws.String(d.Id()),
 	})
 
-	if errs.IsAErrorMessageContains[*types.InvalidInput](err, "not found") {
+	if errs.IsA[*awstypes.NoSuchDistribution](err) {
 		return diags
 	}
 
@@ -191,8 +190,8 @@ func flattenRealtimeMetricsSubscriptionConfig(apiObject *awstypes.RealtimeMetric
 
 	tfMap := map[string]interface{}{}
 
-	if v := apiObject.RealtimeMetricsSubscriptionStatus; &v != nil {
-		tfMap["realtime_metrics_subscription_status"] = awstypes.RealtimeMetricsSubscriptionStatus(v)
+	if v := apiObject.RealtimeMetricsSubscriptionStatus; v != awstypes.RealtimeMetricsSubscriptionStatus("") {
+		tfMap["realtime_metrics_subscription_status"] = v
 	}
 
 	return tfMap

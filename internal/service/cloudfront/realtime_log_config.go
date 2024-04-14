@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
-	"github.com/aws/aws-sdk-go-v2/service/route53domains/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -193,7 +192,7 @@ func resourceRealtimeLogConfigDelete(ctx context.Context, d *schema.ResourceData
 		ARN: aws.String(d.Id()),
 	})
 
-	if errs.IsAErrorMessageContains[*types.InvalidInput](err, "not found") {
+	if errs.IsA[*awstypes.NoSuchRealtimeLogConfig](err) {
 		return diags
 	}
 
@@ -290,9 +289,9 @@ func flattenEndPoints(apiObjects []awstypes.EndPoint) []interface{} {
 	}
 
 	var tfList []interface{}
-
+	emptyObj := awstypes.EndPoint{}
 	for _, apiObject := range apiObjects {
-		if &apiObject == nil {
+		if apiObject == emptyObj {
 			continue
 		}
 

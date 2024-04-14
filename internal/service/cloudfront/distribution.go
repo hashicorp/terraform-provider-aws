@@ -6,13 +6,11 @@ package cloudfront
 import (
 	"context"
 	"log"
-
 	"time"
-
-	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -1027,10 +1025,6 @@ func resourceDistributionDelete(ctx context.Context, d *schema.ResourceData, met
 		_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, 1*time.Minute, func() (interface{}, error) {
 			return nil, deleteDistribution(ctx, conn, d.Id())
 		}, "PreconditionFailed", "InvalidIfMatchVersion")
-	}
-
-	if errs.IsA[*awstypes.NoSuchDistribution](err) {
-		return diags
 	}
 
 	if errs.IsA[*awstypes.DistributionNotDisabled](err) {

@@ -13,8 +13,7 @@ import (
 
 // Custom CloudFront listing functions using similar formatting as other service generated code.
 
-func ListCachePoliciesPages(ctx context.Context, input *cloudfront.ListCachePoliciesInput, fn func(*cloudfront.ListCachePoliciesOutput, bool) bool, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
+func ListCachePoliciesPages(ctx context.Context, input *cloudfront.ListCachePoliciesInput, fn func(*cloudfront.ListCachePoliciesOutput, bool) bool, conn *cloudfront.Client) error {
 	for {
 		output, err := conn.ListCachePolicies(ctx, input)
 		if err != nil {
@@ -103,8 +102,7 @@ func ListOriginRequestPoliciesPages(ctx context.Context, input *cloudfront.ListO
 	return nil
 }
 
-func ListResponseHeadersPoliciesPages(ctx context.Context, input *cloudfront.ListResponseHeadersPoliciesInput, fn func(*cloudfront.ListResponseHeadersPoliciesOutput, bool) bool, meta interface{}) error {
-	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
+func ListResponseHeadersPoliciesPages(ctx context.Context, input *cloudfront.ListResponseHeadersPoliciesInput, fn func(*cloudfront.ListResponseHeadersPoliciesOutput, bool) bool, conn *cloudfront.Client) error {
 	for {
 		output, err := conn.ListResponseHeadersPolicies(ctx, input)
 		if err != nil {

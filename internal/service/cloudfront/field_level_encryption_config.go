@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
-	"github.com/aws/aws-sdk-go-v2/service/route53domains/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -248,7 +247,7 @@ func resourceFieldLevelEncryptionConfigDelete(ctx context.Context, d *schema.Res
 		IfMatch: aws.String(d.Get("etag").(string)),
 	})
 
-	if errs.IsAErrorMessageContains[*types.InvalidInput](err, "not found") {
+	if errs.IsA[*awstypes.NoSuchFieldLevelEncryptionConfig](err) {
 		return diags
 	}
 
@@ -413,7 +412,8 @@ func expandQueryArgProfileItems(tfList []interface{}) []awstypes.QueryArgProfile
 
 		apiObject := *expandQueryArgProfile(tfMap)
 
-		if &apiObject == nil {
+		emptyObj := awstypes.QueryArgProfile{}
+		if apiObject == emptyObj {
 			continue
 		}
 
@@ -450,7 +450,8 @@ func flattenContentTypeProfiles(apiObject *awstypes.ContentTypeProfiles) map[str
 
 	tfmapItems := make([]*awstypes.ContentTypeProfile, 0)
 	for _, v := range apiObject.Items {
-		tfmapItems = append(tfmapItems, &v)
+		item := v
+		tfmapItems = append(tfmapItems, &item)
 	}
 
 	if v := apiObject.Items; len(v) > 0 {
@@ -472,7 +473,7 @@ func flattenContentTypeProfile(apiObject *awstypes.ContentTypeProfile) map[strin
 	}
 
 	if v := apiObject.Format; v != awstypes.Format("") {
-		tfMap["format"] = awstypes.Format(v)
+		tfMap["format"] = v
 	}
 
 	if v := apiObject.ProfileId; v != nil {
@@ -559,8 +560,9 @@ func flattenQueryArgProfileItems(apiObjects []awstypes.QueryArgProfile) []interf
 
 	var tfList []interface{}
 
+	emptyObj := awstypes.QueryArgProfile{}
 	for _, apiObject := range apiObjects {
-		if &apiObject == nil {
+		if apiObject == emptyObj {
 			continue
 		}
 

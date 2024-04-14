@@ -10,7 +10,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
-	"github.com/aws/aws-sdk-go-v2/service/route53domains/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -499,7 +498,7 @@ func resourceResponseHeadersPolicyDelete(ctx context.Context, d *schema.Resource
 		IfMatch: aws.String(d.Get("etag").(string)),
 	})
 
-	if errs.IsAErrorMessageContains[*types.InvalidInput](err, "not found") {
+	if errs.IsA[*awstypes.NoSuchResponseHeadersPolicy](err) {
 		return diags
 	}
 
@@ -783,10 +782,6 @@ func expandResponseHeadersPolicyCustomHeaders(tfList []interface{}) []awstypes.R
 }
 
 func flattenResponseHeadersPolicyCustomHeadersConfig(apiObject awstypes.ResponseHeadersPolicyCustomHeadersConfig) map[string]interface{} {
-	if &apiObject == nil {
-		return nil
-	}
-
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Items; len(v) > 0 {
@@ -825,8 +820,9 @@ func flattenResponseHeadersPolicyCustomHeaders(apiObjects []awstypes.ResponseHea
 
 	var tfList []interface{}
 
+	emptyObj := awstypes.ResponseHeadersPolicyCustomHeader{}
 	for _, apiObject := range apiObjects {
-		if &apiObject == nil {
+		if apiObject == emptyObj {
 			continue
 		}
 
@@ -933,8 +929,9 @@ func flattenResponseHeadersPolicyRemoveHeaders(apiObjects []awstypes.ResponseHea
 
 	var tfList []interface{}
 
+	emptyHeader := awstypes.ResponseHeadersPolicyRemoveHeader{}
 	for _, apiObject := range apiObjects {
-		if &apiObject == nil {
+		if apiObject == emptyHeader {
 			continue
 		}
 
@@ -1177,7 +1174,7 @@ func flattenResponseHeadersPolicyFrameOptions(apiObject *awstypes.ResponseHeader
 
 	tfMap := map[string]interface{}{}
 
-	if v := string(apiObject.FrameOption); &v != nil {
+	if v := string(apiObject.FrameOption); v != "" {
 		tfMap["frame_option"] = aws.ToString(&v)
 	}
 
@@ -1199,8 +1196,8 @@ func flattenResponseHeadersPolicyReferrerPolicy(apiObject *awstypes.ResponseHead
 		tfMap["override"] = aws.Bool(*v)
 	}
 
-	if v := apiObject.ReferrerPolicy; &v != nil {
-		tfMap["referrer_policy"] = awstypes.ReferrerPolicyList(v)
+	if v := apiObject.ReferrerPolicy; v != awstypes.ReferrerPolicyList("") {
+		tfMap["referrer_policy"] = v
 	}
 
 	return tfMap

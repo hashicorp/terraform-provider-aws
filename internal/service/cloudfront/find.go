@@ -9,8 +9,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -21,7 +21,7 @@ func FindCachePolicyByID(ctx context.Context, conn *cloudfront.Client, id string
 
 	output, err := conn.GetCachePolicy(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, "NoSuchCachePolicy") {
+	if errs.IsA[*awstypes.NoSuchCachePolicy](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -46,7 +46,7 @@ func FindFieldLevelEncryptionConfigByID(ctx context.Context, conn *cloudfront.Cl
 
 	output, err := conn.GetFieldLevelEncryptionConfig(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, "NoSuchCachePolicy") {
+	if errs.IsA[*awstypes.NoSuchCachePolicy](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -71,7 +71,7 @@ func FindFieldLevelEncryptionProfileByID(ctx context.Context, conn *cloudfront.C
 
 	output, err := conn.GetFieldLevelEncryptionProfile(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, "NoSuchFieldLevelEncryptionProfile") {
+	if errs.IsA[*awstypes.NoSuchFieldLevelEncryptionProfile](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -96,7 +96,7 @@ func FindMonitoringSubscriptionByDistributionID(ctx context.Context, conn *cloud
 
 	output, err := conn.GetMonitoringSubscription(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, "NoSuchDistribution", "NoSuchMonitoringSubscription") {
+	if errs.IsA[*awstypes.NoSuchDistribution](err) || errs.IsA[*awstypes.NoSuchMonitoringSubscription](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -121,7 +121,7 @@ func FindOriginRequestPolicyByID(ctx context.Context, conn *cloudfront.Client, i
 
 	output, err := conn.GetOriginRequestPolicy(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, "NoSuchOriginRequestPolicy") {
+	if errs.IsA[*awstypes.NoSuchOriginRequestPolicy](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -146,7 +146,7 @@ func FindRealtimeLogConfigByARN(ctx context.Context, conn *cloudfront.Client, ar
 
 	output, err := conn.GetRealtimeLogConfig(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, "NoSuchRealtimeLogConfig") {
+	if errs.IsA[*awstypes.NoSuchRealtimeLogConfig](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -171,7 +171,7 @@ func FindRealtimeLogConfigByName(ctx context.Context, conn *cloudfront.Client, n
 
 	output, err := conn.GetRealtimeLogConfig(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, "NoSuchRealtimeLogConfig") {
+	if errs.IsA[*awstypes.NoSuchRealtimeLogConfig](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -196,7 +196,7 @@ func FindResponseHeadersPolicyByID(ctx context.Context, conn *cloudfront.Client,
 
 	output, err := conn.GetResponseHeadersPolicy(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, "NoSuchResponseHeadersPolicy") {
+	if errs.IsA[*awstypes.NoSuchResponseHeadersPolicy](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
