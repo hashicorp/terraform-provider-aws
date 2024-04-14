@@ -300,6 +300,8 @@ func TestAccMWAAEnvironment_full(t *testing.T) {
 					acctest.CheckResourceAttrGlobalARNNoAccount(resourceName, "source_bucket_arn", "s3", rName),
 					resource.TestCheckResourceAttr(resourceName, "startup_script_s3_path", "startup.sh"),
 					resource.TestCheckResourceAttrSet(resourceName, "status"),
+					resource.TestCheckResourceAttrSet(resourceName, "database_vpc_endpoint_service"),
+					resource.TestCheckResourceAttrSet(resourceName, "webserver_vpc_endpoint_service"),
 					resource.TestCheckResourceAttr(resourceName, "webserver_access_mode", string(awstypes.WebserverAccessModePublicOnly)),
 					resource.TestCheckResourceAttrSet(resourceName, "webserver_url"),
 					resource.TestCheckResourceAttr(resourceName, "weekly_maintenance_window_start", "SAT:03:00"),
