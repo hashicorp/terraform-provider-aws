@@ -195,6 +195,7 @@ func ResourceContainerRecipe() *schema.Resource {
 										// this is not compatible with TypeString's zero value.
 										Type:     schema.TypeBool,
 										Optional: true,
+										Computed: true,
 										ForceNew: true,
 									},
 									"virtual_name": {
