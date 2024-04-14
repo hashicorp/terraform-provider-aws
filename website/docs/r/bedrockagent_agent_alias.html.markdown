@@ -65,7 +65,7 @@ resource "aws_bedrockagent_agent" "test" {
   foundation_model        = "anthropic.claude-v2"
 }
 resource "aws_bedrockagent_agent_alias" "example" {
-  agent_alias_name = "AgentAlias"
+  agent_alias_name = "my-agent-alias"
   agent_id         = aws_bedrockagent_agent.test.agent_id
   description      = "Test ALias"
 }
