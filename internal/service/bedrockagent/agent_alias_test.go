@@ -145,6 +145,7 @@ func TestAccBedrockAgentAlias_routingUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_alias.test"
+	updatedVersion := "2"
 	var v bedrockagent.GetAgentAliasOutput
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -175,7 +176,7 @@ func TestAccBedrockAgentAlias_routingUpdate(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccagentAliasConfig_routingUpdateTwo(rName),
+				Config: testAccagentAliasConfig_routingUpdateTwo(rName, updatedVersion),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAgentAliasExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "agent_alias_name", rName),
@@ -186,7 +187,7 @@ func TestAccBedrockAgentAlias_routingUpdate(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttr(resourceName, "description", "Test ALias"),
 					resource.TestCheckResourceAttr(resourceName, "routing_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "routing_configuration.0.agent_version", "2"),
+					resource.TestCheckResourceAttr(resourceName, "routing_configuration.0.agent_version", updatedVersion),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
@@ -358,10 +359,10 @@ resource "aws_bedrockagent_agent_alias" "second" {
 	)
 }
 
-func testAccagentAliasConfig_routingUpdateTwo(rName string) string {
+func testAccagentAliasConfig_routingUpdateTwo(rName, version string) string {
 	return acctest.ConfigCompose(
 		testAccAgentConfig_basic(rName, "anthropic.claude-v2", "basic claude"),
-		testAccAgentAliasConfig_routing(rName, "2"),
+		testAccAgentAliasConfig_routing(rName, version),
 	)
 }
 
