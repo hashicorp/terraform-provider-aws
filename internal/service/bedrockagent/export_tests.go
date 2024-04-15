@@ -5,4 +5,5 @@ package bedrockagent
 
 var (
 	ResourceAgentAlias = newAgentAliasResource
+	FindAgentAliasByID = findAgentAliasByID
 )
