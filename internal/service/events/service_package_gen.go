@@ -61,8 +61,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceBusPolicy,
+			Factory:  resourceBusPolicy,
 			TypeName: "aws_cloudwatch_event_bus_policy",
+			Name:     "Event Bus Policy",
 		},
 		{
 			Factory:  ResourceConnection,

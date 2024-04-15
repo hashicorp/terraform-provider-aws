@@ -8,8 +8,10 @@ var (
 	ResourceAPIDestination = resourceAPIDestination
 	ResourceArchive        = resourceArchive
 	ResourceBus            = resourceBus
+	ResourceBusPolicy      = resourceBusPolicy
 
 	FindAPIDestinationByName = findAPIDestinationByName
 	FindArchiveByName        = findArchiveByName
 	FindEventBusByName       = findEventBusByName
+	FindEventBusPolicyByName = findEventBusPolicyByName
 )
