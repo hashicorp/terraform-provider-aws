@@ -191,6 +191,11 @@ func ResourceEndpoint() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
+						"sasl_mechanism": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(dms.KafkaSaslMechanism_Values(), false),
+						},
 						"security_protocol": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -1865,6 +1870,10 @@ func expandKafkaSettings(tfMap map[string]interface{}) *dms.KafkaSettings {
 		apiObject.SaslUsername = aws.String(v)
 	}
 
+	if v, ok := tfMap["sasl_mechanism"].(string); ok && v != "" {
+		apiObject.SaslMechanism = aws.String(v)
+	}
+
 	if v, ok := tfMap["security_protocol"].(string); ok && v != "" {
 		apiObject.SecurityProtocol = aws.String(v)
 	}
@@ -1945,6 +1954,10 @@ func flattenKafkaSettings(apiObject *dms.KafkaSettings) map[string]interface{} {
 
 	if v := apiObject.SaslUsername; v != nil {
 		tfMap["sasl_username"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.SaslMechanism; v != nil {
+		tfMap["sasl_mechanism"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.SecurityProtocol; v != nil {
