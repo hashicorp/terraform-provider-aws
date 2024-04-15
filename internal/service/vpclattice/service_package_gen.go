@@ -54,11 +54,6 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_vpclattice_target_group",
 			Name:     "Target Group",
 		},
-		{
-			Factory:  DataSourceTargetGroups,
-			TypeName: "aws_vpclattice_target_groups",
-			Name:     "Target Groups",
-		},
 	}
 }
 
