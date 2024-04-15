@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -421,6 +422,40 @@ func FindTargetGroupByID(ctx context.Context, conn *vpclattice.Client, id string
 	}
 
 	return out, nil
+}
+
+func findTargetGroup(ctx context.Context, conn *vpclattice.Client, filter tfslices.Predicate[types.TargetGroupSummary]) (*types.TargetGroupSummary, error) {
+	output, err := findTargetGroups(ctx, conn, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findTargetGroups(ctx context.Context, conn *vpclattice.Client, filter tfslices.Predicate[types.TargetGroupSummary]) ([]types.TargetGroupSummary, error) {
+	input := &vpclattice.ListTargetGroupsInput{}
+	var output []types.TargetGroupSummary
+	paginator := vpclattice.NewListTargetGroupsPaginator(conn, input, func(options *vpclattice.ListTargetGroupsPaginatorOptions) {
+		options.Limit = 100
+	})
+
+	for paginator.HasMorePages() {
+		page, err := paginator.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Items {
+			if filter(v) {
+				output = append(output, v)
+			}
+		}
+	}
+
+	return output, nil
 }
 
 func flattenTargetGroupConfig(apiObject *types.TargetGroupConfig) map[string]interface{} {
