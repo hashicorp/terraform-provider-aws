@@ -9,9 +9,11 @@ var (
 	ResourceArchive        = resourceArchive
 	ResourceBus            = resourceBus
 	ResourceBusPolicy      = resourceBusPolicy
+	ResourceConnection     = resourceConnection
 
 	FindAPIDestinationByName = findAPIDestinationByName
 	FindArchiveByName        = findArchiveByName
+	FindConnectionByName     = findConnectionByName
 	FindEventBusByName       = findEventBusByName
 	FindEventBusPolicyByName = findEventBusPolicyByName
 )
