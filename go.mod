@@ -200,7 +200,7 @@ require (
 	github.com/mitchellh/go-testing-interface v1.14.1
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pquerna/otp v1.4.0
-	github.com/shopspring/decimal v1.3.1
+	github.com/shopspring/decimal v1.4.0
 	golang.org/x/crypto v0.22.0
 	golang.org/x/tools v0.18.0
 	gopkg.in/dnaeon/go-vcr.v3 v3.2.0
