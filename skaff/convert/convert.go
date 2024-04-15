@@ -6,6 +6,7 @@ package convert
 import (
 	"fmt"
 	"strings"
+	"unicode"
 
 	"github.com/YakDriver/regexache"
 )
@@ -39,4 +40,30 @@ func ToHumanResName(upper string) string {
 // of a resource or data source
 func ToProviderResourceName(servicePackage, snakeName string) string {
 	return fmt.Sprintf("aws_%s_%s", servicePackage, snakeName)
+}
+
+// ToLowercasePrefix converts a string beginning with uppercase letters
+// to begin lowercased
+//
+// Specifically, this is used to take user-provided input beginning with uppercase
+// letters, and transform it so that it can be used to name a private struct. This
+// function assumes all characters are unicode.
+func ToLowercasePrefix(s string) string {
+	var hasLower bool
+	var splitIdx int
+	for i, char := range s {
+		if unicode.IsLower(char) {
+			hasLower = true
+			break
+		}
+		splitIdx = i
+	}
+
+	if !hasLower {
+		return strings.ToLower(s)
+	}
+	if splitIdx == 0 && len(s) > 0 {
+		splitIdx++
+	}
+	return strings.ToLower(s[:splitIdx]) + s[splitIdx:]
 }

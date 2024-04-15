@@ -31,6 +31,7 @@ var snakeCaseRegex = regexache.MustCompile(`[a-z0-9_]*`)
 
 type TemplateData struct {
 	Function        string
+	FunctionLower   string
 	FunctionSnake   string
 	Description     string
 	IncludeComments bool
@@ -49,6 +50,7 @@ func Create(name, snakeName, description string, comments, force bool) error {
 
 	templateData := TemplateData{
 		Function:        name,
+		FunctionLower:   convert.ToLowercasePrefix(name),
 		FunctionSnake:   snakeName,
 		Description:     description,
 		IncludeComments: comments,

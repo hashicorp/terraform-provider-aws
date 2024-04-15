@@ -104,3 +104,24 @@ func TestToHumanResName(t *testing.T) {
 		})
 	}
 }
+
+func TestToLowercasePrefix(t *testing.T) {
+	tests := []struct {
+		name string
+		s    string
+		want string
+	}{
+		{"title", "HelloWorld", "helloWorld"},
+		{"multi-upper prefix", "ARNParse", "arnParse"},
+		{"all upper", "FOO", "foo"},
+		{"all lower", "bar", "bar"},
+		{"empty", "", ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := ToLowercasePrefix(tt.s); got != tt.want {
+				t.Errorf("ToLowercasePrefix() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

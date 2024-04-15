@@ -45,7 +45,7 @@ import (
 // 4. Metadata, Definition, and Run methods (in that order)
 {{- end }}
 
-var _ function.Function = {{ .Function }}Function{}
+var _ function.Function = {{ .FunctionLower }}Function{}
 {{ if .IncludeComments }}
 // TIP: ==== INITIALIZATION FUNCTION ====
 // The New* function returns an instance of the provider function struct. Currently,
@@ -54,12 +54,12 @@ var _ function.Function = {{ .Function }}Function{}
 // to the providers `Functions` method in `internal/provider/fwprovider/provider.go`.
 {{- end }}
 func New{{ .Function }}Function() function.Function {
-	return &{{ .Function }}Function{}
+	return &{{ .FunctionLower }}Function{}
 }
 
-type {{ .Function }}Function struct{}
+type {{ .FunctionLower }}Function struct{}
 
-func (f {{ .Function }}Function) Metadata(ctx context.Context, req function.MetadataRequest, resp *function.MetadataResponse) {
+func (f {{ .FunctionLower }}Function) Metadata(ctx context.Context, req function.MetadataRequest, resp *function.MetadataResponse) {
 	resp.Name = "{{ .FunctionSnake }}"
 }
 {{ if .IncludeComments }}
@@ -68,7 +68,7 @@ func (f {{ .Function }}Function) Metadata(ctx context.Context, req function.Meta
 // return values. The types of argument and return values are explicitly
 // defined in this method.
 {{- end }}
-func (f {{ .Function }}Function) Definition(ctx context.Context, req function.DefinitionRequest, resp *function.DefinitionResponse) {
+func (f {{ .FunctionLower }}Function) Definition(ctx context.Context, req function.DefinitionRequest, resp *function.DefinitionResponse) {
 	resp.Definition = function.Definition{
 		Summary:             "{{ .FunctionSnake }} Function",
 		MarkdownDescription: "{{ .Description }}",
@@ -86,7 +86,7 @@ func (f {{ .Function }}Function) Definition(ctx context.Context, req function.De
 // This method contains the logic of the function, such as manipulating 
 // arguments or returning static values.
 {{- end }}
-func (f {{ .Function }}Function) Run(ctx context.Context, req function.RunRequest, resp *function.RunResponse) {
+func (f {{ .FunctionLower }}Function) Run(ctx context.Context, req function.RunRequest, resp *function.RunResponse) {
 	var arg string
 
 	resp.Error = function.ConcatFuncErrors(req.Arguments.Get(ctx, &arg))
