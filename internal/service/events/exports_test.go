@@ -10,10 +10,12 @@ var (
 	ResourceBus            = resourceBus
 	ResourceBusPolicy      = resourceBusPolicy
 	ResourceConnection     = resourceConnection
+	ResourceEndpoint       = resourceEndpoint
 
 	FindAPIDestinationByName = findAPIDestinationByName
 	FindArchiveByName        = findArchiveByName
 	FindConnectionByName     = findConnectionByName
+	FindEndpointByName       = findEndpointByName
 	FindEventBusByName       = findEventBusByName
 	FindEventBusPolicyByName = findEventBusPolicyByName
 )
