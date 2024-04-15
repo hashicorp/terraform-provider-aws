@@ -52,7 +52,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Archive",
 		},
 		{
-			Factory:  ResourceBus,
+			Factory:  resourceBus,
 			TypeName: "aws_cloudwatch_event_bus",
 			Name:     "Event Bus",
 			Tags: &types.ServicePackageResourceTags{

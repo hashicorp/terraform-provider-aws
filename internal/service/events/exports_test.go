@@ -7,7 +7,9 @@ package events
 var (
 	ResourceAPIDestination = resourceAPIDestination
 	ResourceArchive        = resourceArchive
+	ResourceBus            = resourceBus
 
 	FindAPIDestinationByName = findAPIDestinationByName
 	FindArchiveByName        = findArchiveByName
+	FindEventBusByName       = findEventBusByName
 )
