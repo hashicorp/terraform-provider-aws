@@ -193,7 +193,7 @@ func (r *agentAliasResource) Create(ctx context.Context, request resource.Create
 		*output.AgentAlias.AgentAliasId,
 		*output.AgentAlias.AgentId,
 	}
-	id, _ := intflex.FlattenResourceId(idParts, 2, false)
+	id, _ := intflex.FlattenResourceId(idParts, agentAliasIdParts, false)
 	data.ID = types.StringValue(id)
 
 	alias, err := waitAliasCreated(ctx, conn, id, r.CreateTimeout(ctx, data.Timeouts))
