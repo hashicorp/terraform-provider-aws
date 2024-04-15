@@ -34,10 +34,12 @@ func main() {
 
 		switch packageName {
 		case "cloudfrontkeyvaluestore", // Endpoint includes account ID
-			"codecatalyst",    // Bearer auth token needs special handling
-			"mwaa",            // Resolver modifies URL
-			"s3control",       // Resolver modifies URL
-			"timestreamwrite": // Uses endpoint discovery
+			"codecatalyst",        // Bearer auth token needs special handling
+			"mwaa",                // Resolver modifies URL
+			"neptunegraph",        // EndpointParameters has an additional parameter, ApiType
+			"paymentcryptography", // Resolver modifies URL
+			"s3control",           // Resolver modifies URL
+			"timestreamwrite":     // Uses endpoint discovery
 			continue
 		}
 
@@ -90,7 +92,7 @@ func main() {
 		}
 
 		switch packageName {
-		case "costoptimizationhub", "route53domains":
+		case "costoptimizationhub", "cur", "route53domains":
 			td.Region = "us-east-1"
 		}
 

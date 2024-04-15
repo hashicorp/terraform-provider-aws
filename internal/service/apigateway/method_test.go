@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -21,7 +21,7 @@ import (
 
 func TestAccAPIGatewayMethod_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.Method
+	var conf apigateway.GetMethodOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method.test"
 
@@ -45,10 +45,11 @@ func TestAccAPIGatewayMethod_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccMethodImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccMethodImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"authorizer_id", "operation_name", "request_validator_id"},
 			},
 			{
 				Config: testAccMethodConfig_update(rName),
@@ -68,7 +69,7 @@ func TestAccAPIGatewayMethod_basic(t *testing.T) {
 
 func TestAccAPIGatewayMethod_customAuthorizer(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.Method
+	var conf apigateway.GetMethodOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method.test"
 
@@ -87,10 +88,11 @@ func TestAccAPIGatewayMethod_customAuthorizer(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccMethodImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccMethodImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"operation_name", "request_validator_id"},
 			},
 
 			{
@@ -107,7 +109,7 @@ func TestAccAPIGatewayMethod_customAuthorizer(t *testing.T) {
 
 func TestAccAPIGatewayMethod_cognitoAuthorizer(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.Method
+	var conf apigateway.GetMethodOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method.test"
 
@@ -148,7 +150,7 @@ func TestAccAPIGatewayMethod_cognitoAuthorizer(t *testing.T) {
 
 func TestAccAPIGatewayMethod_customRequestValidator(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.Method
+	var conf apigateway.GetMethodOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method.test"
 
@@ -166,10 +168,11 @@ func TestAccAPIGatewayMethod_customRequestValidator(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccMethodImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccMethodImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"authorizer_id", "operation_name"},
 			},
 
 			{
@@ -185,7 +188,7 @@ func TestAccAPIGatewayMethod_customRequestValidator(t *testing.T) {
 
 func TestAccAPIGatewayMethod_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.Method
+	var conf apigateway.GetMethodOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method.test"
 
@@ -209,7 +212,7 @@ func TestAccAPIGatewayMethod_disappears(t *testing.T) {
 
 func TestAccAPIGatewayMethod_operationName(t *testing.T) {
 	ctx := acctest.Context(t)
-	var conf apigateway.Method
+	var conf apigateway.GetMethodOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_api_gateway_method.test"
 
@@ -227,10 +230,11 @@ func TestAccAPIGatewayMethod_operationName(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccMethodImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccMethodImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"authorizer_id", "request_validator_id"},
 			},
 			{
 				Config: testAccMethodConfig_operationName(rName, "describeTest"),
@@ -243,18 +247,14 @@ func TestAccAPIGatewayMethod_operationName(t *testing.T) {
 	})
 }
 
-func testAccCheckMethodExists(ctx context.Context, n string, v *apigateway.Method) resource.TestCheckFunc {
+func testAccCheckMethodExists(ctx context.Context, n string, v *apigateway.GetMethodOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No API Gateway Method ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
 		output, err := tfapigateway.FindMethodByThreePartKey(ctx, conn, rs.Primary.Attributes["http_method"], rs.Primary.Attributes["resource_id"], rs.Primary.Attributes["rest_api_id"])
 
@@ -270,7 +270,7 @@ func testAccCheckMethodExists(ctx context.Context, n string, v *apigateway.Metho
 
 func testAccCheckMethodDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_api_gateway_method" {

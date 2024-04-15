@@ -724,6 +724,65 @@ rules:
           patterns:
             - pattern-regex: "(?i)DataSync"
     severity: WARNING
+  - id: datazone-in-func-name
+    languages:
+      - go
+    message: Do not use "DataZone" in func name inside datazone package
+    paths:
+      include:
+        - internal/service/datazone
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)DataZone"
+            - pattern-not-regex: ^TestAcc.*
+      - focus-metavariable: $NAME
+    severity: WARNING
+  - id: datazone-in-test-name
+    languages:
+      - go
+    message: Include "DataZone" in test name
+    paths:
+      include:
+        - internal/service/datazone/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccDataZone"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: datazone-in-const-name
+    languages:
+      - go
+    message: Do not use "DataZone" in const name inside datazone package
+    paths:
+      include:
+        - internal/service/datazone
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)DataZone"
+    severity: WARNING
+  - id: datazone-in-var-name
+    languages:
+      - go
+    message: Do not use "DataZone" in var name inside datazone package
+    paths:
+      include:
+        - internal/service/datazone
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)DataZone"
+    severity: WARNING
   - id: dax-in-func-name
     languages:
       - go

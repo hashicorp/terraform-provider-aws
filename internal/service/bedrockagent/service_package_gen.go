@@ -21,15 +21,22 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newBedrockAgentActionGroupResource,
-			Name:    "Bedrock Agent Action Group",
+			Factory: newAgentAliasResource,
+			Name:    "Bedrock Agent Alias",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "agent_alias_arn",
+			},
 		},
 		{
-			Factory: newBedrockAgentResource,
+			Factory: newAgentResource,
 			Name:    "Bedrock Agent",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "agent_arn",
 			},
+		},
+		{
+			Factory: newBedrockAgentActionGroupResource,
+			Name:    "Bedrock Agent Action Group",
 		},
 	}
 }

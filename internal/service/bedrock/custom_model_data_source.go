@@ -33,7 +33,6 @@ func (d *customModelDataSource) Metadata(_ context.Context, request datasource.M
 	response.TypeName = "aws_bedrock_custom_model"
 }
 
-// Schema returns the schema for this data source.
 func (d *customModelDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{

@@ -18,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_redshiftserverless_snapshot")
-func ResourceSnapshot() *schema.Resource {
+// @SDKResource("aws_redshiftserverless_snapshot", name="Snapshot")
+func resourceSnapshot() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSnapshotCreate,
 		ReadWithoutTimeout:   resourceSnapshotRead,
@@ -116,7 +116,7 @@ func resourceSnapshotRead(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
 
-	out, err := FindSnapshotByName(ctx, conn, d.Id())
+	out, err := findSnapshotByName(ctx, conn, d.Id())
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Redshift Serverless Snapshot (%s) not found, removing from state", d.Id())
 		d.SetId("")

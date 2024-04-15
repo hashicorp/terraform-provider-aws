@@ -15,6 +15,7 @@ import (
 	"go/token"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/YakDriver/regexache"
@@ -90,6 +91,13 @@ func main() {
 	}
 }
 
+type implementation string
+
+const (
+	implementationFramework implementation = "framework"
+	implementationSDK       implementation = "sdk"
+)
+
 type ResourceDatum struct {
 	ProviderPackage   string
 	ProviderNameUpper string
@@ -100,6 +108,7 @@ type ResourceDatum struct {
 	FileName          string
 	Generator         string
 	ImportIgnore      []string
+	Implementation    implementation
 }
 
 //go:embed file.tmpl
@@ -165,6 +174,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		FileName: v.fileName,
 	}
 	tagged := false
+	skip := false
 
 	for _, line := range funcDecl.Doc.List {
 		line := line.Text
@@ -172,6 +182,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		if m := annotation.FindStringSubmatch(line); len(m) > 0 {
 			switch annotationName := m[1]; annotationName {
 			case "FrameworkResource":
+				d.Implementation = implementationFramework
 				args := common.ParseArgs(m[3])
 				if len(args.Positional) == 0 {
 					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
@@ -183,6 +194,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 
 			case "SDKResource":
+				d.Implementation = implementationSDK
 				args := common.ParseArgs(m[3])
 				if len(args.Positional) == 0 {
 					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
@@ -210,13 +222,25 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					d.Generator = attr
 				}
 				if attr, ok := args.Keyword["importIgnore"]; ok {
-					d.ImportIgnore = strings.Split(attr, ",")
+					d.ImportIgnore = strings.Split(attr, ";")
+				}
+				if attr, ok := args.Keyword["name"]; ok {
+					d.Name = strings.ReplaceAll(attr, " ", "")
+				}
+				if attr, ok := args.Keyword["tagsTest"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid tagsTest value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else if !b {
+						v.g.Infof("Skipping tags test for %s.%s", v.packageName, v.functionName)
+						skip = true
+					}
 				}
 			}
 		}
 	}
 
-	if tagged {
+	if tagged && !skip {
 		v.taggedResources = append(v.taggedResources, d)
 	}
 

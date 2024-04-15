@@ -1184,6 +1184,24 @@ func expandManagedRuleGroupConfigs(tfList []interface{}) []*wafv2.ManagedRuleGro
 	return out
 }
 
+func expandAddressFields(tfList []interface{}) []*wafv2.AddressField {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	out := make([]*wafv2.AddressField, 0)
+	identifiers := tfList[0].(map[string]interface{})
+	for _, v := range identifiers["identifiers"].([]interface{}) {
+		r := wafv2.AddressField{
+			Identifier: aws.String(v.(string)),
+		}
+
+		out = append(out, &r)
+	}
+
+	return out
+}
+
 func expandEmailField(tfList []interface{}) *wafv2.EmailField {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
@@ -1208,6 +1226,24 @@ func expandPasswordField(tfList []interface{}) *wafv2.PasswordField {
 	}
 
 	return &out
+}
+
+func expandPhoneNumberFields(tfList []interface{}) []*wafv2.PhoneNumberField {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	out := make([]*wafv2.PhoneNumberField, 0)
+	identifiers := tfList[0].(map[string]interface{})
+	for _, v := range identifiers["identifiers"].([]interface{}) {
+		r := wafv2.PhoneNumberField{
+			Identifier: aws.String(v.(string)),
+		}
+
+		out = append(out, &r)
+	}
+
+	return out
 }
 
 func expandUsernameField(tfList []interface{}) *wafv2.UsernameField {
@@ -1305,10 +1341,12 @@ func expandRequestInspectionACFP(tfList []interface{}) *wafv2.RequestInspectionA
 
 	m := tfList[0].(map[string]interface{})
 	out := wafv2.RequestInspectionACFP{
-		EmailField:    expandEmailField(m["email_field"].([]interface{})),
-		PasswordField: expandPasswordField(m["password_field"].([]interface{})),
-		PayloadType:   aws.String(m["payload_type"].(string)),
-		UsernameField: expandUsernameField(m["username_field"].([]interface{})),
+		AddressFields:     expandAddressFields(m["address_fields"].([]interface{})),
+		EmailField:        expandEmailField(m["email_field"].([]interface{})),
+		PasswordField:     expandPasswordField(m["password_field"].([]interface{})),
+		PayloadType:       aws.String(m["payload_type"].(string)),
+		PhoneNumberFields: expandPhoneNumberFields(m["phone_number_fields"].([]interface{})),
+		UsernameField:     expandUsernameField(m["username_field"].([]interface{})),
 	}
 
 	return &out
@@ -2559,6 +2597,27 @@ func flattenManagedRuleGroupConfigs(c []*wafv2.ManagedRuleGroupConfig) []interfa
 	return out
 }
 
+func flattenAddressFields(apiObjects []*wafv2.AddressField) []interface{} {
+	if apiObjects == nil {
+		return nil
+	}
+
+	var identifiers []*string
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		identifiers = append(identifiers, apiObject.Identifier)
+	}
+
+	return []interface{}{
+		map[string]interface{}{
+			"identifiers": aws.StringValueSlice(identifiers),
+		},
+	}
+}
+
 func flattenEmailField(apiObject *wafv2.EmailField) []interface{} {
 	if apiObject == nil {
 		return nil
@@ -2581,6 +2640,27 @@ func flattenPasswordField(apiObject *wafv2.PasswordField) []interface{} {
 	}
 
 	return []interface{}{m}
+}
+
+func flattenPhoneNumberFields(apiObjects []*wafv2.PhoneNumberField) []interface{} {
+	if apiObjects == nil {
+		return nil
+	}
+
+	var identifiers []*string
+	for _, apiObject := range apiObjects {
+		if apiObject == nil {
+			continue
+		}
+
+		identifiers = append(identifiers, apiObject.Identifier)
+	}
+
+	return []interface{}{
+		map[string]interface{}{
+			"identifiers": aws.StringValueSlice(identifiers),
+		},
+	}
 }
 
 func flattenUsernameField(apiObject *wafv2.UsernameField) []interface{} {
@@ -2652,10 +2732,12 @@ func flattenRequestInspectionACFP(apiObject *wafv2.RequestInspectionACFP) []inte
 	}
 
 	m := map[string]interface{}{
-		"email_field":    flattenEmailField(apiObject.EmailField),
-		"password_field": flattenPasswordField(apiObject.PasswordField),
-		"payload_type":   aws.StringValue(apiObject.PayloadType),
-		"username_field": flattenUsernameField(apiObject.UsernameField),
+		"address_fields":      flattenAddressFields(apiObject.AddressFields),
+		"email_field":         flattenEmailField(apiObject.EmailField),
+		"password_field":      flattenPasswordField(apiObject.PasswordField),
+		"payload_type":        aws.StringValue(apiObject.PayloadType),
+		"phone_number_fields": flattenPhoneNumberFields(apiObject.PhoneNumberFields),
+		"username_field":      flattenUsernameField(apiObject.UsernameField),
 	}
 
 	return []interface{}{m}

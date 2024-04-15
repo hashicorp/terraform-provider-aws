@@ -7,23 +7,25 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -39,8 +41,8 @@ import (
 
 // @FrameworkResource(name="Bedrock Agent")
 // @Tags(identifierAttribute="agent_arn")
-func newBedrockAgentResource(context.Context) (resource.ResourceWithConfigure, error) {
-	r := &bedrockAgentResource{}
+func newAgentResource(context.Context) (resource.ResourceWithConfigure, error) {
+	r := &agentResource{}
 
 	r.SetDefaultCreateTimeout(5 * time.Minute)
 	r.SetDefaultUpdateTimeout(5 * time.Minute)
@@ -49,26 +51,23 @@ func newBedrockAgentResource(context.Context) (resource.ResourceWithConfigure, e
 	return r, nil
 }
 
-type bedrockAgentResource struct {
+type agentResource struct {
 	framework.ResourceWithConfigure
 	framework.WithImportByID
 	framework.WithTimeouts
 }
 
-func (r *bedrockAgentResource) Metadata(_ context.Context, request resource.MetadataRequest, resp *resource.MetadataResponse) {
+func (r *agentResource) Metadata(_ context.Context, request resource.MetadataRequest, resp *resource.MetadataResponse) {
 	resp.TypeName = "aws_bedrockagent_agent"
 }
 
-func (r *bedrockAgentResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+func (r *agentResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"agent_arn": framework.ARNAttributeComputedOnly(),
 			"agent_id":  framework.IDAttribute(),
 			"agent_name": schema.StringAttribute{
 				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
 			},
 			"agent_resource_role_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
@@ -96,16 +95,10 @@ func (r *bedrockAgentResource) Schema(ctx context.Context, request resource.Sche
 			"customer_encryption_key_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Optional:   true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
 			},
 			"description": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
 			},
 			"failure_reasons": schema.ListAttribute{
 				ElementType: types.StringType,
@@ -116,9 +109,6 @@ func (r *bedrockAgentResource) Schema(ctx context.Context, request resource.Sche
 			},
 			"foundation_model": schema.StringAttribute{
 				Required: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.RequiresReplace(),
-				},
 			},
 			names.AttrID: framework.IDAttribute(),
 			"idle_ttl": schema.Int64Attribute{
@@ -128,6 +118,14 @@ func (r *bedrockAgentResource) Schema(ctx context.Context, request resource.Sche
 				Optional: true,
 				Computed: true,
 			},
+			"prepare_agent": schema.BoolAttribute{
+				Optional: true,
+				Computed: true,
+				Default:  booldefault.StaticBool(true),
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
+			},
 			"prepared_at": schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
@@ -136,11 +134,14 @@ func (r *bedrockAgentResource) Schema(ctx context.Context, request resource.Sche
 				Computed:   true,
 				Optional:   true,
 				Validators: []validator.List{listvalidator.SizeAtMost(1)},
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
 				CustomType: fwtypes.NewListNestedObjectTypeOf[poc](ctx),
 				ElementType: types.ObjectType{
 					AttrTypes: map[string]attr.Type{
 						"override_lambda": types.StringType,
-						"prompt_configurations": types.ListType{
+						"prompt_configurations": types.SetType{
 							ElemType: types.ObjectType{
 								AttrTypes: map[string]attr.Type{
 									"base_prompt_template": types.StringType,
@@ -189,7 +190,7 @@ func (r *bedrockAgentResource) Schema(ctx context.Context, request resource.Sche
 	}
 }
 
-func (r *bedrockAgentResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
+func (r *agentResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	var data bedrockAgentResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
@@ -226,11 +227,29 @@ func (r *bedrockAgentResource) Create(ctx context.Context, request resource.Crea
 		return
 	}
 
+	if data.PrepareAgent.ValueBool() {
+		prepareInput := &bedrockagent.PrepareAgentInput{}
+		prepareInput.AgentId = output.Agent.AgentId
+		_, err := conn.PrepareAgent(ctx, prepareInput)
+		if err != nil {
+			response.Diagnostics.AddError("preparing Bedrock Agent", err.Error())
+
+			return
+		}
+		agent, err = waitAgentPrepared(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+
+		if err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent (%s) prepare", data.ID.ValueString()), err.Error())
+
+			return
+		}
+	}
+
 	response.Diagnostics.Append(fwflex.Flatten(ctx, agent.Agent, &data)...)
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *bedrockAgentResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
+func (r *agentResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	var data bedrockAgentResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
@@ -246,7 +265,7 @@ func (r *bedrockAgentResource) Read(ctx context.Context, request resource.ReadRe
 	conn := r.Meta().BedrockAgentClient(ctx)
 
 	AgentId := data.ID.ValueString()
-	output, err := findBedrockAgentByID(ctx, conn, AgentId)
+	output, err := findAgentByID(ctx, conn, AgentId)
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -263,6 +282,10 @@ func (r *bedrockAgentResource) Read(ctx context.Context, request resource.ReadRe
 
 	response.Diagnostics.Append(fwflex.Flatten(ctx, output.Agent, &data)...)
 
+	if output.Agent.AgentStatus == awstypes.AgentStatusPrepared {
+		data.PrepareAgent = types.BoolValue(true)
+	}
+
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -270,7 +293,7 @@ func (r *bedrockAgentResource) Read(ctx context.Context, request resource.ReadRe
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func (r *bedrockAgentResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+func (r *agentResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
 	var old, new bedrockAgentResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
 	if response.Diagnostics.HasError() {
@@ -283,25 +306,55 @@ func (r *bedrockAgentResource) Update(ctx context.Context, request resource.Upda
 
 	conn := r.Meta().BedrockAgentClient(ctx)
 
-	if bedrockAgentHasChanges(ctx, old, new) {
-		input := &bedrockagent.UpdateAgentInput{}
-		response.Diagnostics.Append(fwflex.Expand(ctx, new, input)...)
+	update := false
+	input := &bedrockagent.UpdateAgentInput{}
+
+	input.AgentId = fwflex.StringFromFramework(ctx, old.AgentId)
+	input.AgentResourceRoleArn = fwflex.StringFromFramework(ctx, new.AgentResourceRoleARN)
+	input.IdleSessionTTLInSeconds = fwflex.Int32FromFramework(ctx, new.IdleSessionTTLInSeconds)
+	input.AgentName = fwflex.StringFromFramework(ctx, new.AgentName)
+	input.Description = fwflex.StringFromFramework(ctx, new.Description)
+	input.Instruction = fwflex.StringFromFramework(ctx, new.Instruction)
+
+	if !old.AgentName.Equal(new.AgentName) {
+		update = true
+	}
+
+	if !old.Description.Equal(new.Description) {
+		update = true
+	}
+
+	if !old.Instruction.Equal(new.Instruction) {
+		update = true
+	}
+
+	if !old.CustomerEncryptionKeyARN.Equal(new.CustomerEncryptionKeyARN) {
+		input.CustomerEncryptionKeyArn = fwflex.StringFromFramework(ctx, new.CustomerEncryptionKeyARN)
+		update = true
+	}
+
+	if old.FoundationModel.Equal(new.FoundationModel) {
+		input.FoundationModel = fwflex.StringFromFramework(ctx, old.FoundationModel)
+	} else {
+		input.FoundationModel = fwflex.StringFromFramework(ctx, new.FoundationModel)
+		update = true
+	}
+
+	if !new.PromptOverrideConfiguration.Equal(old.PromptOverrideConfiguration) {
+		poc := []awstypes.PromptOverrideConfiguration{}
+		response.Diagnostics.Append(fwflex.Expand(ctx, new.PromptOverrideConfiguration, &poc)...)
 		if response.Diagnostics.HasError() {
 			return
 		}
 
-		_, err := conn.UpdateAgent(ctx, input)
-
-		if err != nil {
-			response.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionUpdating, "Bedrock Agent", old.AgentId.ValueString(), err),
-				err.Error(),
-			)
-			return
-		}
+		input.PromptOverrideConfiguration = &poc[0]
+		update = true
 	}
+	if !update {
+		return
+	}
+	_, err := conn.UpdateAgent(ctx, input)
 
-	out, err := findBedrockAgentByID(ctx, conn, old.ID.ValueString())
 	if err != nil {
 		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionUpdating, "Bedrock Agent", old.AgentId.ValueString(), err),
@@ -309,7 +362,34 @@ func (r *bedrockAgentResource) Update(ctx context.Context, request resource.Upda
 		)
 		return
 	}
-	response.Diagnostics.Append(fwflex.Flatten(ctx, out, &new)...)
+
+	out, err := waitAgentUpdated(ctx, conn, new.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
+	if err != nil {
+		response.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionUpdating, "Bedrock Agent", old.AgentId.ValueString(), err),
+			err.Error(),
+		)
+		return
+	}
+
+	if new.PrepareAgent.ValueBool() {
+		prepareInput := &bedrockagent.PrepareAgentInput{}
+		prepareInput.AgentId = out.Agent.AgentId
+		_, err := conn.PrepareAgent(ctx, prepareInput)
+		if err != nil {
+			response.Diagnostics.AddError("preparing Bedrock Agent", err.Error())
+
+			return
+		}
+		out, err = waitAgentPrepared(ctx, conn, new.ID.ValueString(), r.CreateTimeout(ctx, new.Timeouts))
+		if err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent (%s) prepare", new.ID.ValueString()), err.Error())
+
+			return
+		}
+	}
+
+	response.Diagnostics.Append(fwflex.Flatten(ctx, out.Agent, &new)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -317,7 +397,7 @@ func (r *bedrockAgentResource) Update(ctx context.Context, request resource.Upda
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *bedrockAgentResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
+func (r *agentResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	var data bedrockAgentResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
@@ -350,11 +430,11 @@ func (r *bedrockAgentResource) Delete(ctx context.Context, request resource.Dele
 	}
 }
 
-func (r *bedrockAgentResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
+func (r *agentResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
 	r.SetTagsAll(ctx, request, response)
 }
 
-func findBedrockAgentByID(ctx context.Context, conn *bedrockagent.Client, id string) (*bedrockagent.GetAgentOutput, error) {
+func findAgentByID(ctx context.Context, conn *bedrockagent.Client, id string) (*bedrockagent.GetAgentOutput, error) {
 	input := &bedrockagent.GetAgentInput{
 		AgentId: aws.String(id),
 	}
@@ -381,7 +461,7 @@ func findBedrockAgentByID(ctx context.Context, conn *bedrockagent.Client, id str
 
 func statusAgent(ctx context.Context, conn *bedrockagent.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := findBedrockAgentByID(ctx, conn, id)
+		output, err := findAgentByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -399,6 +479,63 @@ func waitAgentCreated(ctx context.Context, conn *bedrockagent.Client, id string,
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AgentStatusCreating),
 		Target:  enum.Slice(awstypes.AgentStatusNotPrepared),
+		Refresh: statusAgent(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*bedrockagent.GetAgentOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString((*string)(&output.Agent.AgentStatus))))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitAgentUpdated(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*bedrockagent.GetAgentOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.AgentStatusUpdating),
+		Target:  enum.Slice(awstypes.AgentStatusNotPrepared, awstypes.AgentStatusPrepared),
+		Refresh: statusAgent(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*bedrockagent.GetAgentOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString((*string)(&output.Agent.AgentStatus))))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitAgentPrepared(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*bedrockagent.GetAgentOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.AgentStatusNotPrepared, awstypes.AgentStatusPreparing),
+		Target:  enum.Slice(awstypes.AgentStatusPrepared),
+		Refresh: statusAgent(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*bedrockagent.GetAgentOutput); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString((*string)(&output.Agent.AgentStatus))))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitAgentVersioned(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*bedrockagent.GetAgentOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.AgentStatusVersioning),
+		Target:  enum.Slice(awstypes.AgentStatusPrepared),
 		Refresh: statusAgent(ctx, conn, id),
 		Timeout: timeout,
 	}
@@ -449,6 +586,7 @@ type bedrockAgentResourceModel struct {
 	IdleSessionTTLInSeconds     types.Int64                          `tfsdk:"idle_ttl"`
 	Instruction                 types.String                         `tfsdk:"instruction"`
 	PreparedAt                  timetypes.RFC3339                    `tfsdk:"prepared_at"`
+	PrepareAgent                types.Bool                           `tfsdk:"prepare_agent"`
 	PromptOverrideConfiguration fwtypes.ListNestedObjectValueOf[poc] `tfsdk:"prompt_override_configuration"`
 	RecommendedActions          types.List                           `tfsdk:"recommended_actions"`
 	UpdatedAt                   timetypes.RFC3339                    `tfsdk:"updated_at"`
@@ -462,8 +600,8 @@ func (m *bedrockAgentResourceModel) setId() {
 }
 
 type poc struct {
-	OverrideLambda       fwtypes.ARN                         `tfsdk:"override_lambda"`
-	PromptConfigurations fwtypes.ListNestedObjectValueOf[pc] `tfsdk:"prompt_configurations"`
+	OverrideLambda       fwtypes.ARN                        `tfsdk:"override_lambda"`
+	PromptConfigurations fwtypes.SetNestedObjectValueOf[pc] `tfsdk:"prompt_configurations"`
 }
 
 type pc struct {
@@ -481,9 +619,4 @@ type ic struct {
 	Temperature   types.Float64                     `tfsdk:"temperature"`
 	TopK          types.Int64                       `tfsdk:"topk"`
 	TopP          types.Float64                     `tfsdk:"topp"`
-}
-
-func bedrockAgentHasChanges(_ context.Context, plan, state bedrockAgentResourceModel) bool {
-	return !plan.CustomerEncryptionKeyARN.Equal(state.CustomerEncryptionKeyARN) ||
-		!plan.Description.Equal(state.Description)
 }

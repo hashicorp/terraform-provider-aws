@@ -11,7 +11,6 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
-	"github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -35,14 +34,93 @@ func TestAccBedrockAgent_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBedrockAgentDestroy(ctx),
+		CheckDestroy:             testAccCheckAgentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBedrockAgentConfig_basic(rName, "anthropic.claude-v2"),
+				Config: testAccAgentConfig_basic(rName, "anthropic.claude-v2", "basic claude"),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBedrockAgentExists(ctx, resourceName, &v),
+					testAccCheckAgentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "agent_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "prompt_override_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "description", "basic claude"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgent_full(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagent_agent.test"
+	var v bedrockagent.GetAgentOutput
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAgentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAgentConfig_full(rName, "anthropic.claude-v2", "basic claude"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "agent_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "prompt_override_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "description", "basic claude"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccBedrockAgent_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagent_agent.test"
+	var v bedrockagent.GetAgentOutput
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAgentDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAgentConfig_basic(rName+"-1", "anthropic.claude-v2", "basic claude"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "agent_name", rName+"-1"),
+					resource.TestCheckResourceAttr(resourceName, "prompt_override_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "description", "basic claude"),
+				),
+			},
+			{
+				Config: testAccAgentConfig_basic(rName+"-2", "anthropic.claude-v2", "basic claude"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "agent_name", rName+"-2"),
+					resource.TestCheckResourceAttr(resourceName, "prompt_override_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "description", "basic claude"),
+				),
+			},
+			{
+				Config: testAccAgentConfig_basic(rName+"-3", "anthropic.claude-v2", "basic claude again"),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckAgentExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "agent_name", rName+"-3"),
+					resource.TestCheckResourceAttr(resourceName, "prompt_override_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "description", "basic claude again"),
 				),
 			},
 			{
@@ -64,12 +142,12 @@ func TestAccBedrockAgent_tags(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBedrockAgentDestroy(ctx),
+		CheckDestroy:             testAccCheckAgentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBedrockAgentConfig_tags1(rName, "anthropic.claude-v2", "key1", "value1"),
+				Config: testAccAgentConfig_tags1(rName, "anthropic.claude-v2", "key1", "value1"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBedrockAgentExists(ctx, resourceName, &agent),
+					testAccCheckAgentExists(ctx, resourceName, &agent),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
 				),
@@ -80,18 +158,18 @@ func TestAccBedrockAgent_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccBedrockAgentConfig_tags2(rName, "anthropic.claude-v2", "key1", "value1updated", "key2", "value2"),
+				Config: testAccAgentConfig_tags2(rName, "anthropic.claude-v2", "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBedrockAgentExists(ctx, resourceName, &agent),
+					testAccCheckAgentExists(ctx, resourceName, &agent),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
 			{
-				Config: testAccBedrockAgentConfig_tags1(rName, "anthropic.claude-v2", "key2", "value2"),
+				Config: testAccAgentConfig_tags1(rName, "anthropic.claude-v2", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckBedrockAgentExists(ctx, resourceName, &agent),
+					testAccCheckAgentExists(ctx, resourceName, &agent),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
@@ -100,7 +178,7 @@ func TestAccBedrockAgent_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckBedrockAgentDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAgentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentClient(ctx)
 
@@ -109,9 +187,9 @@ func testAccCheckBedrockAgentDestroy(ctx context.Context) resource.TestCheckFunc
 				continue
 			}
 
-			_, err := findBedrockAgentByID(ctx, conn, rs.Primary.ID)
+			_, err := findAgentByID(ctx, conn, rs.Primary.ID)
 
-			if errs.IsA[*types.ResourceNotFoundException](err) {
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				return nil
 			}
 			if err != nil {
@@ -125,7 +203,7 @@ func testAccCheckBedrockAgentDestroy(ctx context.Context) resource.TestCheckFunc
 	}
 }
 
-func testAccCheckBedrockAgentExists(ctx context.Context, n string, v *bedrockagent.GetAgentOutput) resource.TestCheckFunc {
+func testAccCheckAgentExists(ctx context.Context, n string, v *bedrockagent.GetAgentOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -134,7 +212,7 @@ func testAccCheckBedrockAgentExists(ctx context.Context, n string, v *bedrockage
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentClient(ctx)
 
-		output, err := findBedrockAgentByID(ctx, conn, rs.Primary.ID)
+		output, err := findAgentByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -146,7 +224,7 @@ func testAccCheckBedrockAgentExists(ctx context.Context, n string, v *bedrockage
 	}
 }
 
-func findBedrockAgentByID(ctx context.Context, conn *bedrockagent.Client, id string) (*bedrockagent.GetAgentOutput, error) {
+func findAgentByID(ctx context.Context, conn *bedrockagent.Client, id string) (*bedrockagent.GetAgentOutput, error) {
 	input := &bedrockagent.GetAgentInput{
 		AgentId: aws.String(id),
 	}
@@ -171,25 +249,28 @@ func findBedrockAgentByID(ctx context.Context, conn *bedrockagent.Client, id str
 	return output, nil
 }
 
-func testAccBedrockAgentConfig_basic(rName, model string) string {
+func testAccAgentConfig_basic(rName, model, description string) string {
 	return acctest.ConfigCompose(testAccBedrockRole(rName, model), fmt.Sprintf(`
 resource "aws_bedrockagent_agent" "test" {
   agent_name              = %[1]q
   agent_resource_role_arn = aws_iam_role.test.arn
+  description             = %[3]q
   idle_ttl                = 500
+  instruction             = file("${path.module}/test-fixtures/instruction.txt")
   foundation_model        = %[2]q
 }
-`, rName, model))
+`, rName, model, description))
 }
 
-func testAccBedrockAgentConfig_tags1(rName, model, tagKey1, tagValue1 string) string {
+func testAccAgentConfig_tags1(rName, model, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccBedrockRole(rName, model), fmt.Sprintf(`
 resource "aws_bedrockagent_agent" "test" {
   agent_name              = %[1]q
   agent_resource_role_arn = aws_iam_role.test.arn
   idle_ttl                = 500
+  instruction             = file("${path.module}/test-fixtures/instruction.txt")
   foundation_model        = %[2]q
-  
+
   tags = {
     %[3]q = %[4]q
   }
@@ -197,14 +278,15 @@ resource "aws_bedrockagent_agent" "test" {
 `, rName, model, tagKey1, tagValue1))
 }
 
-func testAccBedrockAgentConfig_tags2(rName, model, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccAgentConfig_tags2(rName, model, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(testAccBedrockRole(rName, model), fmt.Sprintf(`
 resource "aws_bedrockagent_agent" "test" {
   agent_name              = %[1]q
   agent_resource_role_arn = aws_iam_role.test.arn
   idle_ttl                = 500
+  instruction             = file("${path.module}/test-fixtures/instruction.txt")
   foundation_model        = %[2]q
-  
+
   tags = {
     %[3]q = %[4]q
     %[5]q = %[6]q
@@ -213,11 +295,98 @@ resource "aws_bedrockagent_agent" "test" {
 `, rName, model, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
+func testAccAgentConfig_full(rName, model, desc string) string {
+	return acctest.ConfigCompose(testAccBedrockRole(rName, model), fmt.Sprintf(`
+resource "aws_bedrockagent_agent" "test" {
+  agent_name              = %[1]q
+  agent_resource_role_arn = aws_iam_role.test.arn
+  description             = %[3]q
+  idle_ttl                = 500
+  instruction             = file("${path.module}/test-fixtures/instruction.txt")
+  foundation_model        = %[2]q
+  prompt_override_configuration {
+    override_lambda = null
+    prompt_configurations = [
+      {
+        base_prompt_template = file("${path.module}/test-fixtures/pre-processing.txt")
+        inference_configuration = [
+          {
+            max_length     = 2048
+            stop_sequences = ["Human:"]
+            temperature    = 0
+            topk           = 250
+            topp           = 1
+          },
+        ]
+        parser_mode          = "DEFAULT"
+        prompt_creation_mode = "OVERRIDDEN"
+        prompt_state         = "ENABLED"
+        prompt_type          = "PRE_PROCESSING"
+      },
+      {
+        base_prompt_template = file("${path.module}/test-fixtures/knowledge-base-response-generation.txt")
+        inference_configuration = [
+          {
+            max_length     = 2048
+            stop_sequences = ["Human:"]
+            temperature    = 0
+            topk           = 250
+            topp           = 1
+          },
+        ]
+        parser_mode          = "DEFAULT"
+        prompt_creation_mode = "OVERRIDDEN"
+        prompt_state         = "ENABLED"
+        prompt_type          = "KNOWLEDGE_BASE_RESPONSE_GENERATION"
+      },
+      {
+        base_prompt_template = file("${path.module}/test-fixtures/orchestration.txt")
+        inference_configuration = [
+          {
+            max_length = 2048
+            stop_sequences = [
+              "</function_call>",
+              "</answer>",
+              "</error>",
+            ]
+            temperature = 0
+            topk        = 250
+            topp        = 1
+          },
+        ]
+        parser_mode          = "DEFAULT"
+        prompt_creation_mode = "OVERRIDDEN"
+        prompt_state         = "ENABLED"
+        prompt_type          = "ORCHESTRATION"
+      },
+      {
+        base_prompt_template = file("${path.module}/test-fixtures/post-processing.txt")
+        inference_configuration = [
+          {
+            max_length     = 2048
+            stop_sequences = ["Human:"]
+            temperature    = 0
+            topk           = 250
+            topp           = 1
+          },
+        ]
+        parser_mode          = "DEFAULT"
+        prompt_creation_mode = "OVERRIDDEN"
+        prompt_state         = "DISABLED"
+        prompt_type          = "POST_PROCESSING"
+      },
+    ]
+  }
+
+}
+`, rName, model, desc))
+}
+
 func testAccBedrockRole(rName, model string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   assume_role_policy = data.aws_iam_policy_document.test_agent_trust.json
-  name_prefix               = "AmazonBedrockExecutionRoleForAgents_tf"
+  name_prefix        = "AmazonBedrockExecutionRoleForAgents_tf"
 }
 
 data "aws_iam_policy_document" "test_agent_trust" {
@@ -235,7 +404,7 @@ data "aws_iam_policy_document" "test_agent_trust" {
 
     condition {
       test     = "ArnLike"
-      values   = ["arn:aws:bedrock:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:agent/*"]
+      values   = ["arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:agent/*"]
       variable = "AWS:SourceArn"
     }
   }
@@ -245,8 +414,8 @@ data "aws_iam_policy_document" "test_agent_permissions" {
   statement {
     actions = ["bedrock:InvokeModel"]
     resources = [
-        "arn:aws:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s",
-      ]
+      "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s",
+    ]
   }
 }
 
@@ -258,5 +427,7 @@ resource "aws_iam_role_policy" "test" {
 data "aws_caller_identity" "current" {}
 
 data "aws_region" "current" {}
+
+data "aws_partition" "current" {}
 `, rName, model)
 }

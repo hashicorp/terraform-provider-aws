@@ -11,10 +11,11 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccTransitGatewayVPCAttachmentAccepter_basic(t *testing.T) {
+func testAccTransitGatewayVPCAttachmentAccepter_basic(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var transitGatewayVpcAttachment ec2.TransitGatewayVpcAttachment
 	resourceName := "aws_ec2_transit_gateway_vpc_attachment_accepter.test"
@@ -24,11 +25,12 @@ func testAccTransitGatewayVPCAttachmentAccepter_basic(t *testing.T) {
 	callerIdentityDatasourceName := "data.aws_caller_identity.creator"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
-			testAccPreCheckTransitGateway(ctx, t)
+			testAccPreCheckTransitGatewayVPCAttachment(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
@@ -61,17 +63,18 @@ func testAccTransitGatewayVPCAttachmentAccepter_basic(t *testing.T) {
 	})
 }
 
-func testAccTransitGatewayVPCAttachmentAccepter_tags(t *testing.T) {
+func testAccTransitGatewayVPCAttachmentAccepter_tags(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var transitGatewayVpcAttachment ec2.TransitGatewayVpcAttachment
 	resourceName := "aws_ec2_transit_gateway_vpc_attachment_accepter.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
-			testAccPreCheckTransitGateway(ctx, t)
+			testAccPreCheckTransitGatewayVPCAttachment(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
@@ -112,7 +115,7 @@ func testAccTransitGatewayVPCAttachmentAccepter_tags(t *testing.T) {
 	})
 }
 
-func testAccTransitGatewayVPCAttachmentAccepter_TransitGatewayDefaultRouteTableAssociationAndPropagation(t *testing.T) {
+func testAccTransitGatewayVPCAttachmentAccepter_TransitGatewayDefaultRouteTableAssociationAndPropagation(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var transitGateway ec2.TransitGateway
 	var transitGatewayVpcAttachment ec2.TransitGatewayVpcAttachment
@@ -120,11 +123,12 @@ func testAccTransitGatewayVPCAttachmentAccepter_TransitGatewayDefaultRouteTableA
 	transitGatewayResourceName := "aws_ec2_transit_gateway.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
+			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckAlternateAccount(t)
-			testAccPreCheckTransitGateway(ctx, t)
+			testAccPreCheckTransitGatewayVPCAttachment(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),

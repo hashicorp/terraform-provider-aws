@@ -22,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-provider-aws/version"
 )
 
 type Config struct {
@@ -69,9 +70,15 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	ctx, logger := logging.NewTfLogger(ctx)
 
 	awsbaseConfig := awsbase.Config{
-		AccessKey:                      c.AccessKey,
-		AllowedAccountIds:              c.AllowedAccountIds,
-		APNInfo:                        StdUserAgentProducts(c.TerraformVersion),
+		AccessKey:         c.AccessKey,
+		AllowedAccountIds: c.AllowedAccountIds,
+		APNInfo: &awsbase.APNInfo{
+			PartnerName: "HashiCorp",
+			Products: []awsbase.UserAgentProduct{
+				{Name: "Terraform", Version: c.TerraformVersion, Comment: "+https://www.terraform.io"},
+				{Name: "terraform-provider-aws", Version: version.ProviderVersion, Comment: "+https://registry.terraform.io/providers/hashicorp/aws"},
+			},
+		},
 		AssumeRoleWithWebIdentity:      c.AssumeRoleWithWebIdentity,
 		CallerDocumentationURL:         "https://registry.terraform.io/providers/hashicorp/aws",
 		CallerName:                     "Terraform AWS Provider",
@@ -156,7 +163,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	awsbaseConfig.SkipCredsValidation = skipCredsValidation
 
 	tflog.Debug(ctx, "Creating AWS SDK v1 session")
-	sess, awsDiags := awsbasev1.GetSession(ctx, &cfg, &awsbaseConfig)
+	session, awsDiags := awsbasev1.GetSession(ctx, &cfg, &awsbaseConfig)
 
 	for _, d := range awsDiags {
 		diags = append(diags, diag.Diagnostic{
@@ -202,9 +209,8 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 	client.IgnoreTagsConfig = c.IgnoreTagsConfig
 	client.Partition = partition
 	client.Region = c.Region
-	client.SetHTTPClient(ctx, sess.Config.HTTPClient) // Must be called while client.Session is nil.
-	client.Session = sess
-	client.TerraformVersion = c.TerraformVersion
+	client.SetHTTPClient(ctx, session.Config.HTTPClient) // Must be called while client.Session is nil.
+	client.session = session
 
 	// Used for lazy-loading AWS API clients.
 	client.awsConfig = &cfg
