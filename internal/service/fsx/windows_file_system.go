@@ -716,13 +716,20 @@ func expandWindowsAuditLogCreateConfiguration(l []interface{}) *fsx.WindowsAudit
 	}
 
 	data := l[0].(map[string]interface{})
+	fileAccessAuditLogLevel, ok1 := data["file_access_audit_log_level"].(string)
+	fileShareAccessAuditLogLevel, ok2 := data["file_share_access_audit_log_level"].(string)
+
+	if !ok1 || !ok2 {
+		return nil
+	}
+
 	req := &fsx.WindowsAuditLogCreateConfiguration{
-		FileAccessAuditLogLevel:      aws.String(data["file_access_audit_log_level"].(string)),
-		FileShareAccessAuditLogLevel: aws.String(data["file_share_access_audit_log_level"].(string)),
+		FileAccessAuditLogLevel:      aws.String(fileAccessAuditLogLevel),
+		FileShareAccessAuditLogLevel: aws.String(fileShareAccessAuditLogLevel),
 	}
 
 	// audit_log_destination cannot be included in the request if the log levels are disabled
-	if data["file_access_audit_log_level"].(string) == fsx.WindowsAccessAuditLogLevelDisabled && data["file_share_access_audit_log_level"].(string) == fsx.WindowsAccessAuditLogLevelDisabled {
+	if fileAccessAuditLogLevel == fsx.WindowsAccessAuditLogLevelDisabled && fileShareAccessAuditLogLevel == fsx.WindowsAccessAuditLogLevelDisabled {
 		return req
 	}
 
