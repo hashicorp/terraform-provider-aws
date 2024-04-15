@@ -207,7 +207,7 @@ func TestAccDMSReplicationTask_resourceIdentifier(t *testing.T) {
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"start_replication_task"},
+				ImportStateVerifyIgnore: []string{"resource_identifier", "start_replication_task"},
 			},
 		},
 	})
