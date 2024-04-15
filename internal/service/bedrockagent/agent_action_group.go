@@ -33,7 +33,7 @@ import (
 )
 
 // @FrameworkResource(name="Bedrock Agent Action Group")
-func newBedrockAgentActionGroupResource(context.Context) (resource.ResourceWithConfigure, error) {
+func newAgentActionGroupResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &agentActionGroupResource{}
 
 	r.SetDefaultDeleteTimeout(120 * time.Minute)
@@ -48,7 +48,7 @@ type agentActionGroupResource struct {
 }
 
 func (r *agentActionGroupResource) Metadata(_ context.Context, request resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_bedrockagent_action_group"
+	resp.TypeName = "aws_bedrockagent_agent_action_group"
 }
 
 func (r *agentActionGroupResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
