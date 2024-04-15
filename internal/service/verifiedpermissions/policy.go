@@ -216,7 +216,7 @@ func (r *resourcePolicy) Create(ctx context.Context, req resource.CreateRequest,
 				return
 			}
 
-			value.Principal = &awstypes.EntityIdentifier{
+			value.Resource = &awstypes.EntityIdentifier{
 				EntityId:   fwflex.StringFromFramework(ctx, res.EntityID),
 				EntityType: fwflex.StringFromFramework(ctx, res.EntityType),
 			}
@@ -298,6 +298,37 @@ func (r *resourcePolicy) Read(ctx context.Context, req resource.ReadRequest, res
 		state.Definition = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &policyDefinition{
 			Static:         static,
 			TemplateLinked: fwtypes.NewListNestedObjectValueOfNull[templateLinkedPolicyDefinition](ctx),
+		})
+	}
+
+	if val, ok := out.Definition.(*awstypes.PolicyDefinitionDetailMemberTemplateLinked); ok && val != nil {
+		tpl := templateLinkedPolicyDefinition{
+			PolicyTemplateID: fwflex.StringToFramework(ctx, val.Value.PolicyTemplateId),
+		}
+
+		if val.Value.Principal != nil {
+			tpl.Principal = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &templateLinkedPrincipal{
+				EntityID:   flex.StringToFramework(ctx, val.Value.Principal.EntityId),
+				EntityType: flex.StringToFramework(ctx, val.Value.Principal.EntityType),
+			})
+		} else {
+			tpl.Principal = fwtypes.NewListNestedObjectValueOfNull[templateLinkedPrincipal](ctx)
+		}
+
+		if val.Value.Resource != nil {
+			tpl.Resource = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &templateLinkedResource{
+				EntityID:   flex.StringToFramework(ctx, val.Value.Principal.EntityId),
+				EntityType: flex.StringToFramework(ctx, val.Value.Principal.EntityType),
+			})
+		} else {
+			tpl.Resource = fwtypes.NewListNestedObjectValueOfNull[templateLinkedResource](ctx)
+		}
+
+		templateLinked := fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &tpl)
+
+		state.Definition = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &policyDefinition{
+			Static:         fwtypes.NewListNestedObjectValueOfNull[staticPolicyDefinition](ctx),
+			TemplateLinked: templateLinked,
 		})
 	}
 
@@ -415,7 +446,7 @@ type staticPolicyDefinition struct {
 type templateLinkedPolicyDefinition struct {
 	PolicyTemplateID types.String                                             `tfsdk:"policy_template_id"`
 	Principal        fwtypes.ListNestedObjectValueOf[templateLinkedPrincipal] `tfsdk:"principal"`
-	Resource         fwtypes.SetNestedObjectValueOf[templateLinkedResource]   `tfsdk:"resource"`
+	Resource         fwtypes.ListNestedObjectValueOf[templateLinkedResource]  `tfsdk:"resource"`
 }
 
 type templateLinkedPrincipal struct {
