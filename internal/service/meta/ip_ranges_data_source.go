@@ -26,7 +26,6 @@ import (
 // @FrameworkDataSource
 func newDataSourceIPRanges(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceIPRanges{}
-	d.SetMigratedFromPluginSDK(true)
 
 	return d, nil
 }
