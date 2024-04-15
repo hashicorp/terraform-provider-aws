@@ -12,12 +12,17 @@ var (
 	ResourceConnection     = resourceConnection
 	ResourceEndpoint       = resourceEndpoint
 	ResourcePermission     = resourcePermission
+	ResourceRule           = resourceRule
 
-	FindAPIDestinationByName   = findAPIDestinationByName
-	FindArchiveByName          = findArchiveByName
-	FindConnectionByName       = findConnectionByName
-	FindEndpointByName         = findEndpointByName
-	FindEventBusByName         = findEventBusByName
-	FindEventBusPolicyByName   = findEventBusPolicyByName
-	FindPermissionByTwoPartKey = findPermissionByTwoPartKey
+	FindAPIDestinationByName    = findAPIDestinationByName
+	FindArchiveByName           = findArchiveByName
+	FindConnectionByName        = findConnectionByName
+	FindEndpointByName          = findEndpointByName
+	FindEventBusByName          = findEventBusByName
+	FindEventBusPolicyByName    = findEventBusPolicyByName
+	FindPermissionByTwoPartKey  = findPermissionByTwoPartKey
+	FindRuleByTwoPartKey        = findRuleByTwoPartKey
+	RuleEventPatternJSONDecoder = ruleEventPatternJSONDecoder
+	RuleCreateResourceID        = ruleCreateResourceID
+	RuleParseResourceID         = ruleParseResourceID
 )

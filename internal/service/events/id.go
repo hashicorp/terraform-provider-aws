@@ -6,51 +6,7 @@ package events
 import (
 	"fmt"
 	"strings"
-
-	"github.com/YakDriver/regexache"
 )
-
-var (
-	eventBusARNPattern     = regexache.MustCompile(`^arn:aws[\w-]*:events:[a-z]{2}-[a-z]+-[\w-]+:[0-9]{12}:event-bus\/[0-9A-Za-z_.-]+$`)
-	partnerEventBusPattern = regexache.MustCompile(`^(?:arn:aws[\w-]*:events:[a-z]{2}-[a-z]+-[\w-]+:[0-9]{12}:event-bus\/)?aws\.partner(/[0-9A-Za-z_.-]+){2,}$`)
-)
-
-const ruleResourceIDSeparator = "/"
-
-func RuleCreateResourceID(eventBusName, ruleName string) string {
-	if eventBusName == "" || eventBusName == DefaultEventBusName {
-		return ruleName
-	}
-
-	parts := []string{eventBusName, ruleName}
-	id := strings.Join(parts, ruleResourceIDSeparator)
-
-	return id
-}
-
-func RuleParseResourceID(id string) (string, string, error) {
-	parts := strings.Split(id, ruleResourceIDSeparator)
-
-	if len(parts) == 1 && parts[0] != "" {
-		return DefaultEventBusName, parts[0], nil
-	}
-	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
-		return parts[0], parts[1], nil
-	}
-	if len(parts) > 2 {
-		i := strings.LastIndex(id, ruleResourceIDSeparator)
-		eventBusName := id[:i]
-		ruleName := id[i+1:]
-		if eventBusARNPattern.MatchString(eventBusName) && ruleName != "" {
-			return eventBusName, ruleName, nil
-		}
-		if partnerEventBusPattern.MatchString(eventBusName) && ruleName != "" {
-			return eventBusName, ruleName, nil
-		}
-	}
-
-	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected EVENTBUSNAME%[2]sRULENAME or RULENAME", id, ruleResourceIDSeparator)
-}
 
 // Terraform resource IDs for Targets are not parseable as the separator used ("-") is also a valid character in both the rule name and the target ID.
 

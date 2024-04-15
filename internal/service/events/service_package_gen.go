@@ -82,7 +82,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Permission",
 		},
 		{
-			Factory:  ResourceRule,
+			Factory:  resourceRule,
 			TypeName: "aws_cloudwatch_event_rule",
 			Name:     "Rule",
 			Tags: &types.ServicePackageResourceTags{
