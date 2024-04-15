@@ -200,7 +200,7 @@ func dataSourceTargetGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("last_updated_at", aws.ToTime(out.LastUpdatedAt).String())
 	d.Set("name", out.Name)
 	d.Set("service_arns", out.ServiceArns)
-	d.Set("status", string(out.Status))
+	d.Set("status", out.Status)
 	d.Set("target_group_identifier", out.Id)
 	d.Set("type", out.Type)
 

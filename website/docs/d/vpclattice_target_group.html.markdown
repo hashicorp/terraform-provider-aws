@@ -40,5 +40,5 @@ This data source exports the following attributes in addition to the arguments a
 * `created_at` - Date and time that the target group was created.
 * `last_updated_at` - Date and time that the target group was last updated.
 * `service_arns` - List of VPC lattice service arns the target group is associated with.
-* `status` - Status of the target group.
+* `status` - Status of the target group. Either `CREATE_IN_PROGRESS`, `ACTIVE`, `DELETE_IN_PROGRESS`, `CREATE_FAILED` or `DELETE_FAILED`
 * `type` - Type of the target group. Either `IP`, `LAMBDA`, `INSTANCE` or `ALB`.
