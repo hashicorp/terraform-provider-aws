@@ -11,11 +11,13 @@ var (
 	ResourceBusPolicy      = resourceBusPolicy
 	ResourceConnection     = resourceConnection
 	ResourceEndpoint       = resourceEndpoint
+	ResourcePermission     = resourcePermission
 
-	FindAPIDestinationByName = findAPIDestinationByName
-	FindArchiveByName        = findArchiveByName
-	FindConnectionByName     = findConnectionByName
-	FindEndpointByName       = findEndpointByName
-	FindEventBusByName       = findEventBusByName
-	FindEventBusPolicyByName = findEventBusPolicyByName
+	FindAPIDestinationByName   = findAPIDestinationByName
+	FindArchiveByName          = findArchiveByName
+	FindConnectionByName       = findConnectionByName
+	FindEndpointByName         = findEndpointByName
+	FindEventBusByName         = findEventBusByName
+	FindEventBusPolicyByName   = findEventBusPolicyByName
+	FindPermissionByTwoPartKey = findPermissionByTwoPartKey
 )

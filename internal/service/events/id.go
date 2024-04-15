@@ -15,32 +15,6 @@ var (
 	partnerEventBusPattern = regexache.MustCompile(`^(?:arn:aws[\w-]*:events:[a-z]{2}-[a-z]+-[\w-]+:[0-9]{12}:event-bus\/)?aws\.partner(/[0-9A-Za-z_.-]+){2,}$`)
 )
 
-const permissionResourceIDSeparator = "/"
-
-func PermissionCreateResourceID(eventBusName, statementID string) string {
-	if eventBusName == "" || eventBusName == DefaultEventBusName {
-		return statementID
-	}
-
-	parts := []string{eventBusName, statementID}
-	id := strings.Join(parts, permissionResourceIDSeparator)
-
-	return id
-}
-
-func PermissionParseResourceID(id string) (string, string, error) {
-	parts := strings.Split(id, permissionResourceIDSeparator)
-
-	if len(parts) == 1 && parts[0] != "" {
-		return DefaultEventBusName, parts[0], nil
-	}
-	if len(parts) == 2 && parts[0] != "" && parts[1] != "" {
-		return parts[0], parts[1], nil
-	}
-
-	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected EVENTBUSNAME%[2]sSTATEMENTID or STATEMENTID", id, permissionResourceIDSeparator)
-}
-
 const ruleResourceIDSeparator = "/"
 
 func RuleCreateResourceID(eventBusName, ruleName string) string {
