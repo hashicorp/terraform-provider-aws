@@ -35,8 +35,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Connection",
 		},
 		{
-			Factory:  DataSourceSource,
+			Factory:  dataSourceSource,
 			TypeName: "aws_cloudwatch_event_source",
+			Name:     "Source",
 		},
 	}
 }
