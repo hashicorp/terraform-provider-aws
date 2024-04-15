@@ -2469,9 +2469,6 @@ func TestAccRDSCluster_enableHTTPEndpoint(t *testing.T) {
 
 func TestAccRDSCluster_enableHTTPEndpointProvisioned(t *testing.T) {
 	ctx := acctest.Context(t)
-	if testing.Short() {
-		t.Skip("skipping long-running test in short mode")
-	}
 
 	var dbCluster rds.DBCluster
 
