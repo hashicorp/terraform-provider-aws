@@ -39,6 +39,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const (
+	agentAliasIdParts = 2
+)
+
 // @FrameworkResource(name="Bedrock Agent Alias")
 // @Tags(identifierAttribute="agent_alias_arn")
 func newAgentAliasResource(context.Context) (resource.ResourceWithConfigure, error) {
@@ -336,7 +340,7 @@ func (r *agentAliasResource) ImportState(ctx context.Context, request resource.I
 }
 
 func findAgentAliasByID(ctx context.Context, conn *bedrockagent.Client, id string) (*bedrockagent.GetAgentAliasOutput, error) {
-	parts, err := intflex.ExpandResourceId(id, 2, false)
+	parts, err := intflex.ExpandResourceId(id, agentAliasIdParts, false)
 	if err != nil {
 		return nil, err
 	}
