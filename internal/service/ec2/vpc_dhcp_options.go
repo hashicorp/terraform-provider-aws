@@ -221,7 +221,7 @@ func resourceVPCDHCPOptionsDelete(ctx context.Context, d *schema.ResourceData, m
 		return conn.DeleteDhcpOptionsWithContext(ctx, input)
 	}, errCodeDependencyViolation)
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidDHCPOptionIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidDHCPOptionsIDNotFound) {
 		return diags
 	}
 

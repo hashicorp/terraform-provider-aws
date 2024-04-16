@@ -6,16 +6,21 @@ NOTES:
 
 ENHANCEMENTS:
 
+* data-source/aws_organizations_organization: Add `master_account_name` attribute ([#36797](https://github.com/hashicorp/terraform-provider-aws/issues/36797))
 * resource/aws_cloudfront_origin_access_control: Add `lambda` and `mediapackagev2` as valid values for `origin_access_control_origin_type` ([#34362](https://github.com/hashicorp/terraform-provider-aws/issues/34362))
 * resource/aws_dms_replication_task: Add `resource_identifier` argument ([#36901](https://github.com/hashicorp/terraform-provider-aws/issues/36901))
 * resource/aws_elasticache_serverless_cache: Add `minimum` attribute in `cache_usage_limits.data_storage` and `cache_usage_limits.ecpu_per_second` ([#36766](https://github.com/hashicorp/terraform-provider-aws/issues/36766))
 * resource/aws_mwaa_environment: Add `database_vpc_endpoint_service` and `webserver_vpc_endpoint_service` attributes ([#36903](https://github.com/hashicorp/terraform-provider-aws/issues/36903))
+* resource/aws_organizations_organization: Add `master_account_name` attribute ([#36797](https://github.com/hashicorp/terraform-provider-aws/issues/36797))
 
 BUG FIXES:
 
+* data-source/aws_iam_policy_document: When using multiple principals, sort them to avoid differences based only on order ([#25967](https://github.com/hashicorp/terraform-provider-aws/issues/25967))
 * resource/aws_ce_anomaly_monitor: Change `monitor_dimension` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) ([#36773](https://github.com/hashicorp/terraform-provider-aws/issues/36773))
 * resource/aws_ce_anomaly_subscription: Change `account_id` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) ([#36773](https://github.com/hashicorp/terraform-provider-aws/issues/36773))
 * resource/aws_cloudformation_stack: CRLF line endings in `template_body` no longer cause erroneous diffs ([#14270](https://github.com/hashicorp/terraform-provider-aws/issues/14270))
+* resource/aws_fsx_windows_file_system: Fix error `BadRequest: AuditLogDestination must not be provided when auditing is disabled` when updating `audit_log_configuration.0.file_access_audit_log_level` and `audit_log_configuration.0.file_share_access_audit_log_level` to `"DISABLED"` ([#36928](https://github.com/hashicorp/terraform-provider-aws/issues/36928))
+* resource/aws_vpc_dhcp_options: Fix `NotFound` error handling on delete ([#36933](https://github.com/hashicorp/terraform-provider-aws/issues/36933))
 
 ## 5.45.0 (April 11, 2024)
 

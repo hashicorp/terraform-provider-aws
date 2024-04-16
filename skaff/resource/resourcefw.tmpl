@@ -87,7 +87,7 @@ import (
 {{- end }}
 
 // Function annotations are used for resource registration to the Provider. DO NOT EDIT.
-// @FrameworkResource(name="{{ .HumanResourceName }}")
+// @FrameworkResource("aws_{{ .ServicePackage }}_{{ .ResourceSnake }}", name="{{ .HumanResourceName }}")
 {{- if .IncludeTags }}
 // @Tags(identifierAttribute="arn")
 {{- end }}
