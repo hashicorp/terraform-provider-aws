@@ -26,7 +26,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	interflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -335,9 +334,9 @@ func (r *resourcePolicy) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	plan.ID = flex.StringValueToFramework(ctx, rID)
+	plan.ID = fwflex.StringValueToFramework(ctx, rID)
 	plan.CreatedDate = timetypes.NewRFC3339TimePointerValue(out.CreatedDate)
-	plan.PolicyID = flex.StringToFramework(ctx, out.PolicyId)
+	plan.PolicyID = fwflex.StringToFramework(ctx, out.PolicyId)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
@@ -380,8 +379,8 @@ func (r *resourcePolicy) Read(ctx context.Context, req resource.ReadRequest, res
 
 	if val, ok := out.Definition.(*awstypes.PolicyDefinitionDetailMemberStatic); ok && val != nil {
 		static := fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &staticPolicyDefinition{
-			Statement:   flex.StringToFramework(ctx, val.Value.Statement),
-			Description: flex.StringToFramework(ctx, val.Value.Description),
+			Statement:   fwflex.StringToFramework(ctx, val.Value.Statement),
+			Description: fwflex.StringToFramework(ctx, val.Value.Description),
 		})
 
 		state.Definition = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &policyDefinition{
@@ -397,8 +396,8 @@ func (r *resourcePolicy) Read(ctx context.Context, req resource.ReadRequest, res
 
 		if val.Value.Principal != nil {
 			tpl.Principal = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &templateLinkedPrincipal{
-				EntityID:   flex.StringToFramework(ctx, val.Value.Principal.EntityId),
-				EntityType: flex.StringToFramework(ctx, val.Value.Principal.EntityType),
+				EntityID:   fwflex.StringToFramework(ctx, val.Value.Principal.EntityId),
+				EntityType: fwflex.StringToFramework(ctx, val.Value.Principal.EntityType),
 			})
 		} else {
 			tpl.Principal = fwtypes.NewListNestedObjectValueOfNull[templateLinkedPrincipal](ctx)
@@ -406,8 +405,8 @@ func (r *resourcePolicy) Read(ctx context.Context, req resource.ReadRequest, res
 
 		if val.Value.Resource != nil {
 			tpl.Resource = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &templateLinkedResource{
-				EntityID:   flex.StringToFramework(ctx, val.Value.Resource.EntityId),
-				EntityType: flex.StringToFramework(ctx, val.Value.Resource.EntityType),
+				EntityID:   fwflex.StringToFramework(ctx, val.Value.Resource.EntityId),
+				EntityType: fwflex.StringToFramework(ctx, val.Value.Resource.EntityType),
 			})
 		} else {
 			tpl.Resource = fwtypes.NewListNestedObjectValueOfNull[templateLinkedResource](ctx)
@@ -439,10 +438,15 @@ func (r *resourcePolicy) Update(ctx context.Context, req resource.UpdateRequest,
 		in.PolicyId = fwflex.StringFromFramework(ctx, state.PolicyID)
 		in.PolicyStoreId = fwflex.StringFromFramework(ctx, state.PolicyStoreID)
 
-		defPlan, diags := plan.Definition.ToPtr(ctx)
-		defState, diags := state.Definition.ToPtr(ctx)
-		resp.Diagnostics.Append(diags...)
-		if diags.HasError() {
+		defPlan, diagsPlan := plan.Definition.ToPtr(ctx)
+		resp.Diagnostics.Append(diagsPlan...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+
+		defState, diagsState := state.Definition.ToPtr(ctx)
+		resp.Diagnostics.Append(diagsState...)
+		if resp.Diagnostics.HasError() {
 			return
 		}
 
@@ -513,10 +517,14 @@ func (r *resourcePolicy) ModifyPlan(ctx context.Context, req resource.ModifyPlan
 		}
 
 		if !plan.Definition.Equal(state.Definition) {
-			defPlan, diags := plan.Definition.ToPtr(ctx)
-			defState, diags := state.Definition.ToPtr(ctx)
-			resp.Diagnostics.Append(diags...)
-			if diags.HasError() {
+			defPlan, diagsPlan := plan.Definition.ToPtr(ctx)
+			resp.Diagnostics.Append(diagsPlan...)
+			if resp.Diagnostics.HasError() {
+				return
+			}
+			defState, diagsState := state.Definition.ToPtr(ctx)
+			resp.Diagnostics.Append(diagsState...)
+			if resp.Diagnostics.HasError() {
 				return
 			}
 
