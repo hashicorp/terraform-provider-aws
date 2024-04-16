@@ -36,6 +36,7 @@ func main() {
 		case "cloudfrontkeyvaluestore", // Endpoint includes account ID
 			"codecatalyst",        // Bearer auth token needs special handling
 			"mwaa",                // Resolver modifies URL
+			"neptunegraph",        // EndpointParameters has an additional parameter, ApiType
 			"paymentcryptography", // Resolver modifies URL
 			"s3control",           // Resolver modifies URL
 			"timestreamwrite":     // Uses endpoint discovery

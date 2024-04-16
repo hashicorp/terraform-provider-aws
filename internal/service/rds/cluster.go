@@ -1296,7 +1296,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		"iam_roles",
 		"replication_source_identifier",
 		"skip_final_snapshot",
-		"tags", "tags_all") {
+		names.AttrTags, names.AttrTagsAll) {
 		input := &rds.ModifyDBClusterInput{
 			ApplyImmediately:    aws.Bool(d.Get("apply_immediately").(bool)),
 			DBClusterIdentifier: aws.String(d.Id()),
