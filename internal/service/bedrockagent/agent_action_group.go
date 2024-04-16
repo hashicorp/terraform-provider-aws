@@ -6,20 +6,19 @@ package bedrockagent
 import (
 	"context"
 	"fmt"
-	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
-	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
-	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
@@ -29,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
@@ -203,7 +203,7 @@ func (r *agentActionGroupResource) Create(ctx context.Context, request resource.
 	var input bedrockagent.CreateAgentActionGroupInput
 	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 
-	apiSchemaInput, diags := expandApiSchema(ctx, data.APISchema)
+	apiSchemaInput, diags := expandAPISchema(ctx, data.APISchema)
 	response.Diagnostics.Append(diags...)
 
 	if response.Diagnostics.HasError() {
@@ -276,7 +276,7 @@ func (r *agentActionGroupResource) Read(ctx context.Context, request resource.Re
 		return
 	}
 
-	apiSchemaData, moreDiags := flattenApiSchema(ctx, output.AgentActionGroup.ApiSchema)
+	apiSchemaData, moreDiags := flattenAPISchema(ctx, output.AgentActionGroup.ApiSchema)
 	response.Diagnostics.Append(moreDiags...)
 	if response.Diagnostics.HasError() {
 		return
@@ -315,7 +315,7 @@ func (r *agentActionGroupResource) Update(ctx context.Context, request resource.
 			return
 		}
 
-		apiConfig, diags := expandApiSchema(ctx, new.APISchema)
+		apiConfig, diags := expandAPISchema(ctx, new.APISchema)
 		response.Diagnostics.Append(diags...)
 
 		if response.Diagnostics.HasError() {
@@ -499,7 +499,7 @@ func flattenActionGroupExecutor(ctx context.Context, age awstypes.ActionGroupExe
 	return fwtypes.NewListNestedObjectValueOfPtr(ctx, &ageData)
 }
 
-func expandApiSchema(ctx context.Context, api fwtypes.ListNestedObjectValueOf[apiSchema]) (awstypes.APISchema, diag.Diagnostics) {
+func expandAPISchema(ctx context.Context, api fwtypes.ListNestedObjectValueOf[apiSchema]) (awstypes.APISchema, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	planApi, d := api.ToPtr(ctx)
 	diags.Append(d...)
@@ -533,7 +533,7 @@ func expandApiSchema(ctx context.Context, api fwtypes.ListNestedObjectValueOf[ap
 	return nil, diags
 }
 
-func flattenApiSchema(ctx context.Context, apiObject awstypes.APISchema) (fwtypes.ListNestedObjectValueOf[apiSchema], diag.Diagnostics) {
+func flattenAPISchema(ctx context.Context, apiObject awstypes.APISchema) (fwtypes.ListNestedObjectValueOf[apiSchema], diag.Diagnostics) {
 	var diags diag.Diagnostics
 	apiSchemaData := &apiSchema{
 		S3:      fwtypes.NewListNestedObjectValueOfNull[s3](ctx),

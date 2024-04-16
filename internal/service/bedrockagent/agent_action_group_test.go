@@ -7,7 +7,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	bedrockagent2 "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagent"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -20,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	tfagent "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagent"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -65,7 +65,7 @@ func TestAccBedrockAgentActionGroup_s3ApiSchema(t *testing.T) {
 		CheckDestroy:             testAccCheckBedrockAgentActionGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAgentActionGroupConfig_s3ApiSchema(rName),
+				Config: testAccAgentActionGroupConfig_s3APISchema(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBedrockAgentActionGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "action_group_name", rName),
@@ -118,7 +118,7 @@ func testAccCheckBedrockAgentActionGroupExists(ctx context.Context, n string, v 
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentClient(ctx)
 
-		output, err := bedrockagent2.FindAgentActionGroupByID(ctx, conn, rs.Primary.ID)
+		output, err := tfagent.FindAgentActionGroupByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -150,7 +150,7 @@ resource "aws_bedrockagent_agent_action_group" "test" {
 `, rName))
 }
 
-func testAccAgentActionGroupConfig_s3ApiSchema(rName string) string {
+func testAccAgentActionGroupConfig_s3APISchema(rName string) string {
 	return acctest.ConfigCompose(testAccAgentConfig_basic(rName, "anthropic.claude-v2", "basic claude"),
 		testAccAgentActionGroupConfig_lamba(rName),
 		fmt.Sprintf(`
