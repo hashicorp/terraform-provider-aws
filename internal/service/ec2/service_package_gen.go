@@ -290,8 +290,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_internet_gateway",
 		},
 		{
-			Factory:  DataSourceKeyPair,
+			Factory:  dataSourceKeyPair,
 			TypeName: "aws_key_pair",
+			Name:     "Key Pair",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "key_pair_id",
+			},
 		},
 		{
 			Factory:  DataSourceLaunchTemplate,
