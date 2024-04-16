@@ -132,6 +132,23 @@ func TestAccDMSReplicationConfig_settings_EnableLogging(t *testing.T) {
 				ImportStateVerifyIgnore: []string{"start_replication"},
 			},
 			{
+				Config: testAccReplicationConfigConfig_settings_EnableLogContext(rName, true, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationConfigExists(ctx, resourceName, &v),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "Logging.EnableLogging", "true"),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "Logging.EnableLogContext", "true"),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "Logging.LogComponents[?Id=='DATA_STRUCTURE'].Severity | [0]", "LOGGER_SEVERITY_DEFAULT"),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "type(Logging.CloudWatchLogGroup)", "null"),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "type(Logging.CloudWatchLogStream)", "null"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"start_replication"},
+			},
+			{
 				Config: testAccReplicationConfigConfig_settings_EnableLogging(rName, false),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckReplicationConfigExists(ctx, resourceName, &v),
@@ -163,7 +180,7 @@ func TestAccDMSReplicationConfig_settings_LoggingValidation(t *testing.T) {
 		CheckDestroy:             testAccCheckReplicationTaskDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccReplicationConfigConfig_settings_EnableLogContext(rName, true),
+				Config:      testAccReplicationConfigConfig_settings_EnableLogContext(rName, false, true),
 				ExpectError: regexache.MustCompile(`The parameter Logging.EnableLogContext is not allowed when\s+Logging.EnableLogging is not set to true.`),
 			},
 			{
@@ -497,7 +514,7 @@ resource "aws_dms_replication_config" "test" {
 `, rName, enabled))
 }
 
-func testAccReplicationConfigConfig_settings_EnableLogContext(rName string, enabled bool) string {
+func testAccReplicationConfigConfig_settings_EnableLogContext(rName string, enableLogging, enableLogContext bool) string {
 	return acctest.ConfigCompose(
 		testAccReplicationConfigConfig_base_DummyDatabase(rName),
 		fmt.Sprintf(`
@@ -515,9 +532,9 @@ resource "aws_dms_replication_config" "test" {
   }
 
   # terrafmt can't handle this using jsonencode or a heredoc
-  replication_settings = "{\"Logging\":{\"EnableLogContext\":%[2]t}}"
+  replication_settings = "{\"Logging\":{\"EnableLogging\":%[2]t,\"EnableLogContext\":%[3]t}}"
 }
-`, rName, enabled))
+`, rName, enableLogging, enableLogContext))
 }
 
 func testAccReplicationConfigConfig_settings_LoggingReadOnly(rName, field string) string {
@@ -640,6 +657,8 @@ resource "aws_dms_replication_config" "test" {
     min_capacity_units           = "2"
     preferred_maintenance_window = "sun:23:45-mon:00:30"
   }
+
+  depends_on = [aws_rds_cluster_instance.source, aws_rds_cluster_instance.target]
 }
 `, rName, start))
 }

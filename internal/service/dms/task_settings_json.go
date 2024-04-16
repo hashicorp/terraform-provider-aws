@@ -129,3 +129,33 @@ func validateReplicationSettings(i any, path cty.Path) diag.Diagnostics {
 
 	return diags
 }
+
+func normalizeReplicationSettings(s string) (string, error) {
+	if s == "" {
+		return "", nil
+	}
+
+	var m map[string]any
+
+	if err := json.Unmarshal([]byte(s), &m); err != nil {
+		return s, err
+	}
+
+	// If EnableLogging is false, set EnableLogContext to false unless it is explicitly set.
+	// Normally, if EnableLogContext is not set, it uses the existing value.
+	if l, ok := m["Logging"].(map[string]any); ok {
+		if enabled, ok := l["EnableLogging"]; ok && !enabled.(bool) {
+			delete(l, "EnableLogContext")
+			if _, ok := l["EnableLogContext"]; !ok {
+				l["EnableLogContext"] = false
+				b, err := json.Marshal(m)
+				if err != nil {
+					return s, err
+				}
+				s = string(b)
+			}
+		}
+	}
+
+	return s, nil
+}

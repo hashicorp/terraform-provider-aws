@@ -251,7 +251,11 @@ func resourceReplicationTaskUpdate(ctx context.Context, d *schema.ResourceData, 
 
 		if d.HasChange("replication_task_settings") {
 			if v, ok := d.GetOk("replication_task_settings"); ok {
-				input.ReplicationTaskSettings = aws.String(v.(string))
+				s, err := normalizeReplicationSettings(v.(string))
+				if err != nil {
+					return sdkdiag.AppendErrorf(diags, "updating DMS Replication Task (%s): %s", d.Id(), err)
+				}
+				input.ReplicationTaskSettings = aws.String(s)
 			}
 		}
 
