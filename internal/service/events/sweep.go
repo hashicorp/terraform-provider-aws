@@ -356,6 +356,9 @@ func sweepTargets(region string) error {
 							r := resourceTarget()
 							d := r.Data(nil)
 							d.SetId(targetCreateResourceID(eventBusName, ruleName, targetID))
+							d.Set("event_bus_name", eventBusName)
+							d.Set("rule", ruleName)
+							d.Set("target_id", targetID)
 
 							sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 						}

@@ -28,4 +28,5 @@ var (
 	RuleCreateResourceID        = ruleCreateResourceID
 	RuleParseResourceID         = ruleParseResourceID
 	TargetParseImportID         = targetParseImportID
+	TargetStateUpgradeV0        = targetStateUpgradeV0
 )

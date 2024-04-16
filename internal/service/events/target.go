@@ -61,7 +61,7 @@ func resourceTarget() *schema.Resource {
 		StateUpgraders: []schema.StateUpgrader{
 			{
 				Type:    resourceTargetV0().CoreConfigSchema().ImpliedType(),
-				Upgrade: TargetStateUpgradeV0,
+				Upgrade: targetStateUpgradeV0,
 				Version: 0,
 			},
 		},
