@@ -104,10 +104,10 @@ func testAccCheckBedrockAgentActionGroupExists(ctx context.Context, n string, v 
 }
 
 func testAccBedrockAgentActionGroupConfig_basic(rName string) string {
-	return fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAgentConfig_basic(rName, "anthropic.claude-v2", "basic claude"), fmt.Sprintf(`
 resource "aws_bedrockagent_action_group" "test" {
   action_group_name = %[1]q
-  agent_id          = "TLJ2L6TKGM"
+  agent_id          = aws_bedrockagent_agent.test.agent_id
   agent_version     = "DRAFT"
   action_group_executor {
 	lambda = "arn:aws:lambda:us-west-2:xxxxxxxxxxxx:function:sairam:1"
@@ -119,5 +119,5 @@ resource "aws_bedrockagent_action_group" "test" {
 	}
   }
 }
-`, rName)
+`, rName))
 }

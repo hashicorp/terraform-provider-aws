@@ -6,6 +6,7 @@ package bedrockagent
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -193,56 +194,28 @@ func (r *agentActionGroupResource) Create(ctx context.Context, request resource.
 
 	conn := r.Meta().BedrockAgentClient(ctx)
 
-	// input := &bedrockagent.CreateAgentActionGroupInput{}
-	// response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
-	// if response.Diagnostics.HasError() {
-	// 	return
-	// }
+	var input bedrockagent.CreateAgentActionGroupInput
+	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 
-	// if !data.ActionGroupExecutor.IsNull() {
-	// 	age, diags := data.ActionGroupExecutor.ToPtr(ctx)
-	// 	response.Diagnostics.Append(diags...)
-	// 	if response.Diagnostics.HasError() {
-	// 		return
-	// 	}
-	// 	input.ActionGroupExecutor = expandAge(age)
-	// }
-
-	age, diags := data.ActionGroupExecutor.ToPtr(ctx)
+	apiConfig, diags := expandApiSchema(ctx, data.APISchema)
 	response.Diagnostics.Append(diags...)
+
 	if response.Diagnostics.HasError() {
 		return
 	}
-	lambda := &awstypes.ActionGroupExecutorMemberLambda{
-		Value: *fwflex.StringFromFramework(ctx, age.Lambda),
-	}
 
-	apischema, diags := data.APISchema.ToPtr(ctx)
+	input.ApiSchema = apiConfig
+
+	ageConfig, diags := expandActionGroupExecutor(ctx, data.ActionGroupExecutor)
 	response.Diagnostics.Append(diags...)
+
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	s3, diags := apischema.S3.ToPtr(ctx)
-	response.Diagnostics.Append(diags...)
-	if response.Diagnostics.HasError() {
-		return
-	}
-	s3data := &awstypes.APISchemaMemberS3{}
-	response.Diagnostics.Append(fwflex.Expand(ctx, s3, &s3data.Value)...)
-	if response.Diagnostics.HasError() {
-		return
-	}
+	input.ActionGroupExecutor = ageConfig
 
-	input := &bedrockagent.CreateAgentActionGroupInput{
-		ActionGroupName:     data.ActionGroupName.ValueStringPointer(),
-		AgentId:             data.AgentId.ValueStringPointer(),
-		AgentVersion:        data.AgentVersion.ValueStringPointer(),
-		ActionGroupExecutor: lambda,
-		ApiSchema:           s3data,
-	}
-
-	output, err := conn.CreateAgentActionGroup(ctx, input)
+	output, err := conn.CreateAgentActionGroup(ctx, &input)
 
 	if err != nil {
 		response.Diagnostics.AddError("creating Bedrock Agent Group", err.Error())
@@ -250,20 +223,8 @@ func (r *agentActionGroupResource) Create(ctx context.Context, request resource.
 		return
 	}
 
-	// Set values for unknowns.
-	//data.ActionGroupId = fwflex.StringToFramework(ctx, output.AgentActionGroup.ActionGroupId)
-	//data.ID = data.ActionGroupId
-
 	var dataFromCreate actionGroupResourceModel
 	response.Diagnostics.Append(fwflex.Flatten(ctx, output.AgentActionGroup, &dataFromCreate)...)
-	data.CreatedAt = dataFromCreate.CreatedAt
-	data.UpdatedAt = dataFromCreate.UpdatedAt
-	data.PreparedAt = dataFromCreate.PreparedAt
-	data.ActionGroupState = dataFromCreate.ActionGroupState
-	data.Description = dataFromCreate.Description
-	data.AgentId = dataFromCreate.AgentId
-	data.ActionGroupId = dataFromCreate.ActionGroupId
-	data.AgentVersion = dataFromCreate.AgentVersion
 	data.ID = dataFromCreate.ActionGroupId
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
@@ -308,6 +269,22 @@ func (r *agentActionGroupResource) Read(ctx context.Context, request resource.Re
 		return
 	}
 
+	apiSchemaData, moreDiags := flattenApiSchema(ctx, output.AgentActionGroup.ApiSchema)
+	response.Diagnostics.Append(moreDiags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	data.APISchema = apiSchemaData
+
+	ageData, moreDiags := flattenActionGroupExecutor(ctx, output.AgentActionGroup.ActionGroupExecutor)
+	response.Diagnostics.Append(moreDiags...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	data.ActionGroupExecutor = ageData
+
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
@@ -330,6 +307,24 @@ func (r *agentActionGroupResource) Update(ctx context.Context, request resource.
 		if response.Diagnostics.HasError() {
 			return
 		}
+
+		apiConfig, diags := expandApiSchema(ctx, new.APISchema)
+		response.Diagnostics.Append(diags...)
+
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		input.ApiSchema = apiConfig
+
+		ageConfig, diags := expandActionGroupExecutor(ctx, new.ActionGroupExecutor)
+		response.Diagnostics.Append(diags...)
+
+		if response.Diagnostics.HasError() {
+			return
+		}
+
+		input.ActionGroupExecutor = ageConfig
 
 		_, err := conn.UpdateAgentActionGroup(ctx, input)
 
@@ -385,10 +380,6 @@ func (r *agentActionGroupResource) Delete(ctx context.Context, request resource.
 		}
 	}
 }
-
-// func (r *agentActionGroupResource) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
-// 	r.SetTagsAll(ctx, request, response)
-// }
 
 func findAgentActionGroupByID(ctx context.Context, conn *bedrockagent.Client, grpid, agentid, agentversion string) (*bedrockagent.GetAgentActionGroupOutput, error) {
 	input := &bedrockagent.GetAgentActionGroupInput{
@@ -453,11 +444,75 @@ func agentActionGroupHasChanges(_ context.Context, plan, state actionGroupResour
 		!plan.Description.Equal(state.Description)
 }
 
-func expandAge(agedata *actionGroupExecutor) awstypes.ActionGroupExecutor {
-	if !agedata.Lambda.IsNull() {
-		return &awstypes.ActionGroupExecutorMemberLambda{
-			Value: agedata.Lambda.ValueString(),
-		}
+func expandActionGroupExecutor(ctx context.Context, age fwtypes.ListNestedObjectValueOf[actionGroupExecutor]) (awstypes.ActionGroupExecutor, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	var ageObject awstypes.ActionGroupExecutor
+	planAge, moreDiags := age.ToPtr(ctx)
+
+	diags.Append(moreDiags...)
+	if diags.HasError() {
+		return ageObject, diags
 	}
-	return nil
+
+	if !planAge.Lambda.IsNull() {
+		var lambdaAge awstypes.ActionGroupExecutorMemberLambda
+		diags.Append(fwflex.Expand(ctx, planAge.Lambda, &lambdaAge.Value)...)
+		ageObject = &lambdaAge
+	}
+
+	return ageObject, diags
+}
+
+func flattenActionGroupExecutor(ctx context.Context, age awstypes.ActionGroupExecutor) (fwtypes.ListNestedObjectValueOf[actionGroupExecutor], diag.Diagnostics) {
+	var ageData actionGroupExecutor
+	switch v := age.(type) {
+	case *awstypes.ActionGroupExecutorMemberLambda:
+		ageData.Lambda = fwflex.StringValueToFramework(ctx, v.Value)
+	}
+
+	return fwtypes.NewListNestedObjectValueOfPtr(ctx, &ageData)
+}
+
+func expandApiSchema(ctx context.Context, api fwtypes.ListNestedObjectValueOf[apiSchema]) (awstypes.APISchema, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	var apiObject awstypes.APISchema
+	planApi, moreDiags := api.ToPtr(ctx)
+	diags.Append(moreDiags...)
+	if diags.HasError() {
+		return apiObject, diags
+	}
+
+	if !planApi.S3.IsNull() {
+		var s3 awstypes.APISchemaMemberS3
+		diags.Append(fwflex.Expand(ctx, planApi.S3, &s3.Value)...)
+		apiObject = &s3
+	}
+
+	if !planApi.Payload.IsNull() {
+		var payload awstypes.APISchemaMemberPayload
+		diags.Append(fwflex.Expand(ctx, planApi.Payload, &payload.Value)...)
+		apiObject = &payload
+	}
+	return apiObject, diags
+}
+
+func flattenApiSchema(ctx context.Context, apiObject awstypes.APISchema) (fwtypes.ListNestedObjectValueOf[apiSchema], diag.Diagnostics) {
+	var diags diag.Diagnostics
+	var apiSchemaData []*apiSchema
+
+	switch v := apiObject.(type) {
+	case *awstypes.APISchemaMemberS3:
+		var s3data s3
+		diags.Append(fwflex.Flatten(ctx, v, s3data)...)
+		apiSchemaData = append(apiSchemaData, &apiSchema{S3: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &s3data)})
+	case *awstypes.APISchemaMemberPayload:
+		payloadValue := fwflex.StringValueToFramework(ctx, v.Value)
+		apiValue := apiSchema{Payload: payloadValue}
+		apiSchemaData = append(apiSchemaData, &apiValue)
+	}
+
+	apiSchemaDataReturn, moreDiags := fwtypes.NewListNestedObjectValueOfSlice(ctx, apiSchemaData)
+	diags.Append(moreDiags...)
+
+	return apiSchemaDataReturn, diags
 }
