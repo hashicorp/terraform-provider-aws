@@ -47,6 +47,8 @@ const (
 
 	// The following attributes are supported by only Network Load Balancers:
 	loadBalancerAttributeDNSRecordClientRoutingPolicy = "dns_record.client_routing_policy"
+
+	loadBalancerAttributeConnectionSettingsClientKeepAliveTimeoutSeconds = "connection_settings.client_keep_alive.seconds"
 )
 
 const (
