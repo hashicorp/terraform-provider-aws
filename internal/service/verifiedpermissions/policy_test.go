@@ -102,6 +102,60 @@ func TestAccVerifiedPermissionsPolicy_templateLinked(t *testing.T) {
 	})
 }
 
+func TestAccVerifiedPermissionsPolicy_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var policy verifiedpermissions.GetPolicyOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_verifiedpermissions_policy.test"
+
+	policyStatement := "permit (principal, action == Action::\"view\", resource in Album:: \"test_album\");"
+	policyStatementActionUpdated := "permit (principal, action == Action::\"write\", resource in Album:: \"test_album\");"
+	policyStatementEffectUpdated := "forbid (principal, action == Action::\"view\", resource in Album:: \"test_album\");"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissionsEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_basic(rName, policyStatement),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.static.0.description", rName),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.static.0.statement", policyStatement),
+					resource.TestCheckResourceAttrSet(resourceName, "policy_id"),
+				),
+			},
+			{
+				Config: testAccPolicyConfig_basic(rName, policyStatementActionUpdated),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.static.0.description", rName),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.static.0.statement", policyStatementActionUpdated),
+					resource.TestCheckResourceAttrSet(resourceName, "policy_id"),
+				),
+			},
+			{
+				Config: testAccPolicyConfig_basic(rName, policyStatementEffectUpdated),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, resourceName, &policy),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.static.0.description", rName),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.static.0.statement", policyStatementEffectUpdated),
+					resource.TestCheckResourceAttrSet(resourceName, "policy_id"),
+				),
+			},
+		},
+	})
+}
+
 func TestAccVerifiedPermissionsPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {

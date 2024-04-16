@@ -40,7 +40,7 @@ The following arguments are optional:
 ### Definition
 
 * `static` - (Optional) The static policy statement. See [Static](#static) below.
-* `template_linked` - (Optional) The template linked policy. See [Template Linked](#template_linked) below.
+* `template_linked` - (Optional) The template linked policy. See [Template Linked](#template-linked) below.
 
 #### Static
 
