@@ -221,7 +221,7 @@ func testAccPolicyConfig_basic(rName, policyStatement string) string {
 		fmt.Sprintf(`
 resource "aws_verifiedpermissions_policy" "test" {
   policy_store_id = aws_verifiedpermissions_policy_store.test.id
-  
+
   definition {
     static {
       description = %[1]q
@@ -245,18 +245,18 @@ resource "aws_verifiedpermissions_policy_template" "test" {
 
 resource "aws_verifiedpermissions_policy" "test" {
   policy_store_id = aws_verifiedpermissions_policy_store.test.id
-  
+
   definition {
     template_linked {
       policy_template_id = aws_verifiedpermissions_policy_template.test.policy_template_id
 
       principal {
-        entity_id = "TestUsers"
+        entity_id   = "TestUsers"
         entity_type = "User"
       }
 
       resource {
-        entity_id = "test_album"
+        entity_id   = "test_album"
         entity_type = "Album"
       }
     }

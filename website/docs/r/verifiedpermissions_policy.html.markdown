@@ -52,11 +52,11 @@ The following arguments are optional:
 
 * `policy_template_id` - (Required) The ID of the template.
 * `principal` - (Optional) The principal of the template linked policy.
-  * `entity_id` - (Required) The entity ID of the principal.
-  * `entity_type` - (Required) The entity type of the principal.
+    * `entity_id` - (Required) The entity ID of the principal.
+    * `entity_type` - (Required) The entity type of the principal.
 * `resource` - (Optional) The resource of the template linked policy.
-  * `entity_id` - (Required) The entity ID of the resource.
-  * `entity_type` - (Required) The entity type of the resource.
+    * `entity_id` - (Required) The entity ID of the resource.
+    * `entity_type` - (Required) The entity type of the resource.
 
 ## Attribute Reference
 
