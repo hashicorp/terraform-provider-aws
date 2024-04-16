@@ -7,6 +7,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -20,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/timestamp"
 )
@@ -514,6 +517,34 @@ func ValidServicePrincipal(v interface{}, k string) (ws []string, errors []error
 
 func IsServicePrincipal(value string) (valid bool) {
 	return servicePrincipalRegexp.MatchString(value)
+}
+
+func MapKeyNoMatch(r *regexp.Regexp, message string) schema.SchemaValidateDiagFunc {
+	return func(v interface{}, path cty.Path) diag.Diagnostics {
+		var diags diag.Diagnostics
+		m := v.(map[string]interface{})
+		keys := tfmaps.Keys(m)
+
+		slices.Sort(keys)
+		for _, k := range keys {
+			if ok := r.MatchString(k); ok {
+				var detail string
+				if message != "" {
+					detail = fmt.Sprintf("Map key '%s' %s", k, message)
+				} else {
+					detail = fmt.Sprintf("Map key '%s' must not match regular expression '%s'", k, r)
+				}
+				diags = append(diags, diag.Diagnostic{
+					Severity:      diag.Error,
+					Summary:       "Bad map key",
+					Detail:        detail,
+					AttributePath: path,
+				})
+			}
+		}
+
+		return diags
+	}
 }
 
 func MapKeysAre(keyValidators ...schema.SchemaValidateDiagFunc) schema.SchemaValidateDiagFunc {
