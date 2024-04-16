@@ -10,6 +10,7 @@ var (
 	ResourcePolicyTemplate = newResourcePolicyTemplate
 	ResourceSchema         = newResourceSchema
 
+	FindPolicyByID            = findPolicyByID
 	FindPolicyStoreByID       = findPolicyStoreByID
 	FindPolicyTemplateByID    = findPolicyTemplateByID
 	FindSchemaByPolicyStoreID = findSchemaByPolicyStoreID
