@@ -382,6 +382,7 @@ func TestAccDMSReplicationTask_resourceIdentifier(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_dms_replication_task.test"
+	var v dms.ReplicationTask
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -392,7 +393,7 @@ func TestAccDMSReplicationTask_resourceIdentifier(t *testing.T) {
 			{
 				Config: testAccReplicationTaskConfig_resourceIdentifier(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckReplicationTaskExists(ctx, resourceName),
+					testAccCheckReplicationTaskExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "resource_identifier", "identifier"),
 				),
 			},
