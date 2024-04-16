@@ -366,10 +366,14 @@ func TestAccVPCNetworkInterface_ignoreExternalAttachment(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"private_ip_list_enabled", "ipv6_address_list_enabled"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"attachment",
+					"ipv6_address_list_enabled",
+					"private_ip_list_enabled",
+				},
 			},
 		},
 	})
