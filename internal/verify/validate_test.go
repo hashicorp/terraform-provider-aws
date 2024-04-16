@@ -812,7 +812,7 @@ func TestMapLenBetween(t *testing.T) {
 			},
 		},
 	}
-	f := MapLenBetween(2, 4)
+	f := MapSizeBetween(2, 4)
 	for _, testCase := range testCases {
 		testCase := testCase
 		t.Run(testCase.name, func(t *testing.T) {

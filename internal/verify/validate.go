@@ -530,7 +530,7 @@ func MapKeysAre(keyValidators ...schema.SchemaValidateDiagFunc) schema.SchemaVal
 	}
 }
 
-func MapLenBetween(min, max int) schema.SchemaValidateDiagFunc {
+func MapSizeBetween(min, max int) schema.SchemaValidateDiagFunc {
 	return func(v interface{}, path cty.Path) diag.Diagnostics {
 		var diags diag.Diagnostics
 		m := v.(map[string]interface{})
@@ -538,7 +538,7 @@ func MapLenBetween(min, max int) schema.SchemaValidateDiagFunc {
 		if l := len(m); l < min || l > max {
 			diags = append(diags, diag.Diagnostic{
 				Severity:      diag.Error,
-				Summary:       "Bad map length",
+				Summary:       "Bad map size",
 				Detail:        fmt.Sprintf("Map must contain at least %d elements and at most %d elements: length=%d", min, max, l),
 				AttributePath: path,
 			})
