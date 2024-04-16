@@ -840,7 +840,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_internet_gateway_attachment",
 		},
 		{
-			Factory:  ResourceKeyPair,
+			Factory:  resourceKeyPair,
 			TypeName: "aws_key_pair",
 			Name:     "Key Pair",
 			Tags: &types.ServicePackageResourceTags{

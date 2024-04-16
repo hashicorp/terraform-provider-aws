@@ -11,6 +11,7 @@ var (
 	ResourceEBSFastSnapshotRestore          = newEBSFastSnapshotRestoreResource
 	ResourceInstanceConnectEndpoint         = newInstanceConnectEndpointResource
 	ResourceInstanceMetadataDefaults        = newInstanceMetadataDefaultsResource
+	ResourceKeyPair                         = resourceKeyPair
 	ResourceNetworkACL                      = resourceNetworkACL
 	ResourceNetworkACLRule                  = resourceNetworkACLRule
 	ResourceRoute                           = resourceRoute
@@ -28,6 +29,7 @@ var (
 	CustomFiltersSchema                 = customFiltersSchema
 	FindFastSnapshotRestoreByTwoPartKey = findFastSnapshotRestoreByTwoPartKey
 	FindInstanceMetadataDefaults        = findInstanceMetadataDefaults
+	FindKeyPairByName                   = findKeyPairByName
 	FindNetworkACLByIDV2                = findNetworkACLByIDV2
 	NewAttributeFilterList              = newAttributeFilterList
 	NewCustomFilterList                 = newCustomFilterList
