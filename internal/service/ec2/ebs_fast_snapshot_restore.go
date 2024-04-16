@@ -93,7 +93,7 @@ func (r *ebsFastSnapshotRestoreResource) Create(ctx context.Context, request res
 	output, err := conn.EnableFastSnapshotRestores(ctx, input)
 
 	if err == nil && output != nil {
-		err = EnableFastSnapshotRestoreItemsError(output.Unsuccessful)
+		err = enableFastSnapshotRestoreItemsError(output.Unsuccessful)
 	}
 
 	if err != nil {
