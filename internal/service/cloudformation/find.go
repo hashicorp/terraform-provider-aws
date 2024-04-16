@@ -76,7 +76,6 @@ func FindStackInstanceSummariesByOrgIDs(ctx context.Context, conn *cloudformatio
 				}
 			}
 		}
-
 	}
 
 	return result, nil

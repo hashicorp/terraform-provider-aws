@@ -62,7 +62,6 @@ func dataSourceExportRead(ctx context.Context, d *schema.ResourceData, meta inte
 				d.Set("exporting_stack_id", e.ExportingStackId)
 			}
 		}
-
 	}
 
 	if value == "" {

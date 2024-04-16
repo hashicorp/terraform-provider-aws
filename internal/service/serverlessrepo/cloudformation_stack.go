@@ -117,7 +117,7 @@ func resourceCloudFormationStackCreate(ctx context.Context, d *schema.ResourceDa
 		ChangeSetName:      changeSet.ChangeSetId,
 		ClientRequestToken: aws.String(requestToken),
 	}
-	log.Printf("[DEBUG] Executing Serverless Application Repository CloudFormation change set: %s", executeRequest)
+	log.Printf("[DEBUG] Executing Serverless Application Repository CloudFormation change set: %+v", executeRequest)
 	_, err = cfConn.ExecuteChangeSet(ctx, &executeRequest)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "executing Serverless Application Repository CloudFormation Stack (%s) change set failed: %s", d.Id(), err)
@@ -234,7 +234,7 @@ func resourceCloudFormationStackUpdate(ctx context.Context, d *schema.ResourceDa
 		ChangeSetName:      changeSet.ChangeSetId,
 		ClientRequestToken: aws.String(requestToken),
 	}
-	log.Printf("[DEBUG] Executing Serverless Application Repository CloudFormation change set: %s", executeRequest)
+	log.Printf("[DEBUG] Executing Serverless Application Repository CloudFormation change set: %+v", executeRequest)
 	_, err = cfConn.ExecuteChangeSet(ctx, &executeRequest)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "executing Serverless Application Repository CloudFormation change set failed: %s", err)
