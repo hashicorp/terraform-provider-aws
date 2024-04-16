@@ -559,7 +559,7 @@ func resourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("source_dest_check", eni.SourceDestCheck)
 	d.Set("subnet_id", eni.SubnetId)
 
-	setTagsOut(ctx, eni.TagSet)
+	setTagsOutV2(ctx, eni.TagSet)
 
 	return diags
 }

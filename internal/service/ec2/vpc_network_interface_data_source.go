@@ -224,7 +224,7 @@ func dataSourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData,
 	d.Set("subnet_id", eni.SubnetId)
 	d.Set("vpc_id", eni.VpcId)
 
-	setTagsOut(ctx, eni.TagSet)
+	setTagsOutV2(ctx, eni.TagSet)
 
 	return diags
 }
