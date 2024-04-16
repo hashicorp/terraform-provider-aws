@@ -6,13 +6,12 @@ package cloudformation
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudformation"
+	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func StatusChangeSet(ctx context.Context, conn *cloudformation.CloudFormation, stackID, changeSetName string) retry.StateRefreshFunc {
+func StatusChangeSet(ctx context.Context, conn *cloudformation.Client, stackID, changeSetName string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindChangeSetByStackIDAndChangeSetName(ctx, conn, stackID, changeSetName)
 
@@ -24,11 +23,11 @@ func StatusChangeSet(ctx context.Context, conn *cloudformation.CloudFormation, s
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.Status), nil
+		return output, string(output.Status), nil
 	}
 }
 
-func StatusStackSetOperation(ctx context.Context, conn *cloudformation.CloudFormation, stackSetName, operationID, callAs string) retry.StateRefreshFunc {
+func StatusStackSetOperation(ctx context.Context, conn *cloudformation.Client, stackSetName, operationID, callAs string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindStackSetOperationByStackSetNameAndOperationID(ctx, conn, stackSetName, operationID, callAs)
 
@@ -40,11 +39,11 @@ func StatusStackSetOperation(ctx context.Context, conn *cloudformation.CloudForm
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.Status), nil
+		return output, string(output.Status), nil
 	}
 }
 
-func StatusTypeRegistrationProgress(ctx context.Context, conn *cloudformation.CloudFormation, registrationToken string) retry.StateRefreshFunc {
+func StatusTypeRegistrationProgress(ctx context.Context, conn *cloudformation.Client, registrationToken string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindTypeRegistrationByToken(ctx, conn, registrationToken)
 
@@ -56,6 +55,6 @@ func StatusTypeRegistrationProgress(ctx context.Context, conn *cloudformation.Cl
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.ProgressStatus), nil
+		return output, string(output.ProgressStatus), nil
 	}
 }

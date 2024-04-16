@@ -8,14 +8,16 @@ import (
 	"log"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudformation"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -104,11 +106,11 @@ func ResourceType() *schema.Resource {
 				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^(https|s3)\:\/\/.+`), "must begin with s3:// or https://"),
 			},
 			"type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Computed:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(cloudformation.RegistryType_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Computed:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.RegistryType](),
 			},
 			"type_arn": {
 				Type:     schema.TypeString,
@@ -138,7 +140,7 @@ func ResourceType() *schema.Resource {
 func resourceTypeCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
+	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
 	typeName := d.Get("type_name").(string)
 	input := &cloudformation.RegisterTypeInput{
@@ -156,10 +158,10 @@ func resourceTypeCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if v, ok := d.GetOk("type"); ok {
-		input.Type = aws.String(v.(string))
+		input.Type = awstypes.RegistryType(v.(string))
 	}
 
-	output, err := conn.RegisterTypeWithContext(ctx, input)
+	output, err := conn.RegisterType(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "registering CloudFormation Type (%s): %s", typeName, err)
@@ -169,14 +171,14 @@ func resourceTypeCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "registering CloudFormation Type (%s): empty result", typeName)
 	}
 
-	registrationOutput, err := WaitTypeRegistrationProgressStatusComplete(ctx, conn, aws.StringValue(output.RegistrationToken))
+	registrationOutput, err := WaitTypeRegistrationProgressStatusComplete(ctx, conn, aws.ToString(output.RegistrationToken))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for CloudFormation Type (%s) register: %s", typeName, err)
 	}
 
 	// Type Version ARN is not available until after registration is complete
-	d.SetId(aws.StringValue(registrationOutput.TypeVersionArn))
+	d.SetId(aws.ToString(registrationOutput.TypeVersionArn))
 
 	return append(diags, resourceTypeRead(ctx, d, meta)...)
 }
@@ -184,7 +186,7 @@ func resourceTypeCreate(ctx context.Context, d *schema.ResourceData, meta interf
 func resourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
+	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
 	output, err := FindTypeByARN(ctx, conn, d.Id())
 
@@ -233,17 +235,17 @@ func resourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interfac
 func resourceTypeDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
+	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
 	input := &cloudformation.DeregisterTypeInput{
 		Arn: aws.String(d.Id()),
 	}
 
-	_, err := conn.DeregisterTypeWithContext(ctx, input)
+	_, err := conn.DeregisterType(ctx, input)
 
 	// Must deregister type if removing final LIVE version. This error can also occur
 	// when the type is already DEPRECATED.
-	if tfawserr.ErrMessageContains(err, cloudformation.ErrCodeCFNRegistryException, "is the default version and cannot be deregistered") {
+	if errs.IsAErrorMessageContains[*awstypes.CFNRegistryException](err, "is the default version and cannot be deregistered") {
 		typeARN, _, err := TypeVersionARNToTypeARNAndVersionID(d.Id())
 
 		if err != nil {
@@ -252,27 +254,21 @@ func resourceTypeDelete(ctx context.Context, d *schema.ResourceData, meta interf
 
 		input := &cloudformation.ListTypeVersionsInput{
 			Arn:              aws.String(typeARN),
-			DeprecatedStatus: aws.String(cloudformation.DeprecatedStatusLive),
+			DeprecatedStatus: awstypes.DeprecatedStatusLive,
 		}
 
-		var typeVersionSummaries []*cloudformation.TypeVersionSummary
+		var typeVersionSummaries []awstypes.TypeVersionSummary
 
-		err = conn.ListTypeVersionsPagesWithContext(ctx, input, func(page *cloudformation.ListTypeVersionsOutput, lastPage bool) bool {
-			if page == nil {
-				return !lastPage
+		pages := cloudformation.NewListTypeVersionsPaginator(conn, input)
+
+		for pages.HasMorePages() {
+			page, err := pages.NextPage(ctx)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "listing CloudFormation Type (%s) Versions: %s", d.Id(), err)
 			}
 
 			typeVersionSummaries = append(typeVersionSummaries, page.TypeVersionSummaries...)
-
-			if len(typeVersionSummaries) > 1 {
-				return false
-			}
-
-			return !lastPage
-		})
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "listing CloudFormation Type (%s) Versions: %s", d.Id(), err)
 		}
 
 		if len(typeVersionSummaries) <= 1 {
@@ -280,9 +276,9 @@ func resourceTypeDelete(ctx context.Context, d *schema.ResourceData, meta interf
 				Arn: aws.String(typeARN),
 			}
 
-			_, err := conn.DeregisterTypeWithContext(ctx, input)
+			_, err := conn.DeregisterType(ctx, input)
 
-			if tfawserr.ErrCodeEquals(err, cloudformation.ErrCodeTypeNotFoundException) {
+			if errs.IsA[*awstypes.TypeNotFoundException](err) {
 				return diags
 			}
 
@@ -294,7 +290,7 @@ func resourceTypeDelete(ctx context.Context, d *schema.ResourceData, meta interf
 		}
 	}
 
-	if tfawserr.ErrCodeEquals(err, cloudformation.ErrCodeTypeNotFoundException) {
+	if errs.IsA[*awstypes.TypeNotFoundException](err) {
 		return diags
 	}
 
@@ -305,12 +301,12 @@ func resourceTypeDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func expandLoggingConfig(tfMap map[string]interface{}) *cloudformation.LoggingConfig {
+func expandLoggingConfig(tfMap map[string]interface{}) *awstypes.LoggingConfig {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &cloudformation.LoggingConfig{}
+	apiObject := &awstypes.LoggingConfig{}
 
 	if v, ok := tfMap["log_group_name"].(string); ok && v != "" {
 		apiObject.LogGroupName = aws.String(v)
@@ -323,39 +319,39 @@ func expandLoggingConfig(tfMap map[string]interface{}) *cloudformation.LoggingCo
 	return apiObject
 }
 
-func expandOperationPreferences(tfMap map[string]interface{}) *cloudformation.StackSetOperationPreferences {
+func expandOperationPreferences(tfMap map[string]interface{}) *awstypes.StackSetOperationPreferences {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &cloudformation.StackSetOperationPreferences{}
+	apiObject := &awstypes.StackSetOperationPreferences{}
 
 	if v, ok := tfMap["failure_tolerance_count"].(int); ok {
-		apiObject.FailureToleranceCount = aws.Int64(int64(v))
+		apiObject.FailureToleranceCount = aws.Int32(int32(v))
 	}
 	if v, ok := tfMap["failure_tolerance_percentage"].(int); ok {
-		apiObject.FailureTolerancePercentage = aws.Int64(int64(v))
+		apiObject.FailureTolerancePercentage = aws.Int32(int32(v))
 	}
 	if v, ok := tfMap["max_concurrent_count"].(int); ok {
-		apiObject.MaxConcurrentCount = aws.Int64(int64(v))
+		apiObject.MaxConcurrentCount = aws.Int32(int32(v))
 	}
 	if v, ok := tfMap["max_concurrent_percentage"].(int); ok {
-		apiObject.MaxConcurrentPercentage = aws.Int64(int64(v))
+		apiObject.MaxConcurrentPercentage = aws.Int32(int32(v))
 	}
 	if v, ok := tfMap["region_concurrency_type"].(string); ok && v != "" {
-		apiObject.RegionConcurrencyType = aws.String(v)
+		apiObject.RegionConcurrencyType = awstypes.RegionConcurrencyType(v)
 	}
 	if v, ok := tfMap["region_order"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.RegionOrder = flex.ExpandStringSet(v)
+		apiObject.RegionOrder = flex.ExpandStringValueSet(v)
 	}
 
-	if ftc, ftp := aws.Int64Value(apiObject.FailureToleranceCount), aws.Int64Value(apiObject.FailureTolerancePercentage); ftp == 0 {
+	if ftc, ftp := aws.ToInt32(apiObject.FailureToleranceCount), aws.ToInt32(apiObject.FailureTolerancePercentage); ftp == 0 {
 		apiObject.FailureTolerancePercentage = nil
 	} else if ftc == 0 {
 		apiObject.FailureToleranceCount = nil
 	}
 
-	if mcc, mcp := aws.Int64Value(apiObject.MaxConcurrentCount), aws.Int64Value(apiObject.MaxConcurrentPercentage); mcp == 0 {
+	if mcc, mcp := aws.ToInt32(apiObject.MaxConcurrentCount), aws.ToInt32(apiObject.MaxConcurrentPercentage); mcp == 0 {
 		apiObject.MaxConcurrentPercentage = nil
 	} else if mcc == 0 {
 		apiObject.MaxConcurrentCount = nil
@@ -364,7 +360,7 @@ func expandOperationPreferences(tfMap map[string]interface{}) *cloudformation.St
 	return apiObject
 }
 
-func flattenLoggingConfig(apiObject *cloudformation.LoggingConfig) map[string]interface{} {
+func flattenLoggingConfig(apiObject *awstypes.LoggingConfig) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -372,11 +368,11 @@ func flattenLoggingConfig(apiObject *cloudformation.LoggingConfig) map[string]in
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.LogGroupName; v != nil {
-		tfMap["log_group_name"] = aws.StringValue(v)
+		tfMap["log_group_name"] = aws.ToString(v)
 	}
 
 	if v := apiObject.LogRoleArn; v != nil {
-		tfMap["log_role_arn"] = aws.StringValue(v)
+		tfMap["log_role_arn"] = aws.ToString(v)
 	}
 
 	return tfMap

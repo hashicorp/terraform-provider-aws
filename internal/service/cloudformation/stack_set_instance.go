@@ -11,14 +11,16 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudformation"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -53,10 +55,10 @@ func ResourceStackSetInstance() *schema.Resource {
 				ConflictsWith: []string{"deployment_targets"},
 			},
 			"call_as": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      cloudformation.CallAsSelf,
-				ValidateFunc: validation.StringInSlice(cloudformation.CallAs_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.CallAsSelf,
+				ValidateDiagFunc: enum.Validate[awstypes.CallAs](),
 			},
 			"deployment_targets": {
 				Type:     schema.TypeList,
@@ -109,9 +111,9 @@ func ResourceStackSetInstance() *schema.Resource {
 							ConflictsWith: []string{"operation_preferences.0.max_concurrent_count"},
 						},
 						"region_concurrency_type": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice(cloudformation.RegionConcurrencyType_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.RegionConcurrencyType](),
 						},
 						"region_order": {
 							Type:     schema.TypeList,
@@ -187,7 +189,7 @@ var (
 
 func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
+	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
 	region := meta.(*conns.AWSClient).Region
 	if v, ok := d.GetOk("region"); ok {
@@ -196,7 +198,7 @@ func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData,
 
 	stackSetName := d.Get("stack_set_name").(string)
 	input := &cloudformation.CreateStackInstancesInput{
-		Regions:      aws.StringSlice([]string{region}),
+		Regions:      []string{region},
 		StackSetName: aws.String(stackSetName),
 	}
 
@@ -211,16 +213,16 @@ func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData,
 
 	if v, ok := d.GetOk("deployment_targets"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		dt := expandDeploymentTargets(v.([]interface{}))
-		accountOrOrgID = strings.Join(aws.StringValueSlice(dt.OrganizationalUnitIds), "/")
+		accountOrOrgID = strings.Join(dt.OrganizationalUnitIds, "/")
 		input.DeploymentTargets = dt
 	} else {
 		d.Set("account_id", accountID)
-		input.Accounts = aws.StringSlice([]string{accountID})
+		input.Accounts = []string{accountID}
 	}
 
 	callAs := d.Get("call_as").(string)
 	if v, ok := d.GetOk("call_as"); ok {
-		input.CallAs = aws.String(v.(string))
+		input.CallAs = awstypes.CallAs(v.(string))
 	}
 
 	if v, ok := d.GetOk("parameter_overrides"); ok {
@@ -235,7 +237,7 @@ func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData,
 		func() (interface{}, error) {
 			input.OperationId = aws.String(id.UniqueId())
 
-			output, err := conn.CreateStackInstancesWithContext(ctx, input)
+			output, err := conn.CreateStackInstances(ctx, input)
 
 			if err != nil {
 				return nil, err
@@ -243,7 +245,7 @@ func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData,
 
 			d.SetId(StackSetInstanceCreateResourceID(stackSetName, accountOrOrgID, region))
 
-			operation, err := WaitStackSetOperationSucceeded(ctx, conn, stackSetName, aws.StringValue(output.OperationId), callAs, d.Timeout(schema.TimeoutCreate))
+			operation, err := WaitStackSetOperationSucceeded(ctx, conn, stackSetName, aws.ToString(output.OperationId), callAs, d.Timeout(schema.TimeoutCreate))
 			if err != nil {
 				return nil, fmt.Errorf("waiting for completion: %w", err)
 			}
@@ -297,7 +299,7 @@ func resourceStackSetInstanceCreate(ctx context.Context, d *schema.ResourceData,
 
 func resourceStackSetInstanceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
+	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
 	stackSetName, accountOrOrgID, region, err := StackSetInstanceParseResourceID(d.Id())
 	if err != nil {
@@ -356,7 +358,7 @@ func resourceStackSetInstanceRead(ctx context.Context, d *schema.ResourceData, m
 
 func resourceStackSetInstanceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
+	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
 	if d.HasChanges("deployment_targets", "parameter_overrides", "operation_preferences") {
 		stackSetName, accountOrOrgID, region, err := StackSetInstanceParseResourceID(d.Id())
@@ -365,16 +367,16 @@ func resourceStackSetInstanceUpdate(ctx context.Context, d *schema.ResourceData,
 		}
 
 		input := &cloudformation.UpdateStackInstancesInput{
-			Accounts:           aws.StringSlice([]string{accountOrOrgID}),
+			Accounts:           []string{accountOrOrgID},
 			OperationId:        aws.String(id.UniqueId()),
-			ParameterOverrides: []*cloudformation.Parameter{},
-			Regions:            aws.StringSlice([]string{region}),
+			ParameterOverrides: []awstypes.Parameter{},
+			Regions:            []string{region},
 			StackSetName:       aws.String(stackSetName),
 		}
 
 		callAs := d.Get("call_as").(string)
 		if v, ok := d.GetOk("call_as"); ok {
-			input.CallAs = aws.String(v.(string))
+			input.CallAs = awstypes.CallAs(v.(string))
 		}
 
 		if v, ok := d.GetOk("deployment_targets"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -392,13 +394,13 @@ func resourceStackSetInstanceUpdate(ctx context.Context, d *schema.ResourceData,
 			input.OperationPreferences = expandOperationPreferences(v.([]interface{})[0].(map[string]interface{}))
 		}
 
-		output, err := conn.UpdateStackInstancesWithContext(ctx, input)
+		output, err := conn.UpdateStackInstances(ctx, input)
 
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating CloudFormation StackSet Instance (%s): %s", d.Id(), err)
 		}
 
-		if _, err := WaitStackSetOperationSucceeded(ctx, conn, stackSetName, aws.StringValue(output.OperationId), callAs, d.Timeout(schema.TimeoutUpdate)); err != nil {
+		if _, err := WaitStackSetOperationSucceeded(ctx, conn, stackSetName, aws.ToString(output.OperationId), callAs, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for CloudFormation StackSet Instance (%s) update: %s", d.Id(), err)
 		}
 	}
@@ -408,7 +410,7 @@ func resourceStackSetInstanceUpdate(ctx context.Context, d *schema.ResourceData,
 
 func resourceStackSetInstanceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
+	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 
 	stackSetName, accountOrOrgID, region, err := StackSetInstanceParseResourceID(d.Id())
 	if err != nil {
@@ -416,16 +418,16 @@ func resourceStackSetInstanceDelete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	input := &cloudformation.DeleteStackInstancesInput{
-		Accounts:     aws.StringSlice([]string{accountOrOrgID}),
+		Accounts:     []string{accountOrOrgID},
 		OperationId:  aws.String(id.UniqueId()),
-		Regions:      aws.StringSlice([]string{region}),
+		Regions:      []string{region},
 		RetainStacks: aws.Bool(d.Get("retain_stack").(bool)),
 		StackSetName: aws.String(stackSetName),
 	}
 
 	callAs := d.Get("call_as").(string)
 	if v, ok := d.GetOk("call_as"); ok {
-		input.CallAs = aws.String(v.(string))
+		input.CallAs = awstypes.CallAs(v.(string))
 	}
 
 	if v, ok := d.GetOk("deployment_targets"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -437,11 +439,11 @@ func resourceStackSetInstanceDelete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	log.Printf("[DEBUG] Deleting CloudFormation StackSet Instance: %s", d.Id())
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
-		return conn.DeleteStackInstancesWithContext(ctx, input)
-	}, cloudformation.ErrCodeOperationInProgressException)
+	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.OperationInProgressException](ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+		return conn.DeleteStackInstances(ctx, input)
+	})
 
-	if tfawserr.ErrCodeEquals(err, cloudformation.ErrCodeStackInstanceNotFoundException, cloudformation.ErrCodeStackSetNotFoundException) {
+	if errs.IsA[*awstypes.StackInstanceNotFoundException](err) || errs.IsA[*awstypes.StackSetNotFoundException](err) {
 		return diags
 	}
 
@@ -449,7 +451,7 @@ func resourceStackSetInstanceDelete(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "deleting CloudFormation StackSet Instance (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitStackSetOperationSucceeded(ctx, conn, stackSetName, aws.StringValue(outputRaw.(*cloudformation.DeleteStackInstancesOutput).OperationId), callAs, d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := WaitStackSetOperationSucceeded(ctx, conn, stackSetName, aws.ToString(outputRaw.(*cloudformation.DeleteStackInstancesOutput).OperationId), callAs, d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for CloudFormation StackSet Instance (%s) delete: %s", d.Id(), err)
 	}
 
@@ -488,7 +490,7 @@ func StackSetInstanceParseResourceID(id string) (string, string, string, error) 
 	return "", "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected STACKSETNAME%[2]sACCOUNTID%[2]sREGION", id, stackSetInstanceResourceIDSeparator)
 }
 
-func expandDeploymentTargets(tfList []interface{}) *cloudformation.DeploymentTargets {
+func expandDeploymentTargets(tfList []interface{}) *awstypes.DeploymentTargets {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
@@ -498,9 +500,9 @@ func expandDeploymentTargets(tfList []interface{}) *cloudformation.DeploymentTar
 		return nil
 	}
 
-	dt := &cloudformation.DeploymentTargets{}
+	dt := &awstypes.DeploymentTargets{}
 	if v, ok := tfMap["organizational_unit_ids"].(*schema.Set); ok && v.Len() > 0 {
-		dt.OrganizationalUnitIds = flex.ExpandStringSet(v)
+		dt.OrganizationalUnitIds = flex.ExpandStringValueSet(v)
 	}
 
 	return dt
@@ -522,7 +524,7 @@ func flattenDeploymentTargetsFromSlice(orgIDs []string) []interface{} {
 	return []interface{}{m}
 }
 
-func flattenStackInstanceSummaries(apiObject []*cloudformation.StackInstanceSummary) []interface{} {
+func flattenStackInstanceSummaries(apiObject []awstypes.StackInstanceSummary) []interface{} {
 	if len(apiObject) == 0 {
 		return nil
 	}

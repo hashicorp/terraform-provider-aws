@@ -7,8 +7,8 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudformation"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -77,7 +77,7 @@ func DataSourceStack() *schema.Resource {
 
 func dataSourceStackRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
+	conn := meta.(*conns.AWSClient).CloudFormationClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
@@ -85,8 +85,8 @@ func dataSourceStackRead(ctx context.Context, d *schema.ResourceData, meta inter
 		StackName: aws.String(name),
 	}
 
-	log.Printf("[DEBUG] Reading CloudFormation Stack: %s", input)
-	out, err := conn.DescribeStacksWithContext(ctx, input)
+	log.Printf("[DEBUG] Reading CloudFormation Stack: %+v", input)
+	out, err := conn.DescribeStacks(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "Failed describing CloudFormation stack (%s): %s", name, err)
 	}
@@ -94,7 +94,7 @@ func dataSourceStackRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "Expected 1 CloudFormation stack (%s), found %d", name, l)
 	}
 	stack := out.Stacks[0]
-	d.SetId(aws.StringValue(stack.StackId))
+	d.SetId(aws.ToString(stack.StackId))
 
 	d.Set("description", stack.Description)
 	d.Set("disable_rollback", stack.DisableRollback)
@@ -102,7 +102,7 @@ func dataSourceStackRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("iam_role_arn", stack.RoleARN)
 
 	if len(stack.NotificationARNs) > 0 {
-		d.Set("notification_arns", flex.FlattenStringSet(stack.NotificationARNs))
+		d.Set("notification_arns", flex.FlattenStringValueSet(stack.NotificationARNs))
 	}
 
 	d.Set("parameters", flattenAllParameters(stack.Parameters))
@@ -112,13 +112,13 @@ func dataSourceStackRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("outputs", flattenOutputs(stack.Outputs))
 
 	if len(stack.Capabilities) > 0 {
-		d.Set("capabilities", flex.FlattenStringSet(stack.Capabilities))
+		d.Set("capabilities", flex.FlattenStringyValueSet(stack.Capabilities))
 	}
 
 	tInput := cloudformation.GetTemplateInput{
 		StackName: aws.String(name),
 	}
-	tOut, err := conn.GetTemplateWithContext(ctx, &tInput)
+	tOut, err := conn.GetTemplate(ctx, &tInput)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading CloudFormation Stack (%s): reading template: %s", name, err)
 	}

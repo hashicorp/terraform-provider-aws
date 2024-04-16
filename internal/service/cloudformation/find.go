@@ -6,22 +6,24 @@ package cloudformation
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudformation"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindChangeSetByStackIDAndChangeSetName(ctx context.Context, conn *cloudformation.CloudFormation, stackID, changeSetName string) (*cloudformation.DescribeChangeSetOutput, error) {
+func FindChangeSetByStackIDAndChangeSetName(ctx context.Context, conn *cloudformation.Client, stackID, changeSetName string) (*cloudformation.DescribeChangeSetOutput, error) {
 	input := &cloudformation.DescribeChangeSetInput{
 		ChangeSetName: aws.String(changeSetName),
 		StackName:     aws.String(stackID),
 	}
 
-	output, err := conn.DescribeChangeSetWithContext(ctx, input)
+	output, err := conn.DescribeChangeSet(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, cloudformation.ErrCodeChangeSetNotFoundException) {
+	if errs.IsA[*awstypes.ChangeSetNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -39,53 +41,48 @@ func FindChangeSetByStackIDAndChangeSetName(ctx context.Context, conn *cloudform
 	return output, nil
 }
 
-func FindStackInstanceSummariesByOrgIDs(ctx context.Context, conn *cloudformation.CloudFormation, stackSetName, region, callAs string, orgIDs []string) ([]*cloudformation.StackInstanceSummary, error) {
+func FindStackInstanceSummariesByOrgIDs(ctx context.Context, conn *cloudformation.Client, stackSetName, region, callAs string, orgIDs []string) ([]awstypes.StackInstanceSummary, error) {
 	input := &cloudformation.ListStackInstancesInput{
 		StackInstanceRegion: aws.String(region),
 		StackSetName:        aws.String(stackSetName),
 	}
 
 	if callAs != "" {
-		input.CallAs = aws.String(callAs)
+		input.CallAs = awstypes.CallAs(callAs)
 	}
 
-	var result []*cloudformation.StackInstanceSummary
+	var result []awstypes.StackInstanceSummary
 
-	err := conn.ListStackInstancesPagesWithContext(ctx, input, func(page *cloudformation.ListStackInstancesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := cloudformation.NewListStackInstancesPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.StackSetNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
+		}
+
+		if err != nil {
+			return nil, err
 		}
 
 		for _, s := range page.Summaries {
-			if s == nil {
-				continue
-			}
-
 			for _, orgID := range orgIDs {
-				if aws.StringValue(s.OrganizationalUnitId) == orgID {
+				if aws.ToString(s.OrganizationalUnitId) == orgID {
 					result = append(result, s)
 				}
 			}
 		}
 
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, cloudformation.ErrCodeStackSetNotFoundException) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
 	}
 
 	return result, nil
 }
 
-func FindStackInstanceByName(ctx context.Context, conn *cloudformation.CloudFormation, stackSetName, accountID, region, callAs string) (*cloudformation.StackInstance, error) {
+func FindStackInstanceByName(ctx context.Context, conn *cloudformation.Client, stackSetName, accountID, region, callAs string) (*awstypes.StackInstance, error) {
 	input := &cloudformation.DescribeStackInstanceInput{
 		StackInstanceAccount: aws.String(accountID),
 		StackInstanceRegion:  aws.String(region),
@@ -93,12 +90,12 @@ func FindStackInstanceByName(ctx context.Context, conn *cloudformation.CloudForm
 	}
 
 	if callAs != "" {
-		input.CallAs = aws.String(callAs)
+		input.CallAs = awstypes.CallAs(callAs)
 	}
 
-	output, err := conn.DescribeStackInstanceWithContext(ctx, input)
+	output, err := conn.DescribeStackInstance(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, cloudformation.ErrCodeStackInstanceNotFoundException) || tfawserr.ErrCodeEquals(err, cloudformation.ErrCodeStackSetNotFoundException) {
+	if errs.IsA[*awstypes.StackInstanceNotFoundException](err) || errs.IsA[*awstypes.StackSetNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -116,25 +113,25 @@ func FindStackInstanceByName(ctx context.Context, conn *cloudformation.CloudForm
 	return output.StackInstance, nil
 }
 
-func FindStackSetByName(ctx context.Context, conn *cloudformation.CloudFormation, name, callAs string) (*cloudformation.StackSet, error) {
+func FindStackSetByName(ctx context.Context, conn *cloudformation.Client, name, callAs string) (*awstypes.StackSet, error) {
 	input := &cloudformation.DescribeStackSetInput{
 		StackSetName: aws.String(name),
 	}
 
 	if callAs != "" {
-		input.CallAs = aws.String(callAs)
+		input.CallAs = awstypes.CallAs(callAs)
 	}
 
-	output, err := conn.DescribeStackSetWithContext(ctx, input)
+	output, err := conn.DescribeStackSet(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, cloudformation.ErrCodeStackSetNotFoundException) {
+	if errs.IsA[*awstypes.StackSetNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
 	}
 
-	if callAs == cloudformation.CallAsDelegatedAdmin && tfawserr.ErrMessageContains(err, errCodeValidationError, "Failed to check account is Delegated Administrator") {
+	if callAs == string(awstypes.CallAsDelegatedAdmin) && tfawserr.ErrMessageContains(err, errCodeValidationError, "Failed to check account is Delegated Administrator") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -152,19 +149,19 @@ func FindStackSetByName(ctx context.Context, conn *cloudformation.CloudFormation
 	return output.StackSet, nil
 }
 
-func FindStackSetOperationByStackSetNameAndOperationID(ctx context.Context, conn *cloudformation.CloudFormation, stackSetName, operationID, callAs string) (*cloudformation.StackSetOperation, error) {
+func FindStackSetOperationByStackSetNameAndOperationID(ctx context.Context, conn *cloudformation.Client, stackSetName, operationID, callAs string) (*awstypes.StackSetOperation, error) {
 	input := &cloudformation.DescribeStackSetOperationInput{
 		OperationId:  aws.String(operationID),
 		StackSetName: aws.String(stackSetName),
 	}
 
 	if callAs != "" {
-		input.CallAs = aws.String(callAs)
+		input.CallAs = awstypes.CallAs(callAs)
 	}
 
-	output, err := conn.DescribeStackSetOperationWithContext(ctx, input)
+	output, err := conn.DescribeStackSetOperation(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, cloudformation.ErrCodeOperationNotFoundException) {
+	if errs.IsA[*awstypes.OperationNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -182,7 +179,7 @@ func FindStackSetOperationByStackSetNameAndOperationID(ctx context.Context, conn
 	return output.StackSetOperation, nil
 }
 
-func FindTypeByARN(ctx context.Context, conn *cloudformation.CloudFormation, arn string) (*cloudformation.DescribeTypeOutput, error) {
+func FindTypeByARN(ctx context.Context, conn *cloudformation.Client, arn string) (*cloudformation.DescribeTypeOutput, error) {
 	input := &cloudformation.DescribeTypeInput{
 		Arn: aws.String(arn),
 	}
@@ -190,19 +187,19 @@ func FindTypeByARN(ctx context.Context, conn *cloudformation.CloudFormation, arn
 	return FindType(ctx, conn, input)
 }
 
-func FindTypeByName(ctx context.Context, conn *cloudformation.CloudFormation, name string) (*cloudformation.DescribeTypeOutput, error) {
+func FindTypeByName(ctx context.Context, conn *cloudformation.Client, name string) (*cloudformation.DescribeTypeOutput, error) {
 	input := &cloudformation.DescribeTypeInput{
-		Type:     aws.String(cloudformation.RegistryTypeResource),
+		Type:     awstypes.RegistryTypeResource,
 		TypeName: aws.String(name),
 	}
 
 	return FindType(ctx, conn, input)
 }
 
-func FindType(ctx context.Context, conn *cloudformation.CloudFormation, input *cloudformation.DescribeTypeInput) (*cloudformation.DescribeTypeOutput, error) {
-	output, err := conn.DescribeTypeWithContext(ctx, input)
+func FindType(ctx context.Context, conn *cloudformation.Client, input *cloudformation.DescribeTypeInput) (*cloudformation.DescribeTypeOutput, error) {
+	output, err := conn.DescribeType(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, cloudformation.ErrCodeTypeNotFoundException) {
+	if errs.IsA[*awstypes.TypeNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -217,24 +214,24 @@ func FindType(ctx context.Context, conn *cloudformation.CloudFormation, input *c
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	if status := aws.StringValue(output.DeprecatedStatus); status == cloudformation.DeprecatedStatusDeprecated {
+	if output.DeprecatedStatus == awstypes.DeprecatedStatusDeprecated {
 		return nil, &retry.NotFoundError{
 			LastRequest: input,
-			Message:     status,
+			Message:     string(output.DeprecatedStatus),
 		}
 	}
 
 	return output, nil
 }
 
-func FindTypeRegistrationByToken(ctx context.Context, conn *cloudformation.CloudFormation, registrationToken string) (*cloudformation.DescribeTypeRegistrationOutput, error) {
+func FindTypeRegistrationByToken(ctx context.Context, conn *cloudformation.Client, registrationToken string) (*cloudformation.DescribeTypeRegistrationOutput, error) {
 	input := &cloudformation.DescribeTypeRegistrationInput{
 		RegistrationToken: aws.String(registrationToken),
 	}
 
-	output, err := conn.DescribeTypeRegistrationWithContext(ctx, input)
+	output, err := conn.DescribeTypeRegistration(ctx, input)
 
-	if tfawserr.ErrMessageContains(err, cloudformation.ErrCodeCFNRegistryException, "No registration token matches") {
+	if errs.IsA[*awstypes.CFNRegistryException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

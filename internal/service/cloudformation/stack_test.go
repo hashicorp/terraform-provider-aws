@@ -7,9 +7,11 @@ import (
 	"context"
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/cloudformation"
+	"github.com/aws/aws-sdk-go-v2/service/cloudformation"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudformation/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/plancheck"
@@ -24,7 +26,7 @@ import (
 
 func TestAccCloudFormationStack_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var stack cloudformation.Stack
+	var stack awstypes.Stack
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudformation_stack.test"
 
@@ -71,7 +73,7 @@ func TestAccCloudFormationStack_CreationFailure_doNothing(t *testing.T) {
 		CheckDestroy:             testAccCheckStackDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccStackConfig_creationFailure(rName, cloudformation.OnFailureDoNothing),
+				Config:      testAccStackConfig_creationFailure(rName, string(awstypes.OnFailureDoNothing)),
 				ExpectError: regexache.MustCompile(`failed to create CloudFormation stack \(CREATE_FAILED\).*The following resource\(s\) failed to create.*This is not a valid CIDR block`),
 			},
 		},
@@ -89,7 +91,7 @@ func TestAccCloudFormationStack_CreationFailure_delete(t *testing.T) {
 		CheckDestroy:             testAccCheckStackDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccStackConfig_creationFailure(rName, cloudformation.OnFailureDelete),
+				Config:      testAccStackConfig_creationFailure(rName, string(awstypes.OnFailureDelete)),
 				ExpectError: regexache.MustCompile(`failed to create CloudFormation stack, delete requested \(DELETE_COMPLETE\).*The following resource\(s\) failed to create.*This is not a valid CIDR block`),
 			},
 		},
@@ -107,7 +109,7 @@ func TestAccCloudFormationStack_CreationFailure_rollback(t *testing.T) {
 		CheckDestroy:             testAccCheckStackDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccStackConfig_creationFailure(rName, cloudformation.OnFailureRollback),
+				Config:      testAccStackConfig_creationFailure(rName, string(awstypes.OnFailureRollback)),
 				ExpectError: regexache.MustCompile(`failed to create CloudFormation stack, rollback requested \(ROLLBACK_COMPLETE\).*The following resource\(s\) failed to create.*This is not a valid CIDR block`),
 			},
 		},
@@ -116,7 +118,7 @@ func TestAccCloudFormationStack_CreationFailure_rollback(t *testing.T) {
 
 func TestAccCloudFormationStack_updateFailure(t *testing.T) {
 	ctx := acctest.Context(t)
-	var stack cloudformation.Stack
+	var stack awstypes.Stack
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudformation_stack.test"
 
@@ -145,7 +147,7 @@ func TestAccCloudFormationStack_updateFailure(t *testing.T) {
 
 func TestAccCloudFormationStack_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var stack cloudformation.Stack
+	var stack awstypes.Stack
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudformation_stack.test"
 
@@ -169,7 +171,7 @@ func TestAccCloudFormationStack_disappears(t *testing.T) {
 
 func TestAccCloudFormationStack_yaml(t *testing.T) {
 	ctx := acctest.Context(t)
-	var stack cloudformation.Stack
+	var stack awstypes.Stack
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudformation_stack.test"
 
@@ -196,7 +198,7 @@ func TestAccCloudFormationStack_yaml(t *testing.T) {
 
 func TestAccCloudFormationStack_defaultParams(t *testing.T) {
 	ctx := acctest.Context(t)
-	var stack cloudformation.Stack
+	var stack awstypes.Stack
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudformation_stack.test"
 
@@ -224,7 +226,7 @@ func TestAccCloudFormationStack_defaultParams(t *testing.T) {
 
 func TestAccCloudFormationStack_allAttributes(t *testing.T) {
 	ctx := acctest.Context(t)
-	var stack cloudformation.Stack
+	var stack awstypes.Stack
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudformation_stack.test"
 	expectedPolicyBody := "{\"Statement\":[{\"Action\":\"Update:*\",\"Effect\":\"Deny\",\"Principal\":\"*\",\"Resource\":\"LogicalResourceId/StaticVPC\"},{\"Action\":\"Update:*\",\"Effect\":\"Allow\",\"Principal\":\"*\",\"Resource\":\"*\"}]}"
@@ -284,7 +286,7 @@ func TestAccCloudFormationStack_allAttributes(t *testing.T) {
 // Regression for https://github.com/hashicorp/terraform/issues/4332
 func TestAccCloudFormationStack_withParams(t *testing.T) {
 	ctx := acctest.Context(t)
-	var stack cloudformation.Stack
+	var stack awstypes.Stack
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudformation_stack.test"
 
@@ -328,7 +330,7 @@ func TestAccCloudFormationStack_withParams(t *testing.T) {
 // Regression for https://github.com/hashicorp/terraform/issues/4534
 func TestAccCloudFormationStack_WithURL_withParams(t *testing.T) {
 	ctx := acctest.Context(t)
-	var stack cloudformation.Stack
+	var stack awstypes.Stack
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudformation_stack.test"
 
@@ -362,7 +364,7 @@ func TestAccCloudFormationStack_WithURL_withParams(t *testing.T) {
 
 func TestAccCloudFormationStack_WithURLWithParams_withYAML(t *testing.T) {
 	ctx := acctest.Context(t)
-	var stack cloudformation.Stack
+	var stack awstypes.Stack
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudformation_stack.test"
 
@@ -391,7 +393,7 @@ func TestAccCloudFormationStack_WithURLWithParams_withYAML(t *testing.T) {
 // Test for https://github.com/hashicorp/terraform/issues/5653
 func TestAccCloudFormationStack_WithURLWithParams_noUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var stack cloudformation.Stack
+	var stack awstypes.Stack
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudformation_stack.test"
 
@@ -425,7 +427,7 @@ func TestAccCloudFormationStack_WithURLWithParams_noUpdate(t *testing.T) {
 
 func TestAccCloudFormationStack_withTransform(t *testing.T) {
 	ctx := acctest.Context(t)
-	var stack cloudformation.Stack
+	var stack awstypes.Stack
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudformation_stack.test"
 
@@ -455,7 +457,7 @@ func TestAccCloudFormationStack_withTransform(t *testing.T) {
 // TestAccCloudFormationStack_onFailure verifies https://github.com/hashicorp/terraform-provider-aws/issues/5204
 func TestAccCloudFormationStack_onFailure(t *testing.T) {
 	ctx := acctest.Context(t)
-	var stack cloudformation.Stack
+	var stack awstypes.Stack
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudformation_stack.test"
 
@@ -470,7 +472,7 @@ func TestAccCloudFormationStack_onFailure(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckStackExists(ctx, resourceName, &stack),
 					resource.TestCheckResourceAttr(resourceName, "disable_rollback", "false"),
-					resource.TestCheckResourceAttr(resourceName, "on_failure", cloudformation.OnFailureDoNothing),
+					resource.TestCheckResourceAttr(resourceName, "on_failure", string(awstypes.OnFailureDoNothing)),
 				),
 			},
 		},
@@ -479,7 +481,7 @@ func TestAccCloudFormationStack_onFailure(t *testing.T) {
 
 func TestAccCloudFormationStack_outputsUpdated(t *testing.T) {
 	ctx := acctest.Context(t)
-	var stack cloudformation.Stack
+	var stack awstypes.Stack
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudformation_stack.test"
 
@@ -529,7 +531,7 @@ func TestAccCloudFormationStack_outputsUpdated(t *testing.T) {
 
 func TestAccCloudFormationStack_templateUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var stack cloudformation.Stack
+	var stack awstypes.Stack
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudformation_stack.test"
 
@@ -572,14 +574,14 @@ func TestAccCloudFormationStack_templateUpdate(t *testing.T) {
 	})
 }
 
-func testAccCheckStackExists(ctx context.Context, n string, v *cloudformation.Stack) resource.TestCheckFunc {
+func testAccCheckStackExists(ctx context.Context, n string, v *awstypes.Stack) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationClient(ctx)
 
 		output, err := tfcloudformation.FindStackByName(ctx, conn, rs.Primary.ID)
 
@@ -595,7 +597,7 @@ func testAccCheckStackExists(ctx context.Context, n string, v *cloudformation.St
 
 func testAccCheckStackDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudformation_stack" {
@@ -619,15 +621,17 @@ func testAccCheckStackDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckStackDisappears(ctx context.Context, stack *cloudformation.Stack) resource.TestCheckFunc {
+func testAccCheckStackDisappears(ctx context.Context, stack *awstypes.Stack) resource.TestCheckFunc {
+	const deleteStackTimeout = 30 * time.Minute
+
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFormationClient(ctx)
 
 		input := &cloudformation.DeleteStackInput{
 			StackName: stack.StackName,
 		}
 
-		_, err := conn.DeleteStackWithContext(ctx, input)
+		_, err := conn.DeleteStack(ctx, input)
 
 		if err != nil {
 			return err
@@ -638,7 +642,7 @@ func testAccCheckStackDisappears(ctx context.Context, stack *cloudformation.Stac
 			StackName: stack.StackName,
 		}
 
-		return conn.WaitUntilStackDeleteCompleteWithContext(ctx, describeStacksInput)
+		return cloudformation.NewStackDeleteCompleteWaiter(conn).Wait(ctx, describeStacksInput, deleteStackTimeout)
 	}
 }
 

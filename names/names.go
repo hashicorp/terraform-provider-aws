@@ -40,6 +40,7 @@ const (
 	BudgetsEndpointID                    = "budgets"
 	ChimeSDKMediaPipelinesEndpointID     = "media-pipelines-chime"
 	ChimeSDKVoiceEndpointID              = "voice-chime"
+	CloudFormationEndpointID             = "cloudformation"
 	CloudSearchEndpointID                = "cloudsearch"
 	CloudWatchEndpointID                 = "monitoring"
 	Cloud9EndpointID                     = "cloud9"
