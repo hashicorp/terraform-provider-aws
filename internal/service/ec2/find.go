@@ -6058,14 +6058,14 @@ func FindIPAMScopeByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.Ipam
 	return output, nil
 }
 
-func FindKeyPair(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.DescribeKeyPairsInput) (*awstypes.KeyPairInfo, error) {
+func FindKeyPair(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeKeyPairsInput) (*ec2.KeyPairInfo, error) {
 	output, err := FindKeyPairs(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	if len(output) == 0 {
+	if len(output) == 0 || output[0] == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
@@ -6073,11 +6073,11 @@ func FindKeyPair(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.D
 		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
 
-	return &output[0], nil
+	return output[0], nil
 }
 
-func FindKeyPairs(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.DescribeKeyPairsInput) ([]awstypes.KeyPairInfo, error) {
-	output, err := conn.DescribeKeyPairs(ctx, input)
+func FindKeyPairs(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeKeyPairsInput) ([]*ec2.KeyPairInfo, error) {
+	output, err := conn.DescribeKeyPairsWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidKeyPairNotFound) {
 		return nil, &retry.NotFoundError{
@@ -6093,10 +6093,9 @@ func FindKeyPairs(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.
 	return output.KeyPairs, nil
 }
 
-func FindKeyPairByName(ctx context.Context, conn *ec2_sdkv2.Client, name string) (*awstypes.KeyPairInfo, error) {
-	input := &ec2_sdkv2.DescribeKeyPairsInput{
-		KeyNames:         []string{name},
-		IncludePublicKey: aws.Bool(true),
+func FindKeyPairByName(ctx context.Context, conn *ec2.EC2, name string) (*ec2.KeyPairInfo, error) {
+	input := &ec2.DescribeKeyPairsInput{
+		KeyNames: aws.StringSlice([]string{name}),
 	}
 
 	output, err := FindKeyPair(ctx, conn, input)

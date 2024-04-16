@@ -47,30 +47,6 @@ func createTags(ctx context.Context, conn ec2iface.EC2API, identifier string, ta
 	return nil
 }
 
-// tagSpecificationsFromKeyValueTags returns the tag specifications for the given KeyValueTags object and resource type.
-func tagSpecificationsFromKeyValueTagsV2(tags tftags.KeyValueTags, t awstypes.ResourceType) []awstypes.TagSpecification {
-	if len(tags) == 0 {
-		return nil
-	}
-
-	// TODO: Once the tag functions have been migrated to V2 of the aws sdk, use `Tags` function for this
-	aws_tags := make([]awstypes.Tag, 0, len(tags))
-	for k, v := range tags.IgnoreAWS().Map() {
-		tag := awstypes.Tag{
-			Key:   aws.String(k),
-			Value: aws.String(v),
-		}
-		aws_tags = append(aws_tags, tag)
-	}
-
-	return []awstypes.TagSpecification{
-		{
-			ResourceType: t,
-			Tags:         aws_tags,
-		},
-	}
-}
-
 // tagSpecificationsFromMap returns the tag specifications for the given tag key/value map and resource type.
 func tagSpecificationsFromMap(ctx context.Context, m map[string]interface{}, t string) []*ec2.TagSpecification {
 	if len(m) == 0 {

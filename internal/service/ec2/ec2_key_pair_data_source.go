@@ -8,9 +8,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
-	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -70,21 +70,21 @@ func DataSourceKeyPair() *schema.Resource {
 
 func dataSourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Client(ctx)
+	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeKeyPairsInput{}
 
 	if v, ok := d.GetOk("filter"); ok {
-		input.Filters = BuildCustomFilterListV2(v.(*schema.Set))
+		input.Filters = BuildCustomFilterList(v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("key_name"); ok {
-		input.KeyNames = []string{v.(string)}
+		input.KeyNames = aws.StringSlice([]string{v.(string)})
 	}
 
 	if v, ok := d.GetOk("key_pair_id"); ok {
-		input.KeyPairIds = []string{v.(string)}
+		input.KeyPairIds = aws.StringSlice([]string{v.(string)})
 	}
 
 	if v, ok := d.GetOk("include_public_key"); ok {
@@ -97,18 +97,18 @@ func dataSourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta int
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 Key Pair", err))
 	}
 
-	d.SetId(aws.ToString(keyPair.KeyPairId))
+	d.SetId(aws.StringValue(keyPair.KeyPairId))
 
-	keyName := aws.ToString(keyPair.KeyName)
+	keyName := aws.StringValue(keyPair.KeyName)
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "ec2",
+		Service:   ec2.ServiceName,
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Resource:  fmt.Sprintf("key-pair/%s", keyName),
 	}.String()
 	d.Set("arn", arn)
-	d.Set("create_time", aws.ToTime(keyPair.CreateTime).Format(time.RFC3339))
+	d.Set("create_time", aws.TimeValue(keyPair.CreateTime).Format(time.RFC3339))
 	d.Set("fingerprint", keyPair.KeyFingerprint)
 	d.Set("key_name", keyName)
 	d.Set("key_pair_id", keyPair.KeyPairId)

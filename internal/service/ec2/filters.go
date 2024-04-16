@@ -206,34 +206,6 @@ func BuildCustomFilterList(filterSet *schema.Set) []*ec2.Filter {
 	return filters
 }
 
-// This is the same as BuildCustomFilterList, but returns a []awstypes.Filter
-// that is compatible with v2 of the aws sdk
-func BuildCustomFilterListV2(filterSet *schema.Set) []awstypes.Filter {
-	if filterSet == nil {
-		return []awstypes.Filter{}
-	}
-
-	customFilters := filterSet.List()
-	filters := make([]awstypes.Filter, len(customFilters))
-
-	for filterIdx, customFilterI := range customFilters {
-		customFilterMapI := customFilterI.(map[string]interface{})
-		name := customFilterMapI["name"].(string)
-		valuesI := customFilterMapI["values"].(*schema.Set).List()
-		values := make([]string, len(valuesI))
-		for valueIdx, valueI := range valuesI {
-			values[valueIdx] = valueI.(string)
-		}
-
-		filters[filterIdx] = awstypes.Filter{
-			Name:   &name,
-			Values: values,
-		}
-	}
-
-	return filters
-}
-
 func BuildCustomFilters(ctx context.Context, filterSet types.Set) []*ec2.Filter {
 	if filterSet.IsNull() || filterSet.IsUnknown() {
 		return nil
