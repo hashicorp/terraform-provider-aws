@@ -4,6 +4,7 @@
 package bedrockagent
 
 var (
-	ResourceAgentAlias = newAgentAliasResource
-	FindAgentAliasByID = findAgentAliasByID
+	ResourceAgentAlias       = newAgentAliasResource
+	FindAgentAliasByID       = findAgentAliasByID
+	FindAgentActionGroupByID = findAgentActionGroupByID
 )

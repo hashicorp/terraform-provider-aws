@@ -6,7 +6,10 @@ package bedrockagent
 import (
 	"context"
 	"fmt"
+	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	intflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -31,6 +34,10 @@ import (
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
+)
+
+const (
+	agentActionGroupIdParts = 3
 )
 
 // @FrameworkResource(name="Bedrock Agent Action Group")
@@ -82,16 +89,12 @@ func (r *agentActionGroupResource) Schema(ctx context.Context, request resource.
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-
-			"client_token": schema.StringAttribute{
-				Optional: true,
-			},
 			"created_at": schema.StringAttribute{
-				Computed: true,
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
 			},
 			"description": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -103,11 +106,14 @@ func (r *agentActionGroupResource) Schema(ctx context.Context, request resource.
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"prepared_at": schema.StringAttribute{
+			"skip_resource_in_use_check": schema.BoolAttribute{
 				Computed: true,
+				Default:  booldefault.StaticBool(false),
+				Optional: true,
 			},
 			"updated_at": schema.StringAttribute{
-				Computed: true,
+				CustomType: timetypes.RFC3339Type{},
+				Computed:   true,
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -197,23 +203,23 @@ func (r *agentActionGroupResource) Create(ctx context.Context, request resource.
 	var input bedrockagent.CreateAgentActionGroupInput
 	response.Diagnostics.Append(fwflex.Expand(ctx, data, &input)...)
 
-	apiConfig, diags := expandApiSchema(ctx, data.APISchema)
+	apiSchemaInput, diags := expandApiSchema(ctx, data.APISchema)
 	response.Diagnostics.Append(diags...)
 
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	input.ApiSchema = apiConfig
+	input.ApiSchema = apiSchemaInput
 
-	ageConfig, diags := expandActionGroupExecutor(ctx, data.ActionGroupExecutor)
+	actionGroupExecutorInput, diags := expandActionGroupExecutor(ctx, data.ActionGroupExecutor)
 	response.Diagnostics.Append(diags...)
 
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	input.ActionGroupExecutor = ageConfig
+	input.ActionGroupExecutor = actionGroupExecutorInput
 
 	output, err := conn.CreateAgentActionGroup(ctx, &input)
 
@@ -223,9 +229,14 @@ func (r *agentActionGroupResource) Create(ctx context.Context, request resource.
 		return
 	}
 
-	var dataFromCreate actionGroupResourceModel
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output.AgentActionGroup, &dataFromCreate)...)
-	data.ID = dataFromCreate.ActionGroupId
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output.AgentActionGroup, &data)...)
+
+	err = data.setId()
+	if err != nil {
+		response.Diagnostics.AddError("creating Bedrock Agent Group", err.Error())
+
+		return
+	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -245,11 +256,7 @@ func (r *agentActionGroupResource) Read(ctx context.Context, request resource.Re
 
 	conn := r.Meta().BedrockAgentClient(ctx)
 
-	AgentId := data.AgentId.ValueString()
-	ActionGroupId := data.ActionGroupId.ValueString()
-	AgentVersion := data.AgentVersion.ValueString()
-
-	output, err := findAgentActionGroupByID(ctx, conn, ActionGroupId, AgentId, AgentVersion)
+	output, err := findAgentActionGroupByID(ctx, conn, data.ID.ValueString())
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -259,12 +266,12 @@ func (r *agentActionGroupResource) Read(ctx context.Context, request resource.Re
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading Bedrock Agent (%s)", AgentId), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading Bedrock Agent (%s)", data.ID.ValueString()), err.Error())
 
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output.AgentActionGroup, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -337,7 +344,7 @@ func (r *agentActionGroupResource) Update(ctx context.Context, request resource.
 		}
 	}
 
-	out, err := findAgentActionGroupByID(ctx, conn, old.ActionGroupId.String(), old.ID.ValueString(), old.AgentVersion.ValueString())
+	out, err := findAgentActionGroupByID(ctx, conn, old.ID.ValueString())
 	if err != nil {
 		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionUpdating, "Bedrock Agent", old.AgentId.ValueString(), err),
@@ -364,9 +371,10 @@ func (r *agentActionGroupResource) Delete(ctx context.Context, request resource.
 
 	if !data.ActionGroupId.IsNull() {
 		_, err := conn.DeleteAgentActionGroup(ctx, &bedrockagent.DeleteAgentActionGroupInput{
-			AgentId:       fwflex.StringFromFramework(ctx, data.AgentId),
-			ActionGroupId: fwflex.StringFromFramework(ctx, data.ActionGroupId),
-			AgentVersion:  fwflex.StringFromFramework(ctx, data.AgentVersion),
+			AgentId:                fwflex.StringFromFramework(ctx, data.AgentId),
+			ActionGroupId:          fwflex.StringFromFramework(ctx, data.ActionGroupId),
+			AgentVersion:           fwflex.StringFromFramework(ctx, data.AgentVersion),
+			SkipResourceInUseCheck: data.SkipResourceInUseCheck.ValueBool(),
 		})
 
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
@@ -381,11 +389,21 @@ func (r *agentActionGroupResource) Delete(ctx context.Context, request resource.
 	}
 }
 
-func findAgentActionGroupByID(ctx context.Context, conn *bedrockagent.Client, grpid, agentid, agentversion string) (*bedrockagent.GetAgentActionGroupOutput, error) {
+func findAgentActionGroupByID(ctx context.Context, conn *bedrockagent.Client, id string) (*bedrockagent.GetAgentActionGroupOutput, error) {
+	parts, err := intflex.ExpandResourceId(id, agentActionGroupIdParts, false)
+
+	if err != nil {
+		return nil, err
+	}
+
+	actionGroupId := parts[0]
+	agentId := parts[1]
+	agentVersion := parts[2]
+
 	input := &bedrockagent.GetAgentActionGroupInput{
-		ActionGroupId: aws.String(grpid),
-		AgentId:       aws.String(agentid),
-		AgentVersion:  aws.String(agentversion),
+		ActionGroupId: aws.String(actionGroupId),
+		AgentId:       aws.String(agentId),
+		AgentVersion:  aws.String(agentVersion),
 	}
 
 	output, err := conn.GetAgentActionGroup(ctx, input)
@@ -416,13 +434,21 @@ type actionGroupResourceModel struct {
 	AgentId                    types.String                                         `tfsdk:"agent_id"`
 	AgentVersion               types.String                                         `tfsdk:"agent_version"`
 	APISchema                  fwtypes.ListNestedObjectValueOf[apiSchema]           `tfsdk:"api_schema"`
-	ClientToken                types.String                                         `tfsdk:"client_token"`
-	CreatedAt                  types.String                                         `tfsdk:"created_at"`
+	CreatedAt                  timetypes.RFC3339                                    `tfsdk:"created_at"`
 	Description                types.String                                         `tfsdk:"description"`
 	ID                         types.String                                         `tfsdk:"id"`
 	ParentActionGroupSignature types.String                                         `tfsdk:"parent_action_group_signature"`
-	PreparedAt                 types.String                                         `tfsdk:"prepared_at"`
-	UpdatedAt                  types.String                                         `tfsdk:"updated_at"`
+	SkipResourceInUseCheck     types.Bool                                           `tfsdk:"skip_resource_in_use_check"`
+	UpdatedAt                  timetypes.RFC3339                                    `tfsdk:"updated_at"`
+}
+
+func (a *actionGroupResourceModel) setId() error {
+	id, err := intflex.FlattenResourceId([]string{a.ActionGroupId.ValueString(), a.AgentId.ValueString(), a.AgentVersion.ValueString()}, agentActionGroupIdParts, false)
+	if err != nil {
+		return err
+	}
+	a.ID = types.StringValue(id)
+	return nil
 }
 
 type actionGroupExecutor struct {
@@ -498,21 +524,20 @@ func expandApiSchema(ctx context.Context, api fwtypes.ListNestedObjectValueOf[ap
 
 func flattenApiSchema(ctx context.Context, apiObject awstypes.APISchema) (fwtypes.ListNestedObjectValueOf[apiSchema], diag.Diagnostics) {
 	var diags diag.Diagnostics
-	var apiSchemaData []*apiSchema
+	apiSchemaData := &apiSchema{
+		S3:      fwtypes.NewListNestedObjectValueOfNull[s3](ctx),
+		Payload: types.StringNull(),
+	}
 
 	switch v := apiObject.(type) {
 	case *awstypes.APISchemaMemberS3:
 		var s3data s3
 		diags.Append(fwflex.Flatten(ctx, v, s3data)...)
-		apiSchemaData = append(apiSchemaData, &apiSchema{S3: fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &s3data)})
+		apiSchemaData.S3 = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &s3data)
 	case *awstypes.APISchemaMemberPayload:
 		payloadValue := fwflex.StringValueToFramework(ctx, v.Value)
-		apiValue := apiSchema{Payload: payloadValue}
-		apiSchemaData = append(apiSchemaData, &apiValue)
+		apiSchemaData.Payload = payloadValue
 	}
 
-	apiSchemaDataReturn, moreDiags := fwtypes.NewListNestedObjectValueOfSlice(ctx, apiSchemaData)
-	diags.Append(moreDiags...)
-
-	return apiSchemaDataReturn, diags
+	return fwtypes.NewListNestedObjectValueOfPtrMust(ctx, apiSchemaData), diags
 }

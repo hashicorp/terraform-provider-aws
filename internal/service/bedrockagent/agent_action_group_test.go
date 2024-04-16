@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	bedrockagent2 "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagent"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -25,7 +26,7 @@ import (
 func TestAccBedrockAgentActionGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_bedrockagent_action_group.test"
+	resourceName := "aws_bedrockagent_agent_action_group.test"
 	var v bedrockagent.GetAgentActionGroupOutput
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -42,9 +43,10 @@ func TestAccBedrockAgentActionGroup_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_resource_in_use_check"},
 			},
 		},
 	})
@@ -87,11 +89,7 @@ func testAccCheckBedrockAgentActionGroupExists(ctx context.Context, n string, v 
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentClient(ctx)
 
-		output, err := conn.GetAgentActionGroup(ctx, &bedrockagent.GetAgentActionGroupInput{
-			ActionGroupId: aws.String(rs.Primary.ID),
-			AgentId:       aws.String(*v.AgentActionGroup.AgentId),
-			AgentVersion:  aws.String(*v.AgentActionGroup.AgentVersion),
-		})
+		output, err := bedrockagent2.FindAgentActionGroupByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -104,20 +102,54 @@ func testAccCheckBedrockAgentActionGroupExists(ctx context.Context, n string, v 
 }
 
 func testAccBedrockAgentActionGroupConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccAgentConfig_basic(rName, "anthropic.claude-v2", "basic claude"), fmt.Sprintf(`
-resource "aws_bedrockagent_action_group" "test" {
+	return acctest.ConfigCompose(testAccAgentConfig_basic(rName, "anthropic.claude-v2", "basic claude"),
+		testAccBedrockAgentActionGroupConfig_lamba(rName),
+		fmt.Sprintf(`
+resource "aws_bedrockagent_agent_action_group" "test" {
   action_group_name = %[1]q
   agent_id          = aws_bedrockagent_agent.test.agent_id
   agent_version     = "DRAFT"
+  skip_resource_in_use_check = true
   action_group_executor {
-	lambda = "arn:aws:lambda:us-west-2:xxxxxxxxxxxx:function:sairam:1"
+    lambda = aws_lambda_function.test_lambda.arn
   }
   api_schema {
-	s3 {
-		s3_bucket_name = "tf-acc-test-3678246384762388142"
-		s3_object_key  = "sai.yaml"
-	}
+    payload = file("${path.module}/test-fixtures/api_schema.yaml")
   }
 }
 `, rName))
+}
+
+func testAccBedrockAgentActionGroupConfig_lamba(rName string) string {
+	return fmt.Sprintf(`
+data "aws_iam_policy_document" "lambda_assume" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["lambda.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
+  }
+}
+
+resource "aws_iam_role" "lambda" {
+  name_prefix        = %[1]q
+  assume_role_policy = data.aws_iam_policy_document.lambda_assume.json
+}
+
+resource "aws_lambda_function" "test_lambda" {
+  filename      = "${path.module}/test-fixtures/lambda_function.zip"
+  function_name = %[1]q
+  role          = aws_iam_role.lambda.arn
+  handler       = "lambda_handler"
+
+  source_code_hash = filebase64sha256("${path.module}/test-fixtures/lambda_function.zip")
+
+  runtime = "python3.9"
+}
+
+`, rName)
 }
