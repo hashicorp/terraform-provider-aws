@@ -52,6 +52,35 @@ func TestAccBedrockAgentActionGroup_basic(t *testing.T) {
 	})
 }
 
+func TestAccBedrockAgentActionGroup_s3ApiSchema(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_bedrockagent_agent_action_group.test"
+	var v bedrockagent.GetAgentActionGroupOutput
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBedrockAgentActionGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBedrockAgentActionGroupConfig_basic(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckBedrockAgentActionGroupExists(ctx, resourceName, &v),
+					resource.TestCheckResourceAttr(resourceName, "action_group_name", rName),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"skip_resource_in_use_check"},
+			},
+		},
+	})
+}
+
 func testAccCheckBedrockAgentActionGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentClient(ctx)
@@ -106,9 +135,9 @@ func testAccBedrockAgentActionGroupConfig_basic(rName string) string {
 		testAccBedrockAgentActionGroupConfig_lamba(rName),
 		fmt.Sprintf(`
 resource "aws_bedrockagent_agent_action_group" "test" {
-  action_group_name = %[1]q
-  agent_id          = aws_bedrockagent_agent.test.agent_id
-  agent_version     = "DRAFT"
+  action_group_name          = %[1]q
+  agent_id                   = aws_bedrockagent_agent.test.agent_id
+  agent_version              = "DRAFT"
   skip_resource_in_use_check = true
   action_group_executor {
     lambda = aws_lambda_function.test_lambda.arn
@@ -117,6 +146,41 @@ resource "aws_bedrockagent_agent_action_group" "test" {
     payload = file("${path.module}/test-fixtures/api_schema.yaml")
   }
 }
+`, rName))
+}
+
+func testAccBedrockAgentActionGroupConfig_s3ApiSchema(rName string) string {
+	return acctest.ConfigCompose(testAccAgentConfig_basic(rName, "anthropic.claude-v2", "basic claude"),
+		testAccBedrockAgentActionGroupConfig_lamba(rName),
+		fmt.Sprintf(`
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_s3_object" "test" {
+  bucket = aws_s3_bucket.test.id
+  key    = "api_schema.yaml"
+  source = "${path.module}/test-fixtures/api_schema.yaml"
+}
+
+resource "aws_bedrockagent_agent_action_group" "test" {
+  action_group_name          = %[1]q
+  agent_id                   = aws_bedrockagent_agent.test.agent_id
+  agent_version              = "DRAFT"
+  skip_resource_in_use_check = true
+  action_group_executor {
+    lambda = aws_lambda_function.test_lambda.arn
+  }
+  api_schema {
+    s3 {
+      s3_bucket_name = aws_s3_bucket.test.id
+      s3_object_key  = aws_s3_object.test.key
+    }
+  }
+  depends_on = [aws_s3_object.test]
+}
+
+
 `, rName))
 }
 
