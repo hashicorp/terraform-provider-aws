@@ -233,7 +233,6 @@ func (r *resourceExport) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	// resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
@@ -259,18 +258,6 @@ func (r *resourceExport) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	// exp := ExportData{}
-	// exp.Description = flex.StringToFramework(ctx, out.Export.Description)
-
-	// dq := fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &DataQueryData{
-	// 	QueryStatement: flex.StringToFramework(ctx, out.Export.DataQuery.QueryStatement),
-	// })
-	// resp.Diagnostics.Append(flex.Flatten(ctx, out.Export, &exp)...)
-	// if resp.Diagnostics.HasError() {
-	// 	return
-	// }
-
-	// state.Export = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &exp)
 	state.ID = flex.StringToFramework(ctx, out.Export.ExportArn)
 
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
@@ -343,25 +330,18 @@ func (r *resourceExport) Delete(ctx context.Context, req resource.DeleteRequest,
 	}
 
 	_, err := conn.DeleteExport(ctx, in)
+
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
+
 	if err != nil {
-		if errs.IsA[*retry.NotFoundError](err) {
-			return
-		}
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.BCMDataExports, create.ErrActionDeleting, ResNameExport, state.ID.String(), err),
 			err.Error(),
 		)
 		return
 	}
-	// deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
-	// _, err = waitExportDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
-	// if err != nil {
-	// 	resp.Diagnostics.AddError(
-	// 		create.ProblemStandardMessage(names.BCMDataExports, create.ErrActionWaitingForDeletion, ResNameExport, state.ID.String(), err),
-	// 		err.Error(),
-	// 	)
-	// 	return
-	// }
 }
 
 func (r *resourceExport) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
@@ -408,22 +388,6 @@ func waitExportUpdated(ctx context.Context, conn *bcmdataexports.Client, id stri
 
 	return nil, err
 }
-
-// func waitExportDeleted(ctx context.Context, conn *bcmdataexports.Client, id string, timeout time.Duration) (*awstypes.Export, error) {
-// 	stateConf := &retry.StateChangeConf{
-// 		Pending: []string{statusDeleting, statusHealthy},
-// 		Target:  []string{},
-// 		Refresh: statusExport(ctx, conn, id),
-// 		Timeout: timeout,
-// 	}
-
-// 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-// 	if out, ok := outputRaw.(*bcmdataexports.Export); ok {
-// 		return out, err
-// 	}
-
-// 	return nil, err
-// }
 
 func statusExport(ctx context.Context, conn *bcmdataexports.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {

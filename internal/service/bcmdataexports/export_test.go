@@ -69,7 +69,6 @@ func TestAccBCMDataExportsExport_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BCMDataExportsEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BCMDataExportsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -153,11 +152,12 @@ resource "aws_s3_bucket_policy" "bucket" {
         "billingreports.amazonaws.com",
         "bcm-data-exports.amazonaws.com"
       ]
-    }
-    Resource = [
-      aws_s3_bucket.test.arn,
-      "${aws_s3_bucket.test.arn}/*",
-    ]
+      }
+      Resource = [
+        aws_s3_bucket.test.arn,
+        "${aws_s3_bucket.test.arn}/*",
+      ]
+    }]
     Version = "2012-10-17"
   })
 }
@@ -174,11 +174,13 @@ resource "aws_bcmdataexports_export" "test" {
       query_statement = "SELECT identity_line_item_id, identity_time_interval, line_item_product_code,line_item_unblended_cost FROM COST_AND_USAGE_REPORT"
       table_configurations = {
         COST_AND_USAGE_REPORT = {
-          TIME_GRANULARITY = "DAILY"
+          TIME_GRANULARITY = "HOURLY",
+          INCLUDE_RESOURCES = "FALSE",
+          INCLUDE_MANUAL_DISCOUNT_COMPATIBILITY = "FALSE",
+          INCLUDE_SPLIT_COST_ALLOCATION_DATA = "FALSE",
         }
       }
     }
-
     destination_configurations {
       s3_destination {
           s3_bucket = aws_s3_bucket.test.bucket
