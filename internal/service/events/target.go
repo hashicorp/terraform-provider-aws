@@ -318,9 +318,9 @@ func resourceTarget() *schema.Resource {
 							Type:     schema.TypeMap,
 							Optional: true,
 							Elem:     &schema.Schema{Type: schema.TypeString},
-							ValidateFunc: validation.All(
-								mapMaxItems(targetInputTransformerMaxInputPaths),
-								mapKeysDoNotMatch(regexache.MustCompile(`^AWS.*$`), "input_path must not start with \"AWS\""),
+							ValidateDiagFunc: validation.AllDiag(
+								verify.MapSizeAtMost(targetInputTransformerMaxInputPaths),
+								verify.MapKeyNoMatch(regexache.MustCompile(`^AWS.*$`), `must not start with "AWS"`),
 							),
 						},
 						"input_template": {
