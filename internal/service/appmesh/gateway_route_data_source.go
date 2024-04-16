@@ -12,6 +12,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -51,7 +52,7 @@ func DataSourceGatewayRoute() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"spec":         dataSourcePropertyFromResourceProperty(resourceGatewayRouteSpecSchema()),
+			"spec":         sdkv2.DataSourcePropertyFromResourceProperty(resourceGatewayRouteSpecSchema()),
 			names.AttrTags: tftags.TagsSchemaComputed(),
 			"virtual_gateway_name": {
 				Type:     schema.TypeString,

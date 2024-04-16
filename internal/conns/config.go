@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"strings"
+	"time"
 
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	imds_sdkv2 "github.com/aws/aws-sdk-go-v2/feature/ec2/imds"
@@ -91,6 +92,7 @@ func (c *Config) ConfigureProvider(ctx context.Context, client *AWSClient) (*AWS
 		HTTPSProxy:                     c.HTTPSProxy,
 		HTTPProxyMode:                  awsbase.HTTPProxyModeLegacy,
 		Logger:                         logger,
+		MaxBackoff:                     300 * time.Second, // AWS SDK for Go v1 DefaultRetryerMaxRetryDelay: https://github.com/aws/aws-sdk-go/blob/9f6e3bb9f523aef97fa1cd5c5f8ba8ecf212e44e/aws/client/default_retryer.go#L48-L49.
 		MaxRetries:                     c.MaxRetries,
 		NoProxy:                        c.NoProxy,
 		Profile:                        c.Profile,

@@ -10,8 +10,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/eventbridge"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -580,7 +580,7 @@ func TestAccEventsConnection_disappears(t *testing.T) {
 
 func testAccCheckConnectionDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudwatch_event_connection" {
@@ -597,7 +597,7 @@ func testAccCheckConnectionDestroy(ctx context.Context) resource.TestCheckFunc {
 				return err
 			}
 
-			return fmt.Errorf("EventBridge connection %s still exists", rs.Primary.ID)
+			return fmt.Errorf("EventBridge Connection %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -611,7 +611,7 @@ func testAccCheckConnectionExists(ctx context.Context, n string, v *eventbridge.
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsClient(ctx)
 
 		output, err := tfevents.FindConnectionByName(ctx, conn, rs.Primary.ID)
 
@@ -627,7 +627,7 @@ func testAccCheckConnectionExists(ctx context.Context, n string, v *eventbridge.
 
 func testAccCheckConnectionRecreated(i, j *eventbridge.DescribeConnectionOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.StringValue(i.ConnectionArn) == aws.StringValue(j.ConnectionArn) {
+		if aws.ToString(i.ConnectionArn) == aws.ToString(j.ConnectionArn) {
 			return fmt.Errorf("EventBridge Connection not recreated")
 		}
 		return nil
@@ -636,7 +636,7 @@ func testAccCheckConnectionRecreated(i, j *eventbridge.DescribeConnectionOutput)
 
 func testAccCheckConnectionNotRecreated(i, j *eventbridge.DescribeConnectionOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.StringValue(i.ConnectionArn) != aws.StringValue(j.ConnectionArn) {
+		if aws.ToString(i.ConnectionArn) != aws.ToString(j.ConnectionArn) {
 			return fmt.Errorf("EventBridge Connection was recreated")
 		}
 		return nil

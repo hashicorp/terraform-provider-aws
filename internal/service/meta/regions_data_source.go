@@ -19,7 +19,6 @@ import (
 // @FrameworkDataSource(name=Regions)
 func newDataSourceRegions(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceRegions{}
-	d.SetMigratedFromPluginSDK(true)
 
 	return d, nil
 }

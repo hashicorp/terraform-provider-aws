@@ -89,11 +89,13 @@ The following arguments are optional:
 
 ### DataStorage Configuration
 
+* `minimum` - The lower limit for data storage the cache is set to use. Must be between 1 and 5,000.
 * `maximum` - The upper limit for data storage the cache is set to use. Must be between 1 and 5,000.
 * `unit` - The unit that the storage is measured in, in GB.
 
 ### ECPUPerSecond Configuration
 
+* `minimum` - The minimum number of ECPUs the cache can consume per second. Must be between 1,000 and 15,000,000.
 * `maximum` - The maximum number of ECPUs the cache can consume per second. Must be between 1,000 and 15,000,000.
 
 ## Attribute Reference
