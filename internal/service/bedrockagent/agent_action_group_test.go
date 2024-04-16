@@ -36,7 +36,7 @@ func TestAccBedrockAgentActionGroup_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckBedrockAgentActionGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBedrockAgentActionGroupConfig_basic(rName),
+				Config: testAccAgentActionGroupConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBedrockAgentActionGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "action_group_name", rName),
@@ -65,7 +65,7 @@ func TestAccBedrockAgentActionGroup_s3ApiSchema(t *testing.T) {
 		CheckDestroy:             testAccCheckBedrockAgentActionGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBedrockAgentActionGroupConfig_s3ApiSchema(rName),
+				Config: testAccAgentActionGroupConfig_s3ApiSchema(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBedrockAgentActionGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "action_group_name", rName),
@@ -130,9 +130,9 @@ func testAccCheckBedrockAgentActionGroupExists(ctx context.Context, n string, v 
 	}
 }
 
-func testAccBedrockAgentActionGroupConfig_basic(rName string) string {
+func testAccAgentActionGroupConfig_basic(rName string) string {
 	return acctest.ConfigCompose(testAccAgentConfig_basic(rName, "anthropic.claude-v2", "basic claude"),
-		testAccBedrockAgentActionGroupConfig_lamba(rName),
+		testAccAgentActionGroupConfig_lamba(rName),
 		fmt.Sprintf(`
 resource "aws_bedrockagent_agent_action_group" "test" {
   action_group_name          = %[1]q
@@ -150,9 +150,9 @@ resource "aws_bedrockagent_agent_action_group" "test" {
 `, rName))
 }
 
-func testAccBedrockAgentActionGroupConfig_s3ApiSchema(rName string) string {
+func testAccAgentActionGroupConfig_s3ApiSchema(rName string) string {
 	return acctest.ConfigCompose(testAccAgentConfig_basic(rName, "anthropic.claude-v2", "basic claude"),
-		testAccBedrockAgentActionGroupConfig_lamba(rName),
+		testAccAgentActionGroupConfig_lamba(rName),
 		fmt.Sprintf(`
 resource "aws_s3_bucket" "test" {
   bucket = %[1]q
@@ -185,7 +185,7 @@ resource "aws_bedrockagent_agent_action_group" "test" {
 `, rName))
 }
 
-func testAccBedrockAgentActionGroupConfig_lamba(rName string) string {
+func testAccAgentActionGroupConfig_lamba(rName string) string {
 	return fmt.Sprintf(`
 data "aws_iam_policy_document" "lambda_assume" {
   statement {
