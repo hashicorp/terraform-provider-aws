@@ -1053,7 +1053,7 @@ func TestAccEventsTarget_Input_transformer(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccTargetConfig_inputTransformer(rName, tooManyInputPaths),
-				ExpectError: regexache.MustCompile(`.*expected number of items in.* to be less than or equal to.*`),
+				ExpectError: regexache.MustCompile(`Map must contain at most \d+ elements: length=\d+`),
 			},
 			{
 				Config: testAccTargetConfig_inputTransformer(rName, validInputPaths),
