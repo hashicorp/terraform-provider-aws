@@ -19,6 +19,7 @@ BUG FIXES:
 * resource/aws_ce_anomaly_monitor: Change `monitor_dimension` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) ([#36773](https://github.com/hashicorp/terraform-provider-aws/issues/36773))
 * resource/aws_ce_anomaly_subscription: Change `account_id` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) ([#36773](https://github.com/hashicorp/terraform-provider-aws/issues/36773))
 * resource/aws_cloudformation_stack: CRLF line endings in `template_body` no longer cause erroneous diffs ([#14270](https://github.com/hashicorp/terraform-provider-aws/issues/14270))
+* resource/aws_fsx_windows_file_system: Fix error `BadRequest: AuditLogDestination must not be provided when auditing is disabled` when updating `audit_log_configuration.0.file_access_audit_log_level` and `audit_log_configuration.0.file_share_access_audit_log_level` to `"DISABLED"` ([#36928](https://github.com/hashicorp/terraform-provider-aws/issues/36928))
 
 ## 5.45.0 (April 11, 2024)
 
