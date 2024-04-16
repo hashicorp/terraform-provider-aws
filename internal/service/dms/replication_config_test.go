@@ -78,54 +78,6 @@ func TestAccDMSReplicationConfig_basic(t *testing.T) {
 	}
 }
 
-// func TestAccDMSReplicationConfig_noChangeOnDefault(t *testing.T) {
-// 	ctx := acctest.Context(t)
-// 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-// 	resourceName := "aws_dms_replication_config.test"
-
-// 	resource.ParallelTest(t, resource.TestCase{
-// 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-// 		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
-// 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-// 		CheckDestroy:             testAccCheckReplicationConfigDestroy(ctx),
-// 		Steps: []resource.TestStep{
-// 			{
-// 				Config: testAccReplicationConfigConfig_noChangeOnDefault(rName),
-// 				Check: resource.ComposeAggregateTestCheckFunc(
-// 					testAccCheckReplicationConfigExists(ctx, resourceName),
-// 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-// 					resource.TestCheckResourceAttr(resourceName, "compute_config.#", "1"),
-// 					resource.TestCheckResourceAttr(resourceName, "compute_config.0.availability_zone", ""),
-// 					resource.TestCheckResourceAttr(resourceName, "compute_config.0.dns_name_servers", ""),
-// 					resource.TestCheckResourceAttr(resourceName, "compute_config.0.kms_key_id", ""),
-// 					resource.TestCheckResourceAttr(resourceName, "compute_config.0.max_capacity_units", "128"),
-// 					resource.TestCheckResourceAttr(resourceName, "compute_config.0.min_capacity_units", "2"),
-// 					resource.TestCheckResourceAttr(resourceName, "compute_config.0.multi_az", "false"),
-// 					resource.TestCheckResourceAttr(resourceName, "compute_config.0.preferred_maintenance_window", "sun:23:45-mon:00:30"),
-// 					resource.TestCheckResourceAttrSet(resourceName, "compute_config.0.replication_subnet_group_id"),
-// 					resource.TestCheckResourceAttr(resourceName, "compute_config.0.vpc_security_group_ids.#", "0"),
-// 					resource.TestCheckResourceAttr(resourceName, "replication_config_identifier", rName),
-// 					resource.TestCheckResourceAttrSet(resourceName, "replication_settings"),
-// 					resource.TestCheckResourceAttr(resourceName, "replication_type", "cdc"),
-// 					resource.TestCheckNoResourceAttr(resourceName, "resource_identifier"),
-// 					resource.TestCheckResourceAttrSet(resourceName, "source_endpoint_arn"),
-// 					resource.TestCheckResourceAttr(resourceName, "start_replication", "false"),
-// 					resource.TestCheckResourceAttr(resourceName, "supplemental_settings", ""),
-// 					resource.TestCheckResourceAttrSet(resourceName, "table_mappings"),
-// 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
-// 					resource.TestCheckResourceAttrSet(resourceName, "target_endpoint_arn"),
-// 				),
-// 			},
-// 			{
-// 				ResourceName:            resourceName,
-// 				ImportState:             true,
-// 				ImportStateVerify:       true,
-// 				ImportStateVerifyIgnore: []string{"start_replication", "resource_identifier"},
-// 			},
-// 		},
-// 	})
-// }
-
 func TestAccDMSReplicationConfig_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -145,6 +97,146 @@ func TestAccDMSReplicationConfig_disappears(t *testing.T) {
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfdms.ResourceReplicationConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
+func TestAccDMSReplicationConfig_settings_EnableLogging(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_dms_replication_config.test"
+	var v dms.ReplicationConfig
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationTaskDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationConfigConfig_settings_EnableLogging(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationConfigExists(ctx, resourceName, &v),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "Logging.EnableLogging", "true"),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "Logging.EnableLogContext", "false"),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "Logging.LogComponents[?Id=='DATA_STRUCTURE'].Severity | [0]", "LOGGER_SEVERITY_DEFAULT"),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "type(Logging.CloudWatchLogGroup)", "null"),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "type(Logging.CloudWatchLogStream)", "null"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"start_replication"},
+			},
+			{
+				Config: testAccReplicationConfigConfig_settings_EnableLogging(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationConfigExists(ctx, resourceName, &v),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "Logging.EnableLogging", "false"),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "Logging.EnableLogContext", "false"),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "Logging.LogComponents[?Id=='DATA_STRUCTURE'].Severity | [0]", "LOGGER_SEVERITY_DEFAULT"),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "type(Logging.CloudWatchLogGroup)", "null"),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "type(Logging.CloudWatchLogStream)", "null"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"start_replication"},
+			},
+		},
+	})
+}
+
+func TestAccDMSReplicationConfig_settings_LoggingValidation(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationTaskDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccReplicationConfigConfig_settings_EnableLogContext(rName, true),
+				ExpectError: regexache.MustCompile(`The parameter Logging.EnableLogContext is not allowed when\s+Logging.EnableLogging is not set to true.`),
+			},
+			{
+				Config:      testAccReplicationConfigConfig_settings_LoggingReadOnly(rName, "CloudWatchLogGroup"),
+				ExpectError: regexache.MustCompile(`The parameter Logging.CloudWatchLogGroup is read-only and cannot be set.`),
+			},
+			{
+				Config:      testAccReplicationConfigConfig_settings_LoggingReadOnly(rName, "CloudWatchLogStream"),
+				ExpectError: regexache.MustCompile(`The parameter Logging.CloudWatchLogStream is read-only and cannot be set.`),
+			},
+		},
+	})
+}
+
+func TestAccDMSReplicationConfig_settings_LogComponents(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_dms_replication_config.test"
+	var v dms.ReplicationConfig
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationTaskDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationConfigConfig_settings_LogComponents(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationConfigExists(ctx, resourceName, &v),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "Logging.EnableLogging", "true"),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "Logging.EnableLogContext", "false"),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "Logging.LogComponents[?Id=='DATA_STRUCTURE'].Severity | [0]", "LOGGER_SEVERITY_WARNING"),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "type(Logging.CloudWatchLogGroup)", "null"),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "type(Logging.CloudWatchLogStream)", "null"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"start_replication"},
+			},
+		},
+	})
+}
+
+func TestAccDMSReplicationConfig_settings_StreamBuffer(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_dms_replication_config.test"
+	var v dms.ReplicationConfig
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationTaskDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationConfigConfig_settings_StreamBuffer(rName, 4, 16),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationConfigExists(ctx, resourceName, &v),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "StreamBufferSettings.StreamBufferCount", "4"),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "StreamBufferSettings.StreamBufferSizeInMB", "16"),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_settings", "StreamBufferSettings.CtrlStreamBufferSizeInMB", "5"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"start_replication"},
 			},
 		},
 	})
@@ -382,26 +474,128 @@ resource "aws_dms_replication_config" "test" {
 `, rName, migrationType))
 }
 
-func testAccReplicationConfigConfig_noChangeOnDefault(rName string) string {
+func testAccReplicationConfigConfig_settings_EnableLogging(rName string, enabled bool) string {
 	return acctest.ConfigCompose(
 		testAccReplicationConfigConfig_base_DummyDatabase(rName),
 		fmt.Sprintf(`
 resource "aws_dms_replication_config" "test" {
   replication_config_identifier = %[1]q
-  replication_type              = "cdc"
+  replication_type              = "full-load"
   source_endpoint_arn           = aws_dms_endpoint.source.endpoint_arn
   target_endpoint_arn           = aws_dms_endpoint.target.endpoint_arn
   table_mappings                = "{\"rules\":[{\"rule-type\":\"selection\",\"rule-id\":\"1\",\"rule-name\":\"1\",\"object-locator\":{\"schema-name\":\"%%\",\"table-name\":\"%%\"},\"rule-action\":\"include\"}]}"
-  replication_settings          = "{\"Logging\":{\"EnableLogging\":true}}"
-
   compute_config {
     replication_subnet_group_id  = aws_dms_replication_subnet_group.test.replication_subnet_group_id
     max_capacity_units           = "128"
     min_capacity_units           = "2"
     preferred_maintenance_window = "sun:23:45-mon:00:30"
   }
+
+  # terrafmt can't handle this using jsonencode or a heredoc
+  replication_settings = "{\"Logging\":{\"EnableLogging\":%[2]t}}"
+}
+`, rName, enabled))
+}
+
+func testAccReplicationConfigConfig_settings_EnableLogContext(rName string, enabled bool) string {
+	return acctest.ConfigCompose(
+		testAccReplicationConfigConfig_base_DummyDatabase(rName),
+		fmt.Sprintf(`
+resource "aws_dms_replication_config" "test" {
+  replication_config_identifier = %[1]q
+  replication_type              = "full-load"
+  source_endpoint_arn           = aws_dms_endpoint.source.endpoint_arn
+  target_endpoint_arn           = aws_dms_endpoint.target.endpoint_arn
+  table_mappings                = "{\"rules\":[{\"rule-type\":\"selection\",\"rule-id\":\"1\",\"rule-name\":\"1\",\"object-locator\":{\"schema-name\":\"%%\",\"table-name\":\"%%\"},\"rule-action\":\"include\"}]}"
+  compute_config {
+    replication_subnet_group_id  = aws_dms_replication_subnet_group.test.replication_subnet_group_id
+    max_capacity_units           = "128"
+    min_capacity_units           = "2"
+    preferred_maintenance_window = "sun:23:45-mon:00:30"
+  }
+
+  # terrafmt can't handle this using jsonencode or a heredoc
+  replication_settings = "{\"Logging\":{\"EnableLogContext\":%[2]t}}"
+}
+`, rName, enabled))
+}
+
+func testAccReplicationConfigConfig_settings_LoggingReadOnly(rName, field string) string {
+	return acctest.ConfigCompose(
+		testAccReplicationConfigConfig_base_DummyDatabase(rName),
+		fmt.Sprintf(`
+resource "aws_dms_replication_config" "test" {
+  replication_config_identifier = %[1]q
+  replication_type              = "full-load"
+  source_endpoint_arn           = aws_dms_endpoint.source.endpoint_arn
+  target_endpoint_arn           = aws_dms_endpoint.target.endpoint_arn
+  table_mappings                = "{\"rules\":[{\"rule-type\":\"selection\",\"rule-id\":\"1\",\"rule-name\":\"1\",\"object-locator\":{\"schema-name\":\"%%\",\"table-name\":\"%%\"},\"rule-action\":\"include\"}]}"
+  compute_config {
+    replication_subnet_group_id  = aws_dms_replication_subnet_group.test.replication_subnet_group_id
+    max_capacity_units           = "128"
+    min_capacity_units           = "2"
+    preferred_maintenance_window = "sun:23:45-mon:00:30"
+  }
+
+  # terrafmt can't handle this using jsonencode or a heredoc
+  replication_settings = "{\"Logging\":{\"EnableLogging\":true, \"%[2]s\":\"value\"}}"
+}
+`, rName, field))
+}
+
+func testAccReplicationConfigConfig_settings_LogComponents(rName string) string {
+	return acctest.ConfigCompose(
+		testAccReplicationConfigConfig_base_DummyDatabase(rName),
+		fmt.Sprintf(`
+resource "aws_dms_replication_config" "test" {
+  replication_config_identifier = %[1]q
+  replication_type              = "full-load"
+  source_endpoint_arn           = aws_dms_endpoint.source.endpoint_arn
+  target_endpoint_arn           = aws_dms_endpoint.target.endpoint_arn
+  table_mappings                = "{\"rules\":[{\"rule-type\":\"selection\",\"rule-id\":\"1\",\"rule-name\":\"1\",\"object-locator\":{\"schema-name\":\"%%\",\"table-name\":\"%%\"},\"rule-action\":\"include\"}]}"
+  compute_config {
+    replication_subnet_group_id  = aws_dms_replication_subnet_group.test.replication_subnet_group_id
+    max_capacity_units           = "128"
+    min_capacity_units           = "2"
+    preferred_maintenance_window = "sun:23:45-mon:00:30"
+  }
+
+  replication_settings = jsonencode(
+    {
+      Logging = {
+        EnableLogging = true,
+        LogComponents = [{
+          Id       = "DATA_STRUCTURE",
+          Severity = "LOGGER_SEVERITY_WARNING"
+        }]
+      }
+    }
+  )
 }
 `, rName))
+}
+
+func testAccReplicationConfigConfig_settings_StreamBuffer(rName string, bufferCount, bufferSize int) string {
+	return acctest.ConfigCompose(
+		testAccReplicationConfigConfig_base_DummyDatabase(rName),
+		fmt.Sprintf(`
+resource "aws_dms_replication_config" "test" {
+  replication_config_identifier = %[1]q
+  replication_type              = "full-load"
+  source_endpoint_arn           = aws_dms_endpoint.source.endpoint_arn
+  target_endpoint_arn           = aws_dms_endpoint.target.endpoint_arn
+  table_mappings                = "{\"rules\":[{\"rule-type\":\"selection\",\"rule-id\":\"1\",\"rule-name\":\"1\",\"object-locator\":{\"schema-name\":\"%%\",\"table-name\":\"%%\"},\"rule-action\":\"include\"}]}"
+  compute_config {
+    replication_subnet_group_id  = aws_dms_replication_subnet_group.test.replication_subnet_group_id
+    max_capacity_units           = "128"
+    min_capacity_units           = "2"
+    preferred_maintenance_window = "sun:23:45-mon:00:30"
+  }
+
+  # terrafmt can't handle this using jsonencode or a heredoc
+  replication_settings = "{\"StreamBufferSettings\":{\"StreamBufferCount\":%[2]d,\"StreamBufferSizeInMB\":%[3]d}}"
+}
+`, rName, bufferCount, bufferSize))
 }
 
 func testAccReplicationConfigConfig_update(rName, replicationType string, minCapacity, maxCapacity int) string {

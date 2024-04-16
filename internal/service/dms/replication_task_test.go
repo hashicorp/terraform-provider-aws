@@ -13,6 +13,8 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -173,6 +175,133 @@ func TestAccDMSReplicationTask_updateSettingsAndMappings(t *testing.T) {
 				ImportState:             true,
 				ImportStateVerify:       true,
 				ImportStateVerifyIgnore: []string{"start_replication_task"},
+			},
+		},
+	})
+}
+
+func TestAccDMSReplicationTask_settings_EnableLogging(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_dms_replication_task.test"
+	var v dms.ReplicationTask
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationTaskDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationTaskConfig_settings_EnableLogging(rName, true),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationTaskExists(ctx, resourceName, &v),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.EnableLogging", "true"),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.EnableLogContext", "false"),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.CloudWatchLogGroup", fmt.Sprintf("dms-tasks-%s", rName)),
+					func(s *terraform.State) error {
+						arn, err := arn.Parse(aws.StringValue(v.ReplicationTaskArn))
+						if err != nil {
+							return err
+						}
+						l := strings.Split(arn.Resource, ":")
+						if len(l) != 2 {
+							return fmt.Errorf("expected 2 parts in %s", arn.Resource)
+						}
+						id := l[1]
+						return acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.CloudWatchLogStream", fmt.Sprintf("dms-task-%s", id))(s)
+					},
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"start_replication_task"},
+			},
+			{
+				Config: testAccReplicationTaskConfig_settings_EnableLogging(rName, false),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationTaskExists(ctx, resourceName, &v),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.EnableLogging", "false"),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.EnableLogContext", "false"),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.CloudWatchLogGroup", fmt.Sprintf("dms-tasks-%s", rName)),
+					func(s *terraform.State) error {
+						arn, err := arn.Parse(aws.StringValue(v.ReplicationTaskArn))
+						if err != nil {
+							return err
+						}
+						l := strings.Split(arn.Resource, ":")
+						if len(l) != 2 {
+							return fmt.Errorf("expected 2 parts in %s", arn.Resource)
+						}
+						id := l[1]
+						return acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.CloudWatchLogStream", fmt.Sprintf("dms-task-%s", id))(s)
+					},
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"start_replication_task"},
+			},
+		},
+	})
+}
+
+func TestAccDMSReplicationTask_settings_LoggingValidation(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationTaskDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config:      testAccReplicationTaskConfig_settings_EnableLogContext(rName, true),
+				ExpectError: regexache.MustCompile(`The parameter Logging.EnableLogContext is not allowed when\s+Logging.EnableLogging is not set to true.`),
+			},
+			{
+				Config:      testAccReplicationTaskConfig_settings_LoggingReadOnly(rName, "CloudWatchLogGroup"),
+				ExpectError: regexache.MustCompile(`The parameter Logging.CloudWatchLogGroup is read-only and cannot be set.`),
+			},
+			{
+				Config:      testAccReplicationTaskConfig_settings_LoggingReadOnly(rName, "CloudWatchLogStream"),
+				ExpectError: regexache.MustCompile(`The parameter Logging.CloudWatchLogStream is read-only and cannot be set.`),
+			},
+		},
+	})
+}
+
+func TestAccDMSReplicationTask_settings_StreamBuffer(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_dms_replication_task.test"
+	var v dms.ReplicationTask
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationTaskDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationTaskConfig_settings_StreamBuffer(rName, 4, 16),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationTaskExists(ctx, resourceName, &v),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "StreamBufferSettings.StreamBufferCount", "4"),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "StreamBufferSettings.StreamBufferSizeInMB", "16"),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "StreamBufferSettings.CtrlStreamBufferSizeInMB", "5"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"start_replication"},
 			},
 		},
 	})
@@ -530,7 +659,7 @@ resource "aws_dms_replication_subnet_group" "test" {
 resource "aws_dms_replication_instance" "test" {
   allocated_storage            = 5
   auto_minor_version_upgrade   = true
-  replication_instance_class   = "dms.c4.large"
+  replication_instance_class   = "dms.t3.medium"
   replication_instance_id      = %[1]q
   preferred_maintenance_window = "sun:00:30-sun:02:30"
   publicly_accessible          = false
@@ -607,9 +736,170 @@ resource "aws_dms_replication_task" "test" {
   # terrafmt can't handle this using jsonencode or a heredoc
   replication_task_settings = "{\"BeforeImageSettings\":null,\"FailTaskWhenCleanTaskResourceFailed\":false,\"ChangeProcessingDdlHandlingPolicy\":{\"HandleSourceTableAltered\":true,\"HandleSourceTableDropped\":true,\"HandleSourceTableTruncated\":true},\"ChangeProcessingTuning\":{\"BatchApplyMemoryLimit\":500,\"BatchApplyPreserveTransaction\":true,\"BatchApplyTimeoutMax\":30,\"BatchApplyTimeoutMin\":1,\"BatchSplitSize\":0,\"CommitTimeout\":1,\"MemoryKeepTime\":60,\"MemoryLimitTotal\":%[2]d,\"MinTransactionSize\":1000,\"StatementCacheSize\":50},\"CharacterSetSettings\":null,\"ControlTablesSettings\":{\"ControlSchema\":\"\",\"FullLoadExceptionTableEnabled\":false,\"HistoryTableEnabled\":false,\"HistoryTimeslotInMinutes\":5,\"StatusTableEnabled\":false,\"SuspendedTablesTableEnabled\":false},\"ErrorBehavior\":{\"ApplyErrorDeletePolicy\":\"IGNORE_RECORD\",\"ApplyErrorEscalationCount\":0,\"ApplyErrorEscalationPolicy\":\"LOG_ERROR\",\"ApplyErrorFailOnTruncationDdl\":false,\"ApplyErrorInsertPolicy\":\"LOG_ERROR\",\"ApplyErrorUpdatePolicy\":\"LOG_ERROR\",\"DataErrorEscalationCount\":0,\"DataErrorEscalationPolicy\":\"SUSPEND_TABLE\",\"DataErrorPolicy\":\"LOG_ERROR\",\"DataTruncationErrorPolicy\":\"LOG_ERROR\",\"EventErrorPolicy\":\"IGNORE\",\"FailOnNoTablesCaptured\":false,\"FailOnTransactionConsistencyBreached\":false,\"FullLoadIgnoreConflicts\":true,\"RecoverableErrorCount\":-1,\"RecoverableErrorInterval\":5,\"RecoverableErrorStopRetryAfterThrottlingMax\":false,\"RecoverableErrorThrottling\":true,\"RecoverableErrorThrottlingMax\":1800,\"TableErrorEscalationCount\":0,\"TableErrorEscalationPolicy\":\"STOP_TASK\",\"TableErrorPolicy\":\"SUSPEND_TABLE\"},\"FullLoadSettings\":{\"CommitRate\":10000,\"CreatePkAfterFullLoad\":false,\"MaxFullLoadSubTasks\":8,\"StopTaskCachedChangesApplied\":false,\"StopTaskCachedChangesNotApplied\":false,\"TargetTablePrepMode\":\"DROP_AND_CREATE\",\"TransactionConsistencyTimeout\":600},\"Logging\":{\"EnableLogging\":false,\"LogComponents\":[{\"Id\":\"TRANSFORMATION\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"},{\"Id\":\"SOURCE_UNLOAD\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"},{\"Id\":\"IO\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"},{\"Id\":\"TARGET_LOAD\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"},{\"Id\":\"PERFORMANCE\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"},{\"Id\":\"SOURCE_CAPTURE\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"},{\"Id\":\"SORTER\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"},{\"Id\":\"REST_SERVER\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"},{\"Id\":\"VALIDATOR_EXT\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"},{\"Id\":\"TARGET_APPLY\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"},{\"Id\":\"TASK_MANAGER\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"},{\"Id\":\"TABLES_MANAGER\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"},{\"Id\":\"METADATA_MANAGER\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"},{\"Id\":\"FILE_FACTORY\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"},{\"Id\":\"COMMON\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"},{\"Id\":\"ADDONS\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"},{\"Id\":\"DATA_STRUCTURE\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"},{\"Id\":\"COMMUNICATION\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"},{\"Id\":\"FILE_TRANSFER\",\"Severity\":\"LOGGER_SEVERITY_DEFAULT\"}]},\"LoopbackPreventionSettings\":null,\"PostProcessingRules\":null,\"StreamBufferSettings\":{\"CtrlStreamBufferSizeInMB\":5,\"StreamBufferCount\":3,\"StreamBufferSizeInMB\":8},\"TargetMetadata\":{\"BatchApplyEnabled\":false,\"FullLobMode\":false,\"InlineLobMaxSize\":0,\"LimitedSizeLobMode\":true,\"LoadMaxFileSize\":0,\"LobChunkSize\":0,\"LobMaxSize\":32,\"ParallelApplyBufferSize\":0,\"ParallelApplyQueuesPerThread\":0,\"ParallelApplyThreads\":0,\"ParallelLoadBufferSize\":0,\"ParallelLoadQueuesPerThread\":0,\"ParallelLoadThreads\":0,\"SupportLobs\":true,\"TargetSchema\":\"\",\"TaskRecoveryTableEnabled\":false},\"TTSettings\":{\"EnableTT\":false,\"TTRecordSettings\":null,\"TTS3Settings\":null}}"
   # terrafmt can't handle this using jsonencode or a heredoc
-  table_mappings = "{\"rules\":[{\"rule-type\":\"selection\",\"rule-id\":\"1\",\"rule-name\":%[3]q,\"object-locator\":{\"schema-name\":\"%%\",\"table-name\":\"%%\"},\"rule-action\":\"include\"}]}"
+  table_mappings = "{\"rules\":[{\"rule-type\":\"selection\",\"rule-id\":\"1\",\"rule-name\":\"%[3]s\",\"object-locator\":{\"schema-name\":\"%%\",\"table-name\":\"%%\"},\"rule-action\":\"include\"}]}"
 }
 `, rName, memLimitTotal, ruleName))
+}
+
+func testAccReplicationTaskConfig_settings_EnableLogging(rName string, enabled bool) string {
+	return acctest.ConfigCompose(testAccReplicationTaskConfig_base(rName), fmt.Sprintf(`
+resource "aws_dms_replication_task" "test" {
+  replication_task_id      = %[1]q
+  migration_type           = "full-load"
+  replication_instance_arn = aws_dms_replication_instance.test.replication_instance_arn
+  source_endpoint_arn      = aws_dms_endpoint.source.endpoint_arn
+  target_endpoint_arn      = aws_dms_endpoint.target.endpoint_arn
+  table_mappings = jsonencode(
+    {
+      "rules" = [
+        {
+          "rule-type" = "selection",
+          "rule-id"   = "1",
+          "rule-name" = "1",
+          "object-locator" = {
+            "schema-name" = "%%",
+            "table-name"  = "%%"
+          },
+          "rule-action" = "include"
+        }
+      ]
+    }
+  )
+  # terrafmt can't handle this using jsonencode or a heredoc
+  replication_task_settings = "{\"Logging\":{\"EnableLogging\":%[2]t}}"
+}
+`, rName, enabled))
+}
+
+func testAccReplicationTaskConfig_settings_EnableLogContext(rName string, enabled bool) string {
+	return acctest.ConfigCompose(testAccReplicationTaskConfig_base(rName), fmt.Sprintf(`
+resource "aws_dms_replication_task" "test" {
+  replication_task_id      = %[1]q
+  migration_type           = "full-load"
+  replication_instance_arn = aws_dms_replication_instance.test.replication_instance_arn
+  source_endpoint_arn      = aws_dms_endpoint.source.endpoint_arn
+  target_endpoint_arn      = aws_dms_endpoint.target.endpoint_arn
+  table_mappings = jsonencode(
+    {
+      "rules" = [
+        {
+          "rule-type" = "selection",
+          "rule-id"   = "1",
+          "rule-name" = "1",
+          "object-locator" = {
+            "schema-name" = "%%",
+            "table-name"  = "%%"
+          },
+          "rule-action" = "include"
+        }
+      ]
+    }
+  )
+  # terrafmt can't handle this using jsonencode or a heredoc
+  replication_task_settings = "{\"Logging\":{\"EnableLogContext\":%[2]t}}"
+}
+`, rName, enabled))
+}
+
+func testAccReplicationTaskConfig_settings_LoggingReadOnly(rName, field string) string {
+	return acctest.ConfigCompose(testAccReplicationTaskConfig_base(rName), fmt.Sprintf(`
+resource "aws_dms_replication_task" "test" {
+  replication_task_id      = %[1]q
+  migration_type           = "full-load"
+  replication_instance_arn = aws_dms_replication_instance.test.replication_instance_arn
+  source_endpoint_arn      = aws_dms_endpoint.source.endpoint_arn
+  target_endpoint_arn      = aws_dms_endpoint.target.endpoint_arn
+  table_mappings = jsonencode(
+    {
+      "rules" = [
+        {
+          "rule-type" = "selection",
+          "rule-id"   = "1",
+          "rule-name" = "1",
+          "object-locator" = {
+            "schema-name" = "%%",
+            "table-name"  = "%%"
+          },
+          "rule-action" = "include"
+        }
+      ]
+    }
+  )
+  # terrafmt can't handle this using jsonencode or a heredoc
+  replication_task_settings = "{\"Logging\":{\"EnableLogging\":true, \"%[2]s\":\"value\"}}"
+}
+`, rName, field))
+}
+
+func testAccReplicationTaskConfig_settings_LogComponents(rName string) string {
+	return acctest.ConfigCompose(testAccReplicationTaskConfig_base(rName), fmt.Sprintf(`
+resource "aws_dms_replication_task" "test" {
+  replication_task_id      = %[1]q
+  migration_type           = "full-load"
+  replication_instance_arn = aws_dms_replication_instance.test.replication_instance_arn
+  source_endpoint_arn      = aws_dms_endpoint.source.endpoint_arn
+  target_endpoint_arn      = aws_dms_endpoint.target.endpoint_arn
+  table_mappings = jsonencode(
+    {
+      "rules" = [
+        {
+          "rule-type" = "selection",
+          "rule-id"   = "1",
+          "rule-name" = "1",
+          "object-locator" = {
+            "schema-name" = "%%",
+            "table-name"  = "%%"
+          },
+          "rule-action" = "include"
+        }
+      ]
+    }
+  )
+
+  replication_task_settings = jsonencode(
+    {
+      Logging = {
+        EnableLogging = true,
+        LogComponents = [{
+          Id       = "DATA_STRUCTURE",
+          Severity = "LOGGER_SEVERITY_WARNING"
+        }]
+      }
+    }
+  )
+}
+`, rName))
+}
+
+func testAccReplicationTaskConfig_settings_StreamBuffer(rName string, bufferCount, bufferSize int) string {
+	return acctest.ConfigCompose(testAccReplicationTaskConfig_base(rName), fmt.Sprintf(`
+resource "aws_dms_replication_task" "test" {
+  replication_task_id      = %[1]q
+  migration_type           = "full-load"
+  replication_instance_arn = aws_dms_replication_instance.test.replication_instance_arn
+  source_endpoint_arn      = aws_dms_endpoint.source.endpoint_arn
+  target_endpoint_arn      = aws_dms_endpoint.target.endpoint_arn
+  table_mappings = jsonencode(
+    {
+      "rules" = [
+        {
+          "rule-type" = "selection",
+          "rule-id"   = "1",
+          "rule-name" = "1",
+          "object-locator" = {
+            "schema-name" = "%%",
+            "table-name"  = "%%"
+          },
+          "rule-action" = "include"
+        }
+      ]
+    }
+  )
+
+  # terrafmt can't handle this using jsonencode or a heredoc
+  replication_task_settings = "{\"StreamBufferSettings\":{\"StreamBufferCount\":%[2]d,\"StreamBufferSizeInMB\":%[3]d}}"
+}
+	`, rName, bufferCount, bufferSize))
 }
 
 func testAccReplicationTaskConfig_cdcStartPosition(rName, cdcStartPosition string) string {
@@ -673,7 +963,7 @@ resource "aws_dms_replication_task" "test" {
 resource "aws_dms_replication_instance" "test" {
   allocated_storage            = 5
   auto_minor_version_upgrade   = true
-  replication_instance_class   = "dms.c4.large"
+  replication_instance_class   = "dms.t3.medium"
   replication_instance_id      = %[1]q
   preferred_maintenance_window = "sun:00:30-sun:02:30"
   publicly_accessible          = false
@@ -837,7 +1127,7 @@ resource "aws_dms_endpoint" "target" {
 resource "aws_dms_replication_instance" "test" {
   allocated_storage            = 5
   auto_minor_version_upgrade   = true
-  replication_instance_class   = "dms.c4.large"
+  replication_instance_class   = "dms.t3.medium"
   replication_instance_id      = %[1]q
   preferred_maintenance_window = "sun:00:30-sun:02:30"
   publicly_accessible          = false
@@ -906,7 +1196,7 @@ resource "aws_dms_replication_task" "test" {
 resource "aws_dms_replication_instance" "test2" {
   allocated_storage            = 5
   auto_minor_version_upgrade   = true
-  replication_instance_class   = "dms.c4.large"
+  replication_instance_class   = "dms.t3.medium"
   replication_instance_id      = "%[1]s-2"
   preferred_maintenance_window = "sun:00:30-sun:02:30"
   publicly_accessible          = false
