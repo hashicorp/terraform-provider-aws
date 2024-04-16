@@ -2113,22 +2113,13 @@ resource "aws_ecs_capacity_provider" "test" {
   name = %[1]q
 
   auto_scaling_group_provider {
-    auto_scaling_group_arn         = aws_autoscaling_group.test.arn
-    managed_termination_protection = "DISABLED"
-    managed_draining               = "ENABLED"
-
-    managed_scaling {
-      maximum_scaling_step_size = 1
-      minimum_scaling_step_size = 1
-      status                    = "ENABLED"
-      target_capacity           = 1
-    }
+    auto_scaling_group_arn = aws_autoscaling_group.test.arn
   }
 }
 
 resource "aws_ecs_cluster_capacity_providers" "test" {
   cluster_name       = aws_ecs_cluster.test.name
-  capacity_providers = ["%[1]s"]
+  capacity_providers = [%[1]q]
 
   default_capacity_provider_strategy {
     capacity_provider = %[1]q
