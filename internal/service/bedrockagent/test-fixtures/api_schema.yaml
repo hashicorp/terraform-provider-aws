@@ -20,4 +20,3 @@ paths:
                   message:
                     type: string
                     description: The Hello message
-
