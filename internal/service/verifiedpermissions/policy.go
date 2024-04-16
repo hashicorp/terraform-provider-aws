@@ -180,7 +180,7 @@ func (r *resourcePolicy) Schema(ctx context.Context, req resource.SchemaRequest,
 	}
 }
 
-func statementReplaceIf(ctx context.Context, req planmodifier.StringRequest, resp *stringplanmodifier.RequiresReplaceIfFuncResponse) {
+func statementReplaceIf(_ context.Context, req planmodifier.StringRequest, resp *stringplanmodifier.RequiresReplaceIfFuncResponse) {
 	if req.State.Raw.IsNull() {
 		return
 	}

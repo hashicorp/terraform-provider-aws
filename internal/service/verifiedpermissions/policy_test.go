@@ -62,6 +62,46 @@ func TestAccVerifiedPermissionsPolicy_basic(t *testing.T) {
 	})
 }
 
+func TestAccVerifiedPermissionsPolicy_templateLinked(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var policy verifiedpermissions.GetPolicyOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_verifiedpermissions_policy.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.VerifiedPermissionsEndpointID)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.VerifiedPermissionsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccPolicyConfig_templateLinked(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckPolicyExists(ctx, resourceName, &policy),
+					resource.TestCheckResourceAttrSet(resourceName, "definition.0.template_linked.0.policy_template_id"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.template_linked.0.principal.0.entity_id", "TestUsers"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.template_linked.0.principal.0.entity_type", "User"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.template_linked.0.resource.0.entity_id", "test_album"),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.template_linked.0.resource.0.entity_type", "Album"),
+					resource.TestCheckResourceAttrSet(resourceName, "policy_id"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func TestAccVerifiedPermissionsPolicy_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -190,4 +230,37 @@ resource "aws_verifiedpermissions_policy" "test" {
   }
 }
 `, rName, policyStatement))
+}
+
+func testAccPolicyConfig_templateLinked(rName string) string {
+	return acctest.ConfigCompose(
+		testAccPolicyConfig_base(rName),
+		fmt.Sprintf(`
+resource "aws_verifiedpermissions_policy_template" "test" {
+  policy_store_id = aws_verifiedpermissions_policy_store.test.id
+
+  statement   = "permit (principal in ?principal, action in PhotoFlash::Action::\"FullPhotoAccess\", resource == ?resource) unless { resource.IsPrivate };"
+  description = %[1]q
+}
+
+resource "aws_verifiedpermissions_policy" "test" {
+  policy_store_id = aws_verifiedpermissions_policy_store.test.id
+  
+  definition {
+    template_linked {
+      policy_template_id = aws_verifiedpermissions_policy_template.test.policy_template_id
+
+      principal {
+        entity_id = "TestUsers"
+        entity_type = "User"
+      }
+
+      resource {
+        entity_id = "test_album"
+        entity_type = "Album"
+      }
+    }
+  }
+}
+`, rName))
 }
