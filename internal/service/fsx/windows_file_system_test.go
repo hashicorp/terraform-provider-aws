@@ -767,12 +767,12 @@ func TestAccFSxWindowsFileSystem_audit(t *testing.T) {
 		CheckDestroy:             testAccCheckWindowsFileSystemDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccWindowsFileSystemConfig_audit(rName, domainName, "SUCCESS_ONLY"),
+				Config: testAccWindowsFileSystemConfig_audit(rName, domainName, fsx.WindowsAccessAuditLogLevelSuccessOnly),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(ctx, resourceName, &filesystem),
 					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.0.file_access_audit_log_level", "SUCCESS_ONLY"),
-					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.0.file_share_access_audit_log_level", "SUCCESS_ONLY"),
+					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.0.file_access_audit_log_level", fsx.WindowsAccessAuditLogLevelSuccessOnly),
+					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.0.file_share_access_audit_log_level", fsx.WindowsAccessAuditLogLevelSuccessOnly),
 					resource.TestCheckResourceAttrSet(resourceName, "audit_log_configuration.0.audit_log_destination"),
 				),
 			},
@@ -786,13 +786,22 @@ func TestAccFSxWindowsFileSystem_audit(t *testing.T) {
 				},
 			},
 			{
-				Config: testAccWindowsFileSystemConfig_audit(rName, domainName, "SUCCESS_AND_FAILURE"),
+				Config: testAccWindowsFileSystemConfig_audit(rName, domainName, fsx.WindowsAccessAuditLogLevelSuccessAndFailure),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckWindowsFileSystemExists(ctx, resourceName, &filesystem),
 					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.0.file_access_audit_log_level", "SUCCESS_AND_FAILURE"),
-					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.0.file_share_access_audit_log_level", "SUCCESS_AND_FAILURE"),
+					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.0.file_access_audit_log_level", fsx.WindowsAccessAuditLogLevelSuccessAndFailure),
+					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.0.file_share_access_audit_log_level", fsx.WindowsAccessAuditLogLevelSuccessAndFailure),
 					resource.TestCheckResourceAttrSet(resourceName, "audit_log_configuration.0.audit_log_destination"),
+				),
+			},
+			{
+				Config: testAccWindowsFileSystemConfig_auditNoDestination(rName, domainName, fsx.WindowsAccessAuditLogLevelDisabled),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckWindowsFileSystemExists(ctx, resourceName, &filesystem),
+					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.0.file_access_audit_log_level", fsx.WindowsAccessAuditLogLevelDisabled),
+					resource.TestCheckResourceAttr(resourceName, "audit_log_configuration.0.file_share_access_audit_log_level", fsx.WindowsAccessAuditLogLevelDisabled),
 				),
 			},
 		},
@@ -1381,6 +1390,31 @@ resource "aws_fsx_windows_file_system" "test" {
 
   audit_log_configuration {
     audit_log_destination             = aws_cloudwatch_log_group.test.arn
+    file_access_audit_log_level       = %[2]q
+    file_share_access_audit_log_level = %[2]q
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, status))
+}
+
+func testAccWindowsFileSystemConfig_auditNoDestination(rName, domain, status string) string {
+	return acctest.ConfigCompose(testAccWindowsFileSystemConfig_base(rName, domain), fmt.Sprintf(`
+resource aws_cloudwatch_log_group "test" {
+  name = "/aws/fsx/%[1]s"
+}
+
+resource "aws_fsx_windows_file_system" "test" {
+  active_directory_id = aws_directory_service_directory.test.id
+  skip_final_backup   = true
+  storage_capacity    = 32
+  subnet_ids          = [aws_subnet.test[0].id]
+  throughput_capacity = 32
+
+  audit_log_configuration {
     file_access_audit_log_level       = %[2]q
     file_share_access_audit_log_level = %[2]q
   }
