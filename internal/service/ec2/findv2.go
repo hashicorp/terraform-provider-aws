@@ -381,25 +381,27 @@ func findNetworkInterfaceAttachmentByIDV2(ctx context.Context, conn *ec2.Client,
 	return networkInterface.Attachment, nil
 }
 
-func findNetworkInterfaceByAttachmentIDV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.NetworkInterface, error) {
-	input := &ec2.DescribeNetworkInterfacesInput{
-		Filters: newAttributeFilterListV2(map[string]string{
-			"attachment.attachment-id": id,
-		}),
+/*
+	func findNetworkInterfaceByAttachmentIDV2(ctx context.Context, conn *ec2.Client, id string) (*awstypes.NetworkInterface, error) {
+		input := &ec2.DescribeNetworkInterfacesInput{
+			Filters: newAttributeFilterListV2(map[string]string{
+				"attachment.attachment-id": id,
+			}),
+		}
+
+		networkInterface, err := findNetworkInterfaceV2(ctx, conn, input)
+
+		if err != nil {
+			return nil, err
+		}
+
+		if networkInterface == nil {
+			return nil, tfresource.NewEmptyResultError(input)
+		}
+
+		return networkInterface, nil
 	}
-
-	networkInterface, err := findNetworkInterfaceV2(ctx, conn, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if networkInterface == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return networkInterface, nil
-}
+*/
 
 func findNetworkInterfacesByAttachmentInstanceOwnerIDAndDescriptionV2(ctx context.Context, conn *ec2.Client, attachmentInstanceOwnerID, description string) ([]awstypes.NetworkInterface, error) {
 	input := &ec2.DescribeNetworkInterfacesInput{
