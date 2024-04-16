@@ -226,6 +226,7 @@ func TestAccKMSExternalKey_enabled(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"bypass_policy_lockout_safety_check",
 					"deletion_window_in_days",
+					"key_material_base64",
 				},
 			},
 			{
@@ -275,6 +276,7 @@ func TestAccKMSExternalKey_keyMaterialBase64(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"bypass_policy_lockout_safety_check",
 					"deletion_window_in_days",
+					"key_material_base64",
 				},
 			},
 			{
@@ -464,6 +466,7 @@ func TestAccKMSExternalKey_validTo(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"bypass_policy_lockout_safety_check",
 					"deletion_window_in_days",
+					"key_material_base64",
 				},
 			},
 			{

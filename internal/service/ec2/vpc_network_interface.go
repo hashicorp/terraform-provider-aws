@@ -14,10 +14,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	awsv1 "github.com/aws/aws-sdk-go/aws"
-	ec2v1 "github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	tfawserr_sdkv2 "github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -37,7 +34,7 @@ import (
 
 // @SDKResource("aws_network_interface", name="Network Interface")
 // @Tags(identifierAttribute="id")
-func ResourceNetworkInterface() *schema.Resource {
+func resourceNetworkInterface() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNetworkInterfaceCreate,
 		ReadWithoutTimeout:   resourceNetworkInterfaceRead,
@@ -359,7 +356,7 @@ func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData,
 
 	if v, ok := d.GetOk("ipv4_prefixes"); ok && v.(*schema.Set).Len() > 0 {
 		ipv4PrefixesSpecified = true
-		input.Ipv4Prefixes = expandIPv4PrefixSpecificationRequestsV2(v.(*schema.Set).List())
+		input.Ipv4Prefixes = expandIPv4PrefixSpecificationRequests(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("ipv4_prefix_count"); ok {
@@ -376,7 +373,7 @@ func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData,
 
 	if v, ok := d.GetOk("ipv6_prefixes"); ok && v.(*schema.Set).Len() > 0 {
 		ipv6PrefixesSpecified = true
-		input.Ipv6Prefixes = expandIPv6PrefixSpecificationRequestsV2(v.(*schema.Set).List())
+		input.Ipv6Prefixes = expandIPv6PrefixSpecificationRequests(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("ipv6_prefix_count"); ok {
@@ -433,7 +430,7 @@ func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData,
 
 	d.SetId(aws.ToString(output.NetworkInterface.NetworkInterfaceId))
 
-	if _, err := WaitNetworkInterfaceCreatedV2(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := waitNetworkInterfaceCreatedV2(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Network Interface (%s) create: %s", d.Id(), err)
 	}
 
@@ -481,7 +478,7 @@ func resourceNetworkInterfaceCreate(ctx context.Context, d *schema.ResourceData,
 	if v, ok := d.GetOk("attachment"); ok && v.(*schema.Set).Len() > 0 {
 		attachment := v.(*schema.Set).List()[0].(map[string]interface{})
 
-		_, err := attachNetworkInterfaceV2(ctx, conn, d.Id(), attachment["instance"].(string), attachment["device_index"].(int), networkInterfaceAttachedTimeout)
+		_, err := attachNetworkInterface(ctx, conn, d.Id(), attachment["instance"].(string), attachment["device_index"].(int), networkInterfaceAttachedTimeout)
 
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
@@ -496,7 +493,7 @@ func resourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
-		return FindNetworkInterfaceByIDV2(ctx, conn, d.Id())
+		return findNetworkInterfaceByIDV2(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
@@ -514,10 +511,10 @@ func resourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData, m
 	ownerID := aws.ToString(eni.OwnerId)
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   names.EC2,
+		Service:   "ec2",
 		Region:    meta.(*conns.AWSClient).Region,
 		AccountID: ownerID,
-		Resource:  fmt.Sprintf("network-interface/%s", d.Id()),
+		Resource:  "network-interface/" + d.Id(),
 	}.String()
 	d.Set("arn", arn)
 	if eni.Attachment != nil {
@@ -534,10 +531,10 @@ func resourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData, m
 	}
 	d.Set("ipv4_prefix_count", len(eni.Ipv4Prefixes))
 	d.Set("ipv6_address_count", len(eni.Ipv6Addresses))
-	if err := d.Set("ipv6_address_list", flattenNetworkInterfaceIPv6AddressesV2(eni.Ipv6Addresses)); err != nil {
+	if err := d.Set("ipv6_address_list", flattenNetworkInterfaceIPv6Addresses(eni.Ipv6Addresses)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ipv6 address list: %s", err)
 	}
-	if err := d.Set("ipv6_addresses", flattenNetworkInterfaceIPv6AddressesV2(eni.Ipv6Addresses)); err != nil {
+	if err := d.Set("ipv6_addresses", flattenNetworkInterfaceIPv6Addresses(eni.Ipv6Addresses)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting ipv6_addresses: %s", err)
 	}
 	if err := d.Set("ipv6_prefixes", flattenIPv6PrefixSpecifications(eni.Ipv6Prefixes)); err != nil {
@@ -549,20 +546,20 @@ func resourceNetworkInterfaceRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("owner_id", ownerID)
 	d.Set("private_dns_name", eni.PrivateDnsName)
 	d.Set("private_ip", eni.PrivateIpAddress)
-	if err := d.Set("private_ips", FlattenNetworkInterfacePrivateIPAddressesV2(eni.PrivateIpAddresses)); err != nil {
+	if err := d.Set("private_ips", flattenNetworkInterfacePrivateIPAddresses(eni.PrivateIpAddresses)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting private_ips: %s", err)
 	}
 	d.Set("private_ips_count", len(eni.PrivateIpAddresses)-1)
-	if err := d.Set("private_ip_list", FlattenNetworkInterfacePrivateIPAddressesV2(eni.PrivateIpAddresses)); err != nil {
+	if err := d.Set("private_ip_list", flattenNetworkInterfacePrivateIPAddresses(eni.PrivateIpAddresses)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting private_ip_list: %s", err)
 	}
-	if err := d.Set("security_groups", FlattenGroupIdentifiersV2(eni.Groups)); err != nil {
+	if err := d.Set("security_groups", flattenGroupIdentifiers(eni.Groups)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting security_groups: %s", err)
 	}
 	d.Set("source_dest_check", eni.SourceDestCheck)
 	d.Set("subnet_id", eni.SubnetId)
 
-	setTagsOutV2(ctx, eni.TagSet)
+	setTagsOut(ctx, eni.TagSet)
 
 	return diags
 }
@@ -578,9 +575,7 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 		if oa != nil && oa.(*schema.Set).Len() > 0 {
 			attachment := oa.(*schema.Set).List()[0].(map[string]interface{})
 
-			err := DetachNetworkInterfaceV2(ctx, conn, d.Id(), attachment["attachment_id"].(string), NetworkInterfaceDetachedTimeout)
-
-			if err != nil {
+			if err := detachNetworkInterface(ctx, conn, d.Id(), attachment["attachment_id"].(string), NetworkInterfaceDetachedTimeout); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
@@ -588,9 +583,7 @@ func resourceNetworkInterfaceUpdate(ctx context.Context, d *schema.ResourceData,
 		if na != nil && na.(*schema.Set).Len() > 0 {
 			attachment := na.(*schema.Set).List()[0].(map[string]interface{})
 
-			_, err := attachNetworkInterfaceV2(ctx, conn, d.Id(), attachment["instance"].(string), attachment["device_index"].(int), networkInterfaceAttachedTimeout)
-
-			if err != nil {
+			if _, err := attachNetworkInterface(ctx, conn, d.Id(), attachment["instance"].(string), attachment["device_index"].(int), networkInterfaceAttachedTimeout); err != nil {
 				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
@@ -1049,42 +1042,18 @@ func resourceNetworkInterfaceDelete(ctx context.Context, d *schema.ResourceData,
 	if v, ok := d.GetOk("attachment"); ok && v.(*schema.Set).Len() > 0 {
 		attachment := v.(*schema.Set).List()[0].(map[string]interface{})
 
-		if err := DetachNetworkInterfaceV2(ctx, conn, d.Id(), attachment["attachment_id"].(string), NetworkInterfaceDetachedTimeout); err != nil {
+		if err := detachNetworkInterface(ctx, conn, d.Id(), attachment["attachment_id"].(string), NetworkInterfaceDetachedTimeout); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
-	if err := DeleteNetworkInterfaceV2(ctx, conn, d.Id()); err != nil {
+	if err := deleteNetworkInterface(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 	return diags
 }
 
-func attachNetworkInterface(ctx context.Context, conn *ec2v1.EC2, networkInterfaceID, instanceID string, deviceIndex int, timeout time.Duration) (string, error) {
-	input := &ec2v1.AttachNetworkInterfaceInput{
-		DeviceIndex:        aws.Int64(int64(deviceIndex)),
-		InstanceId:         aws.String(instanceID),
-		NetworkInterfaceId: aws.String(networkInterfaceID),
-	}
-
-	output, err := conn.AttachNetworkInterfaceWithContext(ctx, input)
-
-	if err != nil {
-		return "", fmt.Errorf("attaching EC2 Network Interface (%s/%s): %w", networkInterfaceID, instanceID, err)
-	}
-
-	attachmentID := awsv1.StringValue(output.AttachmentId)
-
-	_, err = WaitNetworkInterfaceAttached(ctx, conn, attachmentID, timeout)
-
-	if err != nil {
-		return "", fmt.Errorf("attaching EC2 Network Interface (%s/%s): waiting for completion: %w", networkInterfaceID, instanceID, err)
-	}
-
-	return attachmentID, nil
-}
-
-func attachNetworkInterfaceV2(ctx context.Context, conn *ec2.Client, networkInterfaceID, instanceID string, deviceIndex int, timeout time.Duration) (string, error) {
+func attachNetworkInterface(ctx context.Context, conn *ec2.Client, networkInterfaceID, instanceID string, deviceIndex int, timeout time.Duration) (string, error) {
 	input := &ec2.AttachNetworkInterfaceInput{
 		DeviceIndex:        aws.Int32(int32(deviceIndex)),
 		InstanceId:         aws.String(instanceID),
@@ -1097,20 +1066,18 @@ func attachNetworkInterfaceV2(ctx context.Context, conn *ec2.Client, networkInte
 		return "", fmt.Errorf("attaching EC2 Network Interface (%s/%s): %w", networkInterfaceID, instanceID, err)
 	}
 
-	attachmentID := awsv1.StringValue(output.AttachmentId)
+	attachmentID := aws.ToString(output.AttachmentId)
 
-	_, err = WaitNetworkInterfaceAttachedV2(ctx, conn, attachmentID, timeout)
-
-	if err != nil {
-		return "", fmt.Errorf("attaching EC2 Network Interface (%s/%s): waiting for completion: %w", networkInterfaceID, instanceID, err)
+	if _, err := waitNetworkInterfaceAttachedV2(ctx, conn, attachmentID, timeout); err != nil {
+		return "", fmt.Errorf("waiting for EC2 Network Interface (%s/%s) attach: %w", networkInterfaceID, instanceID, err)
 	}
 
 	return attachmentID, nil
 }
 
-func DeleteNetworkInterface(ctx context.Context, conn *ec2v1.EC2, networkInterfaceID string) error {
+func deleteNetworkInterface(ctx context.Context, conn *ec2.Client, networkInterfaceID string) error {
 	log.Printf("[INFO] Deleting EC2 Network Interface: %s", networkInterfaceID)
-	_, err := conn.DeleteNetworkInterfaceWithContext(ctx, &ec2v1.DeleteNetworkInterfaceInput{
+	_, err := conn.DeleteNetworkInterface(ctx, &ec2.DeleteNetworkInterfaceInput{
 		NetworkInterfaceId: aws.String(networkInterfaceID),
 	})
 
@@ -1125,54 +1092,9 @@ func DeleteNetworkInterface(ctx context.Context, conn *ec2v1.EC2, networkInterfa
 	return nil
 }
 
-func DeleteNetworkInterfaceV2(ctx context.Context, conn *ec2.Client, networkInterfaceID string) error {
-	log.Printf("[INFO] Deleting EC2 Network Interface: %s", networkInterfaceID)
-	_, err := conn.DeleteNetworkInterface(ctx, &ec2.DeleteNetworkInterfaceInput{
-		NetworkInterfaceId: aws.String(networkInterfaceID),
-	})
-
-	if tfawserr_sdkv2.ErrCodeEquals(err, errCodeInvalidNetworkInterfaceIDNotFound) {
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("deleting EC2 Network Interface (%s): %w", networkInterfaceID, err)
-	}
-
-	return nil
-}
-
-func DetachNetworkInterfaceV2(ctx context.Context, conn *ec2.Client, networkInterfaceID, attachmentID string, timeout time.Duration) error {
+func detachNetworkInterface(ctx context.Context, conn *ec2.Client, networkInterfaceID, attachmentID string, timeout time.Duration) error {
 	log.Printf("[INFO] Detaching EC2 Network Interface: %s", networkInterfaceID)
 	_, err := conn.DetachNetworkInterface(ctx, &ec2.DetachNetworkInterfaceInput{
-		AttachmentId: aws.String(attachmentID),
-		Force:        aws.Bool(true),
-	})
-
-	if tfawserr_sdkv2.ErrCodeEquals(err, errCodeInvalidAttachmentIDNotFound) {
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("detaching EC2 Network Interface (%s/%s): %w", networkInterfaceID, attachmentID, err)
-	}
-
-	_, err = WaitNetworkInterfaceDetachedV2(ctx, conn, attachmentID, timeout)
-
-	if tfresource.NotFound(err) {
-		return nil
-	}
-
-	if err != nil {
-		return fmt.Errorf("detaching EC2 Network Interface (%s/%s): waiting for completion: %w", networkInterfaceID, attachmentID, err)
-	}
-
-	return nil
-}
-
-func DetachNetworkInterface(ctx context.Context, conn *ec2v1.EC2, networkInterfaceID, attachmentID string, timeout time.Duration) error {
-	log.Printf("[INFO] Detaching EC2 Network Interface: %s", networkInterfaceID)
-	_, err := conn.DetachNetworkInterfaceWithContext(ctx, &ec2v1.DetachNetworkInterfaceInput{
 		AttachmentId: aws.String(attachmentID),
 		Force:        aws.Bool(true),
 	})
@@ -1185,20 +1107,20 @@ func DetachNetworkInterface(ctx context.Context, conn *ec2v1.EC2, networkInterfa
 		return fmt.Errorf("detaching EC2 Network Interface (%s/%s): %w", networkInterfaceID, attachmentID, err)
 	}
 
-	_, err = WaitNetworkInterfaceDetached(ctx, conn, attachmentID, timeout)
+	_, err = waitNetworkInterfaceDetachedV2(ctx, conn, attachmentID, timeout)
 
 	if tfresource.NotFound(err) {
 		return nil
 	}
 
 	if err != nil {
-		return fmt.Errorf("detaching EC2 Network Interface (%s/%s): waiting for completion: %w", networkInterfaceID, attachmentID, err)
+		return fmt.Errorf("waiting for EC2 Network Interface (%s/%s) detach: %w", networkInterfaceID, attachmentID, err)
 	}
 
 	return nil
 }
 
-func flattenNetworkInterfaceAssociation(apiObject *ec2v1.NetworkInterfaceAssociation) map[string]interface{} {
+func flattenNetworkInterfaceAssociation(apiObject *types.NetworkInterfaceAssociation) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1248,7 +1170,7 @@ func flattenNetworkInterfaceAttachment(apiObject *types.NetworkInterfaceAttachme
 	}
 
 	if v := apiObject.DeviceIndex; v != nil {
-		tfMap["device_index"] = v
+		tfMap["device_index"] = aws.ToInt32(v)
 	}
 
 	if v := apiObject.InstanceId; v != nil {
@@ -1338,7 +1260,7 @@ func expandInstanceIPv6Addresses(tfList []interface{}) []types.InstanceIpv6Addre
 	return apiObjects
 }
 
-func flattenNetworkInterfacePrivateIPAddress(apiObject *ec2v1.NetworkInterfacePrivateIpAddress) string {
+func flattenNetworkInterfacePrivateIPAddress(apiObject *types.NetworkInterfacePrivateIpAddress) string {
 	if apiObject == nil {
 		return ""
 	}
@@ -1352,17 +1274,7 @@ func flattenNetworkInterfacePrivateIPAddress(apiObject *ec2v1.NetworkInterfacePr
 	return tfString
 }
 
-func flattenNetworkInterfacePrivateIPAddressV2(apiObject types.NetworkInterfacePrivateIpAddress) string {
-	tfString := ""
-
-	if v := apiObject.PrivateIpAddress; v != nil {
-		tfString = aws.ToString(v)
-	}
-
-	return tfString
-}
-
-func FlattenNetworkInterfacePrivateIPAddresses(apiObjects []*ec2v1.NetworkInterfacePrivateIpAddress) []string {
+func flattenNetworkInterfacePrivateIPAddresses(apiObjects []types.NetworkInterfacePrivateIpAddress) []string {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -1370,31 +1282,13 @@ func FlattenNetworkInterfacePrivateIPAddresses(apiObjects []*ec2v1.NetworkInterf
 	var tfList []string
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
-		tfList = append(tfList, flattenNetworkInterfacePrivateIPAddress(apiObject))
+		tfList = append(tfList, flattenNetworkInterfacePrivateIPAddress(&apiObject))
 	}
 
 	return tfList
 }
 
-func FlattenNetworkInterfacePrivateIPAddressesV2(apiObjects []types.NetworkInterfacePrivateIpAddress) []string {
-	if len(apiObjects) == 0 {
-		return nil
-	}
-
-	var tfList []string
-
-	for _, apiObject := range apiObjects {
-		tfList = append(tfList, flattenNetworkInterfacePrivateIPAddressV2(apiObject))
-	}
-
-	return tfList
-}
-
-func flattenNetworkInterfaceIPv6Address(apiObject *ec2v1.NetworkInterfaceIpv6Address) string {
+func flattenNetworkInterfaceIPv6Address(apiObject *types.NetworkInterfaceIpv6Address) string {
 	if apiObject == nil {
 		return ""
 	}
@@ -1408,17 +1302,7 @@ func flattenNetworkInterfaceIPv6Address(apiObject *ec2v1.NetworkInterfaceIpv6Add
 	return tfString
 }
 
-func flattenNetworkInterfaceIPv6AddressV2(apiObject types.NetworkInterfaceIpv6Address) string {
-	tfString := ""
-
-	if v := apiObject.Ipv6Address; v != nil {
-		tfString = aws.ToString(v)
-	}
-
-	return tfString
-}
-
-func flattenNetworkInterfaceIPv6Addresses(apiObjects []*ec2v1.NetworkInterfaceIpv6Address) []string {
+func flattenNetworkInterfaceIPv6Addresses(apiObjects []types.NetworkInterfaceIpv6Address) []string {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -1426,43 +1310,13 @@ func flattenNetworkInterfaceIPv6Addresses(apiObjects []*ec2v1.NetworkInterfaceIp
 	var tfList []string
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
-			continue
-		}
-
-		tfList = append(tfList, flattenNetworkInterfaceIPv6Address(apiObject))
+		tfList = append(tfList, flattenNetworkInterfaceIPv6Address(&apiObject))
 	}
 
 	return tfList
 }
 
-func flattenNetworkInterfaceIPv6AddressesV2(apiObjects []types.NetworkInterfaceIpv6Address) []string {
-	if len(apiObjects) == 0 {
-		return nil
-	}
-
-	var tfList []string
-
-	for _, apiObject := range apiObjects {
-		tfList = append(tfList, flattenNetworkInterfaceIPv6AddressV2(apiObject))
-	}
-
-	return tfList
-}
-
-func expandIPv4PrefixSpecificationRequest(tfString string) *ec2v1.Ipv4PrefixSpecificationRequest {
-	if tfString == "" {
-		return nil
-	}
-
-	apiObject := &ec2v1.Ipv4PrefixSpecificationRequest{
-		Ipv4Prefix: aws.String(tfString),
-	}
-
-	return apiObject
-}
-
-func expandIPv4PrefixSpecificationRequestV2(tfString string) *types.Ipv4PrefixSpecificationRequest {
+func expandIPv4PrefixSpecificationRequest(tfString string) *types.Ipv4PrefixSpecificationRequest {
 	if tfString == "" {
 		return nil
 	}
@@ -1474,12 +1328,12 @@ func expandIPv4PrefixSpecificationRequestV2(tfString string) *types.Ipv4PrefixSp
 	return apiObject
 }
 
-func expandIPv4PrefixSpecificationRequests(tfList []interface{}) []*ec2v1.Ipv4PrefixSpecificationRequest {
+func expandIPv4PrefixSpecificationRequests(tfList []interface{}) []types.Ipv4PrefixSpecificationRequest {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []*ec2v1.Ipv4PrefixSpecificationRequest
+	var apiObjects []types.Ipv4PrefixSpecificationRequest
 
 	for _, tfMapRaw := range tfList {
 		tfString, ok := tfMapRaw.(string)
@@ -1494,51 +1348,13 @@ func expandIPv4PrefixSpecificationRequests(tfList []interface{}) []*ec2v1.Ipv4Pr
 			continue
 		}
 
-		apiObjects = append(apiObjects, apiObject)
-	}
-
-	return apiObjects
-}
-
-func expandIPv4PrefixSpecificationRequestsV2(tfList []interface{}) []types.Ipv4PrefixSpecificationRequest {
-	if len(tfList) == 0 {
-		return nil
-	}
-
-	var apiObjects []types.Ipv4PrefixSpecificationRequest
-
-	for _, tfMapRaw := range tfList {
-		tfString, ok := tfMapRaw.(string)
-
-		if !ok {
-			continue
-		}
-
-		apiObject := expandIPv4PrefixSpecificationRequestV2(tfString)
-
-		if apiObject == nil {
-			continue
-		}
-
 		apiObjects = append(apiObjects, *apiObject)
 	}
 
 	return apiObjects
 }
 
-func expandIPv6PrefixSpecificationRequest(tfString string) *ec2v1.Ipv6PrefixSpecificationRequest {
-	if tfString == "" {
-		return nil
-	}
-
-	apiObject := &ec2v1.Ipv6PrefixSpecificationRequest{
-		Ipv6Prefix: aws.String(tfString),
-	}
-
-	return apiObject
-}
-
-func expandIPv6PrefixSpecificationRequestV2(tfString string) *types.Ipv6PrefixSpecificationRequest {
+func expandIPv6PrefixSpecificationRequest(tfString string) *types.Ipv6PrefixSpecificationRequest {
 	if tfString == "" {
 		return nil
 	}
@@ -1550,12 +1366,12 @@ func expandIPv6PrefixSpecificationRequestV2(tfString string) *types.Ipv6PrefixSp
 	return apiObject
 }
 
-func expandIPv6PrefixSpecificationRequests(tfList []interface{}) []*ec2v1.Ipv6PrefixSpecificationRequest {
+func expandIPv6PrefixSpecificationRequests(tfList []interface{}) []types.Ipv6PrefixSpecificationRequest {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []*ec2v1.Ipv6PrefixSpecificationRequest
+	var apiObjects []types.Ipv6PrefixSpecificationRequest
 
 	for _, tfMapRaw := range tfList {
 		tfString, ok := tfMapRaw.(string)
@@ -1570,39 +1386,17 @@ func expandIPv6PrefixSpecificationRequests(tfList []interface{}) []*ec2v1.Ipv6Pr
 			continue
 		}
 
-		apiObjects = append(apiObjects, apiObject)
-	}
-
-	return apiObjects
-}
-
-func expandIPv6PrefixSpecificationRequestsV2(tfList []interface{}) []types.Ipv6PrefixSpecificationRequest {
-	if len(tfList) == 0 {
-		return nil
-	}
-
-	var apiObjects []types.Ipv6PrefixSpecificationRequest
-
-	for _, tfMapRaw := range tfList {
-		tfString, ok := tfMapRaw.(string)
-
-		if !ok {
-			continue
-		}
-
-		apiObject := expandIPv6PrefixSpecificationRequestV2(tfString)
-
-		if apiObject == nil {
-			continue
-		}
-
 		apiObjects = append(apiObjects, *apiObject)
 	}
 
 	return apiObjects
 }
 
-func flattenIPv4PrefixSpecification(apiObject types.Ipv4PrefixSpecification) string {
+func flattenIPv4PrefixSpecification(apiObject *types.Ipv4PrefixSpecification) string {
+	if apiObject == nil {
+		return ""
+	}
+
 	tfString := ""
 
 	if v := apiObject.Ipv4Prefix; v != nil {
@@ -1620,13 +1414,17 @@ func flattenIPv4PrefixSpecifications(apiObjects []types.Ipv4PrefixSpecification)
 	var tfList []string
 
 	for _, apiObject := range apiObjects {
-		tfList = append(tfList, flattenIPv4PrefixSpecification(apiObject))
+		tfList = append(tfList, flattenIPv4PrefixSpecification(&apiObject))
 	}
 
 	return tfList
 }
 
-func flattenIPv6PrefixSpecification(apiObject types.Ipv6PrefixSpecification) string {
+func flattenIPv6PrefixSpecification(apiObject *types.Ipv6PrefixSpecification) string {
+	if apiObject == nil {
+		return ""
+	}
+
 	tfString := ""
 
 	if v := apiObject.Ipv6Prefix; v != nil {
@@ -1644,7 +1442,7 @@ func flattenIPv6PrefixSpecifications(apiObjects []types.Ipv6PrefixSpecification)
 	var tfList []string
 
 	for _, apiObject := range apiObjects {
-		tfList = append(tfList, flattenIPv6PrefixSpecification(apiObject))
+		tfList = append(tfList, flattenIPv6PrefixSpecification(&apiObject))
 	}
 
 	return tfList
@@ -1652,13 +1450,13 @@ func flattenIPv6PrefixSpecifications(apiObjects []types.Ipv6PrefixSpecification)
 
 // Some AWS services creates ENIs behind the scenes and keeps these around for a while
 // which can prevent security groups and subnets attached to such ENIs from being destroyed
-func deleteLingeringENIs(ctx context.Context, conn *ec2v1.EC2, filterName, resourceId string, timeout time.Duration) error {
+func deleteLingeringENIs(ctx context.Context, conn *ec2.Client, filterName, resourceId string, timeout time.Duration) error {
 	var g multierror.Group
 
 	tflog.Trace(ctx, "Checking for lingering ENIs")
 
-	enis, err := FindNetworkInterfaces(ctx, conn, &ec2v1.DescribeNetworkInterfacesInput{
-		Filters: BuildAttributeFilterList(map[string]string{
+	enis, err := findNetworkInterfacesV2(ctx, conn, &ec2.DescribeNetworkInterfacesInput{
+		Filters: newAttributeFilterListV2(map[string]string{
 			filterName: resourceId,
 		}),
 	})
@@ -1667,7 +1465,7 @@ func deleteLingeringENIs(ctx context.Context, conn *ec2v1.EC2, filterName, resou
 	}
 
 	for _, eni := range enis {
-		eni := eni
+		eni := &eni
 
 		if found := deleteLingeringLambdaENI(ctx, &g, conn, eni, timeout); found {
 			continue
@@ -1683,21 +1481,21 @@ func deleteLingeringENIs(ctx context.Context, conn *ec2v1.EC2, filterName, resou
 	return g.Wait().ErrorOrNil()
 }
 
-func deleteLingeringLambdaENI(ctx context.Context, g *multierror.Group, conn *ec2v1.EC2, eni *ec2v1.NetworkInterface, timeout time.Duration) bool {
+func deleteLingeringLambdaENI(ctx context.Context, g *multierror.Group, conn *ec2.Client, eni *types.NetworkInterface, timeout time.Duration) bool {
 	// AWS Lambda service team confirms P99 deletion time of ~35 minutes. Buffer for safety.
 	if minimumTimeout := 45 * time.Minute; timeout < minimumTimeout {
 		timeout = minimumTimeout
 	}
 
-	if !strings.HasPrefix(awsv1.StringValue(eni.Description), "AWS Lambda VPC ENI") {
+	if !strings.HasPrefix(aws.ToString(eni.Description), "AWS Lambda VPC ENI") {
 		return false
 	}
 
 	g.Go(func() error {
-		networkInterfaceID := awsv1.StringValue(eni.NetworkInterfaceId)
+		networkInterfaceID := aws.ToString(eni.NetworkInterfaceId)
 
-		if eni.Attachment != nil && awsv1.StringValue(eni.Attachment.InstanceOwnerId) == "amazon-aws" {
-			networkInterface, err := WaitNetworkInterfaceAvailableAfterUse(ctx, conn, networkInterfaceID, timeout)
+		if eni.Attachment != nil && aws.ToString(eni.Attachment.InstanceOwnerId) == "amazon-aws" {
+			networkInterface, err := waitNetworkInterfaceAvailableAfterUseV2(ctx, conn, networkInterfaceID, timeout)
 			if tfresource.NotFound(err) {
 				return nil
 			}
@@ -1709,12 +1507,12 @@ func deleteLingeringLambdaENI(ctx context.Context, g *multierror.Group, conn *ec
 		}
 
 		if eni.Attachment != nil {
-			if err := DetachNetworkInterface(ctx, conn, networkInterfaceID, awsv1.StringValue(eni.Attachment.AttachmentId), timeout); err != nil {
+			if err := detachNetworkInterface(ctx, conn, networkInterfaceID, aws.ToString(eni.Attachment.AttachmentId), timeout); err != nil {
 				return fmt.Errorf("detaching Lambda ENI (%s): %w", networkInterfaceID, err)
 			}
 		}
 
-		if err := DeleteNetworkInterface(ctx, conn, networkInterfaceID); err != nil {
+		if err := deleteNetworkInterface(ctx, conn, networkInterfaceID); err != nil {
 			return fmt.Errorf("deleting Lambda ENI (%s): %w", networkInterfaceID, err)
 		}
 
@@ -1724,26 +1522,26 @@ func deleteLingeringLambdaENI(ctx context.Context, g *multierror.Group, conn *ec
 	return true
 }
 
-func deleteLingeringComprehendENI(ctx context.Context, g *multierror.Group, conn *ec2v1.EC2, eni *ec2v1.NetworkInterface, timeout time.Duration) bool {
+func deleteLingeringComprehendENI(ctx context.Context, g *multierror.Group, conn *ec2.Client, eni *types.NetworkInterface, timeout time.Duration) bool {
 	// Deletion appears to take approximately 5 minutes
 	if minimumTimeout := 10 * time.Minute; timeout < minimumTimeout {
 		timeout = minimumTimeout
 	}
 
-	if !strings.HasSuffix(awsv1.StringValue(eni.RequesterId), ":Comprehend") {
+	if !strings.HasSuffix(aws.ToString(eni.RequesterId), ":Comprehend") {
 		return false
 	}
 
 	g.Go(func() error {
-		networkInterfaceID := awsv1.StringValue(eni.NetworkInterfaceId)
+		networkInterfaceID := aws.ToString(eni.NetworkInterfaceId)
 
 		if eni.Attachment != nil {
-			if err := DetachNetworkInterface(ctx, conn, networkInterfaceID, awsv1.StringValue(eni.Attachment.AttachmentId), timeout); err != nil {
+			if err := detachNetworkInterface(ctx, conn, networkInterfaceID, aws.ToString(eni.Attachment.AttachmentId), timeout); err != nil {
 				return fmt.Errorf("detaching Comprehend ENI (%s): %w", networkInterfaceID, err)
 			}
 		}
 
-		if err := DeleteNetworkInterface(ctx, conn, networkInterfaceID); err != nil {
+		if err := deleteNetworkInterface(ctx, conn, networkInterfaceID); err != nil {
 			return fmt.Errorf("deleting Comprehend ENI (%s): %w", networkInterfaceID, err)
 		}
 
@@ -1753,26 +1551,26 @@ func deleteLingeringComprehendENI(ctx context.Context, g *multierror.Group, conn
 	return true
 }
 
-func deleteLingeringDMSENI(ctx context.Context, g *multierror.Group, conn *ec2v1.EC2, v *ec2v1.NetworkInterface, timeout time.Duration) bool {
+func deleteLingeringDMSENI(ctx context.Context, g *multierror.Group, conn *ec2.Client, v *types.NetworkInterface, timeout time.Duration) bool {
 	// Deletion appears to take approximately 5 minutes
 	if minimumTimeout := 10 * time.Minute; timeout < minimumTimeout {
 		timeout = minimumTimeout
 	}
 
-	if awsv1.StringValue(v.Description) != "DMSNetworkInterface" {
+	if aws.ToString(v.Description) != "DMSNetworkInterface" {
 		return false
 	}
 
 	g.Go(func() error {
-		networkInterfaceID := awsv1.StringValue(v.NetworkInterfaceId)
+		networkInterfaceID := aws.ToString(v.NetworkInterfaceId)
 
 		if v.Attachment != nil {
-			if err := DetachNetworkInterface(ctx, conn, networkInterfaceID, awsv1.StringValue(v.Attachment.AttachmentId), timeout); err != nil {
+			if err := detachNetworkInterface(ctx, conn, networkInterfaceID, aws.ToString(v.Attachment.AttachmentId), timeout); err != nil {
 				return fmt.Errorf("detaching DMS ENI (%s): %w", networkInterfaceID, err)
 			}
 		}
 
-		if err := DeleteNetworkInterface(ctx, conn, networkInterfaceID); err != nil {
+		if err := deleteNetworkInterface(ctx, conn, networkInterfaceID); err != nil {
 			return fmt.Errorf("deleting DMS ENI (%s): %w", networkInterfaceID, err)
 		}
 
@@ -1783,17 +1581,7 @@ func deleteLingeringDMSENI(ctx context.Context, g *multierror.Group, conn *ec2v1
 }
 
 // Flattens security group identifiers into a []string, where the elements returned are the GroupIDs
-func FlattenGroupIdentifiers(dtos []*ec2v1.GroupIdentifier) []string {
-	ids := make([]string, 0, len(dtos))
-	for _, v := range dtos {
-		group_id := aws.ToString(v.GroupId)
-		ids = append(ids, group_id)
-	}
-	return ids
-}
-
-// Flattens security group identifiers into a []string, where the elements returned are the GroupIDs
-func FlattenGroupIdentifiersV2(dtos []types.GroupIdentifier) []string {
+func flattenGroupIdentifiers(dtos []types.GroupIdentifier) []string {
 	ids := make([]string, 0, len(dtos))
 	for _, v := range dtos {
 		group_id := aws.ToString(v.GroupId)

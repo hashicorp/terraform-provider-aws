@@ -4,5 +4,10 @@
 package ec2
 
 var (
-	FindVPCByIDV2 = findVPCByIDV2
+	CustomFiltersBlock             = customFiltersBlock
+	DeleteNetworkInterface         = deleteNetworkInterface
+	DetachNetworkInterface         = detachNetworkInterface
+	FindVPCByIDV2                  = findVPCByIDV2
+	NewCustomFilterListFrameworkV2 = newCustomFilterListFrameworkV2
+	NewFilter                      = newFilter
 )

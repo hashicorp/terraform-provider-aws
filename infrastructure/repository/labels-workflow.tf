@@ -69,6 +69,10 @@ variable "workflow_labels" {
       color       = "844fba", # color:terraform (main)
       description = "Pertains to the Federal Information Processing Standard (FIPS)."
     },
+    "function" = {
+      color       = "844fba", # color:terraform (main)
+      description = "Pertains to provider functions."
+    },
     "generators" = {
       color       = "60dea9", # color:nomad
       description = "Relates to code generators."
@@ -92,6 +96,10 @@ variable "workflow_labels" {
     "new-data-source" = {
       color       = "ac72f0", # color:terraform (link on black)
       description = "Introduces a new data source."
+    },
+    "new-function" = {
+      color       = "ac72f0", # color:terraform (link on black)
+      description = "Introduces a new function."
     },
     "new-resource" = {
       color       = "8040c9", # color:terraform (link on white)

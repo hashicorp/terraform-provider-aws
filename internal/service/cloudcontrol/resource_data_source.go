@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// @SDKDataSource("aws_cloudcontrolapi_resource")
-func DataSourceResource() *schema.Resource {
+// @SDKDataSource("aws_cloudcontrolapi_resource", name="Resource")
+func dataSourceResource() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceResourceRead,
 
@@ -53,7 +53,7 @@ func dataSourceResourceRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	identifier := d.Get("identifier").(string)
 	typeName := d.Get("type_name").(string)
-	resourceDescription, err := FindResource(ctx, conn,
+	resourceDescription, err := findResource(ctx, conn,
 		identifier,
 		typeName,
 		d.Get("type_version_id").(string),

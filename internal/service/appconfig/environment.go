@@ -40,7 +40,6 @@ import (
 // @Tags(identifierAttribute="arn")
 func newResourceEnvironment(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceEnvironment{}
-	r.SetMigratedFromPluginSDK(true)
 
 	return r, nil
 }
@@ -157,7 +156,7 @@ func (r *resourceEnvironment) Create(ctx context.Context, request resource.Creat
 	input := &appconfig.CreateEnvironmentInput{
 		Name:          aws.String(plan.Name.ValueString()),
 		ApplicationId: aws.String(appId),
-		Tags:          aws.ToStringMap(getTagsIn(ctx)),
+		Tags:          getTagsIn(ctx),
 		Monitors:      expandMonitors(monitors),
 	}
 

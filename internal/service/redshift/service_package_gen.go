@@ -23,6 +23,10 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 			Factory: newDataSourceDataShares,
 			Name:    "Data Shares",
 		},
+		{
+			Factory: newDataSourceProducerDataShares,
+			Name:    "Producer Data Shares",
+		},
 	}
 }
 
@@ -35,6 +39,14 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 		{
 			Factory: newResourceDataShareConsumerAssociation,
 			Name:    "Data Share Consumer Association",
+		},
+		{
+			Factory: newResourceLogging,
+			Name:    "Logging",
+		},
+		{
+			Factory: newResourceSnapshotCopy,
+			Name:    "Snapshot Copy",
 		},
 	}
 }

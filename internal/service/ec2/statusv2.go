@@ -61,9 +61,9 @@ func statusVPCAttributeValueV2(ctx context.Context, conn *ec2.Client, id string,
 	}
 }
 
-func StatusNetworkInterfaceStatusV2(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+func statusNetworkInterfaceV2(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindNetworkInterfaceByIDV2(ctx, conn, id)
+		output, err := findNetworkInterfaceByIDV2(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -77,9 +77,9 @@ func StatusNetworkInterfaceStatusV2(ctx context.Context, conn *ec2.Client, id st
 	}
 }
 
-func StatusNetworkInterfaceAttachmentStatusV2(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
+func statusNetworkInterfaceAttachmentV2(ctx context.Context, conn *ec2.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindNetworkInterfaceAttachmentByIDV2(ctx, conn, id)
+		output, err := findNetworkInterfaceAttachmentByIDV2(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

@@ -7,7 +7,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -16,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKDataSource("aws_iam_saml_provider")
-func DataSourceSAMLProvider() *schema.Resource {
+// @SDKDataSource("aws_iam_saml_provider", name="SAML Provider")
+func dataSourceSAMLProvider() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSAMLProviderRead,
 
@@ -51,7 +51,7 @@ func DataSourceSAMLProvider() *schema.Resource {
 func dataSourceSAMLProviderRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	arn := d.Get("arn").(string)
@@ -69,14 +69,14 @@ func dataSourceSAMLProviderRead(ctx context.Context, d *schema.ResourceData, met
 
 	d.SetId(arn)
 	if output.CreateDate != nil {
-		d.Set("create_date", aws.TimeValue(output.CreateDate).Format(time.RFC3339))
+		d.Set("create_date", aws.ToTime(output.CreateDate).Format(time.RFC3339))
 	} else {
 		d.Set("create_date", nil)
 	}
 	d.Set("name", name)
 	d.Set("saml_metadata_document", output.SAMLMetadataDocument)
 	if output.ValidUntil != nil {
-		d.Set("valid_until", aws.TimeValue(output.ValidUntil).Format(time.RFC3339))
+		d.Set("valid_until", aws.ToTime(output.ValidUntil).Format(time.RFC3339))
 	} else {
 		d.Set("valid_until", nil)
 	}

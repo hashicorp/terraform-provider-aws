@@ -781,6 +781,7 @@ resource "aws_finspace_kx_environment" "test" {
 data "aws_iam_policy_document" "key_policy" {
   statement {
     actions = [
+      "kms:Encrypt",
       "kms:Decrypt",
       "kms:GenerateDataKey"
     ]
@@ -1812,11 +1813,6 @@ resource "aws_s3_object" "object" {
   source = %[2]q
 }
 
-resource "aws_finspace_kx_database" "test" {
-  name           = %[1]q
-  environment_id = aws_finspace_kx_environment.test.id
-}
-
 resource "aws_finspace_kx_cluster" "test" {
   name                  = %[1]q
   environment_id        = aws_finspace_kx_environment.test.id
@@ -1835,19 +1831,6 @@ resource "aws_finspace_kx_cluster" "test" {
     security_group_ids = [aws_security_group.test.id]
     subnet_ids         = [aws_subnet.test.id]
     ip_address_type    = "IP_V4"
-  }
-
-  cache_storage_configurations {
-    type = "CACHE_1000"
-    size = 1200
-  }
-
-  database {
-    database_name = aws_finspace_kx_database.test.name
-    cache_configurations {
-      cache_type = "CACHE_1000"
-      db_paths   = ["/"]
-    }
   }
 
   code {

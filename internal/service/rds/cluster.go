@@ -188,6 +188,16 @@ func ResourceCluster() *schema.Resource {
 				Optional: true,
 				Default:  false,
 			},
+			"enable_http_endpoint": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"enable_local_write_forwarding": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"enabled_cloudwatch_logs_exports": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -195,11 +205,6 @@ func ResourceCluster() *schema.Resource {
 					Type:         schema.TypeString,
 					ValidateFunc: validation.StringInSlice(ClusterExportableLogType_Values(), false),
 				},
-			},
-			"enable_http_endpoint": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
 			},
 			"endpoint": {
 				Type:     schema.TypeString,
@@ -1014,6 +1019,10 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 			input.EnableHttpEndpoint = aws.Bool(v.(bool))
 		}
 
+		if v, ok := d.GetOk("enable_local_write_forwarding"); ok {
+			input.EnableLocalWriteForwarding = aws.Bool(v.(bool))
+		}
+
 		if v, ok := d.GetOk("enabled_cloudwatch_logs_exports"); ok && v.(*schema.Set).Len() > 0 {
 			input.EnableCloudwatchLogsExports = flex.ExpandStringSet(v.(*schema.Set))
 		}
@@ -1287,7 +1296,7 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		"iam_roles",
 		"replication_source_identifier",
 		"skip_final_snapshot",
-		"tags", "tags_all") {
+		names.AttrTags, names.AttrTagsAll) {
 		input := &rds.ModifyDBClusterInput{
 			ApplyImmediately:    aws.Bool(d.Get("apply_immediately").(bool)),
 			DBClusterIdentifier: aws.String(d.Id()),
@@ -1345,6 +1354,10 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 
 		if d.HasChange("enable_http_endpoint") {
 			input.EnableHttpEndpoint = aws.Bool(d.Get("enable_http_endpoint").(bool))
+		}
+
+		if d.HasChange("enable_local_write_forwarding") {
+			input.EnableLocalWriteForwarding = aws.Bool(d.Get("enable_local_write_forwarding").(bool))
 		}
 
 		if d.HasChange("enabled_cloudwatch_logs_exports") {

@@ -26,6 +26,7 @@ import (
 
 // @SDKResource("aws_xray_sampling_rule", name="Sampling Rule")
 // @Tags(identifierAttribute="arn")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/xray/types.SamplingRule")
 func resourceSamplingRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSamplingRuleCreate,

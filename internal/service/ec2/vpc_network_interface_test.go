@@ -12,11 +12,9 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
-	ec2v1 "github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -26,29 +24,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
-
-func TestFlattenGroupIdentifiers(t *testing.T) {
-	t.Parallel()
-
-	expanded := []types.GroupIdentifier{
-		{GroupId: aws.String("sg-001")},
-		{GroupId: aws.String("sg-002")},
-	}
-
-	result := tfec2.FlattenGroupIdentifiersV2(expanded)
-
-	if len(result) != 2 {
-		t.Fatalf("expected result had %d elements, but got %d", 2, len(result))
-	}
-
-	if result[0] != "sg-001" {
-		t.Fatalf("expected id to be sg-001, but was %s", result[0])
-	}
-
-	if result[1] != "sg-002" {
-		t.Fatalf("expected id to be sg-002, but was %s", result[1])
-	}
-}
 
 func TestAccVPCNetworkInterface_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -990,27 +965,23 @@ func convertIPToDashIP(ip string) string {
 }
 
 func regionalPrivateDNSSuffix(region string) string {
-	if region == endpoints.UsEast1RegionID {
+	if region == names.USEast1RegionID {
 		return "ec2.internal"
 	}
 
 	return fmt.Sprintf("%s.compute.internal", region)
 }
 
-func testAccCheckENIExists(ctx context.Context, n string, v *ec2v1.NetworkInterface) resource.TestCheckFunc {
+func testAccCheckENIExists(ctx context.Context, n string, v *types.NetworkInterface) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EC2 Network Interface ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
-
-		output, err := tfec2.FindNetworkInterfaceByID(ctx, conn, rs.Primary.ID)
+		output, err := tfec2.FindNetworkInterfaceByIDV2(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -1097,7 +1068,7 @@ func testAccCheckENIMakeExternalAttachment(ctx context.Context, n string, networ
 
 func testAccCheckENIPrivateIPSet(ips []string, iface *types.NetworkInterface) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		iIPs := tfec2.FlattenNetworkInterfacePrivateIPAddressesV2(iface.PrivateIpAddresses)
+		iIPs := tfec2.FlattenNetworkInterfacePrivateIPAddresses(iface.PrivateIpAddresses)
 
 		if !stringSlicesEqualIgnoreOrder(ips, iIPs) {
 			return fmt.Errorf("expected private IP set %s, got %s", strings.Join(ips, ","), strings.Join(iIPs, ","))
@@ -1109,7 +1080,7 @@ func testAccCheckENIPrivateIPSet(ips []string, iface *types.NetworkInterface) re
 
 func testAccCheckENIPrivateIPList(ips []string, iface *types.NetworkInterface) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		iIPs := tfec2.FlattenNetworkInterfacePrivateIPAddressesV2(iface.PrivateIpAddresses)
+		iIPs := tfec2.FlattenNetworkInterfacePrivateIPAddresses(iface.PrivateIpAddresses)
 
 		if !stringSlicesEqual(ips, iIPs) {
 			return fmt.Errorf("expected private IP set %s, got %s", strings.Join(ips, ","), strings.Join(iIPs, ","))
@@ -1140,8 +1111,8 @@ func stringSlicesEqual(s1, s2 []string) bool {
 
 func testAccCheckENISame(iface1 *types.NetworkInterface, iface2 *types.NetworkInterface) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.StringValue(iface1.NetworkInterfaceId) != aws.StringValue(iface2.NetworkInterfaceId) {
-			return fmt.Errorf("interface %s should not have been replaced with %s", aws.StringValue(iface1.NetworkInterfaceId), aws.StringValue(iface2.NetworkInterfaceId))
+		if aws.ToString(iface1.NetworkInterfaceId) != aws.ToString(iface2.NetworkInterfaceId) {
+			return fmt.Errorf("interface %s should not have been replaced with %s", aws.ToString(iface1.NetworkInterfaceId), aws.ToString(iface2.NetworkInterfaceId))
 		}
 		return nil
 	}
@@ -1149,8 +1120,8 @@ func testAccCheckENISame(iface1 *types.NetworkInterface, iface2 *types.NetworkIn
 
 func testAccCheckENIDifferent(iface1 *types.NetworkInterface, iface2 *types.NetworkInterface) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.StringValue(iface1.NetworkInterfaceId) == aws.StringValue(iface2.NetworkInterfaceId) {
-			return fmt.Errorf("interface %s should have been replaced, have %s", aws.StringValue(iface1.NetworkInterfaceId), aws.StringValue(iface2.NetworkInterfaceId))
+		if aws.ToString(iface1.NetworkInterfaceId) == aws.ToString(iface2.NetworkInterfaceId) {
+			return fmt.Errorf("interface %s should have been replaced, have %s", aws.ToString(iface1.NetworkInterfaceId), aws.ToString(iface2.NetworkInterfaceId))
 		}
 		return nil
 	}

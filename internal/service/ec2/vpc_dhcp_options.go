@@ -178,7 +178,7 @@ func resourceVPCDHCPOptionsDelete(ctx context.Context, d *schema.ResourceData, m
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	vpcs, err := FindVPCs(ctx, conn, &ec2.DescribeVpcsInput{
-		Filters: BuildAttributeFilterList(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"dhcp-options-id": d.Id(),
 		}),
 	})
@@ -214,7 +214,7 @@ func resourceVPCDHCPOptionsDelete(ctx context.Context, d *schema.ResourceData, m
 		return conn.DeleteDhcpOptionsWithContext(ctx, input)
 	}, errCodeDependencyViolation)
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidDHCPOptionIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidDHCPOptionsIDNotFound) {
 		return diags
 	}
 

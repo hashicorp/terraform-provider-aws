@@ -85,14 +85,14 @@ func resourceDefaultVPCDHCPOptionsCreate(ctx context.Context, d *schema.Resource
 	input := &ec2.DescribeDhcpOptionsInput{}
 
 	input.Filters = append(input.Filters,
-		NewFilter("key", []string{"domain-name"}),
-		NewFilter("value", []string{RegionalPrivateDNSSuffix(meta.(*conns.AWSClient).Region)}),
-		NewFilter("key", []string{"domain-name-servers"}),
-		NewFilter("value", []string{"AmazonProvidedDNS"}),
+		newFilter("key", []string{"domain-name"}),
+		newFilter("value", []string{RegionalPrivateDNSSuffix(meta.(*conns.AWSClient).Region)}),
+		newFilter("key", []string{"domain-name-servers"}),
+		newFilter("value", []string{"AmazonProvidedDNS"}),
 	)
 
 	if v, ok := d.GetOk("owner_id"); ok {
-		input.Filters = append(input.Filters, BuildAttributeFilterList(map[string]string{
+		input.Filters = append(input.Filters, newAttributeFilterList(map[string]string{
 			"owner-id": v.(string),
 		})...)
 	}
