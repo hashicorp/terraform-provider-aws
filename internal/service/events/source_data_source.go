@@ -71,7 +71,7 @@ func dataSourceSourceRead(ctx context.Context, d *schema.ResourceData, meta inte
 	return diags
 }
 
-func findEventSource(ctx context.Context, conn *eventbridge.Client, input *eventbridge.ListEventSourcesInput) (*types.EventSource, error) {
+func findEventSource(ctx context.Context, conn *eventbridge.Client, input *eventbridge.ListEventSourcesInput) (*types.EventSource, error) { // nosemgrep:ci.events-in-func-name
 	output, err := findEventSources(ctx, conn, input)
 
 	if err != nil {
@@ -81,7 +81,7 @@ func findEventSource(ctx context.Context, conn *eventbridge.Client, input *event
 	return tfresource.AssertSingleValueResult(output)
 }
 
-func findEventSources(ctx context.Context, conn *eventbridge.Client, input *eventbridge.ListEventSourcesInput) ([]types.EventSource, error) {
+func findEventSources(ctx context.Context, conn *eventbridge.Client, input *eventbridge.ListEventSourcesInput) ([]types.EventSource, error) { // nosemgrep:ci.events-in-func-name
 	var output []types.EventSource
 
 	err := listEventSourcesPages(ctx, conn, input, func(page *eventbridge.ListEventSourcesOutput, lastPage bool) bool {
