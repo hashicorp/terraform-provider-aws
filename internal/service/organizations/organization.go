@@ -107,6 +107,10 @@ func ResourceOrganization() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"master_account_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"non_master_accounts": {
 				Type:     schema.TypeList,
 				Computed: true,
