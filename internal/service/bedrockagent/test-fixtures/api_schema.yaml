@@ -11,7 +11,7 @@ paths:
       operationId: sayHello
       responses:
         '200':
-          description: Hello
+          description: Hello Response
           content:
             'application/json':
               schema:

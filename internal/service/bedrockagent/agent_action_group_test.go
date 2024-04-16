@@ -65,7 +65,7 @@ func TestAccBedrockAgentActionGroup_s3ApiSchema(t *testing.T) {
 		CheckDestroy:             testAccCheckBedrockAgentActionGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccBedrockAgentActionGroupConfig_basic(rName),
+				Config: testAccBedrockAgentActionGroupConfig_s3ApiSchema(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBedrockAgentActionGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "action_group_name", rName),
@@ -138,6 +138,7 @@ resource "aws_bedrockagent_agent_action_group" "test" {
   action_group_name          = %[1]q
   agent_id                   = aws_bedrockagent_agent.test.agent_id
   agent_version              = "DRAFT"
+  description                = "Basic Agent Action"
   skip_resource_in_use_check = true
   action_group_executor {
     lambda = aws_lambda_function.test_lambda.arn

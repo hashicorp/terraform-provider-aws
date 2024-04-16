@@ -501,25 +501,36 @@ func flattenActionGroupExecutor(ctx context.Context, age awstypes.ActionGroupExe
 
 func expandApiSchema(ctx context.Context, api fwtypes.ListNestedObjectValueOf[apiSchema]) (awstypes.APISchema, diag.Diagnostics) {
 	var diags diag.Diagnostics
-	var apiObject awstypes.APISchema
-	planApi, moreDiags := api.ToPtr(ctx)
-	diags.Append(moreDiags...)
+	planApi, d := api.ToPtr(ctx)
+	diags.Append(d...)
 	if diags.HasError() {
-		return apiObject, diags
+		return nil, diags
 	}
 
 	if !planApi.S3.IsNull() {
-		var s3 awstypes.APISchemaMemberS3
-		diags.Append(fwflex.Expand(ctx, planApi.S3, &s3.Value)...)
-		apiObject = &s3
+		planS3Api, d := planApi.S3.ToPtr(ctx)
+		diags.Append(d...)
+		if diags.HasError() {
+			return nil, diags
+		}
+
+		apiObject := &awstypes.APISchemaMemberS3{}
+		diags.Append(fwflex.Expand(ctx, planS3Api, &apiObject.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		return apiObject, diags
 	}
 
 	if !planApi.Payload.IsNull() {
-		var payload awstypes.APISchemaMemberPayload
-		diags.Append(fwflex.Expand(ctx, planApi.Payload, &payload.Value)...)
-		apiObject = &payload
+		apiObject := &awstypes.APISchemaMemberPayload{}
+		diags.Append(fwflex.Expand(ctx, planApi.Payload, &apiObject.Value)...)
+		if diags.HasError() {
+			return nil, diags
+		}
+		return apiObject, diags
 	}
-	return apiObject, diags
+	return nil, diags
 }
 
 func flattenApiSchema(ctx context.Context, apiObject awstypes.APISchema) (fwtypes.ListNestedObjectValueOf[apiSchema], diag.Diagnostics) {
@@ -531,9 +542,9 @@ func flattenApiSchema(ctx context.Context, apiObject awstypes.APISchema) (fwtype
 
 	switch v := apiObject.(type) {
 	case *awstypes.APISchemaMemberS3:
-		var s3data s3
-		diags.Append(fwflex.Flatten(ctx, v, s3data)...)
-		apiSchemaData.S3 = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &s3data)
+		s3data := &s3{}
+		diags.Append(fwflex.Flatten(ctx, v.Value, s3data)...)
+		apiSchemaData.S3 = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, s3data)
 	case *awstypes.APISchemaMemberPayload:
 		payloadValue := fwflex.StringValueToFramework(ctx, v.Value)
 		apiSchemaData.Payload = payloadValue
