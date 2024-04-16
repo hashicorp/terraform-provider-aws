@@ -72,6 +72,10 @@ func ResourceEnvironment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"database_vpc_endpoint_service": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"dag_s3_path": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -272,6 +276,10 @@ func ResourceEnvironment() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"webserver_vpc_endpoint_service": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"weekly_maintenance_window_start": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -430,6 +438,7 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("arn", environment.Arn)
 	d.Set("created_at", aws.ToTime(environment.CreatedAt).String())
 	d.Set("dag_s3_path", environment.DagS3Path)
+	d.Set("database_vpc_endpoint_service", environment.DatabaseVpcEndpointService)
 	d.Set("endpoint_management", environment.EndpointManagement)
 	d.Set("environment_class", environment.EnvironmentClass)
 	d.Set("execution_role_arn", environment.ExecutionRoleArn)
@@ -458,6 +467,7 @@ func resourceEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("status", environment.Status)
 	d.Set("webserver_access_mode", environment.WebserverAccessMode)
 	d.Set("webserver_url", environment.WebserverUrl)
+	d.Set("webserver_vpc_endpoint_service", environment.WebserverVpcEndpointService)
 	d.Set("weekly_maintenance_window_start", environment.WeeklyMaintenanceWindowStart)
 
 	setTagsOut(ctx, environment.Tags)

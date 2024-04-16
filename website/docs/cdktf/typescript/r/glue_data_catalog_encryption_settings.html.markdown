@@ -34,6 +34,7 @@ class MyConvertedCode extends TerraformStack {
         },
         encryptionAtRest: {
           catalogEncryptionMode: "SSE-KMS",
+          catalogEncryptionServiceRole: role.test.arn,
           sseAwsKmsKeyId: test.arn,
         },
       },
@@ -63,6 +64,7 @@ This resource supports the following arguments:
 ### encryption_at_rest
 
 * `catalogEncryptionMode` - (Required) The encryption-at-rest mode for encrypting Data Catalog data. Valid values are `DISABLED` and `SSE-KMS`.
+* `catalogEncryptionServiceRole` - (Optional) The ARN of the AWS IAM role used for accessing encrypted Data Catalog data.
 * `sseAwsKmsKeyId` - (Optional) The ARN of the AWS KMS key to use for encryption at rest.
 
 ## Attribute Reference
@@ -103,4 +105,4 @@ Using `terraform import`, import Glue Data Catalog Encryption Settings using `CA
 % terraform import aws_glue_data_catalog_encryption_settings.example 123456789012
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-c2e85f7ebdcf7cc062a847481555cf88d0fa1324f7ad5edd2567de866f418d1e -->
+<!-- cache-key: cdktf-0.20.1 input-7d5c360e4b0d15c6a5c8a7a95cb1a9cb1346e51dc55d0d8e215fc4bed02f79ac -->

@@ -44,3 +44,4 @@ aws/testdata/service/cloudformation/examplecompany-exampleservice-exampleresourc
 node_modules
 
 .teamcity/target
+awssdk.patch

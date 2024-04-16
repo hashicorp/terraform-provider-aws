@@ -20,10 +20,12 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceSecurityGroupRule,
+			Factory: newSecurityGroupRuleDataSource,
+			Name:    "Security Group Rule",
 		},
 		{
-			Factory: newDataSourceSecurityGroupRules,
+			Factory: newSecurityGroupRulesDataSource,
+			Name:    "Security Group Rules",
 		},
 	}
 }
@@ -31,29 +33,29 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newInstanceMetadataDefaultsResource,
-			Name:    "Instance Metadata Defaults",
-		},
-		{
-			Factory: newResourceEBSFastSnapshotRestore,
+			Factory: newEBSFastSnapshotRestoreResource,
 			Name:    "EBS Fast Snapshot Restore",
 		},
 		{
-			Factory: newResourceInstanceConnectEndpoint,
+			Factory: newInstanceConnectEndpointResource,
 			Name:    "Instance Connect Endpoint",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "id",
 			},
 		},
 		{
-			Factory: newResourceSecurityGroupEgressRule,
+			Factory: newInstanceMetadataDefaultsResource,
+			Name:    "Instance Metadata Defaults",
+		},
+		{
+			Factory: newSecurityGroupEgressRuleResource,
 			Name:    "Security Group Egress Rule",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "id",
 			},
 		},
 		{
-			Factory: newResourceSecurityGroupIngressRule,
+			Factory: newSecurityGroupIngressRuleResource,
 			Name:    "Security Group Ingress Rule",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "id",
@@ -288,8 +290,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_internet_gateway",
 		},
 		{
-			Factory:  DataSourceKeyPair,
+			Factory:  dataSourceKeyPair,
 			TypeName: "aws_key_pair",
+			Name:     "Key Pair",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "key_pair_id",
+			},
 		},
 		{
 			Factory:  DataSourceLaunchTemplate,
@@ -838,7 +844,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_internet_gateway_attachment",
 		},
 		{
-			Factory:  ResourceKeyPair,
+			Factory:  resourceKeyPair,
 			TypeName: "aws_key_pair",
 			Name:     "Key Pair",
 			Tags: &types.ServicePackageResourceTags{

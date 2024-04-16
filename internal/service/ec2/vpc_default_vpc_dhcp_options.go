@@ -38,6 +38,7 @@ func ResourceDefaultVPCDHCPOptions() *schema.Resource {
 		// Keep in sync with aws_vpc_dhcp_options' schema with the following changes:
 		//   - domain_name is Computed-only
 		//   - domain_name_servers is Computed-only and is TypeString
+		//   - ipv6_address_preferred_lease_time is Computed-only and is TypeString
 		//   - netbios_name_servers is Computed-only and is TypeString
 		//   - netbios_node_type is Computed-only
 		//   - ntp_servers is Computed-only and is TypeString
@@ -52,6 +53,10 @@ func ResourceDefaultVPCDHCPOptions() *schema.Resource {
 				Computed: true,
 			},
 			"domain_name_servers": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"ipv6_address_preferred_lease_time": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},

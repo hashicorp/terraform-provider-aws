@@ -10,8 +10,9 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/autoscaling"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -44,8 +45,11 @@ func testAccGroupImportStep(n string) resource.TestStep {
 			"force_delete",
 			"ignore_failed_scaling_activities",
 			"initial_lifecycle_hook",
+			"load_balancers",
 			"tag",
 			"tags",
+			"target_group_arns",
+			"traffic_source",
 			"wait_for_capacity_timeout",
 			"wait_for_elb_capacity",
 		},
@@ -54,7 +58,7 @@ func testAccGroupImportStep(n string) resource.TestStep {
 
 func TestAccAutoScalingGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
@@ -119,7 +123,7 @@ func TestAccAutoScalingGroup_basic(t *testing.T) {
 
 func TestAccAutoScalingGroup_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
@@ -143,7 +147,7 @@ func TestAccAutoScalingGroup_disappears(t *testing.T) {
 
 func TestAccAutoScalingGroup_defaultInstanceWarmup(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
@@ -174,7 +178,7 @@ func TestAccAutoScalingGroup_defaultInstanceWarmup(t *testing.T) {
 
 func TestAccAutoScalingGroup_nameGenerated(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
@@ -199,7 +203,7 @@ func TestAccAutoScalingGroup_nameGenerated(t *testing.T) {
 
 func TestAccAutoScalingGroup_namePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
@@ -224,7 +228,7 @@ func TestAccAutoScalingGroup_namePrefix(t *testing.T) {
 
 func TestAccAutoScalingGroup_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
@@ -282,7 +286,7 @@ func TestAccAutoScalingGroup_tags(t *testing.T) {
 
 func TestAccAutoScalingGroup_simple(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
@@ -398,7 +402,7 @@ func TestAccAutoScalingGroup_simple(t *testing.T) {
 
 func TestAccAutoScalingGroup_terminationPolicies(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
@@ -443,7 +447,7 @@ func TestAccAutoScalingGroup_terminationPolicies(t *testing.T) {
 
 func TestAccAutoScalingGroup_vpcUpdates(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
@@ -478,7 +482,7 @@ func TestAccAutoScalingGroup_vpcUpdates(t *testing.T) {
 
 func TestAccAutoScalingGroup_withInstanceMaintenancePolicyAfterCreation(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
@@ -536,7 +540,7 @@ func TestAccAutoScalingGroup_withInstanceMaintenancePolicyAfterCreation(t *testi
 
 func TestAccAutoScalingGroup_withInstanceMaintenancePolicyAtCreation(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
@@ -589,7 +593,7 @@ func TestAccAutoScalingGroup_withInstanceMaintenancePolicyAtCreation(t *testing.
 
 func TestAccAutoScalingGroup_withInstanceMaintenancePolicyNegativeValues(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
@@ -622,7 +626,7 @@ func TestAccAutoScalingGroup_withInstanceMaintenancePolicyNegativeValues(t *test
 
 func TestAccAutoScalingGroup_withLoadBalancer(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
@@ -654,7 +658,7 @@ func TestAccAutoScalingGroup_withLoadBalancer(t *testing.T) {
 
 func TestAccAutoScalingGroup_WithLoadBalancer_toTargetGroup(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
@@ -698,7 +702,7 @@ func TestAccAutoScalingGroup_WithLoadBalancer_toTargetGroup(t *testing.T) {
 
 func TestAccAutoScalingGroup_withTrafficSourceELB(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
@@ -730,7 +734,7 @@ func TestAccAutoScalingGroup_withTrafficSourceELB(t *testing.T) {
 
 func TestAccAutoScalingGroup_withTrafficSourcesELBs(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	resourceName := "aws_autoscaling_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -765,7 +769,7 @@ func TestAccAutoScalingGroup_withTrafficSourcesELBs(t *testing.T) {
 
 func TestAccAutoScalingGroup_withTrafficSourceELB_toTargetGroup(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
@@ -803,7 +807,7 @@ func TestAccAutoScalingGroup_withTrafficSourceELB_toTargetGroup(t *testing.T) {
 
 func TestAccAutoScalingGroup_withTrafficSourceELBV2(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	resourceName := "aws_autoscaling_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -841,7 +845,7 @@ func TestAccAutoScalingGroup_withTrafficSourceELBV2(t *testing.T) {
 
 func TestAccAutoScalingGroup_withTrafficSourceVPCLatticeTargetGroup(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
@@ -870,7 +874,7 @@ func TestAccAutoScalingGroup_withTrafficSourceVPCLatticeTargetGroup(t *testing.T
 
 func TestAccAutoScalingGroup_withTrafficSourceVPCLatticeTargetGroups(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
@@ -894,7 +898,7 @@ func TestAccAutoScalingGroup_withTrafficSourceVPCLatticeTargetGroups(t *testing.
 
 func TestAccAutoScalingGroup_withPlacementGroup(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
@@ -972,7 +976,7 @@ func TestAccAutoScalingGroup_withScalingActivityErrorIncorrectInstanceArchitectu
 
 func TestAccAutoScalingGroup_withScalingActivityErrorIncorrectInstanceArchitecture_Recovers(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
@@ -1004,7 +1008,7 @@ func TestAccAutoScalingGroup_withScalingActivityErrorIncorrectInstanceArchitectu
 
 func TestAccAutoScalingGroup_enablingMetrics(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
@@ -1040,7 +1044,7 @@ func TestAccAutoScalingGroup_enablingMetrics(t *testing.T) {
 
 func TestAccAutoScalingGroup_withMetrics(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
@@ -1088,7 +1092,7 @@ func TestAccAutoScalingGroup_withMetrics(t *testing.T) {
 
 func TestAccAutoScalingGroup_suspendingProcesses(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
@@ -1130,7 +1134,7 @@ func TestAccAutoScalingGroup_suspendingProcesses(t *testing.T) {
 
 func TestAccAutoScalingGroup_serviceLinkedRoleARN(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
@@ -1154,7 +1158,7 @@ func TestAccAutoScalingGroup_serviceLinkedRoleARN(t *testing.T) {
 
 func TestAccAutoScalingGroup_maxInstanceLifetime(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
@@ -1185,7 +1189,7 @@ func TestAccAutoScalingGroup_maxInstanceLifetime(t *testing.T) {
 
 func TestAccAutoScalingGroup_initialLifecycleHook(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
@@ -1235,7 +1239,7 @@ func TestAccAutoScalingGroup_initialLifecycleHook(t *testing.T) {
 
 func TestAccAutoScalingGroup_launchTemplate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
@@ -1262,7 +1266,7 @@ func TestAccAutoScalingGroup_launchTemplate(t *testing.T) {
 
 func TestAccAutoScalingGroup_LaunchTemplate_update(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	launchTemplateNameUpdated := fmt.Sprintf("%s_updated", rName)
 	resourceName := "aws_autoscaling_group.test"
@@ -1343,7 +1347,7 @@ func TestAccAutoScalingGroup_LaunchTemplate_update(t *testing.T) {
 
 func TestAccAutoScalingGroup_largeDesiredCapacity(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
@@ -1369,7 +1373,7 @@ func TestAccAutoScalingGroup_largeDesiredCapacity(t *testing.T) {
 
 func TestAccAutoScalingGroup_InstanceRefresh_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
@@ -1521,7 +1525,7 @@ func TestAccAutoScalingGroup_InstanceRefresh_basic(t *testing.T) {
 
 func TestAccAutoScalingGroup_InstanceRefresh_start(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 	launchConfigurationResourceName := "aws_launch_configuration.test"
@@ -1546,7 +1550,7 @@ func TestAccAutoScalingGroup_InstanceRefresh_start(t *testing.T) {
 					testAccCheckGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_configuration", launchConfigurationResourceName, "name"),
 					testAccCheckInstanceRefreshCount(ctx, &group, 1),
-					testAccCheckInstanceRefreshStatus(ctx, &group, 0, autoscaling.InstanceRefreshStatusPending, autoscaling.InstanceRefreshStatusInProgress),
+					testAccCheckInstanceRefreshStatus(ctx, &group, 0, awstypes.InstanceRefreshStatusPending, awstypes.InstanceRefreshStatusInProgress),
 				),
 			},
 			{
@@ -1555,8 +1559,8 @@ func TestAccAutoScalingGroup_InstanceRefresh_start(t *testing.T) {
 					testAccCheckGroupExists(ctx, resourceName, &group),
 					resource.TestCheckResourceAttrPair(resourceName, "launch_configuration", launchConfigurationResourceName, "name"),
 					testAccCheckInstanceRefreshCount(ctx, &group, 2),
-					testAccCheckInstanceRefreshStatus(ctx, &group, 0, autoscaling.InstanceRefreshStatusPending, autoscaling.InstanceRefreshStatusInProgress),
-					testAccCheckInstanceRefreshStatus(ctx, &group, 1, autoscaling.InstanceRefreshStatusCancelled),
+					testAccCheckInstanceRefreshStatus(ctx, &group, 0, awstypes.InstanceRefreshStatusPending, awstypes.InstanceRefreshStatusInProgress),
+					testAccCheckInstanceRefreshStatus(ctx, &group, 1, awstypes.InstanceRefreshStatusCancelled),
 				),
 			},
 		},
@@ -1565,7 +1569,7 @@ func TestAccAutoScalingGroup_InstanceRefresh_start(t *testing.T) {
 
 func TestAccAutoScalingGroup_InstanceRefresh_triggers(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
@@ -1596,7 +1600,7 @@ func TestAccAutoScalingGroup_InstanceRefresh_triggers(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "instance_refresh.0.triggers.#", "1"),
 					resource.TestCheckTypeSetElemAttr(resourceName, "instance_refresh.0.triggers.*", "tag"),
 					testAccCheckInstanceRefreshCount(ctx, &group, 1),
-					testAccCheckInstanceRefreshStatus(ctx, &group, 0, autoscaling.InstanceRefreshStatusPending, autoscaling.InstanceRefreshStatusInProgress),
+					testAccCheckInstanceRefreshStatus(ctx, &group, 0, awstypes.InstanceRefreshStatusPending, awstypes.InstanceRefreshStatusInProgress),
 				),
 			},
 		},
@@ -1605,7 +1609,7 @@ func TestAccAutoScalingGroup_InstanceRefresh_triggers(t *testing.T) {
 
 func TestAccAutoScalingGroup_InstanceRefresh_autoRollback(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
@@ -1658,7 +1662,7 @@ func TestAccAutoScalingGroup_InstanceRefresh_autoRollback(t *testing.T) {
 // Reference: https://github.com/hashicorp/terraform-provider-aws/issues/256
 func TestAccAutoScalingGroup_loadBalancers(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	resourceName := "aws_autoscaling_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1696,7 +1700,7 @@ func TestAccAutoScalingGroup_loadBalancers(t *testing.T) {
 
 func TestAccAutoScalingGroup_targetGroups(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	resourceName := "aws_autoscaling_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1734,7 +1738,7 @@ func TestAccAutoScalingGroup_targetGroups(t *testing.T) {
 
 func TestAccAutoScalingGroup_ALBTargetGroups_elbCapacity(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	resourceName := "aws_autoscaling_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	subnetCount := 2
@@ -1761,7 +1765,7 @@ func TestAccAutoScalingGroup_ALBTargetGroups_elbCapacity(t *testing.T) {
 
 func TestAccAutoScalingGroup_warmPool(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	resourceName := "aws_autoscaling_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1808,7 +1812,7 @@ func TestAccAutoScalingGroup_warmPool(t *testing.T) {
 
 func TestAccAutoScalingGroup_launchTempPartitionNum(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	resourceName := "aws_autoscaling_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1831,7 +1835,7 @@ func TestAccAutoScalingGroup_launchTempPartitionNum(t *testing.T) {
 
 func TestAccAutoScalingGroup_Destroy_whenProtectedFromScaleIn(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	resourceName := "aws_autoscaling_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1859,7 +1863,7 @@ func TestAccAutoScalingGroup_Destroy_whenProtectedFromScaleIn(t *testing.T) {
 
 func TestAccAutoScalingGroup_mixedInstancesPolicy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	resourceName := "aws_autoscaling_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1891,7 +1895,7 @@ func TestAccAutoScalingGroup_mixedInstancesPolicy(t *testing.T) {
 
 func TestAccAutoScalingGroup_MixedInstancesPolicy_capacityRebalance(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	resourceName := "aws_autoscaling_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1926,7 +1930,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicy_capacityRebalance(t *testing.T
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyInstancesDistribution_onDemandAllocationStrategy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	resourceName := "aws_autoscaling_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1952,7 +1956,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyInstancesDistribution_onDemandA
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyInstancesDistribution_onDemandBaseCapacity(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	resourceName := "aws_autoscaling_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -1997,7 +2001,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyInstancesDistribution_onDemandB
 // Test to verify fix for behavior in GH-ISSUE 7368
 func TestAccAutoScalingGroup_MixedInstancesPolicyInstancesDistribution_updateToZeroOnDemandBaseCapacity(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	resourceName := "aws_autoscaling_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -2033,7 +2037,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyInstancesDistribution_updateToZ
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyInstancesDistribution_onDemandPercentageAboveBaseCapacity(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	resourceName := "aws_autoscaling_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -2068,7 +2072,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyInstancesDistribution_onDemandP
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyInstancesDistribution_spotAllocationStrategy(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	resourceName := "aws_autoscaling_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -2094,7 +2098,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyInstancesDistribution_spotAlloc
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyInstancesDistribution_spotInstancePools(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	resourceName := "aws_autoscaling_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -2129,7 +2133,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyInstancesDistribution_spotInsta
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyInstancesDistribution_spotMaxPrice(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	resourceName := "aws_autoscaling_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -2173,7 +2177,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyInstancesDistribution_spotMaxPr
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateLaunchTemplateSpecification_launchTemplateName(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	resourceName := "aws_autoscaling_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	launchTemplateNameUpdated := fmt.Sprintf("%s_updated", rName)
@@ -2210,7 +2214,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateLaunchTemplateSpe
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateLaunchTemplateSpecification_version(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	resourceName := "aws_autoscaling_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -2247,7 +2251,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateLaunchTemplateSpe
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instanceType(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	resourceName := "aws_autoscaling_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -2286,7 +2290,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instanceTypeWithLaunchTemplateSpecification(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	resourceName := "aws_autoscaling_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -2316,7 +2320,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_weightedCapacity(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	resourceName := "aws_autoscaling_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -2346,7 +2350,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_weighted
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_weightedCapacity_withELB(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	resourceName := "aws_autoscaling_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -2376,7 +2380,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_weighted
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instanceRequirements_memoryMiBAndVCPUCount(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
@@ -2442,7 +2446,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instanceRequirements_acceleratorCount(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
@@ -2529,7 +2533,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instanceRequirements_acceleratorManufacturers(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
@@ -2590,7 +2594,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instanceRequirements_acceleratorNames(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
@@ -2654,7 +2658,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instanceRequirements_acceleratorTotalMemoryMiB(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
@@ -2743,7 +2747,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instanceRequirements_acceleratorTypes(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
@@ -2803,7 +2807,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instanceRequirements_allowedInstanceTypes(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
@@ -2863,7 +2867,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instanceRequirements_bareMetal(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
@@ -2939,7 +2943,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instanceRequirements_baselineEBSBandwidthMbps(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
@@ -3026,7 +3030,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instanceRequirements_burstablePerformance(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
@@ -3102,7 +3106,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instanceRequirements_cpuManufacturers(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
@@ -3162,7 +3166,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instanceRequirements_excludedInstanceTypes(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
@@ -3222,7 +3226,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instanceRequirements_instanceGenerations(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
@@ -3281,7 +3285,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instanceRequirements_localStorage(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
@@ -3357,7 +3361,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instanceRequirements_localStorageTypes(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
@@ -3416,7 +3420,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instanceRequirements_memoryGiBPerVCPU(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
@@ -3503,7 +3507,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instanceRequirements_networkBandwidthGbps(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
@@ -3590,7 +3594,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instanceRequirements_networkInterfaceCount(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
@@ -3677,7 +3681,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instanceRequirements_onDemandMaxPricePercentageOverLowestPrice(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
@@ -3713,7 +3717,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instanceRequirements_requireHibernateSupport(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
@@ -3769,7 +3773,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instanceRequirements_spotMaxPricePercentageOverLowestPrice(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
@@ -3805,7 +3809,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instanceRequirements_totalLocalStorageGB(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
@@ -3892,7 +3896,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instanceRequirements_desiredCapacityTypeUnits(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
@@ -3922,7 +3926,7 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 
 func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instanceRequirements_desiredCapacityTypeVCPU(t *testing.T) {
 	ctx := acctest.Context(t)
-	var group autoscaling.Group
+	var group awstypes.AutoScalingGroup
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_autoscaling_group.test"
 
@@ -3950,18 +3954,14 @@ func TestAccAutoScalingGroup_MixedInstancesPolicyLaunchTemplateOverride_instance
 	})
 }
 
-func testAccCheckGroupExists(ctx context.Context, n string, v *autoscaling.Group) resource.TestCheckFunc {
+func testAccCheckGroupExists(ctx context.Context, n string, v *awstypes.AutoScalingGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Auto Scaling Group ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingClient(ctx)
 
 		output, err := tfautoscaling.FindGroupByName(ctx, conn, rs.Primary.ID)
 
@@ -3977,7 +3977,7 @@ func testAccCheckGroupExists(ctx context.Context, n string, v *autoscaling.Group
 
 func testAccCheckGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_autoscaling_group" {
@@ -4001,12 +4001,12 @@ func testAccCheckGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckGroupHealthyInstanceCount(v *autoscaling.Group, expected int) resource.TestCheckFunc {
+func testAccCheckGroupHealthyInstanceCount(v *awstypes.AutoScalingGroup, expected int) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		count := 0
 
 		for _, v := range v.Instances {
-			if aws.StringValue(v.HealthStatus) == tfautoscaling.InstanceHealthStatusHealthy {
+			if aws.ToString(v.HealthStatus) == tfautoscaling.InstanceHealthStatusHealthy {
 				count++
 			}
 		}
@@ -4019,9 +4019,9 @@ func testAccCheckGroupHealthyInstanceCount(v *autoscaling.Group, expected int) r
 	}
 }
 
-func testAccCheckInstanceRefreshCount(ctx context.Context, v *autoscaling.Group, expected int) resource.TestCheckFunc {
+func testAccCheckInstanceRefreshCount(ctx context.Context, v *awstypes.AutoScalingGroup, expected int) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingClient(ctx)
 
 		output, err := tfautoscaling.FindInstanceRefreshes(ctx, conn, &autoscaling.DescribeInstanceRefreshesInput{
 			AutoScalingGroupName: v.AutoScalingGroupName,
@@ -4039,9 +4039,9 @@ func testAccCheckInstanceRefreshCount(ctx context.Context, v *autoscaling.Group,
 	}
 }
 
-func testAccCheckInstanceRefreshStatus(ctx context.Context, v *autoscaling.Group, index int, expected ...string) resource.TestCheckFunc {
+func testAccCheckInstanceRefreshStatus(ctx context.Context, v *awstypes.AutoScalingGroup, index int, expected ...awstypes.InstanceRefreshStatus) resource.TestCheckFunc {
 	return func(state *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AutoScalingClient(ctx)
 
 		output, err := tfautoscaling.FindInstanceRefreshes(ctx, conn, &autoscaling.DescribeInstanceRefreshesInput{
 			AutoScalingGroupName: v.AutoScalingGroupName,
@@ -4055,7 +4055,7 @@ func testAccCheckInstanceRefreshStatus(ctx context.Context, v *autoscaling.Group
 			return fmt.Errorf("Expected at least %d Instance Refreshes, got %d", index+1, got)
 		}
 
-		status := aws.StringValue(output[index].Status)
+		status := output[index].Status
 
 		for _, v := range expected {
 			if status == v {
@@ -4072,10 +4072,6 @@ func testAccCheckLBTargetGroupExists(ctx context.Context, n string, v *elbv2.Tar
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
-		}
-
-		if rs.Primary.ID == "" {
-			return errors.New("No ELBv2 Target Group ID is set")
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ELBV2Conn(ctx)
@@ -4107,7 +4103,7 @@ func testAccCheckALBTargetGroupHealthy(ctx context.Context, v *elbv2.TargetGroup
 		}
 
 		for _, v := range output.TargetHealthDescriptions {
-			if v.TargetHealth == nil || aws.StringValue(v.TargetHealth.State) != elbv2.TargetHealthStateEnumHealthy {
+			if v.TargetHealth == nil || aws.ToString(v.TargetHealth.State) != elbv2.TargetHealthStateEnumHealthy {
 				return errors.New("Not all instances in target group are healthy yet, but should be")
 			}
 		}
