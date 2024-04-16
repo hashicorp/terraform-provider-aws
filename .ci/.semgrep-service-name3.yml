@@ -35,6 +35,8 @@ rules:
     paths:
       include:
         - internal/service/rbin
+      exclude:
+        - internal/service/rbin/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -79,6 +81,8 @@ rules:
     paths:
       include:
         - internal/service/redshift
+      exclude:
+        - internal/service/redshift/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -138,6 +142,8 @@ rules:
     paths:
       include:
         - internal/service/redshiftdata
+      exclude:
+        - internal/service/redshiftdata/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -197,6 +203,8 @@ rules:
     paths:
       include:
         - internal/service/redshiftdata
+      exclude:
+        - internal/service/redshiftdata/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -241,6 +249,8 @@ rules:
     paths:
       include:
         - internal/service/redshiftserverless
+      exclude:
+        - internal/service/redshiftserverless/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -300,6 +310,8 @@ rules:
     paths:
       include:
         - internal/service/rekognition
+      exclude:
+        - internal/service/rekognition/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -359,6 +371,8 @@ rules:
     paths:
       include:
         - internal/service/resourceexplorer2
+      exclude:
+        - internal/service/resourceexplorer2/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -418,6 +432,8 @@ rules:
     paths:
       include:
         - internal/service/resourcegroups
+      exclude:
+        - internal/service/resourcegroups/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -477,6 +493,8 @@ rules:
     paths:
       include:
         - internal/service/resourcegroupstaggingapi
+      exclude:
+        - internal/service/resourcegroupstaggingapi/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -521,6 +539,8 @@ rules:
     paths:
       include:
         - internal/service/resourcegroupstaggingapi
+      exclude:
+        - internal/service/resourcegroupstaggingapi/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -580,6 +600,8 @@ rules:
     paths:
       include:
         - internal/service/rolesanywhere
+      exclude:
+        - internal/service/rolesanywhere/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -639,6 +661,8 @@ rules:
     paths:
       include:
         - internal/service/route53
+      exclude:
+        - internal/service/route53/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -698,6 +722,8 @@ rules:
     paths:
       include:
         - internal/service/route53domains
+      exclude:
+        - internal/service/route53domains/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -757,6 +783,8 @@ rules:
     paths:
       include:
         - internal/service/route53recoverycontrolconfig
+      exclude:
+        - internal/service/route53recoverycontrolconfig/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -816,6 +844,8 @@ rules:
     paths:
       include:
         - internal/service/route53recoveryreadiness
+      exclude:
+        - internal/service/route53recoveryreadiness/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -875,6 +905,8 @@ rules:
     paths:
       include:
         - internal/service/route53resolver
+      exclude:
+        - internal/service/route53resolver/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -934,6 +966,8 @@ rules:
     paths:
       include:
         - internal/service/rum
+      exclude:
+        - internal/service/rum/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -993,6 +1027,8 @@ rules:
     paths:
       include:
         - internal/service/s3
+      exclude:
+        - internal/service/s3/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -1052,6 +1088,8 @@ rules:
     paths:
       include:
         - internal/service/s3
+      exclude:
+        - internal/service/s3/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -1096,6 +1134,8 @@ rules:
     paths:
       include:
         - internal/service/s3control
+      exclude:
+        - internal/service/s3control/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -1155,6 +1195,8 @@ rules:
     paths:
       include:
         - internal/service/s3outposts
+      exclude:
+        - internal/service/s3outposts/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -1214,6 +1256,8 @@ rules:
     paths:
       include:
         - internal/service/sagemaker
+      exclude:
+        - internal/service/sagemaker/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -1273,6 +1317,8 @@ rules:
     paths:
       include:
         - internal/service/scheduler
+      exclude:
+        - internal/service/scheduler/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -1332,6 +1378,8 @@ rules:
     paths:
       include:
         - internal/service/schemas
+      exclude:
+        - internal/service/schemas/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -1391,6 +1439,8 @@ rules:
     paths:
       include:
         - internal/service/simpledb
+      exclude:
+        - internal/service/simpledb/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -1435,6 +1485,8 @@ rules:
     paths:
       include:
         - internal/service/secretsmanager
+      exclude:
+        - internal/service/secretsmanager/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -1494,6 +1546,8 @@ rules:
     paths:
       include:
         - internal/service/securityhub
+      exclude:
+        - internal/service/securityhub/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -1553,6 +1607,8 @@ rules:
     paths:
       include:
         - internal/service/securitylake
+      exclude:
+        - internal/service/securitylake/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -1612,6 +1668,8 @@ rules:
     paths:
       include:
         - internal/service/serverlessrepo
+      exclude:
+        - internal/service/serverlessrepo/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -1656,6 +1714,8 @@ rules:
     paths:
       include:
         - internal/service/serverlessrepo
+      exclude:
+        - internal/service/serverlessrepo/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -1700,6 +1760,8 @@ rules:
     paths:
       include:
         - internal/service/serverlessrepo
+      exclude:
+        - internal/service/serverlessrepo/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -1759,6 +1821,8 @@ rules:
     paths:
       include:
         - internal/service/servicecatalog
+      exclude:
+        - internal/service/servicecatalog/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -1818,6 +1882,8 @@ rules:
     paths:
       include:
         - internal/service/servicecatalogappregistry
+      exclude:
+        - internal/service/servicecatalogappregistry/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -1877,6 +1943,8 @@ rules:
     paths:
       include:
         - internal/service/servicediscovery
+      exclude:
+        - internal/service/servicediscovery/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -1936,6 +2004,8 @@ rules:
     paths:
       include:
         - internal/service/servicequotas
+      exclude:
+        - internal/service/servicequotas/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -1995,6 +2065,8 @@ rules:
     paths:
       include:
         - internal/service/ses
+      exclude:
+        - internal/service/ses/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -2054,6 +2126,8 @@ rules:
     paths:
       include:
         - internal/service/sesv2
+      exclude:
+        - internal/service/sesv2/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -2113,6 +2187,8 @@ rules:
     paths:
       include:
         - internal/service/sfn
+      exclude:
+        - internal/service/sfn/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -2172,6 +2248,8 @@ rules:
     paths:
       include:
         - internal/service/shield
+      exclude:
+        - internal/service/shield/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -2231,6 +2309,8 @@ rules:
     paths:
       include:
         - internal/service/signer
+      exclude:
+        - internal/service/signer/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -2290,6 +2370,8 @@ rules:
     paths:
       include:
         - internal/service/simpledb
+      exclude:
+        - internal/service/simpledb/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -2349,6 +2431,8 @@ rules:
     paths:
       include:
         - internal/service/sns
+      exclude:
+        - internal/service/sns/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -2408,6 +2492,8 @@ rules:
     paths:
       include:
         - internal/service/sqs
+      exclude:
+        - internal/service/sqs/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -2467,6 +2553,8 @@ rules:
     paths:
       include:
         - internal/service/ssm
+      exclude:
+        - internal/service/ssm/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -2528,6 +2616,8 @@ rules:
     paths:
       include:
         - internal/service/ssmcontacts
+      exclude:
+        - internal/service/ssmcontacts/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -2587,6 +2677,8 @@ rules:
     paths:
       include:
         - internal/service/ssmincidents
+      exclude:
+        - internal/service/ssmincidents/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -2646,6 +2738,8 @@ rules:
     paths:
       include:
         - internal/service/ssmsap
+      exclude:
+        - internal/service/ssmsap/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -2705,6 +2799,8 @@ rules:
     paths:
       include:
         - internal/service/sso
+      exclude:
+        - internal/service/sso/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -2764,6 +2860,8 @@ rules:
     paths:
       include:
         - internal/service/ssoadmin
+      exclude:
+        - internal/service/ssoadmin/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -2823,6 +2921,8 @@ rules:
     paths:
       include:
         - internal/service/sfn
+      exclude:
+        - internal/service/sfn/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -2867,6 +2967,8 @@ rules:
     paths:
       include:
         - internal/service/storagegateway
+      exclude:
+        - internal/service/storagegateway/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -2926,6 +3028,8 @@ rules:
     paths:
       include:
         - internal/service/sts
+      exclude:
+        - internal/service/sts/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -2985,6 +3089,8 @@ rules:
     paths:
       include:
         - internal/service/swf
+      exclude:
+        - internal/service/swf/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -3044,6 +3150,8 @@ rules:
     paths:
       include:
         - internal/service/synthetics
+      exclude:
+        - internal/service/synthetics/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -3103,6 +3211,8 @@ rules:
     paths:
       include:
         - internal/service/timestreamwrite
+      exclude:
+        - internal/service/timestreamwrite/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -3162,6 +3272,8 @@ rules:
     paths:
       include:
         - internal/service/transcribe
+      exclude:
+        - internal/service/transcribe/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -3221,6 +3333,8 @@ rules:
     paths:
       include:
         - internal/service/transcribe
+      exclude:
+        - internal/service/transcribe/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -3265,6 +3379,8 @@ rules:
     paths:
       include:
         - internal/service/transfer
+      exclude:
+        - internal/service/transfer/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -3354,6 +3470,8 @@ rules:
     paths:
       include:
         - internal/service/verifiedpermissions
+      exclude:
+        - internal/service/verifiedpermissions/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -3428,6 +3546,8 @@ rules:
     paths:
       include:
         - internal/service/vpclattice
+      exclude:
+        - internal/service/vpclattice/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -3517,6 +3637,8 @@ rules:
     paths:
       include:
         - internal/service/waf
+      exclude:
+        - internal/service/waf/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -3577,6 +3699,8 @@ rules:
     paths:
       include:
         - internal/service/wafregional
+      exclude:
+        - internal/service/wafregional/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -3636,6 +3760,8 @@ rules:
     paths:
       include:
         - internal/service/wafv2
+      exclude:
+        - internal/service/wafv2/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -3710,6 +3836,8 @@ rules:
     paths:
       include:
         - internal/service/wellarchitected
+      exclude:
+        - internal/service/wellarchitected/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -3769,6 +3897,8 @@ rules:
     paths:
       include:
         - internal/service/worklink
+      exclude:
+        - internal/service/worklink/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -3828,6 +3958,8 @@ rules:
     paths:
       include:
         - internal/service/workspaces
+      exclude:
+        - internal/service/workspaces/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
@@ -3887,6 +4019,8 @@ rules:
     paths:
       include:
         - internal/service/xray
+      exclude:
+        - internal/service/xray/list_pages_gen.go
     patterns:
       - pattern: func $NAME( ... ) { ... }
       - metavariable-pattern:
