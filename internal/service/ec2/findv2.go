@@ -400,3 +400,14 @@ func findNetworkInterfaceByAttachmentIDV2(ctx context.Context, conn *ec2.Client,
 
 	return networkInterface, nil
 }
+
+func findNetworkInterfacesByAttachmentInstanceOwnerIDAndDescriptionV2(ctx context.Context, conn *ec2.Client, attachmentInstanceOwnerID, description string) ([]awstypes.NetworkInterface, error) {
+	input := &ec2.DescribeNetworkInterfacesInput{
+		Filters: newAttributeFilterListV2(map[string]string{
+			"attachment.instance-owner-id": attachmentInstanceOwnerID,
+			"description":                  description,
+		}),
+	}
+
+	return findNetworkInterfacesV2(ctx, conn, input)
+}
