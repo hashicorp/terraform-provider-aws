@@ -91,8 +91,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceTarget,
+			Factory:  resourceTarget,
 			TypeName: "aws_cloudwatch_event_target",
+			Name:     "Target",
 		},
 	}
 }

@@ -13,6 +13,7 @@ var (
 	ResourceEndpoint       = resourceEndpoint
 	ResourcePermission     = resourcePermission
 	ResourceRule           = resourceRule
+	ResourceTarget         = resourceTarget
 
 	FindAPIDestinationByName    = findAPIDestinationByName
 	FindArchiveByName           = findArchiveByName
@@ -22,7 +23,9 @@ var (
 	FindEventBusPolicyByName    = findEventBusPolicyByName
 	FindPermissionByTwoPartKey  = findPermissionByTwoPartKey
 	FindRuleByTwoPartKey        = findRuleByTwoPartKey
+	FindTargetByThreePartKey    = findTargetByThreePartKey
 	RuleEventPatternJSONDecoder = ruleEventPatternJSONDecoder
 	RuleCreateResourceID        = ruleCreateResourceID
 	RuleParseResourceID         = ruleParseResourceID
+	TargetParseImportID         = targetParseImportID
 )
