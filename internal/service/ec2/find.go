@@ -5543,20 +5543,20 @@ func FindIPAMScopeByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.Ipam
 	return output, nil
 }
 
-func FindKeyPair(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeKeyPairsInput) (*ec2.KeyPairInfo, error) {
-	output, err := FindKeyPairs(ctx, conn, input)
+func findKeyPair(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.DescribeKeyPairsInput) (*awstypes.KeyPairInfo, error) {
+	output, err := findKeyPairs(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func FindKeyPairs(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeKeyPairsInput) ([]*ec2.KeyPairInfo, error) {
-	output, err := conn.DescribeKeyPairsWithContext(ctx, input)
+func findKeyPairs(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.DescribeKeyPairsInput) ([]awstypes.KeyPairInfo, error) {
+	output, err := conn.DescribeKeyPairs(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidKeyPairNotFound) {
+	if tfawserr_sdkv2.ErrCodeEquals(err, errCodeInvalidKeyPairNotFound) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -5570,19 +5570,19 @@ func FindKeyPairs(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeKeyPair
 	return output.KeyPairs, nil
 }
 
-func FindKeyPairByName(ctx context.Context, conn *ec2.EC2, name string) (*ec2.KeyPairInfo, error) {
-	input := &ec2.DescribeKeyPairsInput{
-		KeyNames: aws.StringSlice([]string{name}),
+func findKeyPairByName(ctx context.Context, conn *ec2_sdkv2.Client, name string) (*awstypes.KeyPairInfo, error) {
+	input := &ec2_sdkv2.DescribeKeyPairsInput{
+		KeyNames: []string{name},
 	}
 
-	output, err := FindKeyPair(ctx, conn, input)
+	output, err := findKeyPair(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
 	}
 
 	// Eventual consistency check.
-	if aws.StringValue(output.KeyName) != name {
+	if aws_sdkv2.ToString(output.KeyName) != name {
 		return nil, &retry.NotFoundError{
 			LastRequest: input,
 		}

@@ -1158,7 +1158,7 @@ func sweepKeyPairs(region string) error {
 	}
 
 	for _, v := range output.KeyPairs {
-		r := ResourceKeyPair()
+		r := resourceKeyPair()
 		d := r.Data(nil)
 		d.SetId(aws.StringValue(v.KeyName))
 
