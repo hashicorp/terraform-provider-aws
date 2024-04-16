@@ -6,6 +6,10 @@ package cloudfront
 // Exports for use in tests only.
 var (
 	ResourceContinuousDeploymentPolicy = newResourceContinuousDeploymentPolicy
+	ResourceFunction                   = resourceFunction
+	ResourceKeyValueStore              = newKeyValueStoreResource
 
-	FindPublicKeyByID = findPublicKeyByID
+	FindFunctionByTwoPartKey = findFunctionByTwoPartKey
+	FindKeyValueStoreByName  = findKeyValueStoreByName
+	FindPublicKeyByID        = findPublicKeyByID
 )

@@ -30,7 +30,7 @@ func TestAccS3ControlMultiRegionAccessPoint_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMultiRegionAccessPointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -76,7 +76,7 @@ func TestAccS3ControlMultiRegionAccessPoint_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMultiRegionAccessPointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -101,7 +101,7 @@ func TestAccS3ControlMultiRegionAccessPoint_PublicAccessBlock(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMultiRegionAccessPointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -135,7 +135,7 @@ func TestAccS3ControlMultiRegionAccessPoint_name(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMultiRegionAccessPointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -178,7 +178,7 @@ func TestAccS3ControlMultiRegionAccessPoint_threeRegions(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 3)
 			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3),
 		CheckDestroy:             testAccCheckMultiRegionAccessPointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -217,7 +217,7 @@ func TestAccS3ControlMultiRegionAccessPoint_putAndGetObject(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMultiRegionAccessPointDestroy(ctx),
 		Steps: []resource.TestStep{

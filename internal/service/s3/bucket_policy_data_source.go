@@ -12,8 +12,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 )
 
-// @SDKDataSource("aws_s3_bucket_policy")
-func DataSourceBucketPolicy() *schema.Resource {
+// @SDKDataSource("aws_s3_bucket_policy", name="Bucket Policy")
+func dataSourceBucketPolicy() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceBucketPolicyRead,
 

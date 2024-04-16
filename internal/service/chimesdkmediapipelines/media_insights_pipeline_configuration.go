@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -471,11 +472,13 @@ func RealTimeAlertConfigurationSchema() *schema.Schema {
 }
 
 func resourceMediaInsightsPipelineConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ChimeSDKMediaPipelinesClient(ctx)
 
 	elements, err := expandElements(d.Get("elements").([]interface{}))
 	if err != nil {
-		return create.DiagError(names.ChimeSDKMediaPipelines, create.ErrActionCreating,
+		return create.AppendDiagError(diags, names.ChimeSDKMediaPipelines, create.ErrActionCreating,
 			ResNameMediaInsightsPipelineConfiguration, d.Get("name").(string), err)
 	}
 
@@ -489,7 +492,7 @@ func resourceMediaInsightsPipelineConfigurationCreate(ctx context.Context, d *sc
 	if realTimeAlertConfiguration, ok := d.GetOk("real_time_alert_configuration"); ok && len(realTimeAlertConfiguration.([]interface{})) > 0 {
 		rtac, err := expandRealTimeAlertConfiguration(realTimeAlertConfiguration.([]interface{})[0].(map[string]interface{}))
 		if err != nil {
-			return create.DiagError(names.ChimeSDKMediaPipelines, create.ErrActionCreating,
+			return create.AppendDiagError(diags, names.ChimeSDKMediaPipelines, create.ErrActionCreating,
 				ResNameMediaInsightsPipelineConfiguration, d.Get("name").(string), err)
 		}
 		in.RealTimeAlertConfiguration = rtac
@@ -511,19 +514,21 @@ func resourceMediaInsightsPipelineConfigurationCreate(ctx context.Context, d *sc
 		return nil
 	})
 	if createError != nil {
-		return create.DiagError(names.ChimeSDKMediaPipelines, create.ErrActionCreating, ResNameMediaInsightsPipelineConfiguration, d.Get("name").(string), createError)
+		return create.AppendDiagError(diags, names.ChimeSDKMediaPipelines, create.ErrActionCreating, ResNameMediaInsightsPipelineConfiguration, d.Get("name").(string), createError)
 	}
 
 	if out == nil || out.MediaInsightsPipelineConfiguration == nil {
-		return create.DiagError(names.ChimeSDKMediaPipelines, create.ErrActionCreating, ResNameMediaInsightsPipelineConfiguration, d.Get("name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.ChimeSDKMediaPipelines, create.ErrActionCreating, ResNameMediaInsightsPipelineConfiguration, d.Get("name").(string), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(out.MediaInsightsPipelineConfiguration.MediaInsightsPipelineConfigurationArn))
 
-	return resourceMediaInsightsPipelineConfigurationRead(ctx, d, meta)
+	return append(diags, resourceMediaInsightsPipelineConfigurationRead(ctx, d, meta)...)
 }
 
 func resourceMediaInsightsPipelineConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ChimeSDKMediaPipelinesClient(ctx)
 
 	out, err := FindMediaInsightsPipelineConfigurationByID(ctx, conn, d.Id())
@@ -531,11 +536,11 @@ func resourceMediaInsightsPipelineConfigurationRead(ctx context.Context, d *sche
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] ChimeSDKMediaPipelines MediaInsightsPipelineConfiguration (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.ChimeSDKMediaPipelines, create.ErrActionReading, ResNameMediaInsightsPipelineConfiguration, d.Id(), err)
+		return create.AppendDiagError(diags, names.ChimeSDKMediaPipelines, create.ErrActionReading, ResNameMediaInsightsPipelineConfiguration, d.Id(), err)
 	}
 
 	d.Set("arn", out.MediaInsightsPipelineConfigurationArn)
@@ -543,24 +548,26 @@ func resourceMediaInsightsPipelineConfigurationRead(ctx context.Context, d *sche
 	d.Set("id", out.MediaInsightsPipelineConfigurationId)
 	d.Set("resource_access_role_arn", out.ResourceAccessRoleArn)
 	if err := d.Set("elements", flattenElements(out.Elements)); err != nil {
-		return diag.Errorf("setting elements: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting elements: %s", err)
 	}
 	if out.RealTimeAlertConfiguration != nil {
 		if err := d.Set("real_time_alert_configuration", flattenRealTimeAlertConfiguration(out.RealTimeAlertConfiguration)); err != nil {
-			return diag.Errorf("setting real time alert configuration: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting real time alert configuration: %s", err)
 		}
 	}
 
-	return nil
+	return diags
 }
 
 func resourceMediaInsightsPipelineConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ChimeSDKMediaPipelinesClient(ctx)
 
 	if d.HasChangesExcept(names.AttrTags, names.AttrTagsAll) {
 		elements, err := expandElements(d.Get("elements").([]interface{}))
 		if err != nil {
-			return create.DiagError(names.ChimeSDKMediaPipelines, create.ErrActionUpdating, ResNameMediaInsightsPipelineConfiguration, d.Id(), err)
+			return create.AppendDiagError(diags, names.ChimeSDKMediaPipelines, create.ErrActionUpdating, ResNameMediaInsightsPipelineConfiguration, d.Id(), err)
 		}
 
 		in := &chimesdkmediapipelines.UpdateMediaInsightsPipelineConfigurationInput{
@@ -571,7 +578,7 @@ func resourceMediaInsightsPipelineConfigurationUpdate(ctx context.Context, d *sc
 		if realTimeAlertConfiguration, ok := d.GetOk("real_time_alert_configuration"); ok && len(realTimeAlertConfiguration.([]interface{})) > 0 {
 			rtac, err := expandRealTimeAlertConfiguration(realTimeAlertConfiguration.([]interface{})[0].(map[string]interface{}))
 			if err != nil {
-				return create.DiagError(names.ChimeSDKMediaPipelines, create.ErrActionUpdating, ResNameMediaInsightsPipelineConfiguration, d.Id(), err)
+				return create.AppendDiagError(diags, names.ChimeSDKMediaPipelines, create.ErrActionUpdating, ResNameMediaInsightsPipelineConfiguration, d.Id(), err)
 			}
 			in.RealTimeAlertConfiguration = rtac
 		}
@@ -591,14 +598,16 @@ func resourceMediaInsightsPipelineConfigurationUpdate(ctx context.Context, d *sc
 			return nil
 		})
 		if updateError != nil {
-			return create.DiagError(names.ChimeSDKMediaPipelines, create.ErrActionUpdating, ResNameMediaInsightsPipelineConfiguration, d.Id(), updateError)
+			return create.AppendDiagError(diags, names.ChimeSDKMediaPipelines, create.ErrActionUpdating, ResNameMediaInsightsPipelineConfiguration, d.Id(), updateError)
 		}
 	}
 
-	return resourceMediaInsightsPipelineConfigurationRead(ctx, d, meta)
+	return append(diags, resourceMediaInsightsPipelineConfigurationRead(ctx, d, meta)...)
 }
 
 func resourceMediaInsightsPipelineConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ChimeSDKMediaPipelinesClient(ctx)
 
 	log.Printf("[INFO] Deleting ChimeSDKMediaPipelines MediaInsightsPipelineConfiguration %s", d.Id())
@@ -611,14 +620,14 @@ func resourceMediaInsightsPipelineConfigurationDelete(ctx context.Context, d *sc
 	}, "ConflictException", "Cannot delete a Media Insights Pipeline Configuration while it is in use by 1 or more Voice Connectors")
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.ChimeSDKMediaPipelines, create.ErrActionDeleting, ResNameMediaInsightsPipelineConfiguration, d.Id(), err)
+		return create.AppendDiagError(diags, names.ChimeSDKMediaPipelines, create.ErrActionDeleting, ResNameMediaInsightsPipelineConfiguration, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindMediaInsightsPipelineConfigurationByID(ctx context.Context, conn *chimesdkmediapipelines.Client, id string) (*awstypes.MediaInsightsPipelineConfiguration, error) {

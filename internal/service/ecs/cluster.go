@@ -93,6 +93,7 @@ func ResourceCluster() *schema.Resource {
 									"logging": {
 										Type:         schema.TypeString,
 										Optional:     true,
+										Default:      ecs.ExecuteCommandLoggingDefault,
 										ValidateFunc: validation.StringInSlice(ecs.ExecuteCommandLogging_Values(), false),
 									},
 								},
@@ -260,6 +261,8 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 }
 
 func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	if d.HasChanges("configuration", "service_connect_defaults", "setting") {
@@ -282,15 +285,15 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		_, err := conn.UpdateClusterWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating ECS Cluster (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating ECS Cluster (%s): %s", d.Id(), err)
 		}
 
 		if _, err := waitClusterAvailable(ctx, conn, d.Id()); err != nil {
-			return diag.Errorf("waiting for ECS Cluster (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for ECS Cluster (%s) update: %s", d.Id(), err)
 		}
 	}
 
-	return nil
+	return diags
 }
 
 func FindClusterByNameOrARN(ctx context.Context, conn *ecs.ECS, nameOrARN string) (*ecs.Cluster, error) {
@@ -574,7 +577,7 @@ func flattenClusterConfigurationExecuteCommandConfigurationLogConfiguration(apiO
 }
 
 func expandClusterConfiguration(nc []interface{}) *ecs.ClusterConfiguration {
-	if len(nc) == 0 {
+	if len(nc) == 0 || nc[0] == nil {
 		return &ecs.ClusterConfiguration{}
 	}
 	raw := nc[0].(map[string]interface{})
@@ -588,7 +591,7 @@ func expandClusterConfiguration(nc []interface{}) *ecs.ClusterConfiguration {
 }
 
 func expandClusterConfigurationExecuteCommandConfiguration(nc []interface{}) *ecs.ExecuteCommandConfiguration {
-	if len(nc) == 0 {
+	if len(nc) == 0 || nc[0] == nil {
 		return &ecs.ExecuteCommandConfiguration{}
 	}
 	raw := nc[0].(map[string]interface{})
@@ -610,7 +613,7 @@ func expandClusterConfigurationExecuteCommandConfiguration(nc []interface{}) *ec
 }
 
 func expandClusterConfigurationExecuteCommandLogConfiguration(nc []interface{}) *ecs.ExecuteCommandLogConfiguration {
-	if len(nc) == 0 {
+	if len(nc) == 0 || nc[0] == nil {
 		return &ecs.ExecuteCommandLogConfiguration{}
 	}
 	raw := nc[0].(map[string]interface{})

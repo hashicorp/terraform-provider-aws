@@ -48,65 +48,65 @@ This data source exports the following attributes in addition to the arguments a
 * `advancedOptions` - Key-value string pairs to specify advanced configuration options.
 * `advancedSecurityOptions` - Status of the Elasticsearch domain's advanced security options. The block consists of the following attributes:
     * `enabled` - Whether advanced security is enabled.
-    * `internal_user_database_enabled` - Whether the internal user database is enabled.
+    * `internalUserDatabaseEnabled` - Whether the internal user database is enabled.
 * `arn` – The ARN of the domain.
 * `autoTuneOptions` - Configuration of the Auto-Tune options of the domain.
-    * `desired_state` - The Auto-Tune desired state for the domain.
-    * `maintenance_schedule` - A list of the nested configurations for the Auto-Tune maintenance windows of the domain.
-        * `start_at` - Date and time at which the Auto-Tune maintenance schedule starts in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
+    * `desiredState` - The Auto-Tune desired state for the domain.
+    * `maintenanceSchedule` - A list of the nested configurations for the Auto-Tune maintenance windows of the domain.
+        * `startAt` - Date and time at which the Auto-Tune maintenance schedule starts in [RFC3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
         * `duration` - Configuration block for the duration of the Auto-Tune maintenance window.
             * `value` - Duration of an Auto-Tune maintenance window.
             * `unit` - Unit of time.
-        * `cron_expression_for_recurrence` - Cron expression for an Auto-Tune maintenance schedule.
-    * `rollback_on_disable` - Whether the domain is set to roll back to default Auto-Tune settings when disabling Auto-Tune.
+        * `cronExpressionForRecurrence` - Cron expression for an Auto-Tune maintenance schedule.
+    * `rollbackOnDisable` - Whether the domain is set to roll back to default Auto-Tune settings when disabling Auto-Tune.
 * `clusterConfig` - Cluster configuration of the domain.
-    * `cold_storage_options` - Configuration block containing cold storage configuration.
+    * `coldStorageOptions` - Configuration block containing cold storage configuration.
         * `enabled` - Indicates  cold storage is enabled.
-    * `instance_type` - Instance type of data nodes in the cluster.
-    * `instance_count` - Number of instances in the cluster.
-    * `dedicated_master_enabled` - Indicates whether dedicated master nodes are enabled for the cluster.
-    * `dedicated_master_type` - Instance type of the dedicated master nodes in the cluster.
-    * `dedicated_master_count` - Number of dedicated master nodes in the cluster.
-    * `zone_awareness_enabled` - Indicates whether zone awareness is enabled.
-    * `zone_awareness_config` - Configuration block containing zone awareness settings.
-        * `availability_zone_count` - Number of availability zones used.
-    * `warm_enabled` - Warm storage is enabled.
-    * `warm_count` - The number of warm nodes in the cluster.
-    * `warm_type` - The instance type for the Elasticsearch cluster's warm nodes.
+    * `instanceType` - Instance type of data nodes in the cluster.
+    * `instanceCount` - Number of instances in the cluster.
+    * `dedicatedMasterEnabled` - Indicates whether dedicated master nodes are enabled for the cluster.
+    * `dedicatedMasterType` - Instance type of the dedicated master nodes in the cluster.
+    * `dedicatedMasterCount` - Number of dedicated master nodes in the cluster.
+    * `zoneAwarenessEnabled` - Indicates whether zone awareness is enabled.
+    * `zoneAwarenessConfig` - Configuration block containing zone awareness settings.
+        * `availabilityZoneCount` - Number of availability zones used.
+    * `warmEnabled` - Warm storage is enabled.
+    * `warmCount` - The number of warm nodes in the cluster.
+    * `warmType` - The instance type for the Elasticsearch cluster's warm nodes.
 * `cognitoOptions` - Domain Amazon Cognito Authentication options for Kibana.
     * `enabled` - Whether Amazon Cognito Authentication is enabled.
-    * `user_pool_id` - The Cognito User pool used by the domain.
-    * `identity_pool_id` - The Cognito Identity pool used by the domain.
-    * `role_arn` - The IAM Role with the AmazonESCognitoAccess policy attached.
+    * `userPoolId` - The Cognito User pool used by the domain.
+    * `identityPoolId` - The Cognito Identity pool used by the domain.
+    * `roleArn` - The IAM Role with the AmazonESCognitoAccess policy attached.
 * `created` – Status of the creation of the domain.
 * `deleted` – Status of the deletion of the domain.
 * `domainId` – Unique identifier for the domain.
 * `ebsOptions` - EBS Options for the instances in the domain.
-    * `ebs_enabled` - Whether EBS volumes are attached to data nodes in the domain.
+    * `ebsEnabled` - Whether EBS volumes are attached to data nodes in the domain.
     * `throughput` - The throughput (in MiB/s) of the EBS volumes attached to data nodes.
-    * `volume_type` - The type of EBS volumes attached to data nodes.
-    * `volume_size` - The size of EBS volumes attached to data nodes (in GB).
+    * `volumeType` - The type of EBS volumes attached to data nodes.
+    * `volumeSize` - The size of EBS volumes attached to data nodes (in GB).
     * `iops` - The baseline input/output (I/O) performance of EBS volumes attached to data nodes.
 * `elasticsearchVersion` – Elasticsearch version for the domain.
 * `encryptionAtRest` - Domain encryption at rest related options.
     * `enabled` - Whether encryption at rest is enabled in the domain.
-    * `kms_key_id` - The KMS key id used to encrypt data at rest.
+    * `kmsKeyId` - The KMS key id used to encrypt data at rest.
 * `endpoint` – Domain-specific endpoint used to submit index, search, and data upload requests.
 * `kibanaEndpoint` - Domain-specific endpoint used to access the Kibana application.
 * `logPublishingOptions` - Domain log publishing related options.
-    * `log_type` - The type of Elasticsearch log being published.
-    * `cloudwatch_log_group_arn` - The CloudWatch Log Group where the logs are published.
+    * `logType` - The type of Elasticsearch log being published.
+    * `cloudwatchLogGroupArn` - The CloudWatch Log Group where the logs are published.
     * `enabled` - Whether log publishing is enabled.
 * `nodeToNodeEncryption` - Domain in transit encryption related options.
     * `enabled` - Whether node to node encryption is enabled.
 * `processing` – Status of a configuration change in the domain.
 * `snapshotOptions` – Domain snapshot related options.
-    * `automated_snapshot_start_hour` - Hour during which the service takes an automated daily snapshot of the indices in the domain.
+    * `automatedSnapshotStartHour` - Hour during which the service takes an automated daily snapshot of the indices in the domain.
 * `tags` - Tags assigned to the domain.
 * `vpcOptions` - VPC Options for private Elasticsearch domains.
-    * `availability_zones` - The availability zones used by the domain.
-    * `security_group_ids` - The security groups used by the domain.
-    * `subnet_ids` - The subnets used by the domain.
-    * `vpc_id` - The VPC used by the domain.
+    * `availabilityZones` - The availability zones used by the domain.
+    * `securityGroupIds` - The security groups used by the domain.
+    * `subnetIds` - The subnets used by the domain.
+    * `vpcId` - The VPC used by the domain.
 
-<!-- cache-key: cdktf-0.19.0 input-7feb15d47a2d190cb607bbd9038a049ea8b0ea44a4960e578dae2f2fe8f04a38 -->
+<!-- cache-key: cdktf-0.20.1 input-7feb15d47a2d190cb607bbd9038a049ea8b0ea44a4960e578dae2f2fe8f04a38 -->

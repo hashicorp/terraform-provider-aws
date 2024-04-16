@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccKMSReplicaKey_basic(t *testing.T) {
@@ -27,7 +28,7 @@ func TestAccKMSReplicaKey_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckKeyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -68,7 +69,7 @@ func TestAccKMSReplicaKey_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckKeyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -98,7 +99,7 @@ func TestAccKMSReplicaKey_descriptionAndEnabled(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckKeyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -149,7 +150,7 @@ func TestAccKMSReplicaKey_policy(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckKeyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -190,7 +191,7 @@ func TestAccKMSReplicaKey_tags(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 2)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckKeyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -259,7 +260,7 @@ func TestAccKMSReplicaKey_twoReplicas(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckMultipleRegion(t, 3)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 3),
 		CheckDestroy:             testAccCheckKeyDestroy(ctx),
 		Steps: []resource.TestStep{

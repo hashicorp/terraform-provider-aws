@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -64,6 +65,8 @@ func ResourceCustomerGatewayAssociation() *schema.Resource {
 }
 
 func resourceCustomerGatewayAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID := d.Get("global_network_id").(string)
@@ -106,25 +109,27 @@ func resourceCustomerGatewayAssociationCreate(ctx context.Context, d *schema.Res
 	)
 
 	if err != nil {
-		return diag.Errorf("creating Network Manager Customer Gateway Association (%s): %s", id, err)
+		return sdkdiag.AppendErrorf(diags, "creating Network Manager Customer Gateway Association (%s): %s", id, err)
 	}
 
 	d.SetId(id)
 
 	if _, err := waitCustomerGatewayAssociationCreated(ctx, conn, globalNetworkID, customerGatewayARN, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for Network Manager Customer Gateway Association (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Network Manager Customer Gateway Association (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceCustomerGatewayAssociationRead(ctx, d, meta)
+	return append(diags, resourceCustomerGatewayAssociationRead(ctx, d, meta)...)
 }
 
 func resourceCustomerGatewayAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID, customerGatewayARN, err := CustomerGatewayAssociationParseResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	output, err := FindCustomerGatewayAssociationByTwoPartKey(ctx, conn, globalNetworkID, customerGatewayARN)
@@ -132,11 +137,11 @@ func resourceCustomerGatewayAssociationRead(ctx context.Context, d *schema.Resou
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Network Manager Customer Gateway Association %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Network Manager Customer Gateway Association (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Network Manager Customer Gateway Association (%s): %s", d.Id(), err)
 	}
 
 	d.Set("customer_gateway_arn", output.CustomerGatewayArn)
@@ -144,25 +149,27 @@ func resourceCustomerGatewayAssociationRead(ctx context.Context, d *schema.Resou
 	d.Set("global_network_id", output.GlobalNetworkId)
 	d.Set("link_id", output.LinkId)
 
-	return nil
+	return diags
 }
 
 func resourceCustomerGatewayAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkManagerConn(ctx)
 
 	globalNetworkID, customerGatewayARN, err := CustomerGatewayAssociationParseResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	err = disassociateCustomerGateway(ctx, conn, globalNetworkID, customerGatewayARN, d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	return nil
+	return diags
 }
 
 func disassociateCustomerGateway(ctx context.Context, conn *networkmanager.NetworkManager, globalNetworkID, customerGatewayARN string, timeout time.Duration) error {

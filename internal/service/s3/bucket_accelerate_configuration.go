@@ -21,8 +21,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_s3_bucket_accelerate_configuration")
-func ResourceBucketAccelerateConfiguration() *schema.Resource {
+// @SDKResource("aws_s3_bucket_accelerate_configuration", name="Bucket Accelerate Configuration")
+func resourceBucketAccelerateConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketAccelerateConfigurationCreate,
 		ReadWithoutTimeout:   resourceBucketAccelerateConfigurationRead,
@@ -70,9 +70,13 @@ func resourceBucketAccelerateConfigurationCreate(ctx context.Context, d *schema.
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return conn.PutBucketAccelerateConfiguration(ctx, input)
 	}, errCodeNoSuchBucket)
+
+	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "AccelerateConfiguration is not valid, expected CreateBucketConfiguration") {
+		err = errDirectoryBucket(err)
+	}
 
 	if err != nil {
 		return diag.Errorf("creating S3 Bucket (%s) Accelerate Configuration: %s", bucket, err)
@@ -80,7 +84,7 @@ func resourceBucketAccelerateConfigurationCreate(ctx context.Context, d *schema.
 
 	d.SetId(CreateResourceID(bucket, expectedBucketOwner))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return findBucketAccelerateConfiguration(ctx, conn, bucket, expectedBucketOwner)
 	})
 

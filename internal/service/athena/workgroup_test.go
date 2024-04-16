@@ -29,7 +29,7 @@ func TestAccAthenaWorkGroup_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWorkGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -72,7 +72,7 @@ func TestAccAthenaWorkGroup_aclConfig(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWorkGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -105,7 +105,7 @@ func TestAccAthenaWorkGroup_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWorkGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -129,7 +129,7 @@ func TestAccAthenaWorkGroup_bytesScannedCutoffPerQuery(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWorkGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -167,7 +167,7 @@ func TestAccAthenaWorkGroup_enforceWorkGroup(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWorkGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -205,7 +205,7 @@ func TestAccAthenaWorkGroup_configurationEngineVersion(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWorkGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -262,7 +262,7 @@ func TestAccAthenaWorkGroup_configurationExecutionRole(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWorkGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -292,7 +292,7 @@ func TestAccAthenaWorkGroup_publishCloudWatchMetricsEnabled(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWorkGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -330,7 +330,7 @@ func TestAccAthenaWorkGroup_ResultEncryption_sseS3(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWorkGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -364,7 +364,7 @@ func TestAccAthenaWorkGroup_ResultEncryption_kms(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWorkGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -408,7 +408,7 @@ func TestAccAthenaWorkGroup_Result_outputLocation(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWorkGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -448,7 +448,7 @@ func TestAccAthenaWorkGroup_requesterPaysEnabled(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWorkGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -492,7 +492,7 @@ func TestAccAthenaWorkGroup_ResultOutputLocation_forceDestroy(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWorkGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -534,7 +534,7 @@ func TestAccAthenaWorkGroup_description(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWorkGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -570,7 +570,7 @@ func TestAccAthenaWorkGroup_state(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWorkGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -616,7 +616,7 @@ func TestAccAthenaWorkGroup_forceDestroy(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWorkGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -646,7 +646,7 @@ func TestAccAthenaWorkGroup_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckWorkGroupDestroy(ctx),
 		Steps: []resource.TestStep{

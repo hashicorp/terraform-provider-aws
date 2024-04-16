@@ -27,7 +27,7 @@ func DataSourceTransitGatewayVPNAttachment() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
-			"filter": CustomFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"tags":   tftags.TagsSchemaComputed(),
 			"transit_gateway_id": {
 				Type:     schema.TypeString,
@@ -47,29 +47,29 @@ func dataSourceTransitGatewayVPNAttachmentRead(ctx context.Context, d *schema.Re
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &ec2.DescribeTransitGatewayAttachmentsInput{
-		Filters: BuildAttributeFilterList(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"resource-type": ec2.TransitGatewayAttachmentResourceTypeVpn,
 		}),
 	}
 
-	input.Filters = append(input.Filters, BuildCustomFilterList(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 
 	if v, ok := d.GetOk("tags"); ok {
-		input.Filters = append(input.Filters, BuildTagFilterList(
+		input.Filters = append(input.Filters, newTagFilterList(
 			Tags(tftags.New(ctx, v.(map[string]interface{}))),
 		)...)
 	}
 
 	if v, ok := d.GetOk("vpn_connection_id"); ok {
-		input.Filters = append(input.Filters, BuildAttributeFilterList(map[string]string{
+		input.Filters = append(input.Filters, newAttributeFilterList(map[string]string{
 			"resource-id": v.(string),
 		})...)
 	}
 
 	if v, ok := d.GetOk("transit_gateway_id"); ok {
-		input.Filters = append(input.Filters, BuildAttributeFilterList(map[string]string{
+		input.Filters = append(input.Filters, newAttributeFilterList(map[string]string{
 			"transit-gateway-id": v.(string),
 		})...)
 	}

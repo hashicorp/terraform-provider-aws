@@ -93,7 +93,7 @@ func dataSourceProductRead(ctx context.Context, d *schema.ResourceData, meta int
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ServiceCatalogConn(ctx)
 
-	output, err := WaitProductReady(ctx, conn, d.Get("accept_language").(string), d.Get("id").(string), d.Timeout(schema.TimeoutRead))
+	output, err := waitProductReady(ctx, conn, d.Get("accept_language").(string), d.Get("id").(string), d.Timeout(schema.TimeoutRead))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "describing Service Catalog Product: %s", err)

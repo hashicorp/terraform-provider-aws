@@ -45,4 +45,4 @@ The following arguments are required:
 
 See the [`aws_auditmanager_framework` resource](/docs/providers/aws/r/auditmanager_framework.html) for details on the returned attributes - they are identical.
 
-<!-- cache-key: cdktf-0.19.0 input-e12a3dc3cc7a030af0ee05ef605e7ae0ed5532ec722427fc48f953a615499bf2 -->
+<!-- cache-key: cdktf-0.20.1 input-e12a3dc3cc7a030af0ee05ef605e7ae0ed5532ec722427fc48f953a615499bf2 -->

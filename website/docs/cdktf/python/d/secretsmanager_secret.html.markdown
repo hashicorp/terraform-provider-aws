@@ -62,10 +62,12 @@ class MyConvertedCode(TerraformStack):
 This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the secret.
+* `created_date` - Created date of the secret in UTC.
 * `description` - Description of the secret.
 * `kms_key_id` - Key Management Service (KMS) Customer Master Key (CMK) associated with the secret.
 * `id` - ARN of the secret.
-* `tags` - Tags of the secret.
+* `last_changed_date` - Last updated date of the secret in UTC.
 * `policy` - Resource-based policy document that's attached to the secret.
+* `tags` - Tags of the secret.
 
-<!-- cache-key: cdktf-0.19.0 input-0fca6cfb25caf0f32cdf4fba62b9433e266444e38aa59620febc991b1723f0c4 -->
+<!-- cache-key: cdktf-0.20.1 input-1cf3158ebed32b0b6c34be5689b105718c04748bc53773ad85c5652ccd87a14c -->

@@ -77,12 +77,14 @@ const (
 	orgConfigMutex                   = "f14b54d7-2b10-58c2-9c1b-c48260a4825d"
 )
 
-func resourceOrganizationConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+func resourceOrganizationConfigurationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) (diags diag.Diagnostics) {
 	d.SetId(meta.(*conns.AWSClient).AccountID)
-	return resourceOrganizationConfigurationUpdate(ctx, d, meta)
+	return append(diags, resourceOrganizationConfigurationUpdate(ctx, d, meta)...)
 }
 
 func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).Inspector2Client(ctx)
 
 	out, err := conn.DescribeOrganizationConfiguration(ctx, &inspector2.DescribeOrganizationConfigurationInput{})
@@ -90,23 +92,25 @@ func resourceOrganizationConfigurationRead(ctx context.Context, d *schema.Resour
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Inspector2 OrganizationConfiguration (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Inspector2, create.ErrActionReading, ResNameOrganizationConfiguration, d.Id(), err)
+		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionReading, ResNameOrganizationConfiguration, d.Id(), err)
 	}
 
 	if err := d.Set("auto_enable", []interface{}{flattenAutoEnable(out.AutoEnable)}); err != nil {
-		return create.DiagError(names.Inspector2, create.ErrActionSetting, ResNameOrganizationConfiguration, d.Id(), err)
+		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionSetting, ResNameOrganizationConfiguration, d.Id(), err)
 	}
 
 	d.Set("max_account_limit_reached", out.MaxAccountLimitReached)
 
-	return nil
+	return diags
 }
 
 func resourceOrganizationConfigurationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).Inspector2Client(ctx)
 
 	update := false
@@ -119,7 +123,7 @@ func resourceOrganizationConfigurationUpdate(ctx context.Context, d *schema.Reso
 	}
 
 	if !update {
-		return nil
+		return diags
 	}
 
 	conns.GlobalMutexKV.Lock(orgConfigMutex)
@@ -128,17 +132,19 @@ func resourceOrganizationConfigurationUpdate(ctx context.Context, d *schema.Reso
 	log.Printf("[DEBUG] Updating Inspector2 Organization Configuration (%s): %#v", d.Id(), in)
 	_, err := conn.UpdateOrganizationConfiguration(ctx, in)
 	if err != nil {
-		return create.DiagError(names.Inspector2, create.ErrActionUpdating, ResNameOrganizationConfiguration, d.Id(), err)
+		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionUpdating, ResNameOrganizationConfiguration, d.Id(), err)
 	}
 
 	if err := waitOrganizationConfigurationUpdated(ctx, conn, d.Get("auto_enable.0.ec2").(bool), d.Get("auto_enable.0.ecr").(bool), d.Get("auto_enable.0.lambda").(bool), d.Get("auto_enable.0.lambda_code").(bool), d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return create.DiagError(names.Inspector2, create.ErrActionWaitingForUpdate, ResNameOrganizationConfiguration, d.Id(), err)
+		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionWaitingForUpdate, ResNameOrganizationConfiguration, d.Id(), err)
 	}
 
-	return resourceOrganizationConfigurationRead(ctx, d, meta)
+	return append(diags, resourceOrganizationConfigurationRead(ctx, d, meta)...)
 }
 
 func resourceOrganizationConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).Inspector2Client(ctx)
 
 	conns.GlobalMutexKV.Lock(orgConfigMutex)
@@ -156,14 +162,14 @@ func resourceOrganizationConfigurationDelete(ctx context.Context, d *schema.Reso
 	log.Printf("[DEBUG] Setting Inspector2 Organization Configuration (%s): %#v", d.Id(), in)
 	_, err := conn.UpdateOrganizationConfiguration(ctx, in)
 	if err != nil {
-		return create.DiagError(names.Inspector2, create.ErrActionUpdating, ResNameOrganizationConfiguration, d.Id(), err)
+		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionUpdating, ResNameOrganizationConfiguration, d.Id(), err)
 	}
 
 	if err := waitOrganizationConfigurationUpdated(ctx, conn, false, false, false, false, d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return create.DiagError(names.Inspector2, create.ErrActionWaitingForUpdate, ResNameOrganizationConfiguration, d.Id(), err)
+		return create.AppendDiagError(diags, names.Inspector2, create.ErrActionWaitingForUpdate, ResNameOrganizationConfiguration, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func waitOrganizationConfigurationUpdated(ctx context.Context, conn *inspector2.Client, ec2, ecr, lambda, lambda_code bool, timeout time.Duration) error {

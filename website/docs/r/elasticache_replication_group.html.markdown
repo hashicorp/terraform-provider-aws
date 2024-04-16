@@ -196,7 +196,7 @@ The following arguments are optional:
 * `apply_immediately` - (Optional) Specifies whether any modifications are applied immediately, or during the next maintenance window. Default is `false`.
 * `at_rest_encryption_enabled` - (Optional) Whether to enable encryption at rest.
 * `auth_token` - (Optional) Password used to access a password protected server. Can be specified only if `transit_encryption_enabled = true`.
-* `auth_token_update_strategy` - (Optional) Strategy to use when updating the `auth_token`. Can be specified only if `transit_encryption_enabled = true`. Valid values are `SET`, `ROTATE`, and `DELETE`. Defaults to `ROTATE`.
+* `auth_token_update_strategy` - (Optional) Strategy to use when updating the `auth_token`. Valid values are `SET`, `ROTATE`, and `DELETE`. Defaults to `ROTATE`.
 * `auto_minor_version_upgrade` - (Optional) Specifies whether minor version engine upgrades will be applied automatically to the underlying Cache Cluster instances during the maintenance window.
   Only supported for engine type `"redis"` and if the engine version is 6 or higher.
   Defaults to `true`.

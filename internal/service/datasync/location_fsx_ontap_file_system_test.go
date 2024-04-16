@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/datasync"
+	"github.com/aws/aws-sdk-go-v2/service/datasync"
 	"github.com/aws/aws-sdk-go/service/fsx"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdatasync "github.com/hashicorp/terraform-provider-aws/internal/service/datasync"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccDataSyncLocationFSxONTAPFileSystem_basic(t *testing.T) {
@@ -34,7 +35,7 @@ func TestAccDataSyncLocationFSxONTAPFileSystem_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, fsx.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLocationFSxONTAPDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -78,7 +79,7 @@ func TestAccDataSyncLocationFSxONTAPFileSystem_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, fsx.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLocationFSxONTAPDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -109,7 +110,7 @@ func TestAccDataSyncLocationFSxONTAPFileSystem_smb(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, fsx.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLocationFSxONTAPDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -150,7 +151,7 @@ func TestAccDataSyncLocationFSxONTAPFileSystem_subdirectory(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, fsx.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLocationFSxONTAPDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -183,7 +184,7 @@ func TestAccDataSyncLocationFSxONTAPFileSystem_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, fsx.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, datasync.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DataSyncServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckLocationFSxONTAPDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -224,7 +225,7 @@ func TestAccDataSyncLocationFSxONTAPFileSystem_tags(t *testing.T) {
 
 func testAccCheckLocationFSxONTAPDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_datasync_location_fsx_ontap_file_system" {
@@ -255,7 +256,7 @@ func testAccCheckLocationFSxONTAPExists(ctx context.Context, n string, v *datasy
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).DataSyncClient(ctx)
 
 		output, err := tfdatasync.FindLocationFSxONTAPByARN(ctx, conn, rs.Primary.ID)
 

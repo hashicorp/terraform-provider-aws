@@ -12,7 +12,10 @@ description: |-
 
 Registers a Lake Formation resource (e.g., S3 bucket) as managed by the Data Catalog. In other words, the S3 path is added to the data lake.
 
-Choose a role that has read/write access to the chosen Amazon S3 path or use the service-linked role. When you register the S3 path, the service-linked role and a new inline policy are created on your behalf. Lake Formation adds the first path to the inline policy and attaches it to the service-linked role. When you register subsequent paths, Lake Formation adds the path to the existing policy.
+Choose a role that has read/write access to the chosen Amazon S3 path or use the service-linked role.
+When you register the S3 path, the service-linked role and a new inline policy are created on your behalf.
+Lake Formation adds the first path to the inline policy and attaches it to the service-linked role.
+When you register subsequent paths, Lake Formation adds the path to the existing policy.
 
 ## Example Usage
 
@@ -48,8 +51,15 @@ class MyConvertedCode extends TerraformStack {
 
 ## Argument Reference
 
-* `arn` – (Required) Amazon Resource Name (ARN) of the resource, an S3 path.
-* `roleArn` – (Optional) Role that has read/write access to the resource. If not provided, the Lake Formation service-linked role must exist and is used.
+The following arguments are required:
+
+* `arn` – (Required) Amazon Resource Name (ARN) of the resource.
+
+The following arguments are optional:
+
+* `roleArn` – (Optional) Role that has read/write access to the resource.
+* `useServiceLinkedRole` - (Optional) Designates an AWS Identity and Access Management (IAM) service-linked role by registering this role with the Data Catalog.
+* `hybridAccessEnabled` - (Optional) Flag to enable AWS LakeFormation hybrid access permission mode.
 
 ~> **NOTE:** AWS does not support registering an S3 location with an IAM role and subsequently updating the S3 location registration to a service-linked role.
 
@@ -57,6 +67,6 @@ class MyConvertedCode extends TerraformStack {
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `lastModified` - (Optional) The date and time the resource was last modified in [RFC 3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
+* `lastModified` - Date and time the resource was last modified in [RFC 3339 format](https://tools.ietf.org/html/rfc3339#section-5.8).
 
-<!-- cache-key: cdktf-0.19.0 input-13bd8e71cdf5fa3e7a18a3d1a2e20ff12ed7d291e84a336a056ad1006100d7f8 -->
+<!-- cache-key: cdktf-0.20.1 input-5970095587554c3a95bb54c03adea93f4524b57f2455f2dcc9fb934b4090d05b -->

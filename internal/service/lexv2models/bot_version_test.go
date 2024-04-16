@@ -34,7 +34,7 @@ func TestAccLexV2ModelsBotVersion_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBotVersionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -71,7 +71,7 @@ func TestAccLexV2ModelsBotVersion_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.LexV2ModelsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LexV2ModelsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBotVersionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -142,7 +142,7 @@ func testAccBotVersionConfig_basic(rName string) string {
 resource "aws_lexv2models_bot" "test" {
   name                        = %[1]q
   idle_session_ttl_in_seconds = 60
-  role_arn                    = aws_iam_role.test_role.arn
+  role_arn                    = aws_iam_role.test.arn
 
   data_privacy {
     child_directed = "true"

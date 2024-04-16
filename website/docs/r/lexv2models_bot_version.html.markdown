@@ -17,8 +17,8 @@ Terraform resource for managing an AWS Lex V2 Models Bot Version.
 ```terraform
 resource "aws_lexv2models_bot_version" "test" {
   bot_id = aws_lexv2models.test.id
-  locale_details = {
-    test_key = {
+  locale_specification = {
+    "en_US" = {
       source_bot_version = "DRAFT"
     }
   }
@@ -27,25 +27,21 @@ resource "aws_lexv2models_bot_version" "test" {
 
 ## Argument Reference
 
-The following arguments are required:
+This resource supports the following arguments:
 
-* `bot_id` - Idientifier of the bot to create the version for.
-* `version_locale_specification` - Specifies the locales that Amazon Lex adds to this version. You can choose the draft version or any other previously published version for each locale. When you specify a source version, the locale data is copied from the source version to the new version.
+* `bot_id` - (Required) Idientifier of the bot to create the version for.
+* `locale_specification` - (Required) Specifies the locales that Amazon Lex adds to this version. You can choose the draft version or any other previously published version for each locale. When you specify a source version, the locale data is copied from the source version to the new version.
 
-The following arguments are optional:
-
-* `description` - A description of the version. Use the description to help identify the version in lists.
+   The attribute value is a map with one or more entries, each of which has a locale name as the key and an object with the following attribute as the value:
+    * `sourceBotVersion` - (Required) The version of a bot used for a bot locale. Valid values: `DRAFT`, a numeric version.
+* `description` - (Optional) A description of the version. Use the description to help identify the version in lists.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `members` - List of bot members in a network to be created.
-* `bot_type` - Type of a bot to create.
-* `name` - Name of the bot. The bot name must be unique in the account that creates the bot. Type String. Length Constraints: Minimum length of 1. Maximum length of 100.
-* `data_privacy` - Provides information on additional privacy protections Amazon Lex should use with the bot's data.
-* `idle_session_ttl_in_seconds` - Time, in seconds, that Amazon Lex should keep information about a user's conversation with the bot. You can specify between 60 (1 minute) and 86,400 (24 hours) seconds.
-* `role_arn` - ARN of an IAM role that has permission to access the bot.
+* `bot_version` - Version number assigned to the version.
+* `id` - A comma-delimited string concatinating `bot_id` and `bot_version`.
 
 ## Timeouts
 
@@ -56,17 +52,17 @@ This resource exports the following attributes in addition to the arguments abov
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lex V2 Models Bot Version using the `example_id_arg`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Lex V2 Models Bot Version using the `id`. For example:
 
 ```terraform
 import {
   to = aws_lexv2models_bot_version.example
-  id = "bot_version-id-12345678"
+  id = "id-12345678,1"
 }
 ```
 
-Using `terraform import`, import Lex V2 Models Bot Version using the `example_id_arg`. For example:
+Using `terraform import`, import Lex V2 Models Bot Version using the `id`. For example:
 
 ```console
-% terraform import aws_lexv2models_bot_version.example bot_version-id-12345678
+% terraform import aws_lexv2models_bot_version.example id-12345678,1
 ```

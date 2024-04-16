@@ -15,7 +15,7 @@ Provides a Redshift Cluster Resource.
 ~> **Note:** All arguments including the username and password will be stored in the raw state as plain-text.
 [Read more about sensitive data in state](https://www.terraform.io/docs/state/sensitive-data.html).
 
-~> **NOTE:** A Redshift cluster's default IAM role can be managed both by this resource's `defaultIamRoleArn` argument and the [`awsRedshiftClusterIamRoles`](redshift_cluster_iam_roles.html) resource's `defaultIamRoleArn` argument. Do not configure different values for both arguments. Doing so will cause a conflict of default IAM roles.
+~> **NOTE:** A Redshift cluster's default IAM role can be managed both by this resource's `defaultIamRoleArn` argument and the [`aws_redshift_cluster_iam_roles`](redshift_cluster_iam_roles.html) resource's `defaultIamRoleArn` argument. Do not configure different values for both arguments. Doing so will cause a conflict of default IAM roles.
 
 ## Example Usage
 
@@ -87,18 +87,19 @@ This resource supports the following arguments:
 * `nodeType` - (Required) The node type to be provisioned for the cluster.
 * `clusterType` - (Optional) The cluster type to use. Either `single-node` or `multi-node`.
 * `manageMasterPassword` - (Optional) Whether to use AWS SecretsManager to manage the cluster admin credentials.
-  Conflicts with `master_password`.
-  One of `master_password` or `manage_master_password` is required unless `snapshot_identifier` is provided.
+  Conflicts with `masterPassword`.
+  One of `masterPassword` or `manageMasterPassword` is required unless `snapshotIdentifier` is provided.
 * `masterPassword` - (Optional) Password for the master DB user.
-  Conflicts with `manage_master_password`.
-  One of `master_password` or `manage_master_password` is required unless `snapshot_identifier` is provided.
+  Conflicts with `manageMasterPassword`.
+  One of `masterPassword` or `manageMasterPassword` is required unless `snapshotIdentifier` is provided.
   Note that this may show up in logs, and it will be stored in the state file.
   Password must contain at least 8 characters and contain at least one uppercase letter, one lowercase letter, and one number.
 * `masterPasswordSecretKmsKeyId` - (Optional) ID of the KMS key used to encrypt the cluster admin credentials secret.
-* `masterUsername` - (Required unless a `snapshot_identifier` is provided) Username for the master DB user.
+* `masterUsername` - (Required unless a `snapshotIdentifier` is provided) Username for the master DB user.
+* `multiAz` - (Optional) Specifies if the Redshift cluster is multi-AZ.
 * `vpcSecurityGroupIds` - (Optional) A list of Virtual Private Cloud (VPC) security groups to be associated with the cluster.
 * `clusterSubnetGroupName` - (Optional) The name of a cluster subnet group to be associated with this cluster. If this parameter is not provided the resulting cluster will be deployed outside virtual private cloud (VPC).
-* `availabilityZone` - (Optional) The EC2 Availability Zone (AZ) in which you want Amazon Redshift to provision the cluster. For example, if you have several EC2 instances running in a specific Availability Zone, then you might want the cluster to be provisioned in the same zone in order to decrease network latency. Can only be changed if `availability_zone_relocation_enabled` is `true`.
+* `availabilityZone` - (Optional) The EC2 Availability Zone (AZ) in which you want Amazon Redshift to provision the cluster. For example, if you have several EC2 instances running in a specific Availability Zone, then you might want the cluster to be provisioned in the same zone in order to decrease network latency. Can only be changed if `availabilityZoneRelocationEnabled` is `true`.
 * `availabilityZoneRelocationEnabled` - (Optional) If true, the cluster can be relocated to another availabity zone, either automatically by AWS or when requested. Default is `false`. Available for use on clusters from the RA3 instance family.
 * `preferredMaintenanceWindow` - (Optional) The weekly time range (in UTC) during which automated cluster maintenance can occur.
   Format: ddd:hh24:mi-ddd:hh24:mi
@@ -119,33 +120,37 @@ This resource supports the following arguments:
 * `publiclyAccessible` - (Optional) If true, the cluster can be accessed from a public network. Default is `true`.
 * `encrypted` - (Optional) If true , the data in the cluster is encrypted at rest.
 * `enhancedVpcRouting` - (Optional) If true , enhanced VPC routing is enabled.
-* `kmsKeyId` - (Optional) The ARN for the KMS encryption key. When specifying `kms_key_id`, `encrypted` needs to be set to true.
+* `kmsKeyId` - (Optional) The ARN for the KMS encryption key. When specifying `kmsKeyId`, `encrypted` needs to be set to true.
 * `elasticIp` - (Optional) The Elastic IP (EIP) address for the cluster.
 * `skipFinalSnapshot` - (Optional) Determines whether a final snapshot of the cluster is created before Amazon Redshift deletes the cluster. If true , a final cluster snapshot is not created. If false , a final cluster snapshot is created before the cluster is deleted. Default is false.
-* `finalSnapshotIdentifier` - (Optional) The identifier of the final snapshot that is to be created immediately before deleting the cluster. If this parameter is provided, `skip_final_snapshot` must be false.
-* `snapshotArn` - (Optional) The ARN of the snapshot from which to create the new cluster. Conflicts with `snapshot_identifier`.
-* `snapshotIdentifier` - (Optional) The name of the snapshot from which to create the new cluster.  Conflicts with `snapshot_arn`.
+* `finalSnapshotIdentifier` - (Optional) The identifier of the final snapshot that is to be created immediately before deleting the cluster. If this parameter is provided, `skipFinalSnapshot` must be false.
+* `snapshotArn` - (Optional) The ARN of the snapshot from which to create the new cluster. Conflicts with `snapshotIdentifier`.
+* `snapshotIdentifier` - (Optional) The name of the snapshot from which to create the new cluster.  Conflicts with `snapshotArn`.
 * `snapshotClusterIdentifier` - (Optional) The name of the cluster the source snapshot was created from.
 * `ownerAccount` - (Optional) The AWS customer account used to create or copy the snapshot. Required if you are restoring a snapshot you do not own, optional if you own the snapshot.
 * `iamRoles` - (Optional) A list of IAM Role ARNs to associate with the cluster. A Maximum of 10 can be associated to the cluster at any time.
-* `logging` - (Optional) Logging, documented below.
+* `logging` - (Optional, **Deprecated**) Logging, documented below.
 * `maintenanceTrackName` - (Optional) The name of the maintenance track for the restored cluster. When you take a snapshot, the snapshot inherits the MaintenanceTrack value from the cluster. The snapshot might be on a different track than the cluster that was the source for the snapshot. For example, suppose that you take a snapshot of  a cluster that is on the current track and then change the cluster to be on the trailing track. In this case, the snapshot and the source cluster are on different tracks. Default value is `current`.
 * `manualSnapshotRetentionPeriod` - (Optional)  The default number of days to retain a manual snapshot. If the value is -1, the snapshot is retained indefinitely. This setting doesn't change the retention period of existing snapshots. Valid values are between `-1` and `3653`. Default value is `-1`.
-* `snapshotCopy` - (Optional) Configuration of automatic copy of snapshots from one region to another. Documented below.
-* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
+* `snapshotCopy` - (Optional, **Deprecated**) Configuration of automatic copy of snapshots from one region to another. Documented below.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### Nested Blocks
 
 #### `logging`
 
+~> The `logging` argument is deprecated. Use the [`aws_redshift_logging`](./redshift_logging.html.markdown) resource instead. This argument will be removed in a future major version.
+
 * `enable` - (Required) Enables logging information such as queries and connection attempts, for the specified Amazon Redshift cluster.
-* `bucketName` - (Optional, required when `enable` is `true` and `log_destination_type` is `s3`) The name of an existing S3 bucket where the log files are to be stored. Must be in the same region as the cluster and the cluster must have read bucket and put object permissions.
+* `bucketName` - (Optional, required when `enable` is `true` and `logDestinationType` is `s3`) The name of an existing S3 bucket where the log files are to be stored. Must be in the same region as the cluster and the cluster must have read bucket and put object permissions.
 For more information on the permissions required for the bucket, please read the AWS [documentation](http://docs.aws.amazon.com/redshift/latest/mgmt/db-auditing.html#db-auditing-enable-logging)
 * `s3KeyPrefix` - (Optional) The prefix applied to the log file names.
 * `logDestinationType` - (Optional) The log destination type. An enum with possible values of `s3` and `cloudwatch`.
-* `logExports` - (Optional) The collection of exported log types. Log types include the connection log, user log and user activity log. Required when `log_destination_type` is `cloudwatch`. Valid log types are `connectionlog`, `userlog`, and `useractivitylog`.
+* `logExports` - (Optional) The collection of exported log types. Log types include the connection log, user log and user activity log. Required when `logDestinationType` is `cloudwatch`. Valid log types are `connectionlog`, `userlog`, and `useractivitylog`.
 
 #### `snapshotCopy`
+
+~> The `snapshotCopy` argument is deprecated. Use the [`aws_redshift_snapshot_copy`](./redshift_snapshot_copy.html.markdown) resource instead. This argument will be removed in a future major version.
 
 * `destinationRegion` - (Required) The destination region that you want to copy snapshots to.
 * `retentionPeriod` - (Optional) The number of days to retain automated snapshots in the destination region after they are copied from the source region. Defaults to `7`.
@@ -177,11 +182,11 @@ This resource exports the following attributes in addition to the arguments abov
 * `clusterRevisionNumber` - The specific revision number of the database in the cluster
 * `clusterNodes` - The nodes in the cluster. Cluster node blocks are documented below
 * `clusterNamespaceArn` - The namespace Amazon Resource Name (ARN) of the cluster
-* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
+* `tagsAll` - A map of tags assigned to the resource, including those inherited from the provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 Cluster nodes (for `clusterNodes`) support the following attributes:
 
-* `nodeRole` - Whether the node is a leader node or a compute node
+* `node_role` - Whether the node is a leader node or a compute node
 * `privateIpAddress` - The private IP address of a node within a cluster
 * `publicIpAddress` - The public IP address of a node within a cluster
 
@@ -201,9 +206,19 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { RedshiftCluster } from "./.gen/providers/aws/redshift-cluster";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    RedshiftCluster.generateConfigForImport(
+      this,
+      "myprodcluster",
+      "tf-redshift-cluster-12345"
+    );
   }
 }
 
@@ -215,4 +230,4 @@ Using `terraform import`, import Redshift Clusters using the `clusterIdentifier`
 % terraform import aws_redshift_cluster.myprodcluster tf-redshift-cluster-12345
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-319e699af8bea86cc52b0b11069bc07d0517d8528e32c3cfcc4e71b1e3a6dca2 -->
+<!-- cache-key: cdktf-0.20.1 input-256317dde5b7df14e079cdaf9e10b363bf1abfa16c1fe6bf54c640647f4810cf -->

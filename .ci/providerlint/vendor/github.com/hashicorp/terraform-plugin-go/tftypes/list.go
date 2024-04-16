@@ -4,6 +4,7 @@
 package tftypes
 
 import (
+	"bytes"
 	"fmt"
 )
 
@@ -114,9 +115,15 @@ func valueFromList(typ Type, in interface{}) (Value, error) {
 //
 // Deprecated: this is not meant to be called by third-party code.
 func (l List) MarshalJSON() ([]byte, error) {
-	elementType, err := l.ElementType.MarshalJSON()
-	if err != nil {
-		return nil, fmt.Errorf("error marshaling tftypes.List's element type %T to JSON: %w", l.ElementType, err)
-	}
-	return []byte(`["list",` + string(elementType) + `]`), nil
+	var buf bytes.Buffer
+
+	buf.WriteString(`["list",`)
+
+	// MarshalJSON is always error safe
+	elementTypeBytes, _ := l.ElementType.MarshalJSON()
+
+	buf.Write(elementTypeBytes)
+	buf.WriteString(`]`)
+
+	return buf.Bytes(), nil
 }

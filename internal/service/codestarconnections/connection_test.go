@@ -31,7 +31,7 @@ func TestAccCodeStarConnectionsConnection_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CodeStarConnectionsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeStarConnectionsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeStarConnectionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -66,7 +66,7 @@ func TestAccCodeStarConnectionsConnection_hostARN(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CodeStarConnectionsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeStarConnectionsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeStarConnectionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -102,7 +102,7 @@ func TestAccCodeStarConnectionsConnection_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CodeStarConnectionsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeStarConnectionsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeStarConnectionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConnectionDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -129,7 +129,7 @@ func TestAccCodeStarConnectionsConnection_tags(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.CodeStarConnectionsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeStarConnectionsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeStarConnectionsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConnectionDestroy(ctx),
 		Steps: []resource.TestStep{

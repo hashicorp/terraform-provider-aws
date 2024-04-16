@@ -12,7 +12,7 @@ description: |-
 
 Manages an ECR repository lifecycle policy.
 
-~> **NOTE:** Only one `awsEcrLifecyclePolicy` resource can be used with the same ECR repository. To apply multiple rules, they must be combined in the `policy` JSON.
+~> **NOTE:** Only one `aws_ecr_lifecycle_policy` resource can be used with the same ECR repository. To apply multiple rules, they must be combined in the `policy` JSON.
 
 ~> **NOTE:** The AWS ECR API seems to reorder rules based on `rulePriority`. If you define multiple rules that are not sorted in ascending `rulePriority` order in the Terraform code, the resource will be flagged for recreation every `terraform plan`.
 
@@ -33,14 +33,20 @@ import { EcrRepository } from "./.gen/providers/aws/ecr-repository";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
-    const foo = new EcrRepository(this, "foo", {
-      name: "bar",
+    const example = new EcrRepository(this, "example", {
+      name: "example-repo",
     });
-    new EcrLifecyclePolicy(this, "foopolicy", {
-      policy:
-        '{\n    "rules": [\n        {\n            "rulePriority": 1,\n            "description": "Expire images older than 14 days",\n            "selection": {\n                "tagStatus": "untagged",\n                "countType": "sinceImagePushed",\n                "countUnit": "days",\n                "countNumber": 14\n            },\n            "action": {\n                "type": "expire"\n            }\n        }\n    ]\n}\n\n',
-      repository: foo.name,
-    });
+    const awsEcrLifecyclePolicyExample = new EcrLifecyclePolicy(
+      this,
+      "example_1",
+      {
+        policy:
+          '{\n    "rules": [\n        {\n            "rulePriority": 1,\n            "description": "Expire images older than 14 days",\n            "selection": {\n                "tagStatus": "untagged",\n                "countType": "sinceImagePushed",\n                "countUnit": "days",\n                "countNumber": 14\n            },\n            "action": {\n                "type": "expire"\n            }\n        }\n    ]\n}\n\n',
+        repository: example.name,
+      }
+    );
+    /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
+    awsEcrLifecyclePolicyExample.overrideLogicalId("example");
   }
 }
 
@@ -61,14 +67,20 @@ import { EcrRepository } from "./.gen/providers/aws/ecr-repository";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
-    const foo = new EcrRepository(this, "foo", {
-      name: "bar",
+    const example = new EcrRepository(this, "example", {
+      name: "example-repo",
     });
-    new EcrLifecyclePolicy(this, "foopolicy", {
-      policy:
-        '{\n    "rules": [\n        {\n            "rulePriority": 1,\n            "description": "Keep last 30 images",\n            "selection": {\n                "tagStatus": "tagged",\n                "tagPrefixList": ["v"],\n                "countType": "imageCountMoreThan",\n                "countNumber": 30\n            },\n            "action": {\n                "type": "expire"\n            }\n        }\n    ]\n}\n\n',
-      repository: foo.name,
-    });
+    const awsEcrLifecyclePolicyExample = new EcrLifecyclePolicy(
+      this,
+      "example_1",
+      {
+        policy:
+          '{\n    "rules": [\n        {\n            "rulePriority": 1,\n            "description": "Keep last 30 images",\n            "selection": {\n                "tagStatus": "tagged",\n                "tagPrefixList": ["v"],\n                "countType": "imageCountMoreThan",\n                "countNumber": 30\n            },\n            "action": {\n                "type": "expire"\n            }\n        }\n    ]\n}\n\n',
+        repository: example.name,
+      }
+    );
+    /*This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.*/
+    awsEcrLifecyclePolicyExample.overrideLogicalId("example");
   }
 }
 
@@ -79,7 +91,7 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `repository` - (Required) Name of the repository to apply the policy.
-* `policy` - (Required) The policy document. This is a JSON formatted string. See more details about [Policy Parameters](http://docs.aws.amazon.com/AmazonECR/latest/userguide/LifecyclePolicies.html#lifecycle_policy_parameters) in the official AWS docs.
+* `policy` - (Required) The policy document. This is a JSON formatted string. See more details about [Policy Parameters](http://docs.aws.amazon.com/AmazonECR/latest/userguide/LifecyclePolicies.html#lifecycle_policy_parameters) in the official AWS docs. Consider using the [`aws_ecr_lifecycle_policy_document` data_source](/docs/providers/aws/d/ecr_lifecycle_policy_document.html) to generate/manage the JSON document used for the `policy` argument.
 
 ## Attribute Reference
 
@@ -96,9 +108,15 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { EcrLifecyclePolicy } from "./.gen/providers/aws/ecr-lifecycle-policy";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    EcrLifecyclePolicy.generateConfigForImport(this, "example", "tf-example");
   }
 }
 
@@ -110,4 +128,4 @@ Using `terraform import`, import ECR Lifecycle Policy using the name of the repo
 % terraform import aws_ecr_lifecycle_policy.example tf-example
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-0e4c7e8c7cdaee9fd0d8211aaa75d4db1e461d9cccef8d7c28f406dede927735 -->
+<!-- cache-key: cdktf-0.20.1 input-d545331ba3e4420277d75e2fdc8d30cf8a2c2782aecb6d62783fa7e1ed09235d -->

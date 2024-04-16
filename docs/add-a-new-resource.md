@@ -15,29 +15,29 @@ Determine which version of the AWS SDK for Go the resource will be built upon. F
 
 ### Fork the provider and create a feature branch
 
-For a new resources use a branch named `f-{resource name}` for example: `f-ec2-vpc`. See [Raising a Pull Request](raising-a-pull-request.md) for more details.
+For new resources use a branch named `f-{resource name}` for example: `f-ec2-vpc`. See [Raising a Pull Request](raising-a-pull-request.md) for more details.
 
 ### Create and Name the Resource
 
 See the [Naming Guide](naming.md#resources-and-data-sources) for details on how to name the new resource and the resource file. Not following the naming standards will cause extra delay as maintainers request that you make changes.
 
-Use the [skaff](skaff.md) provider scaffolding tool to generate new resource and test templates using your chosen name ensuring you provide the `v1` flag if you are targeting version 1 of the `aws-go-sdk`. Doing so will ensure that any boilerplate code, structural best practices and repetitive naming is done for you and always represents our most current standards.
+Use the [skaff](skaff.md) provider scaffolding tool to generate new resource and test templates using your chosen name ensuring you provide the `v1` flag if you are targeting version 1 of the `aws-go-sdk`. Doing so will ensure that any boilerplate code, structural best practices and repetitive naming are done for you and always represent our most current standards.
 
 ### Fill out the Resource Schema
 
-In the `internal/service/<service>/<service>.go` file you will see a `Schema` property which exists as a map of `Schema` objects. This relates the AWS API data model with the Terraform resource itself. For each property you want to make available in Terraform, you will need to add it as an attribute, choose the correct data type and supply the correct [Schema Behaviors](https://www.terraform.io/plugin/sdkv2/schemas/schema-behaviors) in order to ensure Terraform knows how to correctly handle the value.
+In the `internal/service/<service>/<service>.go` file you will see a `Schema` property which exists as a map of `Schema` objects. This relates the AWS API data model with the Terraform resource itself. For each property you want to make available in Terraform, you will need to add it as an attribute, choose the correct data type and supply the correct [Schema Behaviors](https://www.terraform.io/plugin/sdkv2/schemas/schema-behaviors) to ensure Terraform knows how to correctly handle the value.
 
-Typically you will add arguments to represent the values that are under control by Terraform, and attributes in order to supply read-only values as references for Terraform. These are distinguished by Schema Behavior.
+Typically you will add arguments to represent the values that are under control by Terraform, and attributes to supply read-only values as references for Terraform. These are distinguished by Schema Behavior.
 
-Attribute names are to specified in `camel_case` as opposed to the AWS API which is `CamelCase`
+Attribute names are to be specified in `camel_case` as opposed to the AWS API which is `CamelCase`.
 
 ### Implement CRUD handlers
 
-These will map planned Terraform state to the AWS API call, or an AWS API response to an applied Terraform state. You will also need to handle different response types (including errors correctly). For complex attributes you will need to implement Flattener or Expander functions. The [Data Handling and Conversion Guide](data-handling-and-conversion.md) covers everything you need to know for mapping AWS API responses to Terraform State and vice-versa. The [Error Handling Guide](error-handling.md) covers everything you need to know about handling AWS API responses consistently.
+These will map the planned Terraform state to the AWS API call, or an AWS API response to an applied Terraform state. You will also need to handle different response types (including errors correctly). For complex attributes, you will need to implement Flattener or Expander functions. The [Data Handling and Conversion Guide](data-handling-and-conversion.md) covers everything you need to know for mapping AWS API responses to Terraform State and vice-versa. The [Error Handling Guide](error-handling.md) covers everything you need to know about handling AWS API responses consistently.
 
 ### Register Resource to the provider
 
-Resources use a self registration process that adds them to the provider using the `@FrameworkResource()` or `@SDKResource()` annotation in the resource's comments. Run `make gen` to register the resource. This will add an entry to the `service_package_gen.go` file located in the service package folder.
+Resources use a self-registration process that adds them to the provider using the `@FrameworkResource()` or `@SDKResource()` annotation in the resource's comments. Run `make gen` to register the resource. This will add an entry to the `service_package_gen.go` file located in the service package folder.
 
 === "Terraform Plugin Framework (Preferred)"
 
@@ -49,7 +49,7 @@ Resources use a self registration process that adds them to the provider using t
         "github.com/hashicorp/terraform-provider-aws/internal/framework"
     )
 
-    // @FrameworkResource(name="Example")
+    // @FrameworkResource("aws_something_example", name="Example")
     func newResourceExample(_ context.Context) (resource.ResourceWithConfigure, error) {
     	return &resourceExample{}, nil
     }
@@ -80,9 +80,9 @@ Resources use a self registration process that adds them to the provider using t
 
 ### Write passing Acceptance Tests
 
-In order to adequately test the resource we will need to write a complete set of Acceptance Tests. You will need an AWS account for this which allows the creation of that resource. See [Writing Acceptance Tests](running-and-writing-acceptance-tests.md) for a detailed guide on how to approach these.
+To adequately test the resource we will need to write a complete set of Acceptance Tests. You will need an AWS account for this which allows the creation of that resource. See [Writing Acceptance Tests](running-and-writing-acceptance-tests.md) for a detailed guide on how to approach these.
 
-You will need at minimum:
+You will need at a minimum:
 
 - Basic Test - Tests full lifecycle (CRUD + Import) of a minimal configuration (all required fields, no optional).
 - Disappears Test - Tests what Terraform does if a resource it is tracking can no longer be found.

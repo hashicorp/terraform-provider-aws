@@ -89,7 +89,7 @@ func resourceNetworkACLAssociationDelete(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.DescribeNetworkAclsInput{
-		Filters: BuildAttributeFilterList(map[string]string{
+		Filters: newAttributeFilterList(map[string]string{
 			"association.association-id": d.Id(),
 		}),
 	}

@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfinspector "github.com/hashicorp/terraform-provider-aws/internal/service/inspector"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccInspectorAssessmentTarget_basic(t *testing.T) {
@@ -26,7 +27,7 @@ func TestAccInspectorAssessmentTarget_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, inspector.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.InspectorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetAssessmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -56,7 +57,7 @@ func TestAccInspectorAssessmentTarget_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, inspector.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.InspectorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetAssessmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -81,7 +82,7 @@ func TestAccInspectorAssessmentTarget_name(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, inspector.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.InspectorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetAssessmentDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -118,7 +119,7 @@ func TestAccInspectorAssessmentTarget_resourceGroupARN(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, inspector.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.InspectorServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTargetAssessmentDestroy(ctx),
 		Steps: []resource.TestStep{

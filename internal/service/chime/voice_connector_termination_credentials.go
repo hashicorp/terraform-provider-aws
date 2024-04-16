@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -63,6 +64,8 @@ func ResourceVoiceConnectorTerminationCredentials() *schema.Resource {
 }
 
 func resourceVoiceConnectorTerminationCredentialsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
 	vcId := d.Get("voice_connector_id").(string)
@@ -73,15 +76,17 @@ func resourceVoiceConnectorTerminationCredentialsCreate(ctx context.Context, d *
 	}
 
 	if _, err := conn.PutVoiceConnectorTerminationCredentials(ctx, input); err != nil {
-		return diag.Errorf("creating Chime Voice Connector (%s) termination credentials: %s", vcId, err)
+		return sdkdiag.AppendErrorf(diags, "creating Chime Voice Connector (%s) termination credentials: %s", vcId, err)
 	}
 
 	d.SetId(vcId)
 
-	return resourceVoiceConnectorTerminationCredentialsRead(ctx, d, meta)
+	return append(diags, resourceVoiceConnectorTerminationCredentialsRead(ctx, d, meta)...)
 }
 
 func resourceVoiceConnectorTerminationCredentialsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
 	_, err := FindVoiceConnectorResourceWithRetry(ctx, d.IsNewResource(), func() (*chimesdkvoice.ListVoiceConnectorTerminationCredentialsOutput, error) {
@@ -95,19 +100,21 @@ func resourceVoiceConnectorTerminationCredentialsRead(ctx context.Context, d *sc
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Chime Voice Connector (%s) termination credentials not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("getting Chime Voice Connector (%s) termination credentials: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "getting Chime Voice Connector (%s) termination credentials: %s", d.Id(), err)
 	}
 
 	d.Set("voice_connector_id", d.Id())
 
-	return nil
+	return diags
 }
 
 func resourceVoiceConnectorTerminationCredentialsUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
 	if d.HasChanges("credentials") {
@@ -119,14 +126,16 @@ func resourceVoiceConnectorTerminationCredentialsUpdate(ctx context.Context, d *
 		_, err := conn.PutVoiceConnectorTerminationCredentials(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating Chime Voice Connector (%s) termination credentials: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Chime Voice Connector (%s) termination credentials: %s", d.Id(), err)
 		}
 	}
 
-	return resourceVoiceConnectorTerminationCredentialsRead(ctx, d, meta)
+	return append(diags, resourceVoiceConnectorTerminationCredentialsRead(ctx, d, meta)...)
 }
 
 func resourceVoiceConnectorTerminationCredentialsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
 	input := &chimesdkvoice.DeleteVoiceConnectorTerminationCredentialsInput{
@@ -137,14 +146,14 @@ func resourceVoiceConnectorTerminationCredentialsDelete(ctx context.Context, d *
 	_, err := conn.DeleteVoiceConnectorTerminationCredentials(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Chime Voice Connector (%s) termination credentials: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Chime Voice Connector (%s) termination credentials: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandCredentialsUsernames(data []interface{}) []string {

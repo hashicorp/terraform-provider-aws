@@ -40,7 +40,6 @@ import (
 // @Tags(identifierAttribute="arn")
 func newResourceEnvironment(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceEnvironment{}
-	r.SetMigratedFromPluginSDK(true)
 
 	return r, nil
 }
@@ -157,7 +156,7 @@ func (r *resourceEnvironment) Create(ctx context.Context, request resource.Creat
 	input := &appconfig.CreateEnvironmentInput{
 		Name:          aws.String(plan.Name.ValueString()),
 		ApplicationId: aws.String(appId),
-		Tags:          aws.ToStringMap(getTagsIn(ctx)),
+		Tags:          getTagsIn(ctx),
 		Monitors:      expandMonitors(monitors),
 	}
 
@@ -475,5 +474,5 @@ func flattenMonitorData(ctx context.Context, apiObject awstypes.Monitor) *monito
 }
 
 func (m *monitorData) value(ctx context.Context) types.Object {
-	return fwtypes.NewObjectValueOf[monitorData](ctx, m).ObjectValue
+	return fwtypes.NewObjectValueOfMust[monitorData](ctx, m).ObjectValue
 }

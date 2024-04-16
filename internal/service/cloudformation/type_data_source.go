@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
 // @SDKDataSource("aws_cloudformation_type")
@@ -110,6 +111,8 @@ func DataSourceType() *schema.Resource {
 }
 
 func dataSourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).CloudFormationConn(ctx)
 
 	input := &cloudformation.DescribeTypeInput{}
@@ -133,11 +136,11 @@ func dataSourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interf
 	output, err := conn.DescribeTypeWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("reading CloudFormation Type: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading CloudFormation Type: %s", err)
 	}
 
 	if output == nil {
-		return diag.Errorf("reading CloudFormation Type: empty response")
+		return sdkdiag.AppendErrorf(diags, "reading CloudFormation Type: empty response")
 	}
 
 	d.SetId(aws.StringValue(output.Arn))
@@ -151,7 +154,7 @@ func dataSourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("is_default_version", output.IsDefaultVersion)
 	if output.LoggingConfig != nil {
 		if err := d.Set("logging_config", []interface{}{flattenLoggingConfig(output.LoggingConfig)}); err != nil {
-			return diag.Errorf("setting logging_config: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting logging_config: %s", err)
 		}
 	} else {
 		d.Set("logging_config", nil)
@@ -163,5 +166,5 @@ func dataSourceTypeRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("type_name", output.TypeName)
 	d.Set("visibility", output.Visibility)
 
-	return nil
+	return diags
 }

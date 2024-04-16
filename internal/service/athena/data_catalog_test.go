@@ -25,7 +25,7 @@ func TestAccAthenaDataCatalog_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataCatalogDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -59,7 +59,7 @@ func TestAccAthenaDataCatalog_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataCatalogDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -82,7 +82,7 @@ func TestAccAthenaDataCatalog_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataCatalogDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -128,7 +128,7 @@ func TestAccAthenaDataCatalog_type_lambda(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataCatalogDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -160,7 +160,7 @@ func TestAccAthenaDataCatalog_type_hive(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataCatalogDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -191,7 +191,7 @@ func TestAccAthenaDataCatalog_type_glue(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataCatalogDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -222,7 +222,7 @@ func TestAccAthenaDataCatalog_parameters(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataCatalogDestroy(ctx),
 		Steps: []resource.TestStep{

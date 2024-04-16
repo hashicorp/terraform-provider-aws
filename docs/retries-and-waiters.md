@@ -11,7 +11,7 @@ This guide describes the behavior of the Terraform AWS Provider and provides cod
 
 !!! note
     The helper functions detailed below **are** compatible with Terraform Plugin Framework based resources (the required library for net-new resources).
-    While these functions currently reside the in the legacy Terraform Plugin SDK repository, they are not directly tied to functionality exclusive to this library, and likely will be moved to a standalone library or into the AWS provider itself in the future.
+    While these functions currently reside in the legacy Terraform Plugin SDK repository, they are not directly tied to functionality exclusive to this library, and likely will be moved to a standalone library or into the AWS provider itself in the future.
 
 ## Terraform Plugin SDK Functionality
 
@@ -369,7 +369,7 @@ Depending on the service and general AWS load, these errors can be frequent or r
 In order to avoid this issue, identify operations that make changes.
 Then, when calling any other operations that rely on the changes, account for the possibility that the AWS service has not yet fully realized them.
 
-Handling eventual consistency looks slightly different for Terraform Plugin Framework based resources versus Plugin SDK V2. For Terraform Framework based resources, a `Get`/`Describe` API call should be made after the create request completes, all within the `Create` method. For Terraform Plugin SDK V2 resources, the `Create` function should return by calling the `Read` function. Both approaches fill in computed attributes and ensures that the AWS service applied the configuration correctly. Add retry logic to the `Get`/`Describe` API call (Plugin Framework) or `Read` function (Plugin SDK V2) to overcome the temporary condition on resource creation.
+Handling eventual consistency looks slightly different for Terraform Plugin Framework based resources versus Plugin SDK V2. For Terraform Framework based resources, a `Get`/`Describe` API call should be made after the create request completes, all within the `Create` method. For Terraform Plugin SDK V2 resources, the `Create` function should return by calling the `Read` function. Both approaches fill in computed attributes and ensure that the AWS service applied the configuration correctly. Add retry logic to the `Get`/`Describe` API call (Plugin Framework) or `Read` function (Plugin SDK V2) to overcome the temporary condition on resource creation.
 
 !!! note
     For eventually consistent resources, "not found" errors can still occur in the `Read` function even after implementing [Resource Lifecycle Waiters](#resource-lifecycle-waiters).
@@ -439,12 +439,15 @@ const (
     ```go
     // internal/service/{service}/{thing}.go
 
-    function ExampleThingCreate(d *schema.ResourceData, meta interface{}) error {
+    function ExampleThingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+		var diags diag.Diagnostics
     	// ...
-    	return ExampleThingRead(d, meta)
+    	return append(diags, ExampleThingRead(ctx, d, meta)...)
     }
 
-    function ExampleThingRead(d *schema.ResourceData, meta interface{}) error {
+    function ExampleThingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+		var diags diag.Diagnostics
+
     	conn := meta.(*AWSClient).ExampleConn()
 
     	input := &example.OperationInput{/* ... */}
@@ -476,16 +479,16 @@ const (
     	if !d.IsNewResource() && tfawserr.ErrorCodeEquals(err, example.ErrCodeNoSuchEntityException) {
     		log.Printf("[WARN] Example Thing (%s) not found, removing from state", d.Id())
     		d.SetId("")
-    		return nil
+    		return diags
     	}
 
     	if err != nil {
-    		return fmt.Errorf("reading Example Thing (%s): %w", d.Id(), err)
+    		return sdkdiag.AppendErrorf(diags, "reading Example Thing (%s): %w", d.Id(), err)
     	}
 
     	// Prevent panics.
     	if output == nil {
-    		return fmt.Errorf("reading Example Thing (%s): empty response", d.Id())
+    		return sdkdiag.AppendErrorf(diags, "reading Example Thing (%s): empty response", d.Id())
     	}
 
     	// ... refresh Terraform state as normal ...
@@ -502,7 +505,7 @@ const (
 
 ### Resource Attribute Value Waiters
 
-An emergent solution for handling eventual consistency with attribute values on updates is to introduce a custom `retry.StateChangeConf` and `resource.RefreshStateFunc` handlers. For example, the waiting logic can be implemeted as:
+An emergent solution for handling eventual consistency with attribute values on updates is to introduce a custom `retry.StateChangeConf` and `resource.RefreshStateFunc` handlers. For example, the waiting logic can be implemented as:
 
 === "AWS SDK Go V2 (Preferred)"
     ```go
@@ -619,7 +622,7 @@ And consumed within the resource update workflow as follows:
     		// ... AWS Go SDK logic to update attribute ...
 
     		if _, err := waitThingAttributeUpdated(ctx, conn, d.Id(), d.Get("attribute").(string), d.Timeout(schema.TimeoutUpdate)); err != nil {
-                return append(diags, create.DiagError(names.Example, create.ErrActionWaitingForUpdate, ResNameThing, d.Id(), err)...)
+                return create.AppendDiagError(diags, names.Example, create.ErrActionWaitingForUpdate, ResNameThing, d.Id(), err)
     		}
     	}
 
@@ -647,7 +650,7 @@ If it is necessary to customize the timeouts and polling, we generally prefer us
 
 ### Resource Lifecycle Waiters
 
-Most of the codebase uses `retry.StateChangeConf` and `retry.StateRefreshFunc` handlers for tracking either component level status fields or explicit tracking identifiers.
+Most of the codebase uses `retry.StateChangeConf` and `retry.StateRefreshFunc` handlers for tracking either component-level status fields or explicit tracking identifiers.
 These should be placed in the `internal/service/{SERVICE}` package and split into separate functions. For example:
 
 === "AWS SDK Go V2 (Preferred)"
@@ -770,20 +773,22 @@ func waitThingDeleted(ctx context.Context, conn *example.Example, id string, tim
 === "Terraform Plugin SDK V2"
     ```go
     func resourceThingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+        var diags diag.Diagnostics
+
         // ... AWS Go SDK logic to create resource ...
 
     	if _, err := waitThingCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)) {
-            return append(diags, create.DiagError(names.Example, create.ErrActionWaitingForCreation, ResNameThing, d.Id(), err)...)
+            return create.AppendDiagError(diags, names.Example, create.ErrActionWaitingForCreation, ResNameThing, d.Id(), err)
     	}
 
-    	return ExampleThingRead(d, meta)
+    	return append(diags, ExampleThingRead(ctx, d, meta)...)
     }
 
     func resourceThingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
         // ... AWS Go SDK logic to delete resource ...
 
     	if _, err := waitThingDeleted(conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
-            return append(diags, create.DiagError(names.Example, create.ErrActionWaitingForDeletion, ResNameThing, d.Id(), err)...)
+            return create.AppendDiagError(diags, names.Example, create.ErrActionWaitingForDeletion, ResNameThing, d.Id(), err)
     	}
 
     	return diags

@@ -204,11 +204,15 @@ Optional arguments:
 
 ### `import_table`
 
-* `input_format` - (Required) The format of the source data. Valid values are `CSV`, `DYNAMODB_JSON` and `ION`.
-* `s3_bucket_source` - (Required) Values for the S3 bucket the source file is imported from. See below.
-* `client_token` - (Optional) Makes the import idempotent, meaning that multiple identical calls have the same effect as one single call (8 hours validity).
-* `input_compression_type` - (Optional) Type of compression to be used on the input coming from the imported table. Valid values are `GZIP`, `ZSTD` and `NONE`.
-* `input_format_options` - (Optional) Describe the format options for the data that was imported into the target table. There is one value, `csv`. See below.
+* `input_compression_type` - (Optional) Type of compression to be used on the input coming from the imported table.
+  Valid values are `GZIP`, `ZSTD` and `NONE`.
+* `input_format` - (Required) The format of the source data.
+  Valid values are `CSV`, `DYNAMODB_JSON`, and `ION`.
+* `input_format_options` - (Optional) Describe the format options for the data that was imported into the target table.
+  There is one value, `csv`.
+  See below.
+* `s3_bucket_source` - (Required) Values for the S3 bucket the source file is imported from.
+  See below.
 
 #### `input_format_options`
 

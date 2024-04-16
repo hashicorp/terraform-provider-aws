@@ -77,12 +77,12 @@ func (r *resourceBot) Schema(ctx context.Context, req resource.SchemaRequest, re
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			names.AttrTags:    tftags.TagsAttribute(),
-			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"role_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Required:   true,
 			},
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 			"test_bot_alias_tags": schema.MapAttribute{
 				ElementType: types.StringType,
 				Optional:    true,
@@ -178,6 +178,10 @@ func (r *resourceBot) Create(ctx context.Context, req resource.CreateRequest, re
 	if !plan.Members.IsNull() {
 		bmInput := expandMembers(ctx, bm)
 		in.BotMembers = bmInput
+	}
+
+	if !plan.Type.IsNull() {
+		in.BotType = awstypes.BotType(plan.Type.ValueString())
 	}
 
 	out, err := conn.CreateBot(ctx, &in)
@@ -314,6 +318,10 @@ func (r *resourceBot) Update(ctx context.Context, req resource.UpdateRequest, re
 			if resp.Diagnostics.HasError() {
 				return
 			}
+		}
+
+		if !plan.Type.IsNull() {
+			in.BotType = awstypes.BotType(plan.Type.ValueString())
 		}
 
 		_, err := conn.UpdateBot(ctx, &in)

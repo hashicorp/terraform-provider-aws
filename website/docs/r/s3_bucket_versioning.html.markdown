@@ -16,6 +16,8 @@ For more information, see [How S3 versioning works](https://docs.aws.amazon.com/
 
 ~> **NOTE:** If you are enabling versioning on the bucket for the first time, AWS recommends that you wait for 15 minutes after enabling versioning before issuing write operations (PUT or DELETE) on objects in the bucket.
 
+-> This resource cannot be used with S3 directory buckets.
+
 ## Example Usage
 
 ### With Versioning Enabled

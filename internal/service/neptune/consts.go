@@ -12,10 +12,37 @@ const (
 )
 
 const (
+	engineNeptune = "neptune" // nosemgrep:ci.neptune-in-const-name,ci.neptune-in-var-name
+)
+
+func engine_Values() []string {
+	return []string{
+		engineNeptune,
+	}
+}
+
+const (
+	storageTypeStandard = "standard"
+	storageTypeIopt1    = "iopt1"
+)
+
+func storageType_Values() []string {
+	return []string{
+		storageTypeStandard,
+		storageTypeIopt1,
+	}
+}
+
+const (
 	clusterEndpointStatusAvailable = "available"
 	clusterEndpointStatusCreating  = "creating"
 	clusterEndpointStatusDeleting  = "deleting"
 	clusterEndpointStatusModifying = "modifying"
+)
+
+const (
+	clusterSnapshotStatusAvailable = "available"
+	clusterSnapshotStatusCreating  = "creating"
 )
 
 const (

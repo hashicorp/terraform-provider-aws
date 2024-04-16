@@ -7,12 +7,13 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/synthetics"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/synthetics"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/synthetics/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -57,7 +58,7 @@ func ResourceGroup() *schema.Resource {
 
 func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SyntheticsConn(ctx)
+	conn := meta.(*conns.AWSClient).SyntheticsClient(ctx)
 
 	name := d.Get("name").(string)
 	in := &synthetics.CreateGroupInput{
@@ -65,7 +66,7 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		Tags: getTagsIn(ctx),
 	}
 
-	out, err := conn.CreateGroupWithContext(ctx, in)
+	out, err := conn.CreateGroup(ctx, in)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Synthetics Group (%s): %s", name, err)
@@ -75,14 +76,14 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "creating Synthetics Group (%s): Empty output", name)
 	}
 
-	d.SetId(aws.StringValue(out.Group.Name))
+	d.SetId(aws.ToString(out.Group.Name))
 
 	return append(diags, resourceGroupRead(ctx, d, meta)...)
 }
 
 func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SyntheticsConn(ctx)
+	conn := meta.(*conns.AWSClient).SyntheticsClient(ctx)
 
 	group, err := FindGroupByName(ctx, conn, d.Id())
 
@@ -112,15 +113,15 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 
 func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SyntheticsConn(ctx)
+	conn := meta.(*conns.AWSClient).SyntheticsClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Synthetics Group %s", d.Id())
 
-	_, err := conn.DeleteGroupWithContext(ctx, &synthetics.DeleteGroupInput{
+	_, err := conn.DeleteGroup(ctx, &synthetics.DeleteGroupInput{
 		GroupIdentifier: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, synthetics.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 

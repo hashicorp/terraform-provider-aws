@@ -9,8 +9,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -18,18 +18,19 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfapigateway "github.com/hashicorp/terraform-provider-aws/internal/service/apigateway"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAPIGatewayAPIKey_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var apiKey1, apiKey2 apigateway.ApiKey
+	var apiKey1, apiKey2 apigateway.GetApiKeyOutput
 	resourceName := "aws_api_gateway_api_key.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAPIKeyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -72,13 +73,13 @@ func TestAccAPIGatewayAPIKey_basic(t *testing.T) {
 
 func TestAccAPIGatewayAPIKey_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var apiKey1 apigateway.ApiKey
+	var apiKey1 apigateway.GetApiKeyOutput
 	resourceName := "aws_api_gateway_api_key.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAPIKeyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -118,13 +119,13 @@ func TestAccAPIGatewayAPIKey_tags(t *testing.T) {
 
 func TestAccAPIGatewayAPIKey_customerID(t *testing.T) {
 	ctx := acctest.Context(t)
-	var apiKey1, apiKey2 apigateway.ApiKey
+	var apiKey1, apiKey2 apigateway.GetApiKeyOutput
 	resourceName := "aws_api_gateway_api_key.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAPIKeyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -154,13 +155,13 @@ func TestAccAPIGatewayAPIKey_customerID(t *testing.T) {
 
 func TestAccAPIGatewayAPIKey_description(t *testing.T) {
 	ctx := acctest.Context(t)
-	var apiKey1, apiKey2 apigateway.ApiKey
+	var apiKey1, apiKey2 apigateway.GetApiKeyOutput
 	resourceName := "aws_api_gateway_api_key.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAPIKeyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -190,13 +191,13 @@ func TestAccAPIGatewayAPIKey_description(t *testing.T) {
 
 func TestAccAPIGatewayAPIKey_enabled(t *testing.T) {
 	ctx := acctest.Context(t)
-	var apiKey1, apiKey2 apigateway.ApiKey
+	var apiKey1, apiKey2 apigateway.GetApiKeyOutput
 	resourceName := "aws_api_gateway_api_key.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAPIKeyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -226,21 +227,21 @@ func TestAccAPIGatewayAPIKey_enabled(t *testing.T) {
 
 func TestAccAPIGatewayAPIKey_value(t *testing.T) {
 	ctx := acctest.Context(t)
-	var apiKey1 apigateway.ApiKey
+	var apiKey1 apigateway.GetApiKeyOutput
 	resourceName := "aws_api_gateway_api_key.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAPIKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAPIKeyConfig_value(rName, `MyCustomToken#@&\"'(§!ç)-_*$€¨^£%ù+=/:.;?,|`),
+				Config: testAccAPIKeyConfig_value(rName, `8bjqPK0BkA5N32bwYj4no2aw3eqsSM1o67eXFTNU`),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAPIKeyExists(ctx, resourceName, &apiKey1),
-					resource.TestCheckResourceAttr(resourceName, "value", `MyCustomToken#@&\"'(§!ç)-_*$€¨^£%ù+=/:.;?,|`),
+					resource.TestCheckResourceAttr(resourceName, "value", `8bjqPK0BkA5N32bwYj4no2aw3eqsSM1o67eXFTNU`),
 				),
 			},
 			{
@@ -254,13 +255,13 @@ func TestAccAPIGatewayAPIKey_value(t *testing.T) {
 
 func TestAccAPIGatewayAPIKey_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var apiKey1 apigateway.ApiKey
+	var apiKey1 apigateway.GetApiKeyOutput
 	resourceName := "aws_api_gateway_api_key.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, apigateway.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.APIGatewayServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAPIKeyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -276,18 +277,14 @@ func TestAccAPIGatewayAPIKey_disappears(t *testing.T) {
 	})
 }
 
-func testAccCheckAPIKeyExists(ctx context.Context, n string, v *apigateway.ApiKey) resource.TestCheckFunc {
+func testAccCheckAPIKeyExists(ctx context.Context, n string, v *apigateway.GetApiKeyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No API Gateway API Key ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
 		output, err := tfapigateway.FindAPIKeyByID(ctx, conn, rs.Primary.ID)
 
@@ -303,7 +300,7 @@ func testAccCheckAPIKeyExists(ctx context.Context, n string, v *apigateway.ApiKe
 
 func testAccCheckAPIKeyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_api_gateway_api_key" {
@@ -327,9 +324,9 @@ func testAccCheckAPIKeyDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckAPIKeyNotRecreated(i, j *apigateway.ApiKey) resource.TestCheckFunc {
+func testAccCheckAPIKeyNotRecreated(i, j *apigateway.GetApiKeyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if !aws.TimeValue(i.CreatedDate).Equal(aws.TimeValue(j.CreatedDate)) {
+		if !aws.ToTime(i.CreatedDate).Equal(aws.ToTime(j.CreatedDate)) {
 			return fmt.Errorf("API Gateway API Key recreated")
 		}
 

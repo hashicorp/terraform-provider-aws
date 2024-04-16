@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -81,6 +82,8 @@ func ResourceVoiceConnectorStreaming() *schema.Resource {
 }
 
 func resourceVoiceConnectorStreamingCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
 	vcId := d.Get("voice_connector_id").(string)
@@ -104,15 +107,17 @@ func resourceVoiceConnectorStreamingCreate(ctx context.Context, d *schema.Resour
 	input.StreamingConfiguration = config
 
 	if _, err := conn.PutVoiceConnectorStreamingConfiguration(ctx, input); err != nil {
-		return diag.Errorf("creating Chime Voice Connector (%s) streaming configuration: %s", vcId, err)
+		return sdkdiag.AppendErrorf(diags, "creating Chime Voice Connector (%s) streaming configuration: %s", vcId, err)
 	}
 
 	d.SetId(vcId)
 
-	return resourceVoiceConnectorStreamingRead(ctx, d, meta)
+	return append(diags, resourceVoiceConnectorStreamingRead(ctx, d, meta)...)
 }
 
 func resourceVoiceConnectorStreamingRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
 	input := &chimesdkvoice.GetVoiceConnectorStreamingConfigurationInput{
@@ -123,15 +128,15 @@ func resourceVoiceConnectorStreamingRead(ctx context.Context, d *schema.Resource
 	if !d.IsNewResource() && errs.IsA[*awstypes.NotFoundException](err) {
 		log.Printf("[WARN] Chime Voice Connector (%s) streaming not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("getting Chime Voice Connector (%s) streaming: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "getting Chime Voice Connector (%s) streaming: %s", d.Id(), err)
 	}
 
 	if resp == nil || resp.StreamingConfiguration == nil {
-		return diag.Errorf("getting Chime Voice Connector (%s) streaming: empty response", d.Id())
+		return sdkdiag.AppendErrorf(diags, "getting Chime Voice Connector (%s) streaming: empty response", d.Id())
 	}
 
 	d.Set("disabled", resp.StreamingConfiguration.Disabled)
@@ -139,17 +144,19 @@ func resourceVoiceConnectorStreamingRead(ctx context.Context, d *schema.Resource
 	d.Set("voice_connector_id", d.Id())
 
 	if err := d.Set("streaming_notification_targets", flattenStreamingNotificationTargets(resp.StreamingConfiguration.StreamingNotificationTargets)); err != nil {
-		return diag.Errorf("setting Chime Voice Connector streaming configuration targets (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting Chime Voice Connector streaming configuration targets (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("media_insights_configuration", flattenMediaInsightsConfiguration(resp.StreamingConfiguration.MediaInsightsConfiguration)); err != nil {
-		return diag.Errorf("setting Chime Voice Connector streaming configuration media insights configuration (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "setting Chime Voice Connector streaming configuration media insights configuration (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceVoiceConnectorStreamingUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
 	vcId := d.Get("voice_connector_id").(string)
@@ -175,14 +182,16 @@ func resourceVoiceConnectorStreamingUpdate(ctx context.Context, d *schema.Resour
 		input.StreamingConfiguration = config
 
 		if _, err := conn.PutVoiceConnectorStreamingConfiguration(ctx, input); err != nil {
-			return diag.Errorf("updating Chime Voice Connector (%s) streaming configuration: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating Chime Voice Connector (%s) streaming configuration: %s", d.Id(), err)
 		}
 	}
 
-	return resourceVoiceConnectorStreamingRead(ctx, d, meta)
+	return append(diags, resourceVoiceConnectorStreamingRead(ctx, d, meta)...)
 }
 
 func resourceVoiceConnectorStreamingDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ChimeSDKVoiceClient(ctx)
 
 	input := &chimesdkvoice.DeleteVoiceConnectorStreamingConfigurationInput{
@@ -192,14 +201,14 @@ func resourceVoiceConnectorStreamingDelete(ctx context.Context, d *schema.Resour
 	_, err := conn.DeleteVoiceConnectorStreamingConfiguration(ctx, input)
 
 	if errs.IsA[*awstypes.NotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Chime Voice Connector (%s) streaming configuration: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Chime Voice Connector (%s) streaming configuration: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandStreamingNotificationTargets(data []interface{}) []awstypes.StreamingNotificationTarget {

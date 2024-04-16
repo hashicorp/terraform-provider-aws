@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tflocation "github.com/hashicorp/terraform-provider-aws/internal/service/location"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccLocationTracker_basic(t *testing.T) {
@@ -26,7 +27,7 @@ func TestAccLocationTracker_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, locationservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LocationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTrackerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -60,7 +61,7 @@ func TestAccLocationTracker_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, locationservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LocationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTrackerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -83,7 +84,7 @@ func TestAccLocationTracker_description(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, locationservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LocationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTrackerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -117,7 +118,7 @@ func TestAccLocationTracker_kmsKeyID(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, locationservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LocationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTrackerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -144,7 +145,7 @@ func TestAccLocationTracker_positionFiltering(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, locationservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LocationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTrackerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -178,7 +179,7 @@ func TestAccLocationTracker_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, locationservice.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.LocationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTrackerDestroy(ctx),
 		Steps: []resource.TestStep{

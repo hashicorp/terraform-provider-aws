@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -92,6 +93,8 @@ func ResourceUser() *schema.Resource {
 }
 
 func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
 	userName := d.Get("user_name").(string)
@@ -108,15 +111,17 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	_, err := conn.CreateUserWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating MemoryDB User (%s): %s", userName, err)
+		return sdkdiag.AppendErrorf(diags, "creating MemoryDB User (%s): %s", userName, err)
 	}
 
 	d.SetId(userName)
 
-	return resourceUserRead(ctx, d, meta)
+	return append(diags, resourceUserRead(ctx, d, meta)...)
 }
 
 func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
 	user, err := FindUserByName(ctx, conn, d.Id())
@@ -124,11 +129,11 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] MemoryDB User (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading MemoryDB User (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading MemoryDB User (%s): %s", d.Id(), err)
 	}
 
 	d.Set("access_string", user.AccessString)
@@ -142,17 +147,19 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		}
 
 		if err := d.Set("authentication_mode", []interface{}{authenticationMode}); err != nil {
-			return diag.Errorf("setting authentication_mode: %s", err)
+			return sdkdiag.AppendErrorf(diags, "setting authentication_mode: %s", err)
 		}
 	}
 
 	d.Set("minimum_engine_version", user.MinimumEngineVersion)
 	d.Set("user_name", user.Name)
 
-	return nil
+	return diags
 }
 
 func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -174,18 +181,20 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 		_, err := conn.UpdateUserWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating MemoryDB User (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating MemoryDB User (%s): %s", d.Id(), err)
 		}
 
 		if err := waitUserActive(ctx, conn, d.Id()); err != nil {
-			return diag.Errorf("waiting for MemoryDB User (%s) update: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for MemoryDB User (%s) update: %s", d.Id(), err)
 		}
 	}
 
-	return resourceUserRead(ctx, d, meta)
+	return append(diags, resourceUserRead(ctx, d, meta)...)
 }
 
 func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
 	log.Printf("[DEBUG] Deleting MemoryDB User: (%s)", d.Id())
@@ -194,16 +203,16 @@ func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interf
 	})
 
 	if tfawserr.ErrCodeEquals(err, memorydb.ErrCodeUserNotFoundFault) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting MemoryDB User (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting MemoryDB User (%s): %s", d.Id(), err)
 	}
 
 	if err := waitUserDeleted(ctx, conn, d.Id()); err != nil {
-		return diag.Errorf("waiting for MemoryDB User (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for MemoryDB User (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

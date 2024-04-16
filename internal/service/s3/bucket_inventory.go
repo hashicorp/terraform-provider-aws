@@ -25,8 +25,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_s3_bucket_inventory")
-func ResourceBucketInventory() *schema.Resource {
+// @SDKResource("aws_s3_bucket_inventory", name="Bucket Inventory")
+func resourceBucketInventory() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketInventoryPut,
 		ReadWithoutTimeout:   resourceBucketInventoryRead,
@@ -215,9 +215,13 @@ func resourceBucketInventoryPut(ctx context.Context, d *schema.ResourceData, met
 		InventoryConfiguration: inventoryConfiguration,
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return conn.PutBucketInventoryConfiguration(ctx, input)
 	}, errCodeNoSuchBucket)
+
+	if tfawserr.ErrMessageContains(err, errCodeInvalidArgument, "InventoryConfiguration is not valid, expected CreateBucketConfiguration") {
+		err = errDirectoryBucket(err)
+	}
 
 	if err != nil {
 		return diag.Errorf("creating S3 Bucket (%s) Inventory: %s", bucket, err)
@@ -226,7 +230,7 @@ func resourceBucketInventoryPut(ctx context.Context, d *schema.ResourceData, met
 	if d.IsNewResource() {
 		d.SetId(fmt.Sprintf("%s:%s", bucket, name))
 
-		_, err = tfresource.RetryWhenNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+		_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 			return findInventoryConfiguration(ctx, conn, bucket, name)
 		})
 
@@ -307,7 +311,7 @@ func resourceBucketInventoryDelete(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket Inventory (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return findInventoryConfiguration(ctx, conn, bucket, name)
 	})
 

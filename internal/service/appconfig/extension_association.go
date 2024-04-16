@@ -8,12 +8,14 @@ import (
 	"errors"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/appconfig"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/appconfig"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/appconfig/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -64,7 +66,9 @@ func ResourceExtensionAssociation() *schema.Resource {
 }
 
 func resourceExtensionAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
 	in := appconfig.CreateExtensionAssociationInput{
 		ExtensionIdentifier: aws.String(d.Get("extension_arn").(string)),
@@ -72,37 +76,39 @@ func resourceExtensionAssociationCreate(ctx context.Context, d *schema.ResourceD
 	}
 
 	if v, ok := d.GetOk("parameters"); ok {
-		in.Parameters = flex.ExpandStringMap(v.(map[string]interface{}))
+		in.Parameters = flex.ExpandStringValueMap(v.(map[string]interface{}))
 	}
 
-	out, err := conn.CreateExtensionAssociationWithContext(ctx, &in)
+	out, err := conn.CreateExtensionAssociation(ctx, &in)
 
 	if err != nil {
-		return create.DiagError(names.AppConfig, create.ErrActionCreating, ResExtensionAssociation, d.Get("extension_arn").(string), err)
+		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionCreating, ResExtensionAssociation, d.Get("extension_arn").(string), err)
 	}
 
 	if out == nil {
-		return create.DiagError(names.AppConfig, create.ErrActionCreating, ResExtensionAssociation, d.Get("extension_arn").(string), errors.New("No Extension Association returned with create request."))
+		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionCreating, ResExtensionAssociation, d.Get("extension_arn").(string), errors.New("No Extension Association returned with create request."))
 	}
 
-	d.SetId(aws.StringValue(out.Id))
+	d.SetId(aws.ToString(out.Id))
 
-	return resourceExtensionAssociationRead(ctx, d, meta)
+	return append(diags, resourceExtensionAssociationRead(ctx, d, meta)...)
 }
 
 func resourceExtensionAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
 	out, err := FindExtensionAssociationById(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		create.LogNotFoundRemoveState(names.AppConfig, create.ErrActionReading, ResExtensionAssociation, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.AppConfig, create.ErrActionReading, ResExtensionAssociation, d.Id(), err)
+		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionReading, ResExtensionAssociation, d.Id(), err)
 	}
 
 	d.Set("arn", out.Arn)
@@ -111,11 +117,13 @@ func resourceExtensionAssociationRead(ctx context.Context, d *schema.ResourceDat
 	d.Set("resource_arn", out.ResourceArn)
 	d.Set("extension_version", out.ExtensionVersionNumber)
 
-	return nil
+	return diags
 }
 
 func resourceExtensionAssociationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 	requestUpdate := false
 
 	in := &appconfig.UpdateExtensionAssociationInput{
@@ -123,36 +131,42 @@ func resourceExtensionAssociationUpdate(ctx context.Context, d *schema.ResourceD
 	}
 
 	if d.HasChange("parameters") {
-		in.Parameters = flex.ExpandStringMap(d.Get("parameters").(map[string]interface{}))
+		in.Parameters = flex.ExpandStringValueMap(d.Get("parameters").(map[string]interface{}))
 		requestUpdate = true
 	}
 
 	if requestUpdate {
-		out, err := conn.UpdateExtensionAssociationWithContext(ctx, in)
+		out, err := conn.UpdateExtensionAssociation(ctx, in)
 
 		if err != nil {
-			return create.DiagError(names.AppConfig, create.ErrActionWaitingForUpdate, ResExtensionAssociation, d.Id(), err)
+			return create.AppendDiagError(diags, names.AppConfig, create.ErrActionWaitingForUpdate, ResExtensionAssociation, d.Id(), err)
 		}
 
 		if out == nil {
-			return create.DiagError(names.AppConfig, create.ErrActionWaitingForUpdate, ResExtensionAssociation, d.Id(), errors.New("No ExtensionAssociation returned with update request."))
+			return create.AppendDiagError(diags, names.AppConfig, create.ErrActionWaitingForUpdate, ResExtensionAssociation, d.Id(), errors.New("No ExtensionAssociation returned with update request."))
 		}
 	}
 
-	return resourceExtensionAssociationRead(ctx, d, meta)
+	return append(diags, resourceExtensionAssociationRead(ctx, d, meta)...)
 }
 
 func resourceExtensionAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
 	log.Printf("[INFO] Deleting AppConfig Hosted Extension Association: %s", d.Id())
-	_, err := conn.DeleteExtensionAssociationWithContext(ctx, &appconfig.DeleteExtensionAssociationInput{
+	_, err := conn.DeleteExtensionAssociation(ctx, &appconfig.DeleteExtensionAssociationInput{
 		ExtensionAssociationId: aws.String(d.Id()),
 	})
 
-	if err != nil {
-		return create.DiagError(names.AppConfig, create.ErrActionDeleting, ResExtensionAssociation, d.Id(), err)
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
 	}
 
-	return nil
+	if err != nil {
+		return create.AppendDiagError(diags, names.AppConfig, create.ErrActionDeleting, ResExtensionAssociation, d.Id(), err)
+	}
+
+	return diags
 }

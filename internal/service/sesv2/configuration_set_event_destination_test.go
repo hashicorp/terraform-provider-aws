@@ -27,7 +27,7 @@ func TestAccSESV2ConfigurationSetEventDestination_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfigurationSetEventDestinationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -71,7 +71,7 @@ func TestAccSESV2ConfigurationSetEventDestination_cloudWatchDestination(t *testi
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfigurationSetEventDestinationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -115,7 +115,7 @@ func TestAccSESV2ConfigurationSetEventDestination_kinesisFirehoseDestination(t *
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfigurationSetEventDestinationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -155,7 +155,7 @@ func TestAccSESV2ConfigurationSetEventDestination_pinpointDestination(t *testing
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfigurationSetEventDestinationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -193,7 +193,7 @@ func TestAccSESV2ConfigurationSetEventDestination_snsDestination(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfigurationSetEventDestinationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -231,7 +231,7 @@ func TestAccSESV2ConfigurationSetEventDestination_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckConfigurationSetEventDestinationDestroy(ctx),
 		Steps: []resource.TestStep{

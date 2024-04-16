@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -105,6 +106,8 @@ func ResourceCustomPlugin() *schema.Resource {
 }
 
 func resourceCustomPluginCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KafkaConnectConn(ctx)
 
 	name := d.Get("name").(string)
@@ -122,7 +125,7 @@ func resourceCustomPluginCreate(ctx context.Context, d *schema.ResourceData, met
 	output, err := conn.CreateCustomPluginWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating MSK Connect Custom Plugin (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating MSK Connect Custom Plugin (%s): %s", name, err)
 	}
 
 	d.SetId(aws.StringValue(output.CustomPluginArn))
@@ -130,13 +133,15 @@ func resourceCustomPluginCreate(ctx context.Context, d *schema.ResourceData, met
 	_, err = waitCustomPluginCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate))
 
 	if err != nil {
-		return diag.Errorf("waiting for MSK Connect Custom Plugin (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for MSK Connect Custom Plugin (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceCustomPluginRead(ctx, d, meta)
+	return append(diags, resourceCustomPluginRead(ctx, d, meta)...)
 }
 
 func resourceCustomPluginRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KafkaConnectConn(ctx)
 
 	plugin, err := FindCustomPluginByARN(ctx, conn, d.Id())
@@ -144,11 +149,11 @@ func resourceCustomPluginRead(ctx context.Context, d *schema.ResourceData, meta 
 	if tfresource.NotFound(err) && !d.IsNewResource() {
 		log.Printf("[WARN] MSK Connect Custom Plugin (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading MSK Connect Custom Plugin (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading MSK Connect Custom Plugin (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", plugin.CustomPluginArn)
@@ -161,7 +166,7 @@ func resourceCustomPluginRead(ctx context.Context, d *schema.ResourceData, meta 
 		d.Set("latest_revision", plugin.LatestRevision.Revision)
 		if plugin.LatestRevision.Location != nil {
 			if err := d.Set("location", []interface{}{flattenCustomPluginLocationDescription(plugin.LatestRevision.Location)}); err != nil {
-				return diag.Errorf("setting location: %s", err)
+				return sdkdiag.AppendErrorf(diags, "setting location: %s", err)
 			}
 		} else {
 			d.Set("location", nil)
@@ -172,10 +177,12 @@ func resourceCustomPluginRead(ctx context.Context, d *schema.ResourceData, meta 
 		d.Set("location", nil)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceCustomPluginDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KafkaConnectConn(ctx)
 
 	log.Printf("[DEBUG] Deleting MSK Connect Custom Plugin: %s", d.Id())
@@ -184,20 +191,20 @@ func resourceCustomPluginDelete(ctx context.Context, d *schema.ResourceData, met
 	})
 
 	if tfawserr.ErrCodeEquals(err, kafkaconnect.ErrCodeNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting MSK Connect Custom Plugin (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting MSK Connect Custom Plugin (%s): %s", d.Id(), err)
 	}
 
 	_, err = waitCustomPluginDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete))
 
 	if err != nil {
-		return diag.Errorf("waiting for MSK Connect Custom Plugin (%s) delete: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for MSK Connect Custom Plugin (%s) delete: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func expandCustomPluginLocation(tfMap map[string]interface{}) *kafkaconnect.CustomPluginLocation {

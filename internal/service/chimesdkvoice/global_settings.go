@@ -86,7 +86,7 @@ func resourceGlobalSettingsRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if err != nil {
-		return append(diags, create.DiagError(names.ChimeSDKVoice, create.ErrActionReading, ResNameGlobalSettings, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.ChimeSDKVoice, create.ErrActionReading, ResNameGlobalSettings, d.Id(), err)
 	}
 
 	d.SetId(meta.(*conns.AWSClient).AccountID)
@@ -106,7 +106,7 @@ func resourceGlobalSettingsUpdate(ctx context.Context, d *schema.ResourceData, m
 
 		_, err := conn.UpdateGlobalSettings(ctx, input)
 		if err != nil {
-			return append(diags, create.DiagError(names.ChimeSDKVoice, create.ErrActionUpdating, ResNameGlobalSettings, d.Id(), err)...)
+			return create.AppendDiagError(diags, names.ChimeSDKVoice, create.ErrActionUpdating, ResNameGlobalSettings, d.Id(), err)
 		}
 	}
 	d.SetId(meta.(*conns.AWSClient).AccountID)
@@ -122,7 +122,7 @@ func resourceGlobalSettingsDelete(ctx context.Context, d *schema.ResourceData, m
 		VoiceConnector: &awstypes.VoiceConnectorSettings{},
 	})
 	if err != nil {
-		return append(diags, create.DiagError(names.ChimeSDKVoice, create.ErrActionDeleting, ResNameGlobalSettings, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.ChimeSDKVoice, create.ErrActionDeleting, ResNameGlobalSettings, d.Id(), err)
 	}
 
 	return diags
