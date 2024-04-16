@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_key_pair", name="Key Pair")
@@ -63,7 +64,7 @@ func dataSourceKeyPair() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -113,6 +114,8 @@ func dataSourceKeyPairRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("key_pair_id", keyPair.KeyPairId)
 	d.Set("key_type", keyPair.KeyType)
 	d.Set("public_key", keyPair.PublicKey)
+
+	setTagsOutV2(ctx, keyPair.Tags)
 
 	return diags
 }
