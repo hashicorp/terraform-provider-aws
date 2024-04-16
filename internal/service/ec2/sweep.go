@@ -2886,7 +2886,7 @@ func sweepInstanceConnectEndpoints(region string) error {
 				continue
 			}
 
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceInstanceConnectEndpoint, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newInstanceConnectEndpointResource, client,
 				framework.NewAttribute("id", aws.StringValue(v.InstanceConnectEndpointId)),
 			))
 		}

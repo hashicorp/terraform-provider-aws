@@ -12,7 +12,7 @@ import (
 
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
-	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -3086,17 +3086,17 @@ func WaitIPAMScopeUpdated(ctx context.Context, conn *ec2.EC2, id string, timeout
 	return nil, err
 }
 
-func WaitInstanceConnectEndpointCreated(ctx context.Context, conn *ec2_sdkv2.Client, id string, timeout time.Duration) (*types.Ec2InstanceConnectEndpoint, error) {
+func WaitInstanceConnectEndpointCreated(ctx context.Context, conn *ec2_sdkv2.Client, id string, timeout time.Duration) (*awstypes.Ec2InstanceConnectEndpoint, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(types.Ec2InstanceConnectEndpointStateCreateInProgress),
-		Target:  enum.Slice(types.Ec2InstanceConnectEndpointStateCreateComplete),
+		Pending: enum.Slice(awstypes.Ec2InstanceConnectEndpointStateCreateInProgress),
+		Target:  enum.Slice(awstypes.Ec2InstanceConnectEndpointStateCreateComplete),
 		Refresh: StatusInstanceConnectEndpointState(ctx, conn, id),
 		Timeout: timeout,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*types.Ec2InstanceConnectEndpoint); ok {
+	if output, ok := outputRaw.(*awstypes.Ec2InstanceConnectEndpoint); ok {
 		tfresource.SetLastError(err, errors.New(aws_sdkv2.ToString(output.StateMessage)))
 
 		return output, err
@@ -3105,9 +3105,9 @@ func WaitInstanceConnectEndpointCreated(ctx context.Context, conn *ec2_sdkv2.Cli
 	return nil, err
 }
 
-func WaitInstanceConnectEndpointDeleted(ctx context.Context, conn *ec2_sdkv2.Client, id string, timeout time.Duration) (*types.Ec2InstanceConnectEndpoint, error) {
+func WaitInstanceConnectEndpointDeleted(ctx context.Context, conn *ec2_sdkv2.Client, id string, timeout time.Duration) (*awstypes.Ec2InstanceConnectEndpoint, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(types.Ec2InstanceConnectEndpointStateDeleteInProgress),
+		Pending: enum.Slice(awstypes.Ec2InstanceConnectEndpointStateDeleteInProgress),
 		Target:  []string{},
 		Refresh: StatusInstanceConnectEndpointState(ctx, conn, id),
 		Timeout: timeout,
@@ -3115,7 +3115,7 @@ func WaitInstanceConnectEndpointDeleted(ctx context.Context, conn *ec2_sdkv2.Cli
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*types.Ec2InstanceConnectEndpoint); ok {
+	if output, ok := outputRaw.(*awstypes.Ec2InstanceConnectEndpoint); ok {
 		tfresource.SetLastError(err, errors.New(aws_sdkv2.ToString(output.StateMessage)))
 
 		return output, err
@@ -3136,10 +3136,10 @@ func WaitImageBlockPublicAccessState(ctx context.Context, conn *ec2_sdkv2.Client
 	return err
 }
 
-func WaitVerifiedAccessEndpointCreated(ctx context.Context, conn *ec2_sdkv2.Client, id string, timeout time.Duration) (*types.VerifiedAccessEndpoint, error) {
+func WaitVerifiedAccessEndpointCreated(ctx context.Context, conn *ec2_sdkv2.Client, id string, timeout time.Duration) (*awstypes.VerifiedAccessEndpoint, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(types.VerifiedAccessEndpointStatusCodePending),
-		Target:                    enum.Slice(types.VerifiedAccessEndpointStatusCodeActive),
+		Pending:                   enum.Slice(awstypes.VerifiedAccessEndpointStatusCodePending),
+		Target:                    enum.Slice(awstypes.VerifiedAccessEndpointStatusCodeActive),
 		Refresh:                   StatusVerifiedAccessEndpoint(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -3148,7 +3148,7 @@ func WaitVerifiedAccessEndpointCreated(ctx context.Context, conn *ec2_sdkv2.Clie
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*types.VerifiedAccessEndpoint); ok {
+	if output, ok := outputRaw.(*awstypes.VerifiedAccessEndpoint); ok {
 		tfresource.SetLastError(err, errors.New(aws_sdkv2.ToString(output.Status.Message)))
 
 		return output, err
@@ -3157,10 +3157,10 @@ func WaitVerifiedAccessEndpointCreated(ctx context.Context, conn *ec2_sdkv2.Clie
 	return nil, err
 }
 
-func WaitVerifiedAccessEndpointUpdated(ctx context.Context, conn *ec2_sdkv2.Client, id string, timeout time.Duration) (*types.VerifiedAccessEndpoint, error) {
+func WaitVerifiedAccessEndpointUpdated(ctx context.Context, conn *ec2_sdkv2.Client, id string, timeout time.Duration) (*awstypes.VerifiedAccessEndpoint, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   enum.Slice(types.VerifiedAccessEndpointStatusCodeUpdating),
-		Target:                    enum.Slice(types.VerifiedAccessEndpointStatusCodeActive),
+		Pending:                   enum.Slice(awstypes.VerifiedAccessEndpointStatusCodeUpdating),
+		Target:                    enum.Slice(awstypes.VerifiedAccessEndpointStatusCodeActive),
 		Refresh:                   StatusVerifiedAccessEndpoint(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -3169,7 +3169,7 @@ func WaitVerifiedAccessEndpointUpdated(ctx context.Context, conn *ec2_sdkv2.Clie
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*types.VerifiedAccessEndpoint); ok {
+	if output, ok := outputRaw.(*awstypes.VerifiedAccessEndpoint); ok {
 		tfresource.SetLastError(err, errors.New(aws_sdkv2.ToString(output.Status.Message)))
 
 		return output, err
@@ -3178,9 +3178,9 @@ func WaitVerifiedAccessEndpointUpdated(ctx context.Context, conn *ec2_sdkv2.Clie
 	return nil, err
 }
 
-func WaitVerifiedAccessEndpointDeleted(ctx context.Context, conn *ec2_sdkv2.Client, id string, timeout time.Duration) (*types.VerifiedAccessEndpoint, error) {
+func WaitVerifiedAccessEndpointDeleted(ctx context.Context, conn *ec2_sdkv2.Client, id string, timeout time.Duration) (*awstypes.VerifiedAccessEndpoint, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: enum.Slice(types.VerifiedAccessEndpointStatusCodeDeleting, types.VerifiedAccessEndpointStatusCodeActive, types.VerifiedAccessEndpointStatusCodeDeleted),
+		Pending: enum.Slice(awstypes.VerifiedAccessEndpointStatusCodeDeleting, awstypes.VerifiedAccessEndpointStatusCodeActive, awstypes.VerifiedAccessEndpointStatusCodeDeleted),
 		Target:  []string{},
 		Refresh: StatusVerifiedAccessEndpoint(ctx, conn, id),
 		Timeout: timeout,
@@ -3188,9 +3188,43 @@ func WaitVerifiedAccessEndpointDeleted(ctx context.Context, conn *ec2_sdkv2.Clie
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*types.VerifiedAccessEndpoint); ok {
+	if output, ok := outputRaw.(*awstypes.VerifiedAccessEndpoint); ok {
 		tfresource.SetLastError(err, errors.New(aws_sdkv2.ToString(output.Status.Message)))
 
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitFastSnapshotRestoreCreated(ctx context.Context, conn *ec2_sdkv2.Client, availabilityZone, snapshotID string, timeout time.Duration) (*awstypes.DescribeFastSnapshotRestoreSuccessItem, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.FastSnapshotRestoreStateCodeEnabling, awstypes.FastSnapshotRestoreStateCodeOptimizing),
+		Target:  enum.Slice(awstypes.FastSnapshotRestoreStateCodeEnabled),
+		Refresh: statusFastSnapshotRestore(ctx, conn, availabilityZone, snapshotID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.DescribeFastSnapshotRestoreSuccessItem); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitFastSnapshotRestoreDeleted(ctx context.Context, conn *ec2_sdkv2.Client, availabilityZone, snapshotID string, timeout time.Duration) (*awstypes.DescribeFastSnapshotRestoreSuccessItem, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.FastSnapshotRestoreStateCodeDisabling, awstypes.FastSnapshotRestoreStateCodeOptimizing, awstypes.FastSnapshotRestoreStateCodeEnabled),
+		Target:  []string{},
+		Refresh: statusFastSnapshotRestore(ctx, conn, availabilityZone, snapshotID),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.DescribeFastSnapshotRestoreSuccessItem); ok {
 		return output, err
 	}
 

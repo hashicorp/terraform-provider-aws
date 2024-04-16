@@ -276,13 +276,15 @@ func outsideIPAddressType_Values() []string {
 	}
 }
 
+type securityGroupRuleType string
+
 const (
-	securityGroupRuleTypeEgress  = "egress"
-	securityGroupRuleTypeIngress = "ingress"
+	securityGroupRuleTypeEgress  securityGroupRuleType = "egress"
+	securityGroupRuleTypeIngress securityGroupRuleType = "ingress"
 )
 
-func securityGroupRuleType_Values() []string {
-	return []string{
+func (securityGroupRuleType) Values() []securityGroupRuleType {
+	return []securityGroupRuleType{
 		securityGroupRuleTypeEgress,
 		securityGroupRuleTypeIngress,
 	}

@@ -6,7 +6,7 @@ require (
 	github.com/ProtonMail/go-crypto v1.1.0-alpha.2
 	github.com/YakDriver/go-version v0.1.0
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.51.20
+	github.com/aws/aws-sdk-go v1.51.21
 	github.com/aws/aws-sdk-go-v2 v1.26.1
 	github.com/aws/aws-sdk-go-v2/config v1.27.11
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.11
@@ -58,7 +58,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/cognitoidentity v1.23.6
 	github.com/aws/aws-sdk-go-v2/service/comprehend v1.31.4
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.34.1
-	github.com/aws/aws-sdk-go-v2/service/configservice v1.46.4
+	github.com/aws/aws-sdk-go-v2/service/configservice v1.46.5
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.15.4
 	github.com/aws/aws-sdk-go-v2/service/controltower v1.13.4
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.23.4
@@ -90,7 +90,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/fms v1.31.4
 	github.com/aws/aws-sdk-go-v2/service/glacier v1.22.4
 	github.com/aws/aws-sdk-go-v2/service/groundstation v1.27.0
-	github.com/aws/aws-sdk-go-v2/service/healthlake v1.23.4
+	github.com/aws/aws-sdk-go-v2/service/healthlake v1.24.0
 	github.com/aws/aws-sdk-go-v2/service/iam v1.32.0
 	github.com/aws/aws-sdk-go-v2/service/identitystore v1.23.5
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.24.4
@@ -115,7 +115,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/mediastore v1.20.4
 	github.com/aws/aws-sdk-go-v2/service/mq v1.22.4
 	github.com/aws/aws-sdk-go-v2/service/mwaa v1.26.5
-	github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.8.0
+	github.com/aws/aws-sdk-go-v2/service/neptunegraph v1.8.1
 	github.com/aws/aws-sdk-go-v2/service/oam v1.10.1
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.11.4
 	github.com/aws/aws-sdk-go-v2/service/osis v1.8.4
@@ -128,7 +128,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.21.4
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.16.4
 	github.com/aws/aws-sdk-go-v2/service/rds v1.77.1
-	github.com/aws/aws-sdk-go-v2/service/redshift v1.43.5
+	github.com/aws/aws-sdk-go-v2/service/redshift v1.44.0
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.25.4
 	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.17.4
 	github.com/aws/aws-sdk-go-v2/service/rekognition v1.40.0
@@ -161,7 +161,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/synthetics v1.24.4
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.25.5
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.36.4
-	github.com/aws/aws-sdk-go-v2/service/transfer v1.45.0
+	github.com/aws/aws-sdk-go-v2/service/transfer v1.46.0
 	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.13.1
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.7.5
 	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.29.4
@@ -201,8 +201,9 @@ require (
 	github.com/mitchellh/go-testing-interface v1.14.1
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/pquerna/otp v1.4.0
-	github.com/shopspring/decimal v1.3.1
+	github.com/shopspring/decimal v1.4.0
 	golang.org/x/crypto v0.22.0
+	golang.org/x/text v0.14.0
 	golang.org/x/tools v0.18.0
 	gopkg.in/dnaeon/go-vcr.v3 v3.2.0
 	gopkg.in/yaml.v2 v2.4.0
@@ -274,7 +275,6 @@ require (
 	golang.org/x/mod v0.15.0 // indirect
 	golang.org/x/net v0.24.0 // indirect
 	golang.org/x/sys v0.19.0 // indirect
-	golang.org/x/text v0.14.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20240123012728-ef4313101c80 // indirect
 	google.golang.org/grpc v1.62.1 // indirect
