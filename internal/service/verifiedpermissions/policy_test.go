@@ -9,9 +9,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/verifiedpermissions"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/verifiedpermissions/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -19,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	interflex "github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tfverifiedpermissions "github.com/hashicorp/terraform-provider-aws/internal/service/verifiedpermissions"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -33,6 +33,8 @@ func TestAccVerifiedPermissionsPolicy_basic(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_verifiedpermissions_policy.test"
 
+	policyStatement := "permit (principal, action == Action::\"view\", resource in Album:: \"test_album\");"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
@@ -43,25 +45,18 @@ func TestAccVerifiedPermissionsPolicy_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConfig_basic(rName),
+				Config: testAccPolicyConfig_basic(rName, policyStatement),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &policy),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
-						"console_access": "false",
-						"groups.#":       "0",
-						"username":       "Test",
-						"password":       "TestTest1234",
-					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "verifiedpermissions", regexache.MustCompile(`policy:+.`)),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.static.0.description", rName),
+					resource.TestCheckResourceAttr(resourceName, "definition.0.static.0.statement", policyStatement),
+					resource.TestCheckResourceAttrSet(resourceName, "policy_id"),
 				),
 			},
 			{
-				ResourceName:            resourceName,
-				ImportState:             true,
-				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
 			},
 		},
 	})
@@ -77,6 +72,8 @@ func TestAccVerifiedPermissionsPolicy_disappears(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_verifiedpermissions_policy.test"
 
+	policyStatement := "permit (principal, action == Action::\"view\", resource in Album:: \"test_album\");"
+
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
@@ -87,15 +84,9 @@ func TestAccVerifiedPermissionsPolicy_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccPolicyConfig_basic(rName, testAccPolicyVersionNewer),
+				Config: testAccPolicyConfig_basic(rName, policyStatement),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckPolicyExists(ctx, resourceName, &policy),
-					// TIP: The Plugin-Framework disappears helper is similar to the Plugin-SDK version,
-					// but expects a new resource factory function as the third argument. To expose this
-					// private function to the testing package, you may need to add a line like the following
-					// to exports_test.go:
-					//
-					//   var ResourcePolicy = newResourcePolicy
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfverifiedpermissions.ResourcePolicy, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
@@ -113,15 +104,17 @@ func testAccCheckPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			input := &verifiedpermissions.DescribePolicyInput{
-				PolicyId: aws.String(rs.Primary.ID),
+			rID, err := interflex.ExpandResourceId(rs.Primary.ID, tfverifiedpermissions.ResourcePolicyIDPartsCount, false)
+			if err != nil {
+				return err
 			}
-			_, err := conn.DescribePolicy(ctx, &verifiedpermissions.DescribePolicyInput{
-				PolicyId: aws.String(rs.Primary.ID),
-			})
-			if errs.IsA[*types.ResourceNotFoundException](err) {
+
+			_, err = tfverifiedpermissions.FindPolicyByID(ctx, conn, rID[0], rID[1])
+
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				return nil
 			}
+
 			if err != nil {
 				return create.Error(names.VerifiedPermissions, create.ErrActionCheckingDestroyed, tfverifiedpermissions.ResNamePolicy, rs.Primary.ID, err)
 			}
@@ -145,9 +138,12 @@ func testAccCheckPolicyExists(ctx context.Context, name string, policy *verified
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).VerifiedPermissionsClient(ctx)
-		resp, err := conn.DescribePolicy(ctx, &verifiedpermissions.DescribePolicyInput{
-			PolicyId: aws.String(rs.Primary.ID),
-		})
+		rID, err := interflex.ExpandResourceId(rs.Primary.ID, tfverifiedpermissions.ResourcePolicyIDPartsCount, false)
+		if err != nil {
+			return err
+		}
+
+		resp, err := tfverifiedpermissions.FindPolicyByID(ctx, conn, rID[0], rID[1])
 
 		if err != nil {
 			return create.Error(names.VerifiedPermissions, create.ErrActionCheckingExistence, tfverifiedpermissions.ResNamePolicy, rs.Primary.ID, err)
@@ -159,39 +155,39 @@ func testAccCheckPolicyExists(ctx context.Context, name string, policy *verified
 	}
 }
 
-func testAccCheckPolicyNotRecreated(before, after *verifiedpermissions.DescribePolicyResponse) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.PolicyId), aws.ToString(after.PolicyId); before != after {
-			return create.Error(names.VerifiedPermissions, create.ErrActionCheckingNotRecreated, tfverifiedpermissions.ResNamePolicy, aws.ToString(before.PolicyId), errors.New("recreated"))
-		}
-
-		return nil
-	}
-}
-
-func testAccPolicyConfig_basic(rName, version string) string {
+func testAccPolicyConfig_base(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_security_group" "test" {
-  name = %[1]q
+resource "aws_verifiedpermissions_policy_store" "test" {
+  description = %[1]q
+  validation_settings {
+    mode = "OFF"
+  }
 }
 
+resource "aws_verifiedpermissions_schema" "test" {
+  policy_store_id = aws_verifiedpermissions_policy_store.test.policy_store_id
+
+  definition {
+    value = "{\"CHANGEDD\":{\"actions\":{},\"entityTypes\":{}}}"
+  }
+}
+
+`, rName)
+}
+
+func testAccPolicyConfig_basic(rName, policyStatement string) string {
+	return acctest.ConfigCompose(
+		testAccPolicyConfig_base(rName),
+		fmt.Sprintf(`
 resource "aws_verifiedpermissions_policy" "test" {
-  policy_name             = %[1]q
-  engine_type             = "ActiveVerifiedPermissions"
-  engine_version          = %[2]q
-  host_instance_type      = "verifiedpermissions.t2.micro"
-  security_groups         = [aws_security_group.test.id]
-  authentication_strategy = "simple"
-  storage_type            = "efs"
-
-  logs {
-    general = true
-  }
-
-  user {
-    username = "Test"
-    password = "TestTest1234"
+  policy_store_id = aws_verifiedpermissions_policy_store.test.id
+  
+  definition {
+    static {
+      description = %[1]q
+      statement   = %[2]q
+    }
   }
 }
-`, rName, version)
+`, rName, policyStatement))
 }

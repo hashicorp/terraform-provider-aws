@@ -232,7 +232,7 @@ func statementReplaceIf(ctx context.Context, req planmodifier.StringRequest, res
 }
 
 const (
-	resourcePolicyIDPartsCount = 2
+	ResourcePolicyIDPartsCount = 2
 )
 
 func (r *resourcePolicy) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
@@ -326,7 +326,7 @@ func (r *resourcePolicy) Create(ctx context.Context, req resource.CreateRequest,
 		aws.ToString(out.PolicyStoreId),
 	}
 
-	rID, err := interflex.FlattenResourceId(idParts, resourcePolicyIDPartsCount, false)
+	rID, err := interflex.FlattenResourceId(idParts, ResourcePolicyIDPartsCount, false)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.VerifiedPermissions, create.ErrActionCreating, ResNamePolicy, plan.PolicyStoreID.String(), err),
@@ -351,7 +351,7 @@ func (r *resourcePolicy) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
-	rID, err := interflex.ExpandResourceId(state.ID.ValueString(), resourcePolicyIDPartsCount, false)
+	rID, err := interflex.ExpandResourceId(state.ID.ValueString(), ResourcePolicyIDPartsCount, false)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.VerifiedPermissions, create.ErrActionSetting, ResNamePolicy, state.ID.String(), err),
@@ -373,6 +373,10 @@ func (r *resourcePolicy) Read(ctx context.Context, req resource.ReadRequest, res
 		)
 		return
 	}
+
+	state.PolicyID = fwflex.StringToFramework(ctx, out.PolicyId)
+	state.PolicyStoreID = fwflex.StringToFramework(ctx, out.PolicyStoreId)
+	state.CreatedDate = timetypes.NewRFC3339TimePointerValue(out.CreatedDate)
 
 	if val, ok := out.Definition.(*awstypes.PolicyDefinitionDetailMemberStatic); ok && val != nil {
 		static := fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &staticPolicyDefinition{
