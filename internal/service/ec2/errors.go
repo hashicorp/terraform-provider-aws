@@ -12,6 +12,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/awserr"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
 const (
@@ -193,19 +194,19 @@ func UnsuccessfulItemsError(apiObjects []*ec2.UnsuccessfulItem) error {
 	return errors.Join(errs...)
 }
 
-func EnableFastSnapshotRestoreStateItemError(apiObject *awstypes.EnableFastSnapshotRestoreStateError) error {
+func enableFastSnapshotRestoreStateItemError(apiObject *awstypes.EnableFastSnapshotRestoreStateError) error {
 	if apiObject == nil {
 		return nil
 	}
 
-	return awserr.New(aws_sdkv2.ToString(apiObject.Code), aws_sdkv2.ToString(apiObject.Message), nil)
+	return errs.APIError(aws_sdkv2.ToString(apiObject.Code), aws_sdkv2.ToString(apiObject.Message))
 }
 
-func EnableFastSnapshotRestoreStateItemsError(apiObjects []awstypes.EnableFastSnapshotRestoreStateErrorItem) error {
+func enableFastSnapshotRestoreStateItemsError(apiObjects []awstypes.EnableFastSnapshotRestoreStateErrorItem) error {
 	var errs []error
 
 	for _, apiObject := range apiObjects {
-		if err := EnableFastSnapshotRestoreStateItemError(apiObject.Error); err != nil {
+		if err := enableFastSnapshotRestoreStateItemError(apiObject.Error); err != nil {
 			errs = append(errs, fmt.Errorf("%s: %w", aws_sdkv2.ToString(apiObject.AvailabilityZone), err))
 		}
 	}
@@ -213,11 +214,11 @@ func EnableFastSnapshotRestoreStateItemsError(apiObjects []awstypes.EnableFastSn
 	return errors.Join(errs...)
 }
 
-func EnableFastSnapshotRestoreItemsError(apiObjects []awstypes.EnableFastSnapshotRestoreErrorItem) error {
+func enableFastSnapshotRestoreItemsError(apiObjects []awstypes.EnableFastSnapshotRestoreErrorItem) error {
 	var errs []error
 
 	for _, apiObject := range apiObjects {
-		if err := EnableFastSnapshotRestoreStateItemsError(apiObject.FastSnapshotRestoreStateErrors); err != nil {
+		if err := enableFastSnapshotRestoreStateItemsError(apiObject.FastSnapshotRestoreStateErrors); err != nil {
 			errs = append(errs, fmt.Errorf("%s: %w", aws_sdkv2.ToString(apiObject.SnapshotId), err))
 		}
 	}
