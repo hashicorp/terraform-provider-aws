@@ -41,6 +41,7 @@ const (
 	errCodeInvalidConversionTaskIdMalformed                  = "InvalidConversionTaskId.Malformed"
 	errCodeInvalidCustomerGatewayIDNotFound                  = "InvalidCustomerGatewayID.NotFound"
 	errCodeInvalidDHCPOptionIDNotFound                       = "InvalidDhcpOptionID.NotFound"
+	errCodeInvalidDHCPOptionsIDNotFound                      = "InvalidDhcpOptionsID.NotFound"
 	errCodeInvalidFleetIdNotFound                            = "InvalidFleetId.NotFound"
 	errCodeInvalidFlowLogIdNotFound                          = "InvalidFlowLogId.NotFound"
 	errCodeInvalidGatewayIDNotFound                          = "InvalidGatewayID.NotFound"
