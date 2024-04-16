@@ -491,8 +491,7 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
-	rule := d.Get("rule").(string)
-
+	ruleName := d.Get("rule").(string)
 	var targetID string
 	if v, ok := d.GetOk("target_id"); ok {
 		targetID = v.(string)
@@ -500,11 +499,11 @@ func resourceTargetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		targetID = id.UniqueId()
 		d.Set("target_id", targetID)
 	}
-	var busName string
+	var eventBusName string
 	if v, ok := d.GetOk("event_bus_name"); ok {
-		busName = v.(string)
+		eventBusName = v.(string)
 	}
-	id := targetCreateResourceID(busName, rule, targetID)
+	id := targetCreateResourceID(eventBusName, ruleName, targetID)
 
 	input := expandPutTargetsInput(ctx, d)
 
@@ -527,8 +526,8 @@ func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EventsClient(ctx)
 
-	busName := d.Get("event_bus_name").(string)
-	target, err := findTargetByThreePartKey(ctx, conn, busName, d.Get("rule").(string), d.Get("target_id").(string))
+	eventBusName := d.Get("event_bus_name").(string)
+	target, err := findTargetByThreePartKey(ctx, conn, eventBusName, d.Get("rule").(string), d.Get("target_id").(string))
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EventBridge Target (%s) not found, removing from state", d.Id())
@@ -541,7 +540,7 @@ func resourceTargetRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	d.Set("arn", target.Arn)
-	d.Set("event_bus_name", busName)
+	d.Set("event_bus_name", eventBusName)
 	d.Set("input", target.Input)
 	d.Set("input_path", target.InputPath)
 	d.Set("role_arn", target.RoleArn)
