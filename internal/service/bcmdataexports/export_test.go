@@ -35,8 +35,6 @@ func TestAccBCMDataExportsExport_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BCMDataExportsServiceID)
-			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BCMDataExportsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -46,7 +44,7 @@ func TestAccBCMDataExportsExport_basic(t *testing.T) {
 				Config: testAccExportConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExportExists(ctx, resourceName, &export),
-					resource.TestCheckResourceAttrSet(resourceName, "export"),
+					resource.TestCheckResourceAttr(resourceName, "export.#", "1"),
 				),
 			},
 			{
@@ -71,7 +69,7 @@ func TestAccBCMDataExportsExport_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.BCMDataExportsServiceID)
+			acctest.PreCheckPartitionHasService(t, names.BCMDataExportsEndpointID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BCMDataExportsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -137,25 +135,36 @@ func testAccCheckExportExists(ctx context.Context, name string, export *bcmdatae
 	}
 }
 
-func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).BCMDataExportsClient(ctx)
-
-	input := &bcmdataexports.GetExportInput{}
-	_, err := conn.GetExport(ctx, input)
-
-	if acctest.PreCheckSkipError(err) {
-		t.Skipf("skipping acceptance testing: %s", err)
-	}
-	if err != nil {
-		t.Fatalf("unexpected PreCheck error: %s", err)
-	}
-}
-
 func testAccExportConfig_basic(rName string) string {
 	return fmt.Sprintf(`
+resource "aws_s3_bucket_policy" "bucket" {
+  bucket = aws_s3_bucket.test.bucket
+  policy = jsonencode({
+    Id = %[1]q
+    Statement = [{
+      Action = [
+      "s3:PutObject",
+      "s3:GetBucketPolicy"
+      ]
+      Effect = "Allow"
+      Sid = "EnableAWSDataExportsToWriteToS3AndCheckPolicy"
+      Principal = {
+      Service = [
+        "billingreports.amazonaws.com",
+        "bcm-data-exports.amazonaws.com"
+      ]
+    }
+    Resource = [
+      aws_s3_bucket.test.arn,
+      "${aws_s3_bucket.test.arn}/*",
+    ]
+    Version = "2012-10-17"
+  })
+}
 
 resource "aws_s3_bucket" "test" {
-  bucket = "testing-bucket"
+  bucket = %[1]q
+  force_destroy = true
 }
 
 resource "aws_bcmdataexports_export" "test" {
@@ -163,29 +172,29 @@ resource "aws_bcmdataexports_export" "test" {
     name = %[1]q
     data_query {
       query_statement = "SELECT identity_line_item_id, identity_time_interval, line_item_product_code,line_item_unblended_cost FROM COST_AND_USAGE_REPORT"
-      table_configurations {
-        "COST_AND_USAGE_REPORT" {
-          "TIME_GRANULARITY" = "DAILY"
+      table_configurations = {
+        COST_AND_USAGE_REPORT = {
+          TIME_GRANULARITY = "DAILY"
         }
       }
     }
 
-    "destination_configurations" {
-      "s3_destination" {
-          "s3_bucket" = aws_s3_bucket.test.bucket
-          "s3_prefix" = aws_s3_bucket.test.bucket_prefix
-          "s3_region" = aws_s3_bucket.test.region
-          "s3_output_configurations" {
-            "overwrite" = "OVERWRITE_REPORT"
-            "format" = "TEXT_OR_CSV"
-            "compression" = "GZIP"
-            "output_type" = "CUSTOM"
+    destination_configurations {
+      s3_destination {
+          s3_bucket = aws_s3_bucket.test.bucket
+          s3_prefix = aws_s3_bucket.test.bucket_prefix
+          s3_region = aws_s3_bucket.test.region
+          s3_output_configurations {
+            overwrite = "OVERWRITE_REPORT"
+            format = "TEXT_OR_CSV"
+            compression = "GZIP"
+            output_type = "CUSTOM"
           }
-        }
+      }
     }
 
-    "refresh_cadence" {
-      "frequency" = "SYNCHRONOUS"
+    refresh_cadence {
+      frequency = "SYNCHRONOUS"
     }
   }
 }

@@ -37,6 +37,7 @@ const (
 	AutoScalingPlansEndpointID           = "autoscaling-plans"
 	BatchEndpointID                      = "batch"
 	BedrockEndpointID                    = "bedrock"
+	BCMDataExportsEndpointID             = "bcm-data-exports"
 	BudgetsEndpointID                    = "budgets"
 	ChimeSDKMediaPipelinesEndpointID     = "media-pipelines-chime"
 	ChimeSDKVoiceEndpointID              = "voice-chime"

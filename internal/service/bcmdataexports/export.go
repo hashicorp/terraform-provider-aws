@@ -6,6 +6,7 @@ package bcmdataexports
 import (
 	"context"
 	"errors"
+	"log"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -16,6 +17,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -36,7 +39,6 @@ func newResourceExport(_ context.Context) (resource.ResourceWithConfigure, error
 
 	r.SetDefaultCreateTimeout(30 * time.Minute)
 	r.SetDefaultUpdateTimeout(30 * time.Minute)
-	r.SetDefaultDeleteTimeout(30 * time.Minute)
 
 	return r, nil
 }
@@ -71,8 +73,8 @@ func (r *resourceExport) Schema(ctx context.Context, req resource.SchemaRequest,
 		},
 	}
 
-	s3OutputFormatConfigurationLNB := schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[s3OutputFormatConfiguration](ctx),
+	s3OutputConfigurationsLNB := schema.ListNestedBlock{
+		CustomType: fwtypes.NewListNestedObjectTypeOf[s3OutputConfigurations](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"compression": schema.StringAttribute{
@@ -110,7 +112,7 @@ func (r *resourceExport) Schema(ctx context.Context, req resource.SchemaRequest,
 				},
 			},
 			Blocks: map[string]schema.Block{
-				"s3_output_format_configuration": s3OutputFormatConfigurationLNB,
+				"s3_output_configurations": s3OutputConfigurationsLNB,
 			},
 		},
 	}
@@ -144,6 +146,7 @@ func (r *resourceExport) Schema(ctx context.Context, req resource.SchemaRequest,
 		},
 		Blocks: map[string]schema.Block{
 			"export": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[ExportData](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
@@ -157,10 +160,13 @@ func (r *resourceExport) Schema(ctx context.Context, req resource.SchemaRequest,
 						},
 						"export_arn": schema.StringAttribute{
 							Computed: true,
+							PlanModifiers: []planmodifier.String{
+								stringplanmodifier.UseStateForUnknown(),
+							},
 						},
 					},
 					Blocks: map[string]schema.Block{
-						"dataQueryLNB":               dataQueryLNB,
+						"data_query":                 dataQueryLNB,
 						"destination_configurations": destinationConfigurationsLNB,
 						"refresh_cadence":            refreshCadenceLNB,
 					},
@@ -210,6 +216,13 @@ func (r *resourceExport) Create(ctx context.Context, req resource.CreateRequest,
 
 	plan.ID = flex.StringToFramework(ctx, out.ExportArn)
 
+	export, _ := plan.Export.ToPtr(ctx)
+	export.ExportArn = flex.StringToFramework(ctx, out.ExportArn)
+
+	plan.Export = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, export)
+
+	log.Printf("[WARN] export arn: %s", export.ExportArn)
+
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	_, err = waitExportCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
 	if err != nil {
@@ -220,7 +233,7 @@ func (r *resourceExport) Create(ctx context.Context, req resource.CreateRequest,
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
+	// resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
@@ -232,8 +245,6 @@ func (r *resourceExport) Read(ctx context.Context, req resource.ReadRequest, res
 	if resp.Diagnostics.HasError() {
 		return
 	}
-
-	// export, _ := state.Export.ToPtr(ctx)
 
 	out, err := findExportByID(ctx, conn, state.ID.ValueString())
 	if tfresource.NotFound(err) {
@@ -248,6 +259,18 @@ func (r *resourceExport) Read(ctx context.Context, req resource.ReadRequest, res
 		return
 	}
 
+	// exp := ExportData{}
+	// exp.Description = flex.StringToFramework(ctx, out.Export.Description)
+
+	// dq := fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &DataQueryData{
+	// 	QueryStatement: flex.StringToFramework(ctx, out.Export.DataQuery.QueryStatement),
+	// })
+	// resp.Diagnostics.Append(flex.Flatten(ctx, out.Export, &exp)...)
+	// if resp.Diagnostics.HasError() {
+	// 	return
+	// }
+
+	// state.Export = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &exp)
 	state.ID = flex.StringToFramework(ctx, out.Export.ExportArn)
 
 	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
@@ -463,7 +486,7 @@ type DataQueryData struct {
 	TableConfigurations fwtypes.MapValueOf[fwtypes.MapValueOf[types.String]] `tfsdk:"table_configurations"`
 }
 
-type s3OutputFormatConfiguration struct {
+type s3OutputConfigurations struct {
 	Compression fwtypes.StringEnum[awstypes.CompressionOption] `tfsdk:"compression"`
 	Format      fwtypes.StringEnum[awstypes.FormatOption]      `tfsdk:"format"`
 	OutputType  fwtypes.StringEnum[awstypes.S3OutputType]      `tfsdk:"output_type"`
@@ -471,14 +494,14 @@ type s3OutputFormatConfiguration struct {
 }
 
 type s3Destination struct {
-	S3Bucket                    types.String                                                 `tfsdk:"s3_bucket"`
-	S3Prefix                    types.String                                                 `tfsdk:"s3_prefix"`
-	S3Region                    types.String                                                 `tfsdk:"s3_region"`
-	S3OutputFormatConfiguration fwtypes.ListNestedObjectValueOf[s3OutputFormatConfiguration] `tfsdk:"s3_output_format_configuration"`
+	S3Bucket               types.String                                            `tfsdk:"s3_bucket"`
+	S3Prefix               types.String                                            `tfsdk:"s3_prefix"`
+	S3Region               types.String                                            `tfsdk:"s3_region"`
+	S3OutputConfigurations fwtypes.ListNestedObjectValueOf[s3OutputConfigurations] `tfsdk:"s3_output_configurations"`
 }
 
 type DestinationConfigurationsData struct {
-	s3Destination fwtypes.ListNestedObjectValueOf[s3Destination] `tfsdk:"s3_destination"`
+	S3Destination fwtypes.ListNestedObjectValueOf[s3Destination] `tfsdk:"s3_destination"`
 }
 
 type RefreshCadenceData struct {

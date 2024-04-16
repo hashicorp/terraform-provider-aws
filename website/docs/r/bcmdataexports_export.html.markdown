@@ -26,6 +26,7 @@ The following arguments are required:
 * `export` - (Required) The details of the export, including data query, name, description, and destination configuration.  See the [`export` argument reference](#export-argument-reference) below.
 
 ### `export` Argument Reference
+
 * `data_query` - (Required) Data query for this specific data export. See the [`data_query` argument reference](#data_query-argument-reference) below.
 * `destination_configurations` - (Required) Destination configuration for this specific data export. See the [`destination_configurations` argument reference](#destination_configurations-argument-reference) below.
 * `name` - (Required) Name of this specific data export.
@@ -33,25 +34,30 @@ The following arguments are required:
 * `description` - (Optional) Description for this specific data export.
 
 ### `data_query` Argument Reference
+
 * `query_statement` - (Required) Query statement.
 * `table_configurations` - (Optional) Table configuration.
 
 ### `destination_configurations` Argument Reference
+
 * `s3_destination` - (Required) Object that describes the destination of the data exports file. See the [`s3_destination` argument reference](#s3_destination-argument-reference) below.
 
 ### `s3_destination` Argument Reference
+
 * `s3_bucket` - (Required) Name of the Amazon S3 bucket used as the destination of a data export file.
 * `s3_output_configurations` - (Required) Output configuration for the data export. See the [`s3_output_configurations` argument reference](#s3_output_configurations-argument-reference) below.
 * `s3_prefix` - (Required) S3 path prefix you want prepended to the name of your data export.
 * `s3_region` - (Required) S3 bucket region.
 
 ### `s3_output_configurations` Argument Reference
+
 * `compression` - (Required) Compression type for the data export. Valid values `GZIP`, `PARQUET`.
 * `format` - (Required) File format for the data export. Valid values `TEXT_OR_CSV` or `PARQUET`.
 * `output_type` - (Required) Output type for the data export. Valid value `CUSTOM`.
 * `overwrite` - (Required) The rule to follow when generating a version of the data export file. You have the choice to overwrite the previous version or to be delivered in addition to the previous versions. Overwriting exports can save on Amazon S3 storage costs. Creating new export versions allows you to track the changes in cost and usage data over time. Valid values `CREATE_NEW_REPORT` or `OVERWRITE_REPORT`.
 
 ### `refresh_cadence` Argument Reference
+
 * `frequency` - (Required) Frequency that data exports are updated. The export refreshes each time the source data updates, up to three times daily. Valid values `SYNCHRONOUS`.
 
 ## Attribute Reference
