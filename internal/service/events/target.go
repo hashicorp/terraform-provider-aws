@@ -776,9 +776,7 @@ func putTargetsError(apiObjects []types.PutTargetsResultEntry) error {
 	var errs []error
 
 	for _, apiObject := range apiObjects {
-		if err := putTargetError(apiObject); err != nil {
-			errs = append(errs, fmt.Errorf("%s: %w", aws.ToString(apiObject.TargetId), err))
-		}
+		errs = append(errs, fmt.Errorf("%s: %w", aws.ToString(apiObject.TargetId), putTargetError(apiObject)))
 	}
 
 	return errors.Join(errs...)
@@ -792,9 +790,7 @@ func removeTargetsError(apiObjects []types.RemoveTargetsResultEntry) error {
 	var errs []error
 
 	for _, apiObject := range apiObjects {
-		if err := removeTargetError(apiObject); err != nil {
-			errs = append(errs, fmt.Errorf("%s: %w", aws.ToString(apiObject.TargetId), err))
-		}
+		errs = append(errs, fmt.Errorf("%s: %w", aws.ToString(apiObject.TargetId), removeTargetError(apiObject)))
 	}
 
 	return errors.Join(errs...)
