@@ -37,7 +37,6 @@ The following arguments are optional:
 
 * `optional_arg` - (Optional) Concise argument description. Do not begin the description with "An", "The", "Defines", "Indicates", or "Specifies," as these are verbose. In other words, "Indicates the amount of storage," can be rewritten as "Amount of storage," without losing any information.
 
-
 ### Definition
 
 * `static` - (Optional) The static policy statement. See [Static](#static) below.
