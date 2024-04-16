@@ -126,6 +126,7 @@ class MyConvertedCode extends TerraformStack {
   <li><code>autoscalingplans</code></li>
   <li><code>backup</code></li>
   <li><code>batch</code></li>
+  <li><code>bcmdataexports</code></li>
   <li><code>bedrock</code></li>
   <li><code>bedrockagent</code></li>
   <li><code>budgets</code></li>
@@ -166,6 +167,7 @@ class MyConvertedCode extends TerraformStack {
   <li><code>dataexchange</code></li>
   <li><code>datapipeline</code></li>
   <li><code>datasync</code></li>
+  <li><code>datazone</code></li>
   <li><code>dax</code></li>
   <li><code>deploy</code> (or <code>codedeploy</code>)</li>
   <li><code>detective</code></li>
@@ -251,6 +253,7 @@ class MyConvertedCode extends TerraformStack {
   <li><code>mq</code></li>
   <li><code>mwaa</code></li>
   <li><code>neptune</code></li>
+  <li><code>neptunegraph</code></li>
   <li><code>networkfirewall</code></li>
   <li><code>networkmanager</code></li>
   <li><code>oam</code> (or <code>cloudwatchobservabilityaccessmanager</code>)</li>
@@ -260,6 +263,7 @@ class MyConvertedCode extends TerraformStack {
   <li><code>organizations</code></li>
   <li><code>osis</code> (or <code>opensearchingestion</code>)</li>
   <li><code>outposts</code></li>
+  <li><code>paymentcryptography</code></li>
   <li><code>pcaconnectorad</code></li>
   <li><code>pinpoint</code></li>
   <li><code>pipes</code></li>
@@ -436,4 +440,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-c07ce09718a0c466712ecaf61e2dbc9d141b981471b7621e8f49cae77bc74715 -->
+<!-- cache-key: cdktf-0.20.1 input-d65f1f0b651e175fa2bfe7882a2a41b16b6ea0a04040101331fe126be0abcbfe -->

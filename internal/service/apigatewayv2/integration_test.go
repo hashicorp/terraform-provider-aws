@@ -8,14 +8,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/apigatewayv2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/service/apigatewayv2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfapigatewayv2 "github.com/hashicorp/terraform-provider-aws/internal/service/apigatewayv2"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -130,7 +130,7 @@ func TestAccAPIGatewayV2Integration_disappears(t *testing.T) {
 				Config: testAccIntegrationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckIntegrationExists(ctx, resourceName, &apiId, &v),
-					testAccCheckIntegrationDisappears(ctx, &apiId, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfapigatewayv2.ResourceIntegration(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -610,68 +610,47 @@ func TestAccAPIGatewayV2Integration_serviceIntegration(t *testing.T) {
 
 func testAccCheckIntegrationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Client(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_apigatewayv2_integration" {
 				continue
 			}
 
-			_, err := conn.GetIntegrationWithContext(ctx, &apigatewayv2.GetIntegrationInput{
-				ApiId:         aws.String(rs.Primary.Attributes["api_id"]),
-				IntegrationId: aws.String(rs.Primary.ID),
-			})
-			if tfawserr.ErrCodeEquals(err, apigatewayv2.ErrCodeNotFoundException) {
+			_, err := tfapigatewayv2.FindIntegrationByTwoPartKey(ctx, conn, rs.Primary.Attributes["api_id"], rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
 				continue
 			}
+
 			if err != nil {
 				return err
 			}
 
-			return fmt.Errorf("API Gateway v2 integration %s still exists", rs.Primary.ID)
+			return fmt.Errorf("API Gateway v2 Integration %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckIntegrationDisappears(ctx context.Context, apiId *string, v *apigatewayv2.GetIntegrationOutput) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn(ctx)
-
-		_, err := conn.DeleteIntegrationWithContext(ctx, &apigatewayv2.DeleteIntegrationInput{
-			ApiId:         apiId,
-			IntegrationId: v.IntegrationId,
-		})
-
-		return err
-	}
-}
-
-func testAccCheckIntegrationExists(ctx context.Context, n string, vApiId *string, v *apigatewayv2.GetIntegrationOutput) resource.TestCheckFunc {
+func testAccCheckIntegrationExists(ctx context.Context, n string, apiID *string, v *apigatewayv2.GetIntegrationOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No API Gateway v2 integration ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Client(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).APIGatewayV2Conn(ctx)
+		output, err := tfapigatewayv2.FindIntegrationByTwoPartKey(ctx, conn, rs.Primary.Attributes["api_id"], rs.Primary.ID)
 
-		apiId := aws.String(rs.Primary.Attributes["api_id"])
-		resp, err := conn.GetIntegrationWithContext(ctx, &apigatewayv2.GetIntegrationInput{
-			ApiId:         apiId,
-			IntegrationId: aws.String(rs.Primary.ID),
-		})
 		if err != nil {
 			return err
 		}
 
-		*vApiId = *apiId
-		*v = *resp
+		*apiID = rs.Primary.Attributes["api_id"]
+		*v = *output
 
 		return nil
 	}
@@ -748,7 +727,7 @@ resource "aws_lambda_function" "test" {
   function_name = %[1]q
   role          = aws_iam_role.test.arn
   handler       = "index.handler"
-  runtime       = "nodejs14.x"
+  runtime       = "nodejs20.x"
 
   depends_on = [aws_iam_role_policy.test]
 }

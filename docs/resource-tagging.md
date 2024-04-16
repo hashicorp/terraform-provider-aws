@@ -201,7 +201,7 @@ Most services can use a facility we call _transparent_ (or _implicit_) _tagging_
 
 === "Terraform Plugin Framework (Preferred)"
     ```go
-    // @FrameworkResource(name="Example")
+    // @FrameworkResource("aws_service_example", name="Example")
     // @Tags(identifierAttribute="arn")
     func newResourceExample(_ context.Context) (resource.ResourceWithConfigure, error) {
         return &resourceExample{}, nil
