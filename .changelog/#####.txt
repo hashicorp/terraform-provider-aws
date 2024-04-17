@@ -2,6 +2,10 @@
 data-source/aws_eip: Add `ptr_record` attribute
 ```
 
+```release-note:enhancement
+resource/aws_eip: Add `ptr_record` attribute
+```
+
 ```release-note:new-resource
 aws_eip_domain_name
 ```

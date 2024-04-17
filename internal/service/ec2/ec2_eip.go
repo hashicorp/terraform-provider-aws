@@ -20,7 +20,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -86,11 +85,6 @@ func resourceEIP() *schema.Resource {
 				ValidateDiagFunc: enum.Validate[types.DomainType](),
 				ConflictsWith:    []string{"vpc"},
 			},
-			"domain_name": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				DiffSuppressFunc: sdkv2.SuppressEquivalentStringCaseInsensitive,
-			},
 			"instance": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -112,6 +106,10 @@ func resourceEIP() *schema.Resource {
 				Computed: true,
 			},
 			"private_ip": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"ptr_record": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -258,9 +256,9 @@ func resourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interface
 
 	switch {
 	case err == nil:
-		d.Set("domain_name", strings.TrimSuffix(aws.ToString(addressAttr.PtrRecord), "."))
+		d.Set("ptr_record", strings.TrimSuffix(aws.ToString(addressAttr.PtrRecord), "."))
 	case tfresource.NotFound(err):
-		d.Set("domain_name", nil)
+		d.Set("ptr_record", nil)
 	default:
 		return sdkdiag.AppendErrorf(diags, "reading EC2 EIP (%s) domain name attribute: %s", d.Id(), err)
 	}
