@@ -102,6 +102,7 @@ resource "aws_lb" "example" {
 This resource supports the following arguments:
 
 * `access_logs` - (Optional) An Access Logs block. Access Logs documented below.
+* `client_keep_alive` - (Optional) The client keep alive value, in seconds. Only valid for Load Balancers of type `application`. The valid range is 60-604800 seconds. The default is 3600 seconds.
 * `connection_logs` - (Optional) A Connection Logs block. Connection Logs documented below. Only valid for Load Balancers of type `application`.
 * `customer_owned_ipv4_pool` - (Optional) The ID of the customer owned ipv4 pool to use for this load balancer.
 * `desync_mitigation_mode` - (Optional) Determines how the load balancer handles requests that might pose a security risk to an application due to HTTP desync. Valid values are `monitor`, `defensive` (default), `strictest`.
