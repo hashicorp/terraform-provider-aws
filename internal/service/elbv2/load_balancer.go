@@ -101,6 +101,12 @@ func ResourceLoadBalancer() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"client_keep_alive": {
+				Type:             schema.TypeInt,
+				Optional:         true,
+				Default:          3600,
+				DiffSuppressFunc: suppressIfLBTypeNot(elbv2.LoadBalancerTypeEnumApplication),
+			},
 			"connection_logs": {
 				Type:             schema.TypeList,
 				Optional:         true,
@@ -702,6 +708,11 @@ type loadBalancerAttributeInfo struct {
 type loadBalancerAttributeMap map[string]loadBalancerAttributeInfo
 
 var loadBalancerAttributes = loadBalancerAttributeMap(map[string]loadBalancerAttributeInfo{
+	"client_keep_alive": {
+		apiAttributeKey:            loadBalancerAttributeClientKeepAliveSeconds,
+		tfType:                     schema.TypeInt,
+		loadBalancerTypesSupported: []string{elbv2.LoadBalancerTypeEnumApplication},
+	},
 	"desync_mitigation_mode": {
 		apiAttributeKey:            loadBalancerAttributeRoutingHTTPDesyncMitigationMode,
 		tfType:                     schema.TypeString,
