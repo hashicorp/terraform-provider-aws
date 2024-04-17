@@ -7,17 +7,20 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKDataSource("aws_eip", name="EIP)
+// @Tags
 func dataSourceEIP() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEIPRead,
@@ -86,31 +89,30 @@ func dataSourceEIP() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func dataSourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeAddressesInput{}
 
 	if v, ok := d.GetOk("id"); ok {
-		input.AllocationIds = aws.StringSlice([]string{v.(string)})
+		input.AllocationIds = []string{v.(string)}
 	}
 
 	if v, ok := d.GetOk("public_ip"); ok {
-		input.PublicIps = aws.StringSlice([]string{v.(string)})
+		input.PublicIps = []string{v.(string)}
 	}
 
-	input.Filters = append(input.Filters, newTagFilterList(
-		Tags(tftags.New(ctx, d.Get("tags").(map[string]interface{}))),
+	input.Filters = append(input.Filters, newTagFilterListV2(
+		TagsV2(tftags.New(ctx, d.Get("tags").(map[string]interface{}))),
 	)...)
 
-	input.Filters = append(input.Filters, newCustomFilterList(
+	input.Filters = append(input.Filters, newCustomFilterListV2(
 		d.Get("filter").(*schema.Set),
 	)...)
 
@@ -125,10 +127,10 @@ func dataSourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 EIP", err))
 	}
 
-	if aws.StringValue(eip.Domain) == ec2.DomainTypeVpc {
-		d.SetId(aws.StringValue(eip.AllocationId))
+	if eip.Domain == types.DomainTypeVpc {
+		d.SetId(aws.ToString(eip.AllocationId))
 	} else {
-		d.SetId(aws.StringValue(eip.PublicIp))
+		d.SetId(aws.ToString(eip.PublicIp))
 	}
 	d.Set("association_id", eip.AssociationId)
 	d.Set("carrier_ip", eip.CarrierIp)
@@ -139,20 +141,16 @@ func dataSourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("network_interface_id", eip.NetworkInterfaceId)
 	d.Set("network_interface_owner_id", eip.NetworkInterfaceOwnerId)
 	d.Set("public_ipv4_pool", eip.PublicIpv4Pool)
-
 	d.Set("private_ip", eip.PrivateIpAddress)
-	if v := aws.StringValue(eip.PrivateIpAddress); v != "" {
+	if v := aws.ToString(eip.PrivateIpAddress); v != "" {
 		d.Set("private_dns", PrivateDNSNameForIP(ctx, meta.(*conns.AWSClient), v))
 	}
-
 	d.Set("public_ip", eip.PublicIp)
-	if v := aws.StringValue(eip.PublicIp); v != "" {
+	if v := aws.ToString(eip.PublicIp); v != "" {
 		d.Set("public_dns", PublicDNSNameForIP(ctx, meta.(*conns.AWSClient), v))
 	}
 
-	if err := d.Set("tags", KeyValueTags(ctx, eip.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-	}
+	setTagsOutV2(ctx, eip.Tags)
 
 	return diags
 }
