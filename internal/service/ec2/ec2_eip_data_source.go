@@ -5,6 +5,7 @@ package ec2
 
 import (
 	"context"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -47,6 +48,10 @@ func dataSourceEIP() *schema.Resource {
 				Computed: true,
 			},
 			"domain": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"domain_name": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -129,8 +134,20 @@ func dataSourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	if eip.Domain == types.DomainTypeVpc {
 		d.SetId(aws.ToString(eip.AllocationId))
+
+		addressAttr, err := findEIPDomainNameAttributeByAllocationID(ctx, conn, d.Id())
+
+		switch {
+		case err == nil:
+			d.Set("domain_name", strings.TrimSuffix(aws.ToString(addressAttr.PtrRecord), "."))
+		case tfresource.NotFound(err):
+			d.Set("domain_name", nil)
+		default:
+			return sdkdiag.AppendErrorf(diags, "reading EC2 EIP (%s) domain name attribute: %s", d.Id(), err)
+		}
 	} else {
 		d.SetId(aws.ToString(eip.PublicIp))
+		d.Set("domain_name", nil)
 	}
 	d.Set("association_id", eip.AssociationId)
 	d.Set("carrier_ip", eip.CarrierIp)

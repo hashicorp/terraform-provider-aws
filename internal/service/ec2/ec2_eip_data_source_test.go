@@ -27,6 +27,7 @@ func TestAccEC2EIPDataSource_filter(t *testing.T) {
 			{
 				Config: testAccEIPDataSourceConfig_filter(rName),
 				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttrPair(dataSourceName, "domain_name", resourceName, "domain_name"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "id", resourceName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "public_dns", resourceName, "public_dns"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "public_ip", resourceName, "public_ip"),

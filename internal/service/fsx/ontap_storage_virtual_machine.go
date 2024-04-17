@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -65,7 +66,7 @@ func ResourceONTAPStorageVirtualMachine() *schema.Resource {
 						"netbios_name": {
 							Type:             schema.TypeString,
 							Optional:         true,
-							DiffSuppressFunc: verify.SuppressEquivalentStringCaseInsensitive,
+							DiffSuppressFunc: sdkv2.SuppressEquivalentStringCaseInsensitive,
 							ValidateFunc:     validation.StringLenBetween(1, 15),
 						},
 						"self_managed_active_directory_configuration": {

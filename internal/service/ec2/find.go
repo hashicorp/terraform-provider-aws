@@ -713,6 +713,55 @@ func findEIPByAssociationID(ctx context.Context, conn *ec2_sdkv2.Client, id stri
 	return output, nil
 }
 
+func findEIPAttributes(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.DescribeAddressesAttributeInput) ([]awstypes.AddressAttribute, error) {
+	var output []awstypes.AddressAttribute
+
+	pages := ec2_sdkv2.NewDescribeAddressesAttributePaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		output = append(output, page.Addresses...)
+	}
+
+	return output, nil
+}
+
+func findEIPAttribute(ctx context.Context, conn *ec2_sdkv2.Client, input *ec2_sdkv2.DescribeAddressesAttributeInput) (*awstypes.AddressAttribute, error) {
+	output, err := findEIPAttributes(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findEIPDomainNameAttributeByAllocationID(ctx context.Context, conn *ec2_sdkv2.Client, id string) (*awstypes.AddressAttribute, error) {
+	input := &ec2_sdkv2.DescribeAddressesAttributeInput{
+		AllocationIds: []string{id},
+		Attribute:     awstypes.AddressAttributeNameDomainName,
+	}
+
+	output, err := findEIPAttribute(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws_sdkv2.ToString(output.AllocationId) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
 func FindHostByID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.Host, error) {
 	input := &ec2.DescribeHostsInput{
 		HostIds: aws.StringSlice([]string{id}),

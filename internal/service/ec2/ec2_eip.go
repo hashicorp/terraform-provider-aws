@@ -20,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/sdkv2"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -84,6 +85,11 @@ func resourceEIP() *schema.Resource {
 				Computed:         true,
 				ValidateDiagFunc: enum.Validate[types.DomainType](),
 				ConflictsWith:    []string{"vpc"},
+			},
+			"domain_name": {
+				Type:             schema.TypeString,
+				Computed:         true,
+				DiffSuppressFunc: sdkv2.SuppressEquivalentStringCaseInsensitive,
 			},
 			"instance": {
 				Type:     schema.TypeString,
@@ -246,6 +252,17 @@ func resourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interface
 	// This allows users to import the EIP based on the IP if they are in a VPC.
 	if address.Domain == types.DomainTypeVpc && net.ParseIP(d.Id()) != nil {
 		d.SetId(aws.ToString(address.AllocationId))
+	}
+
+	addressAttr, err := findEIPDomainNameAttributeByAllocationID(ctx, conn, d.Id())
+
+	switch {
+	case err == nil:
+		d.Set("domain_name", strings.TrimSuffix(aws.ToString(addressAttr.PtrRecord), "."))
+	case tfresource.NotFound(err):
+		d.Set("domain_name", nil)
+	default:
+		return sdkdiag.AppendErrorf(diags, "reading EC2 EIP (%s) domain name attribute: %s", d.Id(), err)
 	}
 
 	setTagsOutV2(ctx, address.Tags)
