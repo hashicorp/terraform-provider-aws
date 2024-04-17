@@ -6,9 +6,12 @@ NOTES:
 
 ENHANCEMENTS:
 
+* data-source/aws_alb: Add `client_keep_alive` argument ([#36969](https://github.com/hashicorp/terraform-provider-aws/issues/36969))
 * data-source/aws_iam_policy: Add `attachment_count` attribute ([#36759](https://github.com/hashicorp/terraform-provider-aws/issues/36759))
+* data-source/aws_lb: Add `client_keep_alive` argument ([#36969](https://github.com/hashicorp/terraform-provider-aws/issues/36969))
 * data-source/aws_organizations_organization: Add `master_account_name` attribute ([#36797](https://github.com/hashicorp/terraform-provider-aws/issues/36797))
 * data/aws_vpc_dhcp_options: Add `ipv6_address_preferred_lease_time` attribute ([#36934](https://github.com/hashicorp/terraform-provider-aws/issues/36934))
+* resource/aws_alb: Add `client_keep_alive` argument ([#36969](https://github.com/hashicorp/terraform-provider-aws/issues/36969))
 * resource/aws_cloudfront_origin_access_control: Add `lambda` and `mediapackagev2` as valid values for `origin_access_control_origin_type` ([#34362](https://github.com/hashicorp/terraform-provider-aws/issues/34362))
 * resource/aws_cloudwatch_event_rule: Add `force_destroy` attribute ([#34905](https://github.com/hashicorp/terraform-provider-aws/issues/34905))
 * resource/aws_codebuild_project: Add GitLab and GitLab Self Managed support to the `report_build_status` and `build_status_config` arguments ([#36942](https://github.com/hashicorp/terraform-provider-aws/issues/36942))
@@ -16,6 +19,7 @@ ENHANCEMENTS:
 * resource/aws_dms_replication_task: Add `resource_identifier` argument ([#36901](https://github.com/hashicorp/terraform-provider-aws/issues/36901))
 * resource/aws_elasticache_serverless_cache: Add `minimum` attribute in `cache_usage_limits.data_storage` and `cache_usage_limits.ecpu_per_second` ([#36766](https://github.com/hashicorp/terraform-provider-aws/issues/36766))
 * resource/aws_iam_policy: Add `attachment_count` attribute ([#36759](https://github.com/hashicorp/terraform-provider-aws/issues/36759))
+* resource/aws_lb: Add `client_keep_alive` argument ([#36969](https://github.com/hashicorp/terraform-provider-aws/issues/36969))
 * resource/aws_mwaa_environment: Add `database_vpc_endpoint_service` and `webserver_vpc_endpoint_service` attributes ([#36903](https://github.com/hashicorp/terraform-provider-aws/issues/36903))
 * resource/aws_organizations_organization: Add `master_account_name` attribute ([#36797](https://github.com/hashicorp/terraform-provider-aws/issues/36797))
 * resource/aws_vpc_dhcp_options: Add `ipv6_address_preferred_lease_time` attribute ([#36934](https://github.com/hashicorp/terraform-provider-aws/issues/36934))
