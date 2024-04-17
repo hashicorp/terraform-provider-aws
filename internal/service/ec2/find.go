@@ -663,7 +663,7 @@ func findEIPs(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeAddressesIn
 	return addresses, nil
 }
 
-func FindEIP(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeAddressesInput) (*ec2.Address, error) {
+func findEIP(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeAddressesInput) (*ec2.Address, error) {
 	output, err := findEIPs(ctx, conn, input)
 
 	if err != nil {
@@ -678,7 +678,7 @@ func findEIPByAllocationID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.
 		AllocationIds: aws.StringSlice([]string{id}),
 	}
 
-	output, err := FindEIP(ctx, conn, input)
+	output, err := findEIP(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -701,7 +701,7 @@ func findEIPByAssociationID(ctx context.Context, conn *ec2.EC2, id string) (*ec2
 		}),
 	}
 
-	output, err := FindEIP(ctx, conn, input)
+	output, err := findEIP(ctx, conn, input)
 
 	if err != nil {
 		return nil, err

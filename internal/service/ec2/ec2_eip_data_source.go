@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKDataSource("aws_eip")
-func DataSourceEIP() *schema.Resource {
+// @SDKDataSource("aws_eip", name="EIP)
+func dataSourceEIP() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEIPRead,
 
@@ -119,7 +119,7 @@ func dataSourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		input.Filters = nil
 	}
 
-	eip, err := FindEIP(ctx, conn, input)
+	eip, err := findEIP(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EC2 EIP", err))

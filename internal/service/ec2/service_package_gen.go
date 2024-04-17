@@ -270,8 +270,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_ec2_transit_gateway_vpn_attachment",
 		},
 		{
-			Factory:  DataSourceEIP,
+			Factory:  dataSourceEIP,
 			TypeName: "aws_eip",
+			Name:     "EIP",
 		},
 		{
 			Factory:  dataSourceEIPs,
