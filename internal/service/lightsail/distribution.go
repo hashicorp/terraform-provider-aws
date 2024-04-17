@@ -495,6 +495,11 @@ func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, met
 		update = true
 	}
 
+	if d.HasChanges("certificate_name") {
+		in.CertificateName = aws.String(d.Get("certificate_name").(string))
+		update = true
+	}
+
 	if d.HasChanges("bundle_id") {
 		bundleIn.BundleId = aws.String(d.Get("bundle_id").(string))
 		bundleUpdate = true
