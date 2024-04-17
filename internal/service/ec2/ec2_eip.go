@@ -344,7 +344,7 @@ func associateEIP(ctx context.Context, conn *ec2.EC2, allocationID, instanceID, 
 
 	_, err = tfresource.RetryWhen(ctx, ec2PropagationTimeout,
 		func() (interface{}, error) {
-			return FindEIPByAssociationID(ctx, conn, aws.StringValue(output.AssociationId))
+			return findEIPByAssociationID(ctx, conn, aws.StringValue(output.AssociationId))
 		},
 		func(err error) (bool, error) {
 			if tfresource.NotFound(err) {

@@ -9,6 +9,7 @@ var (
 	ResourceDefaultNetworkACL               = resourceDefaultNetworkACL
 	ResourceDefaultRouteTable               = resourceDefaultRouteTable
 	ResourceEBSFastSnapshotRestore          = newEBSFastSnapshotRestoreResource
+	ResourceEIPAssociation                  = resourceEIPAssociation
 	ResourceInstanceConnectEndpoint         = newInstanceConnectEndpointResource
 	ResourceInstanceMetadataDefaults        = newInstanceMetadataDefaultsResource
 	ResourceKeyPair                         = resourceKeyPair
@@ -28,6 +29,7 @@ var (
 	ResourceVPNGatewayRoutePropagation      = resourceVPNGatewayRoutePropagation
 
 	CustomFiltersSchema                       = customFiltersSchema
+	FindEIPByAssociationID                    = findEIPByAssociationID
 	FindFastSnapshotRestoreByTwoPartKey       = findFastSnapshotRestoreByTwoPartKey
 	FindInstanceMetadataDefaults              = findInstanceMetadataDefaults
 	FindKeyPairByName                         = findKeyPairByName

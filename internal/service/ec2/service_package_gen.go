@@ -816,8 +816,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceEIPAssociation,
+			Factory:  resourceEIPAssociation,
 			TypeName: "aws_eip_association",
+			Name:     "EIP Association",
 		},
 		{
 			Factory:  ResourceFlowLog,

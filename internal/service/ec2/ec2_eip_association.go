@@ -18,8 +18,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_eip_association")
-func ResourceEIPAssociation() *schema.Resource {
+// @SDKResource("aws_eip_association", name="EIP Association")
+func resourceEIPAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEIPAssociationCreate,
 		ReadWithoutTimeout:   resourceEIPAssociationRead,
@@ -109,7 +109,7 @@ func resourceEIPAssociationCreate(ctx context.Context, d *schema.ResourceData, m
 
 	_, err = tfresource.RetryWhen(ctx, ec2PropagationTimeout,
 		func() (interface{}, error) {
-			return FindEIPByAssociationID(ctx, conn, d.Id())
+			return findEIPByAssociationID(ctx, conn, d.Id())
 		},
 		func(err error) (bool, error) {
 			if tfresource.NotFound(err) {
@@ -140,7 +140,7 @@ func resourceEIPAssociationRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic %s domain EC2 EIPs are no longer supported`, ec2.DomainTypeStandard)
 	}
 
-	address, err := FindEIPByAssociationID(ctx, conn, d.Id())
+	address, err := findEIPByAssociationID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 EIP Association (%s) not found, removing from state", d.Id())
