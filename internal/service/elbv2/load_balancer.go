@@ -444,7 +444,7 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 
 		if v, ok := d.GetOk("client_keep_alive"); ok {
 			attributes = append(attributes, &elbv2.LoadBalancerAttribute{
-				Key:   aws.String(loadBalancerAttributeConnectionSettingsClientKeepAliveTimeoutSeconds),
+				Key:   aws.String(loadBalancerAttributeClientKeepAliveSeconds),
 				Value: flex.IntValueToString(v.(int)),
 			})
 		}
@@ -715,6 +715,11 @@ type loadBalancerAttributeInfo struct {
 type loadBalancerAttributeMap map[string]loadBalancerAttributeInfo
 
 var loadBalancerAttributes = loadBalancerAttributeMap(map[string]loadBalancerAttributeInfo{
+	"client_keep_alive": {
+		apiAttributeKey:            loadBalancerAttributeClientKeepAliveSeconds,
+		tfType:                     schema.TypeInt,
+		loadBalancerTypesSupported: []string{elbv2.LoadBalancerTypeEnumApplication},
+	},
 	"desync_mitigation_mode": {
 		apiAttributeKey:            loadBalancerAttributeRoutingHTTPDesyncMitigationMode,
 		tfType:                     schema.TypeString,
