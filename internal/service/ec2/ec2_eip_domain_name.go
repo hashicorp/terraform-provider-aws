@@ -10,6 +10,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -196,13 +197,17 @@ func (r *eipDomainNameResource) Delete(ctx context.Context, request resource.Del
 		Attribute:    awstypes.AddressAttributeNameDomainName,
 	})
 
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidAssociationIDNotFound) {
+		return
+	}
+
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("deleting EC2 EIP Domain Name (%s)", data.ID.ValueString()), err.Error())
 
 		return
 	}
 
-	if _, err := waitEIPDomainNameAttributeUpdated(ctx, conn, data.ID.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+	if _, err := waitEIPDomainNameAttributeDeleted(ctx, conn, data.ID.ValueString(), r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for EC2 EIP Domain Name (%s) delete", data.ID.ValueString()), err.Error())
 
 		return

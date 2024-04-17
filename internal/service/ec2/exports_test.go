@@ -32,6 +32,7 @@ var (
 	CustomFiltersSchema                       = customFiltersSchema
 	FindEIPByAllocationID                     = findEIPByAllocationID
 	FindEIPByAssociationID                    = findEIPByAssociationID
+	FindEIPDomainNameAttributeByAllocationID  = findEIPDomainNameAttributeByAllocationID
 	FindFastSnapshotRestoreByTwoPartKey       = findFastSnapshotRestoreByTwoPartKey
 	FindInstanceMetadataDefaults              = findInstanceMetadataDefaults
 	FindKeyPairByName                         = findKeyPairByName

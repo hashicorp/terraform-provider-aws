@@ -2163,6 +2163,27 @@ func WaitVPNGatewayDeleted(ctx context.Context, conn *ec2.EC2, id string) (*ec2.
 func waitEIPDomainNameAttributeUpdated(ctx context.Context, conn *ec2_sdkv2.Client, allocationID string, timeout time.Duration) (*awstypes.AddressAttribute, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{PTRUpdateStatusPending},
+		Target:  []string{""},
+		Timeout: timeout,
+		Refresh: statusEIPDomainNameAttribute(ctx, conn, allocationID),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.AddressAttribute); ok {
+		if v := output.PtrRecordUpdate; v != nil {
+			tfresource.SetLastError(err, errors.New(aws_sdkv2.ToString(v.Reason)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitEIPDomainNameAttributeDeleted(ctx context.Context, conn *ec2_sdkv2.Client, allocationID string, timeout time.Duration) (*awstypes.AddressAttribute, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{PTRUpdateStatusPending},
 		Target:  []string{},
 		Timeout: timeout,
 		Refresh: statusEIPDomainNameAttribute(ctx, conn, allocationID),

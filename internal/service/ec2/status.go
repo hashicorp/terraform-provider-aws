@@ -1120,7 +1120,7 @@ func statusEIPDomainNameAttribute(ctx context.Context, conn *ec2_sdkv2.Client, a
 		}
 
 		if output.PtrRecordUpdate == nil {
-			return nil, "", nil
+			return output, "", nil
 		}
 
 		return output, aws_sdkv2.ToString(output.PtrRecordUpdate.Status), nil
