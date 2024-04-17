@@ -402,3 +402,11 @@ func PrivateDNSNameForIP(ctx context.Context, client *conns.AWSClient, ip string
 func PublicDNSNameForIP(ctx context.Context, client *conns.AWSClient, ip string) string {
 	return client.PartitionHostname(ctx, fmt.Sprintf("ec2-%s.%s", ConvertIPToDashIP(ip), RegionalPublicDNSSuffix(client.Region)))
 }
+
+func RegionalPublicDNSSuffix(region string) string {
+	if region == names.USEast1RegionID {
+		return "compute-1"
+	}
+
+	return fmt.Sprintf("%s.compute", region)
+}

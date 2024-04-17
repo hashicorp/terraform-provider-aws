@@ -120,11 +120,3 @@ func RegionalPrivateDNSSuffix(region string) string {
 
 	return fmt.Sprintf("%s.compute.internal", region)
 }
-
-func RegionalPublicDNSSuffix(region string) string {
-	if region == endpoints.UsEast1RegionID {
-		return "compute-1"
-	}
-
-	return fmt.Sprintf("%s.compute", region)
-}
