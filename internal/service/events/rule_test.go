@@ -227,15 +227,17 @@ func TestAccEventsRule_basic(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateIdFunc: testAccRuleNoBusNameImportStateIdFunc(resourceName),
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateIdFunc:       testAccRuleNoBusNameImportStateIdFunc(resourceName),
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 			{
 				Config: testAccRuleConfig_basic(rName2),
@@ -292,9 +294,10 @@ func TestAccEventsRule_eventBusName(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 			{
 				Config: testAccRuleConfig_busName(rName1, busName1, "description 2"),
@@ -341,9 +344,10 @@ func TestAccEventsRule_role(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 		},
 	})
@@ -370,9 +374,10 @@ func TestAccEventsRule_description(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 			{
 				Config: testAccRuleConfig_description(rName, "description2"),
@@ -408,9 +413,10 @@ func TestAccEventsRule_pattern(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 			{
 				Config: testAccRuleConfig_pattern(rName, "{\"source\":[\"aws.lambda\"]}"),
@@ -471,9 +477,10 @@ func TestAccEventsRule_scheduleAndPattern(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 		},
 	})
@@ -500,9 +507,10 @@ func TestAccEventsRule_namePrefix(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 		},
 	})
@@ -528,9 +536,10 @@ func TestAccEventsRule_Name_generated(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 		},
 	})
@@ -557,9 +566,10 @@ func TestAccEventsRule_tags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 			{
 				Config: testAccRuleConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
@@ -604,9 +614,10 @@ func TestAccEventsRule_isEnabled(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 			{
 				Config: testAccRuleConfig_isEnabled(rName, true),
@@ -618,9 +629,10 @@ func TestAccEventsRule_isEnabled(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 			{
 				Config: testAccRuleConfig_isEnabled(rName, false),
@@ -629,38 +641,6 @@ func TestAccEventsRule_isEnabled(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "state", "DISABLED"),
 					testAccCheckRuleEnabled(ctx, resourceName, "DISABLED"),
-				),
-			},
-		},
-	})
-}
-
-func TestAccEventsRule_isForceDeletion(t *testing.T) {
-	ctx := acctest.Context(t)
-	var v1, v2 eventbridge.DescribeRuleOutput
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_cloudwatch_event_rule.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRuleDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccRuleConfig_isForceDeletion(rName, false),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, resourceName, &v1),
-					resource.TestCheckResourceAttr(resourceName, "force_delete", "false"),
-					testAccCheckRuleEnabled(ctx, resourceName, "ENABLED"),
-				),
-			},
-			{
-				Config: testAccRuleConfig_isForceDeletion(rName, true),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, resourceName, &v2),
-					resource.TestCheckResourceAttr(resourceName, "force_delete", "true"),
-					testAccCheckRuleEnabled(ctx, resourceName, "ENABLED"),
 				),
 			},
 		},
@@ -689,9 +669,10 @@ func TestAccEventsRule_state(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 			{
 				Config: testAccRuleConfig_state(rName, string(types.RuleStateEnabled)),
@@ -703,9 +684,10 @@ func TestAccEventsRule_state(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 		},
 	})
@@ -746,9 +728,10 @@ func TestAccEventsRule_partnerEventBus(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 		},
 	})
@@ -784,9 +767,10 @@ func TestAccEventsRule_eventBusARN(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"force_destroy"},
 			},
 		},
 	})
@@ -1129,16 +1113,6 @@ resource "aws_cloudwatch_event_rule" "test" {
   is_enabled          = %[2]t
 }
 `, rName, enabled)
-}
-
-func testAccRuleConfig_isForceDeletion(rName string, force_delete bool) string {
-	return fmt.Sprintf(`
-resource "aws_cloudwatch_event_rule" "test" {
-  name                = %[1]q
-  schedule_expression = "rate(1 hour)"
-  force_delete          = %[2]t
-}
-`, rName, force_delete)
 }
 
 func testAccRuleConfig_state(rName, state string) string {
