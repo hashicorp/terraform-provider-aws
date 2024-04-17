@@ -11,6 +11,7 @@ var (
 	ResourceEBSFastSnapshotRestore          = newEBSFastSnapshotRestoreResource
 	ResourceEIP                             = resourceEIP
 	ResourceEIPAssociation                  = resourceEIPAssociation
+	ResourceEIPDomainName                   = newEIPDomainNameResource
 	ResourceInstanceConnectEndpoint         = newInstanceConnectEndpointResource
 	ResourceInstanceMetadataDefaults        = newInstanceMetadataDefaultsResource
 	ResourceKeyPair                         = resourceKeyPair
