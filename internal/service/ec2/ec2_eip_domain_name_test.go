@@ -199,7 +199,7 @@ resource "aws_route53_record" "test2" {
   zone_id = data.aws_route53_zone.test.zone_id
   ttl     = 60
   type    = "A"
-  name    = %[3]q
+  name    = %[4]q
 
   records = [aws_eip.test.public_ip]
 }
@@ -239,7 +239,7 @@ resource "aws_route53_record" "test2" {
   zone_id = data.aws_route53_zone.test.zone_id
   ttl     = 60
   type    = "A"
-  name    = %[3]q
+  name    = %[4]q
 
   records = [aws_eip.test.public_ip]
 }
