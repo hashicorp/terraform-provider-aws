@@ -63,7 +63,7 @@ The following arguments are optional:
 
 The following arguments are required:
 
-* `workflow_arn` - (Required) Amaozon Resource Name (ARN) of the Image Builder Workflow.
+* `workflow_arn` - (Required) Amazon Resource Name (ARN) of the Image Builder Workflow.
 
 The following arguments are optional:
 
