@@ -111,7 +111,6 @@ The following arguments are required:
 
 * `type` - (Optional) The type of replication starting position. Supports `LATEST` and `EARLIEST`.
 
-
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
