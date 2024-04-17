@@ -80,6 +80,11 @@ func resourceRule() *schema.Resource {
 					return json
 				},
 			},
+			"force_destroy": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
 			"is_enabled": {
 				Type:       schema.TypeBool,
 				Optional:   true,
@@ -92,10 +97,6 @@ func resourceRule() *schema.Resource {
 				ConflictsWith: []string{
 					"state",
 				},
-			},
-			"force_delete": {
-				Type:     schema.TypeBool,
-				Optional: true,
 			},
 			"name": {
 				Type:          schema.TypeString,
@@ -230,14 +231,13 @@ func resourceRuleRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		}
 		d.Set("event_pattern", pattern)
 	}
+	d.Set("force_destroy", d.Get("force_destroy").(bool))
 	switch output.State {
 	case types.RuleStateEnabled, types.RuleStateEnabledWithAllCloudtrailManagementEvents:
 		d.Set("is_enabled", true)
 	default:
 		d.Set("is_enabled", false)
 	}
-	d.Set("state", output.State)
-	d.Set("force_delete", d.Get("force_delete").(bool))
 	d.Set("name", output.Name)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(output.Name)))
 	d.Set("role_arn", output.RoleArn)
@@ -282,9 +282,9 @@ func resourceRuleDelete(ctx context.Context, d *schema.ResourceData, meta interf
 		Name: aws.String(ruleName),
 	}
 
-	forceDeletion := d.Get("force_delete").(bool)
-	if forceDeletion {
-		input.Force = aws.Bool(forceDeletion)
+	forceDestroy := d.Get("force_destroy").(bool)
+	if forceDestroy {
+		input.Force = forceDestroy
 	}
 
 	if eventBusName != "" {
