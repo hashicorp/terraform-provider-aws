@@ -102,6 +102,8 @@ func TestAccTransferConnector_securityPolicyName(t *testing.T) {
 	resourceName := "aws_transfer_connector.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	publicKey := "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDNt3kA/dBkS6ZyU/sVDiGMuWJQaRPmLNbs/25K/e/fIl07ZWUgqqsFkcycLLMNFGD30Cmgp6XCXfNlIjzFWhNam+4cBb4DPpvieUw44VgsHK5JQy3JKlUfglmH5rs4G5pLiVfZpFU6jqvTsu4mE1CHCP0sXJlJhGxMG3QbsqYWNKiqGFEhuzGMs6fQlMkNiXsFoDmh33HAcXCbaFSC7V7xIqT1hlKu0iOL+GNjMj4R3xy0o3jafhO4MG2s3TwCQQCyaa5oyjL8iP8p3L9yp6cbIcXaS72SIgbCSGCyrcQPIKP2lJJHvE1oVWzLVBhR4eSzrlFDv7K4IErzaJmHqdiz" // nosemgrep:ci.ssh-key
+	url := "sftp://s-fakeserver.server.transfer.test.amazonaws.com"
+	securityPolicyName := "TransferSFTPConnectorSecurityPolicy-2024-03"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck: func() {
@@ -114,10 +116,10 @@ func TestAccTransferConnector_securityPolicyName(t *testing.T) {
 		CheckDestroy:             testAccCheckConnectorDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConnectorConfig_securityPolicyName(rName, "sftp://s-fakeserver.server.transfer.test.amazonaws.com", publicKey),
+				Config: testAccConnectorConfig_securityPolicyName(rName, url, publicKey, securityPolicyName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckConnectorExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttr(resourceName, "security_policy_name", "TransferSFTPConnectorSecurityPolicy-2024-03"),
+					resource.TestCheckResourceAttr(resourceName, "security_policy_name", securityPolicyName),
 				),
 			},
 			{
@@ -328,25 +330,24 @@ resource "aws_transfer_connector" "test" {
 `, rName, url))
 }
 
-func testAccConnectorConfig_securityPolicyName(rName, url, publickey string) string {
+func testAccConnectorConfig_securityPolicyName(rName, url, publickey, securityPolicyName string) string {
 	return acctest.ConfigCompose(testAccConnectorConfig_base(rName), fmt.Sprintf(`
 resource "aws_transfer_connector" "test" {
   access_role = aws_iam_role.test.arn
-
-  security_policy_name = "TransferSFTPConnectorSecurityPolicy-2024-03"
 
   sftp_config {
     trusted_host_keys = [%[3]q]
     user_secret_id    = aws_secretsmanager_secret.test.id
   }
 
-  url = %[2]q
+  url                  = %[2]q
+  security_policy_name = %[4]q
 }
 
 resource "aws_secretsmanager_secret" "test" {
   name = %[1]q
 }
-`, rName, url, publickey))
+`, rName, url, publickey, securityPolicyName))
 }
 
 func testAccConnectorConfig_sftpConfig(rName, url, publickey string) string {
