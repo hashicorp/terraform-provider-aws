@@ -81,9 +81,15 @@ func RegisterSweepers() {
 	resource.AddTestSweepers("aws_eip", &resource.Sweeper{
 		Name: "aws_eip",
 		Dependencies: []string{
+			"aws_eip_domain_name",
 			"aws_vpc",
 		},
 		F: sweepEIPs,
+	})
+
+	resource.AddTestSweepers("aws_eip_domain_name", &resource.Sweeper{
+		Name: "aws_eip_domain_name",
+		F:    sweepEIPDomainNames,
 	})
 
 	resource.AddTestSweepers("aws_flow_log", &resource.Sweeper{
@@ -844,15 +850,13 @@ func sweepEgressOnlyInternetGateways(region string) error {
 func sweepEIPs(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-
-	conn := client.EC2Conn(ctx)
-
 	// There is currently no paginator or Marker/NextToken
 	input := &ec2.DescribeAddressesInput{}
+	conn := client.EC2Conn(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	output, err := conn.DescribeAddressesWithContext(ctx, input)
 
@@ -865,43 +869,76 @@ func sweepEIPs(region string) error {
 		return fmt.Errorf("error describing EC2 EIPs: %s", err)
 	}
 
-	if output == nil || len(output.Addresses) == 0 {
-		log.Print("[DEBUG] No EC2 EIPs to sweep")
-		return nil
-	}
+	for _, v := range output.Addresses {
+		publicIP := aws.StringValue(v.PublicIp)
 
-	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
-
-	for _, address := range output.Addresses {
-		publicIP := aws.StringValue(address.PublicIp)
-
-		if address.AssociationId != nil {
-			log.Printf("[INFO] Skipping EC2 EIP (%s) with association: %s", publicIP, aws.StringValue(address.AssociationId))
+		if v.AssociationId != nil {
+			log.Printf("[INFO] Skipping EC2 EIP (%s) with association: %s", publicIP, aws.StringValue(v.AssociationId))
 			continue
 		}
 
 		r := resourceEIP()
 		d := r.Data(nil)
-		if address.AllocationId != nil {
-			d.SetId(aws.StringValue(address.AllocationId))
+		if v.AllocationId != nil {
+			d.SetId(aws.StringValue(v.AllocationId))
 		} else {
-			d.SetId(aws.StringValue(address.PublicIp))
+			d.SetId(aws.StringValue(v.PublicIp))
 		}
 
 		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 	}
 
-	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping EC2 EIPs for %s: %w", region, err))
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping EC2 EIPs (%s): %w", region, err)
 	}
 
-	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping EC2 EIP sweep for %s: %s", region, errs)
+	return nil
+}
+
+func sweepEIPDomainNames(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("error getting client: %s", err)
+	}
+	conn := client.EC2Conn(ctx)
+	input := &ec2.DescribeAddressesAttributeInput{
+		Attribute: aws.String(ec2.AddressAttributeNameDomainName),
+	}
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	err = conn.DescribeAddressesAttributePagesWithContext(ctx, input, func(page *ec2.DescribeAddressesAttributeOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.Addresses {
+			sweepResources = append(sweepResources, framework.NewSweepResource(newEIPDomainNameResource, client,
+				framework.NewAttribute("id", aws.StringValue(v.AllocationId)),
+			))
+		}
+
+		return !lastPage
+	})
+
+	if awsv1.SkipSweepError(err) {
+		log.Printf("[WARN] Skipping EIP Domain Name sweep for %s: %s", region, err)
 		return nil
 	}
 
-	return errs.ErrorOrNil()
+	if err != nil {
+		return fmt.Errorf("error listing EIP Domain Names (%s): %w", region, err)
+	}
+
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
+
+	if err != nil {
+		return fmt.Errorf("error sweeping EIP Domain Names (%s): %w", region, err)
+	}
+
+	return nil
 }
 
 func sweepFlowLogs(region string) error {
