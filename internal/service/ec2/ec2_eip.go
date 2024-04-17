@@ -234,11 +234,11 @@ func resourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("public_ipv4_pool", address.PublicIpv4Pool)
 	d.Set("private_ip", address.PrivateIpAddress)
 	if v := aws.ToString(address.PrivateIpAddress); v != "" {
-		d.Set("private_dns", PrivateDNSNameForIP(ctx, meta.(*conns.AWSClient), v))
+		d.Set("private_dns", meta.(*conns.AWSClient).EC2PrivateDNSNameForIP(ctx, v))
 	}
 	d.Set("public_ip", address.PublicIp)
 	if v := aws.ToString(address.PublicIp); v != "" {
-		d.Set("public_dns", PublicDNSNameForIP(ctx, meta.(*conns.AWSClient), v))
+		d.Set("public_dns", meta.(*conns.AWSClient).EC2PublicDNSNameForIP(ctx, v))
 	}
 	d.Set("vpc", address.Domain == types.DomainTypeVpc)
 
@@ -389,24 +389,4 @@ func disassociateEIP(ctx context.Context, conn *ec2.Client, associationID string
 	}
 
 	return nil
-}
-
-func ConvertIPToDashIP(ip string) string {
-	return strings.Replace(ip, ".", "-", -1)
-}
-
-func PrivateDNSNameForIP(ctx context.Context, client *conns.AWSClient, ip string) string {
-	return fmt.Sprintf("ip-%s.%s", ConvertIPToDashIP(ip), RegionalPrivateDNSSuffix(client.Region))
-}
-
-func PublicDNSNameForIP(ctx context.Context, client *conns.AWSClient, ip string) string {
-	return client.PartitionHostname(ctx, fmt.Sprintf("ec2-%s.%s", ConvertIPToDashIP(ip), RegionalPublicDNSSuffix(client.Region)))
-}
-
-func RegionalPublicDNSSuffix(region string) string {
-	if region == names.USEast1RegionID {
-		return "compute-1"
-	}
-
-	return fmt.Sprintf("%s.compute", region)
 }

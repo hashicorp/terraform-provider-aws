@@ -38,7 +38,7 @@ func TestAccEC2EIP_basic(t *testing.T) {
 					testAccCheckEIPExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "domain", "vpc"),
 					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
-					testAccCheckEIPPublicDNS(resourceName),
+					testAccCheckEIPPublicDNS(ctx, resourceName),
 				),
 			},
 			{
@@ -95,7 +95,7 @@ func TestAccEC2EIP_migrateVPCToDomain(t *testing.T) {
 					testAccCheckEIPExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "domain", "vpc"),
 					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
-					testAccCheckEIPPublicDNS(resourceName),
+					testAccCheckEIPPublicDNS(ctx, resourceName),
 				),
 			},
 			{
@@ -124,7 +124,7 @@ func TestAccEC2EIP_noVPC(t *testing.T) {
 					testAccCheckEIPExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "domain", "vpc"),
 					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
-					testAccCheckEIPPublicDNS(resourceName),
+					testAccCheckEIPPublicDNS(ctx, resourceName),
 				),
 			},
 			{
@@ -345,7 +345,7 @@ func TestAccEC2EIP_networkInterface(t *testing.T) {
 				Config: testAccEIPConfig_networkInterface(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckEIPExists(ctx, resourceName, &conf),
-					testAccCheckEIPPrivateDNS(resourceName),
+					testAccCheckEIPPrivateDNS(ctx, resourceName),
 					resource.TestCheckResourceAttrSet(resourceName, "allocation_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "association_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "public_ip"),
@@ -725,7 +725,7 @@ func testAccCheckEIPDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckEIPPrivateDNS(resourceName string) resource.TestCheckFunc {
+func testAccCheckEIPPrivateDNS(ctx context.Context, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -733,11 +733,7 @@ func testAccCheckEIPPrivateDNS(resourceName string) resource.TestCheckFunc {
 		}
 
 		privateDNS := rs.Primary.Attributes["private_dns"]
-		expectedPrivateDNS := fmt.Sprintf(
-			"ip-%s.%s",
-			tfec2.ConvertIPToDashIP(rs.Primary.Attributes["private_ip"]),
-			tfec2.RegionalPrivateDNSSuffix(acctest.Region()),
-		)
+		expectedPrivateDNS := acctest.Provider.Meta().(*conns.AWSClient).EC2PrivateDNSNameForIP(ctx, rs.Primary.Attributes["private_ip"])
 
 		if privateDNS != expectedPrivateDNS {
 			return fmt.Errorf("expected private_dns value (%s), received: %s", expectedPrivateDNS, privateDNS)
@@ -747,7 +743,7 @@ func testAccCheckEIPPrivateDNS(resourceName string) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckEIPPublicDNS(resourceName string) resource.TestCheckFunc {
+func testAccCheckEIPPublicDNS(ctx context.Context, resourceName string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
@@ -755,12 +751,7 @@ func testAccCheckEIPPublicDNS(resourceName string) resource.TestCheckFunc {
 		}
 
 		publicDNS := rs.Primary.Attributes["public_dns"]
-		expectedPublicDNS := fmt.Sprintf(
-			"ec2-%s.%s.%s",
-			tfec2.ConvertIPToDashIP(rs.Primary.Attributes["public_ip"]),
-			tfec2.RegionalPublicDNSSuffix(acctest.Region()),
-			acctest.PartitionDNSSuffix(),
-		)
+		expectedPublicDNS := acctest.Provider.Meta().(*conns.AWSClient).EC2PublicDNSNameForIP(ctx, rs.Primary.Attributes["public_ip"])
 
 		if publicDNS != expectedPublicDNS {
 			return fmt.Errorf("expected public_dns value (%s), received: %s", expectedPublicDNS, publicDNS)

@@ -143,11 +143,11 @@ func dataSourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.Set("public_ipv4_pool", eip.PublicIpv4Pool)
 	d.Set("private_ip", eip.PrivateIpAddress)
 	if v := aws.ToString(eip.PrivateIpAddress); v != "" {
-		d.Set("private_dns", PrivateDNSNameForIP(ctx, meta.(*conns.AWSClient), v))
+		d.Set("private_dns", meta.(*conns.AWSClient).EC2PrivateDNSNameForIP(ctx, v))
 	}
 	d.Set("public_ip", eip.PublicIp)
 	if v := aws.ToString(eip.PublicIp); v != "" {
-		d.Set("public_dns", PublicDNSNameForIP(ctx, meta.(*conns.AWSClient), v))
+		d.Set("public_dns", meta.(*conns.AWSClient).EC2PublicDNSNameForIP(ctx, v))
 	}
 
 	setTagsOutV2(ctx, eip.Tags)
