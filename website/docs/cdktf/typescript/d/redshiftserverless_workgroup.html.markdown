@@ -76,4 +76,4 @@ This data source exports the following attributes in addition to the arguments a
 * `privateIpAddress` - The IPv4 address of the network interface within the subnet.
 * `subnetId` - The unique identifier of the subnet.
 
-<!-- cache-key: cdktf-0.19.0 input-374d27f8fbd13cb2f6821046b5a1fe85a8500dfa779b30e1ffd4cad3110ce132 -->
+<!-- cache-key: cdktf-0.20.1 input-374d27f8fbd13cb2f6821046b5a1fe85a8500dfa779b30e1ffd4cad3110ce132 -->

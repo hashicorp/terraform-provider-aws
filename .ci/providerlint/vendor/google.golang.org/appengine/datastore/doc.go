@@ -5,8 +5,7 @@
 /*
 Package datastore provides a client for App Engine's datastore service.
 
-
-Basic Operations
+# Basic Operations
 
 Entities are the unit of storage and are associated with a key. A key
 consists of an optional parent key, a string application ID, a string kind
@@ -74,8 +73,7 @@ GetMulti, PutMulti and DeleteMulti are batch versions of the Get, Put and
 Delete functions. They take a []*Key instead of a *Key, and may return an
 appengine.MultiError when encountering partial failure.
 
-
-Properties
+# Properties
 
 An entity's contents can be represented by a variety of types. These are
 typically struct pointers, but can also be any type that implements the
@@ -137,8 +135,7 @@ Example code:
 		J int `datastore:",noindex" json:"j"`
 	}
 
-
-Structured Properties
+# Structured Properties
 
 If the struct pointed to contains other structs, then the nested or embedded
 structs are flattened. For example, given these definitions:
@@ -179,8 +176,7 @@ equivalent field would instead be: FooDotZ bool `datastore:"Foo.Z"`.
 If an outer struct is tagged "noindex" then all of its implicit flattened
 fields are effectively "noindex".
 
-
-The PropertyLoadSaver Interface
+# The PropertyLoadSaver Interface
 
 An entity's contents can also be represented by any type that implements the
 PropertyLoadSaver interface. This type may be a struct pointer, but it does
@@ -230,8 +226,7 @@ Example code:
 The *PropertyList type implements PropertyLoadSaver, and can therefore hold an
 arbitrary entity's contents.
 
-
-Queries
+# Queries
 
 Queries retrieve entities based on their properties or key's ancestry. Running
 a query yields an iterator of results: either keys or (key, entity) pairs.
@@ -284,8 +279,7 @@ Example code:
 		io.Copy(w, b)
 	}
 
-
-Transactions
+# Transactions
 
 RunInTransaction runs a function in a transaction.
 
@@ -323,8 +317,7 @@ Example code:
 		fmt.Fprintf(w, "Count=%d", count)
 	}
 
-
-Metadata
+# Metadata
 
 The datastore package provides access to some of App Engine's datastore
 metadata. This metadata includes information about the entity groups,

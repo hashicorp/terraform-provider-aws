@@ -335,6 +335,11 @@ func resourceJobTemplateDelete(ctx context.Context, d *schema.ResourceData, meta
 		return diags
 	}
 
+	// Not actually a validation exception
+	if tfawserr.ErrMessageContains(err, emrcontainers.ErrCodeValidationException, "Template does not exist") {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting EMR Containers Job Template (%s): %s", d.Id(), err)
 	}

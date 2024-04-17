@@ -7,10 +7,10 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/elbv2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccELBV2LoadBalancerDataSource_basic(t *testing.T) {
@@ -23,7 +23,7 @@ func TestAccELBV2LoadBalancerDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -97,7 +97,7 @@ func TestAccELBV2LoadBalancerDataSource_outpost(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -135,7 +135,7 @@ func TestAccELBV2LoadBalancerDataSource_backwardsCompatibility(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, elbv2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ELBV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -161,6 +161,7 @@ func TestAccELBV2LoadBalancerDataSource_backwardsCompatibility(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName1, "enable_http2", resourceName, "enable_http2"),
 					resource.TestCheckResourceAttrPair(dataSourceName1, "enable_waf_fail_open", resourceName, "enable_waf_fail_open"),
 					resource.TestCheckResourceAttrPair(dataSourceName1, "access_logs.#", resourceName, "access_logs.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName1, "connection_logs.#", resourceName, "connection_logs.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "internal", resourceName, "internal"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "subnets.#", resourceName, "subnets.#"),
@@ -181,6 +182,7 @@ func TestAccELBV2LoadBalancerDataSource_backwardsCompatibility(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName2, "enable_http2", resourceName, "enable_http2"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "enable_waf_fail_open", resourceName, "enable_waf_fail_open"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "access_logs.#", resourceName, "access_logs.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName2, "connection_logs.#", resourceName, "connection_logs.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "internal", resourceName, "internal"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "subnets.#", resourceName, "subnets.#"),
@@ -201,6 +203,7 @@ func TestAccELBV2LoadBalancerDataSource_backwardsCompatibility(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName3, "enable_http2", resourceName, "enable_http2"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "enable_waf_fail_open", resourceName, "enable_waf_fail_open"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "access_logs.#", resourceName, "access_logs.#"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, "connection_logs.#", resourceName, "connection_logs.#"),
 				),
 			},
 		},

@@ -10,8 +10,9 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/eventbridge"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
+	"github.com/aws/aws-sdk-go-v2/service/eventbridge/types"
 	"github.com/google/go-cmp/cmp"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -21,10 +22,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfevents "github.com/hashicorp/terraform-provider-aws/internal/service/events"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func init() {
-	acctest.RegisterServiceErrorCheckFunc(eventbridge.EndpointsID, testAccErrorCheckSkip)
+	acctest.RegisterServiceErrorCheckFunc(names.EventsServiceID, testAccErrorCheckSkip)
 }
 
 func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
@@ -32,6 +34,130 @@ func testAccErrorCheckSkip(t *testing.T) resource.ErrorCheckFunc {
 		"Operation is disabled in this region",
 		"not a supported service for a target",
 	)
+}
+
+func TestRuleParseResourceID(t *testing.T) {
+	t.Parallel()
+
+	testCases := []struct {
+		TestName      string
+		InputID       string
+		ExpectedError bool
+		ExpectedPart0 string
+		ExpectedPart1 string
+	}{
+		{
+			TestName:      "empty ID",
+			InputID:       "",
+			ExpectedError: true,
+		},
+		{
+			TestName:      "single part",
+			InputID:       "TestRule",
+			ExpectedPart0: tfevents.DefaultEventBusName,
+			ExpectedPart1: "TestRule",
+		},
+		{
+			TestName:      "two parts",
+			InputID:       tfevents.RuleCreateResourceID("TestEventBus", "TestRule"),
+			ExpectedPart0: "TestEventBus",
+			ExpectedPart1: "TestRule",
+		},
+		{
+			TestName:      "two parts with default event bus",
+			InputID:       tfevents.RuleCreateResourceID(tfevents.DefaultEventBusName, "TestRule"),
+			ExpectedPart0: tfevents.DefaultEventBusName,
+			ExpectedPart1: "TestRule",
+		},
+		{
+			TestName:      "partner event bus 1",
+			InputID:       "aws.partner/example.com/Test/TestRule",
+			ExpectedPart0: "aws.partner/example.com/Test",
+			ExpectedPart1: "TestRule",
+		},
+		{
+			TestName:      "partner event bus 2",
+			InputID:       "aws.partner/example.net/id/18554d09-58ff-aa42-ba9c-c4c33899006f/test",
+			ExpectedPart0: "aws.partner/example.net/id/18554d09-58ff-aa42-ba9c-c4c33899006f",
+			ExpectedPart1: "test",
+		},
+		{
+			TestName: "ARN event bus",
+			//lintignore:AWSAT003,AWSAT005
+			InputID: tfevents.RuleCreateResourceID("arn:aws:events:us-east-2:123456789012:event-bus/default", "TestRule"),
+			//lintignore:AWSAT003,AWSAT005
+			ExpectedPart0: "arn:aws:events:us-east-2:123456789012:event-bus/default",
+			ExpectedPart1: "TestRule",
+		},
+		{
+			TestName: "ARN based partner event bus",
+			// lintignore:AWSAT003,AWSAT005
+			InputID: "arn:aws:events:us-east-2:123456789012:event-bus/aws.partner/genesys.com/cloud/a12bc345-d678-90e1-2f34-gh5678i9012ej/_genesys/TestRule",
+			// lintignore:AWSAT003,AWSAT005
+			ExpectedPart0: "arn:aws:events:us-east-2:123456789012:event-bus/aws.partner/genesys.com/cloud/a12bc345-d678-90e1-2f34-gh5678i9012ej/_genesys",
+			ExpectedPart1: "TestRule",
+		},
+		{
+			TestName:      "empty both parts",
+			InputID:       "/",
+			ExpectedError: true,
+		},
+		{
+			TestName:      "empty first part",
+			InputID:       "/TestRule",
+			ExpectedError: true,
+		},
+		{
+			TestName:      "empty second part",
+			InputID:       "TestEventBus/",
+			ExpectedError: true,
+		},
+		{
+			TestName:      "empty partner event rule",
+			InputID:       "aws.partner/example.com/Test/",
+			ExpectedError: true,
+		},
+		{
+			TestName:      "three parts",
+			InputID:       "TestEventBus/TestRule/Suffix",
+			ExpectedError: true,
+		},
+		{
+			TestName:      "four parts",
+			InputID:       "abc.partner/TestEventBus/TestRule/Suffix",
+			ExpectedError: true,
+		},
+		{
+			TestName:      "five parts",
+			InputID:       "test/aws.partner/example.com/Test/TestRule",
+			ExpectedError: true,
+		},
+	}
+
+	for _, testCase := range testCases {
+		testCase := testCase
+		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
+
+			gotPart0, gotPart1, err := tfevents.RuleParseResourceID(testCase.InputID)
+
+			if err == nil && testCase.ExpectedError {
+				t.Fatalf("expected error, got no error")
+			}
+
+			if err != nil && !testCase.ExpectedError {
+				t.Fatalf("got unexpected error: %s", err)
+			}
+
+			if gotPart0 != testCase.ExpectedPart0 {
+				t.Errorf("got part 0 %s, expected %s", gotPart0, testCase.ExpectedPart0)
+			}
+
+			if gotPart1 != testCase.ExpectedPart1 {
+				t.Errorf("got part 1 %s, expected %s", gotPart1, testCase.ExpectedPart1)
+			}
+		})
+	}
 }
 
 func TestRuleEventPatternJSONDecoder(t *testing.T) {
@@ -78,7 +204,7 @@ func TestAccEventsRule_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -152,7 +278,7 @@ func TestAccEventsRule_eventBusName(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -202,7 +328,7 @@ func TestAccEventsRule_role(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -231,7 +357,7 @@ func TestAccEventsRule_description(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -268,7 +394,7 @@ func TestAccEventsRule_pattern(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -306,7 +432,7 @@ func TestAccEventsRule_patternJSONEncoder(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -331,7 +457,7 @@ func TestAccEventsRule_scheduleAndPattern(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -361,7 +487,7 @@ func TestAccEventsRule_namePrefix(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -389,7 +515,7 @@ func TestAccEventsRule_Name_generated(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -418,7 +544,7 @@ func TestAccEventsRule_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -464,7 +590,7 @@ func TestAccEventsRule_isEnabled(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -543,23 +669,23 @@ func TestAccEventsRule_isForceDeletion(t *testing.T) {
 
 func TestAccEventsRule_state(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v1, v2, v3 eventbridge.DescribeRuleOutput
+	var v1, v2 eventbridge.DescribeRuleOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudwatch_event_rule.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRuleConfig_state(rName, eventbridge.RuleStateDisabled),
+				Config: testAccRuleConfig_state(rName, string(types.RuleStateDisabled)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v1),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "state", eventbridge.RuleStateDisabled),
-					testAccCheckRuleEnabled(ctx, resourceName, eventbridge.RuleStateDisabled),
+					resource.TestCheckResourceAttr(resourceName, "state", string(types.RuleStateDisabled)),
+					testAccCheckRuleEnabled(ctx, resourceName, types.RuleStateDisabled),
 				),
 			},
 			{
@@ -568,26 +694,12 @@ func TestAccEventsRule_state(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRuleConfig_state(rName, eventbridge.RuleStateEnabled),
+				Config: testAccRuleConfig_state(rName, string(types.RuleStateEnabled)),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRuleExists(ctx, resourceName, &v2),
 					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "state", eventbridge.RuleStateEnabled),
-					testAccCheckRuleEnabled(ctx, resourceName, eventbridge.RuleStateEnabled),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccRuleConfig_state(rName, eventbridge.RuleStateEnabledWithAllCloudtrailManagementEvents),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckRuleExists(ctx, resourceName, &v3),
-					resource.TestCheckResourceAttr(resourceName, "is_enabled", "true"),
-					resource.TestCheckResourceAttr(resourceName, "state", eventbridge.RuleStateEnabledWithAllCloudtrailManagementEvents),
-					testAccCheckRuleEnabled(ctx, resourceName, eventbridge.RuleStateEnabledWithAllCloudtrailManagementEvents),
+					resource.TestCheckResourceAttr(resourceName, "state", string(types.RuleStateEnabled)),
+					testAccCheckRuleEnabled(ctx, resourceName, types.RuleStateEnabled),
 				),
 			},
 			{
@@ -613,7 +725,7 @@ func TestAccEventsRule_partnerEventBus(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -651,7 +763,7 @@ func TestAccEventsRule_eventBusARN(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRuleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -688,7 +800,7 @@ func TestAccEventsRule_migrateV0(t *testing.T) {
 	testcases := map[string]struct {
 		config            string
 		expectedIsEnabled string
-		expectedState     string
+		expectedState     types.RuleState
 	}{
 		"basic": {
 			config:            testAccRuleConfig_basic(sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)),
@@ -718,7 +830,7 @@ func TestAccEventsRule_migrateV0(t *testing.T) {
 
 			resource.ParallelTest(t, resource.TestCase{
 				PreCheck:     func() { acctest.PreCheck(ctx, t) },
-				ErrorCheck:   acctest.ErrorCheck(t, eventbridge.EndpointsID),
+				ErrorCheck:   acctest.ErrorCheck(t, names.EventsServiceID),
 				CheckDestroy: testAccCheckRuleDestroy(ctx),
 				Steps: []resource.TestStep{
 					{
@@ -745,7 +857,7 @@ func TestAccEventsRule_migrateV0(t *testing.T) {
 						},
 						Check: resource.ComposeAggregateTestCheckFunc(
 							resource.TestCheckResourceAttr(resourceName, "is_enabled", testcase.expectedIsEnabled),
-							resource.TestCheckResourceAttr(resourceName, "state", testcase.expectedState),
+							resource.TestCheckResourceAttr(resourceName, "state", string(testcase.expectedState)),
 							testAccCheckRuleEnabled(ctx, resourceName, testcase.expectedState),
 						),
 					},
@@ -764,20 +876,20 @@ func TestAccEventsRule_migrateV0_Equivalent(t *testing.T) {
 		enabled           bool
 		state             string
 		expectedIsEnabled string
-		expectedState     string
+		expectedState     types.RuleState
 	}{
 		"enabled": {
 			enabled:           true,
-			state:             eventbridge.RuleStateEnabled,
+			state:             string(types.RuleStateEnabled),
 			expectedIsEnabled: "true",
-			expectedState:     eventbridge.RuleStateEnabled,
+			expectedState:     types.RuleStateEnabled,
 		},
 
 		"disabled": {
 			enabled:           false,
-			state:             eventbridge.RuleStateDisabled,
+			state:             string(types.RuleStateDisabled),
 			expectedIsEnabled: "false",
-			expectedState:     eventbridge.RuleStateDisabled,
+			expectedState:     types.RuleStateDisabled,
 		},
 	}
 
@@ -791,7 +903,7 @@ func TestAccEventsRule_migrateV0_Equivalent(t *testing.T) {
 
 			resource.ParallelTest(t, resource.TestCase{
 				PreCheck:     func() { acctest.PreCheck(ctx, t) },
-				ErrorCheck:   acctest.ErrorCheck(t, eventbridge.EndpointsID),
+				ErrorCheck:   acctest.ErrorCheck(t, names.EventsServiceID),
 				CheckDestroy: testAccCheckRuleDestroy(ctx),
 				Steps: []resource.TestStep{
 					{
@@ -818,7 +930,7 @@ func TestAccEventsRule_migrateV0_Equivalent(t *testing.T) {
 						},
 						Check: resource.ComposeAggregateTestCheckFunc(
 							resource.TestCheckResourceAttr(resourceName, "is_enabled", testcase.expectedIsEnabled),
-							resource.TestCheckResourceAttr(resourceName, "state", testcase.expectedState),
+							resource.TestCheckResourceAttr(resourceName, "state", string(testcase.expectedState)),
 							testAccCheckRuleEnabled(ctx, resourceName, testcase.expectedState),
 						),
 					},
@@ -835,19 +947,9 @@ func testAccCheckRuleExists(ctx context.Context, n string, v *eventbridge.Descri
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EventBridge Rule ID is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsClient(ctx)
 
-		eventBusName, ruleName, err := tfevents.RuleParseResourceID(rs.Primary.ID)
-
-		if err != nil {
-			return err
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn(ctx)
-
-		output, err := tfevents.FindRuleByTwoPartKey(ctx, conn, eventBusName, ruleName)
+		output, err := tfevents.FindRuleByTwoPartKey(ctx, conn, rs.Primary.Attributes["event_bus_name"], rs.Primary.Attributes["name"])
 
 		if err != nil {
 			return err
@@ -859,28 +961,22 @@ func testAccCheckRuleExists(ctx context.Context, n string, v *eventbridge.Descri
 	}
 }
 
-func testAccCheckRuleEnabled(ctx context.Context, n string, want string) resource.TestCheckFunc {
+func testAccCheckRuleEnabled(ctx context.Context, n string, want types.RuleState) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		eventBusName, ruleName, err := tfevents.RuleParseResourceID(rs.Primary.ID)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsClient(ctx)
+
+		output, err := tfevents.FindRuleByTwoPartKey(ctx, conn, rs.Primary.Attributes["event_bus_name"], rs.Primary.Attributes["name"])
 
 		if err != nil {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn(ctx)
-
-		output, err := tfevents.FindRuleByTwoPartKey(ctx, conn, eventBusName, ruleName)
-
-		if err != nil {
-			return err
-		}
-
-		if got := aws.StringValue(output.State); got != want {
+		if got := output.State; got != want {
 			return fmt.Errorf("EventBridge Rule State = %v, want %v", got, want)
 		}
 
@@ -890,20 +986,14 @@ func testAccCheckRuleEnabled(ctx context.Context, n string, want string) resourc
 
 func testAccCheckRuleDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudwatch_event_rule" {
 				continue
 			}
 
-			eventBusName, ruleName, err := tfevents.RuleParseResourceID(rs.Primary.ID)
-
-			if err != nil {
-				return err
-			}
-
-			_, err = tfevents.FindRuleByTwoPartKey(ctx, conn, eventBusName, ruleName)
+			_, err := tfevents.FindRuleByTwoPartKey(ctx, conn, rs.Primary.Attributes["event_bus_name"], rs.Primary.Attributes["name"])
 
 			if tfresource.NotFound(err) {
 				continue
@@ -922,7 +1012,7 @@ func testAccCheckRuleDestroy(ctx context.Context) resource.TestCheckFunc {
 
 func testAccCheckRuleRecreated(i, j *eventbridge.DescribeRuleOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.StringValue(i.Arn) == aws.StringValue(j.Arn) {
+		if aws.ToString(i.Arn) == aws.ToString(j.Arn) {
 			return fmt.Errorf("EventBridge rule not recreated, but expected it to be")
 		}
 		return nil
@@ -931,7 +1021,7 @@ func testAccCheckRuleRecreated(i, j *eventbridge.DescribeRuleOutput) resource.Te
 
 func testAccCheckRuleNotRecreated(i, j *eventbridge.DescribeRuleOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.StringValue(i.Arn) != aws.StringValue(j.Arn) {
+		if aws.ToString(i.Arn) != aws.ToString(j.Arn) {
 			return fmt.Errorf("EventBridge rule recreated, but expected it to not be")
 		}
 		return nil

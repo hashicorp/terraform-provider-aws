@@ -6,24 +6,36 @@ package appconfig
 import (
 	"context"
 
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	request_sdkv1 "github.com/aws/aws-sdk-go/aws/request"
-	appconfig_sdkv1 "github.com/aws/aws-sdk-go/service/appconfig"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	retry_sdkv2 "github.com/aws/aws-sdk-go-v2/aws/retry"
+	appconfig_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appconfig"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/appconfig/types"
+	"github.com/aws/smithy-go"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
-// CustomizeConn customizes a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) CustomizeConn(ctx context.Context, conn *appconfig_sdkv1.AppConfig) (*appconfig_sdkv1.AppConfig, error) {
-	// StartDeployment operations can return a ConflictException
-	// if ongoing deployments are in-progress, thus we handle them
-	// here for the service client.
-	conn.Handlers.Retry.PushBack(func(r *request_sdkv1.Request) {
-		if r.Operation.Name == "StartDeployment" {
-			if tfawserr.ErrCodeEquals(r.Error, appconfig_sdkv1.ErrCodeConflictException) {
-				r.Retryable = aws_sdkv1.Bool(true)
-			}
-		}
-	})
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*appconfig_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
-	return conn, nil
+	return appconfig_sdkv2.NewFromConfig(cfg, func(o *appconfig_sdkv2.Options) {
+		if endpoint := config["endpoint"].(string); endpoint != "" {
+			o.BaseEndpoint = aws_sdkv2.String(endpoint)
+		}
+
+		// StartDeployment operations can return a ConflictException
+		// if ongoing deployments are in-progress, thus we handle them
+		// here for the service client.
+		o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws_sdkv2.RetryerV2), retry_sdkv2.IsErrorRetryableFunc(func(err error) aws_sdkv2.Ternary {
+			if v, ok := errs.As[*smithy.OperationError](err); ok {
+				switch v.OperationName {
+				case "StartDeployment":
+					if errs.IsA[*awstypes.ConflictException](err) {
+						return aws_sdkv2.TrueTernary
+					}
+				}
+			}
+			return aws_sdkv2.UnknownTernary
+		}))
+	}), nil
 }

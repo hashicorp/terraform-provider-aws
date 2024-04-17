@@ -26,7 +26,7 @@ func TestAccS3DirectoryBucket_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDirectoryBucketDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -59,7 +59,7 @@ func TestAccS3DirectoryBucket_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDirectoryBucketDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -82,7 +82,7 @@ func TestAccS3DirectoryBucket_forceDestroy(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.S3EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDirectoryBucketDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -99,7 +99,7 @@ func TestAccS3DirectoryBucket_forceDestroy(t *testing.T) {
 
 func testAccCheckDirectoryBucketDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_s3_directory_bucket" {
@@ -130,7 +130,7 @@ func testAccCheckDirectoryBucketExists(ctx context.Context, n string) resource.T
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3Client(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ExpressClient(ctx)
 
 		return tfs3.FindBucket(ctx, conn, rs.Primary.ID)
 	}

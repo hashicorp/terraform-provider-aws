@@ -50,7 +50,7 @@ This resource supports the following arguments:
 
 * `auto_enable` - (Required) The status of the feature that is configured for the member accounts within the organization. Valid values: `NEW`, `ALL`, `NONE`.
 * `detector_id` - (Required) The ID of the detector that configures the delegated administrator.
-* `name` - (Required) The name of the feature that will be configured for the organization. Valid values: `S3_DATA_EVENTS`, `EKS_AUDIT_LOGS`, `EBS_MALWARE_PROTECTION`, `RDS_LOGIN_EVENTS`, `EKS_RUNTIME_MONITORING`, `LAMBDA_NETWORK_LOGS`.
+* `name` - (Required) The name of the feature that will be configured for the organization. Valid values: `S3_DATA_EVENTS`, `EKS_AUDIT_LOGS`, `EBS_MALWARE_PROTECTION`, `RDS_LOGIN_EVENTS`, `EKS_RUNTIME_MONITORING`, `LAMBDA_NETWORK_LOGS`, `RUNTIME_MONITORING`.
 * `additional_configuration` - (Optional) The additional information that will be configured for the organization See [below](#additional-configuration).
 
 ### Additional Configuration
@@ -58,10 +58,10 @@ This resource supports the following arguments:
 The `additional_configuration` block supports the following:
 
 * `auto_enable` - (Required) The status of the additional configuration that will be configured for the organization. Valid values: `NEW`, `ALL`, `NONE`.
-* `name` - (Required) The name of the additional configuration that will be configured for the organization. Valid values: `EKS_ADDON_MANAGEMENT`.
+* `name` - (Required) The name of the additional configuration that will be configured for the organization. Valid values: `EKS_ADDON_MANAGEMENT`, `ECS_FARGATE_AGENT_MANAGEMENT`, `EC2_AGENT_MANAGEMENT`.
 
 ## Attribute Reference
 
 This resource exports no additional attributes.
 
-<!-- cache-key: cdktf-0.19.0 input-af534c2b9dc87ad328aeada98eac41421489586c67758449e011a8a7d6b7e223 -->
+<!-- cache-key: cdktf-0.20.1 input-81d27bdb8786df3797d1df8cd206cca98cd8a630bfdf16073612d5e1bd667f8d -->

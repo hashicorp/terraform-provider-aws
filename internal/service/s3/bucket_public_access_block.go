@@ -19,8 +19,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_s3_bucket_public_access_block")
-func ResourceBucketPublicAccessBlock() *schema.Resource {
+// @SDKResource("aws_s3_bucket_public_access_block", name="Bucket Public Access Block")
+func resourceBucketPublicAccessBlock() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketPublicAccessBlockCreate,
 		ReadWithoutTimeout:   resourceBucketPublicAccessBlockRead,
@@ -76,7 +76,7 @@ func resourceBucketPublicAccessBlockCreate(ctx context.Context, d *schema.Resour
 		},
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return conn.PutPublicAccessBlock(ctx, input)
 	}, errCodeNoSuchBucket)
 
@@ -90,7 +90,7 @@ func resourceBucketPublicAccessBlockCreate(ctx context.Context, d *schema.Resour
 
 	d.SetId(bucket)
 
-	_, err = tfresource.RetryWhenNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return findPublicAccessBlockConfiguration(ctx, conn, d.Id())
 	})
 
@@ -176,7 +176,7 @@ func resourceBucketPublicAccessBlockDelete(ctx context.Context, d *schema.Resour
 		return sdkdiag.AppendErrorf(diags, "deleting S3 Bucket Public Access Block (%s): %s", d.Id(), err)
 	}
 
-	_, err = tfresource.RetryUntilNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryUntilNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return findPublicAccessBlockConfiguration(ctx, conn, d.Id())
 	})
 

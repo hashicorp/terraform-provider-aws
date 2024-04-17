@@ -21,7 +21,7 @@ See [CloudFront Functions](https://docs.aws.amazon.com/AmazonCloudFront/latest/D
 ```terraform
 resource "aws_cloudfront_function" "test" {
   name    = "test"
-  runtime = "cloudfront-js-1.0"
+  runtime = "cloudfront-js-2.0"
   comment = "my function"
   publish = true
   code    = file("${path.module}/function.js")
@@ -34,12 +34,13 @@ The following arguments are required:
 
 * `name` - (Required) Unique name for your CloudFront Function.
 * `code` - (Required) Source code of the function
-* `runtime` - (Required) Identifier of the function's runtime. Currently only `cloudfront-js-1.0` is valid.
+* `runtime` - (Required) Identifier of the function's runtime. Valid values are `cloudfront-js-1.0` and `cloudfront-js-2.0`.
 
 The following arguments are optional:
 
 * `comment` - (Optional) Comment.
 * `publish` - (Optional) Whether to publish creation/change as Live CloudFront Function Version. Defaults to `true`.
+* `key_value_store_associations` - (Optional) List of `aws_cloudfront_key_value_store` ARNs to be associated to the function. AWS limits associations to on key value store per function.
 
 ## Attribute Reference
 

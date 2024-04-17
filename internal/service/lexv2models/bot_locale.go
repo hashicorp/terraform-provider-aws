@@ -374,6 +374,7 @@ func waitBotLocaleCreated(ctx context.Context, conn *lexmodelsv2.Client, id stri
 		Target:                    enum.Slice(awstypes.BotLocaleStatusBuilt, awstypes.BotLocaleStatusNotBuilt),
 		Refresh:                   statusBotLocale(ctx, conn, id),
 		Timeout:                   timeout,
+		MinTimeout:                5 * time.Second,
 		NotFoundChecks:            20,
 		ContinuousTargetOccurence: 2,
 	}

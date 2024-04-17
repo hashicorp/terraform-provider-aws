@@ -8,6 +8,7 @@ terraform.tfplan
 terraform.tfstate
 bin/
 dist/
+vendor/
 modules-dev/
 /pkg/
 website/.vagrant
@@ -33,7 +34,6 @@ markdown-link-check*.txt
 changelog.tmp
 terraform-provider-aws
 aws/testdata/service/cloudformation/examplecompany-exampleservice-exampleresource/bin/handler
-
 # Test exclusions
 !command/test-fixtures/**/*.tfstate
 !command/test-fixtures/**/.terraform/
@@ -44,3 +44,4 @@ aws/testdata/service/cloudformation/examplecompany-exampleservice-exampleresourc
 node_modules
 
 .teamcity/target
+awssdk.patch

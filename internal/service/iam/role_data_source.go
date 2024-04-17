@@ -8,8 +8,8 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -17,8 +17,8 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
-// @SDKDataSource("aws_iam_role")
-func DataSourceRole() *schema.Resource {
+// @SDKDataSource("aws_iam_role", name="Role")
+func dataSourceRole() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRoleRead,
 
@@ -82,11 +82,11 @@ func DataSourceRole() *schema.Resource {
 
 func dataSourceRoleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
-	role, err := FindRoleByName(ctx, conn, name)
+	role, err := findRoleByName(ctx, conn, name)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading IAM Role (%s): %s", name, err)
@@ -109,7 +109,7 @@ func dataSourceRoleRead(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 	d.Set("unique_id", role.RoleId)
 
-	assumeRolePolicy, err := url.QueryUnescape(aws.StringValue(role.AssumeRolePolicyDocument))
+	assumeRolePolicy, err := url.QueryUnescape(aws.ToString(role.AssumeRolePolicyDocument))
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
@@ -125,13 +125,13 @@ func dataSourceRoleRead(ctx context.Context, d *schema.ResourceData, meta interf
 	return diags
 }
 
-func flattenRoleLastUsed(apiObject *iam.RoleLastUsed) []interface{} {
+func flattenRoleLastUsed(apiObject *awstypes.RoleLastUsed) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{
-		"region": aws.StringValue(apiObject.Region),
+		"region": aws.ToString(apiObject.Region),
 	}
 
 	if apiObject.LastUsedDate != nil {

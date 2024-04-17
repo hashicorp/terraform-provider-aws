@@ -12,15 +12,15 @@ description: |-
 
 Provides a resource for subscribing to SNS topics. Requires that an SNS topic exist for the subscription to attach to. This resource allows you to automatically place messages sent to SNS topics in SQS queues, send them as HTTP(S) POST requests to a given endpoint, send SMS messages, or notify devices / applications. The most likely use case for Terraform users will probably be SQS queues.
 
-~> **NOTE:** If the SNS topic and SQS queue are in different AWS regions, the `awsSnsTopicSubscription` must use an AWS provider that is in the same region as the SNS topic. If the `awsSnsTopicSubscription` uses a provider with a different region than the SNS topic, Terraform will fail to create the subscription.
+~> **NOTE:** If the SNS topic and SQS queue are in different AWS regions, the `aws_sns_topic_subscription` must use an AWS provider that is in the same region as the SNS topic. If the `aws_sns_topic_subscription` uses a provider with a different region than the SNS topic, Terraform will fail to create the subscription.
 
 ~> **NOTE:** Setup of cross-account subscriptions from SNS topics to SQS queues requires Terraform to have access to BOTH accounts.
 
-~> **NOTE:** If an SNS topic and SQS queue are in different AWS accounts but the same region, the `awsSnsTopicSubscription` must use the AWS provider for the account with the SQS queue. If `awsSnsTopicSubscription` uses a Provider with a different account than the SQS queue, Terraform creates the subscription but does not keep state and tries to re-create the subscription at every `apply`.
+~> **NOTE:** If an SNS topic and SQS queue are in different AWS accounts but the same region, the `aws_sns_topic_subscription` must use the AWS provider for the account with the SQS queue. If `aws_sns_topic_subscription` uses a Provider with a different account than the SQS queue, Terraform creates the subscription but does not keep state and tries to re-create the subscription at every `apply`.
 
 ~> **NOTE:** If an SNS topic and SQS queue are in different AWS accounts and different AWS regions, the subscription needs to be initiated from the account with the SQS queue but in the region of the SNS topic.
 
-~> **NOTE:** You cannot unsubscribe to a subscription that is pending confirmation. If you use `email`, `emailJson`, or `http`/`https` (without auto-confirmation enabled), until the subscription is confirmed (e.g., outside of Terraform), AWS does not allow Terraform to delete / unsubscribe the subscription. If you `destroy` an unconfirmed subscription, Terraform will remove the subscription from its state but the subscription will still exist in AWS. However, if you delete an SNS topic, SNS [deletes all the subscriptions](https://docs.aws.amazon.com/sns/latest/dg/sns-delete-subscription-topic.html) associated with the topic. Also, you can import a subscription after confirmation and then have the capability to delete it.
+~> **NOTE:** You cannot unsubscribe to a subscription that is pending confirmation. If you use `email`, `email-json`, or `http`/`https` (without auto-confirmation enabled), until the subscription is confirmed (e.g., outside of Terraform), AWS does not allow Terraform to delete / unsubscribe the subscription. If you `destroy` an unconfirmed subscription, Terraform will remove the subscription from its state but the subscription will still exist in AWS. However, if you delete an SNS topic, SNS [deletes all the subscriptions](https://docs.aws.amazon.com/sns/latest/dg/sns-delete-subscription-topic.html) associated with the topic. Also, you can import a subscription after confirmation and then have the capability to delete it.
 
 ## Example Usage
 
@@ -344,7 +344,7 @@ The following arguments are optional:
 * `deliveryPolicy` - (Optional) JSON String with the delivery policy (retries, backoff, etc.) that will be used in the subscription - this only applies to HTTP/S subscriptions. Refer to the [SNS docs](https://docs.aws.amazon.com/sns/latest/dg/DeliveryPolicies.html) for more details.
 * `endpointAutoConfirms` - (Optional) Whether the endpoint is capable of [auto confirming subscription](http://docs.aws.amazon.com/sns/latest/dg/SendMessageToHttp.html#SendMessageToHttp.prepare) (e.g., PagerDuty). Default is `false`.
 * `filterPolicy` - (Optional) JSON String with the filter policy that will be used in the subscription to filter messages seen by the target resource. Refer to the [SNS docs](https://docs.aws.amazon.com/sns/latest/dg/message-filtering.html) for more details.
-* `filterPolicyScope` - (Optional) Whether the `filter_policy` applies to `MessageAttributes` (default) or `MessageBody`.
+* `filterPolicyScope` - (Optional) Whether the `filterPolicy` applies to `MessageAttributes` (default) or `MessageBody`.
 * `rawMessageDelivery` - (Optional) Whether to enable raw message delivery (the original message is directly passed, not wrapped in JSON with the original message in the message property). Default is `false`.
 * `redrivePolicy` - (Optional) JSON String with the redrive policy that will be used in the subscription. Refer to the [SNS docs](https://docs.aws.amazon.com/sns/latest/dg/sns-dead-letter-queues.html#how-messages-moved-into-dead-letter-queue) for more details.
 * `replayPolicy` - (Optional) JSON String with the archived message replay policy that will be used in the subscription. Refer to the [SNS docs](https://docs.aws.amazon.com/sns/latest/dg/message-archiving-and-replay-subscriber.html) for more details.
@@ -362,10 +362,10 @@ Supported values for `protocol` include:
 
 Partially supported values for `protocol` include:
 
-~> **NOTE:** If an `awsSnsTopicSubscription` uses a partially-supported protocol and the subscription is not confirmed, either through automatic confirmation or means outside of Terraform (e.g., clicking on a "Confirm Subscription" link in an email), Terraform cannot delete / unsubscribe the subscription. Attempting to `destroy` an unconfirmed subscription will remove the `awsSnsTopicSubscription` from Terraform's state but **_will not_** remove the subscription from AWS. The `pendingConfirmation` attribute provides confirmation status.
+~> **NOTE:** If an `aws_sns_topic_subscription` uses a partially-supported protocol and the subscription is not confirmed, either through automatic confirmation or means outside of Terraform (e.g., clicking on a "Confirm Subscription" link in an email), Terraform cannot delete / unsubscribe the subscription. Attempting to `destroy` an unconfirmed subscription will remove the `aws_sns_topic_subscription` from Terraform's state but **_will not_** remove the subscription from AWS. The `pendingConfirmation` attribute provides confirmation status.
 
 * `email` - Delivers messages via SMTP. `endpoint` is an email address.
-* `emailJson` - Delivers JSON-encoded messages via SMTP. `endpoint` is an email address.
+* `email-json` - Delivers JSON-encoded messages via SMTP. `endpoint` is an email address.
 * `http` -- Delivers JSON-encoded messages via HTTP POST. `endpoint` is a URL beginning with `http://`.
 * `https` -- Delivers JSON-encoded messages via HTTPS POST. `endpoint` is a URL beginning with `https://`.
 
@@ -387,9 +387,19 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { SnsTopicSubscription } from "./.gen/providers/aws/sns-topic-subscription";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    SnsTopicSubscription.generateConfigForImport(
+      this,
+      "userUpdatesSqsTarget",
+      "arn:aws:sns:us-west-2:0123456789012:my-topic:8a21d249-4329-4871-acc6-7be709c6ea7f"
+    );
   }
 }
 
@@ -401,4 +411,4 @@ Using `terraform import`, import SNS Topic Subscriptions using the subscription 
 % terraform import aws_sns_topic_subscription.user_updates_sqs_target arn:aws:sns:us-west-2:0123456789012:my-topic:8a21d249-4329-4871-acc6-7be709c6ea7f
 ```
 
-<!-- cache-key: cdktf-0.19.0 input-8335a789d68fa00f04ac50b0acd532b261ef42a17433eddf557b74baf4887b67 -->
+<!-- cache-key: cdktf-0.20.1 input-8335a789d68fa00f04ac50b0acd532b261ef42a17433eddf557b74baf4887b67 -->

@@ -9,8 +9,8 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/appconfig"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/appconfig"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -91,7 +91,7 @@ const (
 func dataSourceConfigurationProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
+	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
 	appId := d.Get("application_id").(string)
 	profileId := d.Get("configuration_profile_id").(string)
@@ -143,8 +143,8 @@ func dataSourceConfigurationProfileRead(ctx context.Context, d *schema.ResourceD
 	return diags
 }
 
-func findConfigurationProfileByApplicationAndProfile(ctx context.Context, conn *appconfig.AppConfig, appId string, cpId string) (*appconfig.GetConfigurationProfileOutput, error) {
-	res, err := conn.GetConfigurationProfileWithContext(ctx, &appconfig.GetConfigurationProfileInput{
+func findConfigurationProfileByApplicationAndProfile(ctx context.Context, conn *appconfig.Client, appId string, cpId string) (*appconfig.GetConfigurationProfileOutput, error) {
+	res, err := conn.GetConfigurationProfile(ctx, &appconfig.GetConfigurationProfileInput{
 		ApplicationId:          aws.String(appId),
 		ConfigurationProfileId: aws.String(cpId),
 	})

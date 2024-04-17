@@ -21,8 +21,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_s3_bucket_request_payment_configuration")
-func ResourceBucketRequestPaymentConfiguration() *schema.Resource {
+// @SDKResource("aws_s3_bucket_request_payment_configuration", name="Bucket Request Payment Configuration")
+func resourceBucketRequestPaymentConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceBucketRequestPaymentConfigurationCreate,
 		ReadWithoutTimeout:   resourceBucketRequestPaymentConfigurationRead,
@@ -70,7 +70,7 @@ func resourceBucketRequestPaymentConfigurationCreate(ctx context.Context, d *sch
 		input.ExpectedBucketOwner = aws.String(expectedBucketOwner)
 	}
 
-	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return conn.PutBucketRequestPayment(ctx, input)
 	}, errCodeNoSuchBucket)
 
@@ -84,7 +84,7 @@ func resourceBucketRequestPaymentConfigurationCreate(ctx context.Context, d *sch
 
 	d.SetId(CreateResourceID(bucket, expectedBucketOwner))
 
-	_, err = tfresource.RetryWhenNotFound(ctx, s3BucketPropagationTimeout, func() (interface{}, error) {
+	_, err = tfresource.RetryWhenNotFound(ctx, bucketPropagationTimeout, func() (interface{}, error) {
 		return findBucketRequestPayment(ctx, conn, bucket, expectedBucketOwner)
 	})
 

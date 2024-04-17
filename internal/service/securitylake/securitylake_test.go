@@ -13,6 +13,15 @@ func TestAccSecurityLake_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]map[string]func(t *testing.T){
+		"AWSLogSource": {
+			"basic":       testAccAWSLogSource_basic,
+			"disappears":  testAccAWSLogSource_disappears,
+			"multiRegion": testAccAWSLogSource_multiRegion,
+		},
+		"CustomLogSource": {
+			"basic":      testAccCustomLogSource_basic,
+			"disappears": testAccCustomLogSource_disappears,
+		},
 		"DataLake": {
 			"basic":           testAccDataLake_basic,
 			"disappears":      testAccDataLake_disappears,
@@ -20,6 +29,19 @@ func TestAccSecurityLake_serial(t *testing.T) {
 			"lifecycle":       testAccDataLake_lifeCycle,
 			"lifecycleUpdate": testAccDataLake_lifeCycleUpdate,
 			"replication":     testAccDataLake_replication,
+		},
+		"Subscriber": {
+			"basic":      testAccSubscriber_basic,
+			"customLogs": testAccSubscriber_customLogSource,
+			"disappears": testAccSubscriber_disappears,
+			"tags":       testAccSubscriber_tags,
+			"updated":    testAccSubscriber_update,
+		},
+		"SubscriberNotification": {
+			"basic":      testAccSubscriberNotification_basic,
+			"https":      testAccSubscriberNotification_https,
+			"disappears": testAccSubscriberNotification_disappears,
+			"update":     testAccSubscriberNotification_update,
 		},
 	}
 

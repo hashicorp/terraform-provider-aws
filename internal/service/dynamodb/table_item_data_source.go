@@ -15,7 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
-	"github.com/hashicorp/terraform-provider-aws/internal/verify"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -113,7 +113,7 @@ func buildTableItemDataSourceID(tableName string, attrs map[string]*dynamodb.Att
 	id := []string{tableName}
 
 	for key, element := range attrs {
-		id = append(id, key, verify.Base64Encode(element.B))
+		id = append(id, key, itypes.Base64EncodeOnce(element.B))
 		id = append(id, aws.StringValue(element.S))
 		id = append(id, aws.StringValue(element.N))
 	}

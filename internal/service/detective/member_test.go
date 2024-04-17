@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdetective "github.com/hashicorp/terraform-provider-aws/internal/service/detective"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccMember_basic(t *testing.T) {
@@ -31,7 +32,7 @@ func testAccMember_basic(t *testing.T) {
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckMemberDestroy(ctx),
-		ErrorCheck:               acctest.ErrorCheck(t, detective.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DetectiveServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemberConfig_basic(email),
@@ -68,7 +69,7 @@ func testAccMember_disappears(t *testing.T) {
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckMemberDestroy(ctx),
-		ErrorCheck:               acctest.ErrorCheck(t, detective.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DetectiveServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemberConfig_basic(email),
@@ -96,7 +97,7 @@ func testAccMember_message(t *testing.T) {
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckInvitationAccepterDestroy(ctx),
-		ErrorCheck:               acctest.ErrorCheck(t, detective.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DetectiveServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccMemberConfig_invitationMessage(email),

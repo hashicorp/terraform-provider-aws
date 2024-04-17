@@ -30,7 +30,7 @@ func TestAccCodeGuruProfilerProfilingGroupDataSource_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeGuruProfilerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeGuruProfilerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckProfilingGroupDestroy(ctx),
 		Steps: []resource.TestStep{

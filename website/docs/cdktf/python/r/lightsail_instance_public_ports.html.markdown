@@ -34,7 +34,7 @@ class MyConvertedCode(TerraformStack):
         test = LightsailInstance(self, "test",
             availability_zone=Token.as_string(Fn.lookup_nested(available.names, ["0"])),
             blueprint_id="amazon_linux_2",
-            bundle_id="nano_1_0",
+            bundle_id="nano_3_0",
             name="yak_sail"
         )
         aws_lightsail_instance_public_ports_test =
@@ -77,4 +77,4 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `id` - ID of the resource.
 
-<!-- cache-key: cdktf-0.19.0 input-e75c0ed1fb7d870f438bb0070ff3f05dfd9b9a1c05192739f74b37a508a5e0f0 -->
+<!-- cache-key: cdktf-0.20.1 input-dce599696ef2f93bfa8cafe79f5be851558b96bc97c2a9206fac2f0d24cb07d7 -->

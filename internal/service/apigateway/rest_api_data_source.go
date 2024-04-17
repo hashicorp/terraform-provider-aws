@@ -5,31 +5,30 @@ package apigateway
 
 import (
 	"context"
-	"fmt"
-	"log"
 	"strconv"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/apigateway"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway"
+	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_api_gateway_rest_api")
-func DataSourceRestAPI() *schema.Resource {
+// @SDKDataSource("aws_api_gateway_rest_api", name="REST API")
+// @Tags
+func dataSourceRestAPI() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRestAPIRead,
+
 		Schema: map[string]*schema.Schema{
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-			"root_resource_id": {
+			"api_key_source": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -37,26 +36,14 @@ func DataSourceRestAPI() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"description": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"policy": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"api_key_source": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"minimum_compression_size": {
-				Type:     nullable.TypeNullableInt,
-				Computed: true,
-			},
 			"binary_media_types": {
 				Type:     schema.TypeList,
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"description": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"endpoint_configuration": {
 				Type:     schema.TypeList,
@@ -80,95 +67,91 @@ func DataSourceRestAPI() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			"minimum_compression_size": {
+				Type:     nullable.TypeNullableInt,
+				Computed: true,
+			},
+			"name": {
+				Type:     schema.TypeString,
+				Required: true,
+			},
+			"policy": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"root_resource_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			names.AttrTags: tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func dataSourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).APIGatewayConn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
+	conn := meta.(*conns.AWSClient).APIGatewayClient(ctx)
 
-	params := &apigateway.GetRestApisInput{}
+	name := d.Get("name")
+	input := &apigateway.GetRestApisInput{}
 
-	target := d.Get("name")
-	var matchedApis []*apigateway.RestApi
-	log.Printf("[DEBUG] Reading API Gateway REST APIs: %s", params)
-	err := conn.GetRestApisPagesWithContext(ctx, params, func(page *apigateway.GetRestApisOutput, lastPage bool) bool {
-		for _, api := range page.Items {
-			if aws.StringValue(api.Name) == target {
-				matchedApis = append(matchedApis, api)
-			}
-		}
-		return !lastPage
+	match, err := findRestAPI(ctx, conn, input, func(v *types.RestApi) bool {
+		return aws.ToString(v.Name) == name
 	})
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "describing API Gateway REST APIs: %s", err)
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("API Gateway REST API", err))
 	}
 
-	if len(matchedApis) == 0 {
-		return sdkdiag.AppendErrorf(diags, "no REST APIs with name %q found in this region", target)
-	}
-	if len(matchedApis) > 1 {
-		return sdkdiag.AppendErrorf(diags, "multiple REST APIs with name %q found in this region", target)
-	}
-
-	match := matchedApis[0]
-
-	d.SetId(aws.StringValue(match.Id))
-
-	restApiArn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "apigateway",
-		Region:    meta.(*conns.AWSClient).Region,
-		Resource:  fmt.Sprintf("/restapis/%s", d.Id()),
-	}.String()
-	d.Set("arn", restApiArn)
-	d.Set("description", match.Description)
-	d.Set("policy", match.Policy)
+	d.SetId(aws.ToString(match.Id))
 	d.Set("api_key_source", match.ApiKeySource)
+	d.Set("arn", apiARN(meta.(*conns.AWSClient), d.Id()))
 	d.Set("binary_media_types", match.BinaryMediaTypes)
-
-	if match.MinimumCompressionSize == nil {
-		d.Set("minimum_compression_size", nil)
-	} else {
-		d.Set("minimum_compression_size", strconv.FormatInt(aws.Int64Value(match.MinimumCompressionSize), 10))
-	}
-
+	d.Set("description", match.Description)
 	if err := d.Set("endpoint_configuration", flattenEndpointConfiguration(match.EndpointConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting endpoint_configuration: %s", err)
 	}
-
-	if err := d.Set("tags", KeyValueTags(ctx, match.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
+	d.Set("execution_arn", apiInvokeARN(meta.(*conns.AWSClient), d.Id()))
+	if match.MinimumCompressionSize == nil {
+		d.Set("minimum_compression_size", nil)
+	} else {
+		d.Set("minimum_compression_size", strconv.FormatInt(int64(aws.ToInt32(match.MinimumCompressionSize)), 10))
 	}
+	d.Set("policy", match.Policy)
+	d.Set("root_resource_id", match.RootResourceId)
 
-	executionArn := arn.ARN{
-		Partition: meta.(*conns.AWSClient).Partition,
-		Service:   "execute-api",
-		Region:    meta.(*conns.AWSClient).Region,
-		AccountID: meta.(*conns.AWSClient).AccountID,
-		Resource:  d.Id(),
-	}.String()
-	d.Set("execution_arn", executionArn)
+	setTagsOut(ctx, match.Tags)
 
-	resourceParams := &apigateway.GetResourcesInput{
-		RestApiId: aws.String(d.Id()),
-	}
+	return diags
+}
 
-	err = conn.GetResourcesPagesWithContext(ctx, resourceParams, func(page *apigateway.GetResourcesOutput, lastPage bool) bool {
-		for _, item := range page.Items {
-			if aws.StringValue(item.Path) == "/" {
-				d.Set("root_resource_id", item.Id)
-				return false
-			}
-		}
-		return !lastPage
-	})
+func findRestAPI(ctx context.Context, conn *apigateway.Client, input *apigateway.GetRestApisInput, filter tfslices.Predicate[*types.RestApi]) (*types.RestApi, error) {
+	output, err := findRestAPIs(ctx, conn, input, filter)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading API Gateway REST API (%s): %s", target, err)
+		return nil, err
 	}
-	return diags
+
+	return tfresource.AssertSingleValueResult(output)
+}
+
+func findRestAPIs(ctx context.Context, conn *apigateway.Client, input *apigateway.GetRestApisInput, filter tfslices.Predicate[*types.RestApi]) ([]types.RestApi, error) {
+	var output []types.RestApi
+
+	pages := apigateway.NewGetRestApisPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
+		}
+
+		for _, v := range page.Items {
+			if filter(&v) {
+				output = append(output, v)
+			}
+		}
+	}
+
+	return output, nil
 }

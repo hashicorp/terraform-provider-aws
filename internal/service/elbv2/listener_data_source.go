@@ -9,8 +9,9 @@ import (
 	"sort"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/elbv2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -302,22 +303,22 @@ func DataSourceListener() *schema.Resource {
 
 func dataSourceListenerRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ELBV2Conn(ctx)
+	conn := meta.(*conns.AWSClient).ELBV2Client(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	input := &elbv2.DescribeListenersInput{}
+	input := &elasticloadbalancingv2.DescribeListenersInput{}
 
 	if v, ok := d.GetOk("arn"); ok {
-		input.ListenerArns = aws.StringSlice([]string{v.(string)})
+		input.ListenerArns = []string{v.(string)}
 	} else if v, ok := d.GetOk("load_balancer_arn"); ok {
 		input.LoadBalancerArn = aws.String(v.(string))
 	}
 
-	filter := tfslices.PredicateTrue[*elbv2.Listener]()
+	filter := tfslices.PredicateTrue[*awstypes.Listener]()
 	if v, ok := d.GetOk("port"); ok {
 		port := v.(int)
-		filter = func(v *elbv2.Listener) bool {
-			return int(aws.Int64Value(v.Port)) == port
+		filter = func(v *awstypes.Listener) bool {
+			return int(aws.ToInt32(v.Port)) == port
 		}
 	}
 	listener, err := findListener(ctx, conn, input, filter)
@@ -326,18 +327,18 @@ func dataSourceListenerRead(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("ELBv2 Listener", err))
 	}
 
-	d.SetId(aws.StringValue(listener.ListenerArn))
-	if listener.AlpnPolicy != nil && len(listener.AlpnPolicy) == 1 && listener.AlpnPolicy[0] != nil {
+	d.SetId(aws.ToString(listener.ListenerArn))
+	if listener.AlpnPolicy != nil && len(listener.AlpnPolicy) == 1 {
 		d.Set("alpn_policy", listener.AlpnPolicy[0])
 	}
 	d.Set("arn", listener.ListenerArn)
-	if listener.Certificates != nil && len(listener.Certificates) == 1 && listener.Certificates[0] != nil {
+	if listener.Certificates != nil && len(listener.Certificates) == 1 {
 		d.Set("certificate_arn", listener.Certificates[0].CertificateArn)
 	}
 	sort.Slice(listener.DefaultActions, func(i, j int) bool {
-		return aws.Int64Value(listener.DefaultActions[i].Order) < aws.Int64Value(listener.DefaultActions[j].Order)
+		return aws.ToInt32(listener.DefaultActions[i].Order) < aws.ToInt32(listener.DefaultActions[j].Order)
 	})
-	if err := d.Set("default_action", flattenLbListenerActions(d, listener.DefaultActions)); err != nil {
+	if err := d.Set("default_action", flattenLbListenerActions(d, "default_action", listener.DefaultActions)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting default_action: %s", err)
 	}
 	d.Set("load_balancer_arn", listener.LoadBalancerArn)
@@ -348,9 +349,9 @@ func dataSourceListenerRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("protocol", listener.Protocol)
 	d.Set("ssl_policy", listener.SslPolicy)
 
-	tags, err := listTags(ctx, conn, d.Id())
+	tags, err := listTagsV2(ctx, conn, d.Id())
 
-	if errs.IsUnsupportedOperationInPartitionError(conn.PartitionID, err) {
+	if errs.IsUnsupportedOperationInPartitionError(meta.(*conns.AWSClient).Partition, err) {
 		log.Printf("[WARN] Unable to list tags for ELBv2 Listener %s: %s", d.Id(), err)
 		return diags
 	}

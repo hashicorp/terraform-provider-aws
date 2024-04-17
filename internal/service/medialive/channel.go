@@ -21,6 +21,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -958,6 +959,10 @@ func resourceChannelDelete(ctx context.Context, d *schema.ResourceData, meta int
 
 	channel, err := FindChannelByID(ctx, conn, d.Id())
 
+	if tfresource.NotFound(err) {
+		return diags
+	}
+
 	if err != nil {
 		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionDeleting, ResNameChannel, d.Id(), err)
 	}
@@ -972,12 +977,11 @@ func resourceChannelDelete(ctx context.Context, d *schema.ResourceData, meta int
 		ChannelId: aws.String(d.Id()),
 	})
 
-	if err != nil {
-		var nfe *types.NotFoundException
-		if errors.As(err, &nfe) {
-			return diags
-		}
+	if errs.IsA[*types.NotFoundException](err) {
+		return diags
+	}
 
+	if err != nil {
 		return create.AppendDiagError(diags, names.MediaLive, create.ErrActionDeleting, ResNameChannel, d.Id(), err)
 	}
 
@@ -1128,15 +1132,15 @@ func FindChannelByID(ctx context.Context, conn *medialive.Client, id string) (*m
 		ChannelId: aws.String(id),
 	}
 	out, err := conn.DescribeChannel(ctx, in)
-	if err != nil {
-		var nfe *types.NotFoundException
-		if errors.As(err, &nfe) {
-			return nil, &retry.NotFoundError{
-				LastError:   err,
-				LastRequest: in,
-			}
-		}
 
+	if errs.IsA[*types.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: in,
+		}
+	}
+
+	if err != nil {
 		return nil, err
 	}
 
@@ -1632,7 +1636,7 @@ func expandInputAttachmentAutomaticInputFailoverSettings(tfList []interface{}) *
 	if v, ok := m["error_clear_time_msec"].(int); ok && v != 0 {
 		out.ErrorClearTimeMsec = aws.Int32(int32(v))
 	}
-	if v, ok := m["failover_conditions"].(*schema.Set); ok && v.Len() > 0 {
+	if v, ok := m["failover_condition"].(*schema.Set); ok && v.Len() > 0 {
 		out.FailoverConditions = expandInputAttachmentAutomaticInputFailoverSettingsFailoverConditions(v.List())
 	}
 	if v, ok := m["input_preference"].(string); ok && v != "" {
@@ -2062,7 +2066,7 @@ func flattenInputAttachmentAutomaticInputFailoverSettings(in *types.AutomaticInp
 	m := map[string]interface{}{
 		"secondary_input_id":    aws.ToString(in.SecondaryInputId),
 		"error_clear_time_msec": int(aws.ToInt32(in.ErrorClearTimeMsec)),
-		"failover_conditions":   flattenInputAttachmentAutomaticInputFailoverSettingsFailoverConditions(in.FailoverConditions),
+		"failover_condition":    flattenInputAttachmentAutomaticInputFailoverSettingsFailoverConditions(in.FailoverConditions),
 		"input_preference":      string(in.InputPreference),
 	}
 

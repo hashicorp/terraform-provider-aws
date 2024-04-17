@@ -24,6 +24,7 @@ resource "aws_redshiftserverless_endpoint_access" "example" {
 This resource supports the following arguments:
 
 * `endpoint_name` - (Required) The name of the endpoint.
+* `owner_account` - (Optional) The owner Amazon Web Services account for the Amazon Redshift Serverless workgroup.
 * `subnet_ids` - (Required) An array of VPC subnet IDs to associate with the endpoint.
 * `vpc_security_group_ids` - (Optional) An array of security group IDs to associate with the workgroup.
 * `workgroup_name` - (Required) The name of the workgroup.
