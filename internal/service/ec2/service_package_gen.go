@@ -808,7 +808,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceEIP,
+			Factory:  resourceEIP,
 			TypeName: "aws_eip",
 			Name:     "EIP",
 			Tags: &types.ServicePackageResourceTags{
