@@ -54,7 +54,7 @@ func ResourceNetworkInterfaceAttachment() *schema.Resource {
 
 func resourceNetworkInterfaceAttachmentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	attachmentID, err := attachNetworkInterface(ctx, conn,
 		d.Get("network_interface_id").(string),
@@ -101,10 +101,11 @@ func resourceNetworkInterfaceAttachmentRead(ctx context.Context, d *schema.Resou
 
 func resourceNetworkInterfaceAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
-	if err := DetachNetworkInterface(ctx, conn, d.Get("network_interface_id").(string), d.Id(), NetworkInterfaceDetachedTimeout); err != nil {
+	if err := detachNetworkInterface(ctx, conn, d.Get("network_interface_id").(string), d.Id(), NetworkInterfaceDetachedTimeout); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
+
 	return diags
 }

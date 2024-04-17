@@ -1341,7 +1341,7 @@ func sweepNetworkInterfaces(region string) error {
 				continue
 			}
 
-			r := ResourceNetworkInterface()
+			r := resourceNetworkInterface()
 			d := r.Data(nil)
 			d.SetId(id)
 

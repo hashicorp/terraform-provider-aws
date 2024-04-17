@@ -314,8 +314,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_network_acls",
 		},
 		{
-			Factory:  DataSourceNetworkInterface,
+			Factory:  dataSourceNetworkInterface,
 			TypeName: "aws_network_interface",
+			Name:     "Network Interface",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 		{
 			Factory:  DataSourceNetworkInterfaces,
@@ -889,7 +893,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Network ACL Rule",
 		},
 		{
-			Factory:  ResourceNetworkInterface,
+			Factory:  resourceNetworkInterface,
 			TypeName: "aws_network_interface",
 			Name:     "Network Interface",
 			Tags: &types.ServicePackageResourceTags{
