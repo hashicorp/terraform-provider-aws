@@ -7,8 +7,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -44,19 +45,19 @@ func dataSourceEIPs() *schema.Resource {
 
 func dataSourceEIPsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.DescribeAddressesInput{}
 
 	if tags, tagsOk := d.GetOk("tags"); tagsOk {
-		input.Filters = append(input.Filters, newTagFilterList(
-			Tags(tftags.New(ctx, tags.(map[string]interface{}))),
+		input.Filters = append(input.Filters, newTagFilterListV2(
+			TagsV2(tftags.New(ctx, tags.(map[string]interface{}))),
 		)...)
 	}
 
 	if filters, filtersOk := d.GetOk("filter"); filtersOk {
 		input.Filters = append(input.Filters,
-			newCustomFilterList(filters.(*schema.Set))...)
+			newCustomFilterListV2(filters.(*schema.Set))...)
 	}
 
 	if len(input.Filters) == 0 {
@@ -73,10 +74,10 @@ func dataSourceEIPsRead(ctx context.Context, d *schema.ResourceData, meta interf
 	var publicIPs []string
 
 	for _, v := range output {
-		publicIPs = append(publicIPs, aws.StringValue(v.PublicIp))
+		publicIPs = append(publicIPs, aws.ToString(v.PublicIp))
 
-		if aws.StringValue(v.Domain) == ec2.DomainTypeVpc {
-			allocationIDs = append(allocationIDs, aws.StringValue(v.AllocationId))
+		if v.Domain == types.DomainTypeVpc {
+			allocationIDs = append(allocationIDs, aws.ToString(v.AllocationId))
 		}
 	}
 

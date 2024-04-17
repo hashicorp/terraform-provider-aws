@@ -881,7 +881,7 @@ func sweepEIPs(region string) error {
 			continue
 		}
 
-		r := ResourceEIP()
+		r := resourceEIP()
 		d := r.Data(nil)
 		if address.AllocationId != nil {
 			d.SetId(aws.StringValue(address.AllocationId))
