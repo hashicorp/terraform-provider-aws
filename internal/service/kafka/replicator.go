@@ -159,6 +159,21 @@ func resourceReplicator() *schema.Resource {
 										Optional: true,
 										Default:  true,
 									},
+									"starting_position": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Computed: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"type": {
+													Type:             schema.TypeString,
+													Optional:         true,
+													ValidateDiagFunc: enum.Validate[types.ReplicationStartingPositionType](),
+												},
+											},
+										},
+									},
 									"topics_to_exclude": {
 										Type:     schema.TypeSet,
 										Optional: true,
@@ -555,6 +570,10 @@ func flattenTopicReplication(apiObject *types.TopicReplication) map[string]inter
 		tfMap["topics_to_exclude"] = flex.FlattenStringValueSet(v)
 	}
 
+	if v := apiObject.StartingPosition; v != nil {
+		tfMap["starting_position"] = []interface{}{flattenStartingPosition(v)}
+	}
+
 	if aws.ToBool(apiObject.CopyTopicConfigurations) {
 		tfMap["copy_topic_configurations"] = apiObject.CopyTopicConfigurations
 	}
@@ -565,6 +584,16 @@ func flattenTopicReplication(apiObject *types.TopicReplication) map[string]inter
 
 	if aws.ToBool(apiObject.DetectAndCopyNewTopics) {
 		tfMap["detect_and_copy_new_topics"] = apiObject.DetectAndCopyNewTopics
+	}
+
+	return tfMap
+}
+
+func flattenStartingPosition(apiObject *types.ReplicationStartingPosition) map[string]interface{} {
+	tfMap := map[string]interface{}{}
+
+	if v := apiObject.Type; v != "" {
+		tfMap["type"] = v
 	}
 
 	return tfMap
@@ -757,6 +786,10 @@ func expandTopicReplication(tfMap map[string]interface{}) *types.TopicReplicatio
 		apiObject.TopicsToExclude = flex.ExpandStringValueSet(v)
 	}
 
+	if v, ok := tfMap["starting_position"].([]interface{}); ok {
+		apiObject.StartingPosition = expandStartingPosition(v[0].(map[string]interface{}))
+	}
+
 	if v, ok := tfMap["copy_topic_configurations"].(bool); ok {
 		apiObject.CopyTopicConfigurations = aws.Bool(v)
 	}
@@ -767,6 +800,16 @@ func expandTopicReplication(tfMap map[string]interface{}) *types.TopicReplicatio
 
 	if v, ok := tfMap["detect_and_copy_new_topics"].(bool); ok {
 		apiObject.DetectAndCopyNewTopics = aws.Bool(v)
+	}
+
+	return apiObject
+}
+
+func expandStartingPosition(tfMap map[string]interface{}) *types.ReplicationStartingPosition {
+	apiObject := &types.ReplicationStartingPosition{}
+
+	if v, ok := tfMap["type"].(string); ok {
+		apiObject.Type = types.ReplicationStartingPositionType(v)
 	}
 
 	return apiObject
