@@ -69,13 +69,13 @@ This data source exports the following attributes in addition to the arguments a
 * `customer_owned_ip` - Customer Owned IP.
 * `customer_owned_ipv4_pool` - The ID of a Customer Owned IP Pool. For more on customer owned IP addressed check out [Customer-owned IP addresses guide](https://docs.aws.amazon.com/outposts/latest/userguide/outposts-networking-components.html#ip-addressing)
 * `domain` - Whether the address is for use in EC2-Classic (standard) or in a VPC (vpc).
-* `domain_name` - The DNS pointer (PTR) record for the IP address.
 * `id` - If VPC Elastic IP, the allocation identifier. If EC2-Classic Elastic IP, the public IP address.
 * `instance_id` - ID of the instance that the address is associated with (if any).
 * `network_interface_id` - The ID of the network interface.
 * `network_interface_owner_id` - The ID of the AWS account that owns the network interface.
 * `private_ip` - Private IP address associated with the Elastic IP address.
 * `private_dns` - Private DNS associated with the Elastic IP address.
+* `ptr_record` - The DNS pointer (PTR) record for the IP address.
 * `public_ip` - Public IP address of Elastic IP.
 * `public_dns` - Public DNS associated with the Elastic IP address.
 * `public_ipv4_pool` - ID of an address pool.

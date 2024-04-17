@@ -5,7 +5,6 @@ package ec2
 
 import (
 	"context"
-	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -51,10 +50,6 @@ func dataSourceEIP() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"domain_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
 			"filter": customFiltersSchema(),
 			"id": {
 				Type:     schema.TypeString,
@@ -78,6 +73,10 @@ func dataSourceEIP() *schema.Resource {
 				Computed: true,
 			},
 			"private_dns": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"ptr_record": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -139,15 +138,15 @@ func dataSourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 		switch {
 		case err == nil:
-			d.Set("domain_name", strings.TrimSuffix(aws.ToString(addressAttr.PtrRecord), "."))
+			d.Set("ptr_record", addressAttr.PtrRecord)
 		case tfresource.NotFound(err):
-			d.Set("domain_name", nil)
+			d.Set("ptr_record", nil)
 		default:
 			return sdkdiag.AppendErrorf(diags, "reading EC2 EIP (%s) domain name attribute: %s", d.Id(), err)
 		}
 	} else {
 		d.SetId(aws.ToString(eip.PublicIp))
-		d.Set("domain_name", nil)
+		d.Set("ptr_record", nil)
 	}
 	d.Set("association_id", eip.AssociationId)
 	d.Set("carrier_ip", eip.CarrierIp)

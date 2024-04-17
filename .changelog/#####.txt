@@ -1,5 +1,5 @@
 ```release-note:enhancement
-data-source/aws_eip: Add `domain_name` attribute
+data-source/aws_eip: Add `ptr_record` attribute
 ```
 
 ```release-note:enhancement

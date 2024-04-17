@@ -88,7 +88,7 @@ func resourceEIP() *schema.Resource {
 			},
 			"domain_name": {
 				Type:             schema.TypeString,
-				Computed:         true,
+				Optional:         true,
 				DiffSuppressFunc: sdkv2.SuppressEquivalentStringCaseInsensitive,
 			},
 			"instance": {
