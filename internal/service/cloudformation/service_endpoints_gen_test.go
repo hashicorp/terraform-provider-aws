@@ -235,7 +235,9 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) strin
 
 	client := meta.CloudFormationClient(ctx)
 
-	_, err := client.ListStackInstances(ctx, &cloudformation_sdkv2.ListStackInstancesInput{},
+	_, err := client.ListStackInstances(ctx, &cloudformation_sdkv2.ListStackInstancesInput{
+		StackSetName: aws_sdkv2.String("test"),
+	},
 		func(opts *cloudformation_sdkv2.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &endpoint),
