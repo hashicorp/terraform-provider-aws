@@ -137,6 +137,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.21.4
 	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.10.0
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.23.4
+	github.com/aws/aws-sdk-go-v2/service/rum v1.17.5
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.53.1
 	github.com/aws/aws-sdk-go-v2/service/s3control v1.44.5
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.8.4

@@ -7,14 +7,15 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudwatchrum"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/rum"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/rum/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -37,9 +38,9 @@ func ResourceMetricsDestination() *schema.Resource {
 				Required: true,
 			},
 			"destination": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(cloudwatchrum.MetricDestination_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.MetricDestination](),
 			},
 			"destination_arn": {
 				Type:         schema.TypeString,
@@ -56,12 +57,12 @@ func ResourceMetricsDestination() *schema.Resource {
 }
 
 func resourceMetricsDestinationPut(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RUMConn(ctx)
+	conn := meta.(*conns.AWSClient).RUMClient(ctx)
 
 	name := d.Get("app_monitor_name").(string)
-	input := &cloudwatchrum.PutRumMetricsDestinationInput{
+	input := &rum.PutRumMetricsDestinationInput{
 		AppMonitorName: aws.String(name),
-		Destination:    aws.String(d.Get("destination").(string)),
+		Destination:    awstypes.MetricDestination(d.Get("destination").(string)),
 	}
 
 	if v, ok := d.GetOk("destination_arn"); ok {
@@ -72,7 +73,7 @@ func resourceMetricsDestinationPut(ctx context.Context, d *schema.ResourceData, 
 		input.IamRoleArn = aws.String(v.(string))
 	}
 
-	_, err := conn.PutRumMetricsDestinationWithContext(ctx, input)
+	_, err := conn.PutRumMetricsDestination(ctx, input)
 
 	if err != nil {
 		return diag.Errorf("putting CloudWatch RUM Metrics Destination (%s): %s", name, err)
@@ -86,7 +87,7 @@ func resourceMetricsDestinationPut(ctx context.Context, d *schema.ResourceData, 
 }
 
 func resourceMetricsDestinationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RUMConn(ctx)
+	conn := meta.(*conns.AWSClient).RUMClient(ctx)
 
 	dest, err := FindMetricsDestinationByName(ctx, conn, d.Id())
 
@@ -109,11 +110,11 @@ func resourceMetricsDestinationRead(ctx context.Context, d *schema.ResourceData,
 }
 
 func resourceMetricsDestinationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).RUMConn(ctx)
+	conn := meta.(*conns.AWSClient).RUMClient(ctx)
 
-	input := &cloudwatchrum.DeleteRumMetricsDestinationInput{
+	input := &rum.DeleteRumMetricsDestinationInput{
 		AppMonitorName: aws.String(d.Id()),
-		Destination:    aws.String(d.Get("destination").(string)),
+		Destination:    awstypes.MetricDestination(d.Get("destination").(string)),
 	}
 
 	if v, ok := d.GetOk("destination_arn"); ok {
@@ -121,9 +122,9 @@ func resourceMetricsDestinationDelete(ctx context.Context, d *schema.ResourceDat
 	}
 
 	log.Printf("[DEBUG] Deleting CloudWatch RUM Metrics Destination: %s", d.Id())
-	_, err := conn.DeleteRumMetricsDestinationWithContext(ctx, input)
+	_, err := conn.DeleteRumMetricsDestination(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, cloudwatchrum.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil
 	}
 
@@ -134,44 +135,30 @@ func resourceMetricsDestinationDelete(ctx context.Context, d *schema.ResourceDat
 	return nil
 }
 
-func FindMetricsDestinationByName(ctx context.Context, conn *cloudwatchrum.CloudWatchRUM, name string) (*cloudwatchrum.MetricDestinationSummary, error) {
-	input := &cloudwatchrum.ListRumMetricsDestinationsInput{
+func FindMetricsDestinationByName(ctx context.Context, conn *rum.Client, name string) (*awstypes.MetricDestinationSummary, error) {
+	input := &rum.ListRumMetricsDestinationsInput{
 		AppMonitorName: aws.String(name),
 	}
-	var output []*cloudwatchrum.MetricDestinationSummary
+	var output []awstypes.MetricDestinationSummary
 
-	err := conn.ListRumMetricsDestinationsPagesWithContext(ctx, input, func(page *cloudwatchrum.ListRumMetricsDestinationsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
+	pages := rum.NewListRumMetricsDestinationsPaginator(conn, input)
 
-		for _, v := range page.Destinations {
-			if v != nil {
-				output = append(output, v)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return nil, &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
 			}
 		}
 
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, cloudwatchrum.ErrCodeResourceNotFoundException) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
+		if err != nil {
+			return nil, err
 		}
+
+		output = append(output, page.Destinations...)
 	}
 
-	if err != nil {
-		return nil, err
-	}
-
-	if len(output) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return output[0], nil
+	return tfresource.AssertSingleValueResult(output)
 }
