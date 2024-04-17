@@ -8,6 +8,8 @@ import (
 )
 
 func TestTaskSettingsEqual(t *testing.T) {
+	t.Parallel()
+
 	tests := map[string]map[string]struct {
 		a, b     any
 		expected bool
@@ -101,9 +103,15 @@ func TestTaskSettingsEqual(t *testing.T) {
 	}
 
 	for name, typeTest := range tests {
+		name, typeTest := name, typeTest
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			for name, test := range typeTest {
+				name, test := name, test
 				t.Run(name, func(t *testing.T) {
+					t.Parallel()
+
 					if taskSettingsEqual(test.a, test.b) != test.expected {
 						t.Fatalf("expected %v, got %v", test.expected, !test.expected)
 					}

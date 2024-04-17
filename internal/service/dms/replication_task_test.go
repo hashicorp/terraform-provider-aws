@@ -30,7 +30,7 @@ import (
 func TestAccDMSReplicationTask_basic(t *testing.T) {
 	t.Parallel()
 
-	for _, migrationType := range dms.MigrationTypeValue_Values() {
+	for _, migrationType := range dms.MigrationTypeValue_Values() { //nolint:paralleltest // false positive
 		t.Run(migrationType, func(t *testing.T) {
 			ctx := acctest.Context(t)
 			rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
