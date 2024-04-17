@@ -19,7 +19,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -119,9 +118,6 @@ func (r *agentActionGroupResource) Schema(ctx context.Context, request resource.
 		Blocks: map[string]schema.Block{
 			"action_group_executor": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[actionGroupExecutor](ctx),
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.RequiresReplace(),
-				},
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
@@ -129,18 +125,12 @@ func (r *agentActionGroupResource) Schema(ctx context.Context, request resource.
 					Attributes: map[string]schema.Attribute{
 						"lambda": schema.StringAttribute{
 							Required: true,
-							PlanModifiers: []planmodifier.String{
-								stringplanmodifier.RequiresReplace(),
-							},
 						},
 					},
 				},
 			},
 			"api_schema": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[apiSchema](ctx),
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.RequiresReplace(),
-				},
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
