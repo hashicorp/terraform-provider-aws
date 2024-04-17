@@ -637,7 +637,7 @@ func FindEBSVolumeAttachment(ctx context.Context, conn *ec2.EC2, volumeID, insta
 	return nil, &retry.NotFoundError{}
 }
 
-func FindEIPs(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeAddressesInput) ([]*ec2.Address, error) {
+func findEIPs(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeAddressesInput) ([]*ec2.Address, error) {
 	var addresses []*ec2.Address
 
 	output, err := conn.DescribeAddressesWithContext(ctx, input)
@@ -664,7 +664,7 @@ func FindEIPs(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeAddressesIn
 }
 
 func FindEIP(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeAddressesInput) (*ec2.Address, error) {
-	output, err := FindEIPs(ctx, conn, input)
+	output, err := findEIPs(ctx, conn, input)
 
 	if err != nil {
 		return nil, err
@@ -673,7 +673,7 @@ func FindEIP(ctx context.Context, conn *ec2.EC2, input *ec2.DescribeAddressesInp
 	return tfresource.AssertSinglePtrResult(output)
 }
 
-func FindEIPByAllocationID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.Address, error) {
+func findEIPByAllocationID(ctx context.Context, conn *ec2.EC2, id string) (*ec2.Address, error) {
 	input := &ec2.DescribeAddressesInput{
 		AllocationIds: aws.StringSlice([]string{id}),
 	}

@@ -16,8 +16,8 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
-// @SDKDataSource("aws_eips")
-func DataSourceEIPs() *schema.Resource {
+// @SDKDataSource("aws_eips", name="EIPs")
+func dataSourceEIPs() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceEIPsRead,
 
@@ -37,7 +37,7 @@ func DataSourceEIPs() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"tags": tftags.TagsSchemaComputed(),
+			"tags": tftags.TagsSchema(),
 		},
 	}
 }
@@ -63,7 +63,7 @@ func dataSourceEIPsRead(ctx context.Context, d *schema.ResourceData, meta interf
 		input.Filters = nil
 	}
 
-	output, err := FindEIPs(ctx, conn, input)
+	output, err := findEIPs(ctx, conn, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 EIPs: %s", err)

@@ -274,8 +274,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_eip",
 		},
 		{
-			Factory:  DataSourceEIPs,
+			Factory:  dataSourceEIPs,
 			TypeName: "aws_eips",
+			Name:     "EIPs",
 		},
 		{
 			Factory:  DataSourceInstance,

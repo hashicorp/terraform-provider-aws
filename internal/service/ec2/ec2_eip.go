@@ -27,12 +27,13 @@ import (
 
 // @SDKResource("aws_eip", name="EIP")
 // @Tags(identifierAttribute="id")
-func ResourceEIP() *schema.Resource {
+func resourceEIP() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEIPCreate,
 		ReadWithoutTimeout:   resourceEIPRead,
 		UpdateWithoutTimeout: resourceEIPUpdate,
 		DeleteWithoutTimeout: resourceEIPDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -176,7 +177,7 @@ func resourceEIPCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	d.SetId(aws.StringValue(output.AllocationId))
 
 	_, err = tfresource.RetryWhenNotFound(ctx, d.Timeout(schema.TimeoutCreate), func() (interface{}, error) {
-		return FindEIPByAllocationID(ctx, conn, d.Id())
+		return findEIPByAllocationID(ctx, conn, d.Id())
 	})
 
 	if err != nil {
@@ -206,7 +207,7 @@ func resourceEIPRead(ctx context.Context, d *schema.ResourceData, meta interface
 	}
 
 	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
-		return FindEIPByAllocationID(ctx, conn, d.Id())
+		return findEIPByAllocationID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
