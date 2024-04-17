@@ -2,7 +2,7 @@
 
 set -euo pipefail
 
-TEST_LIST=$(./test-binary -test.list="%TEST_PATTERN%" 2>/dev/null)
+TEST_LIST=$(./test-binary -test.list="%TEST_PATTERN%" 2>/dev/null | grep -vE "%TEST_EXCLUDE_PATTERN%")
 
 read -r -a split <<<"${TEST_LIST}"
 TEST_COUNT=${#split[@]}
