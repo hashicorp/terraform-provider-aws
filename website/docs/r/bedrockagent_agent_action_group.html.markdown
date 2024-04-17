@@ -28,7 +28,6 @@ resource "aws_bedrockagent_agent_action_group" "example" {
       s3_object_key  = "path/to/schema.json"
     }
   }
-  depends_on = [aws_s3_object.test]
 }
 
 ```
