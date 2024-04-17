@@ -1,0 +1,7 @@
+```release-note:enhancement
+resource/aws_imagebuilder_image: Add `workflow` attribute
+```
+
+```release-note:enhancement
+resource/aws_imagebuilder_image: Add `execution_role` attribute
+```

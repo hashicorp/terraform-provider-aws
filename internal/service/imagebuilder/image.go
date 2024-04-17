@@ -68,6 +68,11 @@ func ResourceImage() *schema.Resource {
 				ForceNew: true,
 				Default:  true,
 			},
+			"execution_role": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^(?:arn:aws(?:-[a-z]+)*:iam::[0-9]{12}:role/)?[a-zA-Z_0-9+=,.@\-_/]+$`), "valid IAM role ARN must be provided"),
+			},
 			"image_recipe_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
@@ -212,6 +217,54 @@ func ResourceImage() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"workflow": {
+				Type:     schema.TypeSet,
+				Computed: true,
+				Optional: true,
+				ForceNew: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"workflow_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringMatch(regexache.MustCompile(`^arn:aws(?:-[a-z]+)*:imagebuilder:[a-z]{2,}(?:-[a-z]+)+-[0-9]+:(?:[0-9]{12}|aws):workflow/(build|test|distribution)/[a-z0-9-_]+/(?:(?:([0-9]+|x)\.([0-9]+|x)\.([0-9]+|x))|(?:[0-9]+\.[0-9]+\.[0-9]+/[0-9]+))$`), "valid workflow ARN must be provided"),
+						},
+						"on_failure": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringInSlice(imagebuilder.OnWorkflowFailure_Values(), false),
+						},
+						"parallel_group": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ForceNew:     true,
+							ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[A-Za-z0-9][A-Za-z0-9-_+#]{0,99}$`), "valid parallel group string must be provider"),
+						},
+						"parameter": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"name": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.StringLenBetween(1, 128),
+									},
+									"value": {
+										Type:     schema.TypeString,
+										Required: true,
+										ForceNew: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -236,6 +289,10 @@ func resourceImageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		input.DistributionConfigurationArn = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("execution_role"); ok {
+		input.ExecutionRole = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("image_recipe_arn"); ok {
 		input.ImageRecipeArn = aws.String(v.(string))
 	}
@@ -250,6 +307,10 @@ func resourceImageCreate(ctx context.Context, d *schema.ResourceData, meta inter
 
 	if v, ok := d.GetOk("infrastructure_configuration_arn"); ok {
 		input.InfrastructureConfigurationArn = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("workflow"); ok && len(v.(*schema.Set).List()) > 0 {
+		input.Workflows = expandWorkflowConfigurations(v.(*schema.Set).List())
 	}
 
 	output, err := conn.CreateImageWithContext(ctx, input)
@@ -310,6 +371,8 @@ func resourceImageRead(ctx context.Context, d *schema.ResourceData, meta interfa
 
 	d.Set("enhanced_image_metadata_enabled", image.EnhancedImageMetadataEnabled)
 
+	d.Set("execution_role", image.ExecutionRole)
+
 	if image.ImageRecipe != nil {
 		d.Set("image_recipe_arn", image.ImageRecipe.Arn)
 	}
@@ -343,6 +406,12 @@ func resourceImageRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	setTagsOut(ctx, image.Tags)
 
 	d.Set("version", image.Version)
+
+	if image.Workflows != nil {
+		d.Set("workflow", flattenWorkflowConfigurations(image.Workflows))
+	} else {
+		d.Set("workflow", nil)
+	}
 
 	return diags
 }
