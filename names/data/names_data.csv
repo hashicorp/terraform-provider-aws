@@ -11,7 +11,7 @@ amplifyuibuilder,amplifyuibuilder,amplifyuibuilder,amplifyuibuilder,,amplifyuibu
 ,,,,,,,,,,,,,,,,,Apache MXNet on AWS,AWS,x,,,,,,,,,Documentation
 apigateway,apigateway,apigateway,apigateway,,apigateway,,,APIGateway,APIGateway,x,,2,aws_api_gateway_,aws_apigateway_,,api_gateway_,API Gateway,Amazon,,,,,,,API Gateway,GetAccount,,
 apigatewaymanagementapi,apigatewaymanagementapi,apigatewaymanagementapi,apigatewaymanagementapi,,apigatewaymanagementapi,,,APIGatewayManagementAPI,ApiGatewayManagementApi,,1,,,aws_apigatewaymanagementapi_,,apigatewaymanagementapi_,API Gateway Management API,Amazon,,x,,,,,ApiGatewayManagementApi,,,
-apigatewayv2,apigatewayv2,apigatewayv2,apigatewayv2,,apigatewayv2,,,APIGatewayV2,ApiGatewayV2,,1,,,aws_apigatewayv2_,,apigatewayv2_,API Gateway V2,Amazon,,,,,,,ApiGatewayV2,GetApis,,
+apigatewayv2,apigatewayv2,apigatewayv2,apigatewayv2,,apigatewayv2,,,APIGatewayV2,ApiGatewayV2,,,2,,aws_apigatewayv2_,,apigatewayv2_,API Gateway V2,Amazon,,,,,,,ApiGatewayV2,GetApis,,
 appfabric,appfabric,appfabric,appfabric,,appfabric,,,AppFabric,AppFabric,,,2,,aws_appfabric_,,appfabric_,AppFabric,AWS,,,,,,,AppFabric,ListAppBundles,,
 appmesh,appmesh,appmesh,appmesh,,appmesh,,,AppMesh,AppMesh,,1,,,aws_appmesh_,,appmesh_,App Mesh,AWS,,,,,,,App Mesh,ListMeshes,,
 apprunner,apprunner,apprunner,apprunner,,apprunner,,,AppRunner,AppRunner,,,2,,aws_apprunner_,,apprunner_,App Runner,AWS,,,,,,,AppRunner,ListConnections,,
@@ -29,7 +29,7 @@ appsync,appsync,appsync,appsync,,appsync,,,AppSync,AppSync,,1,,,aws_appsync_,,ap
 ,,,,,,,,,,,,,,,,,Artifact,AWS,x,,,,,,,,,No SDK support
 athena,athena,athena,athena,,athena,,,Athena,Athena,,,2,,aws_athena_,,athena_,Athena,Amazon,,,,,,,Athena,ListDataCatalogs,,
 auditmanager,auditmanager,auditmanager,auditmanager,,auditmanager,,,AuditManager,AuditManager,,,2,,aws_auditmanager_,,auditmanager_,Audit Manager,AWS,,,,,,,AuditManager,GetAccountStatus,,
-autoscaling,autoscaling,autoscaling,autoscaling,,autoscaling,,,AutoScaling,AutoScaling,,1,,aws_(autoscaling_|launch_configuration),aws_autoscaling_,,autoscaling_;launch_configuration,Auto Scaling,,,,,,,,Auto Scaling,DescribeAutoScalingGroups,,
+autoscaling,autoscaling,autoscaling,autoscaling,,autoscaling,,,AutoScaling,AutoScaling,,,2,aws_(autoscaling_|launch_configuration),aws_autoscaling_,,autoscaling_;launch_configuration,Auto Scaling,,,,,,,,Auto Scaling,DescribeAutoScalingGroups,,
 autoscaling-plans,autoscalingplans,autoscalingplans,autoscalingplans,,autoscalingplans,,,AutoScalingPlans,AutoScalingPlans,,,2,,aws_autoscalingplans_,,autoscalingplans_,Auto Scaling Plans,,,,,,,,Auto Scaling Plans,DescribeScalingPlans,,
 ,,,,,,,,,,,,,,,,,Backint Agent for SAP HANA,AWS,x,,,,,,,,,No SDK support
 backup,backup,backup,backup,,backup,,,Backup,Backup,,1,,,aws_backup_,,backup_,Backup,AWS,,,,,,,Backup,ListBackupPlans,,
@@ -40,7 +40,7 @@ bedrock-agent,bedrockagent,bedrockagent,bedrockagent,,bedrockagent,,,BedrockAgen
 bcmdataexports,bcmdataexports,bcmdataexports,bcmdataexports,,bcmdataexports,,,BCMDataExports,BCMDataExports,,,2,,aws_bcmdataexports_,,bcmdataexports_,BCM Data Exports,Amazon,,,,,,,BCM Data Exports,ListExports,,
 billingconductor,billingconductor,billingconductor,,,billingconductor,,,BillingConductor,BillingConductor,,1,,,aws_billingconductor_,,billingconductor_,Billing Conductor,AWS,,x,,,,,billingconductor,,,
 braket,braket,braket,braket,,braket,,,Braket,Braket,,1,,,aws_braket_,,braket_,Braket,Amazon,,x,,,,,Braket,,,
-ce,ce,costexplorer,costexplorer,,ce,,costexplorer,CE,CostExplorer,,1,,,aws_ce_,,ce_,CE (Cost Explorer),AWS,,,,,,,Cost Explorer,ListCostCategoryDefinitions,,
+ce,ce,costexplorer,costexplorer,,ce,,costexplorer,CE,CostExplorer,,,2,,aws_ce_,,ce_,CE (Cost Explorer),AWS,,,,,,,Cost Explorer,ListCostCategoryDefinitions,,
 ,,,,,,,,,,,,,,,,,Chatbot,AWS,x,,,,,,,,,No SDK support
 chime,chime,chime,chime,,chime,,,Chime,Chime,,1,,,aws_chime_,,chime_,Chime,Amazon,,,,,,,Chime,ListAccounts,,
 chime-sdk-identity,chimesdkidentity,chimesdkidentity,chimesdkidentity,,chimesdkidentity,,,ChimeSDKIdentity,ChimeSDKIdentity,,1,,,aws_chimesdkidentity_,,chimesdkidentity_,Chime SDK Identity,Amazon,,x,,,,,Chime SDK Identity,,,
@@ -109,7 +109,7 @@ cur,cur,costandusagereportservice,costandusagereportservice,,cur,,costandusagere
 ,,,,,,,,,,,,,,,,,Cryptographic Services Overview,AWS,x,,,,,,,,,No SDK support
 dataexchange,dataexchange,dataexchange,dataexchange,,dataexchange,,,DataExchange,DataExchange,,1,,,aws_dataexchange_,,dataexchange_,Data Exchange,AWS,,,,,,,DataExchange,ListDataSets,,
 datapipeline,datapipeline,datapipeline,datapipeline,,datapipeline,,,DataPipeline,DataPipeline,,1,,,aws_datapipeline_,,datapipeline_,Data Pipeline,AWS,,,,,,,Data Pipeline,ListPipelines,,
-datasync,datasync,datasync,datasync,,datasync,,,DataSync,DataSync,,1,,,aws_datasync_,,datasync_,DataSync,AWS,,,,,,,DataSync,ListAgents,,
+datasync,datasync,datasync,datasync,,datasync,,,DataSync,DataSync,,,2,,aws_datasync_,,datasync_,DataSync,AWS,,,,,,,DataSync,ListAgents,,
 datazone,datazone,datazone,datazone,,datazone,,,DataZone,DataZone,,,2,,aws_datazone_,,datazone_,DataZone,Amazon,,,,,,,DataZone,ListDomains,,
 ,,,,,,,,,,,,,,,,,Deep Learning AMIs,AWS,x,,,,,,,,,No SDK support
 ,,,,,,,,,,,,,,,,,Deep Learning Containers,AWS,x,,,,,,,,,No SDK support
@@ -159,12 +159,12 @@ emr,emr,emr,emr,,emr,,,EMR,EMR,,1,2,,aws_emr_,,emr_,EMR,Amazon,,,,,,,EMR,ListClu
 emr-containers,emrcontainers,emrcontainers,emrcontainers,,emrcontainers,,,EMRContainers,EMRContainers,,1,,,aws_emrcontainers_,,emrcontainers_,EMR Containers,Amazon,,,,,,,EMR containers,ListVirtualClusters,,
 emr-serverless,emrserverless,emrserverless,emrserverless,,emrserverless,,,EMRServerless,EMRServerless,,,2,,aws_emrserverless_,,emrserverless_,EMR Serverless,Amazon,,,,,,,EMR Serverless,ListApplications,,
 ,,,,,,,,,,,,,,,,,End-of-Support Migration Program (EMP) for Windows Server,AWS,x,,,,,,,,,No SDK support
-events,events,eventbridge,eventbridge,,events,,eventbridge;cloudwatchevents,Events,EventBridge,,1,,aws_cloudwatch_event_,aws_events_,,cloudwatch_event_,EventBridge,Amazon,,,,,,,EventBridge,ListEventBuses,,
+events,events,eventbridge,eventbridge,,events,,eventbridge;cloudwatchevents,Events,EventBridge,,,2,aws_cloudwatch_event_,aws_events_,,cloudwatch_event_,EventBridge,Amazon,,,,,,,EventBridge,ListEventBuses,,
 schemas,schemas,schemas,schemas,,schemas,,,Schemas,Schemas,,1,,,aws_schemas_,,schemas_,EventBridge Schemas,Amazon,,,,,,,schemas,ListRegistries,,
 fis,fis,fis,fis,,fis,,,FIS,FIS,,,2,,aws_fis_,,fis_,FIS (Fault Injection Simulator),AWS,,,,,,,fis,ListExperiments,,
 finspace,finspace,finspace,finspace,,finspace,,,FinSpace,Finspace,,,2,,aws_finspace_,,finspace_,FinSpace,Amazon,,,,,,,finspace,ListEnvironments,,
 finspace-data,finspacedata,finspacedata,finspacedata,,finspacedata,,,FinSpaceData,FinSpaceData,,1,,,aws_finspacedata_,,finspacedata_,FinSpace Data,Amazon,,x,,,,,finspace data,,,
-fms,fms,fms,fms,,fms,,,FMS,FMS,,1,,,aws_fms_,,fms_,FMS (Firewall Manager),AWS,,,,,,,FMS,ListAppsLists,,
+fms,fms,fms,fms,,fms,,,FMS,FMS,x,,2,,aws_fms_,,fms_,FMS (Firewall Manager),AWS,,,,,,,FMS,ListAppsLists,MaxResults: aws_sdkv2.Int32(1),
 forecast,forecast,forecastservice,forecast,,forecast,,forecastservice,Forecast,ForecastService,,1,,,aws_forecast_,,forecast_,Forecast,Amazon,,x,,,,,forecast,,,
 forecastquery,forecastquery,forecastqueryservice,forecastquery,,forecastquery,,forecastqueryservice,ForecastQuery,ForecastQueryService,,1,,,aws_forecastquery_,,forecastquery_,Forecast Query,Amazon,,x,,,,,forecastquery,,,
 frauddetector,frauddetector,frauddetector,frauddetector,,frauddetector,,,FraudDetector,FraudDetector,,1,,,aws_frauddetector_,,frauddetector_,Fraud Detector,Amazon,,x,,,,,FraudDetector,,,
@@ -260,6 +260,7 @@ mq,mq,mq,mq,,mq,,,MQ,MQ,,,2,,aws_mq_,,mq_,MQ,Amazon,,,,,,,mq,ListBrokers,,
 mturk,mturk,mturk,mturk,,mturk,,,MTurk,MTurk,,1,,,aws_mturk_,,mturk_,MTurk (Mechanical Turk),Amazon,,x,,,,,MTurk,,,
 mwaa,mwaa,mwaa,mwaa,,mwaa,,,MWAA,MWAA,,,2,,aws_mwaa_,,mwaa_,MWAA (Managed Workflows for Apache Airflow),Amazon,,,,,,,MWAA,ListEnvironments,,
 neptune,neptune,neptune,neptune,,neptune,,,Neptune,Neptune,,1,,,aws_neptune_,,neptune_,Neptune,Amazon,,,,,,,Neptune,DescribeDBClusters,,
+neptune-graph,neptunegraph,,neptunegraph,,neptunegraph,,,NeptuneGraph,,,,2,,aws_neptunegraph_,,neptunegraph_,Neptune Analytics,Amazon,,,,,,,Neptune Graph,ListGraphs,,
 network-firewall,networkfirewall,networkfirewall,networkfirewall,,networkfirewall,,,NetworkFirewall,NetworkFirewall,,1,,,aws_networkfirewall_,,networkfirewall_,Network Firewall,AWS,,,,,,,Network Firewall,ListFirewalls,,
 networkmanager,networkmanager,networkmanager,networkmanager,,networkmanager,,,NetworkManager,NetworkManager,,1,,,aws_networkmanager_,,networkmanager_,Network Manager,AWS,,,,,,,NetworkManager,ListCoreNetworks,,
 ,,,,,,,,,,,,,,,,,NICE DCV,,x,,,,,,,,,No SDK support

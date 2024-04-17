@@ -153,6 +153,7 @@ func ResourceJob() *schema.Resource {
 			"number_of_workers": {
 				Type:          schema.TypeInt,
 				Optional:      true,
+				Computed:      true,
 				ConflictsWith: []string{"max_capacity"},
 				ValidateFunc:  validation.IntAtLeast(1),
 			},
@@ -176,6 +177,7 @@ func ResourceJob() *schema.Resource {
 			"worker_type": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ConflictsWith: []string{"max_capacity"},
 				ValidateFunc:  validation.StringInSlice(glue.WorkerType_Values(), false),
 			},

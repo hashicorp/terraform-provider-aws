@@ -477,6 +477,8 @@ service/mwaa:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_mwaa_'
 service/neptune:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_neptune_'
+service/neptunegraph:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_neptunegraph_'
 service/networkfirewall:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_networkfirewall_'
 service/networkmanager:

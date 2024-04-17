@@ -327,7 +327,7 @@ func resourceVPCRead(ctx context.Context, d *schema.ResourceData, meta interface
 		d.Set("main_route_table_id", v.RouteTableId)
 	}
 
-	if v, err := FindVPCDefaultSecurityGroupV2(ctx, conn, d.Id()); err != nil {
+	if v, err := findVPCDefaultSecurityGroupV2(ctx, conn, d.Id()); err != nil {
 		log.Printf("[WARN] Error reading EC2 VPC (%s) default Security Group: %s", d.Id(), err)
 		d.Set("default_security_group_id", nil)
 	} else {

@@ -1515,3 +1515,19 @@ func StatusVerifiedAccessEndpoint(ctx context.Context, conn *ec2_sdkv2.Client, i
 		return output, string(output.Status.Code), nil
 	}
 }
+
+func statusFastSnapshotRestore(ctx context.Context, conn *ec2_sdkv2.Client, availabilityZone, snapshotID string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findFastSnapshotRestoreByTwoPartKey(ctx, conn, availabilityZone, snapshotID)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.State), nil
+	}
+}

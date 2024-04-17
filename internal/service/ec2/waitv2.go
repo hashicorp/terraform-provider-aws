@@ -97,3 +97,78 @@ func waitVPCIPv6CIDRBlockAssociationDeletedV2(ctx context.Context, conn *ec2.Cli
 
 	return nil, err
 }
+
+func waitNetworkInterfaceAvailableAfterUseV2(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.NetworkInterface, error) {
+	// Hyperplane attached ENI.
+	// Wait for it to be moved into a removable state.
+	stateConf := &retry.StateChangeConf{
+		Pending:    enum.Slice(types.NetworkInterfaceStatusInUse),
+		Target:     enum.Slice(types.NetworkInterfaceStatusAvailable),
+		Timeout:    timeout,
+		Refresh:    statusNetworkInterfaceV2(ctx, conn, id),
+		Delay:      10 * time.Second,
+		MinTimeout: 10 * time.Second,
+		// Handle EC2 ENI eventual consistency. It can take up to 3 minutes.
+		ContinuousTargetOccurence: 18,
+		NotFoundChecks:            1,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.NetworkInterface); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitNetworkInterfaceCreatedV2(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.NetworkInterface, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{NetworkInterfaceStatusPending},
+		Target:  enum.Slice(types.NetworkInterfaceStatusAvailable),
+		Timeout: timeout,
+		Refresh: statusNetworkInterfaceV2(ctx, conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.NetworkInterface); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitNetworkInterfaceAttachedV2(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.NetworkInterfaceAttachment, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.AttachmentStatusAttaching),
+		Target:  enum.Slice(types.AttachmentStatusAttached),
+		Timeout: timeout,
+		Refresh: statusNetworkInterfaceAttachmentV2(ctx, conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.NetworkInterfaceAttachment); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitNetworkInterfaceDetachedV2(ctx context.Context, conn *ec2.Client, id string, timeout time.Duration) (*types.NetworkInterfaceAttachment, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(types.AttachmentStatusAttached, types.AttachmentStatusDetaching),
+		Target:  enum.Slice(types.AttachmentStatusDetached),
+		Timeout: timeout,
+		Refresh: statusNetworkInterfaceAttachmentV2(ctx, conn, id),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.NetworkInterfaceAttachment); ok {
+		return output, err
+	}
+
+	return nil, err
+}

@@ -40,7 +40,6 @@ import (
 // @Testing(existsType="github.com/aws/aws-sdk-go/service/batch.JobQueueDetail")
 func newResourceJobQueue(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := resourceJobQueue{}
-	r.SetMigratedFromPluginSDK(true)
 
 	r.SetDefaultCreateTimeout(10 * time.Minute)
 	r.SetDefaultUpdateTimeout(10 * time.Minute)

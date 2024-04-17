@@ -1158,7 +1158,7 @@ func sweepKeyPairs(region string) error {
 	}
 
 	for _, v := range output.KeyPairs {
-		r := ResourceKeyPair()
+		r := resourceKeyPair()
 		d := r.Data(nil)
 		d.SetId(aws.StringValue(v.KeyName))
 
@@ -1341,7 +1341,7 @@ func sweepNetworkInterfaces(region string) error {
 				continue
 			}
 
-			r := ResourceNetworkInterface()
+			r := resourceNetworkInterface()
 			d := r.Data(nil)
 			d.SetId(id)
 
@@ -2886,7 +2886,7 @@ func sweepInstanceConnectEndpoints(region string) error {
 				continue
 			}
 
-			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceInstanceConnectEndpoint, client,
+			sweepResources = append(sweepResources, framework.NewSweepResource(newInstanceConnectEndpointResource, client,
 				framework.NewAttribute("id", aws.StringValue(v.InstanceConnectEndpointId)),
 			))
 		}

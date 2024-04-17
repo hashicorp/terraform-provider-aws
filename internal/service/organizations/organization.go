@@ -107,6 +107,10 @@ func ResourceOrganization() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"master_account_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"non_master_accounts": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -256,6 +260,12 @@ func resourceOrganizationRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	managementAccountID := aws.StringValue(org.MasterAccountId)
+	managementAccountName := ""
+	for _, v := range accounts {
+		if aws.StringValue(v.Id) == managementAccountID {
+			managementAccountName = aws.StringValue(v.Name)
+		}
+	}
 	nonManagementAccounts := tfslices.Filter(accounts, func(v *organizations.Account) bool {
 		return aws.StringValue(v.Id) != managementAccountID
 	})
@@ -274,6 +284,7 @@ func resourceOrganizationRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("master_account_arn", org.MasterAccountArn)
 	d.Set("master_account_email", org.MasterAccountEmail)
 	d.Set("master_account_id", org.MasterAccountId)
+	d.Set("master_account_name", managementAccountName)
 	if err := d.Set("non_master_accounts", flattenAccounts(nonManagementAccounts)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting non_master_accounts: %s", err)
 	}

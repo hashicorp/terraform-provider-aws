@@ -225,6 +225,7 @@ variable "service_labels" {
     "mturk",
     "mwaa",
     "neptune",
+    "neptunegraph",
     "networkfirewall",
     "networkmanager",
     "nimble",

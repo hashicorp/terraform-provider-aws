@@ -13,9 +13,9 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"time"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/elbv2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -646,7 +646,7 @@ func resourceLoadBalancerDelete(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "deleting ELBv2 Load Balancer (%s): %s", d.Id(), err)
 	}
 
-	ec2conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	ec2conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	if err := cleanupALBNetworkInterfaces(ctx, ec2conn, d.Id()); err != nil {
 		log.Printf("[WARN] Failed to cleanup ENIs for ALB (%s): %s", d.Id(), err)
@@ -954,13 +954,13 @@ func waitLoadBalancerActive(ctx context.Context, conn *elbv2.ELBV2, arn string, 
 // but the cleanup is asynchronous and may take time
 // which then blocks IGW, SG or VPC on deletion
 // So we make the cleanup "synchronous" here
-func cleanupALBNetworkInterfaces(ctx context.Context, conn *ec2.EC2, arn string) error {
+func cleanupALBNetworkInterfaces(ctx context.Context, conn *ec2.Client, arn string) error {
 	name, err := loadBalancerNameFromARN(arn)
 	if err != nil {
 		return err
 	}
 
-	networkInterfaces, err := tfec2.FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription(ctx, conn, "amazon-elb", "ELB "+name)
+	networkInterfaces, err := tfec2.FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescriptionV2(ctx, conn, "amazon-elb", "ELB "+name)
 	if err != nil {
 		return err
 	}
@@ -989,7 +989,7 @@ func cleanupALBNetworkInterfaces(ctx context.Context, conn *ec2.EC2, arn string)
 	return errors.Join(errs...)
 }
 
-func waitForNLBNetworkInterfacesToDetach(ctx context.Context, conn *ec2.EC2, lbArn string) error {
+func waitForNLBNetworkInterfacesToDetach(ctx context.Context, conn *ec2.Client, lbArn string) error {
 	name, err := loadBalancerNameFromARN(lbArn)
 	if err != nil {
 		return err
@@ -999,7 +999,7 @@ func waitForNLBNetworkInterfacesToDetach(ctx context.Context, conn *ec2.EC2, lbA
 		timeout = 5 * time.Minute
 	)
 	_, err = tfresource.RetryUntilEqual(ctx, timeout, 0, func() (int, error) {
-		networkInterfaces, err := tfec2.FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription(ctx, conn, "amazon-aws", "ELB "+name)
+		networkInterfaces, err := tfec2.FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescriptionV2(ctx, conn, "amazon-aws", "ELB "+name)
 		if err != nil {
 			return 0, err
 		}

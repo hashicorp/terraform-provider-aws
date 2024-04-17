@@ -12,6 +12,8 @@ description: |-
 
 Provides a AWS Transfer User resource. Managing SSH keys can be accomplished with the [`aws_transfer_ssh_key` resource](/docs/providers/aws/r/transfer_ssh_key.html).
 
+~> **NOTE:** We suggest using [`jsonencode()`](https://developer.hashicorp.com/terraform/language/functions/jsonencode) or [`aws_iam_policy_document`](/docs/providers/aws/d/iam_policy_document.html) when assigning a value to `policy`. They seamlessly translate Terraform language into JSON, enabling you to maintain consistency within your configuration without the need for context switches. Also, you can sidestep potential complications arising from formatting discrepancies, whitespace inconsistencies, and other nuances inherent to JSON.
+
 ## Example Usage
 
 ```python
@@ -161,4 +163,4 @@ Using `terraform import`, import Transfer Users using the `server_id` and `user_
 % terraform import aws_transfer_user.bar s-12345678/test-username
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-20283ed3a3e6abff667008f255442da0f4606486f3db71039d382ec9cd99e4b2 -->
+<!-- cache-key: cdktf-0.20.1 input-9706bc4f0dfd682a255d6ed8033db1da75a44d86ff9d0c30644eba2531f8021b -->

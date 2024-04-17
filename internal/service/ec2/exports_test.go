@@ -8,15 +8,17 @@ var (
 	ResourceCustomerGateway                 = resourceCustomerGateway
 	ResourceDefaultNetworkACL               = resourceDefaultNetworkACL
 	ResourceDefaultRouteTable               = resourceDefaultRouteTable
-	ResourceEBSFastSnapshotRestore          = newResourceEBSFastSnapshotRestore
-	ResourceInstanceConnectEndpoint         = newResourceInstanceConnectEndpoint
+	ResourceEBSFastSnapshotRestore          = newEBSFastSnapshotRestoreResource
+	ResourceInstanceConnectEndpoint         = newInstanceConnectEndpointResource
 	ResourceInstanceMetadataDefaults        = newInstanceMetadataDefaultsResource
+	ResourceKeyPair                         = resourceKeyPair
 	ResourceNetworkACL                      = resourceNetworkACL
 	ResourceNetworkACLRule                  = resourceNetworkACLRule
+	ResourceNetworkInterface                = resourceNetworkInterface
 	ResourceRoute                           = resourceRoute
 	ResourceRouteTable                      = resourceRouteTable
-	ResourceSecurityGroupEgressRule         = newResourceSecurityGroupEgressRule
-	ResourceSecurityGroupIngressRule        = newResourceSecurityGroupIngressRule
+	ResourceSecurityGroupEgressRule         = newSecurityGroupEgressRuleResource
+	ResourceSecurityGroupIngressRule        = newSecurityGroupIngressRuleResource
 	ResourceTag                             = resourceTag
 	ResourceTransitGatewayPeeringAttachment = resourceTransitGatewayPeeringAttachment
 	ResourceVPNConnection                   = resourceVPNConnection
@@ -25,14 +27,22 @@ var (
 	ResourceVPNGatewayAttachment            = resourceVPNGatewayAttachment
 	ResourceVPNGatewayRoutePropagation      = resourceVPNGatewayRoutePropagation
 
-	CustomFiltersSchema            = customFiltersSchema
-	FindEBSFastSnapshotRestoreByID = findEBSFastSnapshotRestoreByID
-	FindInstanceMetadataDefaults   = findInstanceMetadataDefaults
-	FindNetworkACLByIDV2           = findNetworkACLByIDV2
-	NewAttributeFilterList         = newAttributeFilterList
-	NewCustomFilterList            = newCustomFilterList
-	NewTagFilterList               = newTagFilterList
-	StopInstance                   = stopInstance
-	UpdateTags                     = updateTags
-	UpdateTagsV2                   = updateTagsV2
+	CustomFiltersSchema                       = customFiltersSchema
+	FindFastSnapshotRestoreByTwoPartKey       = findFastSnapshotRestoreByTwoPartKey
+	FindInstanceMetadataDefaults              = findInstanceMetadataDefaults
+	FindKeyPairByName                         = findKeyPairByName
+	FindNetworkACLByIDV2                      = findNetworkACLByIDV2
+	FindNetworkInterfaceByIDV2                = findNetworkInterfaceByIDV2
+	FlattenNetworkInterfacePrivateIPAddresses = flattenNetworkInterfacePrivateIPAddresses
+	NewAttributeFilterList                    = newAttributeFilterList
+	NewCustomFilterList                       = newCustomFilterList
+	NewTagFilterList                          = newTagFilterList
+	ProtocolForValue                          = protocolForValue
+	StopInstance                              = stopInstance
+	UpdateTags                                = updateTags
+	UpdateTagsV2                              = updateTagsV2
+)
+
+type (
+	IPProtocol = ipProtocol
 )
