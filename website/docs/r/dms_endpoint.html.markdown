@@ -62,6 +62,7 @@ The following arguments are optional:
 * `pause_replication_tasks` - (Optional) Whether to pause associated running replication tasks, regardless if they are managed by Terraform, prior to modifying the endpoint. Only tasks paused by the resource will be restarted after the modification completes. Default is `false`.
 * `port` - (Optional) Port used by the endpoint database.
 * `redshift_settings` - (Optional) Configuration block for Redshift settings. See below.
+* `resource_identifier` - (Optional) A friendly name for the resource identifier at the end of the EndpointArn response parameter that is returned in the created Endpoint object.
 * `s3_settings` - (Optional) (**Deprecated**, use the [`aws_dms_s3_endpoint`](/docs/providers/aws/r/dms_s3_endpoint.html) resource instead) Configuration block for S3 settings. See below.
 * `secrets_manager_access_role_arn` - (Optional) ARN of the IAM role that specifies AWS DMS as the trusted entity and has the required permissions to access the value in the Secrets Manager secret referred to by `secrets_manager_arn`. The role must allow the `iam:PassRole` action.
 

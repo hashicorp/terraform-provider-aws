@@ -8,6 +8,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	dms "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -137,6 +138,17 @@ func ResourceReplicationInstance() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 			},
+			"resource_identifier": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				ValidateFunc: validation.All(
+					validation.StringLenBetween(1, 31),
+					validation.StringMatch(regexache.MustCompile("^[A-Za-z][0-9A-Za-z-]+$"), "must start with a letter, only contain alphanumeric characters and hyphens"),
+					validation.StringDoesNotMatch(regexache.MustCompile(`--`), "cannot contain two consecutive hyphens"),
+					validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end in a hyphen"),
+				),
+			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"vpc_security_group_ids": {
@@ -192,6 +204,9 @@ func resourceReplicationInstanceCreate(ctx context.Context, d *schema.ResourceDa
 	}
 	if v, ok := d.GetOk("vpc_security_group_ids"); ok {
 		input.VpcSecurityGroupIds = flex.ExpandStringSet(v.(*schema.Set))
+	}
+	if v, ok := d.GetOk("resource_identifier"); ok {
+		input.ResourceIdentifier = aws.String(v.(string))
 	}
 
 	_, err := conn.CreateReplicationInstanceWithContext(ctx, input)
