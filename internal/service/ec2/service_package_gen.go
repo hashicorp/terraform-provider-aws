@@ -37,6 +37,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:    "EBS Fast Snapshot Restore",
 		},
 		{
+			Factory: newEIPDomainNameResource,
+			Name:    "EIP Domain Name",
+		},
+		{
 			Factory: newInstanceConnectEndpointResource,
 			Name:    "Instance Connect Endpoint",
 			Tags: &types.ServicePackageResourceTags{

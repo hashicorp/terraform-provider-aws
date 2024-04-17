@@ -2160,6 +2160,27 @@ func WaitVPNGatewayDeleted(ctx context.Context, conn *ec2.EC2, id string) (*ec2.
 	return nil, err
 }
 
+func waitEIPDomainNameAttributeUpdated(ctx context.Context, conn *ec2_sdkv2.Client, allocationID string, timeout time.Duration) (*awstypes.AddressAttribute, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{PTRUpdateStatusPending},
+		Target:  []string{},
+		Timeout: timeout,
+		Refresh: statusEIPDomainNameAttribute(ctx, conn, allocationID),
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.AddressAttribute); ok {
+		if v := output.PtrRecordUpdate; v != nil {
+			tfresource.SetLastError(err, errors.New(aws_sdkv2.ToString(v.Reason)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
 func WaitHostCreated(ctx context.Context, conn *ec2.EC2, id string, timeout time.Duration) (*ec2.Host, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{ec2.AllocationStatePending},
@@ -3090,7 +3111,7 @@ func WaitInstanceConnectEndpointCreated(ctx context.Context, conn *ec2_sdkv2.Cli
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.Ec2InstanceConnectEndpointStateCreateInProgress),
 		Target:  enum.Slice(awstypes.Ec2InstanceConnectEndpointStateCreateComplete),
-		Refresh: StatusInstanceConnectEndpointState(ctx, conn, id),
+		Refresh: statusInstanceConnectEndpoint(ctx, conn, id),
 		Timeout: timeout,
 	}
 
@@ -3109,7 +3130,7 @@ func WaitInstanceConnectEndpointDeleted(ctx context.Context, conn *ec2_sdkv2.Cli
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.Ec2InstanceConnectEndpointStateDeleteInProgress),
 		Target:  []string{},
-		Refresh: StatusInstanceConnectEndpointState(ctx, conn, id),
+		Refresh: statusInstanceConnectEndpoint(ctx, conn, id),
 		Timeout: timeout,
 	}
 
