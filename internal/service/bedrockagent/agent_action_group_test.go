@@ -33,12 +33,12 @@ func TestAccBedrockAgentActionGroup_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBedrockAgentActionGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckAgentActionGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAgentActionGroupConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBedrockAgentActionGroupExists(ctx, resourceName, &v),
+					testAccCheckAgentActionGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "action_group_name", rName),
 				),
 			},
@@ -62,12 +62,12 @@ func TestAccBedrockAgentActionGroup_s3APISchema(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckBedrockAgentActionGroupDestroy(ctx),
+		CheckDestroy:             testAccCheckAgentActionGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAgentActionGroupConfig_s3APISchema(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckBedrockAgentActionGroupExists(ctx, resourceName, &v),
+					testAccCheckAgentActionGroupExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "action_group_name", rName),
 				),
 			},
@@ -81,7 +81,7 @@ func TestAccBedrockAgentActionGroup_s3APISchema(t *testing.T) {
 	})
 }
 
-func testAccCheckBedrockAgentActionGroupDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckAgentActionGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentClient(ctx)
 
@@ -109,7 +109,7 @@ func testAccCheckBedrockAgentActionGroupDestroy(ctx context.Context) resource.Te
 		return nil
 	}
 }
-func testAccCheckBedrockAgentActionGroupExists(ctx context.Context, n string, v *bedrockagent.GetAgentActionGroupOutput) resource.TestCheckFunc {
+func testAccCheckAgentActionGroupExists(ctx context.Context, n string, v *bedrockagent.GetAgentActionGroupOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
