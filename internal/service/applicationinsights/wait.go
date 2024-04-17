@@ -7,7 +7,8 @@ import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/service/applicationinsights"
+	"github.com/aws/aws-sdk-go-v2/service/applicationinsights"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/applicationinsights/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
 
@@ -17,7 +18,7 @@ const (
 	ApplicationDeletedTimeout = 2 * time.Minute
 )
 
-func waitApplicationCreated(ctx context.Context, conn *applicationinsights.ApplicationInsights, name string) (*applicationinsights.ApplicationInfo, error) {
+func waitApplicationCreated(ctx context.Context, conn *applicationinsights.Client, name string) (*awstypes.ApplicationInfo, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{"CREATING"},
 		Target:  []string{"NOT_CONFIGURED", "ACTIVE"},
@@ -26,14 +27,14 @@ func waitApplicationCreated(ctx context.Context, conn *applicationinsights.Appli
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if output, ok := outputRaw.(*applicationinsights.ApplicationInfo); ok {
+	if output, ok := outputRaw.(*awstypes.ApplicationInfo); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitApplicationTerminated(ctx context.Context, conn *applicationinsights.ApplicationInsights, name string) (*applicationinsights.ApplicationInfo, error) {
+func waitApplicationTerminated(ctx context.Context, conn *applicationinsights.Client, name string) (*awstypes.ApplicationInfo, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{"ACTIVE", "NOT_CONFIGURED", "DELETING"},
 		Target:  []string{},
@@ -42,7 +43,7 @@ func waitApplicationTerminated(ctx context.Context, conn *applicationinsights.Ap
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if output, ok := outputRaw.(*applicationinsights.ApplicationInfo); ok {
+	if output, ok := outputRaw.(*awstypes.ApplicationInfo); ok {
 		return output, err
 	}
 

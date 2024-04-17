@@ -6,21 +6,22 @@ package applicationinsights
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/applicationinsights"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/applicationinsights"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/applicationinsights/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindApplicationByName(ctx context.Context, conn *applicationinsights.ApplicationInsights, name string) (*applicationinsights.ApplicationInfo, error) {
+func FindApplicationByName(ctx context.Context, conn *applicationinsights.Client, name string) (*awstypes.ApplicationInfo, error) {
 	input := applicationinsights.DescribeApplicationInput{
 		ResourceGroupName: aws.String(name),
 	}
 
-	output, err := conn.DescribeApplicationWithContext(ctx, &input)
+	output, err := conn.DescribeApplication(ctx, &input)
 
-	if tfawserr.ErrCodeEquals(err, applicationinsights.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

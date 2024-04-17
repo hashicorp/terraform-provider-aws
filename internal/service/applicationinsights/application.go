@@ -7,14 +7,15 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/applicationinsights"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/applicationinsights/types"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/applicationinsights"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -53,10 +54,10 @@ func ResourceApplication() *schema.Resource {
 				Optional: true,
 			},
 			"grouping_type": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ForceNew:     true,
-				ValidateFunc: validation.StringInSlice(applicationinsights.GroupingType_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ForceNew:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.GroupingType](),
 			},
 			"ops_center_enabled": {
 				Type:     schema.TypeBool,
@@ -80,7 +81,7 @@ func ResourceApplication() *schema.Resource {
 
 func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ApplicationInsightsConn(ctx)
+	conn := meta.(*conns.AWSClient).ApplicationInsightsClient(ctx)
 
 	input := &applicationinsights.CreateApplicationInput{
 		AutoConfigEnabled: aws.Bool(d.Get("auto_config_enabled").(bool)),
@@ -92,19 +93,19 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("grouping_type"); ok {
-		input.GroupingType = aws.String(v.(string))
+		input.GroupingType = awstypes.GroupingType(v.(string))
 	}
 
 	if v, ok := d.GetOk("ops_item_sns_topic_arn"); ok {
 		input.OpsItemSNSTopicArn = aws.String(v.(string))
 	}
 
-	out, err := conn.CreateApplicationWithContext(ctx, input)
+	out, err := conn.CreateApplication(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating ApplicationInsights Application: %s", err)
 	}
 
-	d.SetId(aws.StringValue(out.ApplicationInfo.ResourceGroupName))
+	d.SetId(aws.ToString(out.ApplicationInfo.ResourceGroupName))
 
 	if _, err := waitApplicationCreated(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for ApplicationInsights Application (%s) create: %s", d.Id(), err)
@@ -115,7 +116,7 @@ func resourceApplicationCreate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ApplicationInsightsConn(ctx)
+	conn := meta.(*conns.AWSClient).ApplicationInsightsClient(ctx)
 
 	application, err := FindApplicationByName(ctx, conn, d.Id())
 
@@ -133,7 +134,7 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta i
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Partition: meta.(*conns.AWSClient).Partition,
 		Region:    meta.(*conns.AWSClient).Region,
-		Resource:  "application/resource-group/" + aws.StringValue(application.ResourceGroupName),
+		Resource:  "application/resource-group/" + aws.ToString(application.ResourceGroupName),
 		Service:   "applicationinsights",
 	}.String()
 	d.Set("arn", arn)
@@ -148,7 +149,7 @@ func resourceApplicationRead(ctx context.Context, d *schema.ResourceData, meta i
 
 func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ApplicationInsightsConn(ctx)
+	conn := meta.(*conns.AWSClient).ApplicationInsightsClient(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &applicationinsights.UpdateApplicationInput{
@@ -177,7 +178,7 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 		}
 
 		log.Printf("[DEBUG] Updating ApplicationInsights Application: %s", d.Id())
-		_, err := conn.UpdateApplicationWithContext(ctx, input)
+		_, err := conn.UpdateApplication(ctx, input)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating ApplicationInsights Application (%s): %s", d.Id(), err)
 		}
@@ -188,16 +189,16 @@ func resourceApplicationUpdate(ctx context.Context, d *schema.ResourceData, meta
 
 func resourceApplicationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ApplicationInsightsConn(ctx)
+	conn := meta.(*conns.AWSClient).ApplicationInsightsClient(ctx)
 
 	input := &applicationinsights.DeleteApplicationInput{
 		ResourceGroupName: aws.String(d.Id()),
 	}
 
 	log.Printf("[DEBUG] Deleting ApplicationInsights Application: %s", d.Id())
-	_, err := conn.DeleteApplicationWithContext(ctx, input)
+	_, err := conn.DeleteApplication(ctx, input)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, applicationinsights.ErrCodeResourceNotFoundException) {
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return diags
 		}
 		return sdkdiag.AppendErrorf(diags, "deleting ApplicationInsights Application: %s", err)

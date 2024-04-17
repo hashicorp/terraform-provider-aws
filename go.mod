@@ -23,6 +23,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/appconfig v1.29.2
 	github.com/aws/aws-sdk-go-v2/service/appfabric v1.7.4
 	github.com/aws/aws-sdk-go-v2/service/appflow v1.41.4
+	github.com/aws/aws-sdk-go-v2/service/applicationinsights v1.24.4
 	github.com/aws/aws-sdk-go-v2/service/apprunner v1.28.4
 	github.com/aws/aws-sdk-go-v2/service/athena v1.40.4
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.32.4
