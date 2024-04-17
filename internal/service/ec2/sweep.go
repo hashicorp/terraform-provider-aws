@@ -2257,7 +2257,7 @@ func sweepVPCDHCPOptions(region string) error {
 						continue
 					}
 
-					if aws.StringValue(v.Values[0].Value) == RegionalPrivateDNSSuffix(region) {
+					if aws.StringValue(v.Values[0].Value) == client.EC2RegionalPrivateDNSSuffix(ctx) {
 						defaultDomainNameFound = true
 					}
 				} else if aws.StringValue(v.Key) == "domain-name-servers" {
