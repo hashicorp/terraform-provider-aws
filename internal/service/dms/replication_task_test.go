@@ -317,6 +317,39 @@ func TestAccDMSReplicationTask_settings_LoggingValidation(t *testing.T) {
 	})
 }
 
+func TestAccDMSReplicationTask_settings_LogComponents(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_dms_replication_task.test"
+	var v dms.ReplicationTask
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.DMSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckReplicationTaskDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccReplicationTaskConfig_settings_LogComponents(rName),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckReplicationTaskExists(ctx, resourceName, &v),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.EnableLogging", "true"),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.EnableLogContext", "false"),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "Logging.LogComponents[?Id=='DATA_STRUCTURE'].Severity | [0]", "LOGGER_SEVERITY_WARNING"),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "type(Logging.CloudWatchLogGroup)", "null"),
+					acctest.CheckResourceAttrJMES(resourceName, "replication_task_settings", "type(Logging.CloudWatchLogStream)", "null"),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"start_replication"},
+			},
+		},
+	})
+}
+
 func TestAccDMSReplicationTask_settings_StreamBuffer(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
