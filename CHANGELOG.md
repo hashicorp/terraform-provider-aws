@@ -6,12 +6,20 @@ NOTES:
 
 ENHANCEMENTS:
 
+* data-source/aws_iam_policy: Add `attachment_count` attribute ([#36759](https://github.com/hashicorp/terraform-provider-aws/issues/36759))
 * data-source/aws_organizations_organization: Add `master_account_name` attribute ([#36797](https://github.com/hashicorp/terraform-provider-aws/issues/36797))
+* data/aws_vpc_dhcp_options: Add `ipv6_address_preferred_lease_time` attribute ([#36934](https://github.com/hashicorp/terraform-provider-aws/issues/36934))
 * resource/aws_cloudfront_origin_access_control: Add `lambda` and `mediapackagev2` as valid values for `origin_access_control_origin_type` ([#34362](https://github.com/hashicorp/terraform-provider-aws/issues/34362))
+* resource/aws_codebuild_project: Add GitLab and GitLab Self Managed support to the `report_build_status` and `build_status_config` arguments ([#36942](https://github.com/hashicorp/terraform-provider-aws/issues/36942))
+* resource/aws_default_vpc_dhcp_options: Add `ipv6_address_preferred_lease_time` as Computed attribute ([#36934](https://github.com/hashicorp/terraform-provider-aws/issues/36934))
 * resource/aws_dms_replication_task: Add `resource_identifier` argument ([#36901](https://github.com/hashicorp/terraform-provider-aws/issues/36901))
 * resource/aws_elasticache_serverless_cache: Add `minimum` attribute in `cache_usage_limits.data_storage` and `cache_usage_limits.ecpu_per_second` ([#36766](https://github.com/hashicorp/terraform-provider-aws/issues/36766))
+* resource/aws_iam_policy: Add `attachment_count` attribute ([#36759](https://github.com/hashicorp/terraform-provider-aws/issues/36759))
 * resource/aws_mwaa_environment: Add `database_vpc_endpoint_service` and `webserver_vpc_endpoint_service` attributes ([#36903](https://github.com/hashicorp/terraform-provider-aws/issues/36903))
 * resource/aws_organizations_organization: Add `master_account_name` attribute ([#36797](https://github.com/hashicorp/terraform-provider-aws/issues/36797))
+* resource/aws_vpc_dhcp_options: Add `ipv6_address_preferred_lease_time` attribute ([#36934](https://github.com/hashicorp/terraform-provider-aws/issues/36934))
+* resource/aws_vpc_ipam_pool: Add `cascade` argument ([#36898](https://github.com/hashicorp/terraform-provider-aws/issues/36898))
+* resource/openzfs_file_system: Add `endpoint_ip_address` attribute ([#36767](https://github.com/hashicorp/terraform-provider-aws/issues/36767))
 
 BUG FIXES:
 
@@ -20,6 +28,8 @@ BUG FIXES:
 * resource/aws_ce_anomaly_subscription: Change `account_id` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) ([#36773](https://github.com/hashicorp/terraform-provider-aws/issues/36773))
 * resource/aws_cloudformation_stack: CRLF line endings in `template_body` no longer cause erroneous diffs ([#14270](https://github.com/hashicorp/terraform-provider-aws/issues/14270))
 * resource/aws_fsx_windows_file_system: Fix error `BadRequest: AuditLogDestination must not be provided when auditing is disabled` when updating `audit_log_configuration.0.file_access_audit_log_level` and `audit_log_configuration.0.file_share_access_audit_log_level` to `"DISABLED"` ([#36928](https://github.com/hashicorp/terraform-provider-aws/issues/36928))
+* resource/aws_glue_job: Mark `number_of_workers` and `worker_type` as optional/computed, preventing persistent differences when `max_capacity` is set. ([#36770](https://github.com/hashicorp/terraform-provider-aws/issues/36770))
+* resource/aws_iam_user_login_profile: Fix forced re-creation when `password_reset_required` is `true` and initial password reset is completed ([#36926](https://github.com/hashicorp/terraform-provider-aws/issues/36926))
 * resource/aws_vpc_dhcp_options: Fix `NotFound` error handling on delete ([#36933](https://github.com/hashicorp/terraform-provider-aws/issues/36933))
 
 ## 5.45.0 (April 11, 2024)
