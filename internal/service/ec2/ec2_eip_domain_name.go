@@ -197,7 +197,7 @@ func (r *eipDomainNameResource) Delete(ctx context.Context, request resource.Del
 		Attribute:    awstypes.AddressAttributeNameDomainName,
 	})
 
-	if tfawserr.ErrCodeEquals(err, errCodeInvalidAssociationIDNotFound) {
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidAllocationIDNotFound) {
 		return
 	}
 
