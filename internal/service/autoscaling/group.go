@@ -236,6 +236,18 @@ func resourceGroup() *schema.Resource {
 										Type:     schema.TypeBool,
 										Optional: true,
 									},
+									"alarm_specification": {
+										Type:     schema.TypeList,
+										MaxItems: 1,
+										Optional: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"alarms": {
+													Type: schema.TypeList,
+												},
+											},
+										},
+									},
 									"checkpoint_delay": {
 										Type:         nullable.TypeNullableInt,
 										Optional:     true,
@@ -3306,6 +3318,10 @@ func expandRefreshPreferences(tfMap map[string]interface{}) *awstypes.RefreshPre
 		apiObject.AutoRollback = aws.Bool(v)
 	}
 
+	if v, ok := tfMap["alarm_specification"].([]interface{}); ok && len(v) > 0 {
+		apiObject.AlarmSpecification = expandRefreshAlarmSpecification(v[0].(map[string]interface{}))
+	}
+
 	if v, ok := tfMap["checkpoint_delay"].(string); ok {
 		if v, null, _ := nullable.Int(v).Value(); !null {
 			apiObject.CheckpointDelay = aws.Int32(int32(v))
@@ -3340,6 +3356,20 @@ func expandRefreshPreferences(tfMap map[string]interface{}) *awstypes.RefreshPre
 
 	if v, ok := tfMap["standby_instances"].(string); ok {
 		apiObject.StandbyInstances = awstypes.StandbyInstances(v)
+	}
+
+	return apiObject
+}
+
+func expandRefreshAlarmSpecification(tfMap map[string]interface{}) *awstypes.AlarmSpecification {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &awstypes.AlarmSpecification{}
+
+	if v, ok := tfMap["alarms"].([]interface{}); ok {
+		apiObject.Alarms = flex.ExpandStringValueList(v)
 	}
 
 	return apiObject
