@@ -58,10 +58,10 @@ func testAccCheckGroupsAttributes(dsName, rsName string) resource.TestCheckFunc 
 			return create.Error(names.IdentityStore, create.ErrActionCheckingExistence, tfidentitystore.DSNameGroups, dsName, errors.New("not found"))
 		}
 
-		for i, _ := strconv.Atoi(ds.Primary.Attributes["groups.#"]); i >= 0; i-- {
-			if ds.Primary.Attributes[fmt.Sprintf("groups.%d.group_id", i)] == rs.Primary.Attributes["group_id"] &&
-				ds.Primary.Attributes[fmt.Sprintf("groups.%d.display_name", i)] == rs.Primary.Attributes["display_name"] &&
-				ds.Primary.Attributes[fmt.Sprintf("groups.%d.description", i)] == rs.Primary.Attributes["description"] {
+		for i, _ := strconv.Atoi(ds.Primary.Attributes["groups.#"]); i > 0; i-- {
+			if ds.Primary.Attributes[fmt.Sprintf("groups.%d.group_id", i-1)] == rs.Primary.Attributes["group_id"] &&
+				ds.Primary.Attributes[fmt.Sprintf("groups.%d.display_name", i-1)] == rs.Primary.Attributes["display_name"] &&
+				ds.Primary.Attributes[fmt.Sprintf("groups.%d.description", i-1)] == rs.Primary.Attributes["description"] {
 				return nil
 			}
 		}
