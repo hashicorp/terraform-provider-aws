@@ -6,7 +6,7 @@ require (
 	github.com/ProtonMail/go-crypto v1.1.0-alpha.2
 	github.com/YakDriver/go-version v0.1.0
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.51.22
+	github.com/aws/aws-sdk-go v1.51.23
 	github.com/aws/aws-sdk-go-v2 v1.26.1
 	github.com/aws/aws-sdk-go-v2/config v1.27.11
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.11
@@ -60,7 +60,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.34.1
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.46.5
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.15.4
-	github.com/aws/aws-sdk-go-v2/service/controltower v1.13.4
+	github.com/aws/aws-sdk-go-v2/service/controltower v1.13.5
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.23.4
 	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.37.1
 	github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.4.4
@@ -72,7 +72,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.24.4
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.9.3
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.31.1
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.156.0
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.157.0
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.27.4
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.23.4
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.41.7
@@ -96,7 +96,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/inspector2 v1.24.4
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.13.0
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.12.5
-	github.com/aws/aws-sdk-go-v2/service/kafka v1.31.2
+	github.com/aws/aws-sdk-go-v2/service/kafka v1.31.3
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.50.1
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.10.4
 	github.com/aws/aws-sdk-go-v2/service/kinesis v1.27.4
@@ -124,7 +124,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.11.4
 	github.com/aws/aws-sdk-go-v2/service/polly v1.39.6
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.28.1
-	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.4.4
+	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.5.0
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.21.4
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.16.4
 	github.com/aws/aws-sdk-go-v2/service/rds v1.77.1
