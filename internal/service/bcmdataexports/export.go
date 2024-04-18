@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/mapplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -58,7 +59,7 @@ func (r *resourceExport) Metadata(_ context.Context, req resource.MetadataReques
 
 func (r *resourceExport) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
 	dataQueryLNB := schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[DataQueryData](ctx),
+		CustomType: fwtypes.NewListNestedObjectTypeOf[dataQueryData](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"query_statement": schema.StringAttribute{
@@ -68,6 +69,10 @@ func (r *resourceExport) Schema(ctx context.Context, req resource.SchemaRequest,
 					// map[string]map[string]string
 					CustomType: fwtypes.NewMapTypeOf[fwtypes.MapValueOf[types.String]](ctx),
 					Optional:   true,
+					PlanModifiers: []planmodifier.Map{
+						mapplanmodifier.RequiresReplace(),
+						mapplanmodifier.UseStateForUnknown(),
+					},
 				},
 			},
 		},
@@ -118,7 +123,7 @@ func (r *resourceExport) Schema(ctx context.Context, req resource.SchemaRequest,
 	}
 
 	destinationConfigurationsLNB := schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[DestinationConfigurationsData](ctx),
+		CustomType: fwtypes.NewListNestedObjectTypeOf[destinationConfigurationsData](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Blocks: map[string]schema.Block{
 				"s3_destination": s3DestinationLNB,
@@ -127,7 +132,7 @@ func (r *resourceExport) Schema(ctx context.Context, req resource.SchemaRequest,
 	}
 
 	refreshCadenceLNB := schema.ListNestedBlock{
-		CustomType: fwtypes.NewListNestedObjectTypeOf[RefreshCadenceData](ctx),
+		CustomType: fwtypes.NewListNestedObjectTypeOf[refreshCadenceData](ctx),
 		NestedObject: schema.NestedBlockObject{
 			Attributes: map[string]schema.Attribute{
 				"frequency": schema.StringAttribute{
@@ -146,7 +151,7 @@ func (r *resourceExport) Schema(ctx context.Context, req resource.SchemaRequest,
 		},
 		Blocks: map[string]schema.Block{
 			"export": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[ExportData](ctx),
+				CustomType: fwtypes.NewListNestedObjectTypeOf[exportData](ctx),
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
@@ -275,8 +280,10 @@ func (r *resourceExport) Update(ctx context.Context, req resource.UpdateRequest,
 	}
 
 	if !plan.Export.Equal(state.Export) {
-		in := &bcmdataexports.UpdateExportInput{}
-		resp.Diagnostics.Append(flex.Expand(context.WithValue(ctx, flex.ResourcePrefix, ResNameExport), plan, in)...)
+		in := &bcmdataexports.UpdateExportInput{
+			ExportArn: aws.String(plan.ID.ValueString()),
+		}
+		resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
@@ -348,15 +355,19 @@ func (r *resourceExport) ImportState(ctx context.Context, req resource.ImportSta
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
+func (r *resourceExport) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+	r.SetTagsAll(ctx, req, resp)
+}
+
 const (
-	statusHealthy = "Healthy"
-	statusError   = "Unhealthy"
+	statusHealthy   = awstypes.ExportStatusCodeHealthy
+	statusUnhealthy = awstypes.ExportStatusCodeUnhealthy
 )
 
 func waitExportCreated(ctx context.Context, conn *bcmdataexports.Client, id string, timeout time.Duration) (*bcmdataexports.GetExportOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
-		Target:                    []string{statusHealthy},
+		Target:                    []string{string(statusHealthy)},
 		Refresh:                   statusExport(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -373,8 +384,8 @@ func waitExportCreated(ctx context.Context, conn *bcmdataexports.Client, id stri
 
 func waitExportUpdated(ctx context.Context, conn *bcmdataexports.Client, id string, timeout time.Duration) (*bcmdataexports.GetExportOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{statusError},
-		Target:                    []string{statusHealthy},
+		Pending:                   []string{string(statusUnhealthy)},
+		Target:                    []string{string(statusHealthy)},
 		Refresh:                   statusExport(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -400,7 +411,7 @@ func statusExport(ctx context.Context, conn *bcmdataexports.Client, id string) r
 			return nil, "", err
 		}
 
-		return out, statusHealthy, nil
+		return out, string(statusHealthy), nil
 	}
 }
 
@@ -429,23 +440,23 @@ func findExportByID(ctx context.Context, conn *bcmdataexports.Client, exportArn 
 }
 
 type resourceExportData struct {
-	Export   fwtypes.ListNestedObjectValueOf[ExportData] `tfsdk:"export"`
+	Export   fwtypes.ListNestedObjectValueOf[exportData] `tfsdk:"export"`
 	ID       types.String                                `tfsdk:"id"`
 	Tags     types.Map                                   `tfsdk:"tags"`
 	TagsAll  types.Map                                   `tfsdk:"tags_all"`
 	Timeouts timeouts.Value                              `tfsdk:"timeouts"`
 }
 
-type ExportData struct {
+type exportData struct {
 	Description               types.String                                                   `tfsdk:"description"`
 	Name                      types.String                                                   `tfsdk:"name"`
 	ExportArn                 types.String                                                   `tfsdk:"export_arn"`
-	DataQuery                 fwtypes.ListNestedObjectValueOf[DataQueryData]                 `tfsdk:"data_query"`
-	DestinationConfigurations fwtypes.ListNestedObjectValueOf[DestinationConfigurationsData] `tfsdk:"destination_configurations"`
-	RefreshCadence            fwtypes.ListNestedObjectValueOf[RefreshCadenceData]            `tfsdk:"refresh_cadence"`
+	DataQuery                 fwtypes.ListNestedObjectValueOf[dataQueryData]                 `tfsdk:"data_query"`
+	DestinationConfigurations fwtypes.ListNestedObjectValueOf[destinationConfigurationsData] `tfsdk:"destination_configurations"`
+	RefreshCadence            fwtypes.ListNestedObjectValueOf[refreshCadenceData]            `tfsdk:"refresh_cadence"`
 }
 
-type DataQueryData struct {
+type dataQueryData struct {
 	QueryStatement      types.String                                         `tfsdk:"query_statement"`
 	TableConfigurations fwtypes.MapValueOf[fwtypes.MapValueOf[types.String]] `tfsdk:"table_configurations"`
 }
@@ -464,10 +475,10 @@ type s3Destination struct {
 	S3OutputConfigurations fwtypes.ListNestedObjectValueOf[s3OutputConfigurations] `tfsdk:"s3_output_configurations"`
 }
 
-type DestinationConfigurationsData struct {
+type destinationConfigurationsData struct {
 	S3Destination fwtypes.ListNestedObjectValueOf[s3Destination] `tfsdk:"s3_destination"`
 }
 
-type RefreshCadenceData struct {
+type refreshCadenceData struct {
 	Frequency fwtypes.StringEnum[awstypes.FrequencyOption] `tfsdk:"frequency"`
 }

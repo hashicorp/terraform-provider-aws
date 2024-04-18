@@ -4,12 +4,10 @@
 package bcmdataexports
 
 import (
-	"errors"
 	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/auditmanager/types"
 	"github.com/aws/aws-sdk-go-v2/service/bcmdataexports"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
@@ -22,16 +20,6 @@ func RegisterSweepers() {
 		Name: "aws_bcmdataexports_export",
 		F:    sweepExports,
 	})
-}
-
-// isCompleteSetupError checks whether the returned error message indicates
-// AuditManager isn't yet enabled in the current region.
-//
-// For example:
-// AccessDeniedException: Please complete AWS Audit Manager setup from home page to enable this action in this account.
-func isCompleteSetupError(err error) bool {
-	var ade *types.AccessDeniedException
-	return errors.As(err, &ade)
 }
 
 func sweepExports(region string) error {
@@ -49,7 +37,7 @@ func sweepExports(region string) error {
 
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-		if awsv2.SkipSweepError(err) || isCompleteSetupError(err) {
+		if awsv2.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping BCM Data Exports export sweep for %s: %s", region, err)
 			return nil
 		}
