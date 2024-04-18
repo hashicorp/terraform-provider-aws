@@ -249,25 +249,74 @@ func findAgentByID(ctx context.Context, conn *bedrockagent.Client, id string) (*
 	return output, nil
 }
 
+func testAccAgent_base(rName, model string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_role" "test" {
+  assume_role_policy = data.aws_iam_policy_document.test_agent_trust.json
+  name_prefix        = "AmazonBedrockExecutionRoleForAgents_tf"
+}
+
+data "aws_iam_policy_document" "test_agent_trust" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      identifiers = ["bedrock.amazonaws.com"]
+      type        = "Service"
+    }
+    condition {
+      test     = "StringEquals"
+      values   = [data.aws_caller_identity.current.account_id]
+      variable = "aws:SourceAccount"
+    }
+
+    condition {
+      test     = "ArnLike"
+      values   = ["arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:agent/*"]
+      variable = "AWS:SourceArn"
+    }
+  }
+}
+
+data "aws_iam_policy_document" "test_agent_permissions" {
+  statement {
+    actions = ["bedrock:InvokeModel"]
+    resources = [
+      "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s",
+    ]
+  }
+}
+
+resource "aws_iam_role_policy" "test" {
+  policy = data.aws_iam_policy_document.test_agent_permissions.json
+  role   = aws_iam_role.test.id
+}
+
+data "aws_caller_identity" "current" {}
+
+data "aws_region" "current" {}
+
+data "aws_partition" "current" {}
+`, rName, model)
+}
+
 func testAccAgentConfig_basic(rName, model, description string) string {
-	return acctest.ConfigCompose(testAccBedrockRole(rName, model), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAgent_base(rName, model), fmt.Sprintf(`
 resource "aws_bedrockagent_agent" "test" {
-  agent_name              = %[1]q
-  agent_resource_role_arn = aws_iam_role.test.arn
-  description             = %[3]q
-  idle_ttl                = 500
-  instruction             = file("${path.module}/test-fixtures/instruction.txt")
-  foundation_model        = %[2]q
+  agent_name                  = %[1]q
+  agent_resource_role_arn     = aws_iam_role.test.arn
+  description                 = %[3]q
+  idle_session_ttl_in_seconds = 500
+  instruction                 = file("${path.module}/test-fixtures/instruction.txt")
+  foundation_model            = %[2]q
 }
 `, rName, model, description))
 }
 
 func testAccAgentConfig_tags1(rName, model, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccBedrockRole(rName, model), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAgent_base(rName, model), fmt.Sprintf(`
 resource "aws_bedrockagent_agent" "test" {
   agent_name              = %[1]q
   agent_resource_role_arn = aws_iam_role.test.arn
-  idle_ttl                = 500
   instruction             = file("${path.module}/test-fixtures/instruction.txt")
   foundation_model        = %[2]q
 
@@ -279,11 +328,10 @@ resource "aws_bedrockagent_agent" "test" {
 }
 
 func testAccAgentConfig_tags2(rName, model, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccBedrockRole(rName, model), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAgent_base(rName, model), fmt.Sprintf(`
 resource "aws_bedrockagent_agent" "test" {
   agent_name              = %[1]q
   agent_resource_role_arn = aws_iam_role.test.arn
-  idle_ttl                = 500
   instruction             = file("${path.module}/test-fixtures/instruction.txt")
   foundation_model        = %[2]q
 
@@ -296,14 +344,15 @@ resource "aws_bedrockagent_agent" "test" {
 }
 
 func testAccAgentConfig_full(rName, model, desc string) string {
-	return acctest.ConfigCompose(testAccBedrockRole(rName, model), fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccAgent_base(rName, model), fmt.Sprintf(`
 resource "aws_bedrockagent_agent" "test" {
-  agent_name              = %[1]q
-  agent_resource_role_arn = aws_iam_role.test.arn
-  description             = %[3]q
-  idle_ttl                = 500
-  instruction             = file("${path.module}/test-fixtures/instruction.txt")
-  foundation_model        = %[2]q
+  agent_name                  = %[1]q
+  agent_resource_role_arn     = aws_iam_role.test.arn
+  description                 = %[3]q
+  idle_session_ttl_in_seconds = 500
+  instruction                 = file("${path.module}/test-fixtures/instruction.txt")
+  foundation_model            = %[2]q
+
   prompt_override_configuration {
     override_lambda = null
     prompt_configurations = [
@@ -380,54 +429,4 @@ resource "aws_bedrockagent_agent" "test" {
 
 }
 `, rName, model, desc))
-}
-
-func testAccBedrockRole(rName, model string) string {
-	return fmt.Sprintf(`
-resource "aws_iam_role" "test" {
-  assume_role_policy = data.aws_iam_policy_document.test_agent_trust.json
-  name_prefix        = "AmazonBedrockExecutionRoleForAgents_tf"
-}
-
-data "aws_iam_policy_document" "test_agent_trust" {
-  statement {
-    actions = ["sts:AssumeRole"]
-    principals {
-      identifiers = ["bedrock.amazonaws.com"]
-      type        = "Service"
-    }
-    condition {
-      test     = "StringEquals"
-      values   = [data.aws_caller_identity.current.account_id]
-      variable = "aws:SourceAccount"
-    }
-
-    condition {
-      test     = "ArnLike"
-      values   = ["arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:agent/*"]
-      variable = "AWS:SourceArn"
-    }
-  }
-}
-
-data "aws_iam_policy_document" "test_agent_permissions" {
-  statement {
-    actions = ["bedrock:InvokeModel"]
-    resources = [
-      "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s",
-    ]
-  }
-}
-
-resource "aws_iam_role_policy" "test" {
-  policy = data.aws_iam_policy_document.test_agent_permissions.json
-  role   = aws_iam_role.test.id
-}
-
-data "aws_caller_identity" "current" {}
-
-data "aws_region" "current" {}
-
-data "aws_partition" "current" {}
-`, rName, model)
 }
