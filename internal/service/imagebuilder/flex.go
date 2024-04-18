@@ -54,10 +54,6 @@ func flattenWorkflowConfiguration(apiObject *imagebuilder.WorkflowConfiguration)
 
 	tfMap := map[string]interface{}{}
 
-	if v := apiObject.WorkflowArn; v != nil {
-		tfMap["workflow_arn"] = aws.StringValue(v)
-	}
-
 	if v := apiObject.OnFailure; v != nil {
 		tfMap["on_failure"] = aws.String(*v)
 	}
@@ -69,6 +65,11 @@ func flattenWorkflowConfiguration(apiObject *imagebuilder.WorkflowConfiguration)
 	if v := apiObject.Parameters; v != nil {
 		tfMap["parameter"] = flattenWorkflowParameters(v)
 	}
+
+	if v := apiObject.WorkflowArn; v != nil {
+		tfMap["workflow_arn"] = aws.StringValue(v)
+	}
+
 	return tfMap
 }
 
@@ -83,8 +84,10 @@ func flattenWorkflowConfigurations(apiObjects []*imagebuilder.WorkflowConfigurat
 		if apiObjects == nil {
 			continue
 		}
+
 		tfList = append(tfList, flattenWorkflowConfiguration(apiObject))
 	}
+
 	return tfList
 }
 
@@ -141,10 +144,6 @@ func expandWorkflowConfiguration(tfMap map[string]interface{}) *imagebuilder.Wor
 
 	apiObject := &imagebuilder.WorkflowConfiguration{}
 
-	if v, ok := tfMap["workflow_arn"].(string); ok && v != "" {
-		apiObject.WorkflowArn = aws.String(v)
-	}
-
 	if v, ok := tfMap["on_failure"].(string); ok && v != "" {
 		apiObject.OnFailure = aws.String(v)
 	}
@@ -155,6 +154,10 @@ func expandWorkflowConfiguration(tfMap map[string]interface{}) *imagebuilder.Wor
 
 	if v, ok := tfMap["parameter"].(*schema.Set); ok && v.Len() > 0 {
 		apiObject.Parameters = expandWorkflowParameters(v.List())
+	}
+
+	if v, ok := tfMap["workflow_arn"].(string); ok && v != "" {
+		apiObject.WorkflowArn = aws.String(v)
 	}
 
 	return apiObject

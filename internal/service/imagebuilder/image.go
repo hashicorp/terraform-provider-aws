@@ -49,7 +49,7 @@ func ResourceImage() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^arn:aws[^:]*:imagebuilder:[^:]+:(?:\d{12}|aws):container-recipe/[0-9a-z_-]+/\d+\.\d+\.\d+$`), "valid container recipe ARN must be provided"),
+				ValidateFunc: verify.ValidARN,
 				ExactlyOneOf: []string{"container_recipe_arn", "image_recipe_arn"},
 			},
 			"date_created": {
@@ -60,7 +60,7 @@ func ResourceImage() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^arn:aws[^:]*:imagebuilder:[^:]+:(?:\d{12}|aws):distribution-configuration/[0-9a-z_-]+$`), "valid distribution configuration ARN must be provided"),
+				ValidateFunc: verify.ValidARN,
 			},
 			"enhanced_image_metadata_enabled": {
 				Type:     schema.TypeBool,
@@ -71,13 +71,13 @@ func ResourceImage() *schema.Resource {
 			"execution_role": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^(?:arn:aws(?:-[a-z]+)*:iam::[0-9]{12}:role/)?[a-zA-Z_0-9+=,.@\-_/]+$`), "valid IAM role ARN must be provided"),
+				ValidateFunc: verify.ValidARN,
 			},
 			"image_recipe_arn": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^arn:aws[^:]*:imagebuilder:[^:]+:(?:\d{12}|aws):image-recipe/[0-9a-z_-]+/\d+\.\d+\.\d+$`), "valid image recipe ARN must be provided"),
+				ValidateFunc: verify.ValidARN,
 				ExactlyOneOf: []string{"container_recipe_arn", "image_recipe_arn"},
 			},
 			"image_scanning_configuration": {
@@ -144,7 +144,7 @@ func ResourceImage() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^arn:aws[^:]*:imagebuilder:[^:]+:(?:\d{12}|aws):infrastructure-configuration/[0-9a-z_-]+$`), "valid infrastructure configuration ARN must be provided"),
+				ValidateFunc: verify.ValidARN,
 			},
 			"name": {
 				Type:     schema.TypeString,
@@ -224,12 +224,6 @@ func ResourceImage() *schema.Resource {
 				ForceNew: true,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"workflow_arn": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringMatch(regexache.MustCompile(`^arn:aws(?:-[a-z]+)*:imagebuilder:[a-z]{2,}(?:-[a-z]+)+-[0-9]+:(?:[0-9]{12}|aws):workflow/(build|test|distribution)/[a-z0-9-_]+/(?:(?:([0-9]+|x)\.([0-9]+|x)\.([0-9]+|x))|(?:[0-9]+\.[0-9]+\.[0-9]+/[0-9]+))$`), "valid workflow ARN must be provided"),
-						},
 						"on_failure": {
 							Type:         schema.TypeString,
 							Optional:     true,
@@ -261,6 +255,12 @@ func ResourceImage() *schema.Resource {
 									},
 								},
 							},
+						},
+						"workflow_arn": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ForceNew:     true,
+							ValidateFunc: verify.ValidARN,
 						},
 					},
 				},
