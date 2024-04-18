@@ -557,7 +557,7 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 
 	d.SetId(aws.StringValue(output.ReplicationGroup.ReplicationGroupId))
 
-	if _, err := WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate), replicationGroupAvailableCreateDelay); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Replication Group (%s) create: %s", d.Id(), err)
 	}
 
@@ -678,11 +678,9 @@ func resourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, m
 	// Tags cannot be read when the replication group is not Available
 	log.Printf("[DEBUG] Waiting for ElastiCache Replication Group (%s) to become available", d.Id())
 
-	if aws.StringValue(rgp.Status) != "available" {
-		_, err = WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Replication Group to be available (%s): %s", aws.StringValue(rgp.ARN), err)
-		}
+	_, err = WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate), replicationGroupAvailableReadDelay)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Replication Group to be available (%s): %s", aws.StringValue(rgp.ARN), err)
 	}
 
 	log.Printf("[DEBUG] ElastiCache Replication Group (%s): Checking underlying cache clusters", d.Id())
@@ -889,7 +887,7 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 
 		if requestUpdate {
 			// tagging may cause this resource to not yet be available, so wait for it to be available
-			_, err := WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+			_, err := WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate), replicationGroupAvailableReadDelay)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Replication Group (%s) to update: %s", d.Id(), err)
 			}
@@ -899,7 +897,7 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 				return sdkdiag.AppendErrorf(diags, "updating ElastiCache Replication Group (%s): %s", d.Id(), err)
 			}
 
-			_, err = WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+			_, err = WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate), replicationGroupAvailableModifyDelay)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Replication Group (%s) to update: %s", d.Id(), err)
 			}
@@ -914,7 +912,7 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 			}
 
 			// tagging may cause this resource to not yet be available, so wait for it to be available
-			_, err := WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+			_, err := WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate), replicationGroupAvailableReadDelay)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Replication Group (%s) to update: %s", d.Id(), err)
 			}
@@ -924,7 +922,7 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 				return sdkdiag.AppendErrorf(diags, "changing auth_token for ElastiCache Replication Group (%s): %s", d.Id(), err)
 			}
 
-			_, err = WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+			_, err = WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate), replicationGroupAvailableModifyDelay)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Replication Group (%s) auth_token change: %s", d.Id(), err)
 			}
@@ -1097,7 +1095,7 @@ func modifyReplicationGroupShardConfigurationNumNodeGroups(ctx context.Context, 
 		return fmt.Errorf("modifying ElastiCache Replication Group shard configuration: %w", err)
 	}
 
-	_, err = WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+	_, err = WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate), replicationGroupAvailableModifyDelay)
 	if err != nil {
 		return fmt.Errorf("waiting for ElastiCache Replication Group (%s) shard reconfiguration completion: %w", d.Id(), err)
 	}
@@ -1120,7 +1118,7 @@ func modifyReplicationGroupShardConfigurationReplicasPerNodeGroup(ctx context.Co
 		if err != nil {
 			return fmt.Errorf("adding ElastiCache Replication Group (%s) replicas: %w", d.Id(), err)
 		}
-		_, err = WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+		_, err = WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate), replicationGroupAvailableModifyDelay)
 		if err != nil {
 			return fmt.Errorf("waiting for ElastiCache Replication Group (%s) replica addition: %w", d.Id(), err)
 		}
@@ -1134,7 +1132,7 @@ func modifyReplicationGroupShardConfigurationReplicasPerNodeGroup(ctx context.Co
 		if err != nil {
 			return fmt.Errorf("removing ElastiCache Replication Group (%s) replicas: %w", d.Id(), err)
 		}
-		_, err = WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+		_, err = WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate), replicationGroupAvailableModifyDelay)
 		if err != nil {
 			return fmt.Errorf("waiting for ElastiCache Replication Group (%s) replica removal: %w", d.Id(), err)
 		}
