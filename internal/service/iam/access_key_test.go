@@ -164,7 +164,7 @@ func testAccCheckAccessKeyDestroy(ctx context.Context) resource.TestCheckFunc {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_access_key" {
+			if rs.Type != "aws_iam_access_key" {
 				continue
 			}
 

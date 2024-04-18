@@ -653,6 +653,20 @@ func TestAccGlueJob_workerType(t *testing.T) {
 				),
 			},
 			{
+				Config: testAccJobConfig_workerType(rName, "G.4X"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckJobExists(ctx, resourceName, &job),
+					resource.TestCheckResourceAttr(resourceName, "worker_type", "G.4X"),
+				),
+			},
+			{
+				Config: testAccJobConfig_workerType(rName, "G.8X"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckJobExists(ctx, resourceName, &job),
+					resource.TestCheckResourceAttr(resourceName, "worker_type", "G.8X"),
+				),
+			},
+			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,

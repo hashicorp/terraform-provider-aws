@@ -48,6 +48,10 @@ func DataSourceVPCDHCPOptions() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"filter": customFiltersSchema(),
+			"ipv6_address_preferred_lease_time": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"netbios_name_servers": {
 				Type:     schema.TypeList,
 				Computed: true,

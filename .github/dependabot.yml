@@ -70,6 +70,13 @@ updates:
     schedule:
       interval: "daily"
 
+  - directory: "/tools/awssdkpatch"
+    package-ecosystem: "gomod"
+    allow:
+      - dependency-type: direct
+    schedule:
+      interval: "daily"
+
   - directory: "/tools/tfsdk2fw"
     package-ecosystem: "gomod"
     allow:
