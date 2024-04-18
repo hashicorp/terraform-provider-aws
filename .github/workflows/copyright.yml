@@ -15,7 +15,7 @@ on:
       - .goreleaser.yml
 
 jobs:
-  go_generate:
+  copywrite:
     name: add headers check
     runs-on: ubuntu-latest
     steps:
