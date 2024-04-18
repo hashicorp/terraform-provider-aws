@@ -37,6 +37,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 			Name:    "EBS Fast Snapshot Restore",
 		},
 		{
+			Factory: newEIPDomainNameResource,
+			Name:    "EIP Domain Name",
+		},
+		{
 			Factory: newInstanceConnectEndpointResource,
 			Name:    "Instance Connect Endpoint",
 			Tags: &types.ServicePackageResourceTags{
@@ -270,12 +274,15 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_ec2_transit_gateway_vpn_attachment",
 		},
 		{
-			Factory:  DataSourceEIP,
+			Factory:  dataSourceEIP,
 			TypeName: "aws_eip",
+			Name:     "EIP",
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
-			Factory:  DataSourceEIPs,
+			Factory:  dataSourceEIPs,
 			TypeName: "aws_eips",
+			Name:     "EIPs",
 		},
 		{
 			Factory:  DataSourceInstance,
@@ -293,9 +300,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  dataSourceKeyPair,
 			TypeName: "aws_key_pair",
 			Name:     "Key Pair",
-			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "key_pair_id",
-			},
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  DataSourceLaunchTemplate,
@@ -317,9 +322,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Factory:  dataSourceNetworkInterface,
 			TypeName: "aws_network_interface",
 			Name:     "Network Interface",
-			Tags: &types.ServicePackageResourceTags{
-				IdentifierAttribute: "id",
-			},
+			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
 			Factory:  DataSourceNetworkInterfaces,
@@ -808,7 +811,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceEIP,
+			Factory:  resourceEIP,
 			TypeName: "aws_eip",
 			Name:     "EIP",
 			Tags: &types.ServicePackageResourceTags{
@@ -816,8 +819,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceEIPAssociation,
+			Factory:  resourceEIPAssociation,
 			TypeName: "aws_eip_association",
+			Name:     "EIP Association",
 		},
 		{
 			Factory:  ResourceFlowLog,

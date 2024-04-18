@@ -96,6 +96,11 @@ const (
 	CustomerGatewayStatePending   = "pending"
 )
 
+// See https://docs.aws.amazon.com/cli/latest/reference/ec2/modify-address-attribute.html#examples.
+const (
+	PTRUpdateStatusPending = "PENDING"
+)
+
 const (
 	managedPrefixListAddressFamilyIPv4 = "IPv4"
 	managedPrefixListAddressFamilyIPv6 = "IPv6"

@@ -9,6 +9,7 @@ import (
 	"maps"
 	"net/http"
 	"os"
+	"strings"
 	"sync"
 
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
@@ -248,6 +249,40 @@ func (c *AWSClient) DNSSuffix(context.Context) string {
 // ReverseDNSPrefix returns the reverse DNS prefix for the configured AWS partition.
 func (c *AWSClient) ReverseDNSPrefix(ctx context.Context) string {
 	return names.ReverseDNS(c.DNSSuffix(ctx))
+}
+
+// EC2RegionalPrivateDNSSuffix returns the EC2 private DNS suffix for the configured AWS Region.
+func (c *AWSClient) EC2RegionalPrivateDNSSuffix(context.Context) string {
+	region := c.Region
+	if region == names.USEast1RegionID {
+		return "ec2.internal"
+	}
+
+	return fmt.Sprintf("%s.compute.internal", region)
+}
+
+// EC2RegionalPublicDNSSuffix returns the EC2 public DNS suffix for the configured AWS Region.
+func (c *AWSClient) EC2RegionalPublicDNSSuffix(context.Context) string {
+	region := c.Region
+	if region == names.USEast1RegionID {
+		return "compute-1"
+	}
+
+	return fmt.Sprintf("%s.compute", region)
+}
+
+// EC2PrivateDNSNameForIP returns a EC2 private DNS name in the configured AWS Region.
+func (c *AWSClient) EC2PrivateDNSNameForIP(ctx context.Context, ip string) string {
+	return fmt.Sprintf("ip-%s.%s", convertIPToDashIP(ip), c.EC2RegionalPrivateDNSSuffix(ctx))
+}
+
+// EC2PublicDNSNameForIP returns a EC2 public DNS name in the configured AWS Region.
+func (c *AWSClient) EC2PublicDNSNameForIP(ctx context.Context, ip string) string {
+	return c.PartitionHostname(ctx, fmt.Sprintf("ec2-%s.%s", convertIPToDashIP(ip), c.EC2RegionalPublicDNSSuffix(ctx)))
+}
+
+func convertIPToDashIP(ip string) string {
+	return strings.Replace(ip, ".", "-", -1)
 }
 
 // apiClientConfig returns the AWS API client configuration parameters for the specified service.
