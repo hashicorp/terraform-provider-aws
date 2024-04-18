@@ -47,8 +47,8 @@ import (
     {{ if .ExistsTypePackage -}}
 	"{{ .ExistsTypePackage }}"
     {{- end }}
-    {{- if eq .Generator "" }}
-	"github.com/hashicorp/terraform-plugin-testing/config"
+ 	"github.com/hashicorp/terraform-plugin-testing/config"
+   {{- if eq .Generator "" }}
  	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
  	{{- end }}
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
