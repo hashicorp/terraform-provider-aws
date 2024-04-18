@@ -4,9 +4,14 @@ NOTES:
 
 * provider: When using YAML or JSON documents, such as in `template_body` of `aws_cloudformation_stack`, CRLF was previously treated as different from LF but these are now treated as equivalent in many situations ([#14270](https://github.com/hashicorp/terraform-provider-aws/issues/14270))
 
+FEATURES:
+
+* **New Resource:** `aws_eip_domain_name` ([#36963](https://github.com/hashicorp/terraform-provider-aws/issues/36963))
+
 ENHANCEMENTS:
 
 * data-source/aws_alb: Add `client_keep_alive` argument ([#36969](https://github.com/hashicorp/terraform-provider-aws/issues/36969))
+* data-source/aws_eip: Add `ptr_record` attribute ([#36963](https://github.com/hashicorp/terraform-provider-aws/issues/36963))
 * data-source/aws_iam_policy: Add `attachment_count` attribute ([#36759](https://github.com/hashicorp/terraform-provider-aws/issues/36759))
 * data-source/aws_lb: Add `client_keep_alive` argument ([#36969](https://github.com/hashicorp/terraform-provider-aws/issues/36969))
 * data-source/aws_organizations_organization: Add `master_account_name` attribute ([#36797](https://github.com/hashicorp/terraform-provider-aws/issues/36797))
@@ -18,15 +23,17 @@ ENHANCEMENTS:
 * resource/aws_codebuild_project: Add GitLab and GitLab Self Managed support to the `report_build_status` and `build_status_config` arguments ([#36942](https://github.com/hashicorp/terraform-provider-aws/issues/36942))
 * resource/aws_default_vpc_dhcp_options: Add `ipv6_address_preferred_lease_time` as Computed attribute ([#36934](https://github.com/hashicorp/terraform-provider-aws/issues/36934))
 * resource/aws_dms_replication_task: Add `resource_identifier` argument ([#36901](https://github.com/hashicorp/terraform-provider-aws/issues/36901))
+* resource/aws_eip: Add `ptr_record` attribute ([#36963](https://github.com/hashicorp/terraform-provider-aws/issues/36963))
 * resource/aws_elasticache_serverless_cache: Add `minimum` attribute in `cache_usage_limits.data_storage` and `cache_usage_limits.ecpu_per_second` ([#36766](https://github.com/hashicorp/terraform-provider-aws/issues/36766))
+* resource/aws_fsx_openzfs_file_system: Add `endpoint_ip_address` attribute ([#36767](https://github.com/hashicorp/terraform-provider-aws/issues/36767))
 * resource/aws_iam_policy: Add `attachment_count` attribute ([#36759](https://github.com/hashicorp/terraform-provider-aws/issues/36759))
+* resource/aws_imagebuilder_image: Add `execution_role` and `workflow` arguments ([#36953](https://github.com/hashicorp/terraform-provider-aws/issues/36953))
 * resource/aws_lb: Add `client_keep_alive` argument ([#36969](https://github.com/hashicorp/terraform-provider-aws/issues/36969))
 * resource/aws_mwaa_environment: Add `database_vpc_endpoint_service` and `webserver_vpc_endpoint_service` attributes ([#36903](https://github.com/hashicorp/terraform-provider-aws/issues/36903))
 * resource/aws_organizations_organization: Add `master_account_name` attribute ([#36797](https://github.com/hashicorp/terraform-provider-aws/issues/36797))
 * resource/aws_transfer_connector: Add `security_policy_name` argument ([#36893](https://github.com/hashicorp/terraform-provider-aws/issues/36893))
 * resource/aws_vpc_dhcp_options: Add `ipv6_address_preferred_lease_time` attribute ([#36934](https://github.com/hashicorp/terraform-provider-aws/issues/36934))
 * resource/aws_vpc_ipam_pool: Add `cascade` argument ([#36898](https://github.com/hashicorp/terraform-provider-aws/issues/36898))
-* resource/openzfs_file_system: Add `endpoint_ip_address` attribute ([#36767](https://github.com/hashicorp/terraform-provider-aws/issues/36767))
 
 BUG FIXES:
 
