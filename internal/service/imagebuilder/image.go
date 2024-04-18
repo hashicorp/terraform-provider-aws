@@ -71,6 +71,7 @@ func ResourceImage() *schema.Resource {
 			"execution_role": {
 				Type:         schema.TypeString,
 				Optional:     true,
+				Computed:     true,
 				ValidateFunc: verify.ValidARN,
 			},
 			"image_recipe_arn": {
@@ -359,59 +360,47 @@ func resourceImageRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	image := output.Image
 
 	d.Set("arn", image.Arn)
-	d.Set("date_created", image.DateCreated)
-
 	if image.ContainerRecipe != nil {
 		d.Set("container_recipe_arn", image.ContainerRecipe.Arn)
 	}
-
+	d.Set("date_created", image.DateCreated)
 	if image.DistributionConfiguration != nil {
 		d.Set("distribution_configuration_arn", image.DistributionConfiguration.Arn)
 	}
-
 	d.Set("enhanced_image_metadata_enabled", image.EnhancedImageMetadataEnabled)
-
 	d.Set("execution_role", image.ExecutionRole)
-
 	if image.ImageRecipe != nil {
 		d.Set("image_recipe_arn", image.ImageRecipe.Arn)
 	}
-
 	if image.ImageScanningConfiguration != nil {
 		d.Set("image_scanning_configuration", []interface{}{flattenImageScanningConfiguration(image.ImageScanningConfiguration)})
 	} else {
 		d.Set("image_scanning_configuration", nil)
 	}
-
 	if image.ImageTestsConfiguration != nil {
 		d.Set("image_tests_configuration", []interface{}{flattenImageTestsConfiguration(image.ImageTestsConfiguration)})
 	} else {
 		d.Set("image_tests_configuration", nil)
 	}
-
 	if image.InfrastructureConfiguration != nil {
 		d.Set("infrastructure_configuration_arn", image.InfrastructureConfiguration.Arn)
 	}
-
 	d.Set("name", image.Name)
-	d.Set("platform", image.Platform)
 	d.Set("os_version", image.OsVersion)
-
 	if image.OutputResources != nil {
 		d.Set("output_resources", []interface{}{flattenOutputResources(image.OutputResources)})
 	} else {
 		d.Set("output_resources", nil)
 	}
-
-	setTagsOut(ctx, image.Tags)
-
+	d.Set("platform", image.Platform)
 	d.Set("version", image.Version)
-
 	if image.Workflows != nil {
 		d.Set("workflow", flattenWorkflowConfigurations(image.Workflows))
 	} else {
 		d.Set("workflow", nil)
 	}
+
+	setTagsOut(ctx, image.Tags)
 
 	return diags
 }
