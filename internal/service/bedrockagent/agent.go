@@ -22,6 +22,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -120,12 +122,20 @@ func (r *agentResource) Schema(ctx context.Context, request resource.SchemaReque
 			names.AttrID: framework.IDAttribute(),
 			"idle_session_ttl_in_seconds": schema.Int64Attribute{
 				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.UseStateForUnknown(),
+				},
 				Validators: []validator.Int64{
 					int64validator.Between(60, 3600),
 				},
 			},
 			"instruction": schema.StringAttribute{
 				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(40, 1200),
 				},
@@ -162,6 +172,9 @@ func (r *agentResource) Schema(ctx context.Context, request resource.SchemaReque
 		Blocks: map[string]schema.Block{
 			"prompt_override_configuration": schema.ListNestedBlock{
 				CustomType: fwtypes.NewListNestedObjectTypeOf[promptOverrideConfigurationModel](ctx),
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
 				Validators: []validator.List{
 					listvalidator.SizeAtMost(1),
 				},
@@ -289,12 +302,10 @@ func (r *agentResource) Create(ctx context.Context, request resource.CreateReque
 	}
 
 	// Set values for unknowns.
-	data.AgentARN = fwflex.StringToFramework(ctx, output.Agent.AgentArn)
 	data.AgentID = fwflex.StringToFramework(ctx, output.Agent.AgentId)
-	data.AgentVersion = fwflex.StringToFramework(ctx, output.Agent.AgentVersion)
 	data.setID()
 
-	_, err = waitAgentCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+	agent, err := waitAgentCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent (%s) create", data.ID.ValueString()), err.Error())
@@ -303,13 +314,19 @@ func (r *agentResource) Create(ctx context.Context, request resource.CreateReque
 	}
 
 	if data.PrepareAgent.ValueBool() {
-		_, err := prepareAgent(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+		agent, err = prepareAgent(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
 
 		if err != nil {
 			response.Diagnostics.AddError("creating Agent", err.Error())
 
 			return
 		}
+	}
+
+	// Set values for unknowns.
+	response.Diagnostics.Append(fwflex.Flatten(ctx, agent, &data)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
