@@ -13,10 +13,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework-validators/float64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -119,6 +117,20 @@ func (r *agentResource) Schema(ctx context.Context, request resource.SchemaReque
 					stringvalidator.LengthBetween(40, 1200),
 				},
 			},
+			"prompt_override_configuration": schema.ListAttribute{ // proto5 Optional+Computed nested block.
+				CustomType: fwtypes.NewListNestedObjectTypeOf[promptOverrideConfigurationModel](ctx),
+				Optional:   true,
+				Computed:   true,
+				PlanModifiers: []planmodifier.List{
+					listplanmodifier.UseStateForUnknown(),
+				},
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
+				},
+				ElementType: types.ObjectType{
+					AttrTypes: fwtypes.AttributeTypesMust[promptOverrideConfigurationModel](ctx),
+				},
+			},
 			"prepare_agent": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
@@ -131,102 +143,6 @@ func (r *agentResource) Schema(ctx context.Context, request resource.SchemaReque
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"prompt_override_configuration": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[promptOverrideConfigurationModel](ctx),
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.UseStateForUnknown(),
-				},
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(1),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"override_lambda": schema.StringAttribute{
-							CustomType: fwtypes.ARNType,
-							Optional:   true,
-						},
-					},
-					Blocks: map[string]schema.Block{
-						"prompt_configurations": schema.SetNestedBlock{
-							CustomType: fwtypes.NewSetNestedObjectTypeOf[promptConfigurationModel](ctx),
-							Validators: []validator.Set{
-								setvalidator.IsRequired(),
-								setvalidator.SizeAtMost(10),
-							},
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"base_prompt_template": schema.StringAttribute{
-										Optional: true,
-										Validators: []validator.String{
-											stringvalidator.LengthBetween(1, 100000),
-										},
-									},
-									"parser_mode": schema.StringAttribute{
-										CustomType: fwtypes.StringEnumType[parserMode](),
-										Optional:   true,
-									},
-									"prompt_creation_mode": schema.StringAttribute{
-										CustomType: fwtypes.StringEnumType[promptCreationMode](),
-										Optional:   true,
-									},
-									"prompt_state": schema.StringAttribute{
-										CustomType: fwtypes.StringEnumType[awstypes.PromptState](),
-										Optional:   true,
-									},
-									"prompt_type": schema.StringAttribute{
-										CustomType: fwtypes.StringEnumType[awstypes.PromptType](),
-										Optional:   true,
-									},
-								},
-								Blocks: map[string]schema.Block{
-									"inference_configuration": schema.ListNestedBlock{
-										CustomType: fwtypes.NewListNestedObjectTypeOf[inferenceConfigurationModel](ctx),
-										Validators: []validator.List{
-											listvalidator.SizeAtMost(1),
-										},
-										NestedObject: schema.NestedBlockObject{
-											Attributes: map[string]schema.Attribute{
-												"max_length": schema.Int64Attribute{
-													Optional: true,
-													Validators: []validator.Int64{
-														int64validator.Between(0, 4096),
-													},
-												},
-												"stop_sequences": schema.ListAttribute{
-													CustomType:  fwtypes.ListOfStringType,
-													ElementType: types.StringType,
-													Optional:    true,
-													Validators: []validator.List{
-														listvalidator.SizeBetween(0, 4),
-													},
-												},
-												"temperature": schema.Float64Attribute{
-													Optional: true,
-													Validators: []validator.Float64{
-														float64validator.Between(0, 1),
-													},
-												},
-												"top_k": schema.Int64Attribute{
-													Optional: true,
-													Validators: []validator.Int64{
-														int64validator.Between(0, 500),
-													},
-												},
-												"top_p": schema.Float64Attribute{
-													Optional: true,
-													Validators: []validator.Float64{
-														float64validator.Between(0, 1),
-													},
-												},
-											},
-										},
-									},
-								},
-							},
-						},
-					},
-				},
-			},
 			"timeouts": timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
