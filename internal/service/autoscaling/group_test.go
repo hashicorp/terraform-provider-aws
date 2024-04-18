@@ -5356,7 +5356,7 @@ resource "aws_autoscaling_group" "test" {
     preferences {
       min_healthy_percentage = 0
       alarm_specification {
-		alarms = [ "my-alarm-1", "my-alarm-2" ]
+        alarms = [ "my-alarm-1", "my-alarm-2" ]
       }
     }
   }
