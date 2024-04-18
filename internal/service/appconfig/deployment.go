@@ -9,6 +9,7 @@ import (
 	"log"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -22,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -124,16 +126,18 @@ func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta 
 		input.KmsKeyIdentifier = aws.String(v.(string))
 	}
 
-	output, err := conn.StartDeployment(ctx, input)
+	const (
+		timeout = 30 * time.Minute // AWS SDK for Go v1 compatibility.
+	)
+	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.ConflictException](ctx, timeout, func() (interface{}, error) {
+		return conn.StartDeployment(ctx, input)
+	})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "starting AppConfig Deployment: %s", err)
 	}
 
-	if output == nil {
-		return sdkdiag.AppendErrorf(diags, "starting AppConfig Deployment: empty response")
-	}
-
+	output := outputRaw.(*appconfig.StartDeploymentOutput)
 	appID := aws.ToString(output.ApplicationId)
 	envID := aws.ToString(output.EnvironmentId)
 
