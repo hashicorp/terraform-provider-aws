@@ -71,7 +71,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 The `sub_domain` configuration block exports the following attributes:
 
-* `dns_record` - DNS record for the subdomain in in a space prefixed and space delimited format " CNAME <target>"
+* `dns_record` - DNS record for the subdomain in a space-prefixed and space-delimited format ` CNAME <target>`
 * `verified` - Verified status of the subdomain.
 
 ## Import
