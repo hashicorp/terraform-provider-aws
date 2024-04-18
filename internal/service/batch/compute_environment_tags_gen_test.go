@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/batch"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -21,11 +22,16 @@ func TestAccBatchComputeEnvironment_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckComputeEnvironmentDestroy(ctx),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccComputeEnvironmentConfig_tags1(rName, "key1", "value1"),
+				ConfigFile: config.StaticFile("testdata/ComputeEnvironment/tags1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable("value1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -33,12 +39,25 @@ func TestAccBatchComputeEnvironment_tags(t *testing.T) {
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/ComputeEnvironment/tags1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable("value1"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccComputeEnvironmentConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				ConfigFile: config.StaticFile("testdata/ComputeEnvironment/tags2_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable("value1updated"),
+					"tagKey2":   config.StringVariable("key2"),
+					"tagValue2": config.StringVariable("value2"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -47,12 +66,25 @@ func TestAccBatchComputeEnvironment_tags(t *testing.T) {
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/ComputeEnvironment/tags2_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable("value1updated"),
+					"tagKey2":   config.StringVariable("key2"),
+					"tagValue2": config.StringVariable("value2"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccComputeEnvironmentConfig_tags1(rName, "key2", "value2"),
+				ConfigFile: config.StaticFile("testdata/ComputeEnvironment/tags1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key2"),
+					"tagValue1": config.StringVariable("value2"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -60,18 +92,31 @@ func TestAccBatchComputeEnvironment_tags(t *testing.T) {
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/ComputeEnvironment/tags1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key2"),
+					"tagValue1": config.StringVariable("value2"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccComputeEnvironmentConfig_tags0(rName),
+				ConfigFile: config.StaticFile("testdata/ComputeEnvironment/tags0_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/ComputeEnvironment/tags0_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -89,23 +134,35 @@ func TestAccBatchComputeEnvironment_tags_null(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckComputeEnvironmentDestroy(ctx),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccComputeEnvironmentConfig_tagsNull(rName, "key1"),
+				ConfigFile: config.StaticFile("testdata/ComputeEnvironment/tagsNull_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":   config.StringVariable(rName),
+					"tagKey1": config.StringVariable("key1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/ComputeEnvironment/tagsNull_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":   config.StringVariable(rName),
+					"tagKey1": config.StringVariable("key1"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config:             testAccComputeEnvironmentConfig_tags0(rName),
+				ConfigFile: config.StaticFile("testdata/ComputeEnvironment/tags0_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+				},
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: false,
 			},
@@ -122,18 +179,26 @@ func TestAccBatchComputeEnvironment_tags_AddOnUpdate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckComputeEnvironmentDestroy(ctx),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccComputeEnvironmentConfig_tags0(rName),
+				ConfigFile: config.StaticFile("testdata/ComputeEnvironment/tags0_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
-				Config: testAccComputeEnvironmentConfig_tags1(rName, "key1", "value1"),
+				ConfigFile: config.StaticFile("testdata/ComputeEnvironment/tags1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable("value1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -141,6 +206,12 @@ func TestAccBatchComputeEnvironment_tags_AddOnUpdate(t *testing.T) {
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/ComputeEnvironment/tags1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable("value1"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -158,11 +229,16 @@ func TestAccBatchComputeEnvironment_tags_EmptyTag_OnCreate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckComputeEnvironmentDestroy(ctx),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccComputeEnvironmentConfig_tags1(rName, "key1", ""),
+				ConfigFile: config.StaticFile("testdata/ComputeEnvironment/tags1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable(""),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -170,18 +246,31 @@ func TestAccBatchComputeEnvironment_tags_EmptyTag_OnCreate(t *testing.T) {
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/ComputeEnvironment/tags1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable(""),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccComputeEnvironmentConfig_tags0(rName),
+				ConfigFile: config.StaticFile("testdata/ComputeEnvironment/tags0_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/ComputeEnvironment/tags0_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -199,11 +288,16 @@ func TestAccBatchComputeEnvironment_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckComputeEnvironmentDestroy(ctx),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccComputeEnvironmentConfig_tags1(rName, "key1", "value1"),
+				ConfigFile: config.StaticFile("testdata/ComputeEnvironment/tags1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable("value1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -211,7 +305,14 @@ func TestAccBatchComputeEnvironment_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccComputeEnvironmentConfig_tags2(rName, "key1", "value1", "key2", ""),
+				ConfigFile: config.StaticFile("testdata/ComputeEnvironment/tags2_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable("value1"),
+					"tagKey2":   config.StringVariable("key2"),
+					"tagValue2": config.StringVariable(""),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -220,12 +321,25 @@ func TestAccBatchComputeEnvironment_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/ComputeEnvironment/tags2_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable("value1"),
+					"tagKey2":   config.StringVariable("key2"),
+					"tagValue2": config.StringVariable(""),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccComputeEnvironmentConfig_tags1(rName, "key1", "value1"),
+				ConfigFile: config.StaticFile("testdata/ComputeEnvironment/tags1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable("value1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -233,6 +347,12 @@ func TestAccBatchComputeEnvironment_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/ComputeEnvironment/tags1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable("value1"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -250,11 +370,16 @@ func TestAccBatchComputeEnvironment_tags_EmptyTag_OnUpdate_Replace(t *testing.T)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckComputeEnvironmentDestroy(ctx),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccComputeEnvironmentConfig_tags1(rName, "key1", "value1"),
+				ConfigFile: config.StaticFile("testdata/ComputeEnvironment/tags1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable("value1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -262,7 +387,12 @@ func TestAccBatchComputeEnvironment_tags_EmptyTag_OnUpdate_Replace(t *testing.T)
 				),
 			},
 			{
-				Config: testAccComputeEnvironmentConfig_tags1(rName, "key1", ""),
+				ConfigFile: config.StaticFile("testdata/ComputeEnvironment/tags1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable(""),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -270,6 +400,12 @@ func TestAccBatchComputeEnvironment_tags_EmptyTag_OnUpdate_Replace(t *testing.T)
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/ComputeEnvironment/tags1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable(""),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -285,16 +421,17 @@ func TestAccBatchComputeEnvironment_tags_DefaultTags_providerOnly(t *testing.T) 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckComputeEnvironmentDestroy(ctx),
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.BatchServiceID),
+		CheckDestroy: testAccCheckComputeEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("key1", "value1"),
-					testAccComputeEnvironmentConfig_tags0(rName),
-				),
+				ConfigFile: config.StaticFile("testdata/ComputeEnvironment/tags0_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("key1"),
+					"providerTagValue1": config.StringVariable("value1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -303,15 +440,25 @@ func TestAccBatchComputeEnvironment_tags_DefaultTags_providerOnly(t *testing.T) 
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/ComputeEnvironment/tags0_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("key1"),
+					"providerTagValue1": config.StringVariable("value1"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags2("key1", "value1updated", "key2", "value2"),
-					testAccComputeEnvironmentConfig_tags0(rName),
-				),
+				ConfigFile: config.StaticFile("testdata/ComputeEnvironment/tags0_default2_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("key1"),
+					"providerTagValue1": config.StringVariable("value1updated"),
+					"providerTagKey2":   config.StringVariable("key2"),
+					"providerTagValue2": config.StringVariable("value2"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -321,15 +468,25 @@ func TestAccBatchComputeEnvironment_tags_DefaultTags_providerOnly(t *testing.T) 
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/ComputeEnvironment/tags0_default2_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("key1"),
+					"providerTagValue1": config.StringVariable("value1updated"),
+					"providerTagKey2":   config.StringVariable("key2"),
+					"providerTagValue2": config.StringVariable("value2"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("key2", "value2"),
-					testAccComputeEnvironmentConfig_tags0(rName),
-				),
+				ConfigFile: config.StaticFile("testdata/ComputeEnvironment/tags0_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("key2"),
+					"providerTagValue1": config.StringVariable("value2"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -338,15 +495,22 @@ func TestAccBatchComputeEnvironment_tags_DefaultTags_providerOnly(t *testing.T) 
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/ComputeEnvironment/tags0_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("key2"),
+					"providerTagValue1": config.StringVariable("value2"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags0(),
-					testAccComputeEnvironmentConfig_tags0(rName),
-				),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigFile:               config.StaticFile("testdata/ComputeEnvironment/tags0_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -354,6 +518,11 @@ func TestAccBatchComputeEnvironment_tags_DefaultTags_providerOnly(t *testing.T) 
 				),
 			},
 			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigFile:               config.StaticFile("testdata/ComputeEnvironment/tags0_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -369,16 +538,19 @@ func TestAccBatchComputeEnvironment_tags_DefaultTags_nonOverlapping(t *testing.T
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckComputeEnvironmentDestroy(ctx),
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.BatchServiceID),
+		CheckDestroy: testAccCheckComputeEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
-					testAccComputeEnvironmentConfig_tags1(rName, "resourcekey1", "resourcevalue1"),
-				),
+				ConfigFile: config.StaticFile("testdata/ComputeEnvironment/tags1_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("providerkey1"),
+					"providerTagValue1": config.StringVariable("providervalue1"),
+					"tagKey1":           config.StringVariable("resourcekey1"),
+					"tagValue1":         config.StringVariable("resourcevalue1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -389,15 +561,29 @@ func TestAccBatchComputeEnvironment_tags_DefaultTags_nonOverlapping(t *testing.T
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/ComputeEnvironment/tags1_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("providerkey1"),
+					"providerTagValue1": config.StringVariable("providervalue1"),
+					"tagKey1":           config.StringVariable("resourcekey1"),
+					"tagValue1":         config.StringVariable("resourcevalue1"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("providerkey1", "providervalue1updated"),
-					testAccComputeEnvironmentConfig_tags2(rName, "resourcekey1", "resourcevalue1updated", "resourcekey2", "resourcevalue2"),
-				),
+				ConfigFile: config.StaticFile("testdata/ComputeEnvironment/tags2_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("providerkey1"),
+					"providerTagValue1": config.StringVariable("providervalue1updated"),
+					"tagKey1":           config.StringVariable("resourcekey1"),
+					"tagValue1":         config.StringVariable("resourcevalue1updated"),
+					"tagKey2":           config.StringVariable("resourcekey2"),
+					"tagValue2":         config.StringVariable("resourcevalue2"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -410,15 +596,26 @@ func TestAccBatchComputeEnvironment_tags_DefaultTags_nonOverlapping(t *testing.T
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/ComputeEnvironment/tags2_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("providerkey1"),
+					"providerTagValue1": config.StringVariable("providervalue1updated"),
+					"tagKey1":           config.StringVariable("resourcekey1"),
+					"tagValue1":         config.StringVariable("resourcevalue1updated"),
+					"tagKey2":           config.StringVariable("resourcekey2"),
+					"tagValue2":         config.StringVariable("resourcevalue2"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags0(),
-					testAccComputeEnvironmentConfig_tags0(rName),
-				),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigFile:               config.StaticFile("testdata/ComputeEnvironment/tags0_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -426,6 +623,11 @@ func TestAccBatchComputeEnvironment_tags_DefaultTags_nonOverlapping(t *testing.T
 				),
 			},
 			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigFile:               config.StaticFile("testdata/ComputeEnvironment/tags0_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -441,16 +643,19 @@ func TestAccBatchComputeEnvironment_tags_DefaultTags_overlapping(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckComputeEnvironmentDestroy(ctx),
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.BatchServiceID),
+		CheckDestroy: testAccCheckComputeEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("overlapkey1", "providervalue1"),
-					testAccComputeEnvironmentConfig_tags1(rName, "overlapkey1", "resourcevalue1"),
-				),
+				ConfigFile: config.StaticFile("testdata/ComputeEnvironment/tags1_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("overlapkey1"),
+					"providerTagValue1": config.StringVariable("providervalue1"),
+					"tagKey1":           config.StringVariable("overlapkey1"),
+					"tagValue1":         config.StringVariable("resourcevalue1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -460,15 +665,31 @@ func TestAccBatchComputeEnvironment_tags_DefaultTags_overlapping(t *testing.T) {
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/ComputeEnvironment/tags1_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("overlapkey1"),
+					"providerTagValue1": config.StringVariable("providervalue1"),
+					"tagKey1":           config.StringVariable("overlapkey1"),
+					"tagValue1":         config.StringVariable("resourcevalue1"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags2("overlapkey1", "providervalue1", "overlapkey2", "providervalue2"),
-					testAccComputeEnvironmentConfig_tags2(rName, "overlapkey1", "resourcevalue1", "overlapkey2", "resourcevalue2"),
-				),
+				ConfigFile: config.StaticFile("testdata/ComputeEnvironment/tags2_default2_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("overlapkey1"),
+					"providerTagValue1": config.StringVariable("providervalue1"),
+					"providerTagKey2":   config.StringVariable("overlapkey2"),
+					"providerTagValue2": config.StringVariable("providervalue2"),
+					"tagKey1":           config.StringVariable("overlapkey1"),
+					"tagValue1":         config.StringVariable("resourcevalue1"),
+					"tagKey2":           config.StringVariable("overlapkey2"),
+					"tagValue2":         config.StringVariable("resourcevalue2"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -480,15 +701,31 @@ func TestAccBatchComputeEnvironment_tags_DefaultTags_overlapping(t *testing.T) {
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/ComputeEnvironment/tags2_default2_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("overlapkey1"),
+					"providerTagValue1": config.StringVariable("providervalue1"),
+					"providerTagKey2":   config.StringVariable("overlapkey2"),
+					"providerTagValue2": config.StringVariable("providervalue2"),
+					"tagKey1":           config.StringVariable("overlapkey1"),
+					"tagValue1":         config.StringVariable("resourcevalue1"),
+					"tagKey2":           config.StringVariable("overlapkey2"),
+					"tagValue2":         config.StringVariable("resourcevalue2"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("overlapkey1", "providervalue1"),
-					testAccComputeEnvironmentConfig_tags1(rName, "overlapkey1", "resourcevalue2"),
-				),
+				ConfigFile: config.StaticFile("testdata/ComputeEnvironment/tags1_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("overlapkey1"),
+					"providerTagValue1": config.StringVariable("providervalue1"),
+					"tagKey1":           config.StringVariable("overlapkey1"),
+					"tagValue1":         config.StringVariable("resourcevalue2"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -498,6 +735,14 @@ func TestAccBatchComputeEnvironment_tags_DefaultTags_overlapping(t *testing.T) {
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/ComputeEnvironment/tags1_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("overlapkey1"),
+					"providerTagValue1": config.StringVariable("providervalue1"),
+					"tagKey1":           config.StringVariable("overlapkey1"),
+					"tagValue1":         config.StringVariable("resourcevalue2"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -513,13 +758,18 @@ func TestAccBatchComputeEnvironment_tags_DefaultTags_updateToProviderOnly(t *tes
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckComputeEnvironmentDestroy(ctx),
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.BatchServiceID),
+		CheckDestroy: testAccCheckComputeEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccComputeEnvironmentConfig_tags1(rName, "key1", "value1"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigFile:               config.StaticFile("testdata/ComputeEnvironment/tags1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable("value1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -529,10 +779,12 @@ func TestAccBatchComputeEnvironment_tags_DefaultTags_updateToProviderOnly(t *tes
 				),
 			},
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("key1", "value1"),
-					testAccComputeEnvironmentConfig_tags0(rName),
-				),
+				ConfigFile: config.StaticFile("testdata/ComputeEnvironment/tags0_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("key1"),
+					"providerTagValue1": config.StringVariable("value1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -541,6 +793,12 @@ func TestAccBatchComputeEnvironment_tags_DefaultTags_updateToProviderOnly(t *tes
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/ComputeEnvironment/tags0_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("key1"),
+					"providerTagValue1": config.StringVariable("value1"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -556,16 +814,17 @@ func TestAccBatchComputeEnvironment_tags_DefaultTags_updateToResourceOnly(t *tes
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckComputeEnvironmentDestroy(ctx),
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.BatchServiceID),
+		CheckDestroy: testAccCheckComputeEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("key1", "value1"),
-					testAccComputeEnvironmentConfig_tags0(rName),
-				),
+				ConfigFile: config.StaticFile("testdata/ComputeEnvironment/tags0_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("key1"),
+					"providerTagValue1": config.StringVariable("value1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -574,7 +833,13 @@ func TestAccBatchComputeEnvironment_tags_DefaultTags_updateToResourceOnly(t *tes
 				),
 			},
 			{
-				Config: testAccComputeEnvironmentConfig_tags1(rName, "key1", "value1"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigFile:               config.StaticFile("testdata/ComputeEnvironment/tags1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable("value1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -584,6 +849,13 @@ func TestAccBatchComputeEnvironment_tags_DefaultTags_updateToResourceOnly(t *tes
 				),
 			},
 			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigFile:               config.StaticFile("testdata/ComputeEnvironment/tags1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable("value1"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -599,16 +871,19 @@ func TestAccBatchComputeEnvironment_tags_DefaultTags_emptyResourceTag(t *testing
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckComputeEnvironmentDestroy(ctx),
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.BatchServiceID),
+		CheckDestroy: testAccCheckComputeEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("key1", "value1"),
-					testAccComputeEnvironmentConfig_tags1(rName, "key1", ""),
-				),
+				ConfigFile: config.StaticFile("testdata/ComputeEnvironment/tags1_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("key1"),
+					"providerTagValue1": config.StringVariable("value1"),
+					"tagKey1":           config.StringVariable("key1"),
+					"tagValue1":         config.StringVariable(""),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -618,6 +893,14 @@ func TestAccBatchComputeEnvironment_tags_DefaultTags_emptyResourceTag(t *testing
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/ComputeEnvironment/tags1_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("key1"),
+					"providerTagValue1": config.StringVariable("value1"),
+					"tagKey1":           config.StringVariable("key1"),
+					"tagValue1":         config.StringVariable(""),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -633,16 +916,18 @@ func TestAccBatchComputeEnvironment_tags_DefaultTags_nullOverlappingResourceTag(
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckComputeEnvironmentDestroy(ctx),
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.BatchServiceID),
+		CheckDestroy: testAccCheckComputeEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("key1", "providervalue1"),
-					testAccComputeEnvironmentConfig_tagsNull(rName, "key1"),
-				),
+				ConfigFile: config.StaticFile("testdata/ComputeEnvironment/tagsNull_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("key1"),
+					"providerTagValue1": config.StringVariable("providervalue1"),
+					"tagKey1":           config.StringVariable("key1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -651,6 +936,13 @@ func TestAccBatchComputeEnvironment_tags_DefaultTags_nullOverlappingResourceTag(
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/ComputeEnvironment/tagsNull_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("key1"),
+					"providerTagValue1": config.StringVariable("providervalue1"),
+					"tagKey1":           config.StringVariable("key1"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -666,16 +958,18 @@ func TestAccBatchComputeEnvironment_tags_DefaultTags_nullNonOverlappingResourceT
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckComputeEnvironmentDestroy(ctx),
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.BatchServiceID),
+		CheckDestroy: testAccCheckComputeEnvironmentDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
-					testAccComputeEnvironmentConfig_tagsNull(rName, "resourcekey1"),
-				),
+				ConfigFile: config.StaticFile("testdata/ComputeEnvironment/tagsNull_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("providerkey1"),
+					"providerTagValue1": config.StringVariable("providervalue1"),
+					"tagKey1":           config.StringVariable("resourcekey1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckComputeEnvironmentExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -684,6 +978,13 @@ func TestAccBatchComputeEnvironment_tags_DefaultTags_nullNonOverlappingResourceT
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/ComputeEnvironment/tagsNull_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("providerkey1"),
+					"providerTagValue1": config.StringVariable("providervalue1"),
+					"tagKey1":           config.StringVariable("resourcekey1"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,

@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 resource "aws_batch_job_definition" "test" {
   name = var.rName
   type = "container"
@@ -7,5 +10,13 @@ resource "aws_batch_job_definition" "test" {
     memory  = 128
     vcpus   = 1
   })
-{{- template "tags" . }}
+
 }
+
+
+variable "rName" {
+  type     = string
+  nullable = false
+}
+
+

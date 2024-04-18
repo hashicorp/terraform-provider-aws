@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/service/batch"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -21,11 +22,16 @@ func TestAccBatchJobQueue_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckJobQueueDestroy(ctx),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobQueueConfig_tags1(rName, "key1", "value1"),
+				ConfigFile: config.StaticFile("testdata/JobQueue/tags1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable("value1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -33,12 +39,25 @@ func TestAccBatchJobQueue_tags(t *testing.T) {
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/JobQueue/tags1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable("value1"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccJobQueueConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				ConfigFile: config.StaticFile("testdata/JobQueue/tags2_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable("value1updated"),
+					"tagKey2":   config.StringVariable("key2"),
+					"tagValue2": config.StringVariable("value2"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -47,12 +66,25 @@ func TestAccBatchJobQueue_tags(t *testing.T) {
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/JobQueue/tags2_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable("value1updated"),
+					"tagKey2":   config.StringVariable("key2"),
+					"tagValue2": config.StringVariable("value2"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccJobQueueConfig_tags1(rName, "key2", "value2"),
+				ConfigFile: config.StaticFile("testdata/JobQueue/tags1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key2"),
+					"tagValue1": config.StringVariable("value2"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -60,18 +92,31 @@ func TestAccBatchJobQueue_tags(t *testing.T) {
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/JobQueue/tags1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key2"),
+					"tagValue1": config.StringVariable("value2"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccJobQueueConfig_tags0(rName),
+				ConfigFile: config.StaticFile("testdata/JobQueue/tags0_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/JobQueue/tags0_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -91,23 +136,35 @@ func TestAccBatchJobQueue_tags_null(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckJobQueueDestroy(ctx),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobQueueConfig_tagsNull(rName, "key1"),
+				ConfigFile: config.StaticFile("testdata/JobQueue/tagsNull_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":   config.StringVariable(rName),
+					"tagKey1": config.StringVariable("key1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/JobQueue/tagsNull_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":   config.StringVariable(rName),
+					"tagKey1": config.StringVariable("key1"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config:             testAccJobQueueConfig_tags0(rName),
+				ConfigFile: config.StaticFile("testdata/JobQueue/tags0_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+				},
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: false,
 			},
@@ -124,18 +181,26 @@ func TestAccBatchJobQueue_tags_AddOnUpdate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckJobQueueDestroy(ctx),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobQueueConfig_tags0(rName),
+				ConfigFile: config.StaticFile("testdata/JobQueue/tags0_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
-				Config: testAccJobQueueConfig_tags1(rName, "key1", "value1"),
+				ConfigFile: config.StaticFile("testdata/JobQueue/tags1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable("value1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -143,6 +208,12 @@ func TestAccBatchJobQueue_tags_AddOnUpdate(t *testing.T) {
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/JobQueue/tags1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable("value1"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -160,11 +231,16 @@ func TestAccBatchJobQueue_tags_EmptyTag_OnCreate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckJobQueueDestroy(ctx),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobQueueConfig_tags1(rName, "key1", ""),
+				ConfigFile: config.StaticFile("testdata/JobQueue/tags1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable(""),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -172,18 +248,31 @@ func TestAccBatchJobQueue_tags_EmptyTag_OnCreate(t *testing.T) {
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/JobQueue/tags1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable(""),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccJobQueueConfig_tags0(rName),
+				ConfigFile: config.StaticFile("testdata/JobQueue/tags0_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/JobQueue/tags0_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -201,11 +290,16 @@ func TestAccBatchJobQueue_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckJobQueueDestroy(ctx),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobQueueConfig_tags1(rName, "key1", "value1"),
+				ConfigFile: config.StaticFile("testdata/JobQueue/tags1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable("value1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -213,7 +307,14 @@ func TestAccBatchJobQueue_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccJobQueueConfig_tags2(rName, "key1", "value1", "key2", ""),
+				ConfigFile: config.StaticFile("testdata/JobQueue/tags2_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable("value1"),
+					"tagKey2":   config.StringVariable("key2"),
+					"tagValue2": config.StringVariable(""),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -222,12 +323,25 @@ func TestAccBatchJobQueue_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/JobQueue/tags2_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable("value1"),
+					"tagKey2":   config.StringVariable("key2"),
+					"tagValue2": config.StringVariable(""),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccJobQueueConfig_tags1(rName, "key1", "value1"),
+				ConfigFile: config.StaticFile("testdata/JobQueue/tags1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable("value1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -235,6 +349,12 @@ func TestAccBatchJobQueue_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/JobQueue/tags1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable("value1"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -252,11 +372,16 @@ func TestAccBatchJobQueue_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckJobQueueDestroy(ctx),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobQueueConfig_tags1(rName, "key1", "value1"),
+				ConfigFile: config.StaticFile("testdata/JobQueue/tags1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable("value1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -264,7 +389,12 @@ func TestAccBatchJobQueue_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccJobQueueConfig_tags1(rName, "key1", ""),
+				ConfigFile: config.StaticFile("testdata/JobQueue/tags1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable(""),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -272,6 +402,12 @@ func TestAccBatchJobQueue_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/JobQueue/tags1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable(""),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -287,16 +423,17 @@ func TestAccBatchJobQueue_tags_DefaultTags_providerOnly(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobQueueDestroy(ctx),
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.BatchServiceID),
+		CheckDestroy: testAccCheckJobQueueDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("key1", "value1"),
-					testAccJobQueueConfig_tags0(rName),
-				),
+				ConfigFile: config.StaticFile("testdata/JobQueue/tags0_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("key1"),
+					"providerTagValue1": config.StringVariable("value1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -305,15 +442,25 @@ func TestAccBatchJobQueue_tags_DefaultTags_providerOnly(t *testing.T) {
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/JobQueue/tags0_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("key1"),
+					"providerTagValue1": config.StringVariable("value1"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags2("key1", "value1updated", "key2", "value2"),
-					testAccJobQueueConfig_tags0(rName),
-				),
+				ConfigFile: config.StaticFile("testdata/JobQueue/tags0_default2_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("key1"),
+					"providerTagValue1": config.StringVariable("value1updated"),
+					"providerTagKey2":   config.StringVariable("key2"),
+					"providerTagValue2": config.StringVariable("value2"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -323,15 +470,25 @@ func TestAccBatchJobQueue_tags_DefaultTags_providerOnly(t *testing.T) {
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/JobQueue/tags0_default2_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("key1"),
+					"providerTagValue1": config.StringVariable("value1updated"),
+					"providerTagKey2":   config.StringVariable("key2"),
+					"providerTagValue2": config.StringVariable("value2"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("key2", "value2"),
-					testAccJobQueueConfig_tags0(rName),
-				),
+				ConfigFile: config.StaticFile("testdata/JobQueue/tags0_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("key2"),
+					"providerTagValue1": config.StringVariable("value2"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -340,15 +497,22 @@ func TestAccBatchJobQueue_tags_DefaultTags_providerOnly(t *testing.T) {
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/JobQueue/tags0_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("key2"),
+					"providerTagValue1": config.StringVariable("value2"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags0(),
-					testAccJobQueueConfig_tags0(rName),
-				),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigFile:               config.StaticFile("testdata/JobQueue/tags0_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -356,6 +520,11 @@ func TestAccBatchJobQueue_tags_DefaultTags_providerOnly(t *testing.T) {
 				),
 			},
 			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigFile:               config.StaticFile("testdata/JobQueue/tags0_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -371,16 +540,19 @@ func TestAccBatchJobQueue_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobQueueDestroy(ctx),
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.BatchServiceID),
+		CheckDestroy: testAccCheckJobQueueDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
-					testAccJobQueueConfig_tags1(rName, "resourcekey1", "resourcevalue1"),
-				),
+				ConfigFile: config.StaticFile("testdata/JobQueue/tags1_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("providerkey1"),
+					"providerTagValue1": config.StringVariable("providervalue1"),
+					"tagKey1":           config.StringVariable("resourcekey1"),
+					"tagValue1":         config.StringVariable("resourcevalue1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -391,15 +563,29 @@ func TestAccBatchJobQueue_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/JobQueue/tags1_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("providerkey1"),
+					"providerTagValue1": config.StringVariable("providervalue1"),
+					"tagKey1":           config.StringVariable("resourcekey1"),
+					"tagValue1":         config.StringVariable("resourcevalue1"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("providerkey1", "providervalue1updated"),
-					testAccJobQueueConfig_tags2(rName, "resourcekey1", "resourcevalue1updated", "resourcekey2", "resourcevalue2"),
-				),
+				ConfigFile: config.StaticFile("testdata/JobQueue/tags2_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("providerkey1"),
+					"providerTagValue1": config.StringVariable("providervalue1updated"),
+					"tagKey1":           config.StringVariable("resourcekey1"),
+					"tagValue1":         config.StringVariable("resourcevalue1updated"),
+					"tagKey2":           config.StringVariable("resourcekey2"),
+					"tagValue2":         config.StringVariable("resourcevalue2"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -412,15 +598,26 @@ func TestAccBatchJobQueue_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/JobQueue/tags2_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("providerkey1"),
+					"providerTagValue1": config.StringVariable("providervalue1updated"),
+					"tagKey1":           config.StringVariable("resourcekey1"),
+					"tagValue1":         config.StringVariable("resourcevalue1updated"),
+					"tagKey2":           config.StringVariable("resourcekey2"),
+					"tagValue2":         config.StringVariable("resourcevalue2"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags0(),
-					testAccJobQueueConfig_tags0(rName),
-				),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigFile:               config.StaticFile("testdata/JobQueue/tags0_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -428,6 +625,11 @@ func TestAccBatchJobQueue_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				),
 			},
 			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigFile:               config.StaticFile("testdata/JobQueue/tags0_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -443,16 +645,19 @@ func TestAccBatchJobQueue_tags_DefaultTags_overlapping(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobQueueDestroy(ctx),
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.BatchServiceID),
+		CheckDestroy: testAccCheckJobQueueDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("overlapkey1", "providervalue1"),
-					testAccJobQueueConfig_tags1(rName, "overlapkey1", "resourcevalue1"),
-				),
+				ConfigFile: config.StaticFile("testdata/JobQueue/tags1_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("overlapkey1"),
+					"providerTagValue1": config.StringVariable("providervalue1"),
+					"tagKey1":           config.StringVariable("overlapkey1"),
+					"tagValue1":         config.StringVariable("resourcevalue1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -462,15 +667,31 @@ func TestAccBatchJobQueue_tags_DefaultTags_overlapping(t *testing.T) {
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/JobQueue/tags1_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("overlapkey1"),
+					"providerTagValue1": config.StringVariable("providervalue1"),
+					"tagKey1":           config.StringVariable("overlapkey1"),
+					"tagValue1":         config.StringVariable("resourcevalue1"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags2("overlapkey1", "providervalue1", "overlapkey2", "providervalue2"),
-					testAccJobQueueConfig_tags2(rName, "overlapkey1", "resourcevalue1", "overlapkey2", "resourcevalue2"),
-				),
+				ConfigFile: config.StaticFile("testdata/JobQueue/tags2_default2_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("overlapkey1"),
+					"providerTagValue1": config.StringVariable("providervalue1"),
+					"providerTagKey2":   config.StringVariable("overlapkey2"),
+					"providerTagValue2": config.StringVariable("providervalue2"),
+					"tagKey1":           config.StringVariable("overlapkey1"),
+					"tagValue1":         config.StringVariable("resourcevalue1"),
+					"tagKey2":           config.StringVariable("overlapkey2"),
+					"tagValue2":         config.StringVariable("resourcevalue2"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -482,15 +703,31 @@ func TestAccBatchJobQueue_tags_DefaultTags_overlapping(t *testing.T) {
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/JobQueue/tags2_default2_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("overlapkey1"),
+					"providerTagValue1": config.StringVariable("providervalue1"),
+					"providerTagKey2":   config.StringVariable("overlapkey2"),
+					"providerTagValue2": config.StringVariable("providervalue2"),
+					"tagKey1":           config.StringVariable("overlapkey1"),
+					"tagValue1":         config.StringVariable("resourcevalue1"),
+					"tagKey2":           config.StringVariable("overlapkey2"),
+					"tagValue2":         config.StringVariable("resourcevalue2"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("overlapkey1", "providervalue1"),
-					testAccJobQueueConfig_tags1(rName, "overlapkey1", "resourcevalue2"),
-				),
+				ConfigFile: config.StaticFile("testdata/JobQueue/tags1_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("overlapkey1"),
+					"providerTagValue1": config.StringVariable("providervalue1"),
+					"tagKey1":           config.StringVariable("overlapkey1"),
+					"tagValue1":         config.StringVariable("resourcevalue2"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -500,6 +737,14 @@ func TestAccBatchJobQueue_tags_DefaultTags_overlapping(t *testing.T) {
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/JobQueue/tags1_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("overlapkey1"),
+					"providerTagValue1": config.StringVariable("providervalue1"),
+					"tagKey1":           config.StringVariable("overlapkey1"),
+					"tagValue1":         config.StringVariable("resourcevalue2"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -515,13 +760,18 @@ func TestAccBatchJobQueue_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobQueueDestroy(ctx),
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.BatchServiceID),
+		CheckDestroy: testAccCheckJobQueueDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccJobQueueConfig_tags1(rName, "key1", "value1"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigFile:               config.StaticFile("testdata/JobQueue/tags1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable("value1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -531,10 +781,12 @@ func TestAccBatchJobQueue_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 				),
 			},
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("key1", "value1"),
-					testAccJobQueueConfig_tags0(rName),
-				),
+				ConfigFile: config.StaticFile("testdata/JobQueue/tags0_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("key1"),
+					"providerTagValue1": config.StringVariable("value1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -543,6 +795,12 @@ func TestAccBatchJobQueue_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/JobQueue/tags0_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("key1"),
+					"providerTagValue1": config.StringVariable("value1"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -558,16 +816,17 @@ func TestAccBatchJobQueue_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobQueueDestroy(ctx),
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.BatchServiceID),
+		CheckDestroy: testAccCheckJobQueueDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("key1", "value1"),
-					testAccJobQueueConfig_tags0(rName),
-				),
+				ConfigFile: config.StaticFile("testdata/JobQueue/tags0_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("key1"),
+					"providerTagValue1": config.StringVariable("value1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -576,7 +835,13 @@ func TestAccBatchJobQueue_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccJobQueueConfig_tags1(rName, "key1", "value1"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigFile:               config.StaticFile("testdata/JobQueue/tags1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable("value1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -586,6 +851,13 @@ func TestAccBatchJobQueue_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 				),
 			},
 			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigFile:               config.StaticFile("testdata/JobQueue/tags1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable("value1"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -601,16 +873,19 @@ func TestAccBatchJobQueue_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobQueueDestroy(ctx),
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.BatchServiceID),
+		CheckDestroy: testAccCheckJobQueueDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("key1", "value1"),
-					testAccJobQueueConfig_tags1(rName, "key1", ""),
-				),
+				ConfigFile: config.StaticFile("testdata/JobQueue/tags1_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("key1"),
+					"providerTagValue1": config.StringVariable("value1"),
+					"tagKey1":           config.StringVariable("key1"),
+					"tagValue1":         config.StringVariable(""),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -620,6 +895,14 @@ func TestAccBatchJobQueue_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/JobQueue/tags1_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("key1"),
+					"providerTagValue1": config.StringVariable("value1"),
+					"tagKey1":           config.StringVariable("key1"),
+					"tagValue1":         config.StringVariable(""),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -637,16 +920,18 @@ func TestAccBatchJobQueue_tags_DefaultTags_nullOverlappingResourceTag(t *testing
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobQueueDestroy(ctx),
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.BatchServiceID),
+		CheckDestroy: testAccCheckJobQueueDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("key1", "providervalue1"),
-					testAccJobQueueConfig_tagsNull(rName, "key1"),
-				),
+				ConfigFile: config.StaticFile("testdata/JobQueue/tagsNull_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("key1"),
+					"providerTagValue1": config.StringVariable("providervalue1"),
+					"tagKey1":           config.StringVariable("key1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -655,6 +940,13 @@ func TestAccBatchJobQueue_tags_DefaultTags_nullOverlappingResourceTag(t *testing
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/JobQueue/tagsNull_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("key1"),
+					"providerTagValue1": config.StringVariable("providervalue1"),
+					"tagKey1":           config.StringVariable("key1"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -672,16 +964,18 @@ func TestAccBatchJobQueue_tags_DefaultTags_nullNonOverlappingResourceTag(t *test
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckJobQueueDestroy(ctx),
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.BatchServiceID),
+		CheckDestroy: testAccCheckJobQueueDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
-					testAccJobQueueConfig_tagsNull(rName, "resourcekey1"),
-				),
+				ConfigFile: config.StaticFile("testdata/JobQueue/tagsNull_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("providerkey1"),
+					"providerTagValue1": config.StringVariable("providervalue1"),
+					"tagKey1":           config.StringVariable("resourcekey1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckJobQueueExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -690,6 +984,13 @@ func TestAccBatchJobQueue_tags_DefaultTags_nullNonOverlappingResourceTag(t *test
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/JobQueue/tagsNull_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("providerkey1"),
+					"providerTagValue1": config.StringVariable("providervalue1"),
+					"tagKey1":           config.StringVariable("resourcekey1"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
