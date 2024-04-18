@@ -46,6 +46,7 @@ func TestAccELBV2LoadBalancerDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "subnet_mapping.#", resourceName, "subnet_mapping.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "desync_mitigation_mode", resourceName, "desync_mitigation_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "enforce_security_group_inbound_rules_on_private_link_traffic", resourceName, "enforce_security_group_inbound_rules_on_private_link_traffic"),
+					resource.TestCheckResourceAttrPair(dataSourceName, "client_keep_alive", resourceName, "client_keep_alive"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "internal", resourceName, "internal"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "subnets.#", resourceName, "subnets.#"),
@@ -63,6 +64,7 @@ func TestAccELBV2LoadBalancerDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName2, "subnet_mapping.#", resourceName, "subnet_mapping.#"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "desync_mitigation_mode", resourceName, "desync_mitigation_mode"),
 					resource.TestCheckResourceAttrPair(dataSourceName2, "enforce_security_group_inbound_rules_on_private_link_traffic", resourceName, "enforce_security_group_inbound_rules_on_private_link_traffic"),
+					resource.TestCheckResourceAttrPair(dataSourceName2, "client_keep_alive", resourceName, "client_keep_alive"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "name", resourceName, "name"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "internal", resourceName, "internal"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "subnets.#", resourceName, "subnets.#"),
@@ -83,6 +85,7 @@ func TestAccELBV2LoadBalancerDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName3, "enable_tls_version_and_cipher_suite_headers", resourceName, "enable_tls_version_and_cipher_suite_headers"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "enable_xff_client_port", resourceName, "enable_xff_client_port"),
 					resource.TestCheckResourceAttrPair(dataSourceName3, "xff_header_processing_mode", resourceName, "xff_header_processing_mode"),
+					resource.TestCheckResourceAttrPair(dataSourceName3, "client_keep_alive", resourceName, "client_keep_alive"),
 				),
 			},
 		},
@@ -222,6 +225,8 @@ resource "aws_lb" "test" {
   enable_deletion_protection = false
 
   desync_mitigation_mode = "defensive"
+
+  client_keep_alive = 60
 
   tags = {
     Name   = %[1]q
