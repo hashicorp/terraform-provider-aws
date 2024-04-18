@@ -239,7 +239,8 @@ func resourceGroup() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"alarms": {
-													Type: schema.TypeList,
+													Type:     schema.TypeList,
+													Optional: true,
 													Elem: &schema.Schema{
 														Type: schema.TypeString,
 													},
