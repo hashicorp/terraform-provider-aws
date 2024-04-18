@@ -87,7 +87,7 @@ func TestAddIsErrorRetryables(t *testing.T) {
 		t.Run(testCase.name, func(t *testing.T) {
 			t.Parallel()
 
-			got := AddIsErrorRetryables(retry.NewStandard(), retry.IsErrorRetryableFunc(testCase.f)).IsErrorRetryable(testCase.err)
+			got := AddIsErrorRetryables(retry.NewStandard(), testCase.f).IsErrorRetryable(testCase.err)
 			if got, want := got, testCase.expected; got != want {
 				t.Errorf("IsErrorRetryable(%q) = %v, want %v", testCase.err, got, want)
 			}
