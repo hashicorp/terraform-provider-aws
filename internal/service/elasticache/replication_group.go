@@ -389,6 +389,8 @@ func ResourceReplicationGroup() *schema.Resource {
 					diff.HasChange("replicas_per_node_group")
 			}),
 			customdiff.ForceNewIf("transit_encryption_enabled", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
+				// For Redis engine versions < 7.0.5, transit_encryption_enabled can only
+				// be configured during creation of the cluster.
 				return verify.SemVerLessThan(d.Get("engine_version_actual").(string), "7.0.5")
 			}),
 			verify.SetTagsDiff,
