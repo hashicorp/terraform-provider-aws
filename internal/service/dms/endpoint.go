@@ -674,17 +674,7 @@ func ResourceEndpoint() *schema.Resource {
 							Optional: true,
 							Default:  false,
 						},
-						"max_file_size": {"resource_identifier": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-							ValidateFunc: validation.All(
-								validation.StringLenBetween(1, 31),
-								validation.StringMatch(regexache.MustCompile("^[A-Za-z][0-9A-Za-z-]+$"), "must start with a letter, only contain alphanumeric characters and hyphens"),
-								validation.StringDoesNotMatch(regexache.MustCompile(`--`), "cannot contain two consecutive hyphens"),
-								validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end in a hyphen"),
-							),
-						},
+						"max_file_size": {
 							Type:         schema.TypeInt,
 							Optional:     true,
 							Default:      1048576,
