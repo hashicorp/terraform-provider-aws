@@ -333,7 +333,7 @@ func ResourceReplicationGroup() *schema.Resource {
 			"transit_encryption_mode": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				ValidateFunc: validation.StringInSlice([]string{"preferred", "required"}, false),
+				ValidateFunc: validation.StringInSlice(elasticache.TransitEncryptionMode_Values(), false),
 			},
 			"user_group_ids": {
 				Type:          schema.TypeSet,
