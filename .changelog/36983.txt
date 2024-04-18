@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ecs_service: Removes duplicate argument references to `name`, `cluster`, and `iam_role` in docs.
+```
