@@ -27,8 +27,8 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 		// if ongoing deployments are in-progress, thus we handle them
 		// here for the service client.
 		o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws_sdkv2.RetryerV2), retry_sdkv2.IsErrorRetryableFunc(func(err error) aws_sdkv2.Ternary {
-			if v, ok := errs.As[*smithy.OperationError](err); ok {
-				switch v.OperationName {
+			if err, ok := errs.As[*smithy.OperationError](err); ok {
+				switch err.OperationName {
 				case "StartDeployment":
 					if errs.IsA[*awstypes.ConflictException](err) {
 						return aws_sdkv2.TrueTernary
