@@ -363,8 +363,8 @@ resource "aws_bedrockagent_agent" "test" {
             max_length     = 2048
             stop_sequences = ["Human:"]
             temperature    = 0
-            topk           = 250
-            topp           = 1
+            top_k          = 250
+            top_p          = 1
           },
         ]
         parser_mode          = "DEFAULT"
@@ -379,8 +379,8 @@ resource "aws_bedrockagent_agent" "test" {
             max_length     = 2048
             stop_sequences = ["Human:"]
             temperature    = 0
-            topk           = 250
-            topp           = 1
+            top_k          = 250
+            top_p          = 1
           },
         ]
         parser_mode          = "DEFAULT"
@@ -399,8 +399,8 @@ resource "aws_bedrockagent_agent" "test" {
               "</error>",
             ]
             temperature = 0
-            topk        = 250
-            topp        = 1
+            top_k       = 250
+            top_p       = 1
           },
         ]
         parser_mode          = "DEFAULT"
@@ -415,8 +415,8 @@ resource "aws_bedrockagent_agent" "test" {
             max_length     = 2048
             stop_sequences = ["Human:"]
             temperature    = 0
-            topk           = 250
-            topp           = 1
+            top_k          = 250
+            top_p          = 1
           },
         ]
         parser_mode          = "DEFAULT"

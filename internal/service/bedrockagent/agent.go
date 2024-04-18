@@ -263,76 +263,65 @@ func (r *agentResource) Update(ctx context.Context, request resource.UpdateReque
 
 	conn := r.Meta().BedrockAgentClient(ctx)
 
-	update := false
-	input := &bedrockagent.UpdateAgentInput{}
+	if !new.AgentName.Equal(old.AgentName) ||
+		!new.CustomerEncryptionKeyARN.Equal(old.CustomerEncryptionKeyARN) ||
+		!new.Description.Equal(old.Description) ||
+		!new.Instruction.Equal(old.Instruction) ||
+		!new.FoundationModel.Equal(old.FoundationModel) ||
+		!new.PromptOverrideConfiguration.Equal(old.PromptOverrideConfiguration) {
+		input := &bedrockagent.UpdateAgentInput{
+			AgentId:                 fwflex.StringFromFramework(ctx, new.AgentID),
+			AgentName:               fwflex.StringFromFramework(ctx, new.AgentName),
+			AgentResourceRoleArn:    fwflex.StringFromFramework(ctx, new.AgentResourceRoleARN),
+			Description:             fwflex.StringFromFramework(ctx, new.Description),
+			FoundationModel:         fwflex.StringFromFramework(ctx, new.FoundationModel),
+			IdleSessionTTLInSeconds: fwflex.Int32FromFramework(ctx, new.IdleSessionTTLInSeconds),
+			Instruction:             fwflex.StringFromFramework(ctx, new.Instruction),
+		}
 
-	input.AgentId = fwflex.StringFromFramework(ctx, old.AgentID)
-	input.AgentResourceRoleArn = fwflex.StringFromFramework(ctx, new.AgentResourceRoleARN)
-	input.IdleSessionTTLInSeconds = fwflex.Int32FromFramework(ctx, new.IdleSessionTTLInSeconds)
-	input.AgentName = fwflex.StringFromFramework(ctx, new.AgentName)
-	input.Description = fwflex.StringFromFramework(ctx, new.Description)
-	input.Instruction = fwflex.StringFromFramework(ctx, new.Instruction)
+		if !new.CustomerEncryptionKeyARN.Equal(old.CustomerEncryptionKeyARN) {
+			input.CustomerEncryptionKeyArn = fwflex.StringFromFramework(ctx, new.CustomerEncryptionKeyARN)
+		}
 
-	if !old.AgentName.Equal(new.AgentName) {
-		update = true
-	}
+		if !new.PromptOverrideConfiguration.Equal(old.PromptOverrideConfiguration) {
+			promptOverrideConfiguration := &awstypes.PromptOverrideConfiguration{}
+			response.Diagnostics.Append(fwflex.Expand(ctx, new.PromptOverrideConfiguration, promptOverrideConfiguration)...)
+			if response.Diagnostics.HasError() {
+				return
+			}
 
-	if !old.Description.Equal(new.Description) {
-		update = true
-	}
+			input.PromptOverrideConfiguration = promptOverrideConfiguration
+		}
 
-	if !old.Instruction.Equal(new.Instruction) {
-		update = true
-	}
+		_, err := conn.UpdateAgent(ctx, input)
 
-	if !old.CustomerEncryptionKeyARN.Equal(new.CustomerEncryptionKeyARN) {
-		input.CustomerEncryptionKeyArn = fwflex.StringFromFramework(ctx, new.CustomerEncryptionKeyARN)
-		update = true
-	}
+		if err != nil {
+			response.Diagnostics.AddError(fmt.Sprintf("updating Bedrock Agent (%s)", new.ID.ValueString()), err.Error())
 
-	if old.FoundationModel.Equal(new.FoundationModel) {
-		input.FoundationModel = fwflex.StringFromFramework(ctx, old.FoundationModel)
-	} else {
-		input.FoundationModel = fwflex.StringFromFramework(ctx, new.FoundationModel)
-		update = true
-	}
-
-	if !new.PromptOverrideConfiguration.Equal(old.PromptOverrideConfiguration) {
-		poc := []awstypes.PromptOverrideConfiguration{}
-		response.Diagnostics.Append(fwflex.Expand(ctx, new.PromptOverrideConfiguration, &poc)...)
-		if response.Diagnostics.HasError() {
 			return
 		}
 
-		input.PromptOverrideConfiguration = &poc[0]
-		update = true
-	}
-	if !update {
-		return
-	}
-
-	_, err := conn.UpdateAgent(ctx, input)
-
-	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("updating Bedrock Agent (%s)", new.ID.ValueString()), err.Error())
-
-		return
-	}
-
-	_, err = waitAgentUpdated(ctx, conn, new.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
-
-	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent (%s) update", new.ID.ValueString()), err.Error())
-
-		return
-	}
-
-	if new.PrepareAgent.ValueBool() {
-		_, err := prepareAgent(ctx, conn, new.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
+		agent, err := waitAgentUpdated(ctx, conn, new.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
 
 		if err != nil {
-			response.Diagnostics.AddError("updating Agent", err.Error())
+			response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent (%s) update", new.ID.ValueString()), err.Error())
 
+			return
+		}
+
+		if new.PrepareAgent.ValueBool() {
+			agent, err = prepareAgent(ctx, conn, new.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
+
+			if err != nil {
+				response.Diagnostics.AddError("updating Agent", err.Error())
+
+				return
+			}
+		}
+
+		// Set values for unknowns.
+		response.Diagnostics.Append(fwflex.Flatten(ctx, agent, &new)...)
+		if response.Diagnostics.HasError() {
 			return
 		}
 	}
