@@ -47,17 +47,26 @@ The following arguments are optional:
 * `tags` - (Optional) list of tags to apply to the EMR Cluster. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `user_role` - (Optional) - The IAM user role that users and groups assume when logged in to an Amazon EMR Studio. Only specify a User Role when you use Amazon Web Services SSO authentication. The permissions attached to the User Role can be scoped down for each user or group using session policies.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn`- ARN of the studio.
 * `url` - The unique access URL of the Amazon EMR Studio.
 
 ## Import
 
-EMR studios can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import EMR studios using the `id`. For example:
 
+```terraform
+import {
+  to = aws_emr_studio.studio
+  id = "es-123456ABCDEF"
+}
 ```
-$ terraform import aws_emr_studio.studio es-123456ABCDEF
+
+Using `terraform import`, import EMR studios using the `id`. For example:
+
+```console
+% terraform import aws_emr_studio.studio es-123456ABCDEF
 ```

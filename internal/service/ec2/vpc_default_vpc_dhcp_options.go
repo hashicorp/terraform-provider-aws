@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -35,6 +38,7 @@ func ResourceDefaultVPCDHCPOptions() *schema.Resource {
 		// Keep in sync with aws_vpc_dhcp_options' schema with the following changes:
 		//   - domain_name is Computed-only
 		//   - domain_name_servers is Computed-only and is TypeString
+		//   - ipv6_address_preferred_lease_time is Computed-only and is TypeString
 		//   - netbios_name_servers is Computed-only and is TypeString
 		//   - netbios_node_type is Computed-only
 		//   - ntp_servers is Computed-only and is TypeString
@@ -49,6 +53,10 @@ func ResourceDefaultVPCDHCPOptions() *schema.Resource {
 				Computed: true,
 			},
 			"domain_name_servers": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"ipv6_address_preferred_lease_time": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -82,14 +90,14 @@ func resourceDefaultVPCDHCPOptionsCreate(ctx context.Context, d *schema.Resource
 	input := &ec2.DescribeDhcpOptionsInput{}
 
 	input.Filters = append(input.Filters,
-		NewFilter("key", []string{"domain-name"}),
-		NewFilter("value", []string{RegionalPrivateDNSSuffix(meta.(*conns.AWSClient).Region)}),
-		NewFilter("key", []string{"domain-name-servers"}),
-		NewFilter("value", []string{"AmazonProvidedDNS"}),
+		newFilter("key", []string{"domain-name"}),
+		newFilter("value", []string{RegionalPrivateDNSSuffix(meta.(*conns.AWSClient).Region)}),
+		newFilter("key", []string{"domain-name-servers"}),
+		newFilter("value", []string{"AmazonProvidedDNS"}),
 	)
 
 	if v, ok := d.GetOk("owner_id"); ok {
-		input.Filters = append(input.Filters, BuildAttributeFilterList(map[string]string{
+		input.Filters = append(input.Filters, newAttributeFilterList(map[string]string{
 			"owner-id": v.(string),
 		})...)
 	}

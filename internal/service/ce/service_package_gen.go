@@ -5,9 +5,9 @@ package ce
 import (
 	"context"
 
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	costexplorer_sdkv1 "github.com/aws/aws-sdk-go/service/costexplorer"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	costexplorer_sdkv2 "github.com/aws/aws-sdk-go-v2/service/costexplorer"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -25,12 +25,14 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceCostCategory,
+			Factory:  dataSourceCostCategory,
 			TypeName: "aws_ce_cost_category",
+			Name:     "Cost Category",
 		},
 		{
-			Factory:  DataSourceTags,
+			Factory:  dataSourceTags,
 			TypeName: "aws_ce_tags",
+			Name:     "Tags",
 		},
 	}
 }
@@ -38,7 +40,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceAnomalyMonitor,
+			Factory:  resourceAnomalyMonitor,
 			TypeName: "aws_ce_anomaly_monitor",
 			Name:     "Anomaly Monitor",
 			Tags: &types.ServicePackageResourceTags{
@@ -46,7 +48,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceAnomalySubscription,
+			Factory:  resourceAnomalySubscription,
 			TypeName: "aws_ce_anomaly_subscription",
 			Name:     "Anomaly Subscription",
 			Tags: &types.ServicePackageResourceTags{
@@ -54,11 +56,12 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceCostAllocationTag,
+			Factory:  resourceCostAllocationTag,
 			TypeName: "aws_ce_cost_allocation_tag",
+			Name:     "Cost Allocation Tag",
 		},
 		{
-			Factory:  ResourceCostCategory,
+			Factory:  resourceCostCategory,
 			TypeName: "aws_ce_cost_category",
 			Name:     "Cost Category",
 			Tags: &types.ServicePackageResourceTags{
@@ -72,11 +75,17 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.CE
 }
 
-// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*costexplorer_sdkv1.CostExplorer, error) {
-	sess := config["session"].(*session_sdkv1.Session)
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*costexplorer_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
-	return costexplorer_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+	return costexplorer_sdkv2.NewFromConfig(cfg, func(o *costexplorer_sdkv2.Options) {
+		if endpoint := config["endpoint"].(string); endpoint != "" {
+			o.BaseEndpoint = aws_sdkv2.String(endpoint)
+		}
+	}), nil
 }
 
-var ServicePackage = &servicePackage{}
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}

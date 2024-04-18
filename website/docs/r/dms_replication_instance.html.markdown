@@ -96,7 +96,7 @@ resource "aws_dms_replication_instance" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `allocated_storage` - (Optional, Default: 50, Min: 5, Max: 6144) The amount of storage (in gigabytes) to be initially allocated for the replication instance.
 * `allow_major_version_upgrade` - (Optional, Default: false) Indicates that major version upgrades are allowed.
@@ -106,6 +106,7 @@ The following arguments are supported:
 * `engine_version` - (Optional) The engine version number of the replication instance.
 * `kms_key_arn` - (Optional) The Amazon Resource Name (ARN) for the KMS key that will be used to encrypt the connection parameters. If you do not specify a value for `kms_key_arn`, then AWS DMS will use your default encryption key. AWS KMS creates the default encryption key for your AWS account. Your AWS account has a different default encryption key for each AWS region.
 * `multi_az` - (Optional) Specifies if the replication instance is a multi-az deployment. You cannot set the `availability_zone` parameter if the `multi_az` parameter is set to `true`.
+* `network_type` - (Optional) The type of IP address protocol used by a replication instance. Valid values: `IPV4`, `DUAL`.
 * `preferred_maintenance_window` - (Optional) The weekly time range during which system maintenance can occur, in Universal Coordinated Time (UTC).
 
     - Default: A 30-minute window selected at random from an 8-hour block of time per region, occurring on a random day of the week.
@@ -126,9 +127,9 @@ The following arguments are supported:
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `vpc_security_group_ids` - (Optional) A list of VPC security group IDs to be used with the replication instance. The VPC security groups must work with the VPC containing the replication instance.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `replication_instance_arn` - The Amazon Resource Name (ARN) of the replication instance.
 * `replication_instance_private_ips` -  A list of the private IP addresses of the replication instance.
@@ -145,8 +146,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Replication instances can be imported using the `replication_instance_id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import replication instances using the `replication_instance_id`. For example:
 
+```terraform
+import {
+  to = aws_dms_replication_instance.test
+  id = "test-dms-replication-instance-tf"
+}
 ```
-$ terraform import aws_dms_replication_instance.test test-dms-replication-instance-tf
+
+Using `terraform import`, import replication instances using the `replication_instance_id`. For example:
+
+```console
+% terraform import aws_dms_replication_instance.test test-dms-replication-instance-tf
 ```

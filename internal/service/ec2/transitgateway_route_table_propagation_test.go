@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -11,11 +14,13 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	tfsync "github.com/hashicorp/terraform-provider-aws/internal/experimental/sync"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func testAccTransitGatewayRouteTablePropagation_basic(t *testing.T) {
+func testAccTransitGatewayRouteTablePropagation_basic(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var v ec2.TransitGatewayRouteTablePropagation
 	resourceName := "aws_ec2_transit_gateway_route_table_propagation.test"
@@ -23,9 +28,13 @@ func testAccTransitGatewayRouteTablePropagation_basic(t *testing.T) {
 	transitGatewayVpcAttachmentResourceName := "aws_ec2_transit_gateway_vpc_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckTransitGateway(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckTransitGateway(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTransitGatewayRouteTablePropagationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -48,15 +57,19 @@ func testAccTransitGatewayRouteTablePropagation_basic(t *testing.T) {
 	})
 }
 
-func testAccTransitGatewayRouteTablePropagation_disappears(t *testing.T) {
+func testAccTransitGatewayRouteTablePropagation_disappears(t *testing.T, semaphore tfsync.Semaphore) {
 	ctx := acctest.Context(t)
 	var v ec2.TransitGatewayRouteTablePropagation
 	resourceName := "aws_ec2_transit_gateway_route_table_propagation.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckTransitGateway(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			testAccPreCheckTransitGatewaySynchronize(t, semaphore)
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckTransitGateway(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTransitGatewayRouteTablePropagationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -135,25 +148,8 @@ func testAccCheckTransitGatewayRouteTablePropagationDestroy(ctx context.Context)
 	}
 }
 
-func testAccTransitGatewayRouteTablePropagationConfig_basic(rName string) string {
-	return fmt.Sprintf(`
-resource "aws_vpc" "test" {
-  cidr_block = "10.0.0.0/16"
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
-resource "aws_subnet" "test" {
-  cidr_block = "10.0.0.0/24"
-  vpc_id     = aws_vpc.test.id
-
-  tags = {
-    Name = %[1]q
-  }
-}
-
+func testAccTransitGatewayRouteTablePropagationConfig_base(rName string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 1), fmt.Sprintf(`
 resource "aws_ec2_transit_gateway" "test" {
   tags = {
     Name = %[1]q
@@ -161,7 +157,7 @@ resource "aws_ec2_transit_gateway" "test" {
 }
 
 resource "aws_ec2_transit_gateway_vpc_attachment" "test" {
-  subnet_ids         = [aws_subnet.test.id]
+  subnet_ids         = aws_subnet.test[*].id
   transit_gateway_id = aws_ec2_transit_gateway.test.id
   vpc_id             = aws_vpc.test.id
 
@@ -177,10 +173,14 @@ resource "aws_ec2_transit_gateway_route_table" "test" {
     Name = %[1]q
   }
 }
+`, rName))
+}
 
+func testAccTransitGatewayRouteTablePropagationConfig_basic(rName string) string {
+	return acctest.ConfigCompose(testAccTransitGatewayRouteTablePropagationConfig_base(rName), `
 resource "aws_ec2_transit_gateway_route_table_propagation" "test" {
   transit_gateway_attachment_id  = aws_ec2_transit_gateway_vpc_attachment.test.id
   transit_gateway_route_table_id = aws_ec2_transit_gateway_route_table.test.id
 }
-`, rName)
+`)
 }

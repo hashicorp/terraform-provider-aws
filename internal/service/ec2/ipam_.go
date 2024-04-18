@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -13,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
@@ -88,6 +92,12 @@ func ResourceIPAM() *schema.Resource {
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
+			"tier": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      ec2.IpamTierAdvanced,
+				ValidateFunc: validation.StringInSlice(ec2.IpamTier_Values(), false),
+			},
 		},
 
 		CustomizeDiff: customdiff.Sequence(
@@ -123,6 +133,10 @@ func resourceIPAMCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	if v, ok := d.GetOk("description"); ok {
 		input.Description = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("tier"); ok {
+		input.Tier = aws.String(v.(string))
 	}
 
 	output, err := conn.CreateIpamWithContext(ctx, input)
@@ -166,6 +180,7 @@ func resourceIPAMRead(ctx context.Context, d *schema.ResourceData, meta interfac
 	d.Set("public_default_scope_id", ipam.PublicDefaultScopeId)
 	d.Set("private_default_scope_id", ipam.PrivateDefaultScopeId)
 	d.Set("scope_count", ipam.ScopeCount)
+	d.Set("tier", ipam.Tier)
 
 	setTagsOut(ctx, ipam.Tags)
 
@@ -206,6 +221,10 @@ func resourceIPAMUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			if len(operatingRegionUpdateRemove) != 0 {
 				input.RemoveOperatingRegions = operatingRegionUpdateRemove
 			}
+		}
+
+		if d.HasChange("tier") {
+			input.Tier = aws.String(d.Get("tier").(string))
 		}
 
 		_, err := conn.ModifyIpamWithContext(ctx, input)

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -19,10 +22,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/experimental/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -2015,7 +2018,7 @@ func expandLaunchTemplateInstanceNetworkInterfaceSpecificationRequest(tfMap map[
 	}
 
 	if v, ok := tfMap["ipv4_prefixes"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.Ipv4Prefixes = expandIPv4PrefixSpecificationRequests(v.List())
+		apiObject.Ipv4Prefixes = expandLaunchTemplateIPv4PrefixSpecificationRequests(v.List())
 	}
 
 	if v, ok := tfMap["ipv6_address_count"].(int); ok && v != 0 {
@@ -2035,7 +2038,7 @@ func expandLaunchTemplateInstanceNetworkInterfaceSpecificationRequest(tfMap map[
 	}
 
 	if v, ok := tfMap["ipv6_prefixes"].(*schema.Set); ok && v.Len() > 0 {
-		apiObject.Ipv6Prefixes = expandIPv6PrefixSpecificationRequests(v.List())
+		apiObject.Ipv6Prefixes = expandLaunchTemplateIPv6PrefixSpecificationRequests(v.List())
 	}
 
 	if v, ok := tfMap["network_card_index"].(int); ok {
@@ -3171,4 +3174,80 @@ func flattenLaunchTemplateTagSpecifications(ctx context.Context, apiObjects []*e
 	}
 
 	return tfList
+}
+
+func expandLaunchTemplateIPv4PrefixSpecificationRequest(tfString string) *ec2.Ipv4PrefixSpecificationRequest {
+	if tfString == "" {
+		return nil
+	}
+
+	apiObject := &ec2.Ipv4PrefixSpecificationRequest{
+		Ipv4Prefix: aws.String(tfString),
+	}
+
+	return apiObject
+}
+
+func expandLaunchTemplateIPv4PrefixSpecificationRequests(tfList []interface{}) []*ec2.Ipv4PrefixSpecificationRequest {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []*ec2.Ipv4PrefixSpecificationRequest
+
+	for _, tfMapRaw := range tfList {
+		tfString, ok := tfMapRaw.(string)
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandLaunchTemplateIPv4PrefixSpecificationRequest(tfString)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
+}
+
+func expandLaunchTemplateIPv6PrefixSpecificationRequest(tfString string) *ec2.Ipv6PrefixSpecificationRequest {
+	if tfString == "" {
+		return nil
+	}
+
+	apiObject := &ec2.Ipv6PrefixSpecificationRequest{
+		Ipv6Prefix: aws.String(tfString),
+	}
+
+	return apiObject
+}
+
+func expandLaunchTemplateIPv6PrefixSpecificationRequests(tfList []interface{}) []*ec2.Ipv6PrefixSpecificationRequest {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []*ec2.Ipv6PrefixSpecificationRequest
+
+	for _, tfMapRaw := range tfList {
+		tfString, ok := tfMapRaw.(string)
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandLaunchTemplateIPv6PrefixSpecificationRequest(tfString)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
 }

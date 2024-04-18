@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -273,13 +276,15 @@ func outsideIPAddressType_Values() []string {
 	}
 }
 
+type securityGroupRuleType string
+
 const (
-	securityGroupRuleTypeEgress  = "egress"
-	securityGroupRuleTypeIngress = "ingress"
+	securityGroupRuleTypeEgress  securityGroupRuleType = "egress"
+	securityGroupRuleTypeIngress securityGroupRuleType = "ingress"
 )
 
-func securityGroupRuleType_Values() []string {
-	return []string{
+func (securityGroupRuleType) Values() []securityGroupRuleType {
+	return []securityGroupRuleType{
 		securityGroupRuleTypeEgress,
 		securityGroupRuleTypeIngress,
 	}
@@ -294,3 +299,37 @@ const (
 	gatewayIDLocal      = "local"
 	gatewayIDVPCLattice = "VpcLattice"
 )
+
+const (
+	verifiedAccessAttachmentTypeVPC = "vpc"
+)
+
+func verifiedAccessAttachmentType_Values() []string {
+	return []string{
+		verifiedAccessAttachmentTypeVPC,
+	}
+}
+
+const (
+	verifiedAccessEndpointTypeLoadBalancer     = "load-balancer"
+	verifiedAccessEndpointTypeNetworkInterface = "network-interface"
+)
+
+func verifiedAccessEndpointType_Values() []string {
+	return []string{
+		verifiedAccessEndpointTypeLoadBalancer,
+		verifiedAccessEndpointTypeNetworkInterface,
+	}
+}
+
+const (
+	verifiedAccessEndpointProtocolHTTP  = "http"
+	verifiedAccessEndpointProtocolHTTPS = "https"
+)
+
+func verifiedAccessEndpointProtocol_Values() []string {
+	return []string{
+		verifiedAccessEndpointProtocolHTTP,
+		verifiedAccessEndpointProtocolHTTPS,
+	}
+}

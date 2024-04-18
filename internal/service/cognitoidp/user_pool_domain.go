@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cognitoidp
 
 import (
@@ -21,8 +24,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKResource("aws_cognito_user_pool_domain")
-func ResourceUserPoolDomain() *schema.Resource {
+// @SDKResource("aws_cognito_user_pool_domain", name="User Pool Domain")
+func resourceUserPoolDomain() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceUserPoolDomainCreate,
 		ReadWithoutTimeout:   resourceUserPoolDomainRead,
@@ -139,7 +142,7 @@ func resourceUserPoolDomainRead(ctx context.Context, d *schema.ResourceData, met
 	}
 	d.Set("cloudfront_distribution", desc.CloudFrontDistribution)
 	d.Set("cloudfront_distribution_arn", desc.CloudFrontDistribution)
-	d.Set("cloudfront_distribution_zone_id", meta.(*conns.AWSClient).CloudFrontDistributionHostedZoneID())
+	d.Set("cloudfront_distribution_zone_id", meta.(*conns.AWSClient).CloudFrontDistributionHostedZoneID(ctx))
 	d.Set("domain", d.Id())
 	d.Set("s3_bucket", desc.S3Bucket)
 	d.Set("user_pool_id", desc.UserPoolId)

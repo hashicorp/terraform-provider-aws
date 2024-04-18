@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker
 
 import (
 	"context"
 	"log"
-	"regexp"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -111,7 +114,7 @@ func ResourceEndpointConfiguration() *schema.Resource {
 										Optional: true,
 										ForceNew: true,
 										ValidateFunc: validation.All(
-											validation.StringMatch(regexp.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+											validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
 											validation.StringLenBetween(1, 512),
 										),
 									},
@@ -120,7 +123,7 @@ func ResourceEndpointConfiguration() *schema.Resource {
 										Required: true,
 										ForceNew: true,
 										ValidateFunc: validation.All(
-											validation.StringMatch(regexp.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+											validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
 											validation.StringLenBetween(1, 512),
 										),
 									},
@@ -151,7 +154,7 @@ func ResourceEndpointConfiguration() *schema.Resource {
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
 											ValidateFunc: validation.All(
-												validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9])*\/[a-zA-Z0-9](-*[a-zA-Z0-9.])*`), ""),
+												validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z])*\/[0-9A-Za-z](-*[0-9A-Za-z.])*`), ""),
 												validation.StringLenBetween(1, 256),
 											),
 										},
@@ -165,7 +168,7 @@ func ResourceEndpointConfiguration() *schema.Resource {
 										Elem: &schema.Schema{
 											Type: schema.TypeString,
 											ValidateFunc: validation.All(
-												validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9])*\/[a-zA-Z0-9](-*[a-zA-Z0-9.])*`), ""),
+												validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z])*\/[0-9A-Za-z](-*[0-9A-Za-z.])*`), ""),
 												validation.StringLenBetween(1, 256),
 											),
 										},
@@ -197,7 +200,7 @@ func ResourceEndpointConfiguration() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 							ValidateFunc: validation.All(
-								validation.StringMatch(regexp.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+								validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
 								validation.StringLenBetween(1, 512),
 							),
 						},
@@ -274,7 +277,7 @@ func ResourceEndpointConfiguration() *schema.Resource {
 										Required: true,
 										ForceNew: true,
 										ValidateFunc: validation.All(
-											validation.StringMatch(regexp.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+											validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
 											validation.StringLenBetween(1, 512),
 										),
 									},
@@ -321,6 +324,21 @@ func ResourceEndpointConfiguration() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
+						},
+						"routing_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"routing_strategy": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.StringInSlice(sagemaker.RoutingStrategy_Values(), false),
+									},
+								},
+							},
 						},
 						"serverless_config": {
 							Type:     schema.TypeList,
@@ -397,7 +415,7 @@ func ResourceEndpointConfiguration() *schema.Resource {
 										Required: true,
 										ForceNew: true,
 										ValidateFunc: validation.All(
-											validation.StringMatch(regexp.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
+											validation.StringMatch(regexache.MustCompile(`^(https|s3)://([^/])/?(.*)$`), ""),
 											validation.StringLenBetween(1, 512),
 										),
 									},
@@ -444,6 +462,21 @@ func ResourceEndpointConfiguration() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 							ForceNew: true,
+						},
+						"routing_config": {
+							Type:     schema.TypeList,
+							Optional: true,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"routing_strategy": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ForceNew:     true,
+										ValidateFunc: validation.StringInSlice(sagemaker.RoutingStrategy_Values(), false),
+									},
+								},
+							},
 						},
 						"serverless_config": {
 							Type:     schema.TypeList,
@@ -648,6 +681,10 @@ func expandProductionVariants(configured []interface{}) []*sagemaker.ProductionV
 			l.AcceleratorType = aws.String(v)
 		}
 
+		if v, ok := data["routing_config"].([]interface{}); ok && len(v) > 0 {
+			l.RoutingConfig = expandRoutingConfig(v)
+		}
+
 		if v, ok := data["serverless_config"].([]interface{}); ok && len(v) > 0 {
 			l.ServerlessConfig = expandServerlessConfig(v)
 		}
@@ -695,6 +732,10 @@ func flattenProductionVariants(list []*sagemaker.ProductionVariant) []map[string
 
 		if i.InstanceType != nil {
 			l["instance_type"] = aws.StringValue(i.InstanceType)
+		}
+
+		if i.RoutingConfig != nil {
+			l["routing_config"] = flattenRoutingConfig(i.RoutingConfig)
 		}
 
 		if i.ServerlessConfig != nil {
@@ -913,6 +954,22 @@ func expandEndpointConfigNotificationConfig(configured []interface{}) *sagemaker
 	return c
 }
 
+func expandRoutingConfig(configured []interface{}) *sagemaker.ProductionVariantRoutingConfig {
+	if len(configured) == 0 {
+		return nil
+	}
+
+	m := configured[0].(map[string]interface{})
+
+	c := &sagemaker.ProductionVariantRoutingConfig{}
+
+	if v, ok := m["routing_strategy"].(string); ok && v != "" {
+		c.RoutingStrategy = aws.String(v)
+	}
+
+	return c
+}
+
 func expandServerlessConfig(configured []interface{}) *sagemaker.ProductionVariantServerlessConfig {
 	if len(configured) == 0 {
 		return nil
@@ -1030,6 +1087,20 @@ func flattenEndpointConfigNotificationConfig(config *sagemaker.AsyncInferenceNot
 
 	if config.IncludeInferenceResponseIn != nil {
 		cfg["include_inference_response_in"] = flex.FlattenStringSet(config.IncludeInferenceResponseIn)
+	}
+
+	return []map[string]interface{}{cfg}
+}
+
+func flattenRoutingConfig(config *sagemaker.ProductionVariantRoutingConfig) []map[string]interface{} {
+	if config == nil {
+		return []map[string]interface{}{}
+	}
+
+	cfg := map[string]interface{}{}
+
+	if config.RoutingStrategy != nil {
+		cfg["routing_strategy"] = aws.StringValue(config.RoutingStrategy)
 	}
 
 	return []map[string]interface{}{cfg}

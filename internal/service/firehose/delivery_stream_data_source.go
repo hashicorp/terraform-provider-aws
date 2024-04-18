@@ -1,9 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package firehose
 
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -11,9 +14,10 @@ import (
 )
 
 // @SDKDataSource("aws_kinesis_firehose_delivery_stream")
-func DataSourceDeliveryStream() *schema.Resource {
+func dataSourceDeliveryStream() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceDeliveryStreamRead,
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -29,16 +33,16 @@ func DataSourceDeliveryStream() *schema.Resource {
 
 func dataSourceDeliveryStreamRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).FirehoseConn(ctx)
+	conn := meta.(*conns.AWSClient).FirehoseClient(ctx)
 
 	sn := d.Get("name").(string)
-	output, err := FindDeliveryStreamByName(ctx, conn, sn)
+	output, err := findDeliveryStreamByName(ctx, conn, sn)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Kinesis Firehose Delivery Stream (%s): %s", sn, err)
 	}
 
-	d.SetId(aws.StringValue(output.DeliveryStreamARN))
+	d.SetId(aws.ToString(output.DeliveryStreamARN))
 	d.Set("arn", output.DeliveryStreamARN)
 	d.Set("name", output.DeliveryStreamName)
 

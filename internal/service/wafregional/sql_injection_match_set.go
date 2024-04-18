@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package wafregional
 
 import (
@@ -19,13 +22,14 @@ import (
 	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 )
 
-// @SDKResource("aws_wafregional_sql_injection_match_set")
-func ResourceSQLInjectionMatchSet() *schema.Resource {
+// @SDKResource("aws_wafregional_sql_injection_match_set", name="SQL Injection Match Set")
+func resourceSQLInjectionMatchSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSQLInjectionMatchSetCreate,
 		ReadWithoutTimeout:   resourceSQLInjectionMatchSetRead,
 		UpdateWithoutTimeout: resourceSQLInjectionMatchSetUpdate,
 		DeleteWithoutTimeout: resourceSQLInjectionMatchSetDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -171,11 +175,13 @@ func resourceSQLInjectionMatchSetDelete(ctx context.Context, d *schema.ResourceD
 
 		return conn.DeleteSqlInjectionMatchSetWithContext(ctx, req)
 	})
+
 	if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
 		return diags
 	}
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Regional WAF SQL Injection Match Set (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting WAF Regional SQL Injection Match Set (%s): %s", d.Id(), err)
 	}
 
 	return diags

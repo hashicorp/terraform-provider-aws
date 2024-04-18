@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cognitoidp
 
 import (
@@ -11,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// @SDKDataSource("aws_cognito_user_pool_signing_certificate")
-func DataSourceUserPoolSigningCertificate() *schema.Resource {
+// @SDKDataSource("aws_cognito_user_pool_signing_certificate", name="User Pool Signing Certificate")
+func dataSourceUserPoolSigningCertificate() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceUserPoolSigningCertificateRead,
 

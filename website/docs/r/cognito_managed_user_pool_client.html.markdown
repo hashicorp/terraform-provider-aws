@@ -3,21 +3,18 @@ subcategory: "Cognito IDP (Identity Provider)"
 layout: "aws"
 page_title: "AWS: aws_cognito_managed_user_pool_client"
 description: |-
-  Manages a Cognito User Pool Client resource created by another service.
+  Use the `aws_cognito_user_pool_client` resource to manage a Cognito User Pool Client. This resource is created by another service.
 ---
 
 # Resource: aws_cognito_managed_user_pool_client
 
-Manages a Cognito User Pool Client resource created by another service.
+Use the `aws_cognito_user_pool_client` resource to manage a Cognito User Pool Client.
 
-**This is an advanced resource** and has special caveats to be aware of when using it. Please read this document in its entirety before using this resource.
+**This resource is advanced** and has special caveats to consider before use. Please read this document completely before using the resource.
 
-The `aws_cognito_managed_user_pool_client` resource should only be used to manage a Cognito User Pool Client created automatically by an AWS service.
-For example, when [configuring an OpenSearch Domain to use Cognito authentication](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/cognito-auth.html),
-the OpenSearch service will create the User Pool Client on setup and delete it when no longer needed.
-Therefore, the `aws_cognito_managed_user_pool_client` resource does not _create_ or _delete_ this resource, but instead "adopts" it into management.
+Use the `aws_cognito_managed_user_pool_client` resource to manage a Cognito User Pool Client that is automatically created by an AWS service. For instance, when [configuring an OpenSearch Domain to use Cognito authentication](https://docs.aws.amazon.com/opensearch-service/latest/developerguide/cognito-auth.html), the OpenSearch service creates the User Pool Client during setup and removes it when it is no longer required. As a result, the `aws_cognito_managed_user_pool_client` resource does not create or delete this resource, but instead assumes management of it.
 
-For normal uses of a Cognito User Pool Client, use the [`aws_cognito_managed_user_pool_client` resource](cognito_user_pool_client.html) instead.
+Use the [`aws_cognito_user_pool_client`](cognito_user_pool_client.html) resource to manage Cognito User Pool Clients for normal use cases.
 
 ## Example Usage
 
@@ -97,71 +94,72 @@ data "aws_partition" "current" {}
 
 The following arguments are required:
 
-* `user_pool_id` - (Required) User pool the client belongs to.
-* `name_pattern` - (Required, one of `name_pattern` or `name_prefix`) Regular expression that matches the name of the desired User Pool Client.
-  Must match only one User Pool Client.
-* `name_prefix` - (Required, one of `name_prefix` or `name_pattern`) String that matches the beginning of the name of the desired User Pool Client.
-  Must match only one User Pool Client.
+* `user_pool_id` - (Required) User pool that the client belongs to.
+* `name_pattern` - (Required, one of `name_pattern` or `name_prefix`) Regular expression that matches the name of the desired User Pool Client. It must only match one User Pool Client.
+* `name_prefix` - (Required, one of `name_prefix` or `name_pattern`) String that matches the beginning of the name of the desired User Pool Client. It must match only one User Pool Client.
 
 The following arguments are optional:
 
-* `access_token_validity` - (Optional) Time limit, between 5 minutes and 1 day, after which the access token is no longer valid and cannot be used.
-  By default, the unit is hours.
-  The unit can be overridden by a value in `token_validity_units.access_token`.
-* `allowed_oauth_flows_user_pool_client` - (Optional) Whether the client is allowed to follow the OAuth protocol when interacting with Cognito user pools.
-* `allowed_oauth_flows` - (Optional) List of allowed OAuth flows (code, implicit, client_credentials).
-* `allowed_oauth_scopes` - (Optional) List of allowed OAuth scopes (phone, email, openid, profile, and aws.cognito.signin.user.admin).
-* `analytics_configuration` - (Optional) Configuration block for Amazon Pinpoint analytics for collecting metrics for this user pool. [Detailed below](#analytics_configuration).
-* `auth_session_validity` - (Optional) Amazon Cognito creates a session token for each API request in an authentication flow. AuthSessionValidity is the duration, in minutes, of that session token. Your user pool native user must respond to each authentication challenge before the session expires. Valid values between `3` and `15`. Default value is `3`.
+* `access_token_validity` - (Optional) Time limit, between 5 minutes and 1 day, after which the access token is no longer valid and cannot be used. By default, the unit is hours. The unit can be overridden by a value in `token_validity_units.access_token`.
+* `allowed_oauth_flows_user_pool_client` - (Optional) Whether the client is allowed to use the OAuth protocol when interacting with Cognito user pools.
+* `allowed_oauth_flows` - (Optional) List of allowed OAuth flows, including code, implicit, and client_credentials.
+* `allowed_oauth_scopes` - (Optional) List of allowed OAuth scopes, including phone, email, openid, profile, and aws.cognito.signin.user.admin.
+* `analytics_configuration` - (Optional) Configuration block for Amazon Pinpoint analytics that collects metrics for this user pool. See [details below](#analytics_configuration).
+* `auth_session_validity` - (Optional) Duration, in minutes, of the session token created by Amazon Cognito for each API request in an authentication flow. The session token must be responded to by the native user of the user pool before it expires. Valid values for `auth_session_validity` are between `3` and `15`, with a default value of `3`.
 * `callback_urls` - (Optional) List of allowed callback URLs for the identity providers.
-* `default_redirect_uri` - (Optional) Default redirect URI. Must be in the list of callback URLs.
+* `default_redirect_uri` - (Optional) Default redirect URI and must be included in the list of callback URLs.
 * `enable_token_revocation` - (Optional) Enables or disables token revocation.
-* `enable_propagate_additional_user_context_data` - (Optional) Activates the propagation of additional user context data.
-* `explicit_auth_flows` - (Optional) List of authentication flows (ADMIN_NO_SRP_AUTH, CUSTOM_AUTH_FLOW_ONLY, USER_PASSWORD_AUTH, ALLOW_ADMIN_USER_PASSWORD_AUTH, ALLOW_CUSTOM_AUTH, ALLOW_USER_PASSWORD_AUTH, ALLOW_USER_SRP_AUTH, ALLOW_REFRESH_TOKEN_AUTH).
-* `generate_secret` - (Optional) Should an application secret be generated.
-* `id_token_validity` - (Optional) Time limit, between 5 minutes and 1 day, after which the ID token is no longer valid and cannot be used.
-  By default, the unit is hours.
-  The unit can be overridden by a value in `token_validity_units.id_token`.
+* `enable_propagate_additional_user_context_data` - (Optional) Enables the propagation of additional user context data.
+* `explicit_auth_flows` - (Optional) List of authentication flows. The available options include ADMIN_NO_SRP_AUTH, CUSTOM_AUTH_FLOW_ONLY, USER_PASSWORD_AUTH, ALLOW_ADMIN_USER_PASSWORD_AUTH, ALLOW_CUSTOM_AUTH, ALLOW_USER_PASSWORD_AUTH, ALLOW_USER_SRP_AUTH, and ALLOW_REFRESH_TOKEN_AUTH.
+* `generate_secret` - (Optional) Boolean flag indicating whether an application secret should be generated.
+* `id_token_validity` - (Optional) Time limit, between 5 minutes and 1 day, after which the ID token is no longer valid and cannot be used. By default, the unit is hours. The unit can be overridden by a value in `token_validity_units.id_token`.
 * `logout_urls` - (Optional) List of allowed logout URLs for the identity providers.
-* `prevent_user_existence_errors` - (Optional) Choose which errors and responses are returned by Cognito APIs during authentication, account confirmation, and password recovery when the user does not exist in the user pool. When set to `ENABLED` and the user does not exist, authentication returns an error indicating either the username or password was incorrect, and account confirmation and password recovery return a response indicating a code was sent to a simulated destination. When set to `LEGACY`, those APIs will return a `UserNotFoundException` exception if the user does not exist in the user pool.
-* `read_attributes` - (Optional) List of user pool attributes the application client can read from.
-* `refresh_token_validity` - (Optional) Time limit, between 60 minutes and 10 years, after which the refresh token is no longer valid and cannot be used.
-  By default, the unit is days.
-  The unit can be overridden by a value in `token_validity_units.refresh_token`.
-* `supported_identity_providers` - (Optional) List of provider names for the identity providers that are supported on this client. Uses the `provider_name` attribute of `aws_cognito_identity_provider` resource(s), or the equivalent string(s).
-* `token_validity_units` - (Optional) Configuration block for units in which the validity times are represented in. [Detailed below](#token_validity_units).
-* `write_attributes` - (Optional) List of user pool attributes the application client can write to.
+* `prevent_user_existence_errors` - (Optional) Setting determines the errors and responses returned by Cognito APIs when a user does not exist in the user pool during authentication, account confirmation, and password recovery.
+* `read_attributes` - (Optional) List of user pool attributes that the application client can read from.
+* `refresh_token_validity` - (Optional) Time limit, between 60 minutes and 10 years, after which the refresh token is no longer valid and cannot be used. By default, the unit is days. The unit can be overridden by a value in `token_validity_units.refresh_token`.
+* `supported_identity_providers` - (Optional) List of provider names for the identity providers that are supported on this client. It uses the `provider_name` attribute of the `aws_cognito_identity_provider` resource(s), or the equivalent string(s).
+* `token_validity_units` - (Optional) Configuration block for representing the validity times in units. See details below. [Detailed below](#token_validity_units).
+* `write_attributes` - (Optional) List of user pool attributes that the application client can write to.
 
 ### analytics_configuration
 
-Either `application_arn` or `application_id` is required.
+Either `application_arn` or `application_id` is required for this configuration block.
 
-* `application_arn` - (Optional) Application ARN for an Amazon Pinpoint application. Conflicts with `external_id` and `role_arn`.
-* `application_id` - (Optional) Application ID for an Amazon Pinpoint application.
-* `external_id` - (Optional) ID for the Analytics Configuration. Conflicts with `application_arn`.
-* `role_arn` - (Optional) ARN of an IAM role that authorizes Amazon Cognito to publish events to Amazon Pinpoint analytics. Conflicts with `application_arn`.
-* `user_data_shared` (Optional) If set to `true`, Amazon Cognito will include user data in the events it publishes to Amazon Pinpoint analytics.
+* `application_arn` - (Optional) Application ARN for an Amazon Pinpoint application. It conflicts with `external_id` and `role_arn`.
+* `application_id` - (Optional) Unique identifier for an Amazon Pinpoint application.
+* `external_id` - (Optional) ID for the Analytics Configuration and conflicts with `application_arn`.
+* `role_arn` - (Optional) ARN of an IAM role that authorizes Amazon Cognito to publish events to Amazon Pinpoint analytics. It conflicts with `application_arn`.
+* `user_data_shared` - (Optional) If `user_data_shared` is set to `true`, Amazon Cognito will include user data in the events it publishes to Amazon Pinpoint analytics.
 
 ### token_validity_units
 
-Valid values for the following arguments are: `seconds`, `minutes`, `hours` or `days`.
+Valid values for the following arguments are: `seconds`, `minutes`, `hours`, or `days`.
 
-* `access_token` - (Optional) Time unit in for the value in `access_token_validity`, defaults to `hours`.
-* `id_token` - (Optional) Time unit in for the value in `id_token_validity`, defaults to `hours`.
-* `refresh_token` - (Optional) Time unit in for the value in `refresh_token_validity`, defaults to `days`.
+* `access_token` - (Optional) Time unit for the value in `access_token_validity` and defaults to `hours`.
+* `id_token` - (Optional) Time unit for the value in `id_token_validity`, and it defaults to `hours`.
+* `refresh_token` - (Optional) Time unit for the value in `refresh_token_validity` and defaults to `days`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `client_secret` - Client secret of the user pool client.
-* `id` - ID of the user pool client.
+* `id` - Unique identifier for the user pool client.
 * `name` - Name of the user pool client.
 
 ## Import
 
-Cognito User Pool Clients can be imported using the `id` of the Cognito User Pool, and the `id` of the Cognito User Pool Client, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Cognito User Pool Clients using the `id` of the Cognito User Pool and the `id` of the Cognito User Pool Client. For example:
 
+```terraform
+import {
+  to = aws_cognito_managed_user_pool_client.client
+  id = "us-west-2_abc123/3ho4ek12345678909nh3fmhpko"
+}
 ```
-$ terraform import aws_cognito_managed_user_pool_client.client us-west-2_abc123/3ho4ek12345678909nh3fmhpko
+
+Using `terraform import`, import Cognito User Pool Clients using the `id` of the Cognito User Pool and the `id` of the Cognito User Pool Client. For example:
+
+```console
+% terraform import aws_cognito_managed_user_pool_client.client us-west-2_abc123/3ho4ek12345678909nh3fmhpko
 ```

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
@@ -17,12 +20,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	"github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/internal/maps"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"golang.org/x/exp/maps"
 )
 
 // @SDKResource("aws_rds_cluster_parameter_group", name="Cluster Parameter Group")
@@ -233,7 +236,7 @@ func resourceClusterParameterGroupUpdate(ctx context.Context, d *schema.Resource
 		ns := n.(*schema.Set)
 
 		// Expand the "parameter" set to aws-sdk-go compat []rds.Parameter.
-		for _, chunk := range slices.Chunks(expandParameters(ns.Difference(os).List()), maxParamModifyChunk) {
+		for _, chunk := range tfslices.Chunks(expandParameters(ns.Difference(os).List()), maxParamModifyChunk) {
 			input := &rds.ModifyDBClusterParameterGroupInput{
 				DBClusterParameterGroupName: aws.String(d.Id()),
 				Parameters:                  chunk,
@@ -260,7 +263,7 @@ func resourceClusterParameterGroupUpdate(ctx context.Context, d *schema.Resource
 		}
 
 		// Reset parameters that have been removed.
-		for _, chunk := range slices.Chunks(maps.Values(toRemove), maxParamModifyChunk) {
+		for _, chunk := range tfslices.Chunks(maps.Values(toRemove), maxParamModifyChunk) {
 			input := &rds.ResetDBClusterParameterGroupInput{
 				DBClusterParameterGroupName: aws.String(d.Id()),
 				Parameters:                  chunk,

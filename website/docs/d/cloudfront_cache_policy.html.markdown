@@ -6,7 +6,7 @@ description: |-
   Use this data source to retrieve information about a CloudFront cache policy.
 ---
 
-# Data source: aws_cloudfront_cache_policy
+# Data Source: aws_cloudfront_cache_policy
 
 Use this data source to retrieve information about a CloudFront cache policy.
 
@@ -32,14 +32,14 @@ data "aws_cloudfront_cache_policy" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `name` - (Optional) Unique name to identify the cache policy.
 * `id` - (Optional) Identifier for the cache policy.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `etag` - Current version of the cache policy.
 * `min_ttl` - Minimum amount of time, in seconds, that you want objects to stay in the CloudFront cache before CloudFront sends another request to the origin to see if the object has been updated.

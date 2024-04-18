@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam_test
 
 import (
@@ -5,8 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -14,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestDecodeServiceLinkedRoleID(t *testing.T) {
@@ -80,14 +83,14 @@ func TestDecodeServiceLinkedRoleID(t *testing.T) {
 func TestAccIAMServiceLinkedRole_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_iam_service_linked_role.test"
-	awsServiceName := "elasticbeanstalk.amazonaws.com"
-	name := "AWSServiceRoleForElasticBeanstalk"
+	awsServiceName := "inspector.amazonaws.com"
+	name := "AWSServiceRoleForAmazonInspector"
 	path := fmt.Sprintf("/aws-service-role/%s/", awsServiceName)
 	arnResource := fmt.Sprintf("role%s%s", path, name)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServiceLinkedRoleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -143,7 +146,7 @@ func TestAccIAMServiceLinkedRole_customSuffix(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServiceLinkedRoleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -173,7 +176,7 @@ func TestAccIAMServiceLinkedRole_CustomSuffix_diffSuppressFunc(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServiceLinkedRoleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -203,7 +206,7 @@ func TestAccIAMServiceLinkedRole_description(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServiceLinkedRoleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -230,52 +233,6 @@ func TestAccIAMServiceLinkedRole_description(t *testing.T) {
 	})
 }
 
-func TestAccIAMServiceLinkedRole_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	resourceName := "aws_iam_service_linked_role.test"
-	awsServiceName := "autoscaling.amazonaws.com"
-	customSuffix := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServiceLinkedRoleDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccServiceLinkedRoleConfig_tags1(awsServiceName, customSuffix, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceLinkedRoleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccServiceLinkedRoleConfig_tags2(awsServiceName, customSuffix, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceLinkedRoleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccServiceLinkedRoleConfig_tags1(awsServiceName, customSuffix, "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckServiceLinkedRoleExists(ctx, resourceName),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccIAMServiceLinkedRole_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_iam_service_linked_role.test"
@@ -284,7 +241,7 @@ func TestAccIAMServiceLinkedRole_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServiceLinkedRoleDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -303,7 +260,7 @@ func TestAccIAMServiceLinkedRole_disappears(t *testing.T) {
 
 func testAccCheckServiceLinkedRoleDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iam_service_linked_role" {
@@ -340,7 +297,7 @@ func testAccCheckServiceLinkedRoleExists(ctx context.Context, n string) resource
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
 		_, roleName, _, err := tfiam.DecodeServiceLinkedRoleID(rs.Primary.ID)
 
@@ -381,7 +338,18 @@ resource "aws_iam_service_linked_role" "test" {
 `, awsServiceName, customSuffix, description)
 }
 
-func testAccServiceLinkedRoleConfig_tags1(awsServiceName, customSuffix, tagKey1, tagValue1 string) string {
+const tagsTestServiceName = "autoscaling.amazonaws.com"
+
+func testAccServiceLinkedRoleConfig_tags0(customSuffix string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_service_linked_role" "test" {
+  aws_service_name = %[1]q
+  custom_suffix    = %[2]q
+}
+`, tagsTestServiceName, customSuffix)
+}
+
+func testAccServiceLinkedRoleConfig_tags1(customSuffix, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_service_linked_role" "test" {
   aws_service_name = %[1]q
@@ -391,10 +359,10 @@ resource "aws_iam_service_linked_role" "test" {
     %[3]q = %[4]q
   }
 }
-`, awsServiceName, customSuffix, tagKey1, tagValue1)
+`, tagsTestServiceName, customSuffix, tagKey1, tagValue1)
 }
 
-func testAccServiceLinkedRoleConfig_tags2(awsServiceName, customSuffix, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccServiceLinkedRoleConfig_tags2(customSuffix, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_service_linked_role" "test" {
   aws_service_name = %[1]q
@@ -405,5 +373,18 @@ resource "aws_iam_service_linked_role" "test" {
     %[5]q = %[6]q
   }
 }
-`, awsServiceName, customSuffix, tagKey1, tagValue1, tagKey2, tagValue2)
+`, tagsTestServiceName, customSuffix, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccServiceLinkedRoleConfig_tagsNull(customSuffix, tagKey1 string) string {
+	return fmt.Sprintf(`
+resource "aws_iam_service_linked_role" "test" {
+  aws_service_name = %[1]q
+  custom_suffix    = %[2]q
+
+  tags = {
+    %[3]q = null
+  }
+}
+`, tagsTestServiceName, customSuffix, tagKey1)
 }

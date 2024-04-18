@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package dynamodb
 
@@ -17,11 +17,12 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/sdk"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_dynamodb_table", &resource.Sweeper{
 		Name: "aws_dynamodb_table",
 		F:    sweepTables,
@@ -53,10 +54,19 @@ func sweepTables(region string) error {
 		}
 
 		for _, tableName := range page.TableNames {
+			id := aws.StringValue(tableName)
+
+			_, err := conn.UpdateTableWithContext(ctx, &dynamodb.UpdateTableInput{
+				DeletionProtectionEnabled: aws.Bool(false),
+				TableName:                 aws.String(id),
+			})
+
+			if err != nil {
+				log.Printf("[WARN] DynamoDB Table (%s): %s", id, err)
+			}
+
 			r := ResourceTable()
 			d := r.Data(nil)
-
-			id := aws.StringValue(tableName)
 			d.SetId(id)
 
 			// read concurrently and gather errors
@@ -92,11 +102,11 @@ func sweepTables(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error concurrently reading DynamoDB Tables: %w", err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping DynamoDB Tables for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping DynamoDB Tables sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -148,11 +158,11 @@ func sweepBackups(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("reading DynamoDB Backups: %w", err))
 	}
 
-	if err = sweep.SweepOrchestratorWithContext(ctx, sweepables); err != nil {
+	if err = sweep.SweepOrchestrator(ctx, sweepables); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping DynamoDB Backups for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping DynamoDB Backups sweep for %s: %s", region, errs)
 		return nil
 	}

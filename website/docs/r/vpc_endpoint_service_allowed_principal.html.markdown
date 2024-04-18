@@ -31,13 +31,13 @@ resource "aws_vpc_endpoint_service_allowed_principal" "allow_me_to_foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `vpc_endpoint_service_id` - (Required) The ID of the VPC endpoint service to allow permission.
 * `principal_arn` - (Required) The ARN of the principal to allow permissions.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the association.

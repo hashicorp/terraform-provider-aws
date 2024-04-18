@@ -8,6 +8,7 @@ import (
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	detective_sdkv1 "github.com/aws/aws-sdk-go/service/detective"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -44,6 +45,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  ResourceMember,
 			TypeName: "aws_detective_member",
 		},
+		{
+			Factory:  ResourceOrganizationAdminAccount,
+			TypeName: "aws_detective_organization_admin_account",
+		},
+		{
+			Factory:  ResourceOrganizationConfiguration,
+			TypeName: "aws_detective_organization_configuration",
+		},
 	}
 }
 
@@ -58,4 +67,6 @@ func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*d
 	return detective_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
 }
 
-var ServicePackage = &servicePackage{}
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}

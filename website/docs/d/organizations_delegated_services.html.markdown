@@ -22,7 +22,9 @@ data "aws_organizations_delegated_services" "example" {
 
 * `account_id` - (Required) Account ID number of a delegated administrator account in the organization.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `delegated_services` - Services for which the account is a delegated administrator, which have the following attributes:
     * `delegation_enabled_date` - The date that the account became a delegated administrator for this service.

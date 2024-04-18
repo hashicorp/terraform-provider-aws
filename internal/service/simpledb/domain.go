@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package simpledb
 
 import (
@@ -24,7 +27,6 @@ import (
 // @FrameworkResource
 func newResourceDomain(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &resourceDomain{}
-	r.SetMigratedFromPluginSDK(true)
 
 	return r, nil
 }

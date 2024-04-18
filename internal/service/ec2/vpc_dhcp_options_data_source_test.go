@@ -1,14 +1,17 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/YakDriver/regexache"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccVPCDHCPOptionsDataSource_basic(t *testing.T) {
@@ -18,12 +21,12 @@ func TestAccVPCDHCPOptionsDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccVPCDHCPOptionsDataSourceConfig_missing,
-				ExpectError: regexp.MustCompile(`no matching EC2 DHCP Options Set found`),
+				ExpectError: regexache.MustCompile(`no matching EC2 DHCP Options Set found`),
 			},
 			{
 				Config: testAccVPCDHCPOptionsDataSourceConfig_id,
@@ -33,6 +36,7 @@ func TestAccVPCDHCPOptionsDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "domain_name_servers.#", resourceName, "domain_name_servers.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "domain_name_servers.0", resourceName, "domain_name_servers.0"),
 					resource.TestCheckResourceAttrPair(datasourceName, "domain_name_servers.1", resourceName, "domain_name_servers.1"),
+					resource.TestCheckResourceAttrPair(datasourceName, "ipv6_address_preferred_lease_time", resourceName, "ipv6_address_preferred_lease_time"),
 					resource.TestCheckResourceAttrPair(datasourceName, "netbios_name_servers.#", resourceName, "netbios_name_servers.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "netbios_name_servers.0", resourceName, "netbios_name_servers.0"),
 					resource.TestCheckResourceAttrPair(datasourceName, "netbios_node_type", resourceName, "netbios_node_type"),
@@ -56,7 +60,7 @@ func TestAccVPCDHCPOptionsDataSource_filter(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -67,6 +71,7 @@ func TestAccVPCDHCPOptionsDataSource_filter(t *testing.T) {
 					resource.TestCheckResourceAttrPair(datasourceName, "domain_name_servers.#", resourceName, "domain_name_servers.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "domain_name_servers.0", resourceName, "domain_name_servers.0"),
 					resource.TestCheckResourceAttrPair(datasourceName, "domain_name_servers.1", resourceName, "domain_name_servers.1"),
+					resource.TestCheckResourceAttrPair(datasourceName, "ipv6_address_preferred_lease_time", resourceName, "ipv6_address_preferred_lease_time"),
 					resource.TestCheckResourceAttrPair(datasourceName, "netbios_name_servers.#", resourceName, "netbios_name_servers.#"),
 					resource.TestCheckResourceAttrPair(datasourceName, "netbios_name_servers.0", resourceName, "netbios_name_servers.0"),
 					resource.TestCheckResourceAttrPair(datasourceName, "netbios_node_type", resourceName, "netbios_node_type"),
@@ -79,7 +84,7 @@ func TestAccVPCDHCPOptionsDataSource_filter(t *testing.T) {
 			},
 			{
 				Config:      testAccVPCDHCPOptionsDataSourceConfig_filter(rInt, 2),
-				ExpectError: regexp.MustCompile(`multiple EC2 DHCP Options Sets matched`),
+				ExpectError: regexache.MustCompile(`multiple EC2 DHCP Options Sets matched`),
 			},
 			{
 				// We have one last empty step here because otherwise we'll leave the
@@ -104,11 +109,12 @@ resource "aws_vpc_dhcp_options" "incorrect" {
 }
 
 resource "aws_vpc_dhcp_options" "test" {
-  domain_name          = "service.consul"
-  domain_name_servers  = ["127.0.0.1", "10.0.0.2"]
-  netbios_name_servers = ["127.0.0.1"]
-  netbios_node_type    = 2
-  ntp_servers          = ["127.0.0.1"]
+  domain_name                       = "service.consul"
+  domain_name_servers               = ["127.0.0.1", "10.0.0.2"]
+  ipv6_address_preferred_lease_time = 3600
+  netbios_name_servers              = ["127.0.0.1"]
+  netbios_node_type                 = 2
+  ntp_servers                       = ["127.0.0.1"]
 
   tags = {
     Name = "tf-acc-test"
@@ -129,11 +135,12 @@ resource "aws_vpc_dhcp_options" "incorrect" {
 resource "aws_vpc_dhcp_options" "test" {
   count = %[2]d
 
-  domain_name          = "tf-acc-test-%[1]d.example.com"
-  domain_name_servers  = ["127.0.0.1", "10.0.0.2"]
-  netbios_name_servers = ["127.0.0.1"]
-  netbios_node_type    = 2
-  ntp_servers          = ["127.0.0.1"]
+  domain_name                       = "tf-acc-test-%[1]d.example.com"
+  domain_name_servers               = ["127.0.0.1", "10.0.0.2"]
+  ipv6_address_preferred_lease_time = 3600
+  netbios_name_servers              = ["127.0.0.1"]
+  netbios_node_type                 = 2
+  ntp_servers                       = ["127.0.0.1"]
 
   tags = {
     Name = "tf-acc-test-%[1]d"

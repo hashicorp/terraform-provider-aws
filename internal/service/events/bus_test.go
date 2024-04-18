@@ -1,14 +1,17 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package events_test
 
 import (
 	"context"
 	"fmt"
 	"os"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/eventbridge"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -16,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfevents "github.com/hashicorp/terraform-provider-aws/internal/service/events"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEventsBus_basic(t *testing.T) {
@@ -27,7 +31,7 @@ func TestAccEventsBus_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBusDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -78,7 +82,7 @@ func TestAccEventsBus_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBusDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -123,13 +127,13 @@ func TestAccEventsBus_default(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBusDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccBusConfig_basic("default"),
-				ExpectError: regexp.MustCompile(`cannot be 'default'`),
+				ExpectError: regexache.MustCompile(`cannot be 'default'`),
 			},
 		},
 	})
@@ -143,7 +147,7 @@ func TestAccEventsBus_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBusDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -172,7 +176,7 @@ func TestAccEventsBus_partnerEventSource(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, eventbridge.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EventsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBusDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -192,7 +196,7 @@ func TestAccEventsBus_partnerEventSource(t *testing.T) {
 
 func testAccCheckBusDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudwatch_event_bus" {
@@ -223,11 +227,7 @@ func testAccCheckBusExists(ctx context.Context, n string, v *eventbridge.Describ
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EventBridge Event Bus ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsClient(ctx)
 
 		output, err := tfevents.FindEventBusByName(ctx, conn, rs.Primary.ID)
 
@@ -243,8 +243,8 @@ func testAccCheckBusExists(ctx context.Context, n string, v *eventbridge.Describ
 
 func testAccCheckBusRecreated(i, j *eventbridge.DescribeEventBusOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.StringValue(i.Arn) == aws.StringValue(j.Arn) {
-			return fmt.Errorf("EventBridge event bus not recreated")
+		if aws.ToString(i.Arn) == aws.ToString(j.Arn) {
+			return fmt.Errorf("EventBridge Event Bus not recreated")
 		}
 		return nil
 	}
@@ -252,8 +252,8 @@ func testAccCheckBusRecreated(i, j *eventbridge.DescribeEventBusOutput) resource
 
 func testAccCheckBusNotRecreated(i, j *eventbridge.DescribeEventBusOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.StringValue(i.Arn) != aws.StringValue(j.Arn) {
-			return fmt.Errorf("EventBridge event bus was recreated")
+		if aws.ToString(i.Arn) != aws.ToString(j.Arn) {
+			return fmt.Errorf("EventBridge Event Bus was recreated")
 		}
 		return nil
 	}

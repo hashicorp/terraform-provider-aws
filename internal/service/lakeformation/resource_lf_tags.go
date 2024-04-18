@@ -1,23 +1,25 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lakeformation
 
 import (
 	"bytes"
 	"context"
 	"fmt"
-	"log"
 	"reflect"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/awserr"
-	"github.com/aws/aws-sdk-go/service/lakeformation"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/lakeformation"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/lakeformation/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -223,41 +225,34 @@ func ResourceResourceLFTags() *schema.Resource {
 }
 
 func resourceResourceLFTagsCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LakeFormationConn(ctx)
+	var diags diag.Diagnostics
 
-	input := &lakeformation.AddLFTagsToResourceInput{
-		Resource: &lakeformation.Resource{},
-	}
+	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
+
+	input := &lakeformation.AddLFTagsToResourceInput{}
 
 	if v, ok := d.GetOk("catalog_id"); ok {
 		input.CatalogId = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("database"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.Database = ExpandDatabaseResource(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("lf_tag"); ok && v.(*schema.Set).Len() > 0 {
 		input.LFTags = expandLFTagPairs(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("table"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.Table = ExpandTableResource(v.([]interface{})[0].(map[string]interface{}))
+	tagger, ds := lfTagsTagger(d)
+	diags = append(diags, ds...)
+	if diags.HasError() {
+		return diags
 	}
 
-	if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.TableWithColumns = expandTableColumnsResource(v.([]interface{})[0].(map[string]interface{}))
-	}
+	input.Resource = tagger.ExpandResource(d)
 
 	var output *lakeformation.AddLFTagsToResourceOutput
 	err := retry.RetryContext(ctx, IAMPropagationTimeout, func() *retry.RetryError {
 		var err error
-		output, err = conn.AddLFTagsToResourceWithContext(ctx, input)
+		output, err = conn.AddLFTagsToResource(ctx, input)
 		if err != nil {
-			if tfawserr.ErrCodeEquals(err, lakeformation.ErrCodeConcurrentModificationException) {
-				return retry.RetryableError(err)
-			}
-			if tfawserr.ErrMessageContains(err, "AccessDeniedException", "is not authorized") {
+			if errs.IsA[*awstypes.ConcurrentModificationException](err) || errs.IsA[*awstypes.AccessDeniedException](err) {
 				return retry.RetryableError(err)
 			}
 
@@ -267,14 +262,12 @@ func resourceResourceLFTagsCreate(ctx context.Context, d *schema.ResourceData, m
 	})
 
 	if tfresource.TimedOut(err) {
-		output, err = conn.AddLFTagsToResourceWithContext(ctx, input)
+		output, err = conn.AddLFTagsToResource(ctx, input)
 	}
 
 	if err != nil {
-		return create.DiagError(names.LakeFormation, create.ErrActionCreating, ResNameLFTags, input.String(), err)
+		return create.AppendDiagError(diags, names.LakeFormation, create.ErrActionCreating, ResNameLFTags, prettify(input), err)
 	}
-
-	diags := diag.Diagnostics{}
 
 	if output != nil && len(output.Failures) > 0 {
 		for _, v := range output.Failures {
@@ -282,36 +275,30 @@ func resourceResourceLFTagsCreate(ctx context.Context, d *schema.ResourceData, m
 				continue
 			}
 
-			diags = create.AddWarning(
-				diags,
+			diags = create.AppendDiagError(diags,
 				names.LakeFormation,
 				create.ErrActionCreating,
 				ResNameLFTags,
-				fmt.Sprintf("catalog id:%s, tag key:%s, values:%+v", aws.StringValue(v.LFTag.CatalogId), aws.StringValue(v.LFTag.TagKey), aws.StringValueSlice(v.LFTag.TagValues)),
-				awserr.New(aws.StringValue(v.Error.ErrorCode), aws.StringValue(v.Error.ErrorMessage), nil),
-			)
-		}
-
-		if len(diags) == len(input.LFTags) {
-			return append(diags,
-				diag.Diagnostic{
-					Severity: diag.Error,
-					Summary:  create.ProblemStandardMessage(names.LakeFormation, create.ErrActionCreating, ResNameLFTags, "", fmt.Errorf("attempted to add %d tags, %d failures", len(input.LFTags), len(diags))),
-				},
+				fmt.Sprintf("catalog id:%s, tag key:%s, values:%+v", aws.ToString(v.LFTag.CatalogId), aws.ToString(v.LFTag.TagKey), v.LFTag.TagValues),
+				fmt.Errorf("%s: %s", aws.ToString(v.Error.ErrorCode), aws.ToString(v.Error.ErrorMessage)),
 			)
 		}
 	}
+	if diags.HasError() {
+		return diags
+	}
 
-	d.SetId(fmt.Sprintf("%d", create.StringHashcode(input.String())))
+	d.SetId(fmt.Sprintf("%d", create.StringHashcode(prettify(input))))
 
-	return append(resourceResourceLFTagsRead(ctx, d, meta), diags...)
+	return append(diags, resourceResourceLFTagsRead(ctx, d, meta)...)
 }
 
 func resourceResourceLFTagsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LakeFormationConn(ctx)
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
 
 	input := &lakeformation.GetResourceLFTagsInput{
-		Resource:           &lakeformation.Resource{},
 		ShowAssignedLFTags: aws.Bool(true),
 	}
 
@@ -319,109 +306,153 @@ func resourceResourceLFTagsRead(ctx context.Context, d *schema.ResourceData, met
 		input.CatalogId = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("database"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.Database = ExpandDatabaseResource(v.([]interface{})[0].(map[string]interface{}))
+	tagger, ds := lfTagsTagger(d)
+	diags = append(diags, ds...)
+	if diags.HasError() {
+		return diags
 	}
 
-	if v, ok := d.GetOk("table"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.Table = ExpandTableResource(v.([]interface{})[0].(map[string]interface{}))
-	}
+	input.Resource = tagger.ExpandResource(d)
 
-	if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.TableWithColumns = expandTableColumnsResource(v.([]interface{})[0].(map[string]interface{}))
-	}
-
-	output, err := conn.GetResourceLFTagsWithContext(ctx, input)
+	output, err := conn.GetResourceLFTags(ctx, input)
 
 	if err != nil {
-		return create.DiagError(names.LakeFormation, create.ErrActionReading, ResNameLFTags, d.Id(), err)
+		return create.AppendDiagError(diags, names.LakeFormation, create.ErrActionReading, ResNameLFTags, d.Id(), err)
 	}
 
-	if len(output.LFTagOnDatabase) > 0 {
-		if err := d.Set("lf_tag", flattenLFTagPairs(output.LFTagOnDatabase)); err != nil {
-			return create.DiagError(names.LakeFormation, create.ErrActionSetting, ResNameLFTags, d.Id(), err)
-		}
+	if err := d.Set("lf_tag", tagger.FlattenTags(output)); err != nil {
+		return create.AppendDiagError(diags, names.LakeFormation, create.ErrActionSetting, ResNameLFTags, d.Id(), err)
 	}
 
-	if len(output.LFTagsOnColumns) > 0 {
-		for _, v := range output.LFTagsOnColumns {
-			if aws.StringValue(v.Name) != d.Get("table_with_columns.0.name").(string) {
-				continue
-			}
-
-			if err := d.Set("lf_tag", flattenLFTagPairs(v.LFTags)); err != nil {
-				return create.DiagError(names.LakeFormation, create.ErrActionSetting, ResNameLFTags, d.Id(), err)
-			}
-		}
-	}
-
-	if len(output.LFTagsOnTable) > 0 {
-		if err := d.Set("lf_tag", flattenLFTagPairs(output.LFTagsOnTable)); err != nil {
-			return create.DiagError(names.LakeFormation, create.ErrActionSetting, ResNameLFTags, d.Id(), err)
-		}
-	}
-
-	return nil
+	return diags
 }
 
 func resourceResourceLFTagsDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).LakeFormationConn(ctx)
+	var diags diag.Diagnostics
 
-	input := &lakeformation.RemoveLFTagsFromResourceInput{
-		Resource: &lakeformation.Resource{},
-	}
+	conn := meta.(*conns.AWSClient).LakeFormationClient(ctx)
+
+	input := &lakeformation.RemoveLFTagsFromResourceInput{}
 
 	if v, ok := d.GetOk("catalog_id"); ok {
 		input.CatalogId = aws.String(v.(string))
-	}
-
-	if v, ok := d.GetOk("database"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.Database = ExpandDatabaseResource(v.([]interface{})[0].(map[string]interface{}))
 	}
 
 	if v, ok := d.GetOk("lf_tag"); ok && v.(*schema.Set).Len() > 0 {
 		input.LFTags = expandLFTagPairs(v.(*schema.Set).List())
 	}
 
-	if v, ok := d.GetOk("table"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.Table = ExpandTableResource(v.([]interface{})[0].(map[string]interface{}))
+	tagger, ds := lfTagsTagger(d)
+	diags = append(diags, ds...)
+	if diags.HasError() {
+		return diags
 	}
 
-	if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.Resource.TableWithColumns = expandTableColumnsResource(v.([]interface{})[0].(map[string]interface{}))
-	}
+	input.Resource = tagger.ExpandResource(d)
 
-	if input.Resource == nil || reflect.DeepEqual(input.Resource, &lakeformation.Resource{}) {
+	if input.Resource == nil || reflect.DeepEqual(input.Resource, &awstypes.Resource{}) || len(input.LFTags) == 0 {
 		// if resource is empty, don't delete = it won't delete anything since this is the predicate
-		log.Printf("[WARN] No Lake Formation Resource LF Tags to remove")
-		return nil
+		return create.AppendDiagWarningMessage(diags, names.LakeFormation, create.ErrActionSetting, ResNameLFTags, d.Id(), "no LF-Tags to remove")
 	}
 
 	err := retry.RetryContext(ctx, d.Timeout(schema.TimeoutDelete), func() *retry.RetryError {
 		var err error
-		_, err = conn.RemoveLFTagsFromResourceWithContext(ctx, input)
+		_, err = conn.RemoveLFTagsFromResource(ctx, input)
 		if err != nil {
-			if tfawserr.ErrCodeEquals(err, lakeformation.ErrCodeConcurrentModificationException) {
+			if errs.IsA[*awstypes.ConcurrentModificationException](err) {
 				return retry.RetryableError(err)
 			}
-			if tfawserr.ErrMessageContains(err, "AccessDeniedException", "is not authorized") {
+			if errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "is not authorized") {
 				return retry.RetryableError(err)
 			}
 
-			return retry.NonRetryableError(fmt.Errorf("unable to revoke Lake Formation Permissions: %w", err))
+			return retry.NonRetryableError(fmt.Errorf("removing Lake Formation LF-Tags: %w", err))
 		}
 		return nil
 	})
 
 	if tfresource.TimedOut(err) {
-		_, err = conn.RemoveLFTagsFromResourceWithContext(ctx, input)
+		_, err = conn.RemoveLFTagsFromResource(ctx, input)
 	}
 
 	if err != nil {
-		return create.DiagError(names.LakeFormation, create.ErrActionDeleting, ResNameLFTags, d.Id(), err)
+		return create.AppendDiagError(diags, names.LakeFormation, create.ErrActionDeleting, ResNameLFTags, d.Id(), err)
 	}
 
-	return nil
+	return diags
+}
+
+func lfTagsTagger(d *schema.ResourceData) (tagger, diag.Diagnostics) {
+	var diags diag.Diagnostics
+	if v, ok := d.GetOk("database"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		return &databaseTagger{}, diags
+	} else if v, ok := d.GetOk("table"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		return &tableTagger{}, diags
+	} else if v, ok := d.GetOk("table_with_columns"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+		return &columnTagger{}, diags
+	} else {
+		diags = append(diags, errs.NewErrorDiagnostic(
+			"Invalid Lake Formation Resource Type",
+			"An unexpected error occurred while resolving the Lake Formation Resource type. "+
+				"This is always an error in the provider. "+
+				"Please report the following to the provider developer:\n\n"+
+				"No Lake Formation Resource defined.",
+		))
+		return nil, diags
+	}
+}
+
+type tagger interface {
+	ExpandResource(*schema.ResourceData) *awstypes.Resource
+	FlattenTags(*lakeformation.GetResourceLFTagsOutput) []any
+}
+
+type databaseTagger struct{}
+
+func (t *databaseTagger) ExpandResource(d *schema.ResourceData) *awstypes.Resource {
+	v := d.Get("database").([]any)[0].(map[string]any)
+	return &awstypes.Resource{
+		Database: ExpandDatabaseResource(v),
+	}
+}
+
+func (t *databaseTagger) FlattenTags(output *lakeformation.GetResourceLFTagsOutput) []any {
+	return flattenLFTagPairs(output.LFTagOnDatabase)
+}
+
+type tableTagger struct{}
+
+func (t *tableTagger) ExpandResource(d *schema.ResourceData) *awstypes.Resource {
+	v := d.Get("table").([]any)[0].(map[string]any)
+	return &awstypes.Resource{
+		Table: ExpandTableResource(v),
+	}
+}
+
+func (t *tableTagger) FlattenTags(output *lakeformation.GetResourceLFTagsOutput) []any {
+	return flattenLFTagPairs(output.LFTagsOnTable)
+}
+
+type columnTagger struct{}
+
+func (t *columnTagger) ExpandResource(d *schema.ResourceData) *awstypes.Resource {
+	v := d.Get("table_with_columns").([]any)[0].(map[string]any)
+	return &awstypes.Resource{
+		TableWithColumns: expandTableColumnsResource(v),
+	}
+}
+
+func (t *columnTagger) FlattenTags(output *lakeformation.GetResourceLFTagsOutput) []any {
+	if len(output.LFTagsOnColumns) == 0 {
+		return []any{}
+	}
+
+	tags := output.LFTagsOnColumns[0]
+	if reflect.ValueOf(tags).IsZero() {
+		return []any{}
+	}
+
+	return flattenLFTagPairs(tags.LFTags)
 }
 
 func lfTagsHash(v interface{}) int {
@@ -439,12 +470,12 @@ func lfTagsHash(v interface{}) int {
 	return create.StringHashcode(buf.String())
 }
 
-func expandLFTagPair(tfMap map[string]interface{}) *lakeformation.LFTagPair {
+func expandLFTagPair(tfMap map[string]interface{}) awstypes.LFTagPair {
 	if tfMap == nil {
-		return nil
+		return awstypes.LFTagPair{}
 	}
 
-	apiObject := &lakeformation.LFTagPair{}
+	apiObject := awstypes.LFTagPair{}
 
 	if v, ok := tfMap["catalog_id"].(string); ok && v != "" {
 		apiObject.CatalogId = aws.String(v)
@@ -455,18 +486,18 @@ func expandLFTagPair(tfMap map[string]interface{}) *lakeformation.LFTagPair {
 	}
 
 	if v, ok := tfMap["value"].(string); ok && v != "" {
-		apiObject.TagValues = aws.StringSlice([]string{v})
+		apiObject.TagValues = []string{v}
 	}
 
 	return apiObject
 }
 
-func expandLFTagPairs(tfList []interface{}) []*lakeformation.LFTagPair {
+func expandLFTagPairs(tfList []interface{}) []awstypes.LFTagPair {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []*lakeformation.LFTagPair
+	var apiObjects []awstypes.LFTagPair
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -477,7 +508,7 @@ func expandLFTagPairs(tfList []interface{}) []*lakeformation.LFTagPair {
 
 		apiObject := expandLFTagPair(tfMap)
 
-		if apiObject == nil {
+		if reflect.ValueOf(apiObject).IsZero() {
 			continue
 		}
 
@@ -487,29 +518,29 @@ func expandLFTagPairs(tfList []interface{}) []*lakeformation.LFTagPair {
 	return apiObjects
 }
 
-func flattenLFTagPair(apiObject *lakeformation.LFTagPair) map[string]interface{} {
-	if apiObject == nil {
+func flattenLFTagPair(apiObject awstypes.LFTagPair) map[string]interface{} {
+	if reflect.ValueOf(apiObject).IsZero() {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.CatalogId; v != nil {
-		tfMap["catalog_id"] = aws.StringValue(v)
+		tfMap["catalog_id"] = aws.ToString(v)
 	}
 
 	if v := apiObject.TagKey; v != nil {
-		tfMap["key"] = aws.StringValue(v)
+		tfMap["key"] = aws.ToString(v)
 	}
 
 	if v := apiObject.TagValues; len(v) > 0 {
-		tfMap["value"] = aws.StringValue(apiObject.TagValues[0])
+		tfMap["value"] = apiObject.TagValues[0]
 	}
 
 	return tfMap
 }
 
-func flattenLFTagPairs(apiObjects []*lakeformation.LFTagPair) []interface{} {
+func flattenLFTagPairs(apiObjects []awstypes.LFTagPair) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -517,7 +548,7 @@ func flattenLFTagPairs(apiObjects []*lakeformation.LFTagPair) []interface{} {
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		if apiObject == nil {
+		if reflect.ValueOf(apiObject).IsZero() {
 			continue
 		}
 

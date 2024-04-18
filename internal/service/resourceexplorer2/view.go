@@ -1,21 +1,24 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package resourceexplorer2
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strings"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/resourceexplorer2/types"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -23,12 +26,11 @@ import (
 	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	fwboolplanmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/boolplanmodifier"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -60,9 +62,7 @@ func (r *resourceView) Schema(ctx context.Context, request resource.SchemaReques
 			"default_view": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
-				PlanModifiers: []planmodifier.Bool{
-					fwboolplanmodifier.DefaultValue(false),
-				},
+				Default:  booldefault.StaticBool(false),
 			},
 			"id": framework.IDAttribute(),
 			"name": schema.StringAttribute{
@@ -72,7 +72,7 @@ func (r *resourceView) Schema(ctx context.Context, request resource.SchemaReques
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthAtMost(64),
-					stringvalidator.RegexMatches(regexp.MustCompile(`^[a-zA-Z0-9\-]+$`), `can include letters, digits, and the dash (-) character`),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9A-Za-z-]+$`), `can include letters, digits, and the dash (-) character`),
 				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
@@ -80,6 +80,7 @@ func (r *resourceView) Schema(ctx context.Context, request resource.SchemaReques
 		},
 		Blocks: map[string]schema.Block{
 			"filters": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[searchFilterModel](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"filter_string": schema.StringAttribute{
@@ -95,13 +96,12 @@ func (r *resourceView) Schema(ctx context.Context, request resource.SchemaReques
 				},
 			},
 			"included_property": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[includedPropertyModel](ctx),
 				NestedObject: schema.NestedBlockObject{
 					Attributes: map[string]schema.Attribute{
 						"name": schema.StringAttribute{
-							Required: true,
-							Validators: []validator.String{
-								enum.FrameworkValidate[propertyName](),
-							},
+							CustomType: fwtypes.StringEnumType[propertyName](),
+							Required:   true,
 						},
 					},
 				},
@@ -111,7 +111,7 @@ func (r *resourceView) Schema(ctx context.Context, request resource.SchemaReques
 }
 
 func (r *resourceView) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	var data resourceViewData
+	var data viewResourceModel
 
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 
@@ -121,13 +121,14 @@ func (r *resourceView) Create(ctx context.Context, request resource.CreateReques
 
 	conn := r.Meta().ResourceExplorer2Client(ctx)
 
-	input := &resourceexplorer2.CreateViewInput{
-		ClientToken:        aws.String(id.UniqueId()),
-		Filters:            r.expandSearchFilter(ctx, data.Filters),
-		IncludedProperties: r.expandIncludedProperties(ctx, data.IncludedProperties),
-		Tags:               getTagsIn(ctx),
-		ViewName:           aws.String(data.Name.ValueString()),
+	input := &resourceexplorer2.CreateViewInput{}
+	response.Diagnostics.Append(flex.Expand(ctx, data, input)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
+
+	input.ClientToken = aws.String(id.UniqueId())
+	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateView(ctx, input)
 
@@ -154,14 +155,14 @@ func (r *resourceView) Create(ctx context.Context, request resource.CreateReques
 	}
 
 	// Set values for unknowns.
-	data.ARN = types.StringValue(arn)
-	data.ID = types.StringValue(arn)
+	data.ViewARN = types.StringValue(arn)
+	data.setID()
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 func (r *resourceView) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	var data resourceViewData
+	var data viewResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 
@@ -169,9 +170,15 @@ func (r *resourceView) Read(ctx context.Context, request resource.ReadRequest, r
 		return
 	}
 
+	if err := data.InitFromID(); err != nil {
+		response.Diagnostics.AddError("parsing resource ID", err.Error())
+
+		return
+	}
+
 	conn := r.Meta().ResourceExplorer2Client(ctx)
 
-	output, err := findViewByARN(ctx, conn, data.ID.ValueString())
+	output, err := findViewByARN(ctx, conn, data.ViewARN.ValueString())
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -195,30 +202,23 @@ func (r *resourceView) Read(ctx context.Context, request resource.ReadRequest, r
 	}
 
 	view := output.View
-	data.ARN = flex.StringToFramework(ctx, view.ViewArn)
-	data.DefaultView = types.BoolValue(defaultViewARN == data.ARN.ValueString())
-	data.Filters = r.flattenSearchFilter(ctx, view.Filters)
-	data.IncludedProperties = r.flattenIncludedProperties(ctx, view.IncludedProperties)
-
-	arn, err := arn.Parse(data.ARN.ValueString())
-
-	if err != nil {
-		response.Diagnostics.AddError("parsing Resource Explorer View ARN", err.Error())
-
+	// The default is
+	//
+	//   "Filters": {
+	// 	   "FilterString": ""
+	//   },
+	//
+	// a view that performs no filtering.
+	// See https://docs.aws.amazon.com/resource-explorer/latest/apireference/API_CreateView.html#API_CreateView_Example_1.
+	if view.Filters != nil && len(aws.ToString(view.Filters.FilterString)) == 0 {
+		view.Filters = nil
+	}
+	response.Diagnostics.Append(flex.Flatten(ctx, view, &data)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	// view/${ViewName}/${ViewUuid}
-	parts := strings.Split(arn.Resource, "/")
-
-	if n := len(parts); n != 3 {
-		response.Diagnostics.AddError("incorrect Resource Explorer View ARN format", fmt.Sprintf("%d parts", n))
-
-		return
-	}
-
-	name := parts[1]
-	data.Name = types.StringValue(name)
+	data.DefaultView = types.BoolValue(defaultViewARN == data.ViewARN.ValueString())
 
 	setTagsOut(ctx, output.Tags)
 
@@ -226,7 +226,7 @@ func (r *resourceView) Read(ctx context.Context, request resource.ReadRequest, r
 }
 
 func (r *resourceView) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var old, new resourceViewData
+	var old, new viewResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
 
@@ -243,10 +243,10 @@ func (r *resourceView) Update(ctx context.Context, request resource.UpdateReques
 	conn := r.Meta().ResourceExplorer2Client(ctx)
 
 	if !new.Filters.Equal(old.Filters) || !new.IncludedProperties.Equal(old.IncludedProperties) {
-		input := &resourceexplorer2.UpdateViewInput{
-			Filters:            r.expandSearchFilter(ctx, new.Filters),
-			IncludedProperties: r.expandIncludedProperties(ctx, new.IncludedProperties),
-			ViewArn:            flex.StringFromFramework(ctx, new.ID),
+		input := &resourceexplorer2.UpdateViewInput{}
+		response.Diagnostics.Append(flex.Expand(ctx, new, input)...)
+		if response.Diagnostics.HasError() {
+			return
 		}
 
 		_, err := conn.UpdateView(ctx, input)
@@ -261,7 +261,7 @@ func (r *resourceView) Update(ctx context.Context, request resource.UpdateReques
 	if !new.DefaultView.Equal(old.DefaultView) {
 		if new.DefaultView.ValueBool() {
 			input := &resourceexplorer2.AssociateDefaultViewInput{
-				ViewArn: flex.StringFromFramework(ctx, new.ID),
+				ViewArn: flex.StringFromFramework(ctx, new.ViewARN),
 			}
 
 			_, err := conn.AssociateDefaultView(ctx, input)
@@ -288,7 +288,7 @@ func (r *resourceView) Update(ctx context.Context, request resource.UpdateReques
 }
 
 func (r *resourceView) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	var data resourceViewData
+	var data viewResourceModel
 
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 
@@ -302,7 +302,7 @@ func (r *resourceView) Delete(ctx context.Context, request resource.DeleteReques
 		"id": data.ID.ValueString(),
 	})
 	_, err := conn.DeleteView(ctx, &resourceexplorer2.DeleteViewInput{
-		ViewArn: flex.StringFromFramework(ctx, data.ID),
+		ViewArn: flex.StringFromFramework(ctx, data.ViewARN),
 	})
 
 	if err != nil {
@@ -320,120 +320,45 @@ func (r *resourceView) ModifyPlan(ctx context.Context, request resource.ModifyPl
 	r.SetTagsAll(ctx, request, response)
 }
 
-func (r *resourceView) expandSearchFilter(ctx context.Context, tfList types.List) *awstypes.SearchFilter {
-	if tfList.IsNull() || tfList.IsUnknown() {
-		return nil
-	}
-
-	var data []viewSearchFilterData
-
-	if diags := tfList.ElementsAs(ctx, &data, false); diags.HasError() {
-		return nil
-	}
-
-	if len(data) == 0 {
-		return nil
-	}
-
-	apiObject := &awstypes.SearchFilter{
-		FilterString: flex.StringFromFramework(ctx, data[0].FilterString),
-	}
-
-	return apiObject
+// See https://docs.aws.amazon.com/resource-explorer/latest/apireference/API_View.html.
+type viewResourceModel struct {
+	DefaultView        types.Bool                                             `tfsdk:"default_view"`
+	Filters            fwtypes.ListNestedObjectValueOf[searchFilterModel]     `tfsdk:"filters"`
+	ID                 types.String                                           `tfsdk:"id"`
+	IncludedProperties fwtypes.ListNestedObjectValueOf[includedPropertyModel] `tfsdk:"included_property"`
+	ViewARN            types.String                                           `tfsdk:"arn"`
+	ViewName           types.String                                           `tfsdk:"name"`
+	Tags               types.Map                                              `tfsdk:"tags"`
+	TagsAll            types.Map                                              `tfsdk:"tags_all"`
 }
 
-func (r *resourceView) flattenSearchFilter(ctx context.Context, apiObject *awstypes.SearchFilter) types.List {
-	attributeTypes, _ := framework.AttributeTypes[viewSearchFilterData](ctx)
-	elementType := types.ObjectType{AttrTypes: attributeTypes}
-
-	// The default is
-	//
-	//   "Filters": {
-	// 	   "FilterString": ""
-	//   },
-	//
-	// a view that performs no filtering.
-	// See https://docs.aws.amazon.com/resource-explorer/latest/apireference/API_CreateView.html#API_CreateView_Example_1.
-	if apiObject == nil || len(aws.ToString(apiObject.FilterString)) == 0 {
-		return types.ListNull(elementType)
+func (data *viewResourceModel) InitFromID() error {
+	data.ViewARN = data.ID
+	arn, err := arn.Parse(data.ViewARN.ValueString())
+	if err != nil {
+		return err
 	}
+	// view/${ViewName}/${ViewUuid}
+	parts := strings.Split(arn.Resource, "/")
+	if n := len(parts); n != 3 {
+		return fmt.Errorf("incorrect Resource Explorer View ARN format: %d parts", n)
+	}
+	name := parts[1]
+	data.ViewName = types.StringValue(name)
 
-	return types.ListValueMust(elementType, []attr.Value{
-		types.ObjectValueMust(attributeTypes, map[string]attr.Value{
-			"filter_string": flex.StringToFramework(ctx, apiObject.FilterString),
-		}),
-	})
+	return nil
 }
 
-func (r *resourceView) expandIncludedProperties(ctx context.Context, tfList types.List) []awstypes.IncludedProperty {
-	if tfList.IsNull() || tfList.IsUnknown() {
-		return nil
-	}
-
-	var data []viewIncludedPropertyData
-
-	if diags := tfList.ElementsAs(ctx, &data, false); diags.HasError() {
-		return nil
-	}
-
-	var apiObjects []awstypes.IncludedProperty
-
-	for _, v := range data {
-		apiObjects = append(apiObjects, r.expandIncludedProperty(ctx, v))
-	}
-
-	return apiObjects
+func (data *viewResourceModel) setID() {
+	data.ID = data.ViewARN
 }
 
-func (r *resourceView) expandIncludedProperty(ctx context.Context, data viewIncludedPropertyData) awstypes.IncludedProperty {
-	apiObject := awstypes.IncludedProperty{
-		Name: flex.StringFromFramework(ctx, data.Name),
-	}
-
-	return apiObject
-}
-
-func (r *resourceView) flattenIncludedProperties(ctx context.Context, apiObjects []awstypes.IncludedProperty) types.List {
-	attributeTypes, _ := framework.AttributeTypes[viewIncludedPropertyData](ctx)
-	elementType := types.ObjectType{AttrTypes: attributeTypes}
-
-	if len(apiObjects) == 0 {
-		return types.ListNull(elementType)
-	}
-
-	var elements []attr.Value
-
-	for _, apiObject := range apiObjects {
-		elements = append(elements, r.flattenIncludedProperty(ctx, apiObject))
-	}
-
-	return types.ListValueMust(elementType, elements)
-}
-
-func (r *resourceView) flattenIncludedProperty(ctx context.Context, apiObject awstypes.IncludedProperty) types.Object {
-	attributeTypes, _ := framework.AttributeTypes[viewIncludedPropertyData](ctx)
-	return types.ObjectValueMust(attributeTypes, map[string]attr.Value{
-		"name": flex.StringToFramework(ctx, apiObject.Name),
-	})
-}
-
-type resourceViewData struct {
-	ARN                types.String `tfsdk:"arn"`
-	DefaultView        types.Bool   `tfsdk:"default_view"`
-	Filters            types.List   `tfsdk:"filters"`
-	ID                 types.String `tfsdk:"id"`
-	IncludedProperties types.List   `tfsdk:"included_property"`
-	Name               types.String `tfsdk:"name"`
-	Tags               types.Map    `tfsdk:"tags"`
-	TagsAll            types.Map    `tfsdk:"tags_all"`
-}
-
-type viewSearchFilterData struct {
+type searchFilterModel struct {
 	FilterString types.String `tfsdk:"filter_string"`
 }
 
-type viewIncludedPropertyData struct {
-	Name types.String `tfsdk:"name"`
+type includedPropertyModel struct {
+	Name fwtypes.StringEnum[propertyName] `tfsdk:"name"`
 }
 
 func findDefaultViewARN(ctx context.Context, conn *resourceexplorer2.Client) (string, error) {

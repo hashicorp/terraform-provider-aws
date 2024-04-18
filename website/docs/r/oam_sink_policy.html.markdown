@@ -49,9 +49,9 @@ The following arguments are required:
 * `sink_identifier` - (Required) ARN of the sink to attach this policy to.
 * `policy` - (Required) JSON policy to use. If you are updating an existing policy, the entire existing policy is replaced by what you specify here.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the Sink.
 * `sink_id` - ID string that AWS generated as part of the sink ARN.
@@ -65,8 +65,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CloudWatch Observability Access Manager Sink Policy can be imported using the `sink_identifier`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch Observability Access Manager Sink Policy using the `sink_identifier`. For example:
 
+```terraform
+import {
+  to = aws_oam_sink_policy.example
+  id = "arn:aws:oam:us-west-2:123456789012:sink/sink-id"
+}
 ```
-$ terraform import aws_oam_sink_policy.example arn:aws:oam:us-west-2:123456789012:sink/sink-id
+
+Using `terraform import`, import CloudWatch Observability Access Manager Sink Policy using the `sink_identifier`. For example:
+
+```console
+% terraform import aws_oam_sink_policy.example arn:aws:oam:us-west-2:123456789012:sink/sink-id
 ```

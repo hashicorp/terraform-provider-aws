@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package quicksight
 
@@ -10,12 +10,14 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/quicksight"
-	"github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_quicksight_dashboard", &resource.Sweeper{
 		Name: "aws_quicksight_dashboard",
 		F:    sweepDashboards,
@@ -32,6 +34,10 @@ func init() {
 		Name: "aws_quicksight_folder",
 		F:    sweepFolders,
 	})
+	resource.AddTestSweepers("aws_quicksight_group", &resource.Sweeper{
+		Name: "aws_quicksight_group",
+		F:    sweepGroups,
+	})
 	resource.AddTestSweepers("aws_quicksight_template", &resource.Sweeper{
 		Name: "aws_quicksight_template",
 		F:    sweepTemplates,
@@ -39,6 +45,13 @@ func init() {
 	resource.AddTestSweepers("aws_quicksight_user", &resource.Sweeper{
 		Name: "aws_quicksight_user",
 		F:    sweepUsers,
+		Dependencies: []string{
+			"aws_quicksight_group",
+		},
+	})
+	resource.AddTestSweepers("aws_quicksight_vpc_connection", &resource.Sweeper{
+		Name: "aws_quicksight_vpc_connection",
+		F:    sweepVPCConnections,
 	})
 }
 
@@ -46,6 +59,10 @@ const (
 	// Defined locally to avoid cyclic import from internal/acctest
 	acctestResourcePrefix = "tf-acc-test"
 )
+
+// TODO
+// TODO Use paginated listers.
+// TODO
 
 func sweepDashboards(region string) error {
 	ctx := sweep.Context(region)
@@ -57,7 +74,6 @@ func sweepDashboards(region string) error {
 
 	conn := client.QuickSightConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
 
 	awsAccountId := client.AccountID
 
@@ -85,20 +101,19 @@ func sweepDashboards(region string) error {
 		return !lastPage
 	})
 
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("listing QuickSight Dashboards: %w", err))
-	}
-
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("sweeping QuickSight Dashboards for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping QuickSight Dashboard sweep for %s: %s", region, errs)
+	if skipSweepError(err) {
+		log.Printf("[WARN] Skipping QuickSight Dashboard sweep for %s: %s", region, err)
 		return nil
 	}
+	if err != nil {
+		return fmt.Errorf("listing QuickSight Dashboards: %w", err)
+	}
 
-	return errs.ErrorOrNil()
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		return fmt.Errorf("sweeping QuickSight Dashboards for %s: %w", region, err)
+	}
+
+	return nil
 }
 
 func sweepDataSets(region string) error {
@@ -111,7 +126,6 @@ func sweepDataSets(region string) error {
 
 	conn := client.QuickSightConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
 
 	awsAccountId := client.AccountID
 
@@ -139,20 +153,19 @@ func sweepDataSets(region string) error {
 		return !lastPage
 	})
 
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("listing QuickSight Data Sets: %w", err))
-	}
-
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("sweeping QuickSight Data Sets for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping QuickSight Data Set sweep for %s: %s", region, errs)
+	if skipSweepError(err) {
+		log.Printf("[WARN] Skipping QuickSight Data Set sweep for %s: %s", region, err)
 		return nil
 	}
+	if err != nil {
+		return fmt.Errorf("listing QuickSight Data Sets: %w", err)
+	}
 
-	return errs.ErrorOrNil()
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		return fmt.Errorf("sweeping QuickSight Data Sets for %s: %w", region, err)
+	}
+
+	return nil
 }
 
 func sweepDataSources(region string) error {
@@ -165,7 +178,6 @@ func sweepDataSources(region string) error {
 
 	conn := client.QuickSightConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
 
 	awsAccountId := client.AccountID
 
@@ -193,20 +205,19 @@ func sweepDataSources(region string) error {
 		return !lastPage
 	})
 
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("listing QuickSight Data Sources: %w", err))
-	}
-
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("sweeping QuickSight Data Sources for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping QuickSight Data Source sweep for %s: %s", region, errs)
+	if skipSweepError(err) {
+		log.Printf("[WARN] Skipping QuickSight Data Source sweep for %s: %s", region, err)
 		return nil
 	}
+	if err != nil {
+		return fmt.Errorf("listing QuickSight Data Sources: %w", err)
+	}
 
-	return errs.ErrorOrNil()
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		return fmt.Errorf("sweeping QuickSight Data Sources for %s: %w", region, err)
+	}
+
+	return nil
 }
 
 func sweepFolders(region string) error {
@@ -220,7 +231,6 @@ func sweepFolders(region string) error {
 	conn := client.QuickSightConn(ctx)
 	awsAccountId := client.AccountID
 	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
 
 	input := &quicksight.ListFoldersInput{
 		AwsAccountId: aws.String(awsAccountId),
@@ -239,20 +249,65 @@ func sweepFolders(region string) error {
 		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 	}
 
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("listing QuickSight Folder for %s: %w", region, err))
-	}
-
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("sweeping QuickSight Folder for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping QuickSight Folder sweep for %s: %s", region, errs)
+	if skipSweepError(err) {
+		log.Printf("[WARN] Skipping QuickSight Folder sweep for %s: %s", region, err)
 		return nil
 	}
+	if err != nil {
+		return fmt.Errorf("listing QuickSight Folders: %w", err)
+	}
 
-	return errs.ErrorOrNil()
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		return fmt.Errorf("sweeping QuickSight Folders for %s: %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepGroups(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+
+	if err != nil {
+		return fmt.Errorf("getting client: %w", err)
+	}
+
+	conn := client.QuickSightConn(ctx)
+	awsAccountId := client.AccountID
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	input := &quicksight.ListGroupsInput{
+		AwsAccountId: aws.String(awsAccountId),
+		Namespace:    aws.String(DefaultUserNamespace),
+	}
+
+	out, err := conn.ListGroupsWithContext(ctx, input)
+	for _, user := range out.GroupList {
+		groupname := aws.StringValue(user.GroupName)
+		if !strings.HasPrefix(groupname, acctestResourcePrefix) {
+			continue
+		}
+
+		r := ResourceGroup()
+		d := r.Data(nil)
+		d.SetId(fmt.Sprintf("%s/%s/%s", awsAccountId, DefaultUserNamespace, groupname))
+
+		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+	}
+
+	if skipSweepUserError(err) {
+		log.Printf("[WARN] Skipping QuickSight Group sweep for %s: %s", region, err)
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("listing QuickSight Groups: %w", err)
+	}
+
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		return fmt.Errorf("sweeping QuickSight Groups for %s: %w", region, err)
+	}
+
+	return nil
 }
 
 func sweepTemplates(region string) error {
@@ -265,7 +320,6 @@ func sweepTemplates(region string) error {
 
 	conn := client.QuickSightConn(ctx)
 	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
 
 	awsAccountId := client.AccountID
 
@@ -293,20 +347,19 @@ func sweepTemplates(region string) error {
 		return !lastPage
 	})
 
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("listing QuickSight Templates: %w", err))
-	}
-
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("sweeping QuickSight Templates for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
-		log.Printf("[WARN] Skipping QuickSight Template sweep for %s: %s", region, errs)
+	if skipSweepError(err) {
+		log.Printf("[WARN] Skipping QuickSight Template sweep for %s: %s", region, err)
 		return nil
 	}
+	if err != nil {
+		return fmt.Errorf("listing QuickSight Templates: %w", err)
+	}
 
-	return errs.ErrorOrNil()
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		return fmt.Errorf("sweeping QuickSight Templates for %s: %w", region, err)
+	}
+
+	return nil
 }
 
 func sweepUsers(region string) error {
@@ -320,7 +373,6 @@ func sweepUsers(region string) error {
 	conn := client.QuickSightConn(ctx)
 	awsAccountId := client.AccountID
 	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
 
 	input := &quicksight.ListUsersInput{
 		AwsAccountId: aws.String(awsAccountId),
@@ -341,18 +393,85 @@ func sweepUsers(region string) error {
 		sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 	}
 
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("listing QuickSight Users for %s: %w", region, err))
-	}
-
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("sweeping QuickSight Users for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping QuickSight User sweep for %s: %s", region, errs)
+	if skipSweepUserError(err) {
+		log.Printf("[WARN] Skipping QuickSight User sweep for %s: %s", region, err)
 		return nil
 	}
+	if err != nil {
+		return fmt.Errorf("listing QuickSight Users: %w", err)
+	}
 
-	return errs.ErrorOrNil()
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		return fmt.Errorf("sweeping QuickSight Users for %s: %w", region, err)
+	}
+
+	return nil
+}
+
+func sweepVPCConnections(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+
+	if err != nil {
+		return fmt.Errorf("getting client: %w", err)
+	}
+
+	conn := client.QuickSightConn(ctx)
+	awsAccountId := client.AccountID
+	sweepResources := make([]sweep.Sweepable, 0)
+
+	input := &quicksight.ListVPCConnectionsInput{
+		AwsAccountId: aws.String(awsAccountId),
+	}
+
+	out, err := conn.ListVPCConnectionsWithContext(ctx, input)
+	for _, v := range out.VPCConnectionSummaries {
+		vpcConnectionID := aws.StringValue(v.VPCConnectionId)
+		sweepResources = append(sweepResources, framework.NewSweepResource(newResourceVPCConnection, client,
+			framework.NewAttribute("id", createVPCConnectionID(awsAccountId, vpcConnectionID)),
+			framework.NewAttribute("aws_account_id", awsAccountId),
+			framework.NewAttribute("vpc_connection_id", vpcConnectionID),
+		))
+	}
+
+	if skipSweepError(err) {
+		log.Printf("[WARN] Skipping QuickSight VPC Connection sweep for %s: %s", region, err)
+		return nil
+	}
+	if err != nil {
+		return fmt.Errorf("listing QuickSight VPC Connections: %w", err)
+	}
+
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		return fmt.Errorf("sweeping QuickSight VPC Connections for %s: %w", region, err)
+	}
+
+	return nil
+}
+
+// skipSweepError adds an additional skippable error code for listing QuickSight resources other than User
+func skipSweepError(err error) bool {
+	if tfawserr.ErrCodeEquals(err, quicksight.ErrCodeUnsupportedUserEditionException) {
+		return true
+	}
+	if tfawserr.ErrMessageContains(err, quicksight.ErrCodeResourceNotFoundException, "Directory information for account") {
+		return true
+	}
+	if tfawserr.ErrMessageContains(err, quicksight.ErrCodeResourceNotFoundException, "Account information for account") {
+		return true
+	}
+
+	return awsv1.SkipSweepError(err)
+}
+
+// skipSweepUserError adds an additional skippable error code for listing QuickSight User resources
+func skipSweepUserError(err error) bool {
+	if tfawserr.ErrMessageContains(err, quicksight.ErrCodeResourceNotFoundException, "not signed up with QuickSight") {
+		return true
+	}
+	if tfawserr.ErrMessageContains(err, quicksight.ErrCodeResourceNotFoundException, "Namespace default not found in account") {
+		return true
+	}
+
+	return awsv1.SkipSweepError(err)
 }

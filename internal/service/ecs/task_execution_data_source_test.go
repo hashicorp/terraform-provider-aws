@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecs_test
 
 import (
@@ -8,6 +11,7 @@ import (
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccECSTaskExecutionDataSource_basic(t *testing.T) {
@@ -26,7 +30,7 @@ func TestAccECSTaskExecutionDataSource_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, ecs.EndpointsID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -34,6 +38,7 @@ func TestAccECSTaskExecutionDataSource_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttrPair(dataSourceName, "cluster", clusterName, "id"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "task_definition", taskDefinitionName, "arn"),
+					resource.TestCheckResourceAttr(dataSourceName, "client_token", "some_token"),
 					resource.TestCheckResourceAttr(dataSourceName, "desired_count", "1"),
 					resource.TestCheckResourceAttr(dataSourceName, "launch_type", "FARGATE"),
 					resource.TestCheckResourceAttr(dataSourceName, "network_configuration.#", "1"),
@@ -60,7 +65,7 @@ func TestAccECSTaskExecutionDataSource_overrides(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, ecs.EndpointsID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -99,7 +104,7 @@ func TestAccECSTaskExecutionDataSource_tags(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, ecs.EndpointsID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -183,6 +188,7 @@ data "aws_ecs_task_execution" "test" {
 
   cluster         = aws_ecs_cluster.test.id
   task_definition = aws_ecs_task_definition.test.arn
+  client_token    = "some_token"
   desired_count   = 1
   launch_type     = "FARGATE"
 

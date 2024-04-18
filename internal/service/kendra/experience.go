@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kendra
 
 import (
@@ -5,9 +8,9 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go-v2/service/kendra"
@@ -20,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -72,7 +76,7 @@ func ResourceExperience() *schema.Resource {
 										MaxItems: 100,
 										Elem: &schema.Schema{
 											Type:         schema.TypeString,
-											ValidateFunc: validation.StringMatch(regexp.MustCompile(`[a-zA-Z0-9][a-zA-Z0-9_\-]*`), ""),
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z_-]*`), ""),
 										},
 									},
 									"direct_put_content": {
@@ -87,7 +91,7 @@ func ResourceExperience() *schema.Resource {
 										MaxItems: 100,
 										Elem: &schema.Schema{
 											Type:         schema.TypeString,
-											ValidateFunc: validation.StringMatch(regexp.MustCompile(`[a-zA-Z0-9][a-zA-Z0-9_\-]*`), ""),
+											ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z_-]*`), ""),
 										},
 									},
 								},
@@ -106,7 +110,7 @@ func ResourceExperience() *schema.Resource {
 									"identity_attribute_name": {
 										Type:         schema.TypeString,
 										Required:     true,
-										ValidateFunc: validation.StringMatch(regexp.MustCompile(`[a-zA-Z0-9][a-zA-Z0-9_\-]*`), ""),
+										ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z_-]*`), ""),
 									},
 								},
 							},
@@ -143,14 +147,14 @@ func ResourceExperience() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`[a-zA-Z0-9][a-zA-Z0-9-]*`), ""),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z-]*`), ""),
 			},
 			"name": {
 				Type:     schema.TypeString,
 				Required: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 1000),
-					validation.StringMatch(regexp.MustCompile(`[a-zA-Z0-9][a-zA-Z0-9_\-]*`), ""),
+					validation.StringMatch(regexache.MustCompile(`[0-9A-Za-z][0-9A-Za-z_-]*`), ""),
 				),
 			},
 			"role_arn": {
@@ -174,6 +178,8 @@ func ResourceExperience() *schema.Resource {
 }
 
 func resourceExperienceCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	in := &kendra.CreateExperienceInput{
@@ -193,11 +199,11 @@ func resourceExperienceCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	out, err := conn.CreateExperience(ctx, in)
 	if err != nil {
-		return diag.Errorf("creating Amazon Kendra Experience (%s): %s", d.Get("name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "creating Amazon Kendra Experience (%s): %s", d.Get("name").(string), err)
 	}
 
 	if out == nil {
-		return diag.Errorf("creating Amazon Kendra Experience (%s): empty output", d.Get("name").(string))
+		return sdkdiag.AppendErrorf(diags, "creating Amazon Kendra Experience (%s): empty output", d.Get("name").(string))
 	}
 
 	id := aws.ToString(out.Id)
@@ -206,18 +212,20 @@ func resourceExperienceCreate(ctx context.Context, d *schema.ResourceData, meta 
 	d.SetId(fmt.Sprintf("%s/%s", id, indexId))
 
 	if err := waitExperienceCreated(ctx, conn, id, indexId, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return diag.Errorf("waiting for Amazon Kendra Experience (%s) create: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Amazon Kendra Experience (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceExperienceRead(ctx, d, meta)
+	return append(diags, resourceExperienceRead(ctx, d, meta)...)
 }
 
 func resourceExperienceRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	id, indexId, err := ExperienceParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	out, err := FindExperienceByID(ctx, conn, id, indexId)
@@ -225,11 +233,11 @@ func resourceExperienceRead(ctx context.Context, d *schema.ResourceData, meta in
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Kendra Experience (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Kendra Experience (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Kendra Experience (%s): %s", d.Id(), err)
 	}
 
 	arn := arn.ARN{
@@ -249,22 +257,24 @@ func resourceExperienceRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("status", out.Status)
 
 	if err := d.Set("endpoints", flattenEndpoints(out.Endpoints)); err != nil {
-		return diag.Errorf("setting endpoints argument: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting endpoints argument: %s", err)
 	}
 
 	if err := d.Set("configuration", flattenConfiguration(out.Configuration)); err != nil {
-		return diag.Errorf("setting configuration argument: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting configuration argument: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceExperienceUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	id, indexId, err := ExperienceParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	in := &kendra.UpdateExperienceInput{
@@ -291,24 +301,26 @@ func resourceExperienceUpdate(ctx context.Context, d *schema.ResourceData, meta 
 	log.Printf("[DEBUG] Updating Kendra Experience (%s): %#v", d.Id(), in)
 	_, err = conn.UpdateExperience(ctx, in)
 	if err != nil {
-		return diag.Errorf("updating Kendra Experience (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating Kendra Experience (%s): %s", d.Id(), err)
 	}
 
 	if err := waitExperienceUpdated(ctx, conn, id, indexId, d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return diag.Errorf("waiting for Kendra Experience (%s) update: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Kendra Experience (%s) update: %s", d.Id(), err)
 	}
 
-	return resourceExperienceRead(ctx, d, meta)
+	return append(diags, resourceExperienceRead(ctx, d, meta)...)
 }
 
 func resourceExperienceDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).KendraClient(ctx)
 
 	log.Printf("[INFO] Deleting Kendra Experience %s", d.Id())
 
 	id, indexId, err := ExperienceParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 	_, err = conn.DeleteExperience(ctx, &kendra.DeleteExperienceInput{
 		Id:      aws.String(id),
@@ -317,18 +329,18 @@ func resourceExperienceDelete(ctx context.Context, d *schema.ResourceData, meta 
 
 	var resourceNotFoundException *types.ResourceNotFoundException
 	if errors.As(err, &resourceNotFoundException) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting Kendra Experience (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Kendra Experience (%s): %s", d.Id(), err)
 	}
 
 	if err := waitExperienceDeleted(ctx, conn, id, indexId, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return diag.Errorf("waiting for Kendra Experience (%s) to be deleted: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Kendra Experience (%s) to be deleted: %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func waitExperienceCreated(ctx context.Context, conn *kendra.Client, id, indexId string, timeout time.Duration) error {

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package schema
 
 import (
@@ -357,7 +360,7 @@ func flattenWordCloudOptions(apiObject *quicksight.WordCloudOptions) []interface
 		tfMap["word_casing"] = aws.StringValue(apiObject.WordCasing)
 	}
 	if apiObject.WordOrientation != nil {
-		tfMap["work_orientation"] = aws.StringValue(apiObject.WordOrientation)
+		tfMap["word_orientation"] = aws.StringValue(apiObject.WordOrientation)
 	}
 	if apiObject.WordPadding != nil {
 		tfMap["word_padding"] = aws.StringValue(apiObject.WordPadding)

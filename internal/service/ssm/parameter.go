@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssm
 
 import (
@@ -60,6 +63,7 @@ func ResourceParameter() *schema.Resource {
 					"aws:ssm:integration",
 					"text",
 				}, false),
+				ForceNew: true,
 			},
 			"description": {
 				Type:         schema.TypeString,
@@ -300,7 +304,7 @@ func resourceParameterUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).SSMConn(ctx)
 
-	if d.HasChangesExcept("tags", "tags_all") {
+	if d.HasChangesExcept("overwrite", "tags", "tags_all") {
 		value := d.Get("value").(string)
 
 		if v, ok := d.Get("insecure_value").(string); ok && v != "" {

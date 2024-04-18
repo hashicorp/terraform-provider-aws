@@ -11,6 +11,8 @@ description: |-
 Use this data source to get the Account ID of the [AWS CloudTrail Service Account](http://docs.aws.amazon.com/awscloudtrail/latest/userguide/cloudtrail-supported-regions.html)
 in a given region for the purpose of allowing CloudTrail to store trail data in S3.
 
+~> **Note:** AWS documentation [states that](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/create-s3-bucket-policy-for-cloudtrail.html#troubleshooting-s3-bucket-policy) a [service principal name](https://docs.aws.amazon.com/IAM/latest/UserGuide/reference_policies_elements_principal.html#principal-services) should be used instead of an AWS account ID in any relevant IAM policy.
+
 ## Example Usage
 
 ```terraform
@@ -60,7 +62,9 @@ resource "aws_s3_bucket_policy" "allow_cloudtrail_logging" {
 * `region` - (Optional) Name of the region whose AWS CloudTrail account ID is desired.
 Defaults to the region from the AWS provider configuration.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the AWS CloudTrail service account in the selected region.
 * `arn` - ARN of the AWS CloudTrail service account in the selected region.

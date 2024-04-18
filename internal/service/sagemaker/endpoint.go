@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker
 
 import (
@@ -68,8 +71,12 @@ func ResourceEndpoint() *schema.Resource {
 						},
 						"blue_green_update_policy": {
 							Type:     schema.TypeList,
-							Required: true,
+							Optional: true,
 							MaxItems: 1,
+							ExactlyOneOf: []string{
+								"deployment_config.0.blue_green_update_policy",
+								"deployment_config.0.rolling_update_policy",
+							},
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"maximum_execution_timeout_in_seconds": {
@@ -139,6 +146,67 @@ func ResourceEndpoint() *schema.Resource {
 												},
 											},
 										},
+									},
+								},
+							},
+						},
+						"rolling_update_policy": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							ExactlyOneOf: []string{
+								"deployment_config.0.blue_green_update_policy",
+								"deployment_config.0.rolling_update_policy",
+							},
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"maximum_batch_size": {
+										Type:     schema.TypeList,
+										Required: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"type": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringInSlice(sagemaker.CapacitySizeType_Values(), false),
+												},
+												"value": {
+													Type:         schema.TypeInt,
+													Required:     true,
+													ValidateFunc: validation.IntAtLeast(1),
+												},
+											},
+										},
+									},
+									"maximum_execution_timeout_in_seconds": {
+										Type:         schema.TypeInt,
+										Optional:     true,
+										ValidateFunc: validation.IntBetween(600, 14400),
+									},
+									"rollback_maximum_batch_size": {
+										Type:     schema.TypeList,
+										Optional: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"type": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringInSlice(sagemaker.CapacitySizeType_Values(), false),
+												},
+												"value": {
+													Type:         schema.TypeInt,
+													Required:     true,
+													ValidateFunc: validation.IntAtLeast(1),
+												},
+											},
+										},
+									},
+									"wait_interval_in_seconds": {
+										Type:         schema.TypeInt,
+										Required:     true,
+										ValidateFunc: validation.IntBetween(0, 3600),
 									},
 								},
 							},
@@ -310,6 +378,10 @@ func expandEndpointDeploymentConfig(configured []interface{}) *sagemaker.Deploym
 		c.AutoRollbackConfiguration = expandEndpointDeploymentConfigAutoRollbackConfig(v)
 	}
 
+	if v, ok := m["rolling_update_policy"].([]interface{}); ok && len(v) > 0 {
+		c.RollingUpdatePolicy = expandEndpointDeploymentConfigRollingUpdatePolicy(v)
+	}
+
 	return c
 }
 
@@ -324,6 +396,10 @@ func flattenEndpointDeploymentConfig(configured *sagemaker.DeploymentConfig) []m
 
 	if configured.AutoRollbackConfiguration != nil {
 		cfg["auto_rollback_configuration"] = flattenEndpointDeploymentConfigAutoRollbackConfig(configured.AutoRollbackConfiguration)
+	}
+
+	if configured.RollingUpdatePolicy != nil {
+		cfg["rolling_update_policy"] = flattenEndpointDeploymentConfigRollingUpdatePolicy(configured.RollingUpdatePolicy)
 	}
 
 	return []map[string]interface{}{cfg}
@@ -378,11 +454,11 @@ func expandEndpointDeploymentConfigTrafficRoutingConfiguration(configured []inte
 	}
 
 	if v, ok := m["canary_size"].([]interface{}); ok && len(v) > 0 {
-		c.CanarySize = expandEndpointDeploymentConfigTrafficRoutingConfigurationCapacitySize(v)
+		c.CanarySize = expandEndpointDeploymentCapacitySize(v)
 	}
 
 	if v, ok := m["linear_step_size"].([]interface{}); ok && len(v) > 0 {
-		c.LinearStepSize = expandEndpointDeploymentConfigTrafficRoutingConfigurationCapacitySize(v)
+		c.LinearStepSize = expandEndpointDeploymentCapacitySize(v)
 	}
 
 	return c
@@ -399,17 +475,17 @@ func flattenEndpointDeploymentConfigTrafficRoutingConfiguration(configured *sage
 	}
 
 	if configured.CanarySize != nil {
-		cfg["canary_size"] = flattenEndpointDeploymentConfigTrafficRoutingConfigurationCapacitySize(configured.CanarySize)
+		cfg["canary_size"] = flattenEndpointDeploymentCapacitySize(configured.CanarySize)
 	}
 
 	if configured.LinearStepSize != nil {
-		cfg["linear_step_size"] = flattenEndpointDeploymentConfigTrafficRoutingConfigurationCapacitySize(configured.LinearStepSize)
+		cfg["linear_step_size"] = flattenEndpointDeploymentCapacitySize(configured.LinearStepSize)
 	}
 
 	return []map[string]interface{}{cfg}
 }
 
-func expandEndpointDeploymentConfigTrafficRoutingConfigurationCapacitySize(configured []interface{}) *sagemaker.CapacitySize {
+func expandEndpointDeploymentCapacitySize(configured []interface{}) *sagemaker.CapacitySize {
 	if len(configured) == 0 {
 		return nil
 	}
@@ -424,7 +500,7 @@ func expandEndpointDeploymentConfigTrafficRoutingConfigurationCapacitySize(confi
 	return c
 }
 
-func flattenEndpointDeploymentConfigTrafficRoutingConfigurationCapacitySize(configured *sagemaker.CapacitySize) []map[string]interface{} {
+func flattenEndpointDeploymentCapacitySize(configured *sagemaker.CapacitySize) []map[string]interface{} {
 	if configured == nil {
 		return []map[string]interface{}{}
 	}
@@ -458,6 +534,47 @@ func flattenEndpointDeploymentConfigAutoRollbackConfig(configured *sagemaker.Aut
 
 	cfg := map[string]interface{}{
 		"alarms": flattenEndpointDeploymentConfigAutoRollbackConfigAlarms(configured.Alarms),
+	}
+
+	return []map[string]interface{}{cfg}
+}
+
+func expandEndpointDeploymentConfigRollingUpdatePolicy(configured []interface{}) *sagemaker.RollingUpdatePolicy {
+	if len(configured) == 0 {
+		return nil
+	}
+
+	m := configured[0].(map[string]interface{})
+
+	c := &sagemaker.RollingUpdatePolicy{
+		WaitIntervalInSeconds: aws.Int64(int64(m["wait_interval_in_seconds"].(int))),
+	}
+
+	if v, ok := m["maximum_execution_timeout_in_seconds"].(int); ok && v > 0 {
+		c.MaximumExecutionTimeoutInSeconds = aws.Int64(int64(v))
+	}
+
+	if v, ok := m["maximum_batch_size"].([]interface{}); ok && len(v) > 0 {
+		c.MaximumBatchSize = expandEndpointDeploymentCapacitySize(v)
+	}
+
+	if v, ok := m["rollback_maximum_batch_size"].([]interface{}); ok && len(v) > 0 {
+		c.RollbackMaximumBatchSize = expandEndpointDeploymentCapacitySize(v)
+	}
+
+	return c
+}
+
+func flattenEndpointDeploymentConfigRollingUpdatePolicy(configured *sagemaker.RollingUpdatePolicy) []map[string]interface{} {
+	if configured == nil {
+		return []map[string]interface{}{}
+	}
+
+	cfg := map[string]interface{}{
+		"maximum_execution_timeout_in_seconds": aws.Int64Value(configured.MaximumExecutionTimeoutInSeconds),
+		"wait_interval_in_seconds":             aws.Int64Value(configured.WaitIntervalInSeconds),
+		"maximum_batch_size":                   flattenEndpointDeploymentCapacitySize(configured.MaximumBatchSize),
+		"rollback_maximum_batch_size":          flattenEndpointDeploymentCapacitySize(configured.RollbackMaximumBatchSize),
 	}
 
 	return []map[string]interface{}{cfg}

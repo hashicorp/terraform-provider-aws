@@ -56,8 +56,8 @@ The following arguments are optional:
 
 The `access_endpoint` block supports the following arguments:
 
-* `endpoint_type` - (Required) Type of interface endpoint.
-* `vpce_id` - (Optional) Identifier (ID) of the VPC in which the interface endpoint is used.
+* `endpoint_type` - (Required) Type of interface endpoint. For valid values, refer to the [AWS documentation](https://docs.aws.amazon.com/appstream2/latest/APIReference/API_AccessEndpoint.html).
+* `vpce_id` - (Optional) Identifier (ID) of the interface VPC endpoint.
 
 ### `domain_join_info`
 
@@ -71,22 +71,31 @@ The `domain_join_info` block supports the following arguments:
 The `vpc_config` block supports the following arguments:
 
 * `security_group_ids` - (Optional) Identifiers of the security groups for the image builder or image builder.
-* `subnet_ids` - (Optional) Identifiers of the subnets to which a network interface is attached from the image builder instance or image builder instance.
+* `subnet_ids` - (Optional) Identifier of the subnet to which a network interface is attached from the image builder instance.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the appstream image builder.
 * `created_time` -  Date and time, in UTC and extended RFC 3339 format, when the image builder was created.
 * `id` - Name of the image builder.
-* `state` - State of the image builder. Can be: `PENDING`, `UPDATING_AGENT`, `RUNNING`, `STOPPING`, `STOPPED`, `REBOOTING`, `SNAPSHOTTING`, `DELETING`, `FAILED`, `UPDATING`, `PENDING_QUALIFICATION`
+* `state` - State of the image builder. For valid values, refer to the [AWS documentation](https://docs.aws.amazon.com/appstream2/latest/APIReference/API_ImageBuilder.html#AppStream2-Type-ImageBuilder-State).
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-`aws_appstream_image_builder` can be imported using the `name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_appstream_image_builder` using the `name`. For example:
 
+```terraform
+import {
+  to = aws_appstream_image_builder.example
+  id = "imageBuilderExample"
+}
 ```
-$ terraform import aws_appstream_image_builder.example imageBuilderExample
+
+Using `terraform import`, import `aws_appstream_image_builder` using the `name`. For example:
+
+```console
+% terraform import aws_appstream_image_builder.example imageBuilderExample
 ```

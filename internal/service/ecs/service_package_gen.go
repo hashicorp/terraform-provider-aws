@@ -5,9 +5,12 @@ package ecs
 import (
 	"context"
 
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	ecs_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ecs"
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	ecs_sdkv1 "github.com/aws/aws-sdk-go/service/ecs"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -52,6 +55,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 		{
 			Factory:  ResourceAccountSettingDefault,
 			TypeName: "aws_ecs_account_setting_default",
+			Name:     "Account Setting Defauilt",
 		},
 		{
 			Factory:  ResourceCapacityProvider,
@@ -82,8 +86,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceTag,
+			Factory:  resourceTag,
 			TypeName: "aws_ecs_tag",
+			Name:     "ECS Resource Tag",
 		},
 		{
 			Factory:  ResourceTaskDefinition,
@@ -115,4 +120,17 @@ func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*e
 	return ecs_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
 }
 
-var ServicePackage = &servicePackage{}
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*ecs_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+
+	return ecs_sdkv2.NewFromConfig(cfg, func(o *ecs_sdkv2.Options) {
+		if endpoint := config["endpoint"].(string); endpoint != "" {
+			o.BaseEndpoint = aws_sdkv2.String(endpoint)
+		}
+	}), nil
+}
+
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}

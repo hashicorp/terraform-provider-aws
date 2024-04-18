@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudfront_test
 
 import (
@@ -31,7 +34,7 @@ func TestAccCloudFrontOriginAccessControl_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOriginAccessControlDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -79,7 +82,7 @@ func TestAccCloudFrontOriginAccessControl_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOriginAccessControlDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -107,7 +110,7 @@ func TestAccCloudFrontOriginAccessControl_Name(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOriginAccessControlDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -143,7 +146,7 @@ func TestAccCloudFrontOriginAccessControl_Description(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOriginAccessControlDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -190,7 +193,7 @@ func TestAccCloudFrontOriginAccessControl_SigningBehavior(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, cloudfront.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckOriginAccessControlDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -268,6 +271,102 @@ func testAccCheckOriginAccessControlExists(ctx context.Context, name string, ori
 	}
 }
 
+func TestAccCloudFrontOriginAccessControl_lambdaOriginType(t *testing.T) {
+	ctx := acctest.Context(t)
+	var originaccesscontrol cloudfront.OriginAccessControl
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudfront_origin_access_control.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOriginAccessControlDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOriginAccessControlConfig_originType(rName, "lambda"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOriginAccessControlExists(ctx, resourceName, &originaccesscontrol),
+					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
+					resource.TestCheckResourceAttrSet(resourceName, "etag"),
+					resource.TestCheckResourceAttrWith(resourceName, "id", func(value string) error {
+						if value == "" {
+							return fmt.Errorf("expected attribute to be set")
+						}
+
+						if id := aws.StringValue(originaccesscontrol.Id); value != id {
+							return fmt.Errorf("expected attribute to be equal to %s", id)
+						}
+
+						return nil
+					}),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "origin_access_control_origin_type", "lambda"),
+					resource.TestCheckResourceAttr(resourceName, "signing_behavior", "always"),
+					resource.TestCheckResourceAttr(resourceName, "signing_protocol", "sigv4"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccCloudFrontOriginAccessControl_mediaPackageV2Type(t *testing.T) {
+	ctx := acctest.Context(t)
+	var originaccesscontrol cloudfront.OriginAccessControl
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_cloudfront_origin_access_control.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckOriginAccessControlDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccOriginAccessControlConfig_originType(rName, "mediapackagev2"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckOriginAccessControlExists(ctx, resourceName, &originaccesscontrol),
+					resource.TestCheckResourceAttr(resourceName, "description", "Managed by Terraform"),
+					resource.TestCheckResourceAttrSet(resourceName, "etag"),
+					resource.TestCheckResourceAttrWith(resourceName, "id", func(value string) error {
+						if value == "" {
+							return fmt.Errorf("expected attribute to be set")
+						}
+
+						if id := aws.StringValue(originaccesscontrol.Id); value != id {
+							return fmt.Errorf("expected attribute to be equal to %s", id)
+						}
+
+						return nil
+					}),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "origin_access_control_origin_type", "mediapackagev2"),
+					resource.TestCheckResourceAttr(resourceName, "signing_behavior", "always"),
+					resource.TestCheckResourceAttr(resourceName, "signing_protocol", "sigv4"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccPreCheck(ctx context.Context, t *testing.T) {
 	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn(ctx)
 
@@ -326,4 +425,15 @@ resource "aws_cloudfront_origin_access_control" "test" {
   signing_protocol                  = "sigv4"
 }
 `, rName, signingBehavior)
+}
+
+func testAccOriginAccessControlConfig_originType(rName, originType string) string {
+	return fmt.Sprintf(`
+resource "aws_cloudfront_origin_access_control" "test" {
+  name                              = %[1]q
+  origin_access_control_origin_type = %[2]q
+  signing_behavior                  = "always"
+  signing_protocol                  = "sigv4"
+}
+`, rName, originType)
 }

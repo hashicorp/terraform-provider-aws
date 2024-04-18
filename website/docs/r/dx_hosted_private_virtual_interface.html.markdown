@@ -26,7 +26,7 @@ resource "aws_dx_hosted_private_virtual_interface" "foo" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `address_family` - (Required) The address family for the BGP peer. `ipv4 ` or `ipv6`.
 * `bgp_asn` - (Required) The autonomous system (AS) number for Border Gateway Protocol (BGP) configuration.
@@ -39,9 +39,9 @@ The following arguments are supported:
 * `bgp_auth_key` - (Optional) The authentication key for BGP configuration.
 * `customer_address` - (Optional) The IPv4 CIDR destination address to which Amazon should send traffic. Required for IPv4 BGP peers.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the virtual interface.
 * `arn` - The ARN of the virtual interface.
@@ -58,8 +58,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Direct Connect hosted private virtual interfaces can be imported using the `vif id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Direct Connect hosted private virtual interfaces using the VIF `id`. For example:
 
+```terraform
+import {
+  to = aws_dx_hosted_private_virtual_interface.test
+  id = "dxvif-33cc44dd"
+}
 ```
-$ terraform import aws_dx_hosted_private_virtual_interface.test dxvif-33cc44dd
+
+Using `terraform import`, import Direct Connect hosted private virtual interfaces using the VIF `id`. For example:
+
+```console
+% terraform import aws_dx_hosted_private_virtual_interface.test dxvif-33cc44dd
 ```

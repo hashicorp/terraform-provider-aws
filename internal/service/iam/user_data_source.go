@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -13,8 +16,8 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
-// @SDKDataSource("aws_iam_user")
-func DataSourceUser() *schema.Resource {
+// @SDKDataSource("aws_iam_user", name="User")
+func dataSourceUser() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceUserRead,
 
@@ -46,7 +49,7 @@ func DataSourceUser() *schema.Resource {
 
 func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	userName := d.Get("user_name").(string)
@@ -54,14 +57,14 @@ func dataSourceUserRead(ctx context.Context, d *schema.ResourceData, meta interf
 		UserName: aws.String(userName),
 	}
 
-	log.Printf("[DEBUG] Reading IAM User: %s", req)
-	resp, err := conn.GetUserWithContext(ctx, req)
+	log.Printf("[DEBUG] Reading IAM User: %v", req)
+	resp, err := conn.GetUser(ctx, req)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "getting user: %s", err)
 	}
 
 	user := resp.User
-	d.SetId(aws.StringValue(user.UserId))
+	d.SetId(aws.ToString(user.UserId))
 	d.Set("arn", user.Arn)
 	d.Set("path", user.Path)
 	d.Set("permissions_boundary", "")

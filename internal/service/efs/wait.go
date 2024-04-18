@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package efs
 
 import (
@@ -81,41 +84,6 @@ func waitBackupPolicyEnabled(ctx context.Context, conn *efs.EFS, id string) (*ef
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*efs.BackupPolicy); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitReplicationConfigurationCreated(ctx context.Context, conn *efs.EFS, id string, timeout time.Duration) (*efs.ReplicationConfigurationDescription, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending: []string{efs.ReplicationStatusEnabling},
-		Target:  []string{efs.ReplicationStatusEnabled},
-		Refresh: statusReplicationConfiguration(ctx, conn, id),
-		Timeout: timeout,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*efs.ReplicationConfigurationDescription); ok {
-		return output, err
-	}
-
-	return nil, err
-}
-
-func waitReplicationConfigurationDeleted(ctx context.Context, conn *efs.EFS, id string, timeout time.Duration) (*efs.ReplicationConfigurationDescription, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{efs.ReplicationStatusDeleting},
-		Target:                    []string{},
-		Refresh:                   statusReplicationConfiguration(ctx, conn, id),
-		Timeout:                   timeout,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-
-	if output, ok := outputRaw.(*efs.ReplicationConfigurationDescription); ok {
 		return output, err
 	}
 

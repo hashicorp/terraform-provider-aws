@@ -3,12 +3,12 @@ subcategory: "Network Manager"
 layout: "aws"
 page_title: "AWS: aws_networkmanager_connect_attachment"
 description: |-
-  Terraform resource for managing an AWS NetworkManager ConnectAttachment.
+  Terraform resource for managing an AWS Network Manager ConnectAttachment.
 ---
 
 # Resource: aws_networkmanager_connect_attachment
 
-Terraform resource for managing an AWS NetworkManager ConnectAttachment.
+Terraform resource for managing an AWS Network Manager ConnectAttachment.
 
 ## Example Usage
 
@@ -70,15 +70,19 @@ The following arguments are required:
 - `core_network_id` - (Required) The ID of a core network where you want to create the attachment.
 - `transport_attachment_id` - (Required) The ID of the attachment between the two connections.
 - `edge_location` - (Required) The Region where the edge is located.
-- `options` - (Required) Options for creating an attachment.
+- `options` - (Required) Options block. See [options](#options) for more information.
 
 The following arguments are optional:
 
 - `tags` - (Optional) Key-value tags for the attachment. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+### options
 
-In addition to all arguments above, the following attributes are exported:
+* `protocol` - (Required) The protocol used for the attachment connection. Possible values are `GRE` and `NO_ENCAP`.
+
+## Attribute Reference
+
+This resource exports the following attributes in addition to the arguments above:
 
 - `arn` - The ARN of the attachment.
 - `attachment_policy_rule_number` - The policy rule number associated with the attachment.
@@ -95,8 +99,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_networkmanager_connect_attachment` can be imported using the attachment ID, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_networkmanager_connect_attachment` using the attachment ID. For example:
 
+```terraform
+import {
+  to = aws_networkmanager_connect_attachment.example
+  id = "attachment-0f8fa60d2238d1bd8"
+}
 ```
-$ terraform import aws_networkmanager_connect_attachment.example attachment-0f8fa60d2238d1bd8
+
+Using `terraform import`, import `aws_networkmanager_connect_attachment` using the attachment ID. For example:
+
+```console
+% terraform import aws_networkmanager_connect_attachment.example attachment-0f8fa60d2238d1bd8
 ```

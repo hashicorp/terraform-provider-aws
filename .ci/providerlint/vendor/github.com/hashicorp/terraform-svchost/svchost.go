@@ -1,3 +1,5 @@
+// Copyright (c) HashiCorp, Inc.
+
 // Package svchost deals with the representations of the so-called "friendly
 // hostnames" that we use to represent systems that provide Terraform-native
 // remote services, such as module registry, remote operations, etc.
@@ -101,6 +103,18 @@ func ForComparison(given string) (Hostname, error) {
 	var err error
 	portPortion, err = normalizePortPortion(portPortion)
 	if err != nil {
+		// We can get in here if someone has incorrectly specified a URL
+		// instead of a hostname, because normalizePortPortion will try to
+		// treat the colon after the scheme as the port number separator.
+		// We'll return a more specific error message for that situation.
+		given = strings.ToLower(given)
+		if given == "https" || given == "http" {
+			// Technically it's valid to have a host called "https" or "http"
+			// which would generate a false positive here with input like
+			// "http:foo", but we can only get here if the hostname exactly
+			// matches one of the schemes _and_ the port number is also invalid.
+			return Hostname(""), fmt.Errorf("need just a hostname and optional port number, not a full URL")
+		}
 		return Hostname(""), err
 	}
 

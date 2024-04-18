@@ -1,19 +1,22 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package rds
 
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// @SDKDataSource("aws_db_proxy")
-func DataSourceProxy() *schema.Resource {
+// @SDKDataSource("aws_db_proxy", name="DB Proxy")
+func dataSourceProxy() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceProxyRead,
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
@@ -99,17 +102,18 @@ func DataSourceProxy() *schema.Resource {
 
 func dataSourceProxyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).RDSConn(ctx)
+	conn := meta.(*conns.AWSClient).RDSClient(ctx)
 
 	name := d.Get("name").(string)
-	dbProxy, err := FindDBProxyByName(ctx, conn, name)
+	dbProxy, err := findDBProxyByName(ctx, conn, name)
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading RDS DB Proxy (%s): %s", name, err)
 	}
 
 	d.SetId(name)
 	d.Set("arn", dbProxy.DBProxyArn)
-	d.Set("auth", flattenProxyAuths(dbProxy.Auth))
+	d.Set("auth", flattenUserAuthConfigInfos(dbProxy.Auth))
 	d.Set("debug_logging", dbProxy.DebugLogging)
 	d.Set("endpoint", dbProxy.Endpoint)
 	d.Set("engine_family", dbProxy.EngineFamily)
@@ -117,8 +121,8 @@ func dataSourceProxyRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("require_tls", dbProxy.RequireTLS)
 	d.Set("role_arn", dbProxy.RoleArn)
 	d.Set("vpc_id", dbProxy.VpcId)
-	d.Set("vpc_security_group_ids", aws.StringValueSlice(dbProxy.VpcSecurityGroupIds))
-	d.Set("vpc_subnet_ids", aws.StringValueSlice(dbProxy.VpcSubnetIds))
+	d.Set("vpc_security_group_ids", dbProxy.VpcSecurityGroupIds)
+	d.Set("vpc_subnet_ids", dbProxy.VpcSubnetIds)
 
 	return diags
 }

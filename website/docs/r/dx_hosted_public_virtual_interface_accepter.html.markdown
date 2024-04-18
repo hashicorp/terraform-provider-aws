@@ -60,7 +60,7 @@ resource "aws_dx_hosted_public_virtual_interface_accepter" "accepter" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `virtual_interface_id` - (Required) The ID of the Direct Connect virtual interface to accept.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -73,9 +73,9 @@ by removing the corresponding `aws_dx_hosted_public_virtual_interface` resource 
 Removing a `aws_dx_hosted_public_virtual_interface_accepter` resource from your configuration will remove it
 from your statefile and management, **but will not delete the Direct Connect virtual interface.**
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The ID of the virtual interface.
 * `arn` - The ARN of the virtual interface.
@@ -90,8 +90,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Direct Connect hosted public virtual interfaces can be imported using the `vif id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Direct Connect hosted public virtual interfaces using the VIF `id`. For example:
 
+```terraform
+import {
+  to = aws_dx_hosted_public_virtual_interface_accepter.test
+  id = "dxvif-33cc44dd"
+}
 ```
-$ terraform import aws_dx_hosted_public_virtual_interface_accepter.test dxvif-33cc44dd
+
+Using `terraform import`, import Direct Connect hosted public virtual interfaces using the VIF `id`. For example:
+
+```console
+% terraform import aws_dx_hosted_public_virtual_interface_accepter.test dxvif-33cc44dd
 ```

@@ -14,15 +14,15 @@ Terraform resource for managing an AWS VPC Lattice Listener.
 
 ### Fixed response action
 
-```
-resource "aws_vpclattice_service" "test" {
-  name = %[1]q
+```terraform
+resource "aws_vpclattice_service" "example" {
+  name = "example"
 }
 
-resource "aws_vpclattice_listener" "test" {
-  name               = %[1]q
+resource "aws_vpclattice_listener" "example" {
+  name               = "example"
   protocol           = "HTTPS"
-  service_identifier = aws_vpclattice_service.test.id
+  service_identifier = aws_vpclattice_service.example.id
   default_action {
     fixed_response {
       status_code = 404
@@ -33,8 +33,8 @@ resource "aws_vpclattice_listener" "test" {
 
 ### Forward action
 
-```
-resource "aws_vpclattice_service" "test" {
+```terraform
+resource "aws_vpclattice_service" "example" {
   name = "example"
 }
 
@@ -45,7 +45,7 @@ resource "aws_vpclattice_target_group" "example" {
   config {
     port           = 80
     protocol       = "HTTP"
-    vpc_identifier = aws_vpc.test.id
+    vpc_identifier = aws_vpc.example.id
   }
 }
 
@@ -65,8 +65,8 @@ resource "aws_vpclattice_listener" "example" {
 
 ### Forward action with weighted target groups
 
-```
-resource "aws_vpclattice_service" "test" {
+```terraform
+resource "aws_vpclattice_service" "example" {
   name = "example"
 }
 
@@ -77,7 +77,7 @@ resource "aws_vpclattice_target_group" "example1" {
   config {
     port           = 80
     protocol       = "HTTP"
-    vpc_identifier = aws_vpc.test.id
+    vpc_identifier = aws_vpc.example.id
   }
 }
 
@@ -88,7 +88,7 @@ resource "aws_vpclattice_target_group" "example2" {
   config {
     port           = 8080
     protocol       = "HTTP"
-    vpc_identifier = aws_vpc.test.id
+    vpc_identifier = aws_vpc.example.id
   }
 }
 
@@ -113,7 +113,7 @@ resource "aws_vpclattice_listener" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `default_action` - (Required) Default action block for the default listener rule. Default action blocks are defined below.
 * `name` - (Required, Forces new resource) Name of the listener. A listener name must be unique within a service. Valid characters are a-z, 0-9, and hyphens (-). You can't use a hyphen as the first or last character, or immediately after another hyphen.
@@ -153,9 +153,9 @@ Target group blocks (for `target_group`) must include the following arguments:
 * `weight` - (Optional) Determines how requests are distributed to the target group. Only required if you specify multiple target groups for a forward action. For example, if you specify two target groups, one with a
 weight of 10 and the other with a weight of 20, the target group with a weight of 20 receives twice as many requests as the other target group. See [Listener rules](https://docs.aws.amazon.com/vpc-lattice/latest/ug/listeners.html#listener-rules) in the AWS documentation for additional examples. Default: `100`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the listener.
 * `created_at` - Date and time that the listener was created, specified in ISO-8601 format.
@@ -164,8 +164,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-VPC Lattice Listener can be imported by using the `listener_id` of the listener and the `id` of the VPC Lattice service combined with a `/` character, e.g.:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPC Lattice Listener using the `listener_id` of the listener and the `id` of the VPC Lattice service combined with a `/` character. For example:
 
+```terraform
+import {
+  to = aws_vpclattice_listener.example
+  id = "svc-1a2b3c4d/listener-987654321"
+}
 ```
-$ terraform import aws_vpclattice_listener.example svc-1a2b3c4d/listener-987654321
+
+Using `terraform import`, import VPC Lattice Listener using the `listener_id` of the listener and the `id` of the VPC Lattice service combined with a `/` character. For example:
+
+```console
+% terraform import aws_vpclattice_listener.example svc-1a2b3c4d/listener-987654321
 ```

@@ -1,8 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshift
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/redshift"
@@ -108,54 +110,6 @@ func FindScheduledActionByName(ctx context.Context, conn *redshift.Redshift, nam
 	}
 
 	return output.ScheduledActions[0], nil
-}
-
-func FindScheduleAssociationById(ctx context.Context, conn *redshift.Redshift, id string) (string, *redshift.ClusterAssociatedToSchedule, error) {
-	clusterIdentifier, scheduleIdentifier, err := SnapshotScheduleAssociationParseID(id)
-	if err != nil {
-		return "", nil, fmt.Errorf("parsing Redshift Cluster Snapshot Schedule Association ID %s: %s", id, err)
-	}
-
-	input := &redshift.DescribeSnapshotSchedulesInput{
-		ClusterIdentifier:  aws.String(clusterIdentifier),
-		ScheduleIdentifier: aws.String(scheduleIdentifier),
-	}
-	resp, err := conn.DescribeSnapshotSchedulesWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, redshift.ErrCodeSnapshotScheduleNotFoundFault) {
-		return "", nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return "", nil, err
-	}
-
-	if resp.SnapshotSchedules == nil || len(resp.SnapshotSchedules) == 0 {
-		return "", nil, tfresource.NewEmptyResultError(input)
-	}
-
-	snapshotSchedule := resp.SnapshotSchedules[0]
-
-	if snapshotSchedule == nil {
-		return "", nil, tfresource.NewEmptyResultError(input)
-	}
-
-	var associatedCluster *redshift.ClusterAssociatedToSchedule
-	for _, cluster := range snapshotSchedule.AssociatedClusters {
-		if aws.StringValue(cluster.ClusterIdentifier) == clusterIdentifier {
-			associatedCluster = cluster
-			break
-		}
-	}
-
-	if associatedCluster == nil {
-		return "", nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return aws.StringValue(snapshotSchedule.ScheduleIdentifier), associatedCluster, nil
 }
 
 func FindHSMClientCertificateByID(ctx context.Context, conn *redshift.Redshift, id string) (*redshift.HsmClientCertificate, error) {
@@ -464,4 +418,29 @@ func FindClusterSnapshotByID(ctx context.Context, conn *redshift.Redshift, id st
 	}
 
 	return output.Snapshots[0], nil
+}
+
+func FindResourcePolicyByARN(ctx context.Context, conn *redshift.Redshift, arn string) (*redshift.ResourcePolicy, error) {
+	input := &redshift.GetResourcePolicyInput{
+		ResourceArn: aws.String(arn),
+	}
+
+	output, err := conn.GetResourcePolicyWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, redshift.ErrCodeResourceNotFoundFault) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.ResourcePolicy, nil
 }

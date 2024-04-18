@@ -50,9 +50,9 @@ The following arguments are optional:
 * `passwords` - (Required) The set of passwords used for authentication. You can create up to two passwords for each user.
 * `type` - (Required) Indicates whether the user requires a password to authenticate. Must be set to `password`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Same as `user_name`.
 * `arn` - The ARN of the user.
@@ -63,10 +63,19 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Use the `user_name` to import a user. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import a user using the `user_name`. For example:
 
+```terraform
+import {
+  to = aws_memorydb_user.example
+  id = "my-user"
+}
 ```
-$ terraform import aws_memorydb_user.example my-user
+
+Using `terraform import`, import a user using the `user_name`. For example:
+
+```console
+% terraform import aws_memorydb_user.example my-user
 ```
 
 The `passwords` are not available for imported resources, as this information cannot be read back from the MemoryDB API.

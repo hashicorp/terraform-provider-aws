@@ -1,12 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
 	"context"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -24,8 +28,8 @@ const (
 	RoleStatusNotFound      = "notfound"
 )
 
-func waitRoleARNIsNotUniqueID(ctx context.Context, conn *iam.IAM, id string, role *iam.Role) (*iam.Role, error) {
-	if arn.IsARN(aws.StringValue(role.Arn)) {
+func waitRoleARNIsNotUniqueID(ctx context.Context, conn *iam.Client, id string, role *awstypes.Role) (*awstypes.Role, error) {
+	if arn.IsARN(aws.ToString(role.Arn)) {
 		return role, nil
 	}
 
@@ -40,16 +44,16 @@ func waitRoleARNIsNotUniqueID(ctx context.Context, conn *iam.IAM, id string, rol
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*iam.Role); ok {
+	if output, ok := outputRaw.(*awstypes.Role); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func statusRoleCreate(ctx context.Context, conn *iam.IAM, id string) retry.StateRefreshFunc {
+func statusRoleCreate(ctx context.Context, conn *iam.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		role, err := FindRoleByName(ctx, conn, id)
+		role, err := findRoleByName(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, RoleStatusNotFound, nil
@@ -59,7 +63,7 @@ func statusRoleCreate(ctx context.Context, conn *iam.IAM, id string) retry.State
 			return nil, "", err
 		}
 
-		if arn.IsARN(aws.StringValue(role.Arn)) {
+		if arn.IsARN(aws.ToString(role.Arn)) {
 			return role, RoleStatusARNIsARN, nil
 		}
 

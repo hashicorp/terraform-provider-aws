@@ -1,21 +1,25 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package appconfig
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"regexp"
 	"strconv"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/appconfig"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/appconfig"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/appconfig/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -39,7 +43,7 @@ func ResourceDeployment() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`[a-z0-9]{4,7}`), ""),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9a-z]{4,7}`), ""),
 			},
 			"arn": {
 				Type:     schema.TypeString,
@@ -49,7 +53,7 @@ func ResourceDeployment() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`[a-z0-9]{4,7}`), ""),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9a-z]{4,7}`), ""),
 			},
 			"configuration_version": {
 				Type:         schema.TypeString,
@@ -65,7 +69,7 @@ func ResourceDeployment() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`(^[a-z0-9]{4,7}$|^AppConfig\.[A-Za-z0-9]{9,40}$)`), ""),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`(^[0-9a-z]{4,7}$|^AppConfig\.[0-9A-Za-z]{9,40}$)`), ""),
 			},
 			"description": {
 				Type:         schema.TypeString,
@@ -77,7 +81,19 @@ func ResourceDeployment() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexp.MustCompile(`[a-z0-9]{4,7}`), ""),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`[0-9a-z]{4,7}`), ""),
+			},
+			"kms_key_arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"kms_key_identifier": {
+				Type:     schema.TypeString,
+				Optional: true,
+				ForceNew: true,
+				ValidateFunc: validation.Any(
+					verify.ValidARN,
+					validation.StringLenBetween(1, 256)),
 			},
 			"state": {
 				Type:     schema.TypeString,
@@ -92,7 +108,7 @@ func ResourceDeployment() *schema.Resource {
 
 func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
+	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
 	input := &appconfig.StartDeploymentInput{
 		ApplicationId:          aws.String(d.Get("application_id").(string)),
@@ -104,7 +120,11 @@ func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta 
 		Tags:                   getTagsIn(ctx),
 	}
 
-	output, err := conn.StartDeploymentWithContext(ctx, input)
+	if v, ok := d.GetOk("kms_key_identifier"); ok {
+		input.KmsKeyIdentifier = aws.String(v.(string))
+	}
+
+	output, err := conn.StartDeployment(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "starting AppConfig Deployment: %s", err)
@@ -114,18 +134,17 @@ func resourceDeploymentCreate(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendErrorf(diags, "starting AppConfig Deployment: empty response")
 	}
 
-	appID := aws.StringValue(output.ApplicationId)
-	envID := aws.StringValue(output.EnvironmentId)
-	deployNum := aws.Int64Value(output.DeploymentNumber)
+	appID := aws.ToString(output.ApplicationId)
+	envID := aws.ToString(output.EnvironmentId)
 
-	d.SetId(fmt.Sprintf("%s/%s/%d", appID, envID, deployNum))
+	d.SetId(fmt.Sprintf("%s/%s/%d", appID, envID, output.DeploymentNumber))
 
 	return append(diags, resourceDeploymentRead(ctx, d, meta)...)
 }
 
 func resourceDeploymentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).AppConfigConn(ctx)
+	conn := meta.(*conns.AWSClient).AppConfigClient(ctx)
 
 	appID, envID, deploymentNum, err := DeploymentParseID(d.Id())
 
@@ -135,13 +154,13 @@ func resourceDeploymentRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	input := &appconfig.GetDeploymentInput{
 		ApplicationId:    aws.String(appID),
-		DeploymentNumber: aws.Int64(int64(deploymentNum)),
+		DeploymentNumber: aws.Int32(int32(deploymentNum)),
 		EnvironmentId:    aws.String(envID),
 	}
 
-	output, err := conn.GetDeploymentWithContext(ctx, input)
+	output, err := conn.GetDeployment(ctx, input)
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, appconfig.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		log.Printf("[WARN] Appconfig Deployment (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -159,7 +178,7 @@ func resourceDeploymentRead(ctx context.Context, d *schema.ResourceData, meta in
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Partition: meta.(*conns.AWSClient).Partition,
 		Region:    meta.(*conns.AWSClient).Region,
-		Resource:  fmt.Sprintf("application/%s/environment/%s/deployment/%d", aws.StringValue(output.ApplicationId), aws.StringValue(output.EnvironmentId), aws.Int64Value(output.DeploymentNumber)),
+		Resource:  fmt.Sprintf("application/%s/environment/%s/deployment/%d", aws.ToString(output.ApplicationId), aws.ToString(output.EnvironmentId), output.DeploymentNumber),
 		Service:   "appconfig",
 	}.String()
 
@@ -171,6 +190,8 @@ func resourceDeploymentRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("deployment_strategy_id", output.DeploymentStrategyId)
 	d.Set("description", output.Description)
 	d.Set("environment_id", output.EnvironmentId)
+	d.Set("kms_key_arn", output.KmsKeyArn)
+	d.Set("kms_key_identifier", output.KmsKeyIdentifier)
 	d.Set("state", output.State)
 
 	return diags

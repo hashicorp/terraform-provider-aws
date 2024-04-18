@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ds
 
 import (
@@ -15,8 +18,10 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/setplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringdefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -26,9 +31,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/boolplanmodifier"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
-	fwstringplanmodifier "github.com/hashicorp/terraform-provider-aws/internal/framework/stringplanmodifier"
 	fwvalidators "github.com/hashicorp/terraform-provider-aws/internal/framework/validators"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -79,9 +82,7 @@ func (r *resourceTrust) Schema(ctx context.Context, req resource.SchemaRequest, 
 			"delete_associated_conditional_forwarder": schema.BoolAttribute{
 				Computed: true,
 				Optional: true,
-				PlanModifiers: []planmodifier.Bool{
-					boolplanmodifier.DefaultValue(false),
-				},
+				Default:  booldefault.StaticBool(false),
 			},
 			"directory_id": schema.StringAttribute{
 				Required: true,
@@ -144,11 +145,9 @@ func (r *resourceTrust) Schema(ctx context.Context, req resource.SchemaRequest, 
 			"trust_type": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
+				Default:  stringdefault.StaticString(string(awstypes.TrustTypeForest)),
 				Validators: []validator.String{
 					enum.FrameworkValidate[awstypes.TrustType](),
-				},
-				PlanModifiers: []planmodifier.String{
-					fwstringplanmodifier.DefaultValue(string(awstypes.TrustTypeForest)),
 				},
 			},
 		},

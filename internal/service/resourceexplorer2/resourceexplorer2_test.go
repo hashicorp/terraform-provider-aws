@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package resourceexplorer2_test
 
 import (
@@ -22,6 +25,10 @@ func TestAccResourceExplorer2_serial(t *testing.T) {
 			"disappears":  testAccView_disappears,
 			"filter":      testAccView_filter,
 			"tags":        testAccView_tags,
+		},
+		"SearchDataSource": {
+			"basic":     testAccSearchDataSource_basic,
+			"indexType": testAccSearchDataSource_IndexType,
 		},
 	}
 

@@ -137,7 +137,7 @@ resource "aws_appmesh_route" "serviceb" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) Name to use for the route. Must be between 1 and 255 characters in length.
 * `mesh_name` - (Required) Name of the service mesh in which to create the route. Must be between 1 and 255 characters in length.
@@ -306,9 +306,9 @@ The `range` object supports the following:
 * `end` - (Required) End of the range.
 * `start` - (Requited) Start of the range.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the route.
 * `arn` - ARN of the route.
@@ -319,11 +319,19 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-App Mesh virtual routes can be imported using `mesh_name` and `virtual_router_name` together with the route's `name`,
-e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import App Mesh virtual routes using `mesh_name` and `virtual_router_name` together with the route's `name`. For example:
 
+```terraform
+import {
+  to = aws_appmesh_route.serviceb
+  id = "simpleapp/serviceB/serviceB-route"
+}
 ```
-$ terraform import aws_appmesh_route.serviceb simpleapp/serviceB/serviceB-route
+
+Using `terraform import`, import App Mesh virtual routes using `mesh_name` and `virtual_router_name` together with the route's `name`. For example:
+
+```console
+% terraform import aws_appmesh_route.serviceb simpleapp/serviceB/serviceB-route
 ```
 
 [1]: /docs/providers/aws/index.html

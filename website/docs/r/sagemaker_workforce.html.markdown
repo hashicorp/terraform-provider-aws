@@ -61,7 +61,7 @@ resource "aws_sagemaker_workforce" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `workforce_name` - (Required) The name of the Workforce (must be unique).
 * `cognito_config` - (Optional) Use this parameter to configure an Amazon Cognito private workforce. A single Cognito workforce is created using and corresponds to a single Amazon Cognito user pool. Conflicts with `oidc_config`. see [Cognito Config](#cognito-config) details below.
@@ -95,9 +95,9 @@ The following arguments are supported:
 * `subnets` - (Optional) The ID of the subnets in the VPC that you want to connect.
 * `vpc_id` - (Optional) The ID of the VPC that the workforce uses for communication.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) assigned by AWS to this Workforce.
 * `id` - The name of the Workforce.
@@ -106,8 +106,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-SageMaker Workforces can be imported using the `workforce_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import SageMaker Workforces using the `workforce_name`. For example:
 
+```terraform
+import {
+  to = aws_sagemaker_workforce.example
+  id = "example"
+}
 ```
-$ terraform import aws_sagemaker_workforce.example example
+
+Using `terraform import`, import SageMaker Workforces using the `workforce_name`. For example:
+
+```console
+% terraform import aws_sagemaker_workforce.example example
 ```

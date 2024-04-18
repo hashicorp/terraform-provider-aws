@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dynamodb
 
 import (
@@ -59,7 +62,7 @@ func (f attributeValue) MarshalJSON() ([]byte, error) {
 		})
 	}
 	if f.M != nil {
-		thing["M"] = maps.ApplyToAll(f.M, func(t *dynamodb.AttributeValue) attributeValue {
+		thing["M"] = maps.ApplyToAllValues(f.M, func(t *dynamodb.AttributeValue) attributeValue {
 			return attributeValue(*t)
 		})
 	}

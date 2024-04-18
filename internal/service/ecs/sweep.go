@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package ecs
 
@@ -12,9 +12,10 @@ import (
 	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_ecs_capacity_provider", &resource.Sweeper{
 		Name: "aws_ecs_capacity_provider",
 		F:    sweepCapacityProviders,
@@ -79,7 +80,7 @@ func sweepCapacityProviders(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping ECS Capacity Provider sweep for %s: %s", region, err)
 		return nil
 	}
@@ -88,7 +89,7 @@ func sweepCapacityProviders(region string) error {
 		return fmt.Errorf("error listing ECS Capacity Providers (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping ECS Capacity Providers (%s): %w", region, err)
@@ -123,7 +124,7 @@ func sweepClusters(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping ECS Cluster sweep for %s: %s", region, err)
 		return nil
 	}
@@ -132,7 +133,7 @@ func sweepClusters(region string) error {
 		return fmt.Errorf("error listing ECS Clusters (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping ECS Clusters (%s): %w", region, err)
@@ -180,7 +181,7 @@ func sweepServices(region string) error {
 				return !lastPage
 			})
 
-			if sweep.SkipSweepError(err) {
+			if awsv1.SkipSweepError(err) {
 				continue
 			}
 
@@ -192,7 +193,7 @@ func sweepServices(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping ECS Service sweep for %s: %s", region, err)
 		return sweeperErrs.ErrorOrNil() // In case we have completed some pages, but had errors
 	}
@@ -201,7 +202,7 @@ func sweepServices(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error listing ECS Clusters (%s): %w", region, err))
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("error sweeping ECS Services (%s): %w", region, err))
@@ -237,7 +238,7 @@ func sweepTaskDefinitions(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping ECS Task Definition sweep for %s: %s", region, err)
 		return nil
 	}
@@ -246,7 +247,7 @@ func sweepTaskDefinitions(region string) error {
 		return fmt.Errorf("error listing ECS Task Definitions (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping ECS Task Definitions (%s): %w", region, err)

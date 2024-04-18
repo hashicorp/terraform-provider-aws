@@ -44,8 +44,8 @@ func TagKeys(tags tftags.KeyValueTags) []*{{ .TagPackage }}.{{ .TagKeyType }} {
 }
 {{- end }}
 
-// Tags returns {{ .ServicePackage }} service tags.
-func Tags(tags tftags.KeyValueTags) []*{{ .TagPackage }}.{{ .TagType }} {
+// {{ .TagsFunc }} returns {{ .ServicePackage }} service tags.
+func {{ .TagsFunc }}(tags tftags.KeyValueTags) []*{{ .TagPackage }}.{{ .TagType }} {
 	{{- if or ( .TagTypeIDElem ) ( .TagTypeAddBoolElem) }}
 	var result []*{{ .TagPackage }}.{{ .TagType }}
 
@@ -82,7 +82,7 @@ func Tags(tags tftags.KeyValueTags) []*{{ .TagPackage }}.{{ .TagType }} {
 	return result
 }
 
-// KeyValueTags creates tftags.KeyValueTags from {{ .AWSService }} service tags.
+// {{ .KeyValueTagsFunc }} creates tftags.KeyValueTags from {{ .AWSService }} service tags.
 {{- if or ( .TagType2 ) ( .TagTypeAddBoolElem ) }}
 //
 // Accepts the following types:
@@ -94,7 +94,7 @@ func Tags(tags tftags.KeyValueTags) []*{{ .TagPackage }}.{{ .TagType }} {
 //   - []any (Terraform TypeList configuration block compatible)
 //   - *schema.Set (Terraform TypeSet configuration block compatible)
 {{- end }}
-func KeyValueTags(ctx context.Context, tags any{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string{{ end }}) tftags.KeyValueTags {
+func {{ .KeyValueTagsFunc }}(ctx context.Context, tags any{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string{{ end }}) tftags.KeyValueTags {
 	switch tags := tags.(type) {
 	case []*{{ .TagPackage }}.{{ .TagType }}:
 		{{- if or ( .TagTypeIDElem ) ( .TagTypeAddBoolElem) }}
@@ -164,7 +164,7 @@ func KeyValueTags(ctx context.Context, tags any{{ if .TagTypeIDElem }}, identifi
 		return tftags.New(ctx, m)
 	{{- if .TagTypeAddBoolElem }}
 	case *schema.Set:
-		return KeyValueTags(ctx, tags.List(){{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }})
+		return {{ .KeyValueTagsFunc }}(ctx, tags.List(){{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }})
 	case []any:
 		result := make(map[string]*tftags.TagData)
 
@@ -214,7 +214,7 @@ func KeyValueTags(ctx context.Context, tags any{{ if .TagTypeIDElem }}, identifi
 	}
 }
 {{- else }}
-func KeyValueTags(ctx context.Context, tags []*{{ .TagPackage }}.{{ .TagType }}) tftags.KeyValueTags {
+func {{ .KeyValueTagsFunc }}(ctx context.Context, tags []*{{ .TagPackage }}.{{ .TagType }}) tftags.KeyValueTags {
 	m := make(map[string]*string, len(tags))
 
 	for _, tag := range tags {
@@ -225,11 +225,11 @@ func KeyValueTags(ctx context.Context, tags []*{{ .TagPackage }}.{{ .TagType }})
 }
 {{- end }}
 
-// getTagsIn returns {{ .ServicePackage }} service tags from Context.
+// {{ .GetTagsInFunc }} returns {{ .ServicePackage }} service tags from Context.
 // nil is returned if there are no input tags.
-func getTagsIn(ctx context.Context) []*{{ .TagPackage }}.{{ .TagType }} {
+func {{ .GetTagsInFunc }}(ctx context.Context) []*{{ .TagPackage }}.{{ .TagType }} {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		if tags := Tags(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
+		if tags := {{ .TagsFunc }}(inContext.TagsIn.UnwrapOrDefault()); len(tags) > 0 {
 			return tags
 		}
 	}
@@ -237,17 +237,17 @@ func getTagsIn(ctx context.Context) []*{{ .TagPackage }}.{{ .TagType }} {
 	return nil
 }
 
-// setTagsOut sets {{ .ServicePackage }} service tags in Context.
+// {{ .SetTagsOutFunc }} sets {{ .ServicePackage }} service tags in Context.
 {{- if or ( .TagType2 ) ( .TagTypeAddBoolElem ) }}
-func setTagsOut(ctx context.Context, tags any{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string{{ end }}) {
+func {{ .SetTagsOutFunc }}(ctx context.Context, tags any{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }} string{{ end }}) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }}))
+		inContext.TagsOut = option.Some({{ .KeyValueTagsFunc }}(ctx, tags{{ if .TagTypeIDElem }}, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}{{ end }}))
 	}
 }
 {{- else }}
-func setTagsOut(ctx context.Context, tags []*{{ .TagPackage }}.{{ .TagType }}) {
+func {{ .SetTagsOutFunc }}(ctx context.Context, tags []*{{ .TagPackage }}.{{ .TagType }}) {
 	if inContext, ok := tftags.FromContext(ctx); ok {
-		inContext.TagsOut = types.Some(KeyValueTags(ctx, tags))
+		inContext.TagsOut = option.Some({{ .KeyValueTagsFunc }}(ctx, tags))
 	}
 }
 {{- end }}
@@ -259,6 +259,6 @@ func {{ .CreateTagsFunc }}(ctx context.Context, conn {{ .ClientType }}, identifi
 		return nil
 	}
 
-	return  {{ .UpdateTagsFunc }}(ctx, conn, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}, nil, KeyValueTags(ctx, tags))
+	return  {{ .UpdateTagsFunc }}(ctx, conn, identifier{{ if .TagResTypeElem }}, resourceType{{ end }}, nil, {{ .KeyValueTagsFunc }}(ctx, tags))
 }
 {{- end }}

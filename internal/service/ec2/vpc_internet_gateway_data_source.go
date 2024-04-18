@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -46,7 +49,7 @@ func DataSourceInternetGateway() *schema.Resource {
 					},
 				},
 			},
-			"filter": CustomFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"internet_gateway_id": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -75,13 +78,13 @@ func dataSourceInternetGatewayRead(ctx context.Context, d *schema.ResourceData, 
 	}
 
 	input := &ec2.DescribeInternetGatewaysInput{}
-	input.Filters = BuildAttributeFilterList(map[string]string{
+	input.Filters = newAttributeFilterList(map[string]string{
 		"internet-gateway-id": internetGatewayId.(string),
 	})
-	input.Filters = append(input.Filters, BuildTagFilterList(
+	input.Filters = append(input.Filters, newTagFilterList(
 		Tags(tftags.New(ctx, tags.(map[string]interface{}))),
 	)...)
-	input.Filters = append(input.Filters, BuildCustomFilterList(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		filter.(*schema.Set),
 	)...)
 

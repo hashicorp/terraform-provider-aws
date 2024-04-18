@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -43,8 +46,8 @@ var routeValidTargets = []string{
 	"vpc_peering_connection_id",
 }
 
-// @SDKResource("aws_route")
-func ResourceRoute() *schema.Resource {
+// @SDKResource("aws_route", name="Route")
+func resourceRoute() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRouteCreate,
 		ReadWithoutTimeout:   resourceRouteRead,
@@ -181,15 +184,13 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	destinationAttributeKey, destination, err := routeDestinationAttribute(d)
-
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Route: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	targetAttributeKey, target, err := routeTargetAttribute(d)
-
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating Route: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	routeTableID := d.Get("route_table_id").(string)
@@ -238,6 +239,18 @@ func resourceRouteCreate(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "creating Route: unexpected route target attribute: %q", targetAttributeKey)
 	}
 
+	route, err := routeFinder(ctx, conn, routeTableID, destination)
+
+	switch {
+	case err == nil:
+		if aws.StringValue(route.Origin) == ec2.RouteOriginCreateRoute {
+			return sdkdiag.AppendFromErr(diags, routeAlreadyExistsError(routeTableID, destination))
+		}
+	case tfresource.NotFound(err):
+	default:
+		return sdkdiag.AppendErrorf(diags, "reading Route: %s", err)
+	}
+
 	_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutCreate),
 		func() (interface{}, error) {
 			return conn.CreateRouteWithContext(ctx, input)
@@ -271,11 +284,10 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	destinationAttributeKey, destination, err := routeDestinationAttribute(d)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Route: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	var routeFinder RouteFinder
-
 	switch destinationAttributeKey {
 	case routeDestinationCIDRBlock:
 		routeFinder = FindRouteByIPv4Destination
@@ -288,8 +300,9 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	routeTableID := d.Get("route_table_id").(string)
-
-	route, err := routeFinder(ctx, conn, routeTableID, destination)
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
+		return routeFinder(ctx, conn, routeTableID, destination)
+	}, d.IsNewResource())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Route in Route Table (%s) with destination (%s) not found, removing from state", routeTableID, destination)
@@ -301,6 +314,7 @@ func resourceRouteRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		return sdkdiag.AppendErrorf(diags, "reading Route in Route Table (%s) with destination (%s): %s", routeTableID, destination, err)
 	}
 
+	route := outputRaw.(*ec2.Route)
 	d.Set("carrier_gateway_id", route.CarrierGatewayId)
 	d.Set("core_network_arn", route.CoreNetworkArn)
 	d.Set(routeDestinationCIDRBlock, route.DestinationCidrBlock)
@@ -335,13 +349,13 @@ func resourceRouteUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	destinationAttributeKey, destination, err := routeDestinationAttribute(d)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Route: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	targetAttributeKey, target, err := routeTargetAttribute(d)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Route: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	routeTableID := d.Get("route_table_id").(string)
@@ -416,7 +430,7 @@ func resourceRouteDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	destinationAttributeKey, destination, err := routeDestinationAttribute(d)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Route: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	routeTableID := d.Get("route_table_id").(string)

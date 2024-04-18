@@ -5,9 +5,12 @@ package cloudfront
 import (
 	"context"
 
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	cloudfront_sdkv2 "github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
 	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
 	cloudfront_sdkv1 "github.com/aws/aws-sdk-go/service/cloudfront"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -19,7 +22,16 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
+	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory: newKeyValueStoreResource,
+			Name:    "Key Value Store",
+		},
+		{
+			Factory: newResourceContinuousDeploymentPolicy,
+			Name:    "Continuous Deployment Policy",
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
@@ -33,8 +45,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			TypeName: "aws_cloudfront_distribution",
 		},
 		{
-			Factory:  DataSourceFunction,
+			Factory:  dataSourceFunction,
 			TypeName: "aws_cloudfront_function",
+			Name:     "Function",
 		},
 		{
 			Factory:  DataSourceLogDeliveryCanonicalUserID,
@@ -86,8 +99,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_cloudfront_field_level_encryption_profile",
 		},
 		{
-			Factory:  ResourceFunction,
+			Factory:  resourceFunction,
 			TypeName: "aws_cloudfront_function",
+			Name:     "Function",
 		},
 		{
 			Factory:  ResourceKeyGroup,
@@ -135,4 +149,17 @@ func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*c
 	return cloudfront_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
 }
 
-var ServicePackage = &servicePackage{}
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*cloudfront_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
+
+	return cloudfront_sdkv2.NewFromConfig(cfg, func(o *cloudfront_sdkv2.Options) {
+		if endpoint := config["endpoint"].(string); endpoint != "" {
+			o.BaseEndpoint = aws_sdkv2.String(endpoint)
+		}
+	}), nil
+}
+
+func ServicePackage(ctx context.Context) conns.ServicePackage {
+	return &servicePackage{}
+}

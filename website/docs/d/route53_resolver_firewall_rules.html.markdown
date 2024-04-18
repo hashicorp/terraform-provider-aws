@@ -29,7 +29,9 @@ The given filters must match exactly one resolver rule whose data will be export
 * `action` - (Optional) The action that DNS Firewall should take on a DNS query when it matches one of the domains in the rule's domain list.
 * `priority` - (Optional) The setting that determines the processing order of the rules in a rule group.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `firewall_rules` - List with information about the firewall rules. See details below.
 

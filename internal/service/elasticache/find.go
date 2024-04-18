@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package elasticache
 
 import (
@@ -5,10 +8,13 @@ import (
 	"fmt"
 	"strings"
 
+	elasticache_v2 "github.com/aws/aws-sdk-go-v2/service/elasticache"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -66,6 +72,15 @@ func FindCacheClusterByID(ctx context.Context, conn *elasticache.ElastiCache, id
 	return FindCacheCluster(ctx, conn, input)
 }
 
+// FindServerlessCacheByID retrieves an ElastiCache Cache Cluster by id.
+func FindServerlessCacheByID(ctx context.Context, conn *elasticache_v2.Client, id string) (awstypes.ServerlessCache, error) {
+	input := &elasticache_v2.DescribeServerlessCachesInput{
+		ServerlessCacheName: aws.String(id),
+	}
+
+	return FindServerlessCacheCluster(ctx, conn, input)
+}
+
 // FindCacheClusterWithNodeInfoByID retrieves an ElastiCache Cache Cluster with Node Info by id.
 func FindCacheClusterWithNodeInfoByID(ctx context.Context, conn *elasticache.ElastiCache, id string) (*elasticache.CacheCluster, error) {
 	input := &elasticache.DescribeCacheClustersInput{
@@ -96,6 +111,28 @@ func FindCacheCluster(ctx context.Context, conn *elasticache.ElastiCache, input 
 	}
 
 	return result.CacheClusters[0], nil
+}
+
+// FindServerlessChache retrieves an ElastiCache Cache Cluster using DescribeCacheClustersInput.
+func FindServerlessCacheCluster(ctx context.Context, conn *elasticache_v2.Client, input *elasticache_v2.DescribeServerlessCachesInput) (awstypes.ServerlessCache, error) {
+	result, err := conn.DescribeServerlessCaches(ctx, input)
+
+	if errs.IsA[*awstypes.ServerlessCacheNotFoundFault](err) {
+		return awstypes.ServerlessCache{}, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return awstypes.ServerlessCache{}, err
+	}
+
+	if result == nil || len(result.ServerlessCaches) == 0 {
+		return awstypes.ServerlessCache{}, tfresource.NewEmptyResultError(input)
+	}
+
+	return result.ServerlessCaches[0], nil
 }
 
 // FindCacheClustersByID retrieves a list of ElastiCache Cache Clusters by id.
@@ -187,7 +224,8 @@ func FindParameterGroupByName(ctx context.Context, conn *elasticache.ElastiCache
 	input := elasticache.DescribeCacheParameterGroupsInput{
 		CacheParameterGroupName: aws.String(name),
 	}
-	out, err := conn.DescribeCacheParameterGroupsWithContext(ctx, &input)
+
+	output, err := conn.DescribeCacheParameterGroupsWithContext(ctx, &input)
 
 	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeCacheParameterGroupNotFoundFault) {
 		return nil, &retry.NotFoundError{
@@ -195,18 +233,16 @@ func FindParameterGroupByName(ctx context.Context, conn *elasticache.ElastiCache
 			LastRequest: input,
 		}
 	}
+
 	if err != nil {
 		return nil, err
 	}
 
-	switch count := len(out.CacheParameterGroups); count {
-	case 0:
+	if output == nil {
 		return nil, tfresource.NewEmptyResultError(input)
-	case 1:
-		return out.CacheParameterGroups[0], nil
-	default:
-		return nil, tfresource.NewTooManyResultsError(count, input)
 	}
+
+	return tfresource.AssertSinglePtrResult(output.CacheParameterGroups)
 }
 
 type redisParameterGroupFilter func(group *elasticache.CacheParameterGroup) bool
@@ -264,33 +300,4 @@ func FilterRedisParameterGroupNameClusterEnabledDefault(group *elasticache.Cache
 		return true
 	}
 	return false
-}
-
-func FindCacheSubnetGroupByName(ctx context.Context, conn *elasticache.ElastiCache, name string) (*elasticache.CacheSubnetGroup, error) {
-	input := elasticache.DescribeCacheSubnetGroupsInput{
-		CacheSubnetGroupName: aws.String(name),
-	}
-
-	output, err := conn.DescribeCacheSubnetGroupsWithContext(ctx, &input)
-
-	if tfawserr.ErrCodeEquals(err, elasticache.ErrCodeCacheSubnetGroupNotFoundFault) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || len(output.CacheSubnetGroups) == 0 || output.CacheSubnetGroups[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output.CacheSubnetGroups); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return output.CacheSubnetGroups[0], nil
 }

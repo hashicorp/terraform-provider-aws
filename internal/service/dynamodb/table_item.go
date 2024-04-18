@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dynamodb
 
 import (
@@ -5,7 +8,6 @@ import (
 	"fmt"
 	"log"
 	"reflect"
-	"regexp"
 	"strings"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -17,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -267,45 +270,16 @@ func FindTableItem(ctx context.Context, conn *dynamodb.DynamoDB, tableName strin
 	return out, nil
 }
 
-func BuildExpressionAttributeNames(attrs map[string]*dynamodb.AttributeValue) map[string]*string {
-	names := map[string]*string{}
-
-	for key := range attrs {
-		names["#a_"+cleanKeyName(key)] = aws.String(key)
-	}
-
-	log.Printf("[DEBUG] ExpressionAttributeNames: %+v", names)
-	return names
-}
-
-func cleanKeyName(key string) string {
-	reg, err := regexp.Compile("[^a-zA-Z]+")
-	if err != nil {
-		log.Printf("[ERROR] clean keyname errored %v", err)
-	}
-	return reg.ReplaceAllString(key, "")
-}
-
-func BuildProjectionExpression(attrs map[string]*dynamodb.AttributeValue) *string {
-	keys := []string{}
-
-	for key := range attrs {
-		keys = append(keys, cleanKeyName(key))
-	}
-	log.Printf("[DEBUG] ProjectionExpressions: %+v", strings.Join(keys, ", #a_"))
-	return aws.String("#a_" + strings.Join(keys, ", #a_"))
-}
-
 func buildTableItemID(tableName string, hashKey string, rangeKey string, attrs map[string]*dynamodb.AttributeValue) string {
 	id := []string{tableName, hashKey}
 
 	if hashVal, ok := attrs[hashKey]; ok {
-		id = append(id, verify.Base64Encode(hashVal.B))
+		id = append(id, itypes.Base64EncodeOnce(hashVal.B))
 		id = append(id, aws.StringValue(hashVal.S))
 		id = append(id, aws.StringValue(hashVal.N))
 	}
 	if rangeVal, ok := attrs[rangeKey]; ok && rangeKey != "" {
-		id = append(id, rangeKey, verify.Base64Encode(rangeVal.B))
+		id = append(id, rangeKey, itypes.Base64EncodeOnce(rangeVal.B))
 		id = append(id, aws.StringValue(rangeVal.S))
 		id = append(id, aws.StringValue(rangeVal.N))
 	}

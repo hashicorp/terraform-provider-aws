@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package connect
 
 import (
@@ -13,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -31,9 +35,7 @@ func ResourceRoutingProfile() *schema.Resource {
 		CreateWithoutTimeout: resourceRoutingProfileCreate,
 		ReadWithoutTimeout:   resourceRoutingProfileRead,
 		UpdateWithoutTimeout: resourceRoutingProfileUpdate,
-		// Routing profiles do not support deletion today. NoOp the Delete method.
-		// Users can rename their routing profiles manually if they want.
-		DeleteWithoutTimeout: schema.NoopContext,
+		DeleteWithoutTimeout: resourceRoutingProfileDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -131,6 +133,8 @@ func ResourceRoutingProfile() *schema.Resource {
 }
 
 func resourceRoutingProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID := d.Get("instance_id").(string)
@@ -152,11 +156,11 @@ func resourceRoutingProfileCreate(ctx context.Context, d *schema.ResourceData, m
 	output, err := conn.CreateRoutingProfileWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Connect Routing Profile (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating Connect Routing Profile (%s): %s", name, err)
 	}
 
 	if output == nil {
-		return diag.Errorf("creating Connect Routing Profile (%s): empty output", name)
+		return sdkdiag.AppendErrorf(diags, "creating Connect Routing Profile (%s): empty output", name)
 	}
 
 	// call the batched association API if the number of queues to associate with the routing profile is > CreateRoutingProfileQueuesMaxItems
@@ -165,22 +169,24 @@ func resourceRoutingProfileCreate(ctx context.Context, d *schema.ResourceData, m
 		err = updateQueueConfigs(ctx, conn, instanceID, aws.StringValue(output.RoutingProfileId), v.(*schema.Set).List(), queueConfigsUpdateRemove)
 
 		if err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(output.RoutingProfileId)))
 
-	return resourceRoutingProfileRead(ctx, d, meta)
+	return append(diags, resourceRoutingProfileRead(ctx, d, meta)...)
 }
 
 func resourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, routingProfileID, err := RoutingProfileParseID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	resp, err := conn.DescribeRoutingProfileWithContext(ctx, &connect.DescribeRoutingProfileInput{
@@ -191,21 +197,21 @@ func resourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, met
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Connect Routing Profile (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("getting Connect Routing Profile (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "getting Connect Routing Profile (%s): %s", d.Id(), err)
 	}
 
 	if resp == nil || resp.RoutingProfile == nil {
-		return diag.Errorf("getting Connect Routing Profile (%s): empty response", d.Id())
+		return sdkdiag.AppendErrorf(diags, "getting Connect Routing Profile (%s): empty response", d.Id())
 	}
 
 	routingProfile := resp.RoutingProfile
 
 	if err := d.Set("media_concurrencies", flattenRoutingProfileMediaConcurrencies(routingProfile.MediaConcurrencies)); err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	d.Set("arn", routingProfile.RoutingProfileArn)
@@ -220,23 +226,25 @@ func resourceRoutingProfileRead(ctx context.Context, d *schema.ResourceData, met
 	queueConfigs, err := getRoutingProfileQueueConfigs(ctx, conn, instanceID, routingProfileID)
 
 	if err != nil {
-		return diag.Errorf("finding Connect Routing Profile Queue Configs Summary by Routing Profile ID (%s): %s", routingProfileID, err)
+		return sdkdiag.AppendErrorf(diags, "finding Connect Routing Profile Queue Configs Summary by Routing Profile ID (%s): %s", routingProfileID, err)
 	}
 
 	d.Set("queue_configs", queueConfigs)
 
 	setTagsOut(ctx, resp.RoutingProfile.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceRoutingProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, routingProfileID, err := RoutingProfileParseID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	// RoutingProfile has 4 update APIs
@@ -256,7 +264,7 @@ func resourceRoutingProfileUpdate(ctx context.Context, d *schema.ResourceData, m
 		inputConcurrency.MediaConcurrencies = mediaConcurrencies
 		_, err = conn.UpdateRoutingProfileConcurrencyWithContext(ctx, inputConcurrency)
 		if err != nil {
-			return diag.Errorf("updating RoutingProfile Media Concurrency (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating RoutingProfile Media Concurrency (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -271,7 +279,7 @@ func resourceRoutingProfileUpdate(ctx context.Context, d *schema.ResourceData, m
 		_, err = conn.UpdateRoutingProfileDefaultOutboundQueueWithContext(ctx, inputDefaultOutboundQueue)
 
 		if err != nil {
-			return diag.Errorf("updating RoutingProfile Default Outbound Queue ID (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating RoutingProfile Default Outbound Queue ID (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -287,7 +295,7 @@ func resourceRoutingProfileUpdate(ctx context.Context, d *schema.ResourceData, m
 		_, err = conn.UpdateRoutingProfileNameWithContext(ctx, inputNameDesc)
 
 		if err != nil {
-			return diag.Errorf("updating RoutingProfile Name (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating RoutingProfile Name (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -316,11 +324,11 @@ func resourceRoutingProfileUpdate(ctx context.Context, d *schema.ResourceData, m
 		err = updateQueueConfigs(ctx, conn, instanceID, routingProfileID, queueConfigsUpdateAdd, queueConfigsUpdateRemove)
 
 		if err != nil {
-			return diag.FromErr(err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
-	return resourceRoutingProfileRead(ctx, d, meta)
+	return append(diags, resourceRoutingProfileRead(ctx, d, meta)...)
 }
 
 func updateQueueConfigs(ctx context.Context, conn *connect.Connect, instanceID, routingProfileID string, queueConfigsUpdateAdd, queueConfigsUpdateRemove []interface{}) error {
@@ -370,26 +378,28 @@ func updateQueueConfigs(ctx context.Context, conn *connect.Connect, instanceID, 
 	return nil
 }
 
-// func resourceRoutingProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-// 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
+func resourceRoutingProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
 
-// 	instanceID, routingProfileID, err := RoutingProfileParseID(d.Id())
+	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
-// 	if err != nil {
-// 		return diag.FromErr(err)
-// 	}
+	instanceID, routingProfileID, err := RoutingProfileParseID(d.Id())
 
-// 	_, err = conn.DeleteRoutingProfileWithContext(ctx, &connect.DeleteRoutingProfileInput{
-// 		InstanceId:       aws.String(instanceID),
-// 		RoutingProfileId: aws.String(routingProfileID),
-// 	})
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
 
-// 	if err != nil {
-// 		return diag.Errorf("deleting RoutingProfile (%s): %s", d.Id(), err)
-// 	}
+	_, err = conn.DeleteRoutingProfileWithContext(ctx, &connect.DeleteRoutingProfileInput{
+		InstanceId:       aws.String(instanceID),
+		RoutingProfileId: aws.String(routingProfileID),
+	})
 
-// 	return nil
-// }
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting RoutingProfile (%s): %s", d.Id(), err)
+	}
+
+	return diags
+}
 
 func expandRoutingProfileMediaConcurrencies(mediaConcurrencies []interface{}) []*connect.MediaConcurrency {
 	if len(mediaConcurrencies) == 0 {

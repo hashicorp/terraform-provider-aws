@@ -1,16 +1,19 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package backup
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/backup"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -62,7 +65,7 @@ func ResourceVault() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(2, 50),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9\-\_]*$`), "must consist of letters, numbers, and hyphens."),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_-]*$`), "must consist of letters, numbers, and hyphens."),
 				),
 			},
 			"recovery_points": {
@@ -142,7 +145,7 @@ func resourceVaultDelete(ctx context.Context, d *schema.ResourceData, meta inter
 		input := &backup.ListRecoveryPointsByBackupVaultInput{
 			BackupVaultName: aws.String(d.Id()),
 		}
-		var recoveryPointErrs *multierror.Error
+		var errs []error
 
 		err := conn.ListRecoveryPointsByBackupVaultPagesWithContext(ctx, input, func(page *backup.ListRecoveryPointsByBackupVaultOutput, lastPage bool) bool {
 			if page == nil {
@@ -159,12 +162,15 @@ func resourceVaultDelete(ctx context.Context, d *schema.ResourceData, meta inter
 				})
 
 				if err != nil {
-					recoveryPointErrs = multierror.Append(recoveryPointErrs, fmt.Errorf("deleting recovery point (%s): %w", recoveryPointARN, err))
+					errs = append(errs, fmt.Errorf("deleting recovery point (%s): %w", recoveryPointARN, err))
+
 					continue
 				}
 
 				if _, err := waitRecoveryPointDeleted(ctx, conn, d.Id(), recoveryPointARN, d.Timeout(schema.TimeoutDelete)); err != nil {
-					recoveryPointErrs = multierror.Append(recoveryPointErrs, fmt.Errorf("deleting recovery point (%s): waiting for completion: %w", recoveryPointARN, err))
+					errs = append(errs, fmt.Errorf("waiting for recovery point (%s) delete: %w", recoveryPointARN, err))
+
+					continue
 				}
 			}
 
@@ -175,7 +181,7 @@ func resourceVaultDelete(ctx context.Context, d *schema.ResourceData, meta inter
 			return sdkdiag.AppendErrorf(diags, "listing Backup Vault (%s) recovery points: %s", d.Id(), err)
 		}
 
-		if err := recoveryPointErrs.ErrorOrNil(); err != nil {
+		if err := errors.Join(errs...); err != nil {
 			return sdkdiag.AppendErrorf(diags, "deleting Backup Vault (%s): %s", d.Id(), err)
 		}
 	}

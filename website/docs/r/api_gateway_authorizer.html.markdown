@@ -24,13 +24,13 @@ resource "aws_api_gateway_rest_api" "demo" {
   name = "auth-demo"
 }
 
-data "aws_iam_role_policy_document" "invocation_assume_role" {
+data "aws_iam_policy_document" "invocation_assume_role" {
   statement {
     effect = "Allow"
 
     principals {
-      type       = "Service"
-      identifier = ["apigateway.amazonaws.com"]
+      type        = "Service"
+      identifiers = ["apigateway.amazonaws.com"]
     }
 
     actions = ["sts:AssumeRole"]
@@ -40,7 +40,7 @@ data "aws_iam_role_policy_document" "invocation_assume_role" {
 resource "aws_iam_role" "invocation_role" {
   name               = "api_gateway_auth_invocation"
   path               = "/"
-  assume_role_policy = data.aws_iam_role_policy_document.assume_role.json
+  assume_role_policy = data.aws_iam_policy_document.invocation_assume_role.json
 }
 
 data "aws_iam_policy_document" "invocation_policy" {
@@ -86,7 +86,7 @@ resource "aws_lambda_function" "authorizer" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `authorizer_uri` - (Optional, required for type `TOKEN`/`REQUEST`) Authorizer's Uniform Resource Identifier (URI). This must be a well-formed Lambda function URI in the form of `arn:aws:apigateway:{region}:lambda:path/{service_api}`,
  e.g., `arn:aws:apigateway:us-west-2:lambda:path/2015-03-31/functions/arn:aws:lambda:us-west-2:012345678912:function:my-function/invocations`
@@ -99,17 +99,26 @@ The following arguments are supported:
 * `identity_validation_expression` - (Optional) Validation expression for the incoming identity. For `TOKEN` type, this value should be a regular expression. The incoming token from the client is matched against this expression, and will proceed if the token matches. If the token doesn't match, the client receives a 401 Unauthorized response.
 * `provider_arns` - (Optional, required for type `COGNITO_USER_POOLS`) List of the Amazon Cognito user pool ARNs. Each element is of this format: `arn:aws:cognito-idp:{region}:{account_id}:userpool/{user_pool_id}`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the API Gateway Authorizer
 * `id` - Authorizer identifier.
 
 ## Import
 
-AWS API Gateway Authorizer can be imported using the `REST-API-ID/AUTHORIZER-ID`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AWS API Gateway Authorizer using the `REST-API-ID/AUTHORIZER-ID`. For example:
 
-```sh
-$ terraform import aws_api_gateway_authorizer.authorizer 12345abcde/example
+```terraform
+import {
+  to = aws_api_gateway_authorizer.authorizer
+  id = "12345abcde/example"
+}
+```
+
+Using `terraform import`, import AWS API Gateway Authorizer using the `REST-API-ID/AUTHORIZER-ID`. For example:
+
+```console
+% terraform import aws_api_gateway_authorizer.authorizer 12345abcde/example
 ```

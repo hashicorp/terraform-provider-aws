@@ -63,7 +63,7 @@ The following arguments are optional:
 
 ### provisioning_parameters
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `key` - (Required) Parameter key.
 * `use_previous_value` - (Optional) Whether to ignore `value` and keep the previous parameter value. Ignored when initially provisioning a product.
@@ -73,7 +73,7 @@ The following arguments are supported:
 
 All of the `stack_set_provisioning_preferences` are only applicable to a `CFN_STACKSET` provisioned product type.
 
-The following arguments are supported:
+This argument supports the following arguments:
 
 * `accounts` - (Optional) One or more AWS accounts that will have access to the provisioned product. The AWS accounts specified should be within the list of accounts in the STACKSET constraint. To get the list of accounts in the STACKSET constraint, use the `aws_servicecatalog_provisioning_parameters` data source. If no values are specified, the default value is all accounts from the STACKSET constraint.
 * `failure_tolerance_count` - (Optional) Number of accounts, per region, for which this operation can fail before AWS Service Catalog stops the operation in that region. If the operation is stopped in a region, AWS Service Catalog doesn't attempt the operation in any subsequent regions. You must specify either `failure_tolerance_count` or `failure_tolerance_percentage`, but not both. The default value is 0 if no value is specified.
@@ -82,9 +82,9 @@ The following arguments are supported:
 * `max_concurrency_percentage` - (Optional) Maximum percentage of accounts in which to perform this operation at one time. When calculating the number of accounts based on the specified percentage, AWS Service Catalog rounds down to the next whole number. This is true except in cases where rounding down would result is zero. In this case, AWS Service Catalog sets the number as 1 instead. Note that this setting lets you specify the maximum for operations. For large deployments, under certain circumstances the actual number of accounts acted upon concurrently may be lower due to service throttling. You must specify either `max_concurrency_count` or `max_concurrency_percentage`, but not both.
 * `regions` - (Optional) One or more AWS Regions where the provisioned product will be available. The specified regions should be within the list of regions from the STACKSET constraint. To get the list of regions in the STACKSET constraint, use the `aws_servicecatalog_provisioning_parameters` data source. If no values are specified, the default value is all regions from the STACKSET constraint.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the provisioned product.
 * `cloudwatch_dashboard_names` - Set of CloudWatch dashboards that were created when provisioning the product.
@@ -122,8 +122,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_servicecatalog_provisioned_product` can be imported using the provisioned product ID, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_servicecatalog_provisioned_product` using the provisioned product ID. For example:
 
+```terraform
+import {
+  to = aws_servicecatalog_provisioned_product.example
+  id = "pp-dnigbtea24ste"
+}
 ```
-$ terraform import aws_servicecatalog_provisioned_product.example pp-dnigbtea24ste
+
+Using `terraform import`, import `aws_servicecatalog_provisioned_product` using the provisioned product ID. For example:
+
+```console
+% terraform import aws_servicecatalog_provisioned_product.example pp-dnigbtea24ste
 ```

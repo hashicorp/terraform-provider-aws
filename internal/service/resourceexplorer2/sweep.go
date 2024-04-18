@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package resourceexplorer2
 
@@ -11,10 +11,11 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/resourceexplorer2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_resourceexplorer2_index", &resource.Sweeper{
 		Name: "aws_resourceexplorer2_index",
 		F:    sweepIndexes,
@@ -35,7 +36,7 @@ func sweepIndexes(region string) error {
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if sweep.SkipSweepError(err) {
+		if awsv2.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping Resource Explorer Index sweep for %s: %s", region, err)
 			return nil
 		}
@@ -46,12 +47,12 @@ func sweepIndexes(region string) error {
 
 		for _, v := range page.Indexes {
 			sweepResources = append(sweepResources, framework.NewSweepResource(newResourceIndex, client,
-				framework.NewAttribute("id", aws.ToString(v.Arn)),
+				framework.NewAttribute("arn", aws.ToString(v.Arn)),
 			))
 		}
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Resource Explorer Indexes (%s): %w", region, err)

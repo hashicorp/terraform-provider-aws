@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -385,7 +388,7 @@ func resourceAMIRead(ctx context.Context, d *schema.ResourceData, meta interface
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, propagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
 		return FindImageByID(ctx, conn, d.Id())
 	}, d.IsNewResource())
 
@@ -462,22 +465,22 @@ func resourceAMIUpdate(ctx context.Context, d *schema.ResourceData, meta interfa
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	if d.Get("description").(string) != "" {
-		_, err := conn.ModifyImageAttributeWithContext(ctx, &ec2.ModifyImageAttributeInput{
-			Description: &ec2.AttributeValue{
-				Value: aws.String(d.Get("description").(string)),
-			},
-			ImageId: aws.String(d.Id()),
-		})
-
+	if d.HasChange("description") {
+		err := updateDescription(ctx, conn, d.Id(), d.Get("description").(string))
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EC2 AMI (%s) description: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating EC2 AMI (%s): %s", d.Id(), err)
 		}
 	}
 
 	if d.HasChange("deprecation_time") {
-		if err := enableImageDeprecation(ctx, conn, d.Id(), d.Get("deprecation_time").(string)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating EC2 AMI (%s): %s", d.Id(), err)
+		if v := d.Get("deprecation_time").(string); v != "" {
+			if err := enableImageDeprecation(ctx, conn, d.Id(), v); err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating EC2 AMI (%s): %s", d.Id(), err)
+			}
+		} else {
+			if err := disableImageDeprecation(ctx, conn, d.Id()); err != nil {
+				return sdkdiag.AppendErrorf(diags, "updating EC2 AMI (%s):  %s", d.Id(), err)
+			}
 		}
 	}
 
@@ -535,6 +538,27 @@ func resourceAMIDelete(ctx context.Context, d *schema.ResourceData, meta interfa
 	return diags
 }
 
+func updateDescription(ctx context.Context, conn *ec2.EC2, id string, description string) error {
+	input := &ec2.ModifyImageAttributeInput{
+		Description: &ec2.AttributeValue{
+			Value: aws.String(description),
+		},
+		ImageId: aws.String(id),
+	}
+
+	_, err := conn.ModifyImageAttributeWithContext(ctx, input)
+	if err != nil {
+		return fmt.Errorf("updating description: %s", err)
+	}
+
+	err = waitImageDescriptionUpdated(ctx, conn, id, description)
+	if err != nil {
+		return fmt.Errorf("updating description: waiting for completion: %s", err)
+	}
+
+	return nil
+}
+
 func enableImageDeprecation(ctx context.Context, conn *ec2.EC2, id string, deprecateAt string) error {
 	v, _ := time.Parse(time.RFC3339, deprecateAt)
 	input := &ec2.EnableImageDeprecationInput{
@@ -546,6 +570,32 @@ func enableImageDeprecation(ctx context.Context, conn *ec2.EC2, id string, depre
 
 	if err != nil {
 		return fmt.Errorf("enabling deprecation: %w", err)
+	}
+
+	err = waitImageDeprecationTimeUpdated(ctx, conn, id, deprecateAt)
+
+	if err != nil {
+		return fmt.Errorf("enabling deprecation: waiting for completion: %w", err)
+	}
+
+	return nil
+}
+
+func disableImageDeprecation(ctx context.Context, conn *ec2.EC2, id string) error {
+	input := &ec2.DisableImageDeprecationInput{
+		ImageId: aws.String(id),
+	}
+
+	_, err := conn.DisableImageDeprecationWithContext(ctx, input)
+
+	if err != nil {
+		return fmt.Errorf("disabling deprecation: %w", err)
+	}
+
+	err = waitImageDeprecationTimeDisabled(ctx, conn, id)
+
+	if err != nil {
+		return fmt.Errorf("disabling deprecation: waiting for completion: %w", err)
 	}
 
 	return nil
@@ -778,4 +828,85 @@ func flattenBlockDeviceMappingsForAMIEphemeralBlockDevice(apiObjects []*ec2.Bloc
 	}
 
 	return tfList
+}
+
+const imageDeprecationPropagationTimeout = 2 * time.Minute
+
+func waitImageDescriptionUpdated(ctx context.Context, conn *ec2.EC2, imageID, expectedValue string) error {
+	return tfresource.WaitUntil(ctx, imageDeprecationPropagationTimeout, func() (bool, error) {
+		output, err := FindImageByID(ctx, conn, imageID)
+
+		if tfresource.NotFound(err) {
+			return false, nil
+		}
+
+		if err != nil {
+			return false, err
+		}
+
+		return aws.StringValue(output.Description) == expectedValue, nil
+	},
+		tfresource.WaitOpts{
+			Delay:      amiRetryDelay,
+			MinTimeout: amiRetryMinTimeout,
+		},
+	)
+}
+
+func waitImageDeprecationTimeUpdated(ctx context.Context, conn *ec2.EC2, imageID, expectedValue string) error {
+	expected, err := time.Parse(time.RFC3339, expectedValue)
+	if err != nil {
+		return err
+	}
+	expected = expected.Round(time.Minute)
+
+	return tfresource.WaitUntil(ctx, imageDeprecationPropagationTimeout, func() (bool, error) {
+		output, err := FindImageByID(ctx, conn, imageID)
+
+		if tfresource.NotFound(err) {
+			return false, nil
+		}
+
+		if err != nil {
+			return false, err
+		}
+
+		if output.DeprecationTime == nil {
+			return false, nil
+		}
+
+		dt, err := time.Parse(time.RFC3339, *output.DeprecationTime)
+		if err != nil {
+			return false, err
+		}
+		dt = dt.Round(time.Minute)
+
+		return expected.Equal(dt), nil
+	},
+		tfresource.WaitOpts{
+			Delay:      amiRetryDelay,
+			MinTimeout: amiRetryMinTimeout,
+		},
+	)
+}
+
+func waitImageDeprecationTimeDisabled(ctx context.Context, conn *ec2.EC2, imageID string) error {
+	return tfresource.WaitUntil(ctx, imageDeprecationPropagationTimeout, func() (bool, error) {
+		output, err := FindImageByID(ctx, conn, imageID)
+
+		if tfresource.NotFound(err) {
+			return false, nil
+		}
+
+		if err != nil {
+			return false, err
+		}
+
+		return output.DeprecationTime == nil, nil
+	},
+		tfresource.WaitOpts{
+			Delay:      amiRetryDelay,
+			MinTimeout: amiRetryMinTimeout,
+		},
+	)
 }

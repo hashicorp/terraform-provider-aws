@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iam
 
 import (
@@ -5,8 +8,8 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -14,8 +17,8 @@ import (
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 )
 
-// @SDKDataSource("aws_iam_role")
-func DataSourceRole() *schema.Resource {
+// @SDKDataSource("aws_iam_role", name="Role")
+func dataSourceRole() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRoleRead,
 
@@ -79,66 +82,56 @@ func DataSourceRole() *schema.Resource {
 
 func dataSourceRoleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	name := d.Get("name").(string)
+	role, err := findRoleByName(ctx, conn, name)
 
-	input := &iam.GetRoleInput{
-		RoleName: aws.String(name),
-	}
-
-	output, err := conn.GetRoleWithContext(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading IAM Role (%s): %s", name, err)
 	}
 
-	d.Set("arn", output.Role.Arn)
-	if err := d.Set("create_date", output.Role.CreateDate.Format(time.RFC3339)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting create_date: %s", err)
+	d.SetId(name)
+	d.Set("arn", role.Arn)
+	d.Set("create_date", role.CreateDate.Format(time.RFC3339))
+	d.Set("description", role.Description)
+	d.Set("max_session_duration", role.MaxSessionDuration)
+	d.Set("name", role.RoleName)
+	d.Set("path", role.Path)
+	if role.PermissionsBoundary != nil {
+		d.Set("permissions_boundary", role.PermissionsBoundary.PermissionsBoundaryArn)
+	} else {
+		d.Set("permissions_boundary", nil)
 	}
-
-	if err := d.Set("role_last_used", flattenRoleLastUsed(output.Role.RoleLastUsed)); err != nil {
+	if err := d.Set("role_last_used", flattenRoleLastUsed(role.RoleLastUsed)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting role_last_used: %s", err)
 	}
+	d.Set("unique_id", role.RoleId)
 
-	d.Set("description", output.Role.Description)
-	d.Set("max_session_duration", output.Role.MaxSessionDuration)
-	d.Set("name", output.Role.RoleName)
-	d.Set("path", output.Role.Path)
-	d.Set("permissions_boundary", "")
-	if output.Role.PermissionsBoundary != nil {
-		d.Set("permissions_boundary", output.Role.PermissionsBoundary.PermissionsBoundaryArn)
-	}
-	d.Set("unique_id", output.Role.RoleId)
-
-	assumRolePolicy, err := url.QueryUnescape(aws.StringValue(output.Role.AssumeRolePolicyDocument))
+	assumeRolePolicy, err := url.QueryUnescape(aws.ToString(role.AssumeRolePolicyDocument))
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "parsing assume role policy document: %s", err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
-	if err := d.Set("assume_role_policy", assumRolePolicy); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting assume_role_policy: %s", err)
-	}
+	d.Set("assume_role_policy", assumeRolePolicy)
 
-	tags := KeyValueTags(ctx, output.Role.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
+	tags := KeyValueTags(ctx, role.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", tags.Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	d.SetId(name)
-
 	return diags
 }
 
-func flattenRoleLastUsed(apiObject *iam.RoleLastUsed) []interface{} {
+func flattenRoleLastUsed(apiObject *awstypes.RoleLastUsed) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{
-		"region": aws.StringValue(apiObject.Region),
+		"region": aws.ToString(apiObject.Region),
 	}
 
 	if apiObject.LastUsedDate != nil {

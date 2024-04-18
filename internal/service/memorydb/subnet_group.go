@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package memorydb
 
 import (
@@ -12,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -77,6 +81,8 @@ func ResourceSubnetGroup() *schema.Resource {
 }
 
 func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
 	name := create.Name(d.Get("name").(string), d.Get("name_prefix").(string))
@@ -91,15 +97,17 @@ func resourceSubnetGroupCreate(ctx context.Context, d *schema.ResourceData, meta
 	_, err := conn.CreateSubnetGroupWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating MemoryDB Subnet Group (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "creating MemoryDB Subnet Group (%s): %s", name, err)
 	}
 
 	d.SetId(name)
 
-	return resourceSubnetGroupRead(ctx, d, meta)
+	return append(diags, resourceSubnetGroupRead(ctx, d, meta)...)
 }
 
 func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -113,14 +121,16 @@ func resourceSubnetGroupUpdate(ctx context.Context, d *schema.ResourceData, meta
 		_, err := conn.UpdateSubnetGroupWithContext(ctx, input)
 
 		if err != nil {
-			return diag.Errorf("updating MemoryDB Subnet Group (%s): %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "updating MemoryDB Subnet Group (%s): %s", d.Id(), err)
 		}
 	}
 
-	return resourceSubnetGroupRead(ctx, d, meta)
+	return append(diags, resourceSubnetGroupRead(ctx, d, meta)...)
 }
 
 func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
 	group, err := FindSubnetGroupByName(ctx, conn, d.Id())
@@ -128,11 +138,11 @@ func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] MemoryDB Subnet Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading MemoryDB Subnet Group (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading MemoryDB Subnet Group (%s): %s", d.Id(), err)
 	}
 
 	var subnetIds []*string
@@ -147,10 +157,12 @@ func resourceSubnetGroupRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(group.Name)))
 	d.Set("vpc_id", group.VpcId)
 
-	return nil
+	return diags
 }
 
 func resourceSubnetGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).MemoryDBConn(ctx)
 
 	log.Printf("[DEBUG] Deleting MemoryDB Subnet Group: (%s)", d.Id())
@@ -159,12 +171,12 @@ func resourceSubnetGroupDelete(ctx context.Context, d *schema.ResourceData, meta
 	})
 
 	if tfawserr.ErrCodeEquals(err, memorydb.ErrCodeSubnetGroupNotFoundFault) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("deleting MemoryDB Subnet Group (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting MemoryDB Subnet Group (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

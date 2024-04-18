@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package meta
 
 import (
@@ -13,7 +16,6 @@ import (
 // @FrameworkDataSource
 func newDataSourceBillingServiceAccount(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceBillingServiceAccount{}
-	d.SetMigratedFromPluginSDK(true)
 
 	return d, nil
 }

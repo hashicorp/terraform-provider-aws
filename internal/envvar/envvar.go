@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package envvar
 
 import (
 	"fmt"
 	"os"
 
-	"github.com/mitchellh/go-testing-interface"
+	testing "github.com/mitchellh/go-testing-interface"
 )
 
 // Standard AWS environment variables used in the Terraform AWS Provider testing.

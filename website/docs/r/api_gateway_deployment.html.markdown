@@ -128,7 +128,7 @@ resource "aws_api_gateway_stage" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `rest_api_id` - (Required) REST API identifier.
 * `description` - (Optional) Description of the deployment
@@ -137,9 +137,9 @@ The following arguments are supported:
 * `triggers` - (Optional) Map of arbitrary keys and values that, when changed, will trigger a redeployment. To force a redeployment without changing these keys/values, use the [`-replace` option](https://developer.hashicorp.com/terraform/cli/commands/plan#replace-address) with `terraform plan` or `terraform apply`.
 * `variables` - (Optional) Map to set on the stage managed by the `stage_name` argument.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - ID of the deployment
 * `invoke_url` - URL to invoke the API pointing to the stage,
@@ -151,10 +151,19 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_api_gateway_deployment` can be imported using `REST-API-ID/DEPLOYMENT-ID`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_api_gateway_deployment` using `REST-API-ID/DEPLOYMENT-ID`. For example:
 
+```terraform
+import {
+  to = aws_api_gateway_deployment.example
+  id = "aabbccddee/1122334"
+}
 ```
-$ terraform import aws_api_gateway_deployment.example aabbccddee/1122334
+
+Using `terraform import`, import `aws_api_gateway_deployment` using `REST-API-ID/DEPLOYMENT-ID`. For example:
+
+```console
+% terraform import aws_api_gateway_deployment.example aabbccddee/1122334
 ```
 
 The `stage_name`, `stage_description`, and `variables` arguments cannot be imported. Use the [`aws_api_gateway_stage` resource](api_gateway_stage.html) to import and manage stages.

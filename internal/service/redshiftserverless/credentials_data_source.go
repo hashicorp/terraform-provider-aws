@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshiftserverless
 
 import (
@@ -13,8 +16,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// @SDKDataSource("aws_redshiftserverless_credentials")
-func DataSourceCredentials() *schema.Resource {
+// @SDKDataSource("aws_redshiftserverless_credentials", name="Credentials")
+func dataSourceCredentials() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceCredentialsRead,
 

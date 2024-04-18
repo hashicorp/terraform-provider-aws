@@ -32,17 +32,18 @@ resource "aws_codecommit_trigger" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `repository_name` - (Required) The name for the repository. This needs to be less than 100 characters.
-* `name` - (Required) The name of the trigger.
-* `destination_arn` - (Required) The ARN of the resource that is the target for a trigger. For example, the ARN of a topic in Amazon Simple Notification Service (SNS).
-* `custom_data` - (Optional) Any custom data associated with the trigger that will be included in the information sent to the target of the trigger.
-* `branches` - (Optional) The branches that will be included in the trigger configuration. If no branches are specified, the trigger will apply to all branches.
-* `events` - (Required) The repository events that will cause the trigger to run actions in another service, such as sending a notification through Amazon Simple Notification Service (SNS). If no events are specified, the trigger will run for all repository events. Event types include: `all`, `updateReference`, `createReference`, `deleteReference`.
+* `trigger` - (Required) The name of the trigger.
+    * `name` - (Required) The name of the trigger.
+    * `destination_arn` - (Required) The ARN of the resource that is the target for a trigger. For example, the ARN of a topic in Amazon Simple Notification Service (SNS).
+    * `events` - (Required) The repository events that will cause the trigger to run actions in another service, such as sending a notification through Amazon Simple Notification Service (SNS). If no events are specified, the trigger will run for all repository events. Event types include: `all`, `updateReference`, `createReference`, `deleteReference`.
+    * `custom_data` - (Optional) Any custom data associated with the trigger that will be included in the information sent to the target of the trigger.
+    * `branches` - (Optional) The branches that will be included in the trigger configuration. If no branches   are specified, the trigger will apply to all branches.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `configuration_id` - System-generated unique identifier.

@@ -59,6 +59,6 @@ The following arguments are required:
 * `name` - (Required) Name of the control.
 * `type` - (Required) Type of control. Valid values are `Custom` and `Standard`.
 
-## Attributes Reference
+## Attribute Reference
 
 See the [`aws_auditmanager_control` resource](/docs/providers/aws/r/auditmanager_control.html) for details on the returned attributes - they are identical.

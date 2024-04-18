@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package redshiftserverless
 
 import (
@@ -11,7 +14,7 @@ import (
 
 func statusNamespace(ctx context.Context, conn *redshiftserverless.RedshiftServerless, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindNamespaceByName(ctx, conn, name)
+		output, err := findNamespaceByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -27,7 +30,7 @@ func statusNamespace(ctx context.Context, conn *redshiftserverless.RedshiftServe
 
 func statusEndpointAccess(ctx context.Context, conn *redshiftserverless.RedshiftServerless, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindEndpointAccessByName(ctx, conn, name)
+		output, err := findEndpointAccessByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -43,7 +46,7 @@ func statusEndpointAccess(ctx context.Context, conn *redshiftserverless.Redshift
 
 func statusSnapshot(ctx context.Context, conn *redshiftserverless.RedshiftServerless, name string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindSnapshotByName(ctx, conn, name)
+		output, err := findSnapshotByName(ctx, conn, name)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

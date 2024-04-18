@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
@@ -9,6 +12,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -18,6 +22,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEC2SpotFleetRequest_basic(t *testing.T) {
@@ -34,7 +39,7 @@ func TestAccEC2SpotFleetRequest_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSpotFleetRequest(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -77,7 +82,7 @@ func TestAccEC2SpotFleetRequest_context(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSpotFleetRequest(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -104,7 +109,7 @@ func TestAccEC2SpotFleetRequest_targetCapacityUnitType(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSpotFleetRequest(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -143,7 +148,7 @@ func TestAccEC2SpotFleetRequest_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSpotFleetRequest(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -173,7 +178,7 @@ func TestAccEC2SpotFleetRequest_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSpotFleetRequest(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -226,7 +231,7 @@ func TestAccEC2SpotFleetRequest_associatePublicIPAddress(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSpotFleetRequest(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -265,7 +270,7 @@ func TestAccEC2SpotFleetRequest_launchTemplate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSpotFleetRequest(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -302,7 +307,7 @@ func TestAccEC2SpotFleetRequest_LaunchTemplate_multiple(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSpotFleetRequest(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -333,7 +338,7 @@ func TestAccEC2SpotFleetRequest_launchTemplateWithInstanceTypeOverrides(t *testi
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSpotFleetRequest(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -384,7 +389,7 @@ func TestAccEC2SpotFleetRequest_launchTemplateWithInstanceRequirementsOverrides(
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSpotFleetRequest(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -435,7 +440,7 @@ func TestAccEC2SpotFleetRequest_launchTemplateToLaunchSpec(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSpotFleetRequest(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -482,7 +487,7 @@ func TestAccEC2SpotFleetRequest_launchSpecToLaunchTemplate(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSpotFleetRequest(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -523,7 +528,7 @@ func TestAccEC2SpotFleetRequest_onDemandTargetCapacity(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSpotFleetRequest(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -572,7 +577,7 @@ func TestAccEC2SpotFleetRequest_onDemandMaxTotalPrice(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSpotFleetRequest(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -607,7 +612,7 @@ func TestAccEC2SpotFleetRequest_onDemandAllocationStrategy(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSpotFleetRequest(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -642,7 +647,7 @@ func TestAccEC2SpotFleetRequest_instanceInterruptionBehavior(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSpotFleetRequest(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -678,7 +683,7 @@ func TestAccEC2SpotFleetRequest_fleetType(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSpotFleetRequest(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -714,7 +719,7 @@ func TestAccEC2SpotFleetRequest_iamInstanceProfileARN(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSpotFleetRequest(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -750,7 +755,7 @@ func TestAccEC2SpotFleetRequest_changePriceForcesNewRequest(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSpotFleetRequest(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -797,7 +802,7 @@ func TestAccEC2SpotFleetRequest_updateTargetCapacity(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSpotFleetRequest(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -848,7 +853,7 @@ func TestAccEC2SpotFleetRequest_updateExcessCapacityTerminationPolicy(t *testing
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSpotFleetRequest(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -891,7 +896,7 @@ func TestAccEC2SpotFleetRequest_lowestPriceAzOrSubnetInRegion(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSpotFleetRequest(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -928,7 +933,7 @@ func TestAccEC2SpotFleetRequest_lowestPriceAzInGivenList(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSpotFleetRequest(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -966,7 +971,7 @@ func TestAccEC2SpotFleetRequest_lowestPriceSubnetInGivenList(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSpotFleetRequest(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1004,7 +1009,7 @@ func TestAccEC2SpotFleetRequest_multipleInstanceTypesInSameAz(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSpotFleetRequest(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1045,7 +1050,7 @@ func TestAccEC2SpotFleetRequest_multipleInstanceTypesInSameSubnet(t *testing.T) 
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSpotFleetRequest(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1082,7 +1087,7 @@ func TestAccEC2SpotFleetRequest_overridingSpotPrice(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSpotFleetRequest(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1124,7 +1129,7 @@ func TestAccEC2SpotFleetRequest_withoutSpotPrice(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSpotFleetRequest(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1160,7 +1165,7 @@ func TestAccEC2SpotFleetRequest_diversifiedAllocation(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSpotFleetRequest(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1197,7 +1202,7 @@ func TestAccEC2SpotFleetRequest_multipleInstancePools(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSpotFleetRequest(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1249,7 +1254,7 @@ func TestAccEC2SpotFleetRequest_withWeightedCapacity(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSpotFleetRequest(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1294,7 +1299,7 @@ func TestAccEC2SpotFleetRequest_withEBSDisk(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSpotFleetRequest(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1329,7 +1334,7 @@ func TestAccEC2SpotFleetRequest_LaunchSpecificationEBSBlockDevice_kmsKeyID(t *te
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSpotFleetRequest(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1363,7 +1368,7 @@ func TestAccEC2SpotFleetRequest_LaunchSpecificationRootBlockDevice_kmsKeyID(t *t
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSpotFleetRequest(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1396,7 +1401,7 @@ func TestAccEC2SpotFleetRequest_LaunchSpecification_ebsBlockDeviceGP3(t *testing
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSpotFleetRequest(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1436,7 +1441,7 @@ func TestAccEC2SpotFleetRequest_LaunchSpecification_rootBlockDeviceGP3(t *testin
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSpotFleetRequest(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1476,7 +1481,7 @@ func TestAccEC2SpotFleetRequest_withTags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSpotFleetRequest(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1516,7 +1521,7 @@ func TestAccEC2SpotFleetRequest_placementTenancyAndGroup(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSpotFleetRequest(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1552,7 +1557,7 @@ func TestAccEC2SpotFleetRequest_withELBs(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSpotFleetRequest(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1589,7 +1594,7 @@ func TestAccEC2SpotFleetRequest_withTargetGroups(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSpotFleetRequest(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1626,7 +1631,7 @@ func TestAccEC2SpotFleetRequest_Zero_capacity(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSpotFleetRequest(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1675,7 +1680,7 @@ func TestAccEC2SpotFleetRequest_capacityRebalance(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSpotFleetRequest(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1710,7 +1715,7 @@ func TestAccEC2SpotFleetRequest_instanceStoreAMI(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSpotFleetRequest(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1748,7 +1753,7 @@ func TestAccEC2SpotFleetRequest_noTerminateInstancesWithExpiration(t *testing.T)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSpotFleetRequest(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSpotFleetRequestDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1907,7 +1912,7 @@ func testAccCheckSpotFleetRequest_IAMInstanceProfileARN(sfr *ec2.SpotFleetReques
 			return fmt.Errorf("Expected IamInstanceProfile to be set, got nil")
 		}
 		//Validate the string whether it is ARN
-		re := regexp.MustCompile(fmt.Sprintf(`arn:%s:iam::\d{12}:instance-profile/?[a-zA-Z0-9+=,.@-_].*`, acctest.Partition()))
+		re := regexache.MustCompile(fmt.Sprintf(`arn:%s:iam::\d{12}:instance-profile/?[0-9A-Za-z@-_+=,.].*`, acctest.Partition())) // regex seems suspicious, @-_ is a range
 		if !re.MatchString(*profile.Arn) {
 			return fmt.Errorf("Expected IamInstanceProfile input as ARN, got %s", *profile.Arn)
 		}
@@ -1918,7 +1923,7 @@ func testAccCheckSpotFleetRequest_IAMInstanceProfileARN(sfr *ec2.SpotFleetReques
 
 func testAccSpotFleetRequestConfig_base(rName, publicKey string) string {
 	return acctest.ConfigCompose(
-		acctest.ConfigLatestAmazonLinuxHVMEBSAMI(),
+		acctest.ConfigLatestAmazonLinux2HVMEBSX8664AMI(),
 		acctest.ConfigAvailableAZsNoOptIn(),
 		acctest.AvailableEC2InstanceTypeForRegion("t3.micro", "t2.micro"),
 		fmt.Sprintf(`
@@ -2009,7 +2014,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type = data.aws_ec2_instance_type_offering.available.instance_type
-    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name      = aws_key_pair.test.key_name
 
     tags = {
@@ -2036,7 +2041,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type = data.aws_ec2_instance_type_offering.available.instance_type
-    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name      = aws_key_pair.test.key_name
 
     tags = {
@@ -2062,7 +2067,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type = data.aws_ec2_instance_type_offering.available.instance_type
-    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name      = aws_key_pair.test.key_name
 
     tags = {
@@ -2092,7 +2097,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type = data.aws_ec2_instance_type_offering.available.instance_type
-    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name      = aws_key_pair.test.key_name
 
     tags = {
@@ -2122,7 +2127,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type               = data.aws_ec2_instance_type_offering.available.instance_type
-    ami                         = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami                         = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name                    = aws_key_pair.test.key_name
     associate_public_ip_address = true
 
@@ -2149,7 +2154,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type = data.aws_ec2_instance_type_offering.available.instance_type
-    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
 
     tags = {
       Name = %[1]q
@@ -2165,7 +2170,7 @@ func testAccSpotFleetRequestConfig_launchTemplate(rName, publicKey, validUntil s
 	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_launch_template" "test" {
   name          = %[1]q
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
   key_name      = aws_key_pair.test.key_name
 
@@ -2212,7 +2217,7 @@ data "aws_ec2_instance_type_offering" "test" {
 
 resource "aws_launch_template" "test1" {
   name          = "%[1]s-1"
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
   key_name      = aws_key_pair.test.key_name
 
@@ -2227,7 +2232,7 @@ resource "aws_launch_template" "test1" {
 
 resource "aws_launch_template" "test2" {
   name          = "%[1]s-2"
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = data.aws_ec2_instance_type_offering.test.instance_type
   key_name      = aws_key_pair.test.key_name
 
@@ -2272,7 +2277,7 @@ func testAccSpotFleetRequestConfig_launchTemplateInstanceTypeOverrides(rName, pu
 	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_launch_template" "test" {
   name          = %[1]q
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
   key_name      = aws_key_pair.test.key_name
 
@@ -2321,7 +2326,7 @@ func testAccSpotFleetRequestConfig_launchTemplateInstanceRequirementsOverrides(r
 	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_launch_template" "test" {
   name          = %[1]q
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
   key_name      = aws_key_pair.test.key_name
 
@@ -2387,7 +2392,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type = data.aws_ec2_instance_type_offering.available.instance_type
-    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
 
     tags = {
       Name = %[1]q
@@ -2412,7 +2417,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type = data.aws_ec2_instance_type_offering.available.instance_type
-    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
 
     tags = {
       Name = %[1]q
@@ -2481,7 +2486,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type            = data.aws_ec2_instance_type_offering.available.instance_type
-    ami                      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami                      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name                 = aws_key_pair.test.key_name
     iam_instance_profile_arn = aws_iam_instance_profile.test-iam-instance-profile1.arn
 
@@ -2507,7 +2512,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type = data.aws_ec2_instance_type_offering.available.instance_type
-    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name      = aws_key_pair.test.key_name
 
     tags = {
@@ -2532,7 +2537,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type     = data.aws_ec2_instance_type_offering.available.instance_type
-    ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami               = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name          = aws_key_pair.test.key_name
     availability_zone = data.aws_availability_zones.available.names[0]
 
@@ -2543,7 +2548,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type     = data.aws_ec2_instance_type_offering.available.instance_type
-    ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami               = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name          = aws_key_pair.test.key_name
     availability_zone = data.aws_availability_zones.available.names[1]
 
@@ -2597,7 +2602,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type = "m3.large"
-    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name      = aws_key_pair.test.key_name
     subnet_id     = aws_subnet.test1.id
 
@@ -2608,7 +2613,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type = "m3.large"
-    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name      = aws_key_pair.test.key_name
     subnet_id     = aws_subnet.test2.id
 
@@ -2676,7 +2681,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type = "m3.large"
-    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name      = aws_key_pair.test.key_name
     subnet_id     = aws_subnet.test1.id
 
@@ -2755,7 +2760,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type = "m3.large"
-    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name      = aws_key_pair.test.key_name
     subnet_id     = aws_subnet.test1.id
 
@@ -2781,7 +2786,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type     = data.aws_ec2_instance_type_offering.available.instance_type
-    ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami               = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name          = aws_key_pair.test.key_name
     availability_zone = data.aws_availability_zones.available.names[0]
 
@@ -2792,7 +2797,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type     = "m3.large"
-    ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami               = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name          = aws_key_pair.test.key_name
     availability_zone = data.aws_availability_zones.available.names[0]
 
@@ -2836,14 +2841,14 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type = "m3.large"
-    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name      = aws_key_pair.test.key_name
     subnet_id     = aws_subnet.test.id
   }
 
   launch_specification {
     instance_type = "r3.large"
-    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name      = aws_key_pair.test.key_name
     subnet_id     = aws_subnet.test.id
 
@@ -2869,7 +2874,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type     = data.aws_ec2_instance_type_offering.available.instance_type
-    ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami               = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name          = aws_key_pair.test.key_name
     availability_zone = data.aws_availability_zones.available.names[0]
 
@@ -2880,7 +2885,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type     = "m3.large"
-    ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami               = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name          = aws_key_pair.test.key_name
     availability_zone = data.aws_availability_zones.available.names[0]
     spot_price        = "0.05"
@@ -2906,7 +2911,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type     = data.aws_ec2_instance_type_offering.available.instance_type
-    ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami               = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name          = aws_key_pair.test.key_name
     availability_zone = data.aws_availability_zones.available.names[0]
 
@@ -2917,7 +2922,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type     = "m3.large"
-    ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami               = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name          = aws_key_pair.test.key_name
     availability_zone = data.aws_availability_zones.available.names[0]
 
@@ -2944,7 +2949,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type     = data.aws_ec2_instance_type_offering.available.instance_type
-    ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami               = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name          = aws_key_pair.test.key_name
     availability_zone = data.aws_availability_zones.available.names[0]
 
@@ -2955,7 +2960,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type     = "m3.large"
-    ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami               = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name          = aws_key_pair.test.key_name
     availability_zone = data.aws_availability_zones.available.names[0]
 
@@ -2966,7 +2971,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type     = "r3.large"
-    ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami               = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name          = aws_key_pair.test.key_name
     availability_zone = data.aws_availability_zones.available.names[0]
 
@@ -2993,7 +2998,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type     = data.aws_ec2_instance_type_offering.available.instance_type
-    ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami               = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name          = aws_key_pair.test.key_name
     availability_zone = data.aws_availability_zones.available.names[0]
 
@@ -3004,7 +3009,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type     = "m3.large"
-    ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami               = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name          = aws_key_pair.test.key_name
     availability_zone = data.aws_availability_zones.available.names[0]
 
@@ -3015,7 +3020,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type     = "r3.large"
-    ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami               = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name          = aws_key_pair.test.key_name
     availability_zone = data.aws_availability_zones.available.names[0]
 
@@ -3041,7 +3046,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type     = "m3.large"
-    ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami               = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name          = aws_key_pair.test.key_name
     availability_zone = data.aws_availability_zones.available.names[0]
     weighted_capacity = "6"
@@ -3053,7 +3058,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type     = "r3.large"
-    ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami               = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name          = aws_key_pair.test.key_name
     availability_zone = data.aws_availability_zones.available.names[0]
     weighted_capacity = "3"
@@ -3080,7 +3085,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type = data.aws_ec2_instance_type_offering.available.instance_type
-    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
 
     ebs_block_device {
       device_name = "/dev/xvda"
@@ -3123,7 +3128,7 @@ resource "aws_spot_fleet_request" "test" {
   wait_for_fulfillment                = true
 
   launch_specification {
-    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     instance_type = "t2.micro"
 
     ebs_block_device {
@@ -3169,7 +3174,7 @@ resource "aws_spot_fleet_request" "test" {
   wait_for_fulfillment                = true
 
   launch_specification {
-    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     instance_type = "t2.micro"
 
     root_block_device {
@@ -3199,7 +3204,7 @@ resource "aws_spot_fleet_request" "test" {
   wait_for_fulfillment                = true
 
   launch_specification {
-    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     instance_type = "t2.micro"
 
     ebs_block_device {
@@ -3236,7 +3241,7 @@ resource "aws_spot_fleet_request" "test" {
   wait_for_fulfillment                = true
 
   launch_specification {
-    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     instance_type = "t2.micro"
 
     root_block_device {
@@ -3258,7 +3263,7 @@ resource "aws_spot_fleet_request" "test" {
 
 func testAccSpotFleetRequestConfig_launchSpecificationInstanceStoreAMI(rName, publicKey, validUntil string) string {
 	return acctest.ConfigCompose(
-		testAccAMIDataSourceConfig_latestAmazonLinuxHVMInstanceStore(),
+		testAccAMIDataSourceConfig_latestUbuntuBionicHVMInstanceStore(),
 		testAccSpotFleetRequestConfig_base(rName, publicKey),
 		fmt.Sprintf(`
 resource "aws_spot_fleet_request" "test" {
@@ -3270,7 +3275,7 @@ resource "aws_spot_fleet_request" "test" {
   wait_for_fulfillment                = true
 
   launch_specification {
-    ami           = data.aws_ami.amzn-ami-minimal-hvm-instance-store.id
+    ami           = data.aws_ami.ubuntu-bionic-ami-hvm-instance-store.id
     instance_type = "c3.large"
 
     tags = {
@@ -3295,7 +3300,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type = data.aws_ec2_instance_type_offering.available.instance_type
-    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
 
     tags = {
       First  = "TfAccTest"
@@ -3325,7 +3330,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type     = data.aws_ec2_instance_type_offering.available.instance_type
-    ami               = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami               = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name          = aws_key_pair.test.key_name
     placement_tenancy = "dedicated"
     placement_group   = aws_placement_group.test.name
@@ -3353,7 +3358,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type = data.aws_ec2_instance_type_offering.available.instance_type
-    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name      = aws_key_pair.test.key_name
 
     tags = {
@@ -3384,7 +3389,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type = data.aws_ec2_instance_type_offering.available.instance_type
-    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name      = aws_key_pair.test.key_name
 
     tags = {
@@ -3401,7 +3406,7 @@ func testAccSpotFleetRequestConfig_onDemandTargetCapacity(rName, publicKey, vali
 	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_launch_template" "test" {
   name          = %[1]q
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
   key_name      = aws_key_pair.test.key_name
 
@@ -3440,7 +3445,7 @@ func testAccSpotFleetRequestConfig_onDemandMaxTotalPrice(rName, publicKey, valid
 	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_launch_template" "test" {
   name          = %[1]q
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
   key_name      = aws_key_pair.test.key_name
 
@@ -3479,7 +3484,7 @@ func testAccSpotFleetRequestConfig_onDemandAllocationStrategy(rName, publicKey, 
 	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_launch_template" "test" {
   name          = %[1]q
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
   key_name      = aws_key_pair.test.key_name
 
@@ -3527,7 +3532,7 @@ resource "aws_spot_fleet_request" "test" {
 
   launch_specification {
     instance_type = data.aws_ec2_instance_type_offering.available.instance_type
-    ami           = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+    ami           = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
     key_name      = aws_key_pair.test.key_name
 
     tags = {
@@ -3544,7 +3549,7 @@ func testAccSpotFleetRequestConfig_targetCapacityUnitType(rName, publicKey, vali
 	return acctest.ConfigCompose(testAccSpotFleetRequestConfig_base(rName, publicKey), fmt.Sprintf(`
 resource "aws_launch_template" "test" {
   name          = %[1]q
-  image_id      = data.aws_ami.amzn-ami-minimal-hvm-ebs.id
+  image_id      = data.aws_ami.amzn2-ami-minimal-hvm-ebs-x86_64.id
   instance_type = data.aws_ec2_instance_type_offering.available.instance_type
   key_name      = aws_key_pair.test.key_name
 

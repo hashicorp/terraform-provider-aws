@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package meta
 
 import (
@@ -16,7 +19,6 @@ import (
 // @FrameworkDataSource
 func newDataSourceRegion(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceRegion{}
-	d.SetMigratedFromPluginSDK(true)
 
 	return d, nil
 }

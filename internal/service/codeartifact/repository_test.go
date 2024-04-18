@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package codeartifact_test
 
 import (
@@ -5,15 +8,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/codeartifact"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfcodeartifact "github.com/hashicorp/terraform-provider-aws/internal/service/codeartifact"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccRepository_basic(t *testing.T) {
@@ -22,8 +24,8 @@ func testAccRepository_basic(t *testing.T) {
 	resourceName := "aws_codeartifact_repository.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, codeartifact.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, codeartifact.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CodeArtifactEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeArtifactServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRepositoryDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -58,7 +60,7 @@ func testAccRepository_tags(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, "codeartifact") },
-		ErrorCheck:               acctest.ErrorCheck(t, codeartifact.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeArtifactServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRepositoryDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -102,8 +104,8 @@ func testAccRepository_owner(t *testing.T) {
 	resourceName := "aws_codeartifact_repository.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, codeartifact.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, codeartifact.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CodeArtifactEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeArtifactServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRepositoryDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -136,8 +138,8 @@ func testAccRepository_description(t *testing.T) {
 	resourceName := "aws_codeartifact_repository.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, codeartifact.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, codeartifact.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CodeArtifactEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeArtifactServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRepositoryDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -170,8 +172,8 @@ func testAccRepository_upstreams(t *testing.T) {
 	resourceName := "aws_codeartifact_repository.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, codeartifact.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, codeartifact.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CodeArtifactEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeArtifactServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRepositoryDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -215,8 +217,8 @@ func testAccRepository_externalConnection(t *testing.T) {
 	resourceName := "aws_codeartifact_repository.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, codeartifact.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, codeartifact.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CodeArtifactEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeArtifactServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRepositoryDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -262,8 +264,8 @@ func testAccRepository_disappears(t *testing.T) {
 	resourceName := "aws_codeartifact_repository.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, codeartifact.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, codeartifact.EndpointsID),
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CodeArtifactEndpointID) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeArtifactServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRepositoryDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -286,20 +288,9 @@ func testAccCheckRepositoryExists(ctx context.Context, n string) resource.TestCh
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("no CodeArtifact repository set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeArtifactClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CodeArtifactConn(ctx)
-		owner, domain, repo, err := tfcodeartifact.DecodeRepositoryID(rs.Primary.ID)
-		if err != nil {
-			return err
-		}
-		_, err = conn.DescribeRepositoryWithContext(ctx, &codeartifact.DescribeRepositoryInput{
-			Repository:  aws.String(repo),
-			Domain:      aws.String(domain),
-			DomainOwner: aws.String(owner),
-		})
+		_, err := tfcodeartifact.FindRepositoryByThreePartKey(ctx, conn, rs.Primary.Attributes["domain_owner"], rs.Primary.Attributes["domain"], rs.Primary.Attributes["repository"])
 
 		return err
 	}
@@ -312,37 +303,26 @@ func testAccCheckRepositoryDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			owner, domain, repo, err := tfcodeartifact.DecodeRepositoryID(rs.Primary.ID)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).CodeArtifactClient(ctx)
+
+			_, err := tfcodeartifact.FindRepositoryByThreePartKey(ctx, conn, rs.Primary.Attributes["domain_owner"], rs.Primary.Attributes["domain"], rs.Primary.Attributes["repository"])
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
 			if err != nil {
 				return err
 			}
-			conn := acctest.Provider.Meta().(*conns.AWSClient).CodeArtifactConn(ctx)
-			resp, err := conn.DescribeRepositoryWithContext(ctx, &codeartifact.DescribeRepositoryInput{
-				Repository:  aws.String(repo),
-				Domain:      aws.String(domain),
-				DomainOwner: aws.String(owner),
-			})
 
-			if err == nil {
-				if aws.StringValue(resp.Repository.Name) == repo &&
-					aws.StringValue(resp.Repository.DomainName) == domain &&
-					aws.StringValue(resp.Repository.DomainOwner) == owner {
-					return fmt.Errorf("CodeArtifact Repository %s in Domain %s still exists", repo, domain)
-				}
-			}
-
-			if tfawserr.ErrCodeEquals(err, codeartifact.ErrCodeResourceNotFoundException) {
-				return nil
-			}
-
-			return err
+			return fmt.Errorf("CodeArtifact Repository %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccRepositoryBaseConfig(rName string) string {
+func testAccRepositoryConfig_base(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_kms_key" "test" {
   description             = %[1]q
@@ -357,36 +337,36 @@ resource "aws_codeartifact_domain" "test" {
 }
 
 func testAccRepositoryConfig_basic(rName string) string {
-	return testAccRepositoryBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccRepositoryConfig_base(rName), fmt.Sprintf(`
 resource "aws_codeartifact_repository" "test" {
   repository = %[1]q
   domain     = aws_codeartifact_domain.test.domain
 }
-`, rName)
+`, rName))
 }
 
 func testAccRepositoryConfig_owner(rName string) string {
-	return testAccRepositoryBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccRepositoryConfig_base(rName), fmt.Sprintf(`
 resource "aws_codeartifact_repository" "test" {
   repository   = %[1]q
   domain       = aws_codeartifact_domain.test.domain
   domain_owner = aws_codeartifact_domain.test.owner
 }
-`, rName)
+`, rName))
 }
 
 func testAccRepositoryConfig_desc(rName, desc string) string {
-	return testAccRepositoryBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccRepositoryConfig_base(rName), fmt.Sprintf(`
 resource "aws_codeartifact_repository" "test" {
   repository  = %[1]q
   domain      = aws_codeartifact_domain.test.domain
   description = %[2]q
 }
-`, rName, desc)
+`, rName, desc))
 }
 
 func testAccRepositoryConfig_upstreams1(rName string) string {
-	return testAccRepositoryBaseConfig(rName) + fmt.Sprintf(`
+	return acctest.ConfigCompose(testAccRepositoryConfig_base(rName), fmt.Sprintf(`
 resource "aws_codeartifact_repository" "upstream1" {
   repository = "%[1]s-upstream1"
   domain     = aws_codeartifact_domain.test.domain
@@ -400,11 +380,11 @@ resource "aws_codeartifact_repository" "test" {
     repository_name = aws_codeartifact_repository.upstream1.repository
   }
 }
-`, rName)
+`, rName))
 }
 
 func testAccRepositoryConfig_upstreams2(rName string) string {
-	return testAccRepositoryBaseConfig(rName) + fmt.Sprintf(`
+	return testAccRepositoryConfig_base(rName) + fmt.Sprintf(`
 resource "aws_codeartifact_repository" "upstream1" {
   repository = "%[1]s-upstream1"
   domain     = aws_codeartifact_domain.test.domain
@@ -431,7 +411,7 @@ resource "aws_codeartifact_repository" "test" {
 }
 
 func testAccRepositoryConfig_externalConnection(rName string) string {
-	return testAccRepositoryBaseConfig(rName) + fmt.Sprintf(`
+	return testAccRepositoryConfig_base(rName) + fmt.Sprintf(`
 resource "aws_codeartifact_repository" "test" {
   repository = %[1]q
   domain     = aws_codeartifact_domain.test.domain
@@ -444,7 +424,7 @@ resource "aws_codeartifact_repository" "test" {
 }
 
 func testAccRepositoryConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return testAccRepositoryBaseConfig(rName) + fmt.Sprintf(`
+	return testAccRepositoryConfig_base(rName) + fmt.Sprintf(`
 resource "aws_codeartifact_repository" "test" {
   repository = %[1]q
   domain     = aws_codeartifact_domain.test.domain
@@ -457,7 +437,7 @@ resource "aws_codeartifact_repository" "test" {
 }
 
 func testAccRepositoryConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return testAccRepositoryBaseConfig(rName) + fmt.Sprintf(`
+	return testAccRepositoryConfig_base(rName) + fmt.Sprintf(`
 resource "aws_codeartifact_repository" "test" {
   repository = %[1]q
   domain     = aws_codeartifact_domain.test.domain

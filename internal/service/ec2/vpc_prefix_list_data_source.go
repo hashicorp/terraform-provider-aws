@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -28,7 +31,7 @@ func DataSourcePrefixList() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": CustomFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"name": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -49,7 +52,7 @@ func dataSourcePrefixListRead(ctx context.Context, d *schema.ResourceData, meta 
 	input := &ec2.DescribePrefixListsInput{}
 
 	if v, ok := d.GetOk("name"); ok {
-		input.Filters = append(input.Filters, BuildAttributeFilterList(map[string]string{
+		input.Filters = append(input.Filters, newAttributeFilterList(map[string]string{
 			"prefix-list-name": v.(string),
 		})...)
 	}
@@ -58,7 +61,7 @@ func dataSourcePrefixListRead(ctx context.Context, d *schema.ResourceData, meta 
 		input.PrefixListIds = aws.StringSlice([]string{v.(string)})
 	}
 
-	input.Filters = append(input.Filters, BuildCustomFilterList(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 

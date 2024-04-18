@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package autoscalingplans
 
@@ -7,13 +7,14 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/autoscalingplans"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/autoscalingplans"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_autoscalingplans_scaling_plan", &resource.Sweeper{
 		Name: "aws_autoscalingplans_scaling_plan",
 		F:    sweepScalingPlans,
@@ -26,7 +27,7 @@ func sweepScalingPlans(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.AutoScalingPlansConn(ctx)
+	conn := client.AutoScalingPlansClient(ctx)
 	input := &autoscalingplans.DescribeScalingPlansInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -36,8 +37,8 @@ func sweepScalingPlans(region string) error {
 		}
 
 		for _, scalingPlan := range page.ScalingPlans {
-			scalingPlanName := aws.StringValue(scalingPlan.ScalingPlanName)
-			scalingPlanVersion := int(aws.Int64Value(scalingPlan.ScalingPlanVersion))
+			scalingPlanName := aws.ToString(scalingPlan.ScalingPlanName)
+			scalingPlanVersion := int(aws.ToInt64(scalingPlan.ScalingPlanVersion))
 
 			r := ResourceScalingPlan()
 			d := r.Data(nil)
@@ -51,7 +52,7 @@ func sweepScalingPlans(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Auto Scaling Scaling Plan sweep for %s: %s", region, err)
 		return nil
 	}
@@ -60,7 +61,7 @@ func sweepScalingPlans(region string) error {
 		return fmt.Errorf("error listing Auto Scaling Scaling Plans (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Auto Scaling Scaling Plans (%s): %w", region, err)

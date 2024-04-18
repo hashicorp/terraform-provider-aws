@@ -1,14 +1,17 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ecs_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ecs"
+	"github.com/YakDriver/regexache"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccECSTaskDefinitionDataSource_ecsTaskDefinition(t *testing.T) {
@@ -18,7 +21,7 @@ func TestAccECSTaskDefinitionDataSource_ecsTaskDefinition(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ecs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -28,7 +31,7 @@ func TestAccECSTaskDefinitionDataSource_ecsTaskDefinition(t *testing.T) {
 					resource.TestCheckResourceAttrPair(dataSourceName, "execution_role_arn", "aws_iam_role.execution", "arn"),
 					resource.TestCheckResourceAttr(dataSourceName, "family", rName),
 					resource.TestCheckResourceAttr(dataSourceName, "network_mode", "bridge"),
-					resource.TestMatchResourceAttr(dataSourceName, "revision", regexp.MustCompile("^[1-9][0-9]*$")),
+					resource.TestMatchResourceAttr(dataSourceName, "revision", regexache.MustCompile("^[1-9][0-9]*$")),
 					resource.TestCheckResourceAttr(dataSourceName, "status", "ACTIVE"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "task_role_arn", "aws_iam_role.test", "arn"),
 				),

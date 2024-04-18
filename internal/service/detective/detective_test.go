@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package detective_test
 
 import (
@@ -23,6 +26,14 @@ func TestAccDetective_serial(t *testing.T) {
 			"basic":     testAccMember_basic,
 			"disappear": testAccMember_disappears,
 			"message":   testAccMember_message,
+		},
+		"OrganizationAdminAccount": {
+			"basic":       testAccOrganizationAdminAccount_basic,
+			"disappears":  testAccOrganizationAdminAccount_disappears,
+			"MultiRegion": testAccOrganizationAdminAccount_MultiRegion,
+		},
+		"OrganizationConfiguration": {
+			"basic": testAccOrganizationConfiguration_basic,
 		},
 	}
 

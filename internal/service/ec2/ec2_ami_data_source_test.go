@@ -1,13 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2_test
 
 import (
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/YakDriver/regexache"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEC2AMIDataSource_natInstance(t *testing.T) {
@@ -16,7 +19,7 @@ func TestAccEC2AMIDataSource_natInstance(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -30,27 +33,27 @@ func TestAccEC2AMIDataSource_natInstance(t *testing.T) {
 					// Tags and product codes may need more testing, but I'm having a hard time finding images with
 					// these attributes set.
 					resource.TestCheckResourceAttr(datasourceName, "architecture", "x86_64"),
-					acctest.MatchResourceAttrRegionalARNNoAccount(datasourceName, "arn", "ec2", regexp.MustCompile(`image/ami-.+`)),
+					acctest.MatchResourceAttrRegionalARNNoAccount(datasourceName, "arn", "ec2", regexache.MustCompile(`image/ami-.+`)),
 					resource.TestCheckResourceAttr(datasourceName, "block_device_mappings.#", "1"),
-					resource.TestMatchResourceAttr(datasourceName, "creation_date", regexp.MustCompile("^20[0-9]{2}-")),
-					resource.TestMatchResourceAttr(datasourceName, "deprecation_time", regexp.MustCompile("^20[0-9]{2}-")),
-					resource.TestMatchResourceAttr(datasourceName, "description", regexp.MustCompile("^Amazon Linux AMI")),
+					resource.TestMatchResourceAttr(datasourceName, "creation_date", regexache.MustCompile("^20[0-9]{2}-")),
+					resource.TestMatchResourceAttr(datasourceName, "deprecation_time", regexache.MustCompile("^20[0-9]{2}-")),
+					resource.TestMatchResourceAttr(datasourceName, "description", regexache.MustCompile("^Amazon Linux AMI")),
 					resource.TestCheckResourceAttr(datasourceName, "ena_support", "true"),
 					resource.TestCheckResourceAttr(datasourceName, "hypervisor", "xen"),
-					resource.TestMatchResourceAttr(datasourceName, "image_id", regexp.MustCompile("^ami-")),
-					resource.TestMatchResourceAttr(datasourceName, "image_location", regexp.MustCompile("^amazon/")),
+					resource.TestMatchResourceAttr(datasourceName, "image_id", regexache.MustCompile("^ami-")),
+					resource.TestMatchResourceAttr(datasourceName, "image_location", regexache.MustCompile("^amazon/")),
 					resource.TestCheckResourceAttr(datasourceName, "image_owner_alias", "amazon"),
 					resource.TestCheckResourceAttr(datasourceName, "image_type", "machine"),
 					resource.TestCheckResourceAttr(datasourceName, "imds_support", ""),
 					resource.TestCheckResourceAttr(datasourceName, "most_recent", "true"),
-					resource.TestMatchResourceAttr(datasourceName, "name", regexp.MustCompile("^amzn-ami-vpc-nat")),
+					resource.TestMatchResourceAttr(datasourceName, "name", regexache.MustCompile("^amzn-ami-vpc-nat")),
 					acctest.MatchResourceAttrAccountID(datasourceName, "owner_id"),
 					resource.TestCheckResourceAttr(datasourceName, "platform_details", "Linux/UNIX"),
 					resource.TestCheckResourceAttr(datasourceName, "product_codes.#", "0"),
 					resource.TestCheckResourceAttr(datasourceName, "public", "true"),
 					resource.TestCheckResourceAttr(datasourceName, "root_device_name", "/dev/xvda"),
 					resource.TestCheckResourceAttr(datasourceName, "root_device_type", "ebs"),
-					resource.TestMatchResourceAttr(datasourceName, "root_snapshot_id", regexp.MustCompile("^snap-")),
+					resource.TestMatchResourceAttr(datasourceName, "root_snapshot_id", regexache.MustCompile("^snap-")),
 					resource.TestCheckResourceAttr(datasourceName, "sriov_net_support", "simple"),
 					resource.TestCheckResourceAttr(datasourceName, "state", "available"),
 					resource.TestCheckResourceAttr(datasourceName, "state_reason.code", "UNSET"),
@@ -70,7 +73,7 @@ func TestAccEC2AMIDataSource_windowsInstance(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -78,32 +81,32 @@ func TestAccEC2AMIDataSource_windowsInstance(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "architecture", "x86_64"),
 					resource.TestCheckResourceAttr(datasourceName, "block_device_mappings.#", "27"),
-					resource.TestMatchResourceAttr(datasourceName, "creation_date", regexp.MustCompile("^20[0-9]{2}-")),
-					resource.TestMatchResourceAttr(datasourceName, "deprecation_time", regexp.MustCompile("^20[0-9]{2}-")),
-					resource.TestMatchResourceAttr(datasourceName, "description", regexp.MustCompile("^Microsoft Windows Server")),
+					resource.TestMatchResourceAttr(datasourceName, "creation_date", regexache.MustCompile("^20[0-9]{2}-")),
+					resource.TestMatchResourceAttr(datasourceName, "deprecation_time", regexache.MustCompile("^20[0-9]{2}-")),
+					resource.TestMatchResourceAttr(datasourceName, "description", regexache.MustCompile("^Microsoft Windows Server")),
 					resource.TestCheckResourceAttr(datasourceName, "ena_support", "true"),
 					resource.TestCheckResourceAttr(datasourceName, "hypervisor", "xen"),
-					resource.TestMatchResourceAttr(datasourceName, "image_id", regexp.MustCompile("^ami-")),
-					resource.TestMatchResourceAttr(datasourceName, "image_location", regexp.MustCompile("^amazon/")),
+					resource.TestMatchResourceAttr(datasourceName, "image_id", regexache.MustCompile("^ami-")),
+					resource.TestMatchResourceAttr(datasourceName, "image_location", regexache.MustCompile("^amazon/")),
 					resource.TestCheckResourceAttr(datasourceName, "image_owner_alias", "amazon"),
 					resource.TestCheckResourceAttr(datasourceName, "image_type", "machine"),
 					resource.TestCheckResourceAttr(datasourceName, "most_recent", "true"),
-					resource.TestMatchResourceAttr(datasourceName, "name", regexp.MustCompile("^Windows_Server-2012-R2")),
+					resource.TestMatchResourceAttr(datasourceName, "name", regexache.MustCompile("^Windows_Server-2012-R2")),
 					acctest.MatchResourceAttrAccountID(datasourceName, "owner_id"),
 					resource.TestCheckResourceAttr(datasourceName, "platform", "windows"),
-					resource.TestMatchResourceAttr(datasourceName, "platform_details", regexp.MustCompile(`Windows`)),
+					resource.TestMatchResourceAttr(datasourceName, "platform_details", regexache.MustCompile(`Windows`)),
 					resource.TestCheckResourceAttr(datasourceName, "product_codes.#", "0"),
 					resource.TestCheckResourceAttr(datasourceName, "public", "true"),
 					resource.TestCheckResourceAttr(datasourceName, "root_device_name", "/dev/sda1"),
 					resource.TestCheckResourceAttr(datasourceName, "root_device_type", "ebs"),
-					resource.TestMatchResourceAttr(datasourceName, "root_snapshot_id", regexp.MustCompile("^snap-")),
+					resource.TestMatchResourceAttr(datasourceName, "root_snapshot_id", regexache.MustCompile("^snap-")),
 					resource.TestCheckResourceAttr(datasourceName, "sriov_net_support", "simple"),
 					resource.TestCheckResourceAttr(datasourceName, "state", "available"),
 					resource.TestCheckResourceAttr(datasourceName, "state_reason.code", "UNSET"),
 					resource.TestCheckResourceAttr(datasourceName, "state_reason.message", "UNSET"),
 					resource.TestCheckResourceAttr(datasourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(datasourceName, "tpm_support", ""),
-					resource.TestMatchResourceAttr(datasourceName, "usage_operation", regexp.MustCompile(`^RunInstances`)),
+					resource.TestMatchResourceAttr(datasourceName, "usage_operation", regexache.MustCompile(`^RunInstances`)),
 					resource.TestCheckResourceAttr(datasourceName, "virtualization_type", "hvm"),
 				),
 			},
@@ -113,27 +116,27 @@ func TestAccEC2AMIDataSource_windowsInstance(t *testing.T) {
 
 func TestAccEC2AMIDataSource_instanceStore(t *testing.T) {
 	ctx := acctest.Context(t)
-	datasourceName := "data.aws_ami.amzn-ami-minimal-hvm-instance-store"
+	datasourceName := "data.aws_ami.ubuntu-bionic-ami-hvm-instance-store"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAMIDataSourceConfig_latestAmazonLinuxHVMInstanceStore(),
+				Config: testAccAMIDataSourceConfig_latestUbuntuBionicHVMInstanceStore(),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckResourceAttr(datasourceName, "architecture", "x86_64"),
 					resource.TestCheckResourceAttr(datasourceName, "block_device_mappings.#", "0"),
-					resource.TestMatchResourceAttr(datasourceName, "creation_date", regexp.MustCompile("^20[0-9]{2}-")),
-					resource.TestMatchResourceAttr(datasourceName, "deprecation_time", regexp.MustCompile("^20[0-9]{2}-")),
+					resource.TestMatchResourceAttr(datasourceName, "creation_date", regexache.MustCompile("^20[0-9]{2}-")),
+					resource.TestMatchResourceAttr(datasourceName, "deprecation_time", regexache.MustCompile("^20[0-9]{2}-")),
 					resource.TestCheckResourceAttr(datasourceName, "ena_support", "true"),
 					resource.TestCheckResourceAttr(datasourceName, "hypervisor", "xen"),
-					resource.TestMatchResourceAttr(datasourceName, "image_id", regexp.MustCompile("^ami-")),
-					resource.TestMatchResourceAttr(datasourceName, "image_location", regexp.MustCompile("amzn-ami-minimal-hvm")),
+					resource.TestMatchResourceAttr(datasourceName, "image_id", regexache.MustCompile("^ami-")),
+					resource.TestMatchResourceAttr(datasourceName, "image_location", regexache.MustCompile(`ubuntu-images-.*-release/.*/.*/hvm/instance-store`)),
 					resource.TestCheckResourceAttr(datasourceName, "image_type", "machine"),
 					resource.TestCheckResourceAttr(datasourceName, "most_recent", "true"),
-					resource.TestMatchResourceAttr(datasourceName, "name", regexp.MustCompile("amzn-ami-minimal-hvm")),
+					resource.TestMatchResourceAttr(datasourceName, "name", regexache.MustCompile(`ubuntu/images/hvm-instance/.*`)),
 					acctest.MatchResourceAttrAccountID(datasourceName, "owner_id"),
 					resource.TestCheckResourceAttr(datasourceName, "platform_details", "Linux/UNIX"),
 					resource.TestCheckResourceAttr(datasourceName, "product_codes.#", "0"),
@@ -160,13 +163,13 @@ func TestAccEC2AMIDataSource_localNameFilter(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccAMIDataSourceConfig_nameRegex,
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestMatchResourceAttr(datasourceName, "image_id", regexp.MustCompile("^ami-")),
+					resource.TestMatchResourceAttr(datasourceName, "image_id", regexache.MustCompile("^ami-")),
 				),
 			},
 		},
@@ -181,7 +184,7 @@ func TestAccEC2AMIDataSource_gp3BlockDevice(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -205,17 +208,17 @@ func TestAccEC2AMIDataSource_gp3BlockDevice(t *testing.T) {
 	})
 }
 
-// testAccAMIDataSourceConfig_latestAmazonLinuxHVMInstanceStore returns the configuration for a data source that
-// describes the latest Amazon Linux AMI using HVM virtualization and an instance store root device.
-// The data source is named 'amzn-ami-minimal-hvm-instance-store'.
-func testAccAMIDataSourceConfig_latestAmazonLinuxHVMInstanceStore() string {
+// testAccAMIDataSourceConfig_latestUbuntuBionicHVMInstanceStore returns the configuration for a data source that
+// describes the latest Ubuntu 18.04 AMI using HVM virtualization and an instance store root device.
+// The data source is named 'ubuntu-bionic-ami-hvm-instance-store'.
+func testAccAMIDataSourceConfig_latestUbuntuBionicHVMInstanceStore() string {
 	return `
-data "aws_ami" "amzn-ami-minimal-hvm-instance-store" {
+data "aws_ami" "ubuntu-bionic-ami-hvm-instance-store" {
   most_recent = true
 
   filter {
     name   = "name"
-    values = ["amzn-ami-minimal-hvm-*"]
+    values = ["ubuntu/images/hvm-instance/ubuntu-bionic-18.04-amd64-server-*"]
   }
 
   filter {

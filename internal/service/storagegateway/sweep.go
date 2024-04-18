@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package storagegateway
 
@@ -11,9 +11,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/storagegateway"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_storagegateway_gateway", &resource.Sweeper{
 		Name: "aws_storagegateway_gateway",
 		F:    sweepGateways,
@@ -59,7 +60,7 @@ func sweepGateways(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Storage Gateway Gateway sweep for %s: %s", region, err)
 		return nil
 	}
@@ -68,7 +69,7 @@ func sweepGateways(region string) error {
 		return fmt.Errorf("error listing Storage Gateway Gateways (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Storage Gateway Gateways (%s): %w", region, err)
@@ -103,7 +104,7 @@ func sweepTapePools(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Storage Gateway Tape Pool sweep for %s: %s", region, err)
 		return nil
 	}
@@ -112,7 +113,7 @@ func sweepTapePools(region string) error {
 		return fmt.Errorf("error listing Storage Gateway Tape Pools (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Storage Gateway Gateways (%s): %w", region, err)
@@ -147,7 +148,7 @@ func sweepFileSystemAssociations(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Storage Gateway File System Association sweep for %s: %s", region, err)
 		return nil
 	}
@@ -156,7 +157,7 @@ func sweepFileSystemAssociations(region string) error {
 		return fmt.Errorf("error listing Storage Gateway File System Associations (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Storage Gateway File System Associations (%s): %w", region, err)

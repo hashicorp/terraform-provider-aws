@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package identitystore
 
 import (
@@ -80,6 +83,8 @@ const (
 )
 
 func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).IdentityStoreClient(ctx)
 
 	identityStoreId := d.Get("identity_store_id").(string)
@@ -97,27 +102,27 @@ func resourceGroupCreate(ctx context.Context, d *schema.ResourceData, meta inter
 	}
 
 	out, err := conn.CreateGroup(ctx, input)
-
 	if err != nil {
-		return create.DiagError(names.IdentityStore, create.ErrActionCreating, ResNameGroup, d.Get("identity_store_id").(string), err)
+		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionCreating, ResNameGroup, d.Get("identity_store_id").(string), err)
 	}
 
 	if out == nil || out.GroupId == nil {
-		return create.DiagError(names.IdentityStore, create.ErrActionCreating, ResNameGroup, d.Get("identity_store_id").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionCreating, ResNameGroup, d.Get("identity_store_id").(string), errors.New("empty output"))
 	}
 
 	d.SetId(fmt.Sprintf("%s/%s", aws.ToString(out.IdentityStoreId), aws.ToString(out.GroupId)))
 
-	return resourceGroupRead(ctx, d, meta)
+	return append(diags, resourceGroupRead(ctx, d, meta)...)
 }
 
 func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).IdentityStoreClient(ctx)
 
 	identityStoreId, groupId, err := resourceGroupParseID(d.Id())
-
 	if err != nil {
-		return create.DiagError(names.IdentityStore, create.ErrActionReading, ResNameGroup, d.Id(), err)
+		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionReading, ResNameGroup, d.Id(), err)
 	}
 
 	out, err := FindGroupByTwoPartKey(ctx, conn, identityStoreId, groupId)
@@ -125,32 +130,40 @@ func resourceGroupRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] IdentityStore Group (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.IdentityStore, create.ErrActionReading, ResNameGroup, d.Id(), err)
+		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionReading, ResNameGroup, d.Id(), err)
 	}
 
-	d.Set("group_id", out.GroupId)
-	d.Set("identity_store_id", out.IdentityStoreId)
 	d.Set("description", out.Description)
 	d.Set("display_name", out.DisplayName)
-
 	if err := d.Set("external_ids", flattenExternalIds(out.ExternalIds)); err != nil {
-		return create.DiagError(names.IdentityStore, create.ErrActionSetting, ResNameGroup, d.Id(), err)
+		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionSetting, ResNameGroup, d.Id(), err)
 	}
+	d.Set("group_id", out.GroupId)
+	d.Set("identity_store_id", out.IdentityStoreId)
 
-	return nil
+	return diags
 }
 
 func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).IdentityStoreClient(ctx)
 
 	in := &identitystore.UpdateGroupInput{
 		GroupId:         aws.String(d.Get("group_id").(string)),
 		IdentityStoreId: aws.String(d.Get("identity_store_id").(string)),
 		Operations:      nil,
+	}
+
+	if d.HasChange("description") {
+		in.Operations = append(in.Operations, types.AttributeOperation{
+			AttributePath:  aws.String("description"),
+			AttributeValue: document.NewLazyDocument(d.Get("description").(string)),
+		})
 	}
 
 	if d.HasChange("display_name") {
@@ -160,18 +173,18 @@ func resourceGroupUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 		})
 	}
 
-	if len(in.Operations) > 0 {
-		log.Printf("[DEBUG] Updating IdentityStore Group (%s): %#v", d.Id(), in)
-		_, err := conn.UpdateGroup(ctx, in)
-		if err != nil {
-			return create.DiagError(names.IdentityStore, create.ErrActionUpdating, ResNameGroup, d.Id(), err)
-		}
+	_, err := conn.UpdateGroup(ctx, in)
+
+	if err != nil {
+		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionUpdating, ResNameGroup, d.Id(), err)
 	}
 
-	return resourceGroupRead(ctx, d, meta)
+	return append(diags, resourceGroupRead(ctx, d, meta)...)
 }
 
 func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).IdentityStoreClient(ctx)
 
 	log.Printf("[INFO] Deleting IdentityStore Group %s", d.Id())
@@ -181,14 +194,14 @@ func resourceGroupDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	})
 
 	if errs.IsA[*types.ResourceNotFoundException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.IdentityStore, create.ErrActionDeleting, ResNameGroup, d.Id(), err)
+		return create.AppendDiagError(diags, names.IdentityStore, create.ErrActionDeleting, ResNameGroup, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindGroupByTwoPartKey(ctx context.Context, conn *identitystore.Client, identityStoreID, groupID string) (*identitystore.DescribeGroupOutput, error) {

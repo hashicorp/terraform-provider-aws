@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package emr
 
 import (
@@ -22,12 +25,13 @@ import (
 
 // @SDKResource("aws_emr_studio", name="Studio")
 // @Tags(identifierAttribute="id")
-func ResourceStudio() *schema.Resource {
+func resourceStudio() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStudioCreate,
 		ReadWithoutTimeout:   resourceStudioRead,
 		UpdateWithoutTimeout: resourceStudioUpdate,
 		DeleteWithoutTimeout: resourceStudioDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -211,7 +215,8 @@ func resourceStudioRead(ctx context.Context, d *schema.ResourceData, meta interf
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
-	studio, err := FindStudioByID(ctx, conn, d.Id())
+	studio, err := findStudioByID(ctx, conn, d.Id())
+
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EMR Studio (%s) not found, removing from state", d.Id())
 		d.SetId("")
@@ -261,4 +266,29 @@ func resourceStudioDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 
 	return diags
+}
+
+func findStudioByID(ctx context.Context, conn *emr.EMR, id string) (*emr.Studio, error) {
+	input := &emr.DescribeStudioInput{
+		StudioId: aws.String(id),
+	}
+
+	output, err := conn.DescribeStudioWithContext(ctx, input)
+
+	if tfawserr.ErrMessageContains(err, emr.ErrCodeInvalidRequestException, "Studio does not exist") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Studio == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Studio, nil
 }

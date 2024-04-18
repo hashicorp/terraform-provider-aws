@@ -1,9 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kms
 
 import (
 	"context"
-	"encoding/base64"
-	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
@@ -12,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 )
 
 // @SDKDataSource("aws_kms_ciphertext")
@@ -20,26 +22,23 @@ func DataSourceCiphertext() *schema.Resource {
 		ReadWithoutTimeout: dataSourceCiphertextRead,
 
 		Schema: map[string]*schema.Schema{
-			"plaintext": {
-				Type:      schema.TypeString,
-				Required:  true,
-				Sensitive: true,
-			},
-
-			"key_id": {
+			"ciphertext_blob": {
 				Type:     schema.TypeString,
-				Required: true,
+				Computed: true,
 			},
-
 			"context": {
 				Type:     schema.TypeMap,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-
-			"ciphertext_blob": {
+			"key_id": {
 				Type:     schema.TypeString,
-				Computed: true,
+				Required: true,
+			},
+			"plaintext": {
+				Type:      schema.TypeString,
+				Required:  true,
+				Sensitive: true,
 			},
 		},
 	}
@@ -50,24 +49,23 @@ func dataSourceCiphertextRead(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).KMSConn(ctx)
 
 	keyID := d.Get("key_id").(string)
-	req := &kms.EncryptInput{
+	input := &kms.EncryptInput{
 		KeyId:     aws.String(keyID),
 		Plaintext: []byte(d.Get("plaintext").(string)),
 	}
 
-	if ec := d.Get("context"); ec != nil {
-		req.EncryptionContext = flex.ExpandStringMap(ec.(map[string]interface{}))
+	if v, ok := d.GetOk("context"); ok && len(v.(map[string]interface{})) > 0 {
+		input.EncryptionContext = flex.ExpandStringMap(v.(map[string]interface{}))
 	}
 
-	log.Printf("[DEBUG] KMS encrypting with KMS Key: %s", keyID)
-	resp, err := conn.EncryptWithContext(ctx, req)
+	output, err := conn.EncryptWithContext(ctx, input)
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "encrypting with KMS Key (%s): %s", keyID, err)
 	}
 
-	d.SetId(aws.StringValue(resp.KeyId))
-
-	d.Set("ciphertext_blob", base64.StdEncoding.EncodeToString(resp.CiphertextBlob))
+	d.SetId(aws.StringValue(output.KeyId))
+	d.Set("ciphertext_blob", itypes.Base64Encode(output.CiphertextBlob))
 
 	return diags
 }

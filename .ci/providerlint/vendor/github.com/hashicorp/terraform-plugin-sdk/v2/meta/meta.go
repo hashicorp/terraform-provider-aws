@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 // The meta package provides a location to set the release version
 // and any other relevant metadata for the SDK.
 //
@@ -11,11 +14,17 @@ import (
 )
 
 // The main version number that is being run at the moment.
-var SDKVersion = "2.10.1"
+//
+// Deprecated: Use Go standard library [runtime/debug] package build information
+// instead.
+var SDKVersion = "2.33.0"
 
 // A pre-release marker for the version. If this is "" (empty string)
 // then it means that it is a final release. Otherwise, this is a pre-release
 // such as "dev" (in development), "beta", "rc1", etc.
+//
+// Deprecated: Use Go standard library [runtime/debug] package build information
+// instead.
 var SDKPrerelease = ""
 
 // SemVer is an instance of version.Version. This has the secondary
@@ -28,6 +37,9 @@ func init() {
 }
 
 // VersionString returns the complete version string, including prerelease
+//
+// Deprecated: Use Go standard library [runtime/debug] package build information
+// instead.
 func SDKVersionString() string {
 	if SDKPrerelease != "" {
 		return fmt.Sprintf("%s-%s", SDKVersion, SDKPrerelease)

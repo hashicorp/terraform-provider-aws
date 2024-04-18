@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssmincidents_test
 
 import (
@@ -5,9 +8,9 @@ import (
 	"errors"
 	"fmt"
 	"log"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -24,8 +27,7 @@ func testReplicationSet_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	ctx := context.Background()
-
+	ctx := acctest.Context(t)
 	resourceName := "aws_ssmincidents_replication_set.test"
 	region1 := acctest.Region()
 	region2 := acctest.AlternateRegion()
@@ -36,7 +38,7 @@ func testReplicationSet_basic(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 			acctest.PreCheckPartitionHasService(t, names.SSMIncidentsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationSetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -53,7 +55,7 @@ func testReplicationSet_basic(t *testing.T) {
 						"name":        region2,
 						"kms_key_arn": "DefaultKey",
 					}),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", regexp.MustCompile(`replication-set\/+.`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", regexache.MustCompile(`replication-set\/+.`)),
 				),
 			},
 			{
@@ -70,8 +72,7 @@ func testReplicationSet_updateRegionsWithoutCMK(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	ctx := context.Background()
-
+	ctx := acctest.Context(t)
 	resourceName := "aws_ssmincidents_replication_set.test"
 	region1 := acctest.Region()
 	region2 := acctest.AlternateRegion()
@@ -82,7 +83,7 @@ func testReplicationSet_updateRegionsWithoutCMK(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 			acctest.PreCheckPartitionHasService(t, names.SSMIncidentsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
 		CheckDestroy:             testAccCheckReplicationSetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -96,7 +97,7 @@ func testReplicationSet_updateRegionsWithoutCMK(t *testing.T) {
 						"kms_key_arn": "DefaultKey",
 					}),
 
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", regexp.MustCompile(`replication-set\/+.`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", regexache.MustCompile(`replication-set\/+.`)),
 				),
 			},
 			{
@@ -119,7 +120,7 @@ func testReplicationSet_updateRegionsWithoutCMK(t *testing.T) {
 						"kms_key_arn": "DefaultKey",
 					}),
 
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", regexp.MustCompile(`replication-set\/+.`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", regexache.MustCompile(`replication-set\/+.`)),
 				),
 			},
 			{
@@ -138,7 +139,7 @@ func testReplicationSet_updateRegionsWithoutCMK(t *testing.T) {
 						"kms_key_arn": "DefaultKey",
 					}),
 
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", regexp.MustCompile(`replication-set\/+.`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", regexache.MustCompile(`replication-set\/+.`)),
 				),
 			},
 			{
@@ -156,8 +157,7 @@ func testReplicationSet_updateRegionsWithCMK(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	ctx := context.Background()
-
+	ctx := acctest.Context(t)
 	resourceName := "aws_ssmincidents_replication_set.test"
 
 	resource.Test(t, resource.TestCase{
@@ -166,7 +166,7 @@ func testReplicationSet_updateRegionsWithCMK(t *testing.T) {
 			acctest.PreCheckMultipleRegion(t, 2)
 			acctest.PreCheckPartitionHasService(t, names.SSMIncidentsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesMultipleRegions(ctx, t, 2),
 		CheckDestroy:             testAccCheckReplicationSetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -178,7 +178,7 @@ func testReplicationSet_updateRegionsWithCMK(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "region.*", map[string]string{
 						"name": acctest.Region(),
 					}),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", regexp.MustCompile(`replication-set\/+.`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", regexache.MustCompile(`replication-set\/+.`)),
 				),
 			},
 			{
@@ -198,7 +198,7 @@ func testReplicationSet_updateRegionsWithCMK(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "region.*", map[string]string{
 						"name": acctest.AlternateRegion(),
 					}),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", regexp.MustCompile(`replication-set\/+.`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", regexache.MustCompile(`replication-set\/+.`)),
 				),
 			},
 			{
@@ -215,7 +215,7 @@ func testReplicationSet_updateRegionsWithCMK(t *testing.T) {
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "region.*", map[string]string{
 						"name": acctest.Region(),
 					}),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", regexp.MustCompile(`replication-set\/+.`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", regexache.MustCompile(`replication-set\/+.`)),
 				),
 			},
 			{
@@ -233,8 +233,7 @@ func testReplicationSet_updateTags(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	ctx := context.Background()
-
+	ctx := acctest.Context(t)
 	resourceName := "aws_ssmincidents_replication_set.test"
 
 	rKey1 := sdkacctest.RandString(26)
@@ -258,7 +257,7 @@ func testReplicationSet_updateTags(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMIncidentsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationSetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -273,7 +272,7 @@ func testReplicationSet_updateTags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey1, rVal1Ini),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all."+rProviderKey1, rProviderVal1Ini),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", regexp.MustCompile(`replication-set\/+.`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", regexache.MustCompile(`replication-set\/+.`)),
 				),
 			},
 			{
@@ -292,7 +291,7 @@ func testReplicationSet_updateTags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey1, rVal1Updated),
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all."+rProviderKey1, rProviderVal1Upd),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", regexp.MustCompile(`replication-set\/+.`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", regexache.MustCompile(`replication-set\/+.`)),
 				),
 			},
 			{
@@ -313,7 +312,7 @@ func testReplicationSet_updateTags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags_all.%", "4"),
 					resource.TestCheckResourceAttr(resourceName, "tags_all."+rProviderKey2, rProviderVal2),
 					resource.TestCheckResourceAttr(resourceName, "tags_all."+rProviderKey3, rProviderVal3),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", regexp.MustCompile(`replication-set\/+.`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", regexache.MustCompile(`replication-set\/+.`)),
 				),
 			},
 			{
@@ -330,8 +329,7 @@ func testReplicationSet_updateEmptyTags(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	ctx := context.Background()
-
+	ctx := acctest.Context(t)
 	resourceName := "aws_ssmincidents_replication_set.test"
 
 	rKey1 := sdkacctest.RandString(26)
@@ -342,7 +340,7 @@ func testReplicationSet_updateEmptyTags(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMIncidentsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationSetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -352,7 +350,7 @@ func testReplicationSet_updateEmptyTags(t *testing.T) {
 					testAccCheckReplicationSetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey1, ""),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", regexp.MustCompile(`replication-set\/+.`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", regexache.MustCompile(`replication-set\/+.`)),
 				),
 			},
 			{
@@ -367,7 +365,7 @@ func testReplicationSet_updateEmptyTags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey1, ""),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey2, ""),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", regexp.MustCompile(`replication-set\/+.`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", regexache.MustCompile(`replication-set\/+.`)),
 				),
 			},
 			{
@@ -381,7 +379,7 @@ func testReplicationSet_updateEmptyTags(t *testing.T) {
 					testAccCheckReplicationSetExists(ctx, resourceName),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags."+rKey1, ""),
-					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", regexp.MustCompile(`replication-set\/+.`)),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "arn", "ssm-incidents", regexache.MustCompile(`replication-set\/+.`)),
 				),
 			},
 		},
@@ -393,8 +391,7 @@ func testReplicationSet_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	ctx := context.Background()
-
+	ctx := acctest.Context(t)
 	resourceName := "aws_ssmincidents_replication_set.test"
 	region1 := acctest.Region()
 	region2 := acctest.AlternateRegion()
@@ -404,7 +401,7 @@ func testReplicationSet_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMIncidentsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckReplicationSetDestroy(ctx),
 		Steps: []resource.TestStep{

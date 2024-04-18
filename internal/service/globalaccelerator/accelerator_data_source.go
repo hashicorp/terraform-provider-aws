@@ -1,9 +1,11 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package globalaccelerator
 
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/globalaccelerator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -19,7 +21,6 @@ import (
 // @FrameworkDataSource
 func newDataSourceAccelerator(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceAccelerator{}
-	d.SetMigratedFromPluginSDK(true)
 
 	return d, nil
 }
@@ -115,7 +116,7 @@ func (d *dataSourceAccelerator) Read(ctx context.Context, request datasource.Rea
 				continue
 			}
 
-			if !data.ARN.IsNull() && data.ARN.ValueARN().String() != aws.StringValue(accelerator.AcceleratorArn) {
+			if !data.ARN.IsNull() && data.ARN.ValueString() != aws.StringValue(accelerator.AcceleratorArn) {
 				continue
 			}
 
@@ -147,15 +148,11 @@ func (d *dataSourceAccelerator) Read(ctx context.Context, request datasource.Rea
 
 	accelerator := results[0]
 	acceleratorARN := aws.StringValue(accelerator.AcceleratorArn)
-	if v, err := arn.Parse(acceleratorARN); err != nil {
-		response.Diagnostics.AddError("parsing ARN", err.Error())
-	} else {
-		data.ARN = fwtypes.ARNValue(v)
-	}
+	data.ARN = flex.StringToFrameworkARN(ctx, accelerator.AcceleratorArn)
 	data.DnsName = flex.StringToFrameworkLegacy(ctx, accelerator.DnsName)
 	data.DualStackDNSName = flex.StringToFrameworkLegacy(ctx, accelerator.DualStackDnsName)
 	data.Enabled = flex.BoolToFrameworkLegacy(ctx, accelerator.Enabled)
-	data.HostedZoneID = types.StringValue(d.Meta().GlobalAcceleratorHostedZoneID())
+	data.HostedZoneID = types.StringValue(d.Meta().GlobalAcceleratorHostedZoneID(ctx))
 	data.ID = types.StringValue(acceleratorARN)
 	data.IpAddressType = flex.StringToFrameworkLegacy(ctx, accelerator.IpAddressType)
 	data.IpSets = d.flattenIPSetsFramework(ctx, accelerator.IpSets)

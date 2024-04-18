@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dynamodb
 
 import (
@@ -99,19 +102,15 @@ func resourceTableReplicaCreate(ctx context.Context, d *schema.ResourceData, met
 
 	mainRegion, err := RegionFromARN(d.Get("global_table_arn").(string))
 	if err != nil {
-		return create.DiagError(names.DynamoDB, create.ErrActionCreating, ResNameTableReplica, d.Get("global_table_arn").(string), err)
+		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionCreating, ResNameTableReplica, d.Get("global_table_arn").(string), err)
 	}
 
 	if mainRegion == aws.StringValue(conn.Config.Region) {
-		return create.DiagError(names.DynamoDB, create.ErrActionCreating, ResNameTableReplica, d.Get("global_table_arn").(string), errors.New("replica cannot be in same region as main table"))
+		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionCreating, ResNameTableReplica, d.Get("global_table_arn").(string), errors.New("replica cannot be in same region as main table"))
 	}
 
-	session, err := conns.NewSessionForRegion(&conn.Config, mainRegion, meta.(*conns.AWSClient).TerraformVersion)
-	if err != nil {
-		return create.DiagError(names.DynamoDB, create.ErrActionCreating, ResNameTableReplica, d.Get("global_table_arn").(string), fmt.Errorf("region %s: %w", mainRegion, err))
-	}
-
-	conn = dynamodb.New(session) // now main table region
+	// now main table region
+	conn = meta.(*conns.AWSClient).DynamoDBConnForRegion(ctx, mainRegion)
 
 	var replicaInput = &dynamodb.CreateReplicationGroupMemberAction{}
 
@@ -127,7 +126,7 @@ func resourceTableReplicaCreate(ctx context.Context, d *schema.ResourceData, met
 
 	tableName, err := TableNameFromARN(d.Get("global_table_arn").(string))
 	if err != nil {
-		return create.DiagError(names.DynamoDB, create.ErrActionCreating, ResNameTableReplica, d.Get("global_table_arn").(string), err)
+		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionCreating, ResNameTableReplica, d.Get("global_table_arn").(string), err)
 	}
 
 	input := &dynamodb.UpdateTableInput{
@@ -160,18 +159,18 @@ func resourceTableReplicaCreate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if err != nil {
-		return create.DiagError(names.DynamoDB, create.ErrActionCreating, ResNameTableReplica, d.Get("global_table_arn").(string), err)
+		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionCreating, ResNameTableReplica, d.Get("global_table_arn").(string), err)
 	}
 
 	if err := waitReplicaActive(ctx, conn, tableName, meta.(*conns.AWSClient).Region, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return create.DiagError(names.DynamoDB, create.ErrActionWaitingForCreation, ResNameTableReplica, d.Get("global_table_arn").(string), err)
+		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionWaitingForCreation, ResNameTableReplica, d.Get("global_table_arn").(string), err)
 	}
 
 	d.SetId(tableReplicaID(tableName, mainRegion))
 
 	repARN, err := ARNForNewRegion(d.Get("global_table_arn").(string), replicaRegion)
 	if err != nil {
-		return create.DiagError(names.DynamoDB, create.ErrActionCreating, ResNameTableReplica, d.Id(), err)
+		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionCreating, ResNameTableReplica, d.Id(), err)
 	}
 
 	d.Set(names.AttrARN, repARN)
@@ -194,7 +193,7 @@ func resourceTableReplicaRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	tableName, mainRegion, err := TableReplicaParseID(d.Id())
 	if err != nil {
-		return create.DiagError(names.DynamoDB, create.ErrActionReading, ResNameTableReplica, d.Id(), err)
+		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionReading, ResNameTableReplica, d.Id(), err)
 	}
 
 	globalTableARN := arn.ARN{
@@ -208,15 +207,11 @@ func resourceTableReplicaRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("global_table_arn", globalTableARN)
 
 	if mainRegion == replicaRegion {
-		return create.DiagError(names.DynamoDB, create.ErrActionReading, ResNameTableReplica, d.Id(), errors.New("replica cannot be in same region as main table"))
+		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionReading, ResNameTableReplica, d.Id(), errors.New("replica cannot be in same region as main table"))
 	}
 
-	session, err := conns.NewSessionForRegion(&conn.Config, mainRegion, meta.(*conns.AWSClient).TerraformVersion)
-	if err != nil {
-		return create.DiagError(names.DynamoDB, create.ErrActionReading, ResNameTableReplica, d.Id(), fmt.Errorf("region %s: %w", mainRegion, err))
-	}
-
-	conn = dynamodb.New(session) // now main table region
+	// now main table region
+	conn = meta.(*conns.AWSClient).DynamoDBConnForRegion(ctx, mainRegion)
 
 	result, err := conn.DescribeTableWithContext(ctx, &dynamodb.DescribeTableInput{
 		TableName: aws.String(tableName),
@@ -229,12 +224,12 @@ func resourceTableReplicaRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if err != nil {
-		return create.DiagError(names.DynamoDB, create.ErrActionReading, ResNameTableReplica, d.Id(), err)
+		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionReading, ResNameTableReplica, d.Id(), err)
 	}
 
 	if result == nil || result.Table == nil {
 		if d.IsNewResource() {
-			return create.DiagError(names.DynamoDB, create.ErrActionReading, ResNameTableReplica, d.Id(), errors.New("empty output after creation"))
+			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionReading, ResNameTableReplica, d.Id(), errors.New("empty output after creation"))
 		}
 		create.LogNotFoundRemoveState(names.DynamoDB, create.ErrActionReading, ResNameTableReplica, d.Id())
 		d.SetId("")
@@ -249,12 +244,12 @@ func resourceTableReplicaRead(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if err != nil {
-		return create.DiagError(names.DynamoDB, create.ErrActionReading, ResNameTableReplica, d.Id(), err)
+		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionReading, ResNameTableReplica, d.Id(), err)
 	}
 
-	dk, err := kms.FindDefaultKey(ctx, "dynamodb", replicaRegion, meta)
+	dk, err := kms.FindDefaultKey(ctx, meta.(*conns.AWSClient), "dynamodb", replicaRegion)
 	if err != nil {
-		return create.DiagError(names.DynamoDB, create.ErrActionReading, ResNameTableReplica, d.Id(), err)
+		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionReading, ResNameTableReplica, d.Id(), err)
 	}
 
 	if replica.KMSMasterKeyId == nil || aws.StringValue(replica.KMSMasterKeyId) == dk {
@@ -284,7 +279,7 @@ func resourceTableReplicaReadReplica(ctx context.Context, d *schema.ResourceData
 
 	tableName, _, err := TableReplicaParseID(d.Id())
 	if err != nil {
-		return create.DiagError(names.DynamoDB, create.ErrActionReading, ResNameTableReplica, d.Id(), err)
+		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionReading, ResNameTableReplica, d.Id(), err)
 	}
 
 	result, err := conn.DescribeTableWithContext(ctx, &dynamodb.DescribeTableInput{
@@ -298,12 +293,12 @@ func resourceTableReplicaReadReplica(ctx context.Context, d *schema.ResourceData
 	}
 
 	if err != nil {
-		return create.DiagError(names.DynamoDB, create.ErrActionReading, ResNameTableReplica, d.Id(), err)
+		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionReading, ResNameTableReplica, d.Id(), err)
 	}
 
 	if result == nil || result.Table == nil {
 		if d.IsNewResource() {
-			return create.DiagError(names.DynamoDB, create.ErrActionReading, ResNameTableReplica, d.Id(), errors.New("empty output after creation"))
+			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionReading, ResNameTableReplica, d.Id(), errors.New("empty output after creation"))
 		}
 		create.LogNotFoundRemoveState(names.DynamoDB, create.ErrActionReading, ResNameTableReplica, d.Id())
 		d.SetId("")
@@ -317,7 +312,7 @@ func resourceTableReplicaReadReplica(ctx context.Context, d *schema.ResourceData
 	})
 	// When a Table is `ARCHIVED`, DescribeContinuousBackups returns `TableNotFoundException`
 	if err != nil && !tfawserr.ErrCodeEquals(err, "UnknownOperationException", dynamodb.ErrCodeTableNotFoundException) {
-		return create.DiagError(names.DynamoDB, create.ErrActionReading, ResNameTableReplica, d.Id(), fmt.Errorf("continuous backups: %w", err))
+		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionReading, ResNameTableReplica, d.Id(), fmt.Errorf("continuous backups: %w", err))
 	}
 
 	if pitrOut != nil && pitrOut.ContinuousBackupsDescription != nil && pitrOut.ContinuousBackupsDescription.PointInTimeRecoveryDescription != nil {
@@ -329,7 +324,7 @@ func resourceTableReplicaReadReplica(ctx context.Context, d *schema.ResourceData
 	tags, err := listTags(ctx, conn, d.Get(names.AttrARN).(string))
 	// When a Table is `ARCHIVED`, ListTags returns `ResourceNotFoundException`
 	if err != nil && !(tfawserr.ErrMessageContains(err, "UnknownOperationException", "Tagging is not currently supported in DynamoDB Local.") || tfresource.NotFound(err)) {
-		return create.DiagError(names.DynamoDB, create.ErrActionReading, ResNameTableReplica, d.Id(), fmt.Errorf("tags: %w", err))
+		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionReading, ResNameTableReplica, d.Id(), fmt.Errorf("tags: %w", err))
 	}
 
 	setTagsOut(ctx, Tags(tags))
@@ -350,21 +345,17 @@ func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, met
 
 	tableName, mainRegion, err := TableReplicaParseID(d.Id())
 	if err != nil {
-		return create.DiagError(names.DynamoDB, create.ErrActionUpdating, ResNameTableReplica, d.Id(), err)
+		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, ResNameTableReplica, d.Id(), err)
 	}
 
 	replicaRegion := aws.StringValue(repConn.Config.Region)
 
 	if mainRegion == replicaRegion {
-		return create.DiagError(names.DynamoDB, create.ErrActionUpdating, ResNameTableReplica, d.Id(), errors.New("replica cannot be in same region as main table"))
+		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, ResNameTableReplica, d.Id(), errors.New("replica cannot be in same region as main table"))
 	}
 
-	session, err := conns.NewSessionForRegion(&repConn.Config, mainRegion, meta.(*conns.AWSClient).TerraformVersion)
-	if err != nil {
-		return create.DiagError(names.DynamoDB, create.ErrActionUpdating, ResNameTableReplica, d.Id(), fmt.Errorf("region %s: %w", mainRegion, err))
-	}
-
-	tabConn := dynamodb.New(session) // now main table region
+	// now main table region
+	tabConn := meta.(*conns.AWSClient).DynamoDBConnForRegion(ctx, mainRegion)
 
 	viaMainChanges := false
 	viaMainInput := &dynamodb.UpdateReplicationGroupMemberAction{
@@ -372,9 +363,9 @@ func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if d.HasChange(names.AttrKMSKeyARN) && !d.IsNewResource() { // create ends with update and sets kms_key_arn causing change that is not
-		dk, err := kms.FindDefaultKey(ctx, "dynamodb", replicaRegion, meta)
+		dk, err := kms.FindDefaultKey(ctx, meta.(*conns.AWSClient), "dynamodb", replicaRegion)
 		if err != nil {
-			return create.DiagError(names.DynamoDB, create.ErrActionUpdating, ResNameTableReplica, d.Id(), fmt.Errorf("region %s: %w", replicaRegion, err))
+			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, ResNameTableReplica, d.Id(), fmt.Errorf("region %s: %w", replicaRegion, err))
 		}
 
 		if d.Get(names.AttrKMSKeyARN).(string) != dk {
@@ -414,11 +405,11 @@ func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 
 		if err != nil && !tfawserr.ErrMessageContains(err, "ValidationException", "no actions specified") {
-			return create.DiagError(names.DynamoDB, create.ErrActionUpdating, ResNameTableReplica, d.Id(), err)
+			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, ResNameTableReplica, d.Id(), err)
 		}
 
 		if err := waitReplicaActive(ctx, tabConn, tableName, replicaRegion, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return create.DiagError(names.DynamoDB, create.ErrActionWaitingForUpdate, ResNameTableReplica, d.Id(), err)
+			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionWaitingForUpdate, ResNameTableReplica, d.Id(), err)
 		}
 	}
 
@@ -429,18 +420,18 @@ func resourceTableReplicaUpdate(ctx context.Context, d *schema.ResourceData, met
 		if d.HasChange(names.AttrTagsAll) {
 			o, n := d.GetChange(names.AttrTagsAll)
 			if err := updateTags(ctx, repConn, d.Get(names.AttrARN).(string), o, n); err != nil {
-				return create.DiagError(names.DynamoDB, create.ErrActionUpdating, ResNameTableReplica, d.Id(), err)
+				return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, ResNameTableReplica, d.Id(), err)
 			}
 		}
 
 		if d.HasChange("point_in_time_recovery") {
-			if err := updatePITR(ctx, repConn, tableName, d.Get("point_in_time_recovery").(bool), replicaRegion, meta.(*conns.AWSClient).TerraformVersion, d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return create.DiagError(names.DynamoDB, create.ErrActionUpdating, ResNameTableReplica, d.Id(), err)
+			if err := updatePITR(ctx, meta.(*conns.AWSClient), tableName, d.Get("point_in_time_recovery").(bool), replicaRegion, d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionUpdating, ResNameTableReplica, d.Id(), err)
 			}
 		}
 
 		if err := waitReplicaActive(ctx, tabConn, tableName, replicaRegion, d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return create.DiagError(names.DynamoDB, create.ErrActionWaitingForUpdate, ResNameTableReplica, d.Id(), err)
+			return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionWaitingForUpdate, ResNameTableReplica, d.Id(), err)
 		}
 	}
 
@@ -453,19 +444,15 @@ func resourceTableReplicaDelete(ctx context.Context, d *schema.ResourceData, met
 
 	tableName, mainRegion, err := TableReplicaParseID(d.Id())
 	if err != nil {
-		return create.DiagError(names.DynamoDB, create.ErrActionDeleting, ResNameTableReplica, d.Id(), err)
+		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionDeleting, ResNameTableReplica, d.Id(), err)
 	}
 
 	conn := meta.(*conns.AWSClient).DynamoDBConn(ctx)
 
 	replicaRegion := aws.StringValue(conn.Config.Region)
 
-	session, err := conns.NewSessionForRegion(&conn.Config, mainRegion, meta.(*conns.AWSClient).TerraformVersion)
-	if err != nil {
-		return create.DiagError(names.DynamoDB, create.ErrActionDeleting, ResNameTableReplica, d.Id(), fmt.Errorf("region %s: %w", mainRegion, err))
-	}
-
-	conn = dynamodb.New(session) // now main table region
+	// now main table region.
+	conn = meta.(*conns.AWSClient).DynamoDBConnForRegion(ctx, mainRegion)
 
 	input := &dynamodb.UpdateTableInput{
 		TableName: aws.String(tableName),
@@ -500,12 +487,16 @@ func resourceTableReplicaDelete(ctx context.Context, d *schema.ResourceData, met
 		_, err = conn.UpdateTableWithContext(ctx, input)
 	}
 
+	if tfawserr.ErrMessageContains(err, errCodeValidationException, "Replica specified in the Replica Update or Replica Delete action of the request was not found") {
+		return diags
+	}
+
 	if err != nil {
-		return create.DiagError(names.DynamoDB, create.ErrActionDeleting, ResNameTableReplica, d.Id(), err)
+		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionDeleting, ResNameTableReplica, d.Id(), err)
 	}
 
 	if err := waitReplicaDeleted(ctx, conn, tableName, replicaRegion, d.Timeout(schema.TimeoutDelete)); err != nil {
-		return create.DiagError(names.DynamoDB, create.ErrActionWaitingForDeletion, ResNameTableReplica, d.Id(), err)
+		return create.AppendDiagError(diags, names.DynamoDB, create.ErrActionWaitingForDeletion, ResNameTableReplica, d.Id(), err)
 	}
 
 	return diags

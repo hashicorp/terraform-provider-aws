@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package transfer_test
 
 import (
@@ -16,6 +19,11 @@ func TestAccTransfer_serial(t *testing.T) {
 			"S3Basic":    testAccAccess_s3_basic,
 			"S3Policy":   testAccAccess_s3_policy,
 		},
+		"Agreement": {
+			"basic":      testAccAgreement_basic,
+			"disappears": testAccAgreement_disappears,
+			"tags":       testAccAgreement_tags,
+		},
 		"Server": {
 			"basic":                         testAccServer_basic,
 			"disappears":                    testAccServer_disappears,
@@ -33,7 +41,10 @@ func TestAccTransfer_serial(t *testing.T) {
 			"LambdaFunction":                testAccServer_lambdaFunction,
 			"Protocols":                     testAccServer_protocols,
 			"ProtocolDetails":               testAccServer_protocolDetails,
+			"S3StorageOptions":              testAccServer_s3StorageOptions,
 			"SecurityPolicy":                testAccServer_securityPolicy,
+			"SecurityPolicyFIPS":            testAccServer_securityPolicyFIPS,
+			"StructuredLogDestinations":     testAccServer_structuredLogDestinations,
 			"UpdateEndpointTypePublicToVPC": testAccServer_updateEndpointType_publicToVPC,
 			"UpdateEndpointTypePublicToVPCAddressAllocationIDs":      testAccServer_updateEndpointType_publicToVPC_addressAllocationIDs,
 			"UpdateEndpointTypeVPCEndpointToVPC":                     testAccServer_updateEndpointType_vpcEndpointToVPC,

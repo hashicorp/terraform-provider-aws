@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package fis_test
 
 import (
@@ -307,6 +310,108 @@ func TestAccFISExperimentTemplate_ebs(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "target.0.resource_arns.0", "aws_ebs_volume.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "target.0.resource_tag.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "target.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFISExperimentTemplate_ebsParameters(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_fis_experiment_template.test"
+	var conf types.ExperimentTemplate
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, fis.ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckExperimentTemplateDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccExperimentTemplateConfig_ebsVolumeParameters(rName, "EBS Volume Pause I/O Experiment", "ebs-paused-io-action", "EBS Volume Pause I/O", "aws:ebs:pause-volume-io", "Volumes", "ebs-volume-to-pause-io", "duration", "PT6M", "aws:ec2:ebs-volume", "ALL", "env", "test"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccExperimentTemplateExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "description", "EBS Volume Pause I/O Experiment"),
+					resource.TestCheckResourceAttrPair(resourceName, "role_arn", "aws_iam_role.test_fis", "arn"),
+					resource.TestCheckResourceAttr(resourceName, "stop_condition.0.source", "none"),
+					resource.TestCheckResourceAttr(resourceName, "stop_condition.0.value", ""),
+					resource.TestCheckResourceAttr(resourceName, "stop_condition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.name", "ebs-paused-io-action"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.description", "EBS Volume Pause I/O"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.action_id", "aws:ebs:pause-volume-io"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.parameter.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.parameter.0.key", "duration"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.parameter.0.value", "PT6M"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.start_after.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.target.0.key", "Volumes"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.target.0.value", "ebs-volume-to-pause-io"),
+					resource.TestCheckResourceAttr(resourceName, "action.0.target.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "action.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.name", "ebs-volume-to-pause-io"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.resource_type", "aws:ec2:ebs-volume"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.selection_mode", "ALL"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.parameters.%", "1"),
+					resource.TestCheckResourceAttrPair(resourceName, "target.0.parameters.availabilityZoneIdentifier", "aws_ebs_volume.test", "availability_zone"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.filter.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.resource_tag.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "target.0.resource_tag.0.key", "Name"),
+					resource.TestCheckResourceAttrPair(resourceName, "target.0.resource_tag.0.value", "aws_ebs_volume.test", "tags.Name"),
+					resource.TestCheckResourceAttr(resourceName, "target.#", "1"),
+				),
+			},
+		},
+	})
+}
+
+func TestAccFISExperimentTemplate_loggingConfiguration(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_fis_experiment_template.test"
+	var conf types.ExperimentTemplate
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, fis.ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckExperimentTemplateDestroy(ctx),
+		Steps: []resource.TestStep{
+			// Cloudwatch Logging
+			{
+				Config: testAccExperimentTemplateConfig_logConfigCloudWatch(rName, "An experiment template for testing", "test-action-1", "", "aws:ec2:terminate-instances", "Instances", "to-terminate-1", "aws:ec2:instance", "COUNT(1)", "env", "test"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccExperimentTemplateExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.log_schema_version", "2"),
+					acctest.CheckResourceAttrRegionalARN(resourceName, "log_configuration.0.cloudwatch_logs_configuration.0.log_group_arn", "logs", fmt.Sprintf("log-group:%s:*", rName)),
+				),
+			},
+			// Delete Logging
+			{
+				Config: testAccExperimentTemplateConfig_basic(rName, "An experiment template for testing", "test-action-1", "", "aws:ec2:terminate-instances", "Instances", "to-terminate-1", "aws:ec2:instance", "COUNT(1)", "env", "test"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccExperimentTemplateExists(ctx, resourceName, &conf),
+				),
+			},
+			// S3 Logging
+			{
+				Config: testAccExperimentTemplateConfig_logConfigS3(rName, "An experiment template for testing", "test-action-1", "", "aws:ec2:terminate-instances", "Instances", "to-terminate-1", "aws:ec2:instance", "COUNT(1)", "env", "test"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccExperimentTemplateExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.log_schema_version", "2"),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.s3_configuration.0.bucket_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.s3_configuration.0.prefix", ""),
+				),
+			},
+			{
+				Config: testAccExperimentTemplateConfig_logConfigS3Prefix(rName, "An experiment template for testing", "test-action-1", "", "aws:ec2:terminate-instances", "Instances", "to-terminate-1", "aws:ec2:instance", "COUNT(1)", "env", "test"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccExperimentTemplateExists(ctx, resourceName, &conf),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.log_schema_version", "2"),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.s3_configuration.0.bucket_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "log_configuration.0.s3_configuration.0.prefix", "test"),
 				),
 			},
 		},
@@ -694,4 +799,270 @@ resource "aws_fis_experiment_template" "test" {
   }
 }
 `, rName+"-fis", desc, actionName, actionDesc, actionID, actionTargetK, actionTargetV, paramK1, paramV1, targetResType, targetSelectMode, targetResTagK, targetResTagV))
+}
+
+func testAccExperimentTemplateConfig_ebsVolumeParameters(rName, desc, actionName, actionDesc, actionID, actionTargetK, actionTargetV, paramK1, paramV1, targetResType, targetSelectMode, targetResTagK, targetResTagV string) string {
+	return acctest.ConfigCompose(testAccExperimentTemplateConfig_baseEBSVolume(rName), fmt.Sprintf(`
+resource "aws_iam_role" "test_fis" {
+  name = %[1]q
+  assume_role_policy = jsonencode({
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = [
+          "fis.${data.aws_partition.current.dns_suffix}",
+        ]
+      }
+    }]
+    Version = "2012-10-17"
+  })
+}
+resource "aws_fis_experiment_template" "test" {
+  description = %[2]q
+  role_arn    = aws_iam_role.test_fis.arn
+  stop_condition {
+    source = "none"
+  }
+  action {
+    name        = %[3]q
+    description = %[4]q
+    action_id   = %[5]q
+    target {
+      key   = %[6]q
+      value = %[7]q
+    }
+    parameter {
+      key   = %[8]q
+      value = %[9]q
+    }
+  }
+  target {
+    name           = %[7]q
+    resource_type  = %[10]q
+    selection_mode = %[11]q
+    resource_tag {
+      key   = "Name"
+      value = aws_ebs_volume.test.tags.Name
+    }
+    parameters = {
+      availabilityZoneIdentifier = aws_ebs_volume.test.availability_zone
+    }
+  }
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName+"-fis", desc, actionName, actionDesc, actionID, actionTargetK, actionTargetV, paramK1, paramV1, targetResType, targetSelectMode, targetResTagK, targetResTagV))
+}
+
+func testAccExperimentTemplateConfig_logConfigCloudWatch(rName, desc, actionName, actionDesc, actionID, actionTargetK, actionTargetV, targetResType, targetSelectMode, targetResTagK, targetResTagV string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = [
+          "fis.${data.aws_partition.current.dns_suffix}",
+        ]
+      }
+    }]
+    Version = "2012-10-17"
+  })
+}
+
+resource "aws_cloudwatch_log_group" "test" {
+  name = %[1]q
+}
+
+resource "aws_fis_experiment_template" "test" {
+  description = %[2]q
+  role_arn    = aws_iam_role.test.arn
+
+  stop_condition {
+    source = "none"
+  }
+
+  action {
+    name        = %[3]q
+    description = %[4]q
+    action_id   = %[5]q
+
+    target {
+      key   = %[6]q
+      value = %[7]q
+    }
+  }
+
+  target {
+    name           = %[7]q
+    resource_type  = %[8]q
+    selection_mode = %[9]q
+
+    resource_tag {
+      key   = %[10]q
+      value = %[11]q
+    }
+  }
+
+  log_configuration {
+    log_schema_version = 2
+
+    cloudwatch_logs_configuration {
+      log_group_arn = "${aws_cloudwatch_log_group.test.arn}:*"
+    }
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, desc, actionName, actionDesc, actionID, actionTargetK, actionTargetV, targetResType, targetSelectMode, targetResTagK, targetResTagV)
+}
+
+func testAccExperimentTemplateConfig_logConfigS3(rName, desc, actionName, actionDesc, actionID, actionTargetK, actionTargetV, targetResType, targetSelectMode, targetResTagK, targetResTagV string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = [
+          "fis.${data.aws_partition.current.dns_suffix}",
+        ]
+      }
+    }]
+    Version = "2012-10-17"
+  })
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_fis_experiment_template" "test" {
+  description = %[2]q
+  role_arn    = aws_iam_role.test.arn
+
+  stop_condition {
+    source = "none"
+  }
+
+  action {
+    name        = %[3]q
+    description = %[4]q
+    action_id   = %[5]q
+
+    target {
+      key   = %[6]q
+      value = %[7]q
+    }
+  }
+
+  target {
+    name           = %[7]q
+    resource_type  = %[8]q
+    selection_mode = %[9]q
+
+    resource_tag {
+      key   = %[10]q
+      value = %[11]q
+    }
+  }
+
+  log_configuration {
+    log_schema_version = 2
+
+    s3_configuration {
+      bucket_name = aws_s3_bucket.test.bucket
+    }
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, desc, actionName, actionDesc, actionID, actionTargetK, actionTargetV, targetResType, targetSelectMode, targetResTagK, targetResTagV)
+}
+
+func testAccExperimentTemplateConfig_logConfigS3Prefix(rName, desc, actionName, actionDesc, actionID, actionTargetK, actionTargetV, targetResType, targetSelectMode, targetResTagK, targetResTagV string) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = jsonencode({
+    Statement = [{
+      Action = "sts:AssumeRole"
+      Effect = "Allow"
+      Principal = {
+        Service = [
+          "fis.${data.aws_partition.current.dns_suffix}",
+        ]
+      }
+    }]
+    Version = "2012-10-17"
+  })
+}
+
+resource "aws_s3_bucket" "test" {
+  bucket = %[1]q
+}
+
+resource "aws_fis_experiment_template" "test" {
+  description = %[2]q
+  role_arn    = aws_iam_role.test.arn
+
+  stop_condition {
+    source = "none"
+  }
+
+  action {
+    name        = %[3]q
+    description = %[4]q
+    action_id   = %[5]q
+
+    target {
+      key   = %[6]q
+      value = %[7]q
+    }
+  }
+
+  target {
+    name           = %[7]q
+    resource_type  = %[8]q
+    selection_mode = %[9]q
+
+    resource_tag {
+      key   = %[10]q
+      value = %[11]q
+    }
+  }
+
+  log_configuration {
+    log_schema_version = 2
+
+    s3_configuration {
+      bucket_name = aws_s3_bucket.test.bucket
+      prefix      = "test"
+    }
+  }
+
+  tags = {
+    Name = %[1]q
+  }
+}
+`, rName, desc, actionName, actionDesc, actionID, actionTargetK, actionTargetV, targetResType, targetSelectMode, targetResTagK, targetResTagV)
 }
