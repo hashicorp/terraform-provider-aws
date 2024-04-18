@@ -324,6 +324,8 @@ func (r *agentResource) Update(ctx context.Context, request resource.UpdateReque
 		if response.Diagnostics.HasError() {
 			return
 		}
+	} else {
+		new.AgentVersion = old.AgentVersion
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
