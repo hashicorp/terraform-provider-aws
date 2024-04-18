@@ -38,6 +38,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * data-source/aws_iam_policy_document: When using multiple principals, sort them to avoid differences based only on order ([#25967](https://github.com/hashicorp/terraform-provider-aws/issues/25967))
+* resource/aws_appconfig_deployment: Fix `ConflictException` errors on resource Create ([#36980](https://github.com/hashicorp/terraform-provider-aws/issues/36980))
 * resource/aws_ce_anomaly_monitor: Change `monitor_dimension` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) ([#36773](https://github.com/hashicorp/terraform-provider-aws/issues/36773))
 * resource/aws_ce_anomaly_subscription: Change `account_id` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) ([#36773](https://github.com/hashicorp/terraform-provider-aws/issues/36773))
 * resource/aws_cloudformation_stack: CRLF line endings in `template_body` no longer cause erroneous diffs ([#14270](https://github.com/hashicorp/terraform-provider-aws/issues/14270))
