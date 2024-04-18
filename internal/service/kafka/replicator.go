@@ -590,6 +590,10 @@ func flattenTopicReplication(apiObject *types.TopicReplication) map[string]inter
 }
 
 func flattenStartingPosition(apiObject *types.ReplicationStartingPosition) map[string]interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Type; v != "" {
@@ -787,7 +791,7 @@ func expandTopicReplication(tfMap map[string]interface{}) *types.TopicReplicatio
 	}
 
 	if v, ok := tfMap["starting_position"].([]interface{}); ok {
-		apiObject.StartingPosition = expandStartingPosition(v[0].(map[string]interface{}))
+		apiObject.StartingPosition = expandStartingPosition(v.([]interface{}))
 	}
 
 	if v, ok := tfMap["copy_topic_configurations"].(bool); ok {
@@ -805,10 +809,16 @@ func expandTopicReplication(tfMap map[string]interface{}) *types.TopicReplicatio
 	return apiObject
 }
 
-func expandStartingPosition(tfMap map[string]interface{}) *types.ReplicationStartingPosition {
+func expandStartingPosition(tfMap []interface{}) *types.ReplicationStartingPosition {
+	if len(tfMap) == 0 || tfMap[0] == nil {
+		return nil
+	}
+
 	apiObject := &types.ReplicationStartingPosition{}
 
-	if v, ok := tfMap["type"].(string); ok {
+	m := tfMap[0].(map[string]interface{})
+
+	if v, ok := m["type"].(string); ok {
 		apiObject.Type = types.ReplicationStartingPositionType(v)
 	}
 
