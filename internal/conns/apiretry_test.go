@@ -57,7 +57,7 @@ func TestAddIsErrorRetryables(t *testing.T) {
 					ResponseError: &smithyhttp.ResponseError{
 						Response: &smithyhttp.Response{
 							Response: &http.Response{
-								StatusCode: 409,
+								StatusCode: http.StatusConflict,
 							},
 						},
 						Err: &appconfigtypes.ConflictException{
