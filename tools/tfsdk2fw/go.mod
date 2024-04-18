@@ -18,7 +18,7 @@ require (
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect
-	github.com/aws/aws-sdk-go v1.51.22 // indirect
+	github.com/aws/aws-sdk-go v1.51.23 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.26.1 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.2 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.27.11 // indirect
@@ -77,7 +77,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/computeoptimizer v1.34.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/configservice v1.46.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/connectcases v1.15.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/controltower v1.13.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/controltower v1.13.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/costandusagereportservice v1.23.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/costexplorer v1.37.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/costoptimizationhub v1.4.4 // indirect
@@ -89,7 +89,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/directoryservice v1.24.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/docdbelastic v1.9.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.31.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.156.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.157.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecr v1.27.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecrpublic v1.23.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.41.7 // indirect
@@ -118,7 +118,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.17.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internetmonitor v1.13.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/ivschat v1.12.5 // indirect
-	github.com/aws/aws-sdk-go-v2/service/kafka v1.31.2 // indirect
+	github.com/aws/aws-sdk-go-v2/service/kafka v1.31.3 // indirect
 	github.com/aws/aws-sdk-go-v2/service/kendra v1.50.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/keyspaces v1.10.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/kinesis v1.27.4 // indirect
@@ -146,7 +146,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.11.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/polly v1.39.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/pricing v1.28.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.4.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/qbusiness v1.5.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/qldb v1.21.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/rbin v1.16.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/rds v1.77.1 // indirect
