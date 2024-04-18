@@ -13,33 +13,34 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework-validators/float64validator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
+	"github.com/hashicorp/terraform-plugin-framework-validators/setvalidator"
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/listplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @FrameworkResource(name="Bedrock Agent")
+// @FrameworkResource(name="Agent")
 // @Tags(identifierAttribute="agent_arn")
 func newAgentResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &agentResource{}
@@ -57,8 +58,8 @@ type agentResource struct {
 	framework.WithTimeouts
 }
 
-func (r *agentResource) Metadata(_ context.Context, request resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_bedrockagent_agent"
+func (*agentResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_bedrockagent_agent"
 }
 
 func (r *agentResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
@@ -76,47 +77,58 @@ func (r *agentResource) Schema(ctx context.Context, request resource.SchemaReque
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"agent_status": schema.StringAttribute{
-				Computed: true,
-				PlanModifiers: []planmodifier.String{
-					stringplanmodifier.UseStateForUnknown(),
-				},
-			},
+			// TODO :Remove from documentation.
+			// "agent_status": schema.StringAttribute{
+			// 	Computed: true,
+			// 	PlanModifiers: []planmodifier.String{
+			// 		stringplanmodifier.UseStateForUnknown(),
+			// 	},
+			// },
 			"agent_version": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"created_at": schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
-				Computed:   true,
-			},
+			// TODO :Remove from documentation.
+			// "created_at": schema.StringAttribute{
+			// 	CustomType: timetypes.RFC3339Type{},
+			// 	Computed:   true,
+			// },
 			"customer_encryption_key_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Optional:   true,
 			},
 			"description": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
-			},
-			"failure_reasons": schema.ListAttribute{
-				ElementType: types.StringType,
-				Computed:    true,
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.UseStateForUnknown(),
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(1, 200),
 				},
 			},
+			// TODO :Remove from documentation.
+			// "failure_reasons": schema.ListAttribute{
+			// 	CustomType:  fwtypes.ListOfStringType,
+			// 	ElementType: types.StringType,
+			// 	Computed:    true,
+			// 	PlanModifiers: []planmodifier.List{
+			// 		listplanmodifier.UseStateForUnknown(),
+			// 	},
+			// },
 			"foundation_model": schema.StringAttribute{
 				Required: true,
 			},
 			names.AttrID: framework.IDAttribute(),
-			"idle_ttl": schema.Int64Attribute{
-				Required: true,
+			"idle_session_ttl_in_seconds": schema.Int64Attribute{
+				Optional: true,
+				Validators: []validator.Int64{
+					int64validator.Between(60, 3600),
+				},
 			},
 			"instruction": schema.StringAttribute{
 				Optional: true,
-				Computed: true,
+				Validators: []validator.String{
+					stringvalidator.LengthBetween(40, 1200),
+				},
 			},
 			"prepare_agent": schema.BoolAttribute{
 				Optional: true,
@@ -126,38 +138,113 @@ func (r *agentResource) Schema(ctx context.Context, request resource.SchemaReque
 					boolplanmodifier.UseStateForUnknown(),
 				},
 			},
-			"prepared_at": schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
-				Computed:   true,
-			},
-			"prompt_override_configuration": schema.ListAttribute{ // Limited here by V5 Protocol
-				Computed:   true,
-				Optional:   true,
-				Validators: []validator.List{listvalidator.SizeAtMost(1)},
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.UseStateForUnknown(),
+			// TODO :Remove from documentation.
+			// "prepared_at": schema.StringAttribute{
+			// 	CustomType: timetypes.RFC3339Type{},
+			// 	Computed:   true,
+			// },
+			// "recommended_actions": schema.ListAttribute{
+			// 	CustomType:  fwtypes.ListOfStringType,
+			// 	ElementType: types.StringType,
+			// 	Computed:    true,
+			// 	PlanModifiers: []planmodifier.List{
+			// 		listplanmodifier.UseStateForUnknown(),
+			// 	},
+			// },
+			names.AttrTags:    tftags.TagsAttribute(),
+			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
+			// TODO :Remove from documentation.
+			// "updated_at": schema.StringAttribute{
+			// 	CustomType: timetypes.RFC3339Type{},
+			// 	Computed:   true,
+			// },
+		},
+		Blocks: map[string]schema.Block{
+			"prompt_override_configuration": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[promptOverrideConfigurationModel](ctx),
+				Validators: []validator.List{
+					listvalidator.SizeAtMost(1),
 				},
-				CustomType: fwtypes.NewListNestedObjectTypeOf[poc](ctx),
-				ElementType: types.ObjectType{
-					AttrTypes: map[string]attr.Type{
-						"override_lambda": types.StringType,
-						"prompt_configurations": types.SetType{
-							ElemType: types.ObjectType{
-								AttrTypes: map[string]attr.Type{
-									"base_prompt_template": types.StringType,
-									"parser_mode":          types.StringType,
-									"prompt_creation_mode": types.StringType,
-									"prompt_state":         types.StringType,
-									"prompt_type":          types.StringType,
-									"inference_configuration": types.ObjectType{
-										AttrTypes: map[string]attr.Type{
-											"max_length": types.Int64Type,
-											"stop_sequences": types.ListType{
-												ElemType: types.StringType,
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"override_lambda": schema.StringAttribute{
+							CustomType: fwtypes.ARNType,
+							Optional:   true,
+						},
+					},
+					Blocks: map[string]schema.Block{
+						"prompt_configurations": schema.SetNestedBlock{
+							CustomType: fwtypes.NewSetNestedObjectTypeOf[promptConfigurationModel](ctx),
+							Validators: []validator.Set{
+								setvalidator.IsRequired(),
+								setvalidator.SizeAtMost(10),
+							},
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"base_prompt_template": schema.StringAttribute{
+										Optional: true,
+										Validators: []validator.String{
+											stringvalidator.LengthBetween(1, 100000),
+										},
+									},
+									"parser_mode": schema.StringAttribute{
+										CustomType: fwtypes.StringEnumType[parserMode](),
+										Optional:   true,
+									},
+									"prompt_creation_mode": schema.StringAttribute{
+										CustomType: fwtypes.StringEnumType[promptCreationMode](),
+										Optional:   true,
+									},
+									"prompt_state": schema.StringAttribute{
+										CustomType: fwtypes.StringEnumType[awstypes.PromptState](),
+										Optional:   true,
+									},
+									"prompt_type": schema.StringAttribute{
+										CustomType: fwtypes.StringEnumType[awstypes.PromptType](),
+										Optional:   true,
+									},
+								},
+								Blocks: map[string]schema.Block{
+									"inference_configuration": schema.ListNestedBlock{
+										CustomType: fwtypes.NewListNestedObjectTypeOf[inferenceConfigurationModel](ctx),
+										Validators: []validator.List{
+											listvalidator.SizeAtMost(1),
+										},
+										NestedObject: schema.NestedBlockObject{
+											Attributes: map[string]schema.Attribute{
+												"max_length": schema.Int64Attribute{
+													Optional: true,
+													Validators: []validator.Int64{
+														int64validator.Between(0, 4096),
+													},
+												},
+												"stop_sequences": schema.ListAttribute{
+													CustomType:  fwtypes.ListOfStringType,
+													ElementType: types.StringType,
+													Optional:    true,
+													Validators: []validator.List{
+														listvalidator.SizeBetween(0, 4),
+													},
+												},
+												"temperature": schema.Float64Attribute{
+													Optional: true,
+													Validators: []validator.Float64{
+														float64validator.Between(0, 1),
+													},
+												},
+												"top_k": schema.Int64Attribute{
+													Optional: true,
+													Validators: []validator.Int64{
+														int64validator.Between(0, 500),
+													},
+												},
+												"top_p": schema.Float64Attribute{
+													Optional: true,
+													Validators: []validator.Float64{
+														float64validator.Between(0, 1),
+													},
+												},
 											},
-											"temperature": types.Float64Type,
-											"topk":        types.Int64Type,
-											"topp":        types.Float64Type,
 										},
 									},
 								},
@@ -166,21 +253,6 @@ func (r *agentResource) Schema(ctx context.Context, request resource.SchemaReque
 					},
 				},
 			},
-			"recommended_actions": schema.ListAttribute{
-				ElementType: types.StringType,
-				Computed:    true,
-				PlanModifiers: []planmodifier.List{
-					listplanmodifier.UseStateForUnknown(),
-				},
-			},
-			"updated_at": schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
-				Computed:   true,
-			},
-			names.AttrTags:    tftags.TagsAttribute(),
-			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
-		},
-		Blocks: map[string]schema.Block{
 			"timeouts": timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
@@ -191,7 +263,7 @@ func (r *agentResource) Schema(ctx context.Context, request resource.SchemaReque
 }
 
 func (r *agentResource) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	var data bedrockAgentResourceModel
+	var data agentResourceModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -206,7 +278,6 @@ func (r *agentResource) Create(ctx context.Context, request resource.CreateReque
 	}
 
 	input.ClientToken = aws.String(id.UniqueId())
-
 	input.Tags = getTagsIn(ctx)
 
 	output, err := conn.CreateAgent(ctx, input)
@@ -217,10 +288,14 @@ func (r *agentResource) Create(ctx context.Context, request resource.CreateReque
 		return
 	}
 
+	// Set values for unknowns.
 	data.AgentARN = fwflex.StringToFramework(ctx, output.Agent.AgentArn)
-	data.AgentId = fwflex.StringToFramework(ctx, output.Agent.AgentId)
-	data.setId()
-	agent, err := waitAgentCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+	data.AgentID = fwflex.StringToFramework(ctx, output.Agent.AgentId)
+	data.AgentVersion = fwflex.StringToFramework(ctx, output.Agent.AgentVersion)
+	data.setID()
+
+	_, err = waitAgentCreated(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent (%s) create", data.ID.ValueString()), err.Error())
 
@@ -228,44 +303,35 @@ func (r *agentResource) Create(ctx context.Context, request resource.CreateReque
 	}
 
 	if data.PrepareAgent.ValueBool() {
-		prepareInput := &bedrockagent.PrepareAgentInput{}
-		prepareInput.AgentId = output.Agent.AgentId
-		_, err := conn.PrepareAgent(ctx, prepareInput)
-		if err != nil {
-			response.Diagnostics.AddError("preparing Bedrock Agent", err.Error())
-
-			return
-		}
-		agent, err = waitAgentPrepared(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
+		_, err := prepareAgent(ctx, conn, data.ID.ValueString(), r.CreateTimeout(ctx, data.Timeouts))
 
 		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent (%s) prepare", data.ID.ValueString()), err.Error())
+			response.Diagnostics.AddError("creating Agent", err.Error())
 
 			return
 		}
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, agent.Agent, &data)...)
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 func (r *agentResource) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	var data bedrockAgentResourceModel
+	var data agentResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	if data.ID.IsNull() {
-		response.Diagnostics.AddError("parsing resource ID", "Bedrock Agent ID")
+	if err := data.InitFromID(); err != nil {
+		response.Diagnostics.AddError("parsing resource ID", err.Error())
 
 		return
 	}
 
 	conn := r.Meta().BedrockAgentClient(ctx)
 
-	AgentId := data.ID.ValueString()
-	output, err := findAgentByID(ctx, conn, AgentId)
+	agentID := data.ID.ValueString()
+	agent, err := findAgentByID(ctx, conn, agentID)
 
 	if tfresource.NotFound(err) {
 		response.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
@@ -275,26 +341,23 @@ func (r *agentResource) Read(ctx context.Context, request resource.ReadRequest, 
 	}
 
 	if err != nil {
-		response.Diagnostics.AddError(fmt.Sprintf("reading Bedrock Agent (%s)", AgentId), err.Error())
+		response.Diagnostics.AddError(fmt.Sprintf("reading Bedrock Agent (%s)", agentID), err.Error())
 
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output.Agent, &data)...)
-
-	if output.Agent.AgentStatus == awstypes.AgentStatusPrepared {
-		data.PrepareAgent = types.BoolValue(true)
-	}
-
+	response.Diagnostics.Append(fwflex.Flatten(ctx, agent, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
+
+	data.PrepareAgent = types.BoolValue(agent.AgentStatus == awstypes.AgentStatusPrepared)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
 func (r *agentResource) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var old, new bedrockAgentResourceModel
+	var old, new agentResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -309,7 +372,7 @@ func (r *agentResource) Update(ctx context.Context, request resource.UpdateReque
 	update := false
 	input := &bedrockagent.UpdateAgentInput{}
 
-	input.AgentId = fwflex.StringFromFramework(ctx, old.AgentId)
+	input.AgentId = fwflex.StringFromFramework(ctx, old.AgentID)
 	input.AgentResourceRoleArn = fwflex.StringFromFramework(ctx, new.AgentResourceRoleARN)
 	input.IdleSessionTTLInSeconds = fwflex.Int32FromFramework(ctx, new.IdleSessionTTLInSeconds)
 	input.AgentName = fwflex.StringFromFramework(ctx, new.AgentName)
@@ -353,52 +416,38 @@ func (r *agentResource) Update(ctx context.Context, request resource.UpdateReque
 	if !update {
 		return
 	}
+
 	_, err := conn.UpdateAgent(ctx, input)
 
 	if err != nil {
-		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionUpdating, "Bedrock Agent", old.AgentId.ValueString(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("updating Bedrock Agent (%s)", new.ID.ValueString()), err.Error())
+
 		return
 	}
 
-	out, err := waitAgentUpdated(ctx, conn, new.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
+	_, err = waitAgentUpdated(ctx, conn, new.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
+
 	if err != nil {
-		response.Diagnostics.AddError(
-			create.ProblemStandardMessage(names.BedrockAgent, create.ErrActionUpdating, "Bedrock Agent", old.AgentId.ValueString(), err),
-			err.Error(),
-		)
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent (%s) update", new.ID.ValueString()), err.Error())
+
 		return
 	}
 
 	if new.PrepareAgent.ValueBool() {
-		prepareInput := &bedrockagent.PrepareAgentInput{}
-		prepareInput.AgentId = out.Agent.AgentId
-		_, err := conn.PrepareAgent(ctx, prepareInput)
+		_, err := prepareAgent(ctx, conn, new.ID.ValueString(), r.UpdateTimeout(ctx, new.Timeouts))
+
 		if err != nil {
-			response.Diagnostics.AddError("preparing Bedrock Agent", err.Error())
+			response.Diagnostics.AddError("updating Agent", err.Error())
 
 			return
 		}
-		out, err = waitAgentPrepared(ctx, conn, new.ID.ValueString(), r.CreateTimeout(ctx, new.Timeouts))
-		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent (%s) prepare", new.ID.ValueString()), err.Error())
-
-			return
-		}
-	}
-
-	response.Diagnostics.Append(fwflex.Flatten(ctx, out.Agent, &new)...)
-	if response.Diagnostics.HasError() {
-		return
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
 func (r *agentResource) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	var data bedrockAgentResourceModel
+	var data agentResourceModel
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -406,27 +455,25 @@ func (r *agentResource) Delete(ctx context.Context, request resource.DeleteReque
 
 	conn := r.Meta().BedrockAgentClient(ctx)
 
-	if !data.AgentId.IsNull() {
-		AgentId := data.ID.ValueString()
-		_, err := conn.DeleteAgent(ctx, &bedrockagent.DeleteAgentInput{
-			AgentId: fwflex.StringFromFramework(ctx, data.AgentId),
-		})
+	agentID := data.ID.ValueString()
+	_, err := conn.DeleteAgent(ctx, &bedrockagent.DeleteAgentInput{
+		AgentId: fwflex.StringFromFramework(ctx, data.AgentID),
+	})
 
-		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-			return
-		}
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return
+	}
 
-		if _, err := waitAgentDeleted(ctx, conn, AgentId, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Custom Model customization job (%s) stop", AgentId), err.Error())
+	if _, err := waitAgentDeleted(ctx, conn, agentID, r.DeleteTimeout(ctx, data.Timeouts)); err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("waiting for Bedrock Agent (%s) delete", agentID), err.Error())
 
-			return
-		}
+		return
+	}
 
-		if err != nil {
-			response.Diagnostics.AddError(fmt.Sprintf("deleting Bedrock Agent (%s)", data.ID.ValueString()), err.Error())
+	if err != nil {
+		response.Diagnostics.AddError(fmt.Sprintf("deleting Bedrock Agent (%s)", data.ID.ValueString()), err.Error())
 
-			return
-		}
+		return
 	}
 }
 
@@ -434,7 +481,27 @@ func (r *agentResource) ModifyPlan(ctx context.Context, request resource.ModifyP
 	r.SetTagsAll(ctx, request, response)
 }
 
-func findAgentByID(ctx context.Context, conn *bedrockagent.Client, id string) (*bedrockagent.GetAgentOutput, error) {
+func prepareAgent(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.Agent, error) {
+	input := &bedrockagent.PrepareAgentInput{
+		AgentId: aws.String(id),
+	}
+
+	_, err := conn.PrepareAgent(ctx, input)
+
+	if err != nil {
+		return nil, fmt.Errorf("preparing Bedrock Agent (%s): %w", id, err)
+	}
+
+	agent, err := waitAgentPrepared(ctx, conn, id, timeout)
+
+	if err != nil {
+		return nil, fmt.Errorf("waiting for Bedrock Agent (%s) prepare: %w", id, err)
+	}
+
+	return agent, nil
+}
+
+func findAgentByID(ctx context.Context, conn *bedrockagent.Client, id string) (*awstypes.Agent, error) {
 	input := &bedrockagent.GetAgentInput{
 		AgentId: aws.String(id),
 	}
@@ -452,11 +519,11 @@ func findAgentByID(ctx context.Context, conn *bedrockagent.Client, id string) (*
 		return nil, err
 	}
 
-	if output == nil {
+	if output == nil || output.Agent == nil {
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return output, nil
+	return output.Agent, nil
 }
 
 func statusAgent(ctx context.Context, conn *bedrockagent.Client, id string) retry.StateRefreshFunc {
@@ -471,11 +538,11 @@ func statusAgent(ctx context.Context, conn *bedrockagent.Client, id string) retr
 			return nil, "", err
 		}
 
-		return output, string(output.Agent.AgentStatus), nil
+		return output, string(output.AgentStatus), nil
 	}
 }
 
-func waitAgentCreated(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*bedrockagent.GetAgentOutput, error) {
+func waitAgentCreated(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.Agent, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AgentStatusCreating),
 		Target:  enum.Slice(awstypes.AgentStatusNotPrepared),
@@ -485,8 +552,8 @@ func waitAgentCreated(ctx context.Context, conn *bedrockagent.Client, id string,
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*bedrockagent.GetAgentOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString((*string)(&output.Agent.AgentStatus))))
+	if output, ok := outputRaw.(*awstypes.Agent); ok {
+		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, func(s string) error { return errors.New(s) })...))
 
 		return output, err
 	}
@@ -494,7 +561,7 @@ func waitAgentCreated(ctx context.Context, conn *bedrockagent.Client, id string,
 	return nil, err
 }
 
-func waitAgentUpdated(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*bedrockagent.GetAgentOutput, error) {
+func waitAgentUpdated(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.Agent, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AgentStatusUpdating),
 		Target:  enum.Slice(awstypes.AgentStatusNotPrepared, awstypes.AgentStatusPrepared),
@@ -504,8 +571,8 @@ func waitAgentUpdated(ctx context.Context, conn *bedrockagent.Client, id string,
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*bedrockagent.GetAgentOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString((*string)(&output.Agent.AgentStatus))))
+	if output, ok := outputRaw.(*awstypes.Agent); ok {
+		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, func(s string) error { return errors.New(s) })...))
 
 		return output, err
 	}
@@ -513,7 +580,7 @@ func waitAgentUpdated(ctx context.Context, conn *bedrockagent.Client, id string,
 	return nil, err
 }
 
-func waitAgentPrepared(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*bedrockagent.GetAgentOutput, error) {
+func waitAgentPrepared(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.Agent, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AgentStatusNotPrepared, awstypes.AgentStatusPreparing),
 		Target:  enum.Slice(awstypes.AgentStatusPrepared),
@@ -523,8 +590,8 @@ func waitAgentPrepared(ctx context.Context, conn *bedrockagent.Client, id string
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*bedrockagent.GetAgentOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString((*string)(&output.Agent.AgentStatus))))
+	if output, ok := outputRaw.(*awstypes.Agent); ok {
+		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, func(s string) error { return errors.New(s) })...))
 
 		return output, err
 	}
@@ -532,7 +599,7 @@ func waitAgentPrepared(ctx context.Context, conn *bedrockagent.Client, id string
 	return nil, err
 }
 
-func waitAgentDeleted(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*bedrockagent.GetAgentOutput, error) {
+func waitAgentDeleted(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.Agent, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AgentStatusDeleting, awstypes.AgentStatusCreating),
 		Target:  []string{},
@@ -542,8 +609,8 @@ func waitAgentDeleted(ctx context.Context, conn *bedrockagent.Client, id string,
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*bedrockagent.GetAgentOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString((*string)(&output.Agent.AgentStatus))))
+	if output, ok := outputRaw.(*awstypes.Agent); ok {
+		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, func(s string) error { return errors.New(s) })...))
 
 		return output, err
 	}
@@ -551,53 +618,87 @@ func waitAgentDeleted(ctx context.Context, conn *bedrockagent.Client, id string,
 	return nil, err
 }
 
-type bedrockAgentResourceModel struct {
-	AgentARN                    types.String                         `tfsdk:"agent_arn"`
-	AgentId                     types.String                         `tfsdk:"agent_id"`
-	AgentName                   types.String                         `tfsdk:"agent_name"`
-	AgentResourceRoleARN        fwtypes.ARN                          `tfsdk:"agent_resource_role_arn"`
-	AgentVersion                types.String                         `tfsdk:"agent_version"`
-	AgentStatus                 types.String                         `tfsdk:"agent_status"`
-	CreatedAt                   timetypes.RFC3339                    `tfsdk:"created_at"`
-	CustomerEncryptionKeyARN    fwtypes.ARN                          `tfsdk:"customer_encryption_key_arn"`
-	Description                 types.String                         `tfsdk:"description"`
-	FailureReasons              types.List                           `tfsdk:"failure_reasons"`
-	FoundationModel             types.String                         `tfsdk:"foundation_model"`
-	ID                          types.String                         `tfsdk:"id"`
-	IdleSessionTTLInSeconds     types.Int64                          `tfsdk:"idle_ttl"`
-	Instruction                 types.String                         `tfsdk:"instruction"`
-	PreparedAt                  timetypes.RFC3339                    `tfsdk:"prepared_at"`
-	PrepareAgent                types.Bool                           `tfsdk:"prepare_agent"`
-	PromptOverrideConfiguration fwtypes.ListNestedObjectValueOf[poc] `tfsdk:"prompt_override_configuration"`
-	RecommendedActions          types.List                           `tfsdk:"recommended_actions"`
-	UpdatedAt                   timetypes.RFC3339                    `tfsdk:"updated_at"`
-	Tags                        types.Map                            `tfsdk:"tags"`
-	TagsAll                     types.Map                            `tfsdk:"tags_all"`
-	Timeouts                    timeouts.Value                       `tfsdk:"timeouts"`
+type agentResourceModel struct {
+	AgentARN             types.String `tfsdk:"agent_arn"`
+	AgentID              types.String `tfsdk:"agent_id"`
+	AgentName            types.String `tfsdk:"agent_name"`
+	AgentResourceRoleARN fwtypes.ARN  `tfsdk:"agent_resource_role_arn"`
+	// AgentStatus          types.String `tfsdk:"agent_status"`
+	AgentVersion types.String `tfsdk:"agent_version"`
+	// CreatedAt                   timetypes.RFC3339                                                 `tfsdk:"created_at"`
+	CustomerEncryptionKeyARN fwtypes.ARN  `tfsdk:"customer_encryption_key_arn"`
+	Description              types.String `tfsdk:"description"`
+	// FailureReasons              fwtypes.ListValueOf[types.String]                                 `tfsdk:"failure_reasons"`
+	FoundationModel         types.String `tfsdk:"foundation_model"`
+	ID                      types.String `tfsdk:"id"`
+	IdleSessionTTLInSeconds types.Int64  `tfsdk:"idle_session_ttl_in_seconds"`
+	Instruction             types.String `tfsdk:"instruction"`
+	// PreparedAt                  timetypes.RFC3339                                                 `tfsdk:"prepared_at"`
+	PrepareAgent                types.Bool                                                        `tfsdk:"prepare_agent"`
+	PromptOverrideConfiguration fwtypes.ListNestedObjectValueOf[promptOverrideConfigurationModel] `tfsdk:"prompt_override_configuration"`
+	// RecommendedActions          fwtypes.ListValueOf[types.String]                                 `tfsdk:"recommended_actions"`
+	Tags     types.Map      `tfsdk:"tags"`
+	TagsAll  types.Map      `tfsdk:"tags_all"`
+	Timeouts timeouts.Value `tfsdk:"timeouts"`
+	// UpdatedAt                   timetypes.RFC3339                                                 `tfsdk:"updated_at"`
 }
 
-func (m *bedrockAgentResourceModel) setId() {
-	m.ID = m.AgentId
+func (m *agentResourceModel) InitFromID() error {
+	m.AgentID = m.ID
+
+	return nil
 }
 
-type poc struct {
-	OverrideLambda       fwtypes.ARN                        `tfsdk:"override_lambda"`
-	PromptConfigurations fwtypes.SetNestedObjectValueOf[pc] `tfsdk:"prompt_configurations"`
+func (m *agentResourceModel) setID() {
+	m.ID = m.AgentID
 }
 
-type pc struct {
-	BasePromptTemplate     types.String                        `tfsdk:"base_prompt_template"`
-	ParserMode             types.String                        `tfsdk:"parser_mode"`
-	PromptCreationMode     types.String                        `tfsdk:"prompt_creation_mode"`
-	PromptState            types.String                        `tfsdk:"prompt_state"`
-	PromptType             types.String                        `tfsdk:"prompt_type"`
-	InferenceConfiguration fwtypes.ListNestedObjectValueOf[ic] `tfsdk:"inference_configuration"`
+type promptOverrideConfigurationModel struct {
+	OverrideLambda       fwtypes.ARN                                              `tfsdk:"override_lambda"`
+	PromptConfigurations fwtypes.SetNestedObjectValueOf[promptConfigurationModel] `tfsdk:"prompt_configurations"`
 }
 
-type ic struct {
+type promptConfigurationModel struct {
+	BasePromptTemplate     types.String                                                 `tfsdk:"base_prompt_template"`
+	InferenceConfiguration fwtypes.ListNestedObjectValueOf[inferenceConfigurationModel] `tfsdk:"inference_configuration"`
+	ParserMode             fwtypes.StringEnum[parserMode]                               `tfsdk:"parser_mode"`
+	PromptCreationMode     fwtypes.StringEnum[promptCreationMode]                       `tfsdk:"prompt_creation_mode"`
+	PromptState            fwtypes.StringEnum[awstypes.PromptState]                     `tfsdk:"prompt_state"`
+	PromptType             fwtypes.StringEnum[awstypes.PromptType]                      `tfsdk:"prompt_type"`
+}
+
+type inferenceConfigurationModel struct {
 	MaximumLength types.Int64                       `tfsdk:"max_length"`
 	StopSequences fwtypes.ListValueOf[types.String] `tfsdk:"stop_sequences"`
 	Temperature   types.Float64                     `tfsdk:"temperature"`
-	TopK          types.Int64                       `tfsdk:"topk"`
-	TopP          types.Float64                     `tfsdk:"topp"`
+	TopK          types.Int64                       `tfsdk:"top_k"`
+	TopP          types.Float64                     `tfsdk:"top_p"`
+}
+
+type parserMode string
+
+const (
+	parserModeDefault    parserMode = "DEFAULT"
+	parserModeOverridden parserMode = "OVERRIDDEN"
+)
+
+func (parserMode) Values() []parserMode {
+	return []parserMode{
+		parserModeDefault,
+		parserModeOverridden,
+	}
+}
+
+type promptCreationMode string
+
+const (
+	promptCreationModeDefault    promptCreationMode = "DEFAULT"
+	promptCreationModeOverridden promptCreationMode = "OVERRIDDEN"
+)
+
+func (promptCreationMode) Values() []promptCreationMode {
+	return []promptCreationMode{
+		promptCreationModeDefault,
+		promptCreationModeOverridden,
+	}
 }
