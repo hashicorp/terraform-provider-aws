@@ -6,122 +6,132 @@ package identitystore
 import (
 	"context"
 
-	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore"
-	"github.com/aws/aws-sdk-go-v2/service/identitystore/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_identitystore_groups", name="Groups")
-func DataSourceGroups() *schema.Resource {
-	return &schema.Resource{
-		ReadWithoutTimeout: dataSourceGroupsRead,
-
-		Schema: map[string]*schema.Schema{
-			"groups": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"description": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"display_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"external_ids": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"issuer": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"group_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
-				},
-			},
-			"identity_store_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9-]*$`), "must match [a-zA-Z0-9-]"),
-				),
-			},
-		},
-	}
+// @FrameworkDataSource(name="Groups")
+func newDataSourceGroups(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &dataSourceGroups{}, nil
 }
 
 const (
 	DSNameGroups = "Groups Data Source"
 )
 
-func dataSourceGroupsRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IdentityStoreClient(ctx)
+type dataSourceGroups struct {
+	framework.DataSourceWithConfigure
+}
 
-	identityStoreID := d.Get("identity_store_id").(string)
+func (d *dataSourceGroups) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
+	response.TypeName = "aws_identitystore_groups"
+}
 
-	input := &identitystore.ListGroupsInput{
-		IdentityStoreId: aws.String(identityStoreID),
+func (d *dataSourceGroups) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+	response.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"identity_store_id": schema.StringAttribute{
+				Required: true,
+			},
+		},
+		Blocks: map[string]schema.Block{
+			"groups": schema.ListNestedBlock{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[groupsData](ctx),
+				NestedObject: schema.NestedBlockObject{
+					Attributes: map[string]schema.Attribute{
+						"group_id": schema.StringAttribute{
+							Computed: true,
+						},
+						"description": schema.StringAttribute{
+							Computed: true,
+						},
+						"display_name": schema.StringAttribute{
+							Computed: true,
+						},
+					},
+					Blocks: map[string]schema.Block{
+						"external_ids": schema.ListNestedBlock{
+							CustomType: fwtypes.NewListNestedObjectTypeOf[externalIdsData](ctx),
+							NestedObject: schema.NestedBlockObject{
+								Attributes: map[string]schema.Attribute{
+									"id": schema.StringAttribute{
+										Computed: true,
+									},
+									"issuer": schema.StringAttribute{
+										Computed: true,
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+func (d *dataSourceGroups) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	conn := d.Meta().IdentityStoreClient(ctx)
+
+	var data dataSourceGroupsData
+	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	input := &identitystore.ListGroupsInput{}
+	response.Diagnostics.Append(flex.Expand(ctx, data, input)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
 	paginator := identitystore.NewListGroupsPaginator(conn, input)
-	groups := make([]types.Group, 0)
+	var out identitystore.ListGroupsOutput
 
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
-
 		if err != nil {
-			return create.DiagError(names.IdentityStore, create.ErrActionReading, DSNameGroups, identityStoreID, err)
+			response.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.IdentityStore, create.ErrActionReading, DSNameGroups, data.IdentityStoreId.String(), err),
+				err.Error(),
+			)
+			return
 		}
 
-		groups = append(groups, page.Groups...)
+		if page != nil && len(page.Groups) > 0 {
+			out.Groups = append(out.Groups, page.Groups...)
+		}
 	}
 
-	d.SetId(identityStoreID)
-
-	if err := d.Set("groups", flattenGroups(groups)); err != nil {
-		return create.DiagError(names.IdentityStore, create.ErrActionSetting, DSNameGroups, d.Id(), err)
+	response.Diagnostics.Append(flex.Flatten(ctx, out, &data)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
-	return nil
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func flattenGroups(groups []types.Group) []map[string]interface{} {
-	if len(groups) == 0 {
-		return nil
-	}
+type dataSourceGroupsData struct {
+	IdentityStoreId types.String                                `tfsdk:"identity_store_id"`
+	Groups          fwtypes.ListNestedObjectValueOf[groupsData] `tfsdk:"groups"`
+}
 
-	result := make([]map[string]interface{}, 0)
-	for _, group := range groups {
-		g := make(map[string]interface{}, 1)
-		g["description"] = aws.ToString(group.Description)
-		g["display_name"] = aws.ToString(group.DisplayName)
-		g["external_ids"] = flattenExternalIds(group.ExternalIds)
-		g["group_id"] = aws.ToString(group.GroupId)
+type groupsData struct {
+	GroupId     types.String                                     `tfsdk:"group_id"`
+	Description types.String                                     `tfsdk:"description"`
+	DisplayName types.String                                     `tfsdk:"display_name"`
+	ExternalIds fwtypes.ListNestedObjectValueOf[externalIdsData] `tfsdk:"external_ids"`
+}
 
-		result = append(result, g)
-	}
-
-	return result
+type externalIdsData struct {
+	Id     types.String `tfsdk:"id"`
+	Issuer types.String `tfsdk:"issuer"`
 }

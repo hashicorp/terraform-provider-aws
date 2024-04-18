@@ -28,7 +28,7 @@ func TestAccIdentityStoreGroupsDataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			testAccPreCheckSSOAdminInstances(ctx, t)
+			acctest.PreCheckSSOAdminInstances(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreEndpointID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
