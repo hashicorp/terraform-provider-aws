@@ -126,13 +126,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `agent_arn` - ARN of the Agent.
 * `agent_id` - ID of the Agent.
-* `agent_status` - Status of the Agent.
 * `agent_version` - Version of the Agent.
-* `created_at` - Timestamp the Agent was created at.
-* `failure_reasons` - Failure reasons for the Agent.
-* `prepared_at` - Timestamp the Agent was prepared at.
-* `recommended_actions` - Recommended actions to make your Agent to succeed.
-* `updated_at` - Timestamp the Agent was updated at.
 
 ## Timeouts
 

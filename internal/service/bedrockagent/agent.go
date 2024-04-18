@@ -79,24 +79,12 @@ func (r *agentResource) Schema(ctx context.Context, request resource.SchemaReque
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			// TODO :Remove from documentation.
-			// "agent_status": schema.StringAttribute{
-			// 	Computed: true,
-			// 	PlanModifiers: []planmodifier.String{
-			// 		stringplanmodifier.UseStateForUnknown(),
-			// 	},
-			// },
 			"agent_version": schema.StringAttribute{
 				Computed: true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
-			// TODO :Remove from documentation.
-			// "created_at": schema.StringAttribute{
-			// 	CustomType: timetypes.RFC3339Type{},
-			// 	Computed:   true,
-			// },
 			"customer_encryption_key_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
 				Optional:   true,
@@ -107,15 +95,6 @@ func (r *agentResource) Schema(ctx context.Context, request resource.SchemaReque
 					stringvalidator.LengthBetween(1, 200),
 				},
 			},
-			// TODO :Remove from documentation.
-			// "failure_reasons": schema.ListAttribute{
-			// 	CustomType:  fwtypes.ListOfStringType,
-			// 	ElementType: types.StringType,
-			// 	Computed:    true,
-			// 	PlanModifiers: []planmodifier.List{
-			// 		listplanmodifier.UseStateForUnknown(),
-			// 	},
-			// },
 			"foundation_model": schema.StringAttribute{
 				Required: true,
 			},
@@ -148,26 +127,8 @@ func (r *agentResource) Schema(ctx context.Context, request resource.SchemaReque
 					boolplanmodifier.UseStateForUnknown(),
 				},
 			},
-			// TODO :Remove from documentation.
-			// "prepared_at": schema.StringAttribute{
-			// 	CustomType: timetypes.RFC3339Type{},
-			// 	Computed:   true,
-			// },
-			// "recommended_actions": schema.ListAttribute{
-			// 	CustomType:  fwtypes.ListOfStringType,
-			// 	ElementType: types.StringType,
-			// 	Computed:    true,
-			// 	PlanModifiers: []planmodifier.List{
-			// 		listplanmodifier.UseStateForUnknown(),
-			// 	},
-			// },
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
-			// TODO :Remove from documentation.
-			// "updated_at": schema.StringAttribute{
-			// 	CustomType: timetypes.RFC3339Type{},
-			// 	Computed:   true,
-			// },
 		},
 		Blocks: map[string]schema.Block{
 			"prompt_override_configuration": schema.ListNestedBlock{
@@ -636,28 +597,22 @@ func waitAgentDeleted(ctx context.Context, conn *bedrockagent.Client, id string,
 }
 
 type agentResourceModel struct {
-	AgentARN             types.String `tfsdk:"agent_arn"`
-	AgentID              types.String `tfsdk:"agent_id"`
-	AgentName            types.String `tfsdk:"agent_name"`
-	AgentResourceRoleARN fwtypes.ARN  `tfsdk:"agent_resource_role_arn"`
-	// AgentStatus          types.String `tfsdk:"agent_status"`
-	AgentVersion types.String `tfsdk:"agent_version"`
-	// CreatedAt                   timetypes.RFC3339                                                 `tfsdk:"created_at"`
-	CustomerEncryptionKeyARN fwtypes.ARN  `tfsdk:"customer_encryption_key_arn"`
-	Description              types.String `tfsdk:"description"`
-	// FailureReasons              fwtypes.ListValueOf[types.String]                                 `tfsdk:"failure_reasons"`
-	FoundationModel         types.String `tfsdk:"foundation_model"`
-	ID                      types.String `tfsdk:"id"`
-	IdleSessionTTLInSeconds types.Int64  `tfsdk:"idle_session_ttl_in_seconds"`
-	Instruction             types.String `tfsdk:"instruction"`
-	// PreparedAt                  timetypes.RFC3339                                                 `tfsdk:"prepared_at"`
+	AgentARN                    types.String                                                      `tfsdk:"agent_arn"`
+	AgentID                     types.String                                                      `tfsdk:"agent_id"`
+	AgentName                   types.String                                                      `tfsdk:"agent_name"`
+	AgentResourceRoleARN        fwtypes.ARN                                                       `tfsdk:"agent_resource_role_arn"`
+	AgentVersion                types.String                                                      `tfsdk:"agent_version"`
+	CustomerEncryptionKeyARN    fwtypes.ARN                                                       `tfsdk:"customer_encryption_key_arn"`
+	Description                 types.String                                                      `tfsdk:"description"`
+	FoundationModel             types.String                                                      `tfsdk:"foundation_model"`
+	ID                          types.String                                                      `tfsdk:"id"`
+	IdleSessionTTLInSeconds     types.Int64                                                       `tfsdk:"idle_session_ttl_in_seconds"`
+	Instruction                 types.String                                                      `tfsdk:"instruction"`
 	PrepareAgent                types.Bool                                                        `tfsdk:"prepare_agent"`
 	PromptOverrideConfiguration fwtypes.ListNestedObjectValueOf[promptOverrideConfigurationModel] `tfsdk:"prompt_override_configuration"`
-	// RecommendedActions          fwtypes.ListValueOf[types.String]                                 `tfsdk:"recommended_actions"`
-	Tags     types.Map      `tfsdk:"tags"`
-	TagsAll  types.Map      `tfsdk:"tags_all"`
-	Timeouts timeouts.Value `tfsdk:"timeouts"`
-	// UpdatedAt                   timetypes.RFC3339                                                 `tfsdk:"updated_at"`
+	Tags                        types.Map                                                         `tfsdk:"tags"`
+	TagsAll                     types.Map                                                         `tfsdk:"tags_all"`
+	Timeouts                    timeouts.Value                                                    `tfsdk:"timeouts"`
 }
 
 func (m *agentResourceModel) InitFromID() error {
