@@ -1,7 +1,7 @@
 data "aws_partition" "current" {}
 
 resource "aws_iam_role" "test" {
-  name = %[1]q
+  name = var.rName
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17"

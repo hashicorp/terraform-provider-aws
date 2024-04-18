@@ -1,4 +1,4 @@
 resource "aws_iam_user" "test" {
-  name = %[1]q
+  name = var.rName
 {{- template "tags" . }}
 }

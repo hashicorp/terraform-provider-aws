@@ -3,10 +3,10 @@
 package iam_test
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/iam/types"
+	"github.com/hashicorp/terraform-plugin-testing/config"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -22,11 +22,16 @@ func TestAccIAMRole_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRoleDestroy(ctx),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoleConfig_tags1(rName, "key1", "value1"),
+				ConfigFile: config.StaticFile("testdata/Role/tags1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable("value1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -34,12 +39,25 @@ func TestAccIAMRole_tags(t *testing.T) {
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/Role/tags1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable("value1"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRoleConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
+				ConfigFile: config.StaticFile("testdata/Role/tags2_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable("value1updated"),
+					"tagKey2":   config.StringVariable("key2"),
+					"tagValue2": config.StringVariable("value2"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -48,12 +66,25 @@ func TestAccIAMRole_tags(t *testing.T) {
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/Role/tags2_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable("value1updated"),
+					"tagKey2":   config.StringVariable("key2"),
+					"tagValue2": config.StringVariable("value2"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRoleConfig_tags1(rName, "key2", "value2"),
+				ConfigFile: config.StaticFile("testdata/Role/tags1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key2"),
+					"tagValue1": config.StringVariable("value2"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -61,18 +92,31 @@ func TestAccIAMRole_tags(t *testing.T) {
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/Role/tags1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key2"),
+					"tagValue1": config.StringVariable("value2"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRoleConfig_tags0(rName),
+				ConfigFile: config.StaticFile("testdata/Role/tags0_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/Role/tags0_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -90,23 +134,35 @@ func TestAccIAMRole_tags_null(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRoleDestroy(ctx),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoleConfig_tagsNull(rName, "key1"),
+				ConfigFile: config.StaticFile("testdata/Role/tagsNull_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":   config.StringVariable(rName),
+					"tagKey1": config.StringVariable("key1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/Role/tagsNull_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":   config.StringVariable(rName),
+					"tagKey1": config.StringVariable("key1"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config:             testAccRoleConfig_tags0(rName),
+				ConfigFile: config.StaticFile("testdata/Role/tags0_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+				},
 				PlanOnly:           true,
 				ExpectNonEmptyPlan: false,
 			},
@@ -123,18 +179,26 @@ func TestAccIAMRole_tags_AddOnUpdate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRoleDestroy(ctx),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoleConfig_tags0(rName),
+				ConfigFile: config.StaticFile("testdata/Role/tags0_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
-				Config: testAccRoleConfig_tags1(rName, "key1", "value1"),
+				ConfigFile: config.StaticFile("testdata/Role/tags1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable("value1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -142,6 +206,12 @@ func TestAccIAMRole_tags_AddOnUpdate(t *testing.T) {
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/Role/tags1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable("value1"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -159,11 +229,16 @@ func TestAccIAMRole_tags_EmptyTag_OnCreate(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRoleDestroy(ctx),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoleConfig_tags1(rName, "key1", ""),
+				ConfigFile: config.StaticFile("testdata/Role/tags1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable(""),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -171,18 +246,31 @@ func TestAccIAMRole_tags_EmptyTag_OnCreate(t *testing.T) {
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/Role/tags1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable(""),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRoleConfig_tags0(rName),
+				ConfigFile: config.StaticFile("testdata/Role/tags0_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/Role/tags0_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -200,11 +288,16 @@ func TestAccIAMRole_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRoleDestroy(ctx),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoleConfig_tags1(rName, "key1", "value1"),
+				ConfigFile: config.StaticFile("testdata/Role/tags1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable("value1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -212,7 +305,14 @@ func TestAccIAMRole_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRoleConfig_tags2(rName, "key1", "value1", "key2", ""),
+				ConfigFile: config.StaticFile("testdata/Role/tags2_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable("value1"),
+					"tagKey2":   config.StringVariable("key2"),
+					"tagValue2": config.StringVariable(""),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -221,12 +321,25 @@ func TestAccIAMRole_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/Role/tags2_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable("value1"),
+					"tagKey2":   config.StringVariable("key2"),
+					"tagValue2": config.StringVariable(""),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccRoleConfig_tags1(rName, "key1", "value1"),
+				ConfigFile: config.StaticFile("testdata/Role/tags1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable("value1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -234,6 +347,12 @@ func TestAccIAMRole_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/Role/tags1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable("value1"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -251,11 +370,16 @@ func TestAccIAMRole_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRoleDestroy(ctx),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoleConfig_tags1(rName, "key1", "value1"),
+				ConfigFile: config.StaticFile("testdata/Role/tags1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable("value1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -263,7 +387,12 @@ func TestAccIAMRole_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRoleConfig_tags1(rName, "key1", ""),
+				ConfigFile: config.StaticFile("testdata/Role/tags1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable(""),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -271,6 +400,12 @@ func TestAccIAMRole_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/Role/tags1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable(""),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -286,16 +421,17 @@ func TestAccIAMRole_tags_DefaultTags_providerOnly(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRoleDestroy(ctx),
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
+		CheckDestroy: testAccCheckRoleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("key1", "value1"),
-					testAccRoleConfig_tags0(rName),
-				),
+				ConfigFile: config.StaticFile("testdata/Role/tags0_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("key1"),
+					"providerTagValue1": config.StringVariable("value1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -304,15 +440,25 @@ func TestAccIAMRole_tags_DefaultTags_providerOnly(t *testing.T) {
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/Role/tags0_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("key1"),
+					"providerTagValue1": config.StringVariable("value1"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags2("key1", "value1updated", "key2", "value2"),
-					testAccRoleConfig_tags0(rName),
-				),
+				ConfigFile: config.StaticFile("testdata/Role/tags0_default2_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("key1"),
+					"providerTagValue1": config.StringVariable("value1updated"),
+					"providerTagKey2":   config.StringVariable("key2"),
+					"providerTagValue2": config.StringVariable("value2"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -322,15 +468,25 @@ func TestAccIAMRole_tags_DefaultTags_providerOnly(t *testing.T) {
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/Role/tags0_default2_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("key1"),
+					"providerTagValue1": config.StringVariable("value1updated"),
+					"providerTagKey2":   config.StringVariable("key2"),
+					"providerTagValue2": config.StringVariable("value2"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("key2", "value2"),
-					testAccRoleConfig_tags0(rName),
-				),
+				ConfigFile: config.StaticFile("testdata/Role/tags0_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("key2"),
+					"providerTagValue1": config.StringVariable("value2"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -339,15 +495,22 @@ func TestAccIAMRole_tags_DefaultTags_providerOnly(t *testing.T) {
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/Role/tags0_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("key2"),
+					"providerTagValue1": config.StringVariable("value2"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags0(),
-					testAccRoleConfig_tags0(rName),
-				),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigFile:               config.StaticFile("testdata/Role/tags0_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -355,6 +518,11 @@ func TestAccIAMRole_tags_DefaultTags_providerOnly(t *testing.T) {
 				),
 			},
 			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigFile:               config.StaticFile("testdata/Role/tags0_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -370,16 +538,19 @@ func TestAccIAMRole_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRoleDestroy(ctx),
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
+		CheckDestroy: testAccCheckRoleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
-					testAccRoleConfig_tags1(rName, "resourcekey1", "resourcevalue1"),
-				),
+				ConfigFile: config.StaticFile("testdata/Role/tags1_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("providerkey1"),
+					"providerTagValue1": config.StringVariable("providervalue1"),
+					"tagKey1":           config.StringVariable("resourcekey1"),
+					"tagValue1":         config.StringVariable("resourcevalue1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -390,15 +561,29 @@ func TestAccIAMRole_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/Role/tags1_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("providerkey1"),
+					"providerTagValue1": config.StringVariable("providervalue1"),
+					"tagKey1":           config.StringVariable("resourcekey1"),
+					"tagValue1":         config.StringVariable("resourcevalue1"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("providerkey1", "providervalue1updated"),
-					testAccRoleConfig_tags2(rName, "resourcekey1", "resourcevalue1updated", "resourcekey2", "resourcevalue2"),
-				),
+				ConfigFile: config.StaticFile("testdata/Role/tags2_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("providerkey1"),
+					"providerTagValue1": config.StringVariable("providervalue1updated"),
+					"tagKey1":           config.StringVariable("resourcekey1"),
+					"tagValue1":         config.StringVariable("resourcevalue1updated"),
+					"tagKey2":           config.StringVariable("resourcekey2"),
+					"tagValue2":         config.StringVariable("resourcevalue2"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -411,15 +596,26 @@ func TestAccIAMRole_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/Role/tags2_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("providerkey1"),
+					"providerTagValue1": config.StringVariable("providervalue1updated"),
+					"tagKey1":           config.StringVariable("resourcekey1"),
+					"tagValue1":         config.StringVariable("resourcevalue1updated"),
+					"tagKey2":           config.StringVariable("resourcekey2"),
+					"tagValue2":         config.StringVariable("resourcevalue2"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags0(),
-					testAccRoleConfig_tags0(rName),
-				),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigFile:               config.StaticFile("testdata/Role/tags0_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -427,6 +623,11 @@ func TestAccIAMRole_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				),
 			},
 			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigFile:               config.StaticFile("testdata/Role/tags0_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName": config.StringVariable(rName),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -442,16 +643,19 @@ func TestAccIAMRole_tags_DefaultTags_overlapping(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRoleDestroy(ctx),
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
+		CheckDestroy: testAccCheckRoleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("overlapkey1", "providervalue1"),
-					testAccRoleConfig_tags1(rName, "overlapkey1", "resourcevalue1"),
-				),
+				ConfigFile: config.StaticFile("testdata/Role/tags1_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("overlapkey1"),
+					"providerTagValue1": config.StringVariable("providervalue1"),
+					"tagKey1":           config.StringVariable("overlapkey1"),
+					"tagValue1":         config.StringVariable("resourcevalue1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -461,15 +665,31 @@ func TestAccIAMRole_tags_DefaultTags_overlapping(t *testing.T) {
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/Role/tags1_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("overlapkey1"),
+					"providerTagValue1": config.StringVariable("providervalue1"),
+					"tagKey1":           config.StringVariable("overlapkey1"),
+					"tagValue1":         config.StringVariable("resourcevalue1"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags2("overlapkey1", "providervalue1", "overlapkey2", "providervalue2"),
-					testAccRoleConfig_tags2(rName, "overlapkey1", "resourcevalue1", "overlapkey2", "resourcevalue2"),
-				),
+				ConfigFile: config.StaticFile("testdata/Role/tags2_default2_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("overlapkey1"),
+					"providerTagValue1": config.StringVariable("providervalue1"),
+					"providerTagKey2":   config.StringVariable("overlapkey2"),
+					"providerTagValue2": config.StringVariable("providervalue2"),
+					"tagKey1":           config.StringVariable("overlapkey1"),
+					"tagValue1":         config.StringVariable("resourcevalue1"),
+					"tagKey2":           config.StringVariable("overlapkey2"),
+					"tagValue2":         config.StringVariable("resourcevalue2"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
@@ -481,15 +701,31 @@ func TestAccIAMRole_tags_DefaultTags_overlapping(t *testing.T) {
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/Role/tags2_default2_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("overlapkey1"),
+					"providerTagValue1": config.StringVariable("providervalue1"),
+					"providerTagKey2":   config.StringVariable("overlapkey2"),
+					"providerTagValue2": config.StringVariable("providervalue2"),
+					"tagKey1":           config.StringVariable("overlapkey1"),
+					"tagValue1":         config.StringVariable("resourcevalue1"),
+					"tagKey2":           config.StringVariable("overlapkey2"),
+					"tagValue2":         config.StringVariable("resourcevalue2"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("overlapkey1", "providervalue1"),
-					testAccRoleConfig_tags1(rName, "overlapkey1", "resourcevalue2"),
-				),
+				ConfigFile: config.StaticFile("testdata/Role/tags1_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("overlapkey1"),
+					"providerTagValue1": config.StringVariable("providervalue1"),
+					"tagKey1":           config.StringVariable("overlapkey1"),
+					"tagValue1":         config.StringVariable("resourcevalue2"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -499,6 +735,14 @@ func TestAccIAMRole_tags_DefaultTags_overlapping(t *testing.T) {
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/Role/tags1_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("overlapkey1"),
+					"providerTagValue1": config.StringVariable("providervalue1"),
+					"tagKey1":           config.StringVariable("overlapkey1"),
+					"tagValue1":         config.StringVariable("resourcevalue2"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -514,13 +758,18 @@ func TestAccIAMRole_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRoleDestroy(ctx),
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
+		CheckDestroy: testAccCheckRoleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccRoleConfig_tags1(rName, "key1", "value1"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigFile:               config.StaticFile("testdata/Role/tags1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable("value1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -530,10 +779,12 @@ func TestAccIAMRole_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 				),
 			},
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("key1", "value1"),
-					testAccRoleConfig_tags0(rName),
-				),
+				ConfigFile: config.StaticFile("testdata/Role/tags0_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("key1"),
+					"providerTagValue1": config.StringVariable("value1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -542,6 +793,12 @@ func TestAccIAMRole_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/Role/tags0_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("key1"),
+					"providerTagValue1": config.StringVariable("value1"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -557,16 +814,17 @@ func TestAccIAMRole_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRoleDestroy(ctx),
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
+		CheckDestroy: testAccCheckRoleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("key1", "value1"),
-					testAccRoleConfig_tags0(rName),
-				),
+				ConfigFile: config.StaticFile("testdata/Role/tags0_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("key1"),
+					"providerTagValue1": config.StringVariable("value1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -575,7 +833,13 @@ func TestAccIAMRole_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccRoleConfig_tags1(rName, "key1", "value1"),
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigFile:               config.StaticFile("testdata/Role/tags1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable("value1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -585,6 +849,13 @@ func TestAccIAMRole_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 				),
 			},
 			{
+				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+				ConfigFile:               config.StaticFile("testdata/Role/tags1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":     config.StringVariable(rName),
+					"tagKey1":   config.StringVariable("key1"),
+					"tagValue1": config.StringVariable("value1"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -600,16 +871,19 @@ func TestAccIAMRole_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRoleDestroy(ctx),
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
+		CheckDestroy: testAccCheckRoleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("key1", "value1"),
-					testAccRoleConfig_tags1(rName, "key1", ""),
-				),
+				ConfigFile: config.StaticFile("testdata/Role/tags1_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("key1"),
+					"providerTagValue1": config.StringVariable("value1"),
+					"tagKey1":           config.StringVariable("key1"),
+					"tagValue1":         config.StringVariable(""),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
@@ -619,6 +893,14 @@ func TestAccIAMRole_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/Role/tags1_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("key1"),
+					"providerTagValue1": config.StringVariable("value1"),
+					"tagKey1":           config.StringVariable("key1"),
+					"tagValue1":         config.StringVariable(""),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -634,16 +916,18 @@ func TestAccIAMRole_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRoleDestroy(ctx),
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
+		CheckDestroy: testAccCheckRoleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("key1", "providervalue1"),
-					testAccRoleConfig_tagsNull(rName, "key1"),
-				),
+				ConfigFile: config.StaticFile("testdata/Role/tagsNull_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("key1"),
+					"providerTagValue1": config.StringVariable("providervalue1"),
+					"tagKey1":           config.StringVariable("key1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -652,6 +936,13 @@ func TestAccIAMRole_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) {
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/Role/tagsNull_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("key1"),
+					"providerTagValue1": config.StringVariable("providervalue1"),
+					"tagKey1":           config.StringVariable("key1"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -667,16 +958,18 @@ func TestAccIAMRole_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckRoleDestroy(ctx),
+		PreCheck:     func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:   acctest.ErrorCheck(t, names.IAMServiceID),
+		CheckDestroy: testAccCheckRoleDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: acctest.ConfigCompose(
-					acctest.ConfigDefaultTags_Tags1("providerkey1", "providervalue1"),
-					testAccRoleConfig_tagsNull(rName, "resourcekey1"),
-				),
+				ConfigFile: config.StaticFile("testdata/Role/tagsNull_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("providerkey1"),
+					"providerTagValue1": config.StringVariable("providervalue1"),
+					"tagKey1":           config.StringVariable("resourcekey1"),
+				},
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckRoleExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -685,112 +978,17 @@ func TestAccIAMRole_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.T)
 				),
 			},
 			{
+				ConfigFile: config.StaticFile("testdata/Role/tagsNull_default1_gen.tf"),
+				ConfigVariables: config.Variables{
+					"rName":             config.StringVariable(rName),
+					"providerTagKey1":   config.StringVariable("providerkey1"),
+					"providerTagValue1": config.StringVariable("providervalue1"),
+					"tagKey1":           config.StringVariable("resourcekey1"),
+				},
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
 			},
 		},
 	})
-}
-
-func testAccRoleConfig_tags0(rName string) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Action = "sts:AssumeRole",
-      Principal = {
-        Service = "ec2.${data.aws_partition.current.dns_suffix}",
-      }
-      Effect = "Allow"
-      Sid    = ""
-    }]
-  })
-
-}
-`, rName)
-}
-
-func testAccRoleConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Action = "sts:AssumeRole",
-      Principal = {
-        Service = "ec2.${data.aws_partition.current.dns_suffix}",
-      }
-      Effect = "Allow"
-      Sid    = ""
-    }]
-  })
-
-  tags = {
-    %[2]q = %[3]q
-  }
-}
-`, rName, tagKey1, tagValue1)
-}
-
-func testAccRoleConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Action = "sts:AssumeRole",
-      Principal = {
-        Service = "ec2.${data.aws_partition.current.dns_suffix}",
-      }
-      Effect = "Allow"
-      Sid    = ""
-    }]
-  })
-
-  tags = {
-    %[2]q = %[3]q
-    %[4]q = %[5]q
-  }
-}
-`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
-}
-
-func testAccRoleConfig_tagsNull(rName, tagKey1 string) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [{
-      Action = "sts:AssumeRole",
-      Principal = {
-        Service = "ec2.${data.aws_partition.current.dns_suffix}",
-      }
-      Effect = "Allow"
-      Sid    = ""
-    }]
-  })
-
-  tags = {
-    %[2]q = null
-  }
-}
-`, rName, tagKey1)
 }
