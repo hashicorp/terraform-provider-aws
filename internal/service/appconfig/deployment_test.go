@@ -435,7 +435,7 @@ resource "aws_appconfig_hosted_configuration_version" "test" {
   description = "%[1]s-${count.index}"
 }
 
-resource "aws_appconfig_deployment" "test"{
+resource "aws_appconfig_deployment" "test" {
   count = %[2]d
 
   application_id           = aws_appconfig_application.test.id
