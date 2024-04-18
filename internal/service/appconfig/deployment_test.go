@@ -179,9 +179,9 @@ func TestAccAppConfigDeployment_tags(t *testing.T) {
 func TestAccAppConfigDeployment_multiple(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resource1Name := "aws_appconfig_deployment.0.test"
-	resource2Name := "aws_appconfig_deployment.1.test"
-	resource3Name := "aws_appconfig_deployment.2.test"
+	resource1Name := "aws_appconfig_deployment.test.0"
+	resource2Name := "aws_appconfig_deployment.test.1"
+	resource3Name := "aws_appconfig_deployment.test.2"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
