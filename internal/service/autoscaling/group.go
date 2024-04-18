@@ -232,10 +232,6 @@ func resourceGroup() *schema.Resource {
 							Optional: true,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"auto_rollback": {
-										Type:     schema.TypeBool,
-										Optional: true,
-									},
 									"alarm_specification": {
 										Type:     schema.TypeList,
 										MaxItems: 1,
@@ -244,9 +240,16 @@ func resourceGroup() *schema.Resource {
 											Schema: map[string]*schema.Schema{
 												"alarms": {
 													Type: schema.TypeList,
+													Elem: &schema.Schema{
+														Type: schema.TypeString,
+													},
 												},
 											},
 										},
+									},
+									"auto_rollback": {
+										Type:     schema.TypeBool,
+										Optional: true,
 									},
 									"checkpoint_delay": {
 										Type:         nullable.TypeNullableInt,
@@ -3314,12 +3317,12 @@ func expandRefreshPreferences(tfMap map[string]interface{}) *awstypes.RefreshPre
 
 	apiObject := &awstypes.RefreshPreferences{}
 
-	if v, ok := tfMap["auto_rollback"].(bool); ok {
-		apiObject.AutoRollback = aws.Bool(v)
+	if v, ok := tfMap["alarm_specification"].([]interface{}); ok && len(v) > 0 {
+		apiObject.AlarmSpecification = expandAlarmSpecification(v[0].(map[string]interface{}))
 	}
 
-	if v, ok := tfMap["alarm_specification"].([]interface{}); ok && len(v) > 0 {
-		apiObject.AlarmSpecification = expandRefreshAlarmSpecification(v[0].(map[string]interface{}))
+	if v, ok := tfMap["auto_rollback"].(bool); ok {
+		apiObject.AutoRollback = aws.Bool(v)
 	}
 
 	if v, ok := tfMap["checkpoint_delay"].(string); ok {
@@ -3361,7 +3364,7 @@ func expandRefreshPreferences(tfMap map[string]interface{}) *awstypes.RefreshPre
 	return apiObject
 }
 
-func expandRefreshAlarmSpecification(tfMap map[string]interface{}) *awstypes.AlarmSpecification {
+func expandAlarmSpecification(tfMap map[string]interface{}) *awstypes.AlarmSpecification {
 	if tfMap == nil {
 		return nil
 	}
