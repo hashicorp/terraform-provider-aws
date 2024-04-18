@@ -1,3 +1,15 @@
 ```release-note:enhancement
 resource/aws_lb: Add `client_keep_alive` attribute
 ```
+
+```release-note:enhancement
+data-source/aws_lb: Add `client_keep_alive` attribute
+```
+
+```release-note:enhancement
+resource/aws_lb: Add `client_keep_alive` argument
+```
+
+```release-note:enhancement
+data-source/aws_lb: Add `client_keep_alive` argument
+```
