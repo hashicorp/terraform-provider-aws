@@ -1,0 +1,104 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
+{{ define "tags" }}
+{{ if eq . "tags0" -}}
+{{- else if eq . "tags1" }}
+  tags = {
+    (var.tagKey1) = var.tagValue1
+  }
+{{- else if eq . "tags2" }}
+  tags = {
+    (var.tagKey1) = var.tagValue1
+    (var.tagKey2) = var.tagValue2
+  }
+{{- else if eq . "tagsNull" }}
+  tags = {
+    (var.tagKey1) = null
+  }
+{{- end -}}
+{{ end -}}
+
+{{- if gt .DefaultTags 0 -}}
+provider "aws" {
+  default_tags {
+    tags = {
+      (var.providerTagKey1) = var.providerTagValue1
+{{- if gt .DefaultTags 1 }}
+      (var.providerTagKey2) = var.providerTagValue2
+{{- end }}
+    }
+  }
+}
+
+{{ end }}
+
+{{- block "body" .Tags }}
+Missing block "body" in template
+{{ end }}
+
+variable "rName" {
+  type     = string
+  nullable = false
+}
+{{ if eq .Tags "tags0" -}}
+{{ else if eq .Tags "tags1" }}
+variable "tagKey1" {
+  type     = string
+  nullable = false
+}
+
+variable "tagValue1" {
+  type     = string
+  nullable = false
+}
+{{ else if eq .Tags "tags2" }}
+variable "tagKey1" {
+  type     = string
+  nullable = false
+}
+
+variable "tagValue1" {
+  type     = string
+  nullable = false
+}
+
+variable "tagKey2" {
+  type     = string
+  nullable = false
+}
+
+variable "tagValue2" {
+  type     = string
+  nullable = false
+}
+{{ else if eq .Tags "tagsNull" }}
+variable "tagKey1" {
+  type     = string
+  nullable = false
+}
+{{ end }}
+
+{{ if gt .DefaultTags 0 -}}
+variable "providerTagKey1" {
+  type     = string
+  nullable = false
+}
+
+variable "providerTagValue1" {
+  type     = string
+  nullable = false
+}
+{{ if gt .DefaultTags 1 }}
+
+variable "providerTagKey2" {
+  type     = string
+  nullable = false
+}
+
+variable "providerTagValue2" {
+  type     = string
+  nullable = false
+}
+{{ end -}}
+{{ end -}}

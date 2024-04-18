@@ -83,9 +83,9 @@ func main() {
 		foo.ProviderNameUpper = serviceRecord.ProviderNameUpper()
 		foo.ProviderPackage = servicePackage
 
-		templates, err := template.New("taggingtests").Parse(tmpl)
+		templates, err := template.New("taggingtests").Parse(testGoTmpl)
 		if err != nil {
-			g.Fatalf("parsing base template: %w", err)
+			g.Fatalf("parsing base Go test template: %w", err)
 		}
 
 		configTmplFile := path.Join("testdata", "tmpl", fmt.Sprintf("%s_tags.tmpl", sourceName))
@@ -116,6 +116,25 @@ func main() {
 		if err := d.Write(); err != nil {
 			g.Fatalf("generating file (%s): %s", filename, err)
 		}
+
+		if foo.GenerateConfig {
+			testDirPath := path.Join("testdata", foo.Name)
+			err = os.MkdirAll(testDirPath, 0755)
+			if err != nil {
+				g.Fatalf("creating test directory %q: %w", testDirPath, err)
+			}
+
+			generateTestConfig(g, testDirPath, "tags0", 0, configTmplFile, configTmpl)
+			generateTestConfig(g, testDirPath, "tags1", 0, configTmplFile, configTmpl)
+			generateTestConfig(g, testDirPath, "tags2", 0, configTmplFile, configTmpl)
+			generateTestConfig(g, testDirPath, "tagsNull", 0, configTmplFile, configTmpl)
+			generateTestConfig(g, testDirPath, "tags0", 1, configTmplFile, configTmpl)
+			generateTestConfig(g, testDirPath, "tags0", 2, configTmplFile, configTmpl)
+			generateTestConfig(g, testDirPath, "tags1", 1, configTmplFile, configTmpl)
+			generateTestConfig(g, testDirPath, "tags2", 1, configTmplFile, configTmpl)
+			generateTestConfig(g, testDirPath, "tags2", 2, configTmplFile, configTmpl)
+			generateTestConfig(g, testDirPath, "tagsNull", 1, configTmplFile, configTmpl)
+		}
 	}
 }
 
@@ -142,6 +161,7 @@ type ResourceDatum struct {
 	SkipEmptyTags     bool // TODO: Remove when we have a strategy for resources that have a minimum tag value length of 1
 	GoImports         []goImport
 	GenerateConfig    bool
+	Tags              string
 }
 
 type goImport struct {
@@ -149,8 +169,17 @@ type goImport struct {
 	Alias string
 }
 
-//go:embed file.tmpl
-var tmpl string
+type ConfigDatum struct {
+	Name        string
+	Tags        string
+	DefaultTags int
+}
+
+//go:embed test.go.tmpl
+var testGoTmpl string
+
+//go:embed test.tf.tmpl
+var testTfTmpl string
 
 // Annotation processing.
 var (
@@ -338,4 +367,39 @@ func (v *visitor) Visit(node ast.Node) ast.Visitor {
 	}
 
 	return v
+}
+
+func generateTestConfig(g *common.Generator, dirPath, test string, defaultCount int, configTmplFile, configTmpl string) {
+	var fileName string
+	if defaultCount > 0 {
+		fileName = fmt.Sprintf("%s_default%d_gen.tf", test, defaultCount)
+	} else {
+		fileName = fmt.Sprintf("%s_gen.tf", test)
+	}
+
+	mainPath := path.Join(dirPath, fileName)
+	tf := g.NewUnformattedFileDestination(mainPath)
+
+	tfTemplates, err := template.New("taggingtests").Parse(testTfTmpl)
+	if err != nil {
+		g.Fatalf("parsing base Terraform config template: %s", err)
+	}
+
+	_, err = tfTemplates.New("body").Parse(configTmpl)
+	if err != nil {
+		g.Fatalf("parsing config template %q: %s", configTmplFile, err)
+	}
+
+	configData := ConfigDatum{
+		// Name: foo.Name,
+		Tags:        test,
+		DefaultTags: defaultCount,
+	}
+	if err := tf.WriteTemplateSet(tfTemplates, configData); err != nil {
+		g.Fatalf("error generating Terraform file %q: %s", mainPath, err)
+	}
+
+	if err := tf.Write(); err != nil {
+		g.Fatalf("generating file (%s): %s", mainPath, err)
+	}
 }

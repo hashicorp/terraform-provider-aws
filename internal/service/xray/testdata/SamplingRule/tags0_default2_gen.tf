@@ -1,0 +1,58 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
+provider "aws" {
+  default_tags {
+    tags = {
+      (var.providerTagKey1) = var.providerTagValue1
+      (var.providerTagKey2) = var.providerTagValue2
+    }
+  }
+}
+
+resource "aws_xray_sampling_rule" "test" {
+  rule_name      = var.rName
+  priority       = 5
+  reservoir_size = 10
+  url_path       = "*"
+  host           = "*"
+  http_method    = "GET"
+  service_type   = "*"
+  service_name   = "*"
+  fixed_rate     = 0.3
+  resource_arn   = "*"
+  version        = 1
+
+  attributes = {
+    Hello = "World"
+  }
+
+}
+
+
+variable "rName" {
+  type     = string
+  nullable = false
+}
+
+
+variable "providerTagKey1" {
+  type     = string
+  nullable = false
+}
+
+variable "providerTagValue1" {
+  type     = string
+  nullable = false
+}
+
+
+variable "providerTagKey2" {
+  type     = string
+  nullable = false
+}
+
+variable "providerTagValue2" {
+  type     = string
+  nullable = false
+}

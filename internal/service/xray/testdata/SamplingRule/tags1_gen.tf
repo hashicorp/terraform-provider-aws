@@ -1,3 +1,6 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
 resource "aws_xray_sampling_rule" "test" {
   rule_name      = var.rName
   priority       = 5
@@ -14,5 +17,26 @@ resource "aws_xray_sampling_rule" "test" {
   attributes = {
     Hello = "World"
   }
-{{- template "tags" . }}
+
+  tags = {
+    (var.tagKey1) = var.tagValue1
+  }
 }
+
+
+variable "rName" {
+  type     = string
+  nullable = false
+}
+
+variable "tagKey1" {
+  type     = string
+  nullable = false
+}
+
+variable "tagValue1" {
+  type     = string
+  nullable = false
+}
+
+
