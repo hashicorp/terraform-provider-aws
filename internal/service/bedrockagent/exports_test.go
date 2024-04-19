@@ -8,6 +8,6 @@ var (
 	ResourceAgent      = newAgentResource
 	ResourceAgentAlias = newAgentAliasResource
 
-	FindAgentAliasByID = findAgentAliasByID
-	FindAgentByID      = findAgentByID
+	FindAgentAliasByTwoPartKey = findAgentAliasByTwoPartKey
+	FindAgentByID              = findAgentByID
 )

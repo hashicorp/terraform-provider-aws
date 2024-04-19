@@ -5,7 +5,6 @@ package bedrockagent_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
@@ -15,9 +14,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	tftypes "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagent"
+	tfbedrockagent "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagent"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -72,7 +70,7 @@ func TestAccBedrockAgentAlias_disappears(t *testing.T) {
 				Config: testAccAgentAliasConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAgentAliasExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tftypes.ResourceAgentAlias, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfbedrockagent.ResourceAgentAlias, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -240,16 +238,17 @@ func testAccCheckAgentAliasDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tftypes.FindAgentAliasByID(ctx, conn, rs.Primary.ID)
+			_, err := tfbedrockagent.FindAgentAliasByTwoPartKey(ctx, conn, rs.Primary.Attributes["agent_alias_id"], rs.Primary.Attributes["agent_id"])
 
-			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-				return nil
+			if tfresource.NotFound(err) {
+				continue
 			}
+
 			if err != nil {
-				return create.Error(names.BedrockAgent, create.ErrActionCheckingDestroyed, "Bedrock Agent", rs.Primary.ID, err)
+				return err
 			}
 
-			return create.Error(names.BedrockAgent, create.ErrActionCheckingDestroyed, "Bedrock Agent", rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("Bedrock Agent Alias %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -265,7 +264,7 @@ func testAccCheckAgentAliasExists(ctx context.Context, n string, v *awstypes.Age
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentClient(ctx)
 
-		output, err := tftypes.FindAgentAliasByID(ctx, conn, rs.Primary.ID)
+		output, err := tfbedrockagent.FindAgentAliasByTwoPartKey(ctx, conn, rs.Primary.Attributes["agent_alias_id"], rs.Primary.Attributes["agent_id"])
 
 		if err != nil {
 			return err
