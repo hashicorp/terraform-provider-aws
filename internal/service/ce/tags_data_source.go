@@ -17,6 +17,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
+const (
+	tagRootElementSchemaLevel = 2
+)
+
 // @SDKDataSource("aws_ce_tags", name="Tags")
 func dataSourceTags() *schema.Resource {
 	return &schema.Resource{
@@ -27,7 +31,7 @@ func dataSourceTags() *schema.Resource {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
-				Elem:     expressionElem(2),
+				Elem:     expressionElem(tagRootElementSchemaLevel),
 			},
 			"search_string": {
 				Type:          schema.TypeString,

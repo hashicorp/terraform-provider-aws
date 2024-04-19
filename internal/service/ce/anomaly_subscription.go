@@ -26,6 +26,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const (
+	anomalySubscriptionRootElementSchemaLevel = 2
+)
+
 // @SDKResource("aws_ce_anomaly_subscription", name="Anomaly Subscription")
 // @Tags(identifierAttribute="id")
 func resourceAnomalySubscription() *schema.Resource {
@@ -96,7 +100,7 @@ func resourceAnomalySubscription() *schema.Resource {
 				MaxItems: 1,
 				Computed: true,
 				Optional: true,
-				Elem:     expressionElem(2),
+				Elem:     expressionElem(anomalySubscriptionRootElementSchemaLevel),
 			},
 		},
 
