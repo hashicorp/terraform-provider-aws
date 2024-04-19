@@ -16,6 +16,7 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/aws/request"
@@ -2955,7 +2956,7 @@ func TestAccEC2Instance_gp3RootBlockDevice(t *testing.T) {
 func TestAccEC2Instance_primaryNetworkInterface(t *testing.T) {
 	ctx := acctest.Context(t)
 	var instance ec2.Instance
-	var eni ec2.NetworkInterface
+	var eni awstypes.NetworkInterface
 	resourceName := "aws_instance.test"
 	eniResourceName := "aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -3027,7 +3028,7 @@ func TestAccEC2Instance_networkCardIndex(t *testing.T) {
 func TestAccEC2Instance_primaryNetworkInterfaceSourceDestCheck(t *testing.T) {
 	ctx := acctest.Context(t)
 	var instance ec2.Instance
-	var eni ec2.NetworkInterface
+	var eni awstypes.NetworkInterface
 	resourceName := "aws_instance.test"
 	eniResourceName := "aws_network_interface.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -3060,8 +3061,8 @@ func TestAccEC2Instance_addSecondaryInterface(t *testing.T) {
 	ctx := acctest.Context(t)
 	var before ec2.Instance
 	var after ec2.Instance
-	var eniPrimary ec2.NetworkInterface
-	var eniSecondary ec2.NetworkInterface
+	var eniPrimary awstypes.NetworkInterface
+	var eniSecondary awstypes.NetworkInterface
 	resourceName := "aws_instance.test"
 	eniPrimaryResourceName := "aws_network_interface.primary"
 	eniSecondaryResourceName := "aws_network_interface.secondary"

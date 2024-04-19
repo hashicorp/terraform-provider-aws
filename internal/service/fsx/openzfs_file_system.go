@@ -117,6 +117,10 @@ func ResourceOpenZFSFileSystem() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"endpoint_ip_address": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"endpoint_ip_address_range": {
 				Type:     schema.TypeString,
 				Optional: true,
@@ -494,6 +498,7 @@ func resourceOpenZFSFileSystemRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendErrorf(diags, "setting disk_iops_configuration: %s", err)
 	}
 	d.Set("dns_name", filesystem.DNSName)
+	d.Set("endpoint_ip_address", openZFSConfig.EndpointIpAddress)
 	d.Set("endpoint_ip_address_range", openZFSConfig.EndpointIpAddressRange)
 	d.Set("kms_key_id", filesystem.KmsKeyId)
 	d.Set("network_interface_ids", aws.StringValueSlice(filesystem.NetworkInterfaceIds))

@@ -54,6 +54,7 @@ import (
 	connectcases_sdkv2 "github.com/aws/aws-sdk-go-v2/service/connectcases"
 	controltower_sdkv2 "github.com/aws/aws-sdk-go-v2/service/controltower"
 	costandusagereportservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/costandusagereportservice"
+	costexplorer_sdkv2 "github.com/aws/aws-sdk-go-v2/service/costexplorer"
 	costoptimizationhub_sdkv2 "github.com/aws/aws-sdk-go-v2/service/costoptimizationhub"
 	customerprofiles_sdkv2 "github.com/aws/aws-sdk-go-v2/service/customerprofiles"
 	datasync_sdkv2 "github.com/aws/aws-sdk-go-v2/service/datasync"
@@ -73,6 +74,7 @@ import (
 	elasticloadbalancingv2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	emr_sdkv2 "github.com/aws/aws-sdk-go-v2/service/emr"
 	emrserverless_sdkv2 "github.com/aws/aws-sdk-go-v2/service/emrserverless"
+	eventbridge_sdkv2 "github.com/aws/aws-sdk-go-v2/service/eventbridge"
 	evidently_sdkv2 "github.com/aws/aws-sdk-go-v2/service/evidently"
 	finspace_sdkv2 "github.com/aws/aws-sdk-go-v2/service/finspace"
 	firehose_sdkv2 "github.com/aws/aws-sdk-go-v2/service/firehose"
@@ -171,7 +173,6 @@ import (
 	cloudwatchrum_sdkv1 "github.com/aws/aws-sdk-go/service/cloudwatchrum"
 	cognitoidentityprovider_sdkv1 "github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
 	connect_sdkv1 "github.com/aws/aws-sdk-go/service/connect"
-	costexplorer_sdkv1 "github.com/aws/aws-sdk-go/service/costexplorer"
 	databasemigrationservice_sdkv1 "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	dataexchange_sdkv1 "github.com/aws/aws-sdk-go/service/dataexchange"
 	datapipeline_sdkv1 "github.com/aws/aws-sdk-go/service/datapipeline"
@@ -192,7 +193,6 @@ import (
 	elbv2_sdkv1 "github.com/aws/aws-sdk-go/service/elbv2"
 	emr_sdkv1 "github.com/aws/aws-sdk-go/service/emr"
 	emrcontainers_sdkv1 "github.com/aws/aws-sdk-go/service/emrcontainers"
-	eventbridge_sdkv1 "github.com/aws/aws-sdk-go/service/eventbridge"
 	fsx_sdkv1 "github.com/aws/aws-sdk-go/service/fsx"
 	gamelift_sdkv1 "github.com/aws/aws-sdk-go/service/gamelift"
 	globalaccelerator_sdkv1 "github.com/aws/aws-sdk-go/service/globalaccelerator"
@@ -370,8 +370,8 @@ func (c *AWSClient) BudgetsClient(ctx context.Context) *budgets_sdkv2.Client {
 	return errs.Must(client[*budgets_sdkv2.Client](ctx, c, names.Budgets, make(map[string]any)))
 }
 
-func (c *AWSClient) CEConn(ctx context.Context) *costexplorer_sdkv1.CostExplorer {
-	return errs.Must(conn[*costexplorer_sdkv1.CostExplorer](ctx, c, names.CE, make(map[string]any)))
+func (c *AWSClient) CEClient(ctx context.Context) *costexplorer_sdkv2.Client {
+	return errs.Must(client[*costexplorer_sdkv2.Client](ctx, c, names.CE, make(map[string]any)))
 }
 
 func (c *AWSClient) CURClient(ctx context.Context) *costandusagereportservice_sdkv2.Client {
@@ -662,8 +662,8 @@ func (c *AWSClient) ElasticsearchConn(ctx context.Context) *elasticsearchservice
 	return errs.Must(conn[*elasticsearchservice_sdkv1.ElasticsearchService](ctx, c, names.Elasticsearch, make(map[string]any)))
 }
 
-func (c *AWSClient) EventsConn(ctx context.Context) *eventbridge_sdkv1.EventBridge {
-	return errs.Must(conn[*eventbridge_sdkv1.EventBridge](ctx, c, names.Events, make(map[string]any)))
+func (c *AWSClient) EventsClient(ctx context.Context) *eventbridge_sdkv2.Client {
+	return errs.Must(client[*eventbridge_sdkv2.Client](ctx, c, names.Events, make(map[string]any)))
 }
 
 func (c *AWSClient) EvidentlyClient(ctx context.Context) *evidently_sdkv2.Client {

@@ -206,7 +206,7 @@ func resourceObject() *schema.Resource {
 										Type:             schema.TypeMap,
 										Optional:         true,
 										Elem:             &schema.Schema{Type: schema.TypeString},
-										ValidateDiagFunc: verify.MapLenBetween(0, 0),
+										ValidateDiagFunc: verify.MapSizeBetween(0, 0),
 									},
 								},
 							},
