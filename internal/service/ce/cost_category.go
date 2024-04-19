@@ -759,11 +759,17 @@ func flattenExpression(apiObject *awstypes.Expression) map[string]interface{} {
 	}
 
 	tfMap := map[string]interface{}{}
-	tfMap["and"] = flattenExpressions(apiObject.And)
+	if len(apiObject.And) > 0 {
+		tfMap["and"] = flattenExpressions(apiObject.And)
+	}
 	tfMap["cost_category"] = flattenCostCategoryValues(apiObject.CostCategories)
 	tfMap["dimension"] = flattenDimensionValues(apiObject.Dimensions)
-	tfMap["not"] = flattenExpression(apiObject.Not)
-	tfMap["or"] = flattenExpressions(apiObject.Or)
+	if apiObject.Not != nil {
+		tfMap["not"] = []interface{}{flattenExpression(apiObject.Not)}
+	}
+	if len(apiObject.Or) > 0 {
+		tfMap["or"] = flattenExpressions(apiObject.Or)
+	}
 	tfMap["tags"] = flattenTagValues(apiObject.Tags)
 
 	return tfMap
