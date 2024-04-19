@@ -175,9 +175,6 @@ func testAccCheckInstanceConnectEndpointExists(ctx context.Context, n string) re
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EC2 Instance Connect Endpoint ID is set")
-		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Client(ctx)
 

@@ -28,6 +28,22 @@ func StatusChangeSet(ctx context.Context, conn *cloudformation.CloudFormation, s
 	}
 }
 
+func StatusStackSet(ctx context.Context, conn *cloudformation.CloudFormation, name, callAs string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := FindStackSetByName(ctx, conn, name, callAs)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status), nil
+	}
+}
+
 func StatusStackSetOperation(ctx context.Context, conn *cloudformation.CloudFormation, stackSetName, operationID, callAs string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		output, err := FindStackSetOperationByStackSetNameAndOperationID(ctx, conn, stackSetName, operationID, callAs)

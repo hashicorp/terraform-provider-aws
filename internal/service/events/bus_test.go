@@ -10,8 +10,8 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/eventbridge"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/eventbridge"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -196,7 +196,7 @@ func TestAccEventsBus_partnerEventSource(t *testing.T) {
 
 func testAccCheckBusDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudwatch_event_bus" {
@@ -227,11 +227,7 @@ func testAccCheckBusExists(ctx context.Context, n string, v *eventbridge.Describ
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No EventBridge Event Bus ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EventsClient(ctx)
 
 		output, err := tfevents.FindEventBusByName(ctx, conn, rs.Primary.ID)
 
@@ -247,8 +243,8 @@ func testAccCheckBusExists(ctx context.Context, n string, v *eventbridge.Describ
 
 func testAccCheckBusRecreated(i, j *eventbridge.DescribeEventBusOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.StringValue(i.Arn) == aws.StringValue(j.Arn) {
-			return fmt.Errorf("EventBridge event bus not recreated")
+		if aws.ToString(i.Arn) == aws.ToString(j.Arn) {
+			return fmt.Errorf("EventBridge Event Bus not recreated")
 		}
 		return nil
 	}
@@ -256,8 +252,8 @@ func testAccCheckBusRecreated(i, j *eventbridge.DescribeEventBusOutput) resource
 
 func testAccCheckBusNotRecreated(i, j *eventbridge.DescribeEventBusOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if aws.StringValue(i.Arn) != aws.StringValue(j.Arn) {
-			return fmt.Errorf("EventBridge event bus was recreated")
+		if aws.ToString(i.Arn) != aws.ToString(j.Arn) {
+			return fmt.Errorf("EventBridge Event Bus was recreated")
 		}
 		return nil
 	}

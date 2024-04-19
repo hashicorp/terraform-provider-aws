@@ -1,0 +1,25 @@
+# Copyright (c) HashiCorp, Inc.
+# SPDX-License-Identifier: MPL-2.0
+
+openapi: 3.0.0
+info:
+  title: Hello Agent API
+  version: 1.0.0
+  description: Says Hello
+paths:
+  /hello:
+    get:
+      summary: Gets a Hello
+      description: Says Hello
+      operationId: sayHello
+      responses:
+        '200':
+          description: Hello Response
+          content:
+            'application/json':
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    description: The Hello message
