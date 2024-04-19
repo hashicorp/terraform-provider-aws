@@ -7,5 +7,7 @@ package bedrockagent
 var (
 	ResourceAgent      = newAgentResource
 	ResourceAgentAlias = newAgentAliasResource
+
 	FindAgentAliasByID = findAgentAliasByID
+	FindAgentByID      = findAgentByID
 )
