@@ -7,6 +7,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -27,7 +28,7 @@ func TestAccBedrockAgentActionGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_action_group.test"
-	var v bedrockagent.GetAgentActionGroupOutput
+	var v awstypes.AgentActionGroup
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
@@ -56,7 +57,7 @@ func TestAccBedrockAgentActionGroup_s3APISchema(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_action_group.test"
-	var v bedrockagent.GetAgentActionGroupOutput
+	var v awstypes.AgentActionGroup
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
@@ -85,7 +86,7 @@ func TestAccBedrockAgentActionGroup_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_action_group.test"
-	var v bedrockagent.GetAgentActionGroupOutput
+	var v awstypes.AgentActionGroup
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
@@ -152,7 +153,7 @@ func testAccCheckAgentActionGroupDestroy(ctx context.Context) resource.TestCheck
 		return nil
 	}
 }
-func testAccCheckAgentActionGroupExists(ctx context.Context, n string, v *bedrockagent.GetAgentActionGroupOutput) resource.TestCheckFunc {
+func testAccCheckAgentActionGroupExists(ctx context.Context, n string, v *awstypes.AgentActionGroup) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {

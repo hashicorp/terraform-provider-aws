@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
-	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -39,7 +38,7 @@ const (
 	agentActionGroupIdParts = 3
 )
 
-// @FrameworkResource(name="Bedrock Agent Action Group")
+// @FrameworkResource(name="Agent Action Group")
 func newAgentActionGroupResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &agentActionGroupResource{}
 
@@ -88,10 +87,6 @@ func (r *agentActionGroupResource) Schema(ctx context.Context, request resource.
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"created_at": schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
-				Computed:   true,
-			},
 			"description": schema.StringAttribute{
 				Optional: true,
 				PlanModifiers: []planmodifier.String{
@@ -109,10 +104,6 @@ func (r *agentActionGroupResource) Schema(ctx context.Context, request resource.
 				Computed: true,
 				Default:  booldefault.StaticBool(false),
 				Optional: true,
-			},
-			"updated_at": schema.StringAttribute{
-				CustomType: timetypes.RFC3339Type{},
-				Computed:   true,
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -261,12 +252,12 @@ func (r *agentActionGroupResource) Read(ctx context.Context, request resource.Re
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output.AgentActionGroup, &data)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	apiSchemaData, moreDiags := flattenAPISchema(ctx, output.AgentActionGroup.ApiSchema)
+	apiSchemaData, moreDiags := flattenAPISchema(ctx, output.ApiSchema)
 	response.Diagnostics.Append(moreDiags...)
 	if response.Diagnostics.HasError() {
 		return
@@ -274,7 +265,7 @@ func (r *agentActionGroupResource) Read(ctx context.Context, request resource.Re
 
 	data.APISchema = apiSchemaData
 
-	ageData, moreDiags := flattenActionGroupExecutor(ctx, output.AgentActionGroup.ActionGroupExecutor)
+	ageData, moreDiags := flattenActionGroupExecutor(ctx, output.ActionGroupExecutor)
 	response.Diagnostics.Append(moreDiags...)
 	if response.Diagnostics.HasError() {
 		return
@@ -379,7 +370,7 @@ func (r *agentActionGroupResource) Delete(ctx context.Context, request resource.
 	}
 }
 
-func findAgentActionGroupByID(ctx context.Context, conn *bedrockagent.Client, id string) (*bedrockagent.GetAgentActionGroupOutput, error) {
+func findAgentActionGroupByID(ctx context.Context, conn *bedrockagent.Client, id string) (*awstypes.AgentActionGroup, error) {
 	parts, err := intflex.ExpandResourceId(id, agentActionGroupIdParts, false)
 
 	if err != nil {
@@ -413,7 +404,7 @@ func findAgentActionGroupByID(ctx context.Context, conn *bedrockagent.Client, id
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return output, nil
+	return output.AgentActionGroup, nil
 }
 
 type actionGroupResourceModel struct {
@@ -424,12 +415,10 @@ type actionGroupResourceModel struct {
 	AgentId                    types.String                                         `tfsdk:"agent_id"`
 	AgentVersion               types.String                                         `tfsdk:"agent_version"`
 	APISchema                  fwtypes.ListNestedObjectValueOf[apiSchema]           `tfsdk:"api_schema"`
-	CreatedAt                  timetypes.RFC3339                                    `tfsdk:"created_at"`
 	Description                types.String                                         `tfsdk:"description"`
 	ID                         types.String                                         `tfsdk:"id"`
 	ParentActionGroupSignature types.String                                         `tfsdk:"parent_action_group_signature"`
 	SkipResourceInUseCheck     types.Bool                                           `tfsdk:"skip_resource_in_use_check"`
-	UpdatedAt                  timetypes.RFC3339                                    `tfsdk:"updated_at"`
 }
 
 func (a *actionGroupResourceModel) setId() error {

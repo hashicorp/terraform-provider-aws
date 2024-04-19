@@ -74,13 +74,6 @@ The following arguments are optional:
 * `description` - (Optional) Description of the Agent Action Group.
 * `skip_resource_in_use_check` - (Optional) Set to true to skip the in-use check when deleting.
 
-## Attribute Reference
-
-This resource exports the following attributes in addition to the arguments above:
-
-* `created_at` - Timestamp the Agent Action Group was created at.
-* `updated_at` - Timestamp the Agent Action Group was updated at.
-
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
