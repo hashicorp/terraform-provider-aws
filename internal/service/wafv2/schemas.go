@@ -1221,6 +1221,11 @@ func managedRuleGroupConfigSchema() *schema.Schema {
 								Required:     true,
 								ValidateFunc: validation.StringInSlice(wafv2.InspectionLevel_Values(), false),
 							},
+							"enable_machine_learning": {
+								Type:     schema.TypeBool,
+								Optional: true,
+								Default:  true,
+							},
 						},
 					},
 				},

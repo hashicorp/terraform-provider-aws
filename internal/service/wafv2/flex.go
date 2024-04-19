@@ -1266,7 +1266,8 @@ func expandManagedRulesBotControlRuleSet(tfList []interface{}) *wafv2.AWSManaged
 
 	m := tfList[0].(map[string]interface{})
 	out := wafv2.AWSManagedRulesBotControlRuleSet{
-		InspectionLevel: aws.String(m["inspection_level"].(string)),
+		InspectionLevel:       aws.String(m["inspection_level"].(string)),
+		EnableMachineLearning: aws.String(m["enable_machine_learning"].(bool)),
 	}
 
 	return &out
@@ -2681,7 +2682,8 @@ func flattenManagedRulesBotControlRuleSet(apiObject *wafv2.AWSManagedRulesBotCon
 	}
 
 	m := map[string]interface{}{
-		"inspection_level": aws.StringValue(apiObject.InspectionLevel),
+		"inspection_level":        aws.StringValue(apiObject.InspectionLevel),
+		"enable_machine_learning": aws.StringValue(apiObject.EnableMachineLearning),
 	}
 
 	return []interface{}{m}

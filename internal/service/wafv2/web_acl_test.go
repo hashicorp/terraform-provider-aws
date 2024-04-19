@@ -940,7 +940,8 @@ func TestAccWAFV2WebACL_ManagedRuleGroup_ManagedRuleGroupConfig_BotControl(t *te
 						"statement.0.managed_rule_group_statement.#":             "1",
 						"statement.0.managed_rule_group_statement.0.name":        "AWSManagedRulesBotControlRuleSet",
 						"statement.0.managed_rule_group_statement.0.vendor_name": "AWS",
-						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_bot_control_rule_set.0.inspection_level": "TARGETED",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_bot_control_rule_set.0.inspection_level":        "TARGETED",
+						"statement.0.managed_rule_group_statement.0.managed_rule_group_configs.0.aws_managed_rules_bot_control_rule_set.0.enable_machine_learning": "false",
 					}),
 				),
 			},
@@ -4547,7 +4548,8 @@ resource "aws_wafv2_web_acl" "test" {
 
         managed_rule_group_configs {
           aws_managed_rules_bot_control_rule_set {
-            inspection_level = "TARGETED"
+            inspection_level        = "TARGETED"
+            enable_machine_learning = false
           }
         }
       }
