@@ -106,6 +106,7 @@ func TestAccELBV2LoadBalancer_ALB_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "xff_header_processing_mode", "append"),
 					resource.TestCheckResourceAttrSet(resourceName, "vpc_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "zone_id"),
+					resource.TestCheckResourceAttr(resourceName, "client_keep_alive", "60"),
 				),
 			},
 		},
@@ -2279,6 +2280,7 @@ resource "aws_lb" "test" {
   subnets         = aws_subnet.test[*].id
 
   idle_timeout               = 30
+  client_keep_alive          = 60
   enable_deletion_protection = false
 }
 `, rName))
