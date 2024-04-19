@@ -67,7 +67,7 @@ func dataSourceCostCategory() *schema.Resource {
 							"rule": {
 								Type:     schema.TypeList,
 								Computed: true,
-								Elem:     sdkv2.DataSourceElemFromResourceElem(elemExpression()),
+								Elem:     sdkv2.DataSourceElemFromResourceElem(expressionElem(costCategoryRuleRootElementSchemaLevel)),
 							},
 							"type": {
 								Type:     schema.TypeString,
