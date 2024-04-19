@@ -790,8 +790,8 @@ func expandTopicReplication(tfMap map[string]interface{}) *types.TopicReplicatio
 		apiObject.TopicsToExclude = flex.ExpandStringValueSet(v)
 	}
 
-	if v, ok := tfMap["starting_position"].([]interface{}); ok {
-		apiObject.StartingPosition = expandStartingPosition(v.([]interface{}))
+	if v, ok := tfMap["starting_position"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
+		apiObject.StartingPosition = expandStartingPosition(v[0].(map[string]interface{}))
 	}
 
 	if v, ok := tfMap["copy_topic_configurations"].(bool); ok {
@@ -809,16 +809,11 @@ func expandTopicReplication(tfMap map[string]interface{}) *types.TopicReplicatio
 	return apiObject
 }
 
-func expandStartingPosition(tfMap []interface{}) *types.ReplicationStartingPosition {
-	if len(tfMap) == 0 || tfMap[0] == nil {
-		return nil
-	}
+func expandStartingPosition(tfMap map[string]interface{}) *types.ReplicationStartingPosition {
 
 	apiObject := &types.ReplicationStartingPosition{}
 
-	m := tfMap[0].(map[string]interface{})
-
-	if v, ok := m["type"].(string); ok {
+	if v, ok := tfMap["type"].(string); ok {
 		apiObject.Type = types.ReplicationStartingPositionType(v)
 	}
 
