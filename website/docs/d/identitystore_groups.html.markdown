@@ -33,9 +33,9 @@ The following arguments are required:
 This data source exports the following attributes in addition to the arguments above:
 
 * `groups` - List of Identity Store Groups
-     * `group_id` - Identifier of the group in the Identity Store.
-     * `description` - Description of the specified group.
-     * `display_name` - Group's display name.
-     * `external_ids` - List of identifiers issued to this resource by an external identity provider.
-         * `id` - Identifier issued to this resource by an external identity provider.
-         * `issuer` - Issuer for an external identifier.
+    * `group_id` - Identifier of the group in the Identity Store.
+    * `description` - Description of the specified group.
+    * `display_name` - Group's display name.
+    * `external_ids` - List of identifiers issued to this resource by an external identity provider.
+        * `id` - Identifier issued to this resource by an external identity provider.
+        * `issuer` - Issuer for an external identifier.
