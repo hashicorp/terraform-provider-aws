@@ -32,8 +32,7 @@ func TestAccIdentityStoreGroupsDataSource_basic(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.IdentityStoreServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		// All destroy checks are already covered in sibling tests
-		CheckDestroy: acctest.CheckDestroyNoop,
+		CheckDestroy:             testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccConfigGroups_basic(rName),
