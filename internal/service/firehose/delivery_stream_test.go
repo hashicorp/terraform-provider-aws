@@ -1080,7 +1080,7 @@ func TestAccFirehoseDeliveryStream_snowflakeUpdates(t *testing.T) {
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "destination", "opensearchserverless"),
+					resource.TestCheckResourceAttr(resourceName, "destination", "snowflake"),
 					resource.TestCheckResourceAttrSet(resourceName, "destination_id"),
 					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", "0"),
