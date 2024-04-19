@@ -10,6 +10,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
@@ -73,6 +74,8 @@ func (r *resourceKey) Schema(ctx context.Context, request resource.SchemaRequest
 				CustomType: timetypes.RFC3339Type{},
 			},
 			"deletion_window_in_days": schema.Int64Attribute{
+				Optional: true,
+				Default:  int64default.StaticInt64(7),
 				Validators: []validator.Int64{
 					int64validator.Between(3, 180),
 				},
