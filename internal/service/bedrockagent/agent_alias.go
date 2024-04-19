@@ -42,7 +42,7 @@ const (
 	agentAliasIdParts = 2
 )
 
-// @FrameworkResource(name="Bedrock Agent Alias")
+// @FrameworkResource(name="Agent Alias")
 // @Tags(identifierAttribute="agent_alias_arn")
 func newAgentAliasResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &agentAliasResource{}
