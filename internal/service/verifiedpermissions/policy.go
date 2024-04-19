@@ -9,11 +9,14 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/verifiedpermissions"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/verifiedpermissions/types"
+	cedar "github.com/cedar-policy/cedar-go/x/exp/parser"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
@@ -42,6 +45,7 @@ const (
 
 type resourcePolicy struct {
 	framework.ResourceWithConfigure
+	framework.WithImportByID
 }
 
 func (r *resourcePolicy) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
@@ -54,11 +58,17 @@ func (r *resourcePolicy) Schema(ctx context.Context, req resource.SchemaRequest,
 			"created_date": schema.StringAttribute{
 				CustomType: timetypes.RFC3339Type{},
 				Computed:   true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"id":        framework.IDAttribute(),
 			"policy_id": framework.IDAttribute(),
 			"policy_store_id": schema.StringAttribute{
 				Required: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 		},
 		Blocks: map[string]schema.Block{
@@ -78,6 +88,9 @@ func (r *resourcePolicy) Schema(ctx context.Context, req resource.SchemaRequest,
 									path.MatchRelative().AtParent().AtName("template_linked"),
 								),
 							},
+							//PlanModifiers: []planmodifier.List{
+							//	listplanmodifier.RequiresReplace(),
+							//},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"description": schema.StringAttribute{
@@ -85,6 +98,11 @@ func (r *resourcePolicy) Schema(ctx context.Context, req resource.SchemaRequest,
 									},
 									"statement": schema.StringAttribute{
 										Required: true,
+										PlanModifiers: []planmodifier.String{
+											stringplanmodifier.RequiresReplaceIf(
+												statementReplaceIf, "Replace cedar statement diff", "Replace cedar statement diff",
+											),
+										},
 									},
 								},
 							},
@@ -97,6 +115,9 @@ func (r *resourcePolicy) Schema(ctx context.Context, req resource.SchemaRequest,
 									path.MatchRelative().AtParent().AtName("static"),
 								),
 							},
+							//PlanModifiers: []planmodifier.List{
+							//	listplanmodifier.RequiresReplace(),
+							//},
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"policy_template_id": schema.StringAttribute{
@@ -144,6 +165,53 @@ func (r *resourcePolicy) Schema(ctx context.Context, req resource.SchemaRequest,
 			},
 		},
 	}
+}
+
+func statementReplaceIf(ctx context.Context, req planmodifier.StringRequest, resp *stringplanmodifier.RequiresReplaceIfFuncResponse) {
+	if req.State.Raw.IsNull() {
+		return
+	}
+
+	if req.Plan.Raw.IsNull() {
+		return
+	}
+	cedarPlan, err := cedar.Tokenize([]byte(req.PlanValue.ValueString()))
+	if err != nil {
+		resp.Diagnostics.AddError(err.Error(), err.Error())
+		return
+	}
+
+	cedarState, err := cedar.Tokenize([]byte(req.StateValue.ValueString()))
+	if err != nil {
+		resp.Diagnostics.AddError(err.Error(), err.Error())
+		return
+	}
+
+	policyPlan, err := cedar.Parse(cedarPlan)
+	if err != nil {
+		resp.Diagnostics.AddError(err.Error(), err.Error())
+		return
+	}
+
+	policyState, err := cedar.Parse(cedarState)
+	if err != nil {
+		resp.Diagnostics.AddError(err.Error(), err.Error())
+		return
+	}
+
+	var policyPrincipal bool
+	if len(policyPlan) > 0 && len(policyState) > 0 && (len(policyPlan[0].Principal.Entity.Path) > 0 && (len(policyState[0].Principal.Entity.Path)) > 0) {
+		policyPrincipal = (policyPlan[0].Principal.Entity.String() != policyState[0].Principal.Entity.String()) || (policyPlan[0].Principal.Type != policyState[0].Principal.Type)
+	}
+
+	var policyResource bool
+	if len(policyPlan) > 0 && len(policyState) > 0 && (len(policyPlan[0].Resource.Entity.Path) > 0 && (len(policyState[0].Resource.Entity.Path)) > 0) {
+		policyResource = (policyPlan[0].Resource.Entity.String() != policyState[0].Resource.Entity.String()) || (policyPlan[0].Resource.Type != policyState[0].Resource.Type)
+	}
+
+	policyEffect := policyPlan[0].Effect != policyState[0].Effect
+
+	resp.RequiresReplace = policyEffect || policyResource || policyPrincipal
 }
 
 const (
@@ -346,7 +414,6 @@ func (r *resourcePolicy) Update(ctx context.Context, req resource.UpdateRequest,
 	}
 
 	if !plan.Definition.Equal(state.Definition) {
-
 		in := &verifiedpermissions.UpdatePolicyInput{}
 		resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
 		if resp.Diagnostics.HasError() {
@@ -397,9 +464,72 @@ func (r *resourcePolicy) Delete(ctx context.Context, req resource.DeleteRequest,
 	}
 }
 
-func (r *resourcePolicy) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
-}
+//func (r *resourcePolicy) ModifyPlan(ctx context.Context, req resource.ModifyPlanRequest, resp *resource.ModifyPlanResponse) {
+//	if !req.State.Raw.IsNull() && !req.Plan.Raw.IsNull() {
+//		var plan, state resourcePolicyData
+//		resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+//		resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+//		if resp.Diagnostics.HasError() {
+//			return
+//		}
+//
+//		defPlan, diags := plan.Definition.ToPtr(ctx)
+//		defState, diags := state.Definition.ToPtr(ctx)
+//		resp.Diagnostics.Append(diags...)
+//		if diags.HasError() {
+//			return
+//		}
+//
+//		staticPlan, diags := defPlan.Static.ToPtr(ctx)
+//		staticState, diags := defState.Static.ToPtr(ctx)
+//		resp.Diagnostics.Append(diags...)
+//		if diags.HasError() {
+//			return
+//		}
+//
+//		if !staticPlan.Statement.Equal(staticState.Statement) {
+//			cedarPlan, err := cedar.Tokenize([]byte(staticPlan.Statement.ValueString()))
+//			if err != nil {
+//				resp.Diagnostics.AddError(
+//					create.ProblemStandardMessage(names.VerifiedPermissions, create.ErrActionUpdating, ResNamePolicy, plan.ID.String(), err),
+//					err.Error(),
+//				)
+//				return
+//			}
+//
+//			cedarState, err := cedar.Tokenize([]byte(staticState.Statement.ValueString()))
+//			if err != nil {
+//				resp.Diagnostics.AddError(
+//					create.ProblemStandardMessage(names.VerifiedPermissions, create.ErrActionUpdating, ResNamePolicy, state.ID.String(), err),
+//					err.Error(),
+//				)
+//				return
+//			}
+//
+//			policyPlan, err := cedar.Parse(cedarPlan)
+//			if err != nil {
+//				resp.Diagnostics.AddError(
+//					create.ProblemStandardMessage(names.VerifiedPermissions, create.ErrActionUpdating, ResNamePolicy, plan.ID.String(), err),
+//					err.Error(),
+//				)
+//				return
+//			}
+//
+//			policyState, err := cedar.Parse(cedarState)
+//			if err != nil {
+//				resp.Diagnostics.AddError(
+//					create.ProblemStandardMessage(names.VerifiedPermissions, create.ErrActionUpdating, ResNamePolicy, state.ID.String(), err),
+//					err.Error(),
+//				)
+//				return
+//			}
+//
+//			if policyPlan[0].Effect != policyState[0].Effect {
+//				resp.RequiresReplace = []path.Path{path.Root("definition").AtListIndex(0).AtName("static").AtListIndex(0).AtName("statement")}
+//			}
+//		}
+//	}
+//}
 
 func findPolicyByID(ctx context.Context, conn *verifiedpermissions.Client, id, policyStoreId string) (*verifiedpermissions.GetPolicyOutput, error) {
 	in := &verifiedpermissions.GetPolicyInput{
