@@ -75,7 +75,7 @@ func testAccConfigGroups_basic(groupName string) string {
 data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_identitystore_group" "test" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+  identity_store_id = data.aws_ssoadmin_instances.test.identity_store_ids[0]
   display_name      = %[1]q
   description       = "Acceptance Test"
 }
@@ -83,7 +83,7 @@ resource "aws_identitystore_group" "test" {
 data "aws_identitystore_groups" "test" {
   depends_on = [aws_identitystore_group.test]
 
-  identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
+  identity_store_id = data.aws_ssoadmin_instances.test.identity_store_ids[0]
 }
 `, groupName)
 }

@@ -18,7 +18,7 @@ Terraform data source for managing an AWS SSO Identity Store Groups.
 data "aws_ssoadmin_instances" "example" {}
 
 data "aws_identitystore_groups" "example" {
-  identity_store_id = tolist(data.aws_ssoadmin_instances.example.identity_store_ids)[0]
+  identity_store_id = data.aws_ssoadmin_instances.example.identity_store_ids[0]
 }
 ```
 
