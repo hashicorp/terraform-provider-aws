@@ -998,6 +998,7 @@ func resourceDeliveryStream() *schema.Resource {
 							"data_loading_option": {
 								Type:             schema.TypeString,
 								Optional:         true,
+								Default:          types.SnowflakeDataLoadingOptionJsonMapping,
 								ValidateDiagFunc: enum.Validate[types.SnowflakeDataLoadingOption](),
 							},
 							"database": {
@@ -1036,6 +1037,7 @@ func resourceDeliveryStream() *schema.Resource {
 							"s3_backup_mode": {
 								Type:             schema.TypeString,
 								Optional:         true,
+								Default:          types.SnowflakeS3BackupModeFailedDataOnly,
 								ValidateDiagFunc: enum.Validate[types.SnowflakeS3BackupMode](),
 							},
 							"s3_configuration": s3ConfigurationSchema(),
@@ -1062,6 +1064,7 @@ func resourceDeliveryStream() *schema.Resource {
 										},
 									},
 								},
+								DiffSuppressFunc: verify.SuppressMissingOptionalConfigurationBlock,
 							},
 							"snowflake_vpc_configuration": {
 								Type:     schema.TypeList,
