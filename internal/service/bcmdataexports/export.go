@@ -279,14 +279,19 @@ func (r *resourceExport) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
+	log.Printf("[WARN] BEFORE EXPAND do i get here")
+
 	if !plan.Export.Equal(state.Export) {
 		in := &bcmdataexports.UpdateExportInput{
 			ExportArn: aws.String(plan.ID.ValueString()),
 		}
+		log.Printf("[WARN] inside EXPAND do i get here")
 		resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
+		log.Printf("[WARN] do i get here")
+		log.Printf("[WARN] export arn: %s", plan.ID.ValueString())
 
 		out, err := conn.UpdateExport(ctx, in)
 		if err != nil {

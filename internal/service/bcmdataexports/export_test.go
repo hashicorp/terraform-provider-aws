@@ -167,7 +167,7 @@ func TestAccBCMDataExportsExport_updateTable(t *testing.T) {
 					testAccCheckExportExists(ctx, resourceName, &export),
 					resource.TestCheckResourceAttr(resourceName, "export.0.name", rName),
 					resource.TestCheckResourceAttr(resourceName, "export.0.data_query.0.table_configurations.COST_AND_USAGE_REPORT.TIME_GRANULARITY", "HOURLY"),
-					resource.TestCheckResourceAttr(resourceName, "export.0.data_query.0.query_statement", "SELECT identity_line_item_id, identity_time_interval, line_item_product_code,line_item_unblended_cost FROM COST_AND_USAGE_REPORT"),
+					resource.TestCheckResourceAttr(resourceName, "export.0.data_query.0.query_statement", "SELECT identity_line_item_id, identity_time_interval, line_item_product_code, line_item_unblended_cost FROM COST_AND_USAGE_REPORT"),
 				),
 			},
 			{
@@ -281,11 +281,11 @@ resource "aws_bcmdataexports_export" "test" {
     data_query {
       query_statement = "SELECT identity_line_item_id, identity_time_interval, line_item_product_code,line_item_unblended_cost FROM COST_AND_USAGE_REPORT"
       table_configurations = {
-        COST_AND_USAGE_REPORT = {
-          TIME_GRANULARITY                      = "HOURLY",
-          INCLUDE_RESOURCES                     = "FALSE",
-          INCLUDE_MANUAL_DISCOUNT_COMPATIBILITY = "FALSE",
-          INCLUDE_SPLIT_COST_ALLOCATION_DATA    = "FALSE",
+        "COST_AND_USAGE_REPORT" = {
+          "TIME_GRANULARITY"                      = "HOURLY",
+          "INCLUDE_RESOURCES"                     = "FALSE",
+          "INCLUDE_MANUAL_DISCOUNT_COMPATIBILITY" = "FALSE",
+          "INCLUDE_SPLIT_COST_ALLOCATION_DATA"    = "FALSE",
         }
       }
     }
@@ -321,11 +321,11 @@ resource "aws_bcmdataexports_export" "test" {
     data_query {
       query_statement = "SELECT identity_line_item_id, identity_time_interval, line_item_product_code,line_item_unblended_cost FROM COST_AND_USAGE_REPORT"
       table_configurations = {
-        COST_AND_USAGE_REPORT = {
-          TIME_GRANULARITY                      = "HOURLY",
-          INCLUDE_RESOURCES                     = "FALSE",
-          INCLUDE_MANUAL_DISCOUNT_COMPATIBILITY = "FALSE",
-          INCLUDE_SPLIT_COST_ALLOCATION_DATA    = "FALSE",
+        "COST_AND_USAGE_REPORT" = {
+          "TIME_GRANULARITY"                      = "HOURLY",
+          "INCLUDE_RESOURCES"                     = "FALSE",
+          "INCLUDE_MANUAL_DISCOUNT_COMPATIBILITY" = "FALSE",
+          "INCLUDE_SPLIT_COST_ALLOCATION_DATA"    = "FALSE",
         }
       }
     }
@@ -363,11 +363,11 @@ resource "aws_bcmdataexports_export" "test" {
     data_query {
       query_statement = "SELECT identity_line_item_id, identity_time_interval, line_item_product_code,line_item_unblended_cost FROM COST_AND_USAGE_REPORT"
       table_configurations = {
-        COST_AND_USAGE_REPORT = {
-          TIME_GRANULARITY                      = "HOURLY",
-          INCLUDE_RESOURCES                     = "FALSE",
-          INCLUDE_MANUAL_DISCOUNT_COMPATIBILITY = "FALSE",
-          INCLUDE_SPLIT_COST_ALLOCATION_DATA    = "FALSE",
+        "COST_AND_USAGE_REPORT" = {
+          "TIME_GRANULARITY"                      = "HOURLY",
+          "INCLUDE_RESOURCES"                     = "FALSE",
+          "INCLUDE_MANUAL_DISCOUNT_COMPATIBILITY" = "FALSE",
+          "INCLUDE_SPLIT_COST_ALLOCATION_DATA"    = "FALSE",
         }
       }
     }
@@ -404,15 +404,15 @@ resource "aws_bcmdataexports_export" "test" {
   export {
     name = %[1]q
     data_query {
-      query_statement = "SELECT identity_line_item_id, identity_time_interval, line_item_product_code,line_item_unblended_cost FROM COST_AND_USAGE_REPORT"
-      table_configurations = {
-        COST_AND_USAGE_REPORT = {
-          TIME_GRANULARITY                      = %[2]q,
-          INCLUDE_RESOURCES                     = "FALSE",
-          INCLUDE_MANUAL_DISCOUNT_COMPATIBILITY = "FALSE",
-          INCLUDE_SPLIT_COST_ALLOCATION_DATA    = "FALSE",
-        }
-      }
+      query_statement = %[3]q
+    //   table_configurations = {
+    //     "COST_AND_USAGE_REPORT" = {
+    //       "TIME_GRANULARITY"                      = %[2]q,
+    //       "INCLUDE_RESOURCES"                     = "FALSE",
+    //       "INCLUDE_MANUAL_DISCOUNT_COMPATIBILITY" = "FALSE",
+    //       "INCLUDE_SPLIT_COST_ALLOCATION_DATA"    = "FALSE",
+    //     }
+    //   }
     }
     destination_configurations {
       s3_destination {
