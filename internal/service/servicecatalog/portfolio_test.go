@@ -77,55 +77,6 @@ func TestAccServiceCatalogPortfolio_disappears(t *testing.T) {
 	})
 }
 
-func TestAccServiceCatalogPortfolio_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	resourceName := "aws_servicecatalog_portfolio.test"
-	name := sdkacctest.RandString(5)
-	var dpo servicecatalog.DescribePortfolioOutput
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServiceCatlaogPortfolioDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccPortfolioConfig_tags1(name, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPortfolioExists(ctx, resourceName, &dpo),
-					resource.TestCheckResourceAttr(resourceName, "name", name),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccPortfolioConfig_tags2(name, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPortfolioExists(ctx, resourceName, &dpo),
-					resource.TestCheckResourceAttr(resourceName, "name", name),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccPortfolioConfig_tags1(name, "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckPortfolioExists(ctx, resourceName, &dpo),
-					resource.TestCheckResourceAttr(resourceName, "name", name),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-		},
-	})
-}
-
 func testAccCheckPortfolioExists(ctx context.Context, n string, v *servicecatalog.DescribePortfolioOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
@@ -187,6 +138,16 @@ resource "aws_servicecatalog_portfolio" "test" {
 `, name)
 }
 
+func testAccPortfolioConfig_tags0(name string) string {
+	return fmt.Sprintf(`
+resource "aws_servicecatalog_portfolio" "test" {
+  name          = %[1]q
+  description   = "test-b"
+  provider_name = "test-c"
+}
+`, name)
+}
+
 func testAccPortfolioConfig_tags1(name, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_servicecatalog_portfolio" "test" {
@@ -214,4 +175,18 @@ resource "aws_servicecatalog_portfolio" "test" {
   }
 }
 `, name, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccPortfolioConfig_tagsNull(name, tagKey1 string) string {
+	return fmt.Sprintf(`
+resource "aws_servicecatalog_portfolio" "test" {
+  name          = %[1]q
+  description   = "test-b"
+  provider_name = "test-c"
+
+  tags = {
+    %[2]q = null
+  }
+}
+`, name, tagKey1)
 }
