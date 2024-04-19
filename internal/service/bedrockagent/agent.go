@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
@@ -69,6 +70,9 @@ func (r *agentResource) Schema(ctx context.Context, request resource.SchemaReque
 			"agent_id":  framework.IDAttribute(),
 			"agent_name": schema.StringAttribute{
 				Required: true,
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(regexache.MustCompile(`^([0-9a-zA-Z][_-]?){1,100}$`), "valid characters are a-z, A-Z, 0-9, _ (underscore) and - (hyphen). The name can have up to 100 characters"),
+				},
 			},
 			"agent_resource_role_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
@@ -438,7 +442,7 @@ func waitAgentCreated(ctx context.Context, conn *bedrockagent.Client, id string,
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.Agent); ok {
-		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, func(s string) error { return errors.New(s) })...))
+		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, errors.New)...))
 
 		return output, err
 	}
@@ -457,7 +461,7 @@ func waitAgentUpdated(ctx context.Context, conn *bedrockagent.Client, id string,
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.Agent); ok {
-		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, func(s string) error { return errors.New(s) })...))
+		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, errors.New)...))
 
 		return output, err
 	}
@@ -476,7 +480,26 @@ func waitAgentPrepared(ctx context.Context, conn *bedrockagent.Client, id string
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.Agent); ok {
-		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, func(s string) error { return errors.New(s) })...))
+		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, errors.New)...))
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitAgentVersioned(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.Agent, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: enum.Slice(awstypes.AgentStatusVersioning),
+		Target:  enum.Slice(awstypes.AgentStatusPrepared),
+		Refresh: statusAgent(ctx, conn, id),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*awstypes.Agent); ok {
+		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, errors.New)...))
 
 		return output, err
 	}
@@ -495,7 +518,7 @@ func waitAgentDeleted(ctx context.Context, conn *bedrockagent.Client, id string,
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*awstypes.Agent); ok {
-		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, func(s string) error { return errors.New(s) })...))
+		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, errors.New)...))
 
 		return output, err
 	}
