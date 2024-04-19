@@ -5,22 +5,17 @@ package bedrockagent_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
-	"github.com/aws/aws-sdk-go-v2/service/m2/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	tfagent "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagent"
+	tfbedrockagent "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagent"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -130,24 +125,21 @@ func testAccCheckAgentActionGroupDestroy(ctx context.Context) resource.TestCheck
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
-			if rs.Type != "aws_bedrock_agent_action_group" {
+			if rs.Type != "aws_bedrockagent_agent_action_group" {
 				continue
 			}
 
-			_, err := conn.GetAgentActionGroup(ctx, &bedrockagent.GetAgentActionGroupInput{
-				ActionGroupId: aws.String(rs.Primary.ID),
-				AgentId:       aws.String(rs.Primary.Attributes["agent_id"]),
-				AgentVersion:  aws.String(rs.Primary.Attributes["agent_version"]),
-			})
+			_, err := tfbedrockagent.FindAgentActionGroupByThreePartKey(ctx, conn, rs.Primary.Attributes["action_group_id"], rs.Primary.Attributes["agent_id"], rs.Primary.Attributes["agent_version"])
 
-			if errs.IsA[*types.ResourceNotFoundException](err) {
-				return nil
+			if tfresource.NotFound(err) {
+				continue
 			}
+
 			if err != nil {
-				return create.Error(names.BedrockAgent, create.ErrActionCheckingDestroyed, "Bedrock Agent", rs.Primary.ID, err)
+				return err
 			}
 
-			return create.Error(names.BedrockAgent, create.ErrActionCheckingDestroyed, "Bedrock Agent", rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("Bedrock Agent Action Group %s still exists", rs.Primary.ID)
 		}
 
 		return nil
@@ -162,7 +154,7 @@ func testAccCheckAgentActionGroupExists(ctx context.Context, n string, v *awstyp
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentClient(ctx)
 
-		output, err := tfagent.FindAgentActionGroupByID(ctx, conn, rs.Primary.ID)
+		output, err := tfbedrockagent.FindAgentActionGroupByThreePartKey(ctx, conn, rs.Primary.Attributes["action_group_id"], rs.Primary.Attributes["agent_id"], rs.Primary.Attributes["agent_version"])
 
 		if err != nil {
 			return err
@@ -224,8 +216,6 @@ resource "aws_bedrockagent_agent_action_group" "test" {
   }
   depends_on = [aws_s3_object.test]
 }
-
-
 `, rName))
 }
 
@@ -259,6 +249,5 @@ resource "aws_lambda_function" "test_lambda" {
 
   runtime = "python3.9"
 }
-
 `, rName)
 }
