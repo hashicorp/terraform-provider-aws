@@ -808,7 +808,6 @@ func expandTopicReplication(tfMap map[string]interface{}) *types.TopicReplicatio
 
 	return apiObject
 }
-
 func expandStartingPosition(tfMap map[string]interface{}) *types.ReplicationStartingPosition {
 
 	apiObject := &types.ReplicationStartingPosition{}
