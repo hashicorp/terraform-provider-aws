@@ -442,9 +442,13 @@ func findKeyByID(ctx context.Context, conn *paymentcryptography.Client, id strin
 		return nil, tfresource.NewEmptyResultError(in)
 	}
 
-	// If the key is either Pending or Complete deletion it's logically deleted
-	if out.Key.KeyState == awstypes.KeyStateDeletePending || out.Key.KeyState == awstypes.KeyStateDeleteComplete {
-		return nil, tfresource.NewEmptyResultError(in)
+	// If the key is either Pending or Complete deletion state Terraform considers it logically deleted.
+	if state := out.Key.KeyState; state == awstypes.KeyStateDeletePending || state == awstypes.KeyStateDeleteComplete {
+		return nil, &retry.NotFoundError{
+			Message:     string(state),
+			LastRequest: in,
+		}
+
 	}
 
 	return out.Key, nil
