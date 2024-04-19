@@ -1128,7 +1128,7 @@ func TestAccFirehoseDeliveryStream_snowflakeUpdates(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.snowflake_role_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.snowflake_role_configuration.0.enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.snowflake_role_configuration.0.snowflake_role", ""),
-					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.snowflake_vpc_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.snowflake_vpc_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.table", "test-table"),
 					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.user", "test-usr"),
 					resource.TestCheckResourceAttr(resourceName, "splunk_configuration.#", "0"),
@@ -3658,7 +3658,7 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
     }
   }
 }
-`, rName, acctest.TLSPEMEscapeNewlines(privateKey)))
+`, rName, acctest.TLSPEMRemoveRSAPrivateKeyEncapsulationBoundaries(acctest.TLSPEMRemoveNewlines(privateKey))))
 }
 
 func testAccDeliveryStreamConfig_splunkBasic(rName string) string {
