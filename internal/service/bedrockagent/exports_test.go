@@ -5,5 +5,8 @@ package bedrockagent
 
 // Exports for use in tests only.
 var (
-	ResourceAgent = newAgentResource
+	ResourceAgent            = newAgentResource
+	ResourceAgentAlias       = newAgentAliasResource
+	FindAgentAliasByID       = findAgentAliasByID
+	FindAgentActionGroupByID = findAgentActionGroupByID
 )
