@@ -26,6 +26,7 @@ import (
 
 // @SDKResource("aws_servicecatalog_product", name="Product")
 // @Tags(identifierAttribute="id")
+// @Testing(skipEmptyTags=true, importIgnore="accept_language;provisioning_artifact_parameters.0.disable_template_validation")
 func ResourceProduct() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProductCreate,
