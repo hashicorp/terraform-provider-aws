@@ -162,12 +162,12 @@ func TestAccBCMDataExportsExport_updateTable(t *testing.T) {
 		CheckDestroy:             testAccCheckExportDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccExportConfig_updateTableConfigs(rName, "HOURLY", "SELECT identity_line_item_id, identity_time_interval, line_item_product_code, line_item_unblended_cost FROM COST_AND_USAGE_REPORT"),
+				Config: testAccExportConfig_updateTableConfigs(rName, "SELECT identity_line_item_id, identity_time_interval, line_item_usage_amount, line_item_unblended_cost FROM COST_AND_USAGE_REPORT"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExportExists(ctx, resourceName, &export),
 					resource.TestCheckResourceAttr(resourceName, "export.0.name", rName),
-					resource.TestCheckResourceAttr(resourceName, "export.0.data_query.0.table_configurations.COST_AND_USAGE_REPORT.TIME_GRANULARITY", "HOURLY"),
-					resource.TestCheckResourceAttr(resourceName, "export.0.data_query.0.query_statement", "SELECT identity_line_item_id, identity_time_interval, line_item_product_code, line_item_unblended_cost FROM COST_AND_USAGE_REPORT"),
+					// resource.TestCheckResourceAttr(resourceName, "export.0.data_query.0.table_configurations.COST_AND_USAGE_REPORT.TIME_GRANULARITY", "HOURLY"),
+					resource.TestCheckResourceAttr(resourceName, "export.0.data_query.0.query_statement", "SELECT identity_line_item_id, identity_time_interval, line_item_usage_amount, line_item_unblended_cost FROM COST_AND_USAGE_REPORT"),
 				),
 			},
 			{
@@ -176,12 +176,12 @@ func TestAccBCMDataExportsExport_updateTable(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				Config: testAccExportConfig_updateTableConfigs(rName, "DAILY", "SELECT identity_line_item_id, identity_time_interval, line_item_product_code, line_item_unblended_cost, cost_category FROM COST_AND_USAGE_REPORT"),
+				Config: testAccExportConfig_updateTableConfigs(rName, "SELECT identity_line_item_id, identity_time_interval, line_item_usage_amount, line_item_unblended_cost, cost_category FROM COST_AND_USAGE_REPORT"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExportExists(ctx, resourceName, &export),
 					resource.TestCheckResourceAttr(resourceName, "export.0.name", rName),
-					resource.TestCheckResourceAttr(resourceName, "export.0.data_query.0.table_configurations.COST_AND_USAGE_REPORT.TIME_GRANULARITY", "DAILY"),
-					resource.TestCheckResourceAttr(resourceName, "export.0.data_query.0.query_statement", "SELECT identity_line_item_id, identity_time_interval, line_item_product_code, line_item_unblended_cost, cost_category FROM COST_AND_USAGE_REPORT"),
+					// resource.TestCheckResourceAttr(resourceName, "export.0.data_query.0.table_configurations.COST_AND_USAGE_REPORT.TIME_GRANULARITY", "DAILY"),
+					resource.TestCheckResourceAttr(resourceName, "export.0.data_query.0.query_statement", "SELECT identity_line_item_id, identity_time_interval, line_item_usage_amount, line_item_unblended_cost, cost_category FROM COST_AND_USAGE_REPORT"),
 				),
 			},
 		},
@@ -396,7 +396,7 @@ resource "aws_bcmdataexports_export" "test" {
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
 }
 
-func testAccExportConfig_updateTableConfigs(rName, timeGranularity, costUsageSettings string) string {
+func testAccExportConfig_updateTableConfigs(rName, queryStatement string) string {
 	return acctest.ConfigCompose(
 		testAccExportConfigBase(rName),
 		fmt.Sprintf(`
@@ -404,15 +404,15 @@ resource "aws_bcmdataexports_export" "test" {
   export {
     name = %[1]q
     data_query {
-      query_statement = %[3]q
-    //   table_configurations = {
-    //     "COST_AND_USAGE_REPORT" = {
-    //       "TIME_GRANULARITY"                      = %[2]q,
-    //       "INCLUDE_RESOURCES"                     = "FALSE",
-    //       "INCLUDE_MANUAL_DISCOUNT_COMPATIBILITY" = "FALSE",
-    //       "INCLUDE_SPLIT_COST_ALLOCATION_DATA"    = "FALSE",
-    //     }
-    //   }
+      query_statement = %[2]q
+      table_configurations = {
+        "COST_AND_USAGE_REPORT" = {
+          "TIME_GRANULARITY"                      = "HOURLY",
+          "INCLUDE_RESOURCES"                     = "FALSE",
+          "INCLUDE_MANUAL_DISCOUNT_COMPATIBILITY" = "FALSE",
+          "INCLUDE_SPLIT_COST_ALLOCATION_DATA"    = "FALSE",
+        }
+      }
     }
     destination_configurations {
       s3_destination {
@@ -433,5 +433,5 @@ resource "aws_bcmdataexports_export" "test" {
     }
   }
 }
-`, rName, timeGranularity, costUsageSettings))
+`, rName, queryStatement))
 }

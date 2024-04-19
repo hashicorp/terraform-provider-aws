@@ -70,7 +70,7 @@ func (r *resourceExport) Schema(ctx context.Context, req resource.SchemaRequest,
 					CustomType: fwtypes.NewMapTypeOf[fwtypes.MapValueOf[types.String]](ctx),
 					Optional:   true,
 					PlanModifiers: []planmodifier.Map{
-						mapplanmodifier.RequiresReplace(),
+						// mapplanmodifier.RequiresReplaceIfConfigured(),
 						mapplanmodifier.UseStateForUnknown(),
 					},
 				},
@@ -282,16 +282,17 @@ func (r *resourceExport) Update(ctx context.Context, req resource.UpdateRequest,
 	log.Printf("[WARN] BEFORE EXPAND do i get here")
 
 	if !plan.Export.Equal(state.Export) {
-		in := &bcmdataexports.UpdateExportInput{
-			ExportArn: aws.String(plan.ID.ValueString()),
-		}
-		log.Printf("[WARN] inside EXPAND do i get here")
+		in := &bcmdataexports.UpdateExportInput{}
 		resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
 		if resp.Diagnostics.HasError() {
 			return
 		}
+
+		in.ExportArn = aws.String(plan.ID.ValueString())
+		in.Export.ExportArn = aws.String(state.ID.ValueString())
+
 		log.Printf("[WARN] do i get here")
-		log.Printf("[WARN] export arn: %s", plan.ID.ValueString())
+		log.Printf("[WARN] export arn: %s", state.ID.ValueString())
 
 		out, err := conn.UpdateExport(ctx, in)
 		if err != nil {
@@ -309,10 +310,12 @@ func (r *resourceExport) Update(ctx context.Context, req resource.UpdateRequest,
 			return
 		}
 
-		resp.Diagnostics.Append(flex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, ResNameExport), in, &plan)...)
-		if resp.Diagnostics.HasError() {
-			return
-		}
+		resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
+
+		// resp.Diagnostics.Append(flex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, ResNameExport), out, &plan)...)
+		// if resp.Diagnostics.HasError() {
+		// 	return
+		// }
 	}
 
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
