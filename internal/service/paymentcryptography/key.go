@@ -7,9 +7,11 @@ import (
 	"context"
 	"errors"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"time"
@@ -57,18 +59,23 @@ type resourceKey struct {
 	framework.WithTimeouts
 }
 
-func (r *resourceKey) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_paymentcryptography_key"
+func (r *resourceKey) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_paymentcryptography_key"
 }
 
-func (r *resourceKey) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *resourceKey) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"arn": framework.ARNAttributeComputedOnly(),
 			"id":  framework.IDAttribute(),
 			"create_timestamp": schema.StringAttribute{
 				Computed:   true,
 				CustomType: timetypes.RFC3339Type{},
+			},
+			"deletion_window_in_days": schema.Int64Attribute{
+				Validators: []validator.Int64{
+					int64validator.Between(3, 180),
+				},
 			},
 			"delete_pending_timestamp": schema.StringAttribute{
 				Computed:   true,
@@ -211,19 +218,19 @@ func (r *resourceKey) Schema(ctx context.Context, req resource.SchemaRequest, re
 	}
 }
 
-func (r *resourceKey) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *resourceKey) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	conn := r.Meta().PaymentCryptographyClient(ctx)
 
 	var plan resourceKeyData
-	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	in := &paymentcryptography.CreateKeyInput{}
-	resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
+	response.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
 
-	if resp.Diagnostics.HasError() {
+	if response.Diagnostics.HasError() {
 		return
 	}
 
@@ -231,14 +238,14 @@ func (r *resourceKey) Create(ctx context.Context, req resource.CreateRequest, re
 
 	out, err := conn.CreateKey(ctx, in)
 	if err != nil {
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.PaymentCryptography, create.ErrActionCreating, ResNameKey, "FIXME", err),
 			err.Error(),
 		)
 		return
 	}
 	if out == nil || out.Key == nil {
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.PaymentCryptography, create.ErrActionCreating, ResNameKey, "FIXME", nil),
 			errors.New("empty output").Error(),
 		)
@@ -251,49 +258,94 @@ func (r *resourceKey) Create(ctx context.Context, req resource.CreateRequest, re
 	createTimeout := r.CreateTimeout(ctx, plan.Timeouts)
 	created, err := waitKeyCreated(ctx, conn, plan.ID.ValueString(), createTimeout)
 	if err != nil {
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.PaymentCryptography, create.ErrActionWaitingForCreation, ResNameKey, plan.KeyArn.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, created, plan)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(flex.Flatten(ctx, created, plan)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, plan)...)
 }
 
-func (r *resourceKey) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *resourceKey) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	conn := r.Meta().PaymentCryptographyClient(ctx)
 
 	var state resourceKeyData
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
 	out, err := findKeyByID(ctx, conn, state.ID.ValueString())
 	if tfresource.NotFound(err) {
-		resp.State.RemoveResource(ctx)
+		response.State.RemoveResource(ctx)
 		return
 	}
 	if err != nil {
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.PaymentCryptography, create.ErrActionSetting, ResNameKey, state.ID.String(), err),
 			err.Error(),
 		)
 		return
 	}
 
-	resp.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(flex.Flatten(ctx, out, &state)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
-	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &state)...)
+}
+
+func (r *resourceKey) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
+	var old, new resourceKeyData
+	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+	response.Diagnostics.Append(request.State.Get(ctx, &old)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
+
+	conn := r.Meta().PaymentCryptographyClient(ctx)
+
+	if !old.Enabled.Equal(new.Enabled) {
+		if new.Enabled.ValueBool() {
+			in := &paymentcryptography.StartKeyUsageInput{
+				KeyIdentifier: flex.StringFromFramework(ctx, new.ID),
+			}
+			_, err := conn.StartKeyUsage(ctx, in)
+			if err != nil {
+				response.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.PaymentCryptography, create.ErrActionUpdating, ResNameKey, new.KeyArn.String(), err),
+					err.Error(),
+				)
+				return
+			}
+		} else {
+			in := &paymentcryptography.StopKeyUsageInput{
+				KeyIdentifier: flex.StringFromFramework(ctx, new.ID),
+			}
+			_, err := conn.StopKeyUsage(ctx, in)
+			if err != nil {
+				response.Diagnostics.AddError(
+					create.ProblemStandardMessage(names.PaymentCryptography, create.ErrActionUpdating, ResNameKey, new.KeyArn.String(), err),
+					err.Error(),
+				)
+				return
+			}
+
+		}
+	}
+
+	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
 func (r *resourceKey) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -364,28 +416,10 @@ func waitKeyCreated(ctx context.Context, conn *paymentcryptography.Client, id st
 	return nil, err
 }
 
-func waitKeyUpdated(ctx context.Context, conn *paymentcryptography.Client, id string, timeout time.Duration) (*awstypes.Key, error) {
-	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{statusChangePending},
-		Target:                    []string{statusUpdated},
-		Refresh:                   statusKey(ctx, conn, id),
-		Timeout:                   timeout,
-		NotFoundChecks:            20,
-		ContinuousTargetOccurence: 2,
-	}
-
-	outputRaw, err := stateConf.WaitForStateContext(ctx)
-	if out, ok := outputRaw.(*awstypes.Key); ok {
-		return out, err
-	}
-
-	return nil, err
-}
-
 func waitKeyDeleted(ctx context.Context, conn *paymentcryptography.Client, id string, timeout time.Duration) (*awstypes.Key, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{statusDeleting, statusNormal},
-		Target:  []string{},
+		Pending: enum.Slice(awstypes.KeyStateCreateComplete),
+		Target:  enum.Slice(awstypes.KeyStateDeletePending, awstypes.KeyStateDeleteComplete),
 		Refresh: statusKey(ctx, conn, id),
 		Timeout: timeout,
 	}
@@ -434,14 +468,18 @@ func findKeyByID(ctx context.Context, conn *paymentcryptography.Client, id strin
 		return nil, tfresource.NewEmptyResultError(in)
 	}
 
+	// If the key is either Pending or Complete deletion it's logically deleted
+	if out.Key.KeyState == awstypes.KeyStateDeletePending || out.Key.KeyState == awstypes.KeyStateDeleteComplete {
+		return nil, tfresource.NewEmptyResultError(in)
+	}
+
 	return out.Key, nil
 }
 
 type resourceKeyData struct {
 	KeyArn                 types.String                                        `tfsdk:"arn"`
 	CreateTimestamp        timetypes.RFC3339Type                               `tfsdk:"create_timestamp"`
-	DeletePendingTimestamp timetypes.RFC3339Type                               `tfsdk:"delete_pending_timestamp"`
-	DeleteTimestamp        timetypes.RFC3339Type                               `tfsdk:"delete_timestamp"`
+	DeletionWindowInDate   types.Int64                                         `tfsdk:"deletion_window_in_days"`
 	Enabled                types.Bool                                          `tfsdk:"enabled"`
 	Exportable             types.Bool                                          `tfsdk:"exportable"`
 	ID                     types.String                                        `tfsdk:"id"`
