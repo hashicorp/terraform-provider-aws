@@ -6,7 +6,6 @@ package paymentcryptography
 import (
 	"context"
 	"errors"
-	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
@@ -21,7 +20,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/paymentcryptography"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/paymentcryptography/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -69,24 +67,12 @@ func (r *resourceKey) Schema(ctx context.Context, request resource.SchemaRequest
 		Attributes: map[string]schema.Attribute{
 			"arn": framework.ARNAttributeComputedOnly(),
 			"id":  framework.IDAttribute(),
-			"create_timestamp": schema.StringAttribute{
-				Computed:   true,
-				CustomType: timetypes.RFC3339Type{},
-			},
 			"deletion_window_in_days": schema.Int64Attribute{
 				Optional: true,
 				Default:  int64default.StaticInt64(7),
 				Validators: []validator.Int64{
 					int64validator.Between(3, 180),
 				},
-			},
-			"delete_pending_timestamp": schema.StringAttribute{
-				Computed:   true,
-				CustomType: timetypes.RFC3339Type{},
-			},
-			"delete_timestamp": schema.StringAttribute{
-				Computed:   true,
-				CustomType: timetypes.RFC3339Type{},
 			},
 			"enabled": schema.BoolAttribute{
 				Optional: true,
@@ -127,14 +113,6 @@ func (r *resourceKey) Schema(ctx context.Context, request resource.SchemaRequest
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
-			"usage_start_timestamp": schema.StringAttribute{
-				Computed:   true,
-				CustomType: timetypes.RFC3339Type{},
-			},
-			"usage_stop_timestamp": schema.StringAttribute{
-				Computed:   true,
-				CustomType: timetypes.RFC3339Type{},
-			},
 		},
 		Blocks: map[string]schema.Block{
 			"key_attributes": schema.SingleNestedBlock{
@@ -224,7 +202,7 @@ func (r *resourceKey) Schema(ctx context.Context, request resource.SchemaRequest
 func (r *resourceKey) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
 	conn := r.Meta().PaymentCryptographyClient(ctx)
 
-	var plan resourceKeyData
+	var plan resourceKeyModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &plan)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -279,7 +257,7 @@ func (r *resourceKey) Create(ctx context.Context, request resource.CreateRequest
 func (r *resourceKey) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
 	conn := r.Meta().PaymentCryptographyClient(ctx)
 
-	var state resourceKeyData
+	var state resourceKeyModel
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -307,7 +285,7 @@ func (r *resourceKey) Read(ctx context.Context, request resource.ReadRequest, re
 }
 
 func (r *resourceKey) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	var old, new resourceKeyData
+	var old, new resourceKeyModel
 	response.Diagnostics.Append(request.Plan.Get(ctx, &new)...)
 	if response.Diagnostics.HasError() {
 		return
@@ -354,7 +332,7 @@ func (r *resourceKey) Update(ctx context.Context, request resource.UpdateRequest
 func (r *resourceKey) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().PaymentCryptographyClient(ctx)
 
-	var state resourceKeyData
+	var state resourceKeyModel
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -479,10 +457,9 @@ func findKeyByID(ctx context.Context, conn *paymentcryptography.Client, id strin
 	return out.Key, nil
 }
 
-type resourceKeyData struct {
+type resourceKeyModel struct {
 	KeyArn                 types.String                                        `tfsdk:"arn"`
-	CreateTimestamp        timetypes.RFC3339Type                               `tfsdk:"create_timestamp"`
-	DeletionWindowInDate   types.Int64                                         `tfsdk:"deletion_window_in_days"`
+	DeletionWindowInDays   types.Int64                                         `tfsdk:"deletion_window_in_days"`
 	Enabled                types.Bool                                          `tfsdk:"enabled"`
 	Exportable             types.Bool                                          `tfsdk:"exportable"`
 	ID                     types.String                                        `tfsdk:"id"`
@@ -494,11 +471,9 @@ type resourceKeyData struct {
 	Tags                   types.Map                                           `tfsdk:"tags"`
 	TagsAll                types.Map                                           `tfsdk:"tags_all"`
 	Timeouts               timeouts.Value                                      `tfsdk:"timeouts"`
-	UsageStartTimestamp    timetypes.RFC3339Type                               `tfsdk:"usage_start_timestamp"`
-	UsageStopTimestamp     timetypes.RFC3339Type                               `tfsdk:"usage_stop_timestamp"`
 }
 
-func (k *resourceKeyData) setId() {
+func (k *resourceKeyModel) setId() {
 	k.ID = k.KeyArn
 }
 
@@ -519,14 +494,4 @@ type keyModesOfUseModel struct {
 	Unwrap         types.Bool `tfsdk:"unwrap"`
 	Verify         types.Bool `tfsdk:"verify"`
 	Wrap           types.Bool `tfsdk:"wrap"`
-}
-
-type complexArgumentData struct {
-	NestedRequired types.String `tfsdk:"nested_required"`
-	NestedOptional types.String `tfsdk:"nested_optional"`
-}
-
-var complexArgumentAttrTypes = map[string]attr.Type{
-	"nested_required": types.StringType,
-	"nested_optional": types.StringType,
 }
