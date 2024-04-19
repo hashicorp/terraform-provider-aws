@@ -1,4 +1,5 @@
-## 5.46.0 (Unreleased)
+## 5.47.0 (Unreleased)
+## 5.46.0 (April 18, 2024)
 
 NOTES:
 
@@ -15,9 +16,10 @@ ENHANCEMENTS:
 * data-source/aws_iam_policy: Add `attachment_count` attribute ([#36759](https://github.com/hashicorp/terraform-provider-aws/issues/36759))
 * data-source/aws_lb: Add `client_keep_alive` argument ([#36969](https://github.com/hashicorp/terraform-provider-aws/issues/36969))
 * data-source/aws_organizations_organization: Add `master_account_name` attribute ([#36797](https://github.com/hashicorp/terraform-provider-aws/issues/36797))
-* data/aws_vpc_dhcp_options: Add `ipv6_address_preferred_lease_time` attribute ([#36934](https://github.com/hashicorp/terraform-provider-aws/issues/36934))
+* data-source/aws_vpc_dhcp_options: Add `ipv6_address_preferred_lease_time` attribute ([#36934](https://github.com/hashicorp/terraform-provider-aws/issues/36934))
 * resource/aws_alb: Add `client_keep_alive` argument ([#36969](https://github.com/hashicorp/terraform-provider-aws/issues/36969))
 * resource/aws_autoscaling_group: Add `alarm_specification` to the `instance_refresh.preferences` configuration block ([#36954](https://github.com/hashicorp/terraform-provider-aws/issues/36954))
+* resource/aws_cloudformation_stack_set: Add retry when creating to potentially help with eventual consistency problems ([#36982](https://github.com/hashicorp/terraform-provider-aws/issues/36982))
 * resource/aws_cloudfront_origin_access_control: Add `lambda` and `mediapackagev2` as valid values for `origin_access_control_origin_type` ([#34362](https://github.com/hashicorp/terraform-provider-aws/issues/34362))
 * resource/aws_cloudwatch_event_rule: Add `force_destroy` attribute ([#34905](https://github.com/hashicorp/terraform-provider-aws/issues/34905))
 * resource/aws_codebuild_project: Add GitLab and GitLab Self Managed support to the `report_build_status` and `build_status_config` arguments ([#36942](https://github.com/hashicorp/terraform-provider-aws/issues/36942))
@@ -38,6 +40,7 @@ ENHANCEMENTS:
 BUG FIXES:
 
 * data-source/aws_iam_policy_document: When using multiple principals, sort them to avoid differences based only on order ([#25967](https://github.com/hashicorp/terraform-provider-aws/issues/25967))
+* resource/aws_appconfig_deployment: Fix `ConflictException` errors on resource Create ([#36980](https://github.com/hashicorp/terraform-provider-aws/issues/36980))
 * resource/aws_ce_anomaly_monitor: Change `monitor_dimension` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) ([#36773](https://github.com/hashicorp/terraform-provider-aws/issues/36773))
 * resource/aws_ce_anomaly_subscription: Change `account_id` to [ForceNew](https://developer.hashicorp.com/terraform/plugin/sdkv2/schemas/schema-behaviors#forcenew) ([#36773](https://github.com/hashicorp/terraform-provider-aws/issues/36773))
 * resource/aws_cloudformation_stack: CRLF line endings in `template_body` no longer cause erroneous diffs ([#14270](https://github.com/hashicorp/terraform-provider-aws/issues/14270))
