@@ -27,7 +27,7 @@ func dataSourceTags() *schema.Resource {
 				Type:     schema.TypeList,
 				MaxItems: 1,
 				Optional: true,
-				Elem:     elemExpression(),
+				Elem:     expressionElem(2),
 			},
 			"search_string": {
 				Type:          schema.TypeString,

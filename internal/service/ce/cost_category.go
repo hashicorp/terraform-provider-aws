@@ -26,6 +26,10 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const (
+	costCategoryRuleRootElementSchemaLevel = 3
+)
+
 // @SDKResource("aws_ce_cost_category", name="Cost Category")
 // @Tags(identifierAttribute="id")
 func resourceCostCategory() *schema.Resource {
@@ -95,7 +99,7 @@ func resourceCostCategory() *schema.Resource {
 								Type:     schema.TypeList,
 								MaxItems: 1,
 								Optional: true,
-								Elem:     elemExpression(),
+								Elem:     expressionElem(costCategoryRuleRootElementSchemaLevel),
 							},
 							"type": {
 								Type:             schema.TypeString,
@@ -174,211 +178,122 @@ func resourceCostCategory() *schema.Resource {
 	}
 }
 
-func elemExpression() *schema.Resource {
-	elemNestedExpression := func() *schema.Resource {
-		return &schema.Resource{
-			Schema: map[string]*schema.Schema{
-				"cost_category": {
-					Type:     schema.TypeList,
-					MaxItems: 1,
-					Optional: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"key": {
-								Type:         schema.TypeString,
-								Optional:     true,
-								ValidateFunc: validation.StringLenBetween(1, 50),
-							},
-							"match_options": {
-								Type:     schema.TypeSet,
-								Optional: true,
-								Elem: &schema.Schema{
-									Type:             schema.TypeString,
-									ValidateDiagFunc: enum.Validate[awstypes.MatchOption](),
-								},
-							},
-							"values": {
-								Type:     schema.TypeSet,
-								Optional: true,
-								Elem: &schema.Schema{
-									Type:         schema.TypeString,
-									ValidateFunc: validation.StringLenBetween(0, 1024),
-								},
-							},
-						},
+func expressionElem(level int) *schema.Resource {
+	// This is the non-recursive part of the schema.
+	expressionSchema := map[string]*schema.Schema{
+		"cost_category": {
+			Type:     schema.TypeList,
+			MaxItems: 1,
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"key": {
+						Type:         schema.TypeString,
+						Optional:     true,
+						ValidateFunc: validation.StringLenBetween(1, 50),
 					},
-				},
-				"dimension": {
-					Type:     schema.TypeList,
-					MaxItems: 1,
-					Optional: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"key": {
-								Type:             schema.TypeString,
-								Optional:         true,
-								ValidateDiagFunc: enum.Validate[awstypes.Dimension](),
-							},
-							"match_options": {
-								Type:     schema.TypeSet,
-								Optional: true,
-								Elem: &schema.Schema{
-									Type:             schema.TypeString,
-									ValidateDiagFunc: enum.Validate[awstypes.MatchOption](),
-								},
-							},
-							"values": {
-								Type:     schema.TypeSet,
-								Optional: true,
-								Elem: &schema.Schema{
-									Type:         schema.TypeString,
-									ValidateFunc: validation.StringLenBetween(0, 1024),
-								},
-							},
-						},
-					},
-				},
-				"tags": {
-					Type:     schema.TypeList,
-					MaxItems: 1,
-					Optional: true,
-					Elem: &schema.Resource{
-						Schema: map[string]*schema.Schema{
-							"key": {
-								Type:     schema.TypeString,
-								Optional: true,
-							},
-							"match_options": {
-								Type:     schema.TypeSet,
-								Optional: true,
-								Elem: &schema.Schema{
-									Type:             schema.TypeString,
-									ValidateDiagFunc: enum.Validate[awstypes.MatchOption](),
-								},
-							},
-							"values": {
-								Type:     schema.TypeSet,
-								Optional: true,
-								Elem: &schema.Schema{
-									Type:         schema.TypeString,
-									ValidateFunc: validation.StringLenBetween(0, 1024),
-								},
-							},
-						},
-					},
-				},
-			},
-		}
-	}
-
-	return &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			"and": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     elemNestedExpression(),
-			},
-			"cost_category": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"key": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringLenBetween(1, 50),
-						},
-						"match_options": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type:             schema.TypeString,
-								ValidateDiagFunc: enum.Validate[awstypes.MatchOption](),
-							},
-						},
-						"values": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.StringLenBetween(0, 1024),
-							},
-						},
-					},
-				},
-			},
-			"dimension": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"key": {
+					"match_options": {
+						Type:     schema.TypeSet,
+						Optional: true,
+						Elem: &schema.Schema{
 							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.Dimension](),
-						},
-						"match_options": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type:             schema.TypeString,
-								ValidateDiagFunc: enum.Validate[awstypes.MatchOption](),
-							},
-						},
-						"values": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.StringLenBetween(0, 1024),
-							},
+							ValidateDiagFunc: enum.Validate[awstypes.MatchOption](),
 						},
 					},
-				},
-			},
-			"not": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Elem:     elemNestedExpression(),
-			},
-			"or": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem:     elemNestedExpression(),
-			},
-			"tags": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"key": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"match_options": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type:             schema.TypeString,
-								ValidateDiagFunc: enum.Validate[awstypes.MatchOption](),
-							},
-						},
-						"values": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.StringLenBetween(0, 1024),
-							},
+					"values": {
+						Type:     schema.TypeSet,
+						Optional: true,
+						Elem: &schema.Schema{
+							Type:         schema.TypeString,
+							ValidateFunc: validation.StringLenBetween(0, 1024),
 						},
 					},
 				},
 			},
 		},
+		"dimension": {
+			Type:     schema.TypeList,
+			MaxItems: 1,
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"key": {
+						Type:             schema.TypeString,
+						Optional:         true,
+						ValidateDiagFunc: enum.Validate[awstypes.Dimension](),
+					},
+					"match_options": {
+						Type:     schema.TypeSet,
+						Optional: true,
+						Elem: &schema.Schema{
+							Type:             schema.TypeString,
+							ValidateDiagFunc: enum.Validate[awstypes.MatchOption](),
+						},
+					},
+					"values": {
+						Type:     schema.TypeSet,
+						Optional: true,
+						Elem: &schema.Schema{
+							Type:         schema.TypeString,
+							ValidateFunc: validation.StringLenBetween(0, 1024),
+						},
+					},
+				},
+			},
+		},
+		"tags": {
+			Type:     schema.TypeList,
+			MaxItems: 1,
+			Optional: true,
+			Elem: &schema.Resource{
+				Schema: map[string]*schema.Schema{
+					"key": {
+						Type:     schema.TypeString,
+						Optional: true,
+					},
+					"match_options": {
+						Type:     schema.TypeSet,
+						Optional: true,
+						Elem: &schema.Schema{
+							Type:             schema.TypeString,
+							ValidateDiagFunc: enum.Validate[awstypes.MatchOption](),
+						},
+					},
+					"values": {
+						Type:     schema.TypeSet,
+						Optional: true,
+						Elem: &schema.Schema{
+							Type:         schema.TypeString,
+							ValidateFunc: validation.StringLenBetween(0, 1024),
+						},
+					},
+				},
+			},
+		},
+	}
+
+	if level > 1 {
+		// Add in the recursive part of the schema.
+		expressionSchema["and"] = &schema.Schema{
+			Type:     schema.TypeSet,
+			Optional: true,
+			Elem:     expressionElem(level - 1),
+		}
+		expressionSchema["not"] = &schema.Schema{
+			Type:     schema.TypeList,
+			MaxItems: 1,
+			Optional: true,
+			Elem:     expressionElem(level - 1),
+		}
+		expressionSchema["or"] = &schema.Schema{
+			Type:     schema.TypeSet,
+			Optional: true,
+			Elem:     expressionElem(level - 1),
+		}
+	}
+
+	return &schema.Resource{
+		Schema: expressionSchema,
 	}
 }
 

@@ -96,7 +96,7 @@ func resourceAnomalySubscription() *schema.Resource {
 				MaxItems: 1,
 				Computed: true,
 				Optional: true,
-				Elem:     elemExpression(),
+				Elem:     expressionElem(2),
 			},
 		},
 
