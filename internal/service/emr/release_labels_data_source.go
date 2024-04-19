@@ -15,8 +15,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// @SDKDataSource("aws_emr_release_labels")
-func DataSourceReleaseLabels() *schema.Resource {
+// @SDKDataSource("aws_emr_release_labels", name="Release Labels")
+func dataSourceReleaseLabels() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceReleaseLabelsRead,
 

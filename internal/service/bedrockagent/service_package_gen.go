@@ -19,7 +19,26 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
+	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory: newAgentActionGroupResource,
+			Name:    "Agent Action Group",
+		},
+		{
+			Factory: newAgentAliasResource,
+			Name:    "Agent Alias",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "agent_alias_arn",
+			},
+		},
+		{
+			Factory: newAgentResource,
+			Name:    "Agent",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "agent_arn",
+			},
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {

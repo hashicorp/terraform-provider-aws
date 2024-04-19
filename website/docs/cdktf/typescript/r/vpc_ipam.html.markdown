@@ -100,10 +100,11 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
+* `cascade` - (Optional) Enables you to quickly delete an IPAM, private scopes, pools in private scopes, and any allocations in the pools in private scopes.
 * `description` - (Optional) A description for the IPAM.
 * `operatingRegions` - (Required) Determines which locales can be chosen when you create pools. Locale is the Region where you want to make an IPAM pool available for allocations. You can only create pools with locales that match the operating Regions of the IPAM. You can only create VPCs from a pool whose locale matches the VPC's Region. You specify a region using the [region_name](#operating_regions) parameter. You **must** set your provider block region as an operating_region.
+* `tier` - (Optional) specifies the IPAM tier. Valid options include `free` and `advanced`. Default is `advanced`.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `cascade` - (Optional) Enables you to quickly delete an IPAM, private scopes, pools in private scopes, and any allocations in the pools in private scopes.
 
 ### operating_regions
 
@@ -151,4 +152,4 @@ Using `terraform import`, import IPAMs using the IPAM `id`. For example:
 % terraform import aws_vpc_ipam.example ipam-0178368ad2146a492
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-84aa9bd97b463b7e0ef48338b382158ae378ddfa622a5c06c2b8e8c82c2fa598 -->
+<!-- cache-key: cdktf-0.20.1 input-702fa54cd52e1c61197fa805eaebba584c89b52dda71e967bc6393a71cf8a184 -->

@@ -14,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// @SDKDataSource("aws_wafregional_ipset")
-func DataSourceIPSet() *schema.Resource {
+// @SDKDataSource("aws_wafregional_ipset", name="IPSet")
+func dataSourceIPSet() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceIPSetRead,
 

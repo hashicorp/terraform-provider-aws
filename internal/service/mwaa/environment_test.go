@@ -40,6 +40,8 @@ func TestAccMWAAEnvironment_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "airflow_version"),
 					acctest.CheckResourceAttrRegionalARN(resourceName, "arn", "airflow", "environment/"+rName),
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
+					resource.TestCheckResourceAttrSet(resourceName, "database_vpc_endpoint_service"),
+					resource.TestCheckResourceAttrSet(resourceName, "webserver_vpc_endpoint_service"),
 					resource.TestCheckResourceAttr(resourceName, "dag_s3_path", "dags/"),
 					resource.TestCheckResourceAttr(resourceName, "environment_class", "mw1.small"),
 					acctest.CheckResourceAttrGlobalARN(resourceName, "execution_role_arn", "iam", "role/service-role/"+rName),

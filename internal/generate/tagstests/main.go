@@ -91,6 +91,13 @@ func main() {
 	}
 }
 
+type implementation string
+
+const (
+	implementationFramework implementation = "framework"
+	implementationSDK       implementation = "sdk"
+)
+
 type ResourceDatum struct {
 	ProviderPackage   string
 	ProviderNameUpper string
@@ -101,6 +108,9 @@ type ResourceDatum struct {
 	FileName          string
 	Generator         string
 	ImportIgnore      []string
+	Implementation    implementation
+	Serialize         bool
+	PreCheck          bool
 }
 
 //go:embed file.tmpl
@@ -174,6 +184,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 		if m := annotation.FindStringSubmatch(line); len(m) > 0 {
 			switch annotationName := m[1]; annotationName {
 			case "FrameworkResource":
+				d.Implementation = implementationFramework
 				args := common.ParseArgs(m[3])
 				if len(args.Positional) == 0 {
 					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
@@ -185,6 +196,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 
 			case "SDKResource":
+				d.Implementation = implementationSDK
 				args := common.ParseArgs(m[3])
 				if len(args.Positional) == 0 {
 					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
@@ -216,6 +228,22 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 				if attr, ok := args.Keyword["name"]; ok {
 					d.Name = strings.ReplaceAll(attr, " ", "")
+				}
+				if attr, ok := args.Keyword["preCheck"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid preCheck value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						d.PreCheck = b
+					}
+				}
+				if attr, ok := args.Keyword["serialize"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid serialize value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						d.Serialize = b
+					}
 				}
 				if attr, ok := args.Keyword["tagsTest"]; ok {
 					if b, err := strconv.ParseBool(attr); err != nil {
