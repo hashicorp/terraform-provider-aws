@@ -26,7 +26,7 @@ func TestAccBatchJobQueue_tags(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigFile: config.StaticFile("testdata/JobQueue/tags1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags1/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -39,7 +39,7 @@ func TestAccBatchJobQueue_tags(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/JobQueue/tags1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags1/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -50,7 +50,7 @@ func TestAccBatchJobQueue_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/JobQueue/tags2_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags2/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -66,7 +66,7 @@ func TestAccBatchJobQueue_tags(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/JobQueue/tags2_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags2/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -79,7 +79,7 @@ func TestAccBatchJobQueue_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/JobQueue/tags1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags1/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key2"),
@@ -92,7 +92,7 @@ func TestAccBatchJobQueue_tags(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/JobQueue/tags1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags1/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key2"),
@@ -103,7 +103,7 @@ func TestAccBatchJobQueue_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/JobQueue/tags0_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags0/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 				},
@@ -113,7 +113,7 @@ func TestAccBatchJobQueue_tags(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/JobQueue/tags0_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags0/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 				},
@@ -140,7 +140,7 @@ func TestAccBatchJobQueue_tags_null(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigFile: config.StaticFile("testdata/JobQueue/tagsNull_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tagsNull/"),
 				ConfigVariables: config.Variables{
 					"rName":   config.StringVariable(rName),
 					"tagKey1": config.StringVariable("key1"),
@@ -151,7 +151,7 @@ func TestAccBatchJobQueue_tags_null(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/JobQueue/tagsNull_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tagsNull/"),
 				ConfigVariables: config.Variables{
 					"rName":   config.StringVariable(rName),
 					"tagKey1": config.StringVariable("key1"),
@@ -161,7 +161,7 @@ func TestAccBatchJobQueue_tags_null(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/JobQueue/tags0_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags0/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 				},
@@ -185,7 +185,7 @@ func TestAccBatchJobQueue_tags_AddOnUpdate(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigFile: config.StaticFile("testdata/JobQueue/tags0_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags0/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 				},
@@ -195,7 +195,7 @@ func TestAccBatchJobQueue_tags_AddOnUpdate(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/JobQueue/tags1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags1/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -208,7 +208,7 @@ func TestAccBatchJobQueue_tags_AddOnUpdate(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/JobQueue/tags1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags1/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -235,7 +235,7 @@ func TestAccBatchJobQueue_tags_EmptyTag_OnCreate(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigFile: config.StaticFile("testdata/JobQueue/tags1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags1/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -248,7 +248,7 @@ func TestAccBatchJobQueue_tags_EmptyTag_OnCreate(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/JobQueue/tags1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags1/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -259,7 +259,7 @@ func TestAccBatchJobQueue_tags_EmptyTag_OnCreate(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/JobQueue/tags0_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags0/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 				},
@@ -269,7 +269,7 @@ func TestAccBatchJobQueue_tags_EmptyTag_OnCreate(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/JobQueue/tags0_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags0/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 				},
@@ -294,7 +294,7 @@ func TestAccBatchJobQueue_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigFile: config.StaticFile("testdata/JobQueue/tags1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags1/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -307,7 +307,7 @@ func TestAccBatchJobQueue_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/JobQueue/tags2_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags2/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -323,7 +323,7 @@ func TestAccBatchJobQueue_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/JobQueue/tags2_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags2/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -336,7 +336,7 @@ func TestAccBatchJobQueue_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/JobQueue/tags1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags1/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -349,7 +349,7 @@ func TestAccBatchJobQueue_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/JobQueue/tags1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags1/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -376,7 +376,7 @@ func TestAccBatchJobQueue_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigFile: config.StaticFile("testdata/JobQueue/tags1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags1/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -389,7 +389,7 @@ func TestAccBatchJobQueue_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/JobQueue/tags1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags1/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -402,7 +402,7 @@ func TestAccBatchJobQueue_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/JobQueue/tags1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags1/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -428,7 +428,7 @@ func TestAccBatchJobQueue_tags_DefaultTags_providerOnly(t *testing.T) {
 		CheckDestroy: testAccCheckJobQueueDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigFile: config.StaticFile("testdata/JobQueue/tags0_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -442,7 +442,7 @@ func TestAccBatchJobQueue_tags_DefaultTags_providerOnly(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/JobQueue/tags0_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -453,7 +453,7 @@ func TestAccBatchJobQueue_tags_DefaultTags_providerOnly(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/JobQueue/tags0_default2_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags0_default2/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -470,7 +470,7 @@ func TestAccBatchJobQueue_tags_DefaultTags_providerOnly(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/JobQueue/tags0_default2_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags0_default2/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -483,7 +483,7 @@ func TestAccBatchJobQueue_tags_DefaultTags_providerOnly(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/JobQueue/tags0_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key2"),
@@ -497,7 +497,7 @@ func TestAccBatchJobQueue_tags_DefaultTags_providerOnly(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/JobQueue/tags0_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key2"),
@@ -509,7 +509,7 @@ func TestAccBatchJobQueue_tags_DefaultTags_providerOnly(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigFile:               config.StaticFile("testdata/JobQueue/tags0_gen.tf"),
+				ConfigDirectory:          config.StaticDirectory("testdata/JobQueue/tags0/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 				},
@@ -521,7 +521,7 @@ func TestAccBatchJobQueue_tags_DefaultTags_providerOnly(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigFile:               config.StaticFile("testdata/JobQueue/tags0_gen.tf"),
+				ConfigDirectory:          config.StaticDirectory("testdata/JobQueue/tags0/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 				},
@@ -545,7 +545,7 @@ func TestAccBatchJobQueue_tags_DefaultTags_nonOverlapping(t *testing.T) {
 		CheckDestroy: testAccCheckJobQueueDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigFile: config.StaticFile("testdata/JobQueue/tags1_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),
@@ -563,7 +563,7 @@ func TestAccBatchJobQueue_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/JobQueue/tags1_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),
@@ -576,7 +576,7 @@ func TestAccBatchJobQueue_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/JobQueue/tags2_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags2_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),
@@ -598,7 +598,7 @@ func TestAccBatchJobQueue_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/JobQueue/tags2_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags2_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),
@@ -614,7 +614,7 @@ func TestAccBatchJobQueue_tags_DefaultTags_nonOverlapping(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigFile:               config.StaticFile("testdata/JobQueue/tags0_gen.tf"),
+				ConfigDirectory:          config.StaticDirectory("testdata/JobQueue/tags0/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 				},
@@ -626,7 +626,7 @@ func TestAccBatchJobQueue_tags_DefaultTags_nonOverlapping(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigFile:               config.StaticFile("testdata/JobQueue/tags0_gen.tf"),
+				ConfigDirectory:          config.StaticDirectory("testdata/JobQueue/tags0/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 				},
@@ -650,7 +650,7 @@ func TestAccBatchJobQueue_tags_DefaultTags_overlapping(t *testing.T) {
 		CheckDestroy: testAccCheckJobQueueDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigFile: config.StaticFile("testdata/JobQueue/tags1_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
@@ -667,7 +667,7 @@ func TestAccBatchJobQueue_tags_DefaultTags_overlapping(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/JobQueue/tags1_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
@@ -680,7 +680,7 @@ func TestAccBatchJobQueue_tags_DefaultTags_overlapping(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/JobQueue/tags2_default2_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags2_default2/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
@@ -703,7 +703,7 @@ func TestAccBatchJobQueue_tags_DefaultTags_overlapping(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/JobQueue/tags2_default2_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags2_default2/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
@@ -720,7 +720,7 @@ func TestAccBatchJobQueue_tags_DefaultTags_overlapping(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/JobQueue/tags1_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
@@ -737,7 +737,7 @@ func TestAccBatchJobQueue_tags_DefaultTags_overlapping(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/JobQueue/tags1_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
@@ -766,7 +766,7 @@ func TestAccBatchJobQueue_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigFile:               config.StaticFile("testdata/JobQueue/tags1_gen.tf"),
+				ConfigDirectory:          config.StaticDirectory("testdata/JobQueue/tags1/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -781,7 +781,7 @@ func TestAccBatchJobQueue_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/JobQueue/tags0_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -795,7 +795,7 @@ func TestAccBatchJobQueue_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/JobQueue/tags0_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -821,7 +821,7 @@ func TestAccBatchJobQueue_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 		CheckDestroy: testAccCheckJobQueueDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigFile: config.StaticFile("testdata/JobQueue/tags0_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -836,7 +836,7 @@ func TestAccBatchJobQueue_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigFile:               config.StaticFile("testdata/JobQueue/tags1_gen.tf"),
+				ConfigDirectory:          config.StaticDirectory("testdata/JobQueue/tags1/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -852,7 +852,7 @@ func TestAccBatchJobQueue_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigFile:               config.StaticFile("testdata/JobQueue/tags1_gen.tf"),
+				ConfigDirectory:          config.StaticDirectory("testdata/JobQueue/tags1/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -878,7 +878,7 @@ func TestAccBatchJobQueue_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 		CheckDestroy: testAccCheckJobQueueDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigFile: config.StaticFile("testdata/JobQueue/tags1_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -895,7 +895,7 @@ func TestAccBatchJobQueue_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/JobQueue/tags1_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -925,7 +925,7 @@ func TestAccBatchJobQueue_tags_DefaultTags_nullOverlappingResourceTag(t *testing
 		CheckDestroy: testAccCheckJobQueueDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigFile: config.StaticFile("testdata/JobQueue/tagsNull_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tagsNull_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -940,7 +940,7 @@ func TestAccBatchJobQueue_tags_DefaultTags_nullOverlappingResourceTag(t *testing
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/JobQueue/tagsNull_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tagsNull_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -969,7 +969,7 @@ func TestAccBatchJobQueue_tags_DefaultTags_nullNonOverlappingResourceTag(t *test
 		CheckDestroy: testAccCheckJobQueueDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigFile: config.StaticFile("testdata/JobQueue/tagsNull_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tagsNull_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),
@@ -984,7 +984,7 @@ func TestAccBatchJobQueue_tags_DefaultTags_nullNonOverlappingResourceTag(t *test
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/JobQueue/tagsNull_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/JobQueue/tagsNull_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),

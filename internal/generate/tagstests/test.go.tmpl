@@ -87,7 +87,7 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tags1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags1/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -100,7 +100,7 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tags1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags1/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -109,7 +109,7 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 				{{- template "ImportBody" .ImportIgnore -}}
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tags2_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags2/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -125,7 +125,7 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tags2_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags2/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -136,7 +136,7 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 				{{- template "ImportBody" .ImportIgnore -}}
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tags1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags1/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key2"),
@@ -149,7 +149,7 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tags1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags1/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key2"),
@@ -158,7 +158,7 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 				{{- template "ImportBody" .ImportIgnore -}}
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tags0_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags0/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 				},
@@ -168,7 +168,7 @@ func {{ template "testname" . }}_tags(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tags0_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags0/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 				},
@@ -188,7 +188,7 @@ func {{ template "testname" . }}_tags_null(t *testing.T) {
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tagsNull_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tagsNull/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -199,7 +199,7 @@ func {{ template "testname" . }}_tags_null(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tagsNull_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tagsNull/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -207,7 +207,7 @@ func {{ template "testname" . }}_tags_null(t *testing.T) {
 				{{- template "ImportBody" .ImportIgnore -}}
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tags0_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags0/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 				},
@@ -225,7 +225,7 @@ func {{ template "testname" . }}_tags_AddOnUpdate(t *testing.T) {
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tags0_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags0/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 				},
@@ -235,7 +235,7 @@ func {{ template "testname" . }}_tags_AddOnUpdate(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tags1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags1/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -248,7 +248,7 @@ func {{ template "testname" . }}_tags_AddOnUpdate(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tags1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags1/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -270,7 +270,7 @@ func {{ template "testname" . }}_tags_EmptyTag_OnCreate(t *testing.T) {
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tags1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags1/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -283,7 +283,7 @@ func {{ template "testname" . }}_tags_EmptyTag_OnCreate(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tags1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags1/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -292,7 +292,7 @@ func {{ template "testname" . }}_tags_EmptyTag_OnCreate(t *testing.T) {
 				{{- template "ImportBody" .ImportIgnore -}}
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tags0_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags0/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 				},
@@ -302,7 +302,7 @@ func {{ template "testname" . }}_tags_EmptyTag_OnCreate(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tags0_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags0/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 				},
@@ -322,7 +322,7 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tags1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags1/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -335,7 +335,7 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tags2_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags2/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -351,7 +351,7 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tags2_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags2/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -362,7 +362,7 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				{{- template "ImportBody" .ImportIgnore -}}
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tags1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags1/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -375,7 +375,7 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tags1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags1/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -397,7 +397,7 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 		{{ template "TestCaseSetup" . }}
 		Steps: []resource.TestStep{
 			{
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tags1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags1/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -410,7 +410,7 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tags1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags1/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -423,7 +423,7 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tags1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags1/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -442,7 +442,7 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tags0_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -456,7 +456,7 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tags0_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -465,7 +465,7 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 				{{- template "ImportBody" .ImportIgnore -}}
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tags0_default2_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags0_default2/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -482,7 +482,7 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tags0_default2_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags0_default2/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -493,7 +493,7 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 				{{- template "ImportBody" .ImportIgnore -}}
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tags0_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key2"),
@@ -507,7 +507,7 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tags0_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key2"),
@@ -517,7 +517,7 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tags0_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags0/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 				},
@@ -529,7 +529,7 @@ func {{ template "testname" . }}_tags_DefaultTags_providerOnly(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tags0_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags0/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 				},
@@ -546,7 +546,7 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tags1_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),
@@ -564,7 +564,7 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tags1_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),
@@ -575,7 +575,7 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				{{- template "ImportBody" .ImportIgnore -}}
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tags2_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags2_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),
@@ -597,7 +597,7 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tags2_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags2_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),
@@ -611,7 +611,7 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tags0_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags0/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 				},
@@ -623,7 +623,7 @@ func {{ template "testname" . }}_tags_DefaultTags_nonOverlapping(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tags0_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags0/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 				},
@@ -640,7 +640,7 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tags1_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
@@ -657,7 +657,7 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tags1_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
@@ -668,7 +668,7 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 				{{- template "ImportBody" .ImportIgnore -}}
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tags2_default2_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags2_default2/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
@@ -691,7 +691,7 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tags2_default2_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags2_default2/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
@@ -706,7 +706,7 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 				{{- template "ImportBody" .ImportIgnore -}}
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tags1_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
@@ -723,7 +723,7 @@ func {{ template "testname" . }}_tags_DefaultTags_overlapping(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tags1_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
@@ -745,7 +745,7 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToProviderOnly(t *testin
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tags1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags1/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -760,7 +760,7 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToProviderOnly(t *testin
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tags0_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -774,7 +774,7 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToProviderOnly(t *testin
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tags0_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -793,7 +793,7 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToResourceOnly(t *testin
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tags0_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -808,7 +808,7 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToResourceOnly(t *testin
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tags1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags1/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -824,7 +824,7 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToResourceOnly(t *testin
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tags1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags1/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -846,7 +846,7 @@ func {{ template "testname" . }}_tags_DefaultTags_emptyResourceTag(t *testing.T)
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tags1_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -863,7 +863,7 @@ func {{ template "testname" . }}_tags_DefaultTags_emptyResourceTag(t *testing.T)
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tags1_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -887,7 +887,7 @@ func {{ template "testname" . }}_tags_DefaultTags_nullOverlappingResourceTag(t *
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tagsNull_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tagsNull_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -902,7 +902,7 @@ func {{ template "testname" . }}_tags_DefaultTags_nullOverlappingResourceTag(t *
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tagsNull_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tagsNull_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -925,7 +925,7 @@ func {{ template "testname" . }}_tags_DefaultTags_nullNonOverlappingResourceTag(
 		{{ template "TestCaseSetupNoProviders" . }}
 		Steps: []resource.TestStep{
 			{
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tagsNull_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tagsNull_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),
@@ -940,7 +940,7 @@ func {{ template "testname" . }}_tags_DefaultTags_nullNonOverlappingResourceTag(
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/{{ .Name }}/tagsNull_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/{{ .Name }}/tagsNull_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),

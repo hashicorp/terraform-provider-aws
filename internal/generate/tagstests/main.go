@@ -118,10 +118,6 @@ func main() {
 
 		if foo.GenerateConfig {
 			testDirPath := path.Join("testdata", foo.Name)
-			err = os.MkdirAll(testDirPath, 0755)
-			if err != nil {
-				g.Fatalf("creating test directory %q: %w", testDirPath, err)
-			}
 
 			generateTestConfig(g, testDirPath, "tags0", 0, configTmplFile, configTmpl)
 			generateTestConfig(g, testDirPath, "tags1", 0, configTmplFile, configTmpl)
@@ -382,14 +378,19 @@ func (v *visitor) Visit(node ast.Node) ast.Visitor {
 }
 
 func generateTestConfig(g *common.Generator, dirPath, test string, defaultCount int, configTmplFile, configTmpl string) {
-	var fileName string
+	var testName string
 	if defaultCount > 0 {
-		fileName = fmt.Sprintf("%s_default%d_gen.tf", test, defaultCount)
+		testName = fmt.Sprintf("%s_default%d", test, defaultCount)
 	} else {
-		fileName = fmt.Sprintf("%s_gen.tf", test)
+		testName = fmt.Sprintf("%s", test)
 	}
 
-	mainPath := path.Join(dirPath, fileName)
+	dirPath = path.Join(dirPath, testName)
+	if err := os.MkdirAll(dirPath, 0755); err != nil {
+		g.Fatalf("creating test directory %q: %w", dirPath, err)
+	}
+
+	mainPath := path.Join(dirPath, "main_gen.tf")
 	tf := g.NewUnformattedFileDestination(mainPath)
 
 	tfTemplates, err := template.New("taggingtests").Parse(testTfTmpl)

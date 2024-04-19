@@ -26,7 +26,7 @@ func TestAccXRayGroup_tags(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigFile: config.StaticFile("testdata/Group/tags1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/Group/tags1/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -39,7 +39,7 @@ func TestAccXRayGroup_tags(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/Group/tags1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/Group/tags1/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -50,7 +50,7 @@ func TestAccXRayGroup_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/Group/tags2_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/Group/tags2/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -66,7 +66,7 @@ func TestAccXRayGroup_tags(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/Group/tags2_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/Group/tags2/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -79,7 +79,7 @@ func TestAccXRayGroup_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/Group/tags1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/Group/tags1/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key2"),
@@ -92,7 +92,7 @@ func TestAccXRayGroup_tags(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/Group/tags1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/Group/tags1/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key2"),
@@ -103,7 +103,7 @@ func TestAccXRayGroup_tags(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/Group/tags0_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/Group/tags0/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 				},
@@ -113,7 +113,7 @@ func TestAccXRayGroup_tags(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/Group/tags0_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/Group/tags0/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 				},
@@ -138,7 +138,7 @@ func TestAccXRayGroup_tags_null(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigFile: config.StaticFile("testdata/Group/tagsNull_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/Group/tagsNull/"),
 				ConfigVariables: config.Variables{
 					"rName":   config.StringVariable(rName),
 					"tagKey1": config.StringVariable("key1"),
@@ -149,7 +149,7 @@ func TestAccXRayGroup_tags_null(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/Group/tagsNull_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/Group/tagsNull/"),
 				ConfigVariables: config.Variables{
 					"rName":   config.StringVariable(rName),
 					"tagKey1": config.StringVariable("key1"),
@@ -159,7 +159,7 @@ func TestAccXRayGroup_tags_null(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/Group/tags0_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/Group/tags0/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 				},
@@ -183,7 +183,7 @@ func TestAccXRayGroup_tags_AddOnUpdate(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigFile: config.StaticFile("testdata/Group/tags0_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/Group/tags0/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 				},
@@ -193,7 +193,7 @@ func TestAccXRayGroup_tags_AddOnUpdate(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/Group/tags1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/Group/tags1/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -206,7 +206,7 @@ func TestAccXRayGroup_tags_AddOnUpdate(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/Group/tags1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/Group/tags1/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -233,7 +233,7 @@ func TestAccXRayGroup_tags_EmptyTag_OnCreate(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigFile: config.StaticFile("testdata/Group/tags1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/Group/tags1/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -246,7 +246,7 @@ func TestAccXRayGroup_tags_EmptyTag_OnCreate(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/Group/tags1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/Group/tags1/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -257,7 +257,7 @@ func TestAccXRayGroup_tags_EmptyTag_OnCreate(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/Group/tags0_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/Group/tags0/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 				},
@@ -267,7 +267,7 @@ func TestAccXRayGroup_tags_EmptyTag_OnCreate(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/Group/tags0_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/Group/tags0/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 				},
@@ -292,7 +292,7 @@ func TestAccXRayGroup_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigFile: config.StaticFile("testdata/Group/tags1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/Group/tags1/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -305,7 +305,7 @@ func TestAccXRayGroup_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/Group/tags2_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/Group/tags2/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -321,7 +321,7 @@ func TestAccXRayGroup_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/Group/tags2_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/Group/tags2/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -334,7 +334,7 @@ func TestAccXRayGroup_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/Group/tags1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/Group/tags1/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -347,7 +347,7 @@ func TestAccXRayGroup_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/Group/tags1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/Group/tags1/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -374,7 +374,7 @@ func TestAccXRayGroup_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
-				ConfigFile: config.StaticFile("testdata/Group/tags1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/Group/tags1/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -387,7 +387,7 @@ func TestAccXRayGroup_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/Group/tags1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/Group/tags1/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -400,7 +400,7 @@ func TestAccXRayGroup_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/Group/tags1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/Group/tags1/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -426,7 +426,7 @@ func TestAccXRayGroup_tags_DefaultTags_providerOnly(t *testing.T) {
 		CheckDestroy: testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigFile: config.StaticFile("testdata/Group/tags0_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/Group/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -440,7 +440,7 @@ func TestAccXRayGroup_tags_DefaultTags_providerOnly(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/Group/tags0_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/Group/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -451,7 +451,7 @@ func TestAccXRayGroup_tags_DefaultTags_providerOnly(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/Group/tags0_default2_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/Group/tags0_default2/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -468,7 +468,7 @@ func TestAccXRayGroup_tags_DefaultTags_providerOnly(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/Group/tags0_default2_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/Group/tags0_default2/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -481,7 +481,7 @@ func TestAccXRayGroup_tags_DefaultTags_providerOnly(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/Group/tags0_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/Group/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key2"),
@@ -495,7 +495,7 @@ func TestAccXRayGroup_tags_DefaultTags_providerOnly(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/Group/tags0_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/Group/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key2"),
@@ -507,7 +507,7 @@ func TestAccXRayGroup_tags_DefaultTags_providerOnly(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigFile:               config.StaticFile("testdata/Group/tags0_gen.tf"),
+				ConfigDirectory:          config.StaticDirectory("testdata/Group/tags0/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 				},
@@ -519,7 +519,7 @@ func TestAccXRayGroup_tags_DefaultTags_providerOnly(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigFile:               config.StaticFile("testdata/Group/tags0_gen.tf"),
+				ConfigDirectory:          config.StaticDirectory("testdata/Group/tags0/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 				},
@@ -543,7 +543,7 @@ func TestAccXRayGroup_tags_DefaultTags_nonOverlapping(t *testing.T) {
 		CheckDestroy: testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigFile: config.StaticFile("testdata/Group/tags1_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/Group/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),
@@ -561,7 +561,7 @@ func TestAccXRayGroup_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/Group/tags1_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/Group/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),
@@ -574,7 +574,7 @@ func TestAccXRayGroup_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/Group/tags2_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/Group/tags2_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),
@@ -596,7 +596,7 @@ func TestAccXRayGroup_tags_DefaultTags_nonOverlapping(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/Group/tags2_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/Group/tags2_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),
@@ -612,7 +612,7 @@ func TestAccXRayGroup_tags_DefaultTags_nonOverlapping(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigFile:               config.StaticFile("testdata/Group/tags0_gen.tf"),
+				ConfigDirectory:          config.StaticDirectory("testdata/Group/tags0/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 				},
@@ -624,7 +624,7 @@ func TestAccXRayGroup_tags_DefaultTags_nonOverlapping(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigFile:               config.StaticFile("testdata/Group/tags0_gen.tf"),
+				ConfigDirectory:          config.StaticDirectory("testdata/Group/tags0/"),
 				ConfigVariables: config.Variables{
 					"rName": config.StringVariable(rName),
 				},
@@ -648,7 +648,7 @@ func TestAccXRayGroup_tags_DefaultTags_overlapping(t *testing.T) {
 		CheckDestroy: testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigFile: config.StaticFile("testdata/Group/tags1_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/Group/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
@@ -665,7 +665,7 @@ func TestAccXRayGroup_tags_DefaultTags_overlapping(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/Group/tags1_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/Group/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
@@ -678,7 +678,7 @@ func TestAccXRayGroup_tags_DefaultTags_overlapping(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/Group/tags2_default2_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/Group/tags2_default2/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
@@ -701,7 +701,7 @@ func TestAccXRayGroup_tags_DefaultTags_overlapping(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/Group/tags2_default2_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/Group/tags2_default2/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
@@ -718,7 +718,7 @@ func TestAccXRayGroup_tags_DefaultTags_overlapping(t *testing.T) {
 				ImportStateVerify: true,
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/Group/tags1_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/Group/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
@@ -735,7 +735,7 @@ func TestAccXRayGroup_tags_DefaultTags_overlapping(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/Group/tags1_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/Group/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("overlapkey1"),
@@ -764,7 +764,7 @@ func TestAccXRayGroup_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 		Steps: []resource.TestStep{
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigFile:               config.StaticFile("testdata/Group/tags1_gen.tf"),
+				ConfigDirectory:          config.StaticDirectory("testdata/Group/tags1/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -779,7 +779,7 @@ func TestAccXRayGroup_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/Group/tags0_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/Group/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -793,7 +793,7 @@ func TestAccXRayGroup_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/Group/tags0_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/Group/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -819,7 +819,7 @@ func TestAccXRayGroup_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 		CheckDestroy: testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigFile: config.StaticFile("testdata/Group/tags0_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/Group/tags0_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -834,7 +834,7 @@ func TestAccXRayGroup_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigFile:               config.StaticFile("testdata/Group/tags1_gen.tf"),
+				ConfigDirectory:          config.StaticDirectory("testdata/Group/tags1/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -850,7 +850,7 @@ func TestAccXRayGroup_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 			},
 			{
 				ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-				ConfigFile:               config.StaticFile("testdata/Group/tags1_gen.tf"),
+				ConfigDirectory:          config.StaticDirectory("testdata/Group/tags1/"),
 				ConfigVariables: config.Variables{
 					"rName":     config.StringVariable(rName),
 					"tagKey1":   config.StringVariable("key1"),
@@ -876,7 +876,7 @@ func TestAccXRayGroup_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 		CheckDestroy: testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigFile: config.StaticFile("testdata/Group/tags1_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/Group/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -893,7 +893,7 @@ func TestAccXRayGroup_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/Group/tags1_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/Group/tags1_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -921,7 +921,7 @@ func TestAccXRayGroup_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) 
 		CheckDestroy: testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigFile: config.StaticFile("testdata/Group/tagsNull_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/Group/tagsNull_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -936,7 +936,7 @@ func TestAccXRayGroup_tags_DefaultTags_nullOverlappingResourceTag(t *testing.T) 
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/Group/tagsNull_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/Group/tagsNull_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("key1"),
@@ -963,7 +963,7 @@ func TestAccXRayGroup_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.
 		CheckDestroy: testAccCheckGroupDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				ConfigFile: config.StaticFile("testdata/Group/tagsNull_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/Group/tagsNull_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),
@@ -978,7 +978,7 @@ func TestAccXRayGroup_tags_DefaultTags_nullNonOverlappingResourceTag(t *testing.
 				),
 			},
 			{
-				ConfigFile: config.StaticFile("testdata/Group/tagsNull_default1_gen.tf"),
+				ConfigDirectory: config.StaticDirectory("testdata/Group/tagsNull_default1/"),
 				ConfigVariables: config.Variables{
 					"rName":             config.StringVariable(rName),
 					"providerTagKey1":   config.StringVariable("providerkey1"),

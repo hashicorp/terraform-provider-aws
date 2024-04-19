@@ -77,7 +77,7 @@ variable "tagKey1" {
   type     = string
   nullable = false
 }
-{{ end }}
+{{- end }}
 
 {{ if gt .DefaultTags 0 -}}
 variable "providerTagKey1" {
