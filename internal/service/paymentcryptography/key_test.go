@@ -20,59 +20,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	"github.com/hashicorp/terraform-provider-aws/names"
 	tfpaymentcryptography "github.com/hashicorp/terraform-provider-aws/internal/service/paymentcryptography"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
-
-func TestKeyExampleUnitTest(t *testing.T) {
-	t.Parallel()
-
-	testCases := []struct {
-		TestName string
-		Input    string
-		Expected string
-		Error    bool
-	}{
-		{
-			TestName: "empty",
-			Input:    "",
-			Expected: "",
-			Error:    true,
-		},
-		{
-			TestName: "descriptive name",
-			Input:    "some input",
-			Expected: "some output",
-			Error:    false,
-		},
-		{
-			TestName: "another descriptive name",
-			Input:    "more input",
-			Expected: "more output",
-			Error:    false,
-		},
-	}
-
-	for _, testCase := range testCases {
-		testCase := testCase
-		t.Run(testCase.TestName, func(t *testing.T) {
-			t.Parallel()
-			got, err := tfpaymentcryptography.FunctionFromResource(testCase.Input)
-
-			if err != nil && !testCase.Error {
-				t.Errorf("got error (%s), expected no error", err)
-			}
-
-			if err == nil && testCase.Error {
-				t.Errorf("got (%s) and no error, expected error", got)
-			}
-
-			if got != testCase.Expected {
-				t.Errorf("got %s, expected %s", got, testCase.Expected)
-			}
-		})
-	}
-}
 
 func TestAccPaymentCryptographyKey_basic(t *testing.T) {
 	ctx := acctest.Context(t)
@@ -80,7 +30,7 @@ func TestAccPaymentCryptographyKey_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var key paymentcryptography.DescribeKeyResponse
+	var key paymentcryptography.GetKeyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_paymentcryptography_key.test"
 
@@ -98,14 +48,7 @@ func TestAccPaymentCryptographyKey_basic(t *testing.T) {
 				Config: testAccKeyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key),
-					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
-					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
-					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
-						"console_access": "false",
-						"groups.#":       "0",
-						"username":       "Test",
-						"password":       "TestTest1234",
-					}),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "paymentcryptography", regexache.MustCompile(`key:+.`)),
 				),
 			},
@@ -125,7 +68,7 @@ func TestAccPaymentCryptographyKey_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var key paymentcryptography.DescribeKeyResponse
+	var key paymentcryptography.GetKeyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_paymentcryptography_key.test"
 
@@ -133,14 +76,14 @@ func TestAccPaymentCryptographyKey_disappears(t *testing.T) {
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.PaymentCryptographyEndpointID)
-			testAccPreCheck(t)
+			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PaymentCryptographyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckKeyDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccKeyConfig_basic(rName, testAccKeyVersionNewer),
+				Config: testAccKeyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key),
 					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfpaymentcryptography.ResourceKey, resourceName),
@@ -160,17 +103,14 @@ func testAccCheckKeyDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			input := &paymentcryptography.DescribeKeyInput{
-				KeyId: aws.String(rs.Primary.ID),
-			}
-			_, err := conn.DescribeKey(ctx, &paymentcryptography.DescribeKeyInput{
-				KeyId: aws.String(rs.Primary.ID),
+			_, err := conn.GetKey(ctx, &paymentcryptography.GetKeyInput{
+				KeyIdentifier: aws.String(rs.Primary.ID),
 			})
-			if errs.IsA[*types.ResourceNotFoundException](err){
+			if errs.IsA[*types.ResourceNotFoundException](err) {
 				return nil
 			}
 			if err != nil {
-			        return create.Error(names.PaymentCryptography, create.ErrActionCheckingDestroyed, tfpaymentcryptography.ResNameKey, rs.Primary.ID, err)
+				return create.Error(names.PaymentCryptography, create.ErrActionCheckingDestroyed, tfpaymentcryptography.ResNameKey, rs.Primary.ID, err)
 			}
 
 			return create.Error(names.PaymentCryptography, create.ErrActionCheckingDestroyed, tfpaymentcryptography.ResNameKey, rs.Primary.ID, errors.New("not destroyed"))
@@ -180,7 +120,7 @@ func testAccCheckKeyDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckKeyExists(ctx context.Context, name string, key *paymentcryptography.DescribeKeyResponse) resource.TestCheckFunc {
+func testAccCheckKeyExists(ctx context.Context, name string, key *paymentcryptography.GetKeyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -192,8 +132,8 @@ func testAccCheckKeyExists(ctx context.Context, name string, key *paymentcryptog
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).PaymentCryptographyClient(ctx)
-		resp, err := conn.DescribeKey(ctx, &paymentcryptography.DescribeKeyInput{
-			KeyId: aws.String(rs.Primary.ID),
+		resp, err := conn.GetKey(ctx, &paymentcryptography.GetKeyInput{
+			KeyIdentifier: aws.String(rs.Primary.ID),
 		})
 
 		if err != nil {
@@ -220,39 +160,30 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccCheckKeyNotRecreated(before, after *paymentcryptography.DescribeKeyResponse) resource.TestCheckFunc {
+func testAccCheckKeyNotRecreated(before, after *paymentcryptography.GetKeyInput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.KeyId), aws.ToString(after.KeyId); before != after {
-			return create.Error(names.PaymentCryptography, create.ErrActionCheckingNotRecreated, tfpaymentcryptography.ResNameKey, aws.ToString(before.KeyId), errors.New("recreated"))
+		if before, after := aws.ToString(before.KeyIdentifier), aws.ToString(after.KeyIdentifier); before != after {
+			return create.Error(names.PaymentCryptography, create.ErrActionCheckingNotRecreated, tfpaymentcryptography.ResNameKey, before, errors.New("recreated"))
 		}
 
 		return nil
 	}
 }
 
-func testAccKeyConfig_basic(rName, version string) string {
+func testAccKeyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_security_group" "test" {
-  name = %[1]q
-}
-
 resource "aws_paymentcryptography_key" "test" {
-  key_name             = %[1]q
-  engine_type             = "ActivePaymentCryptography"
-  engine_version          = %[2]q
-  host_instance_type      = "paymentcryptography.t2.micro"
-  security_groups         = [aws_security_group.test.id]
-  authentication_strategy = "simple"
-  storage_type            = "efs"
-
-  logs {
-    general = true
-  }
-
-  user {
-    username = "Test"
-    password = "TestTest1234"
+  key_attributes {
+    key_algorithm = "TDES_3KEY"
+    key_class     = "SYMMETRIC_KEY"
+    key_usage     = "TR31_P0_PIN_ENCRYPTION_KEY"
+    key_modes_of_use {
+      decrypt = true
+      encrypt = true
+      wrap    = true
+      unwrap  = true
+    }
   }
 }
-`, rName, version)
+`)
 }
