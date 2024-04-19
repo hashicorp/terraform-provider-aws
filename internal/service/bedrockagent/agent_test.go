@@ -262,6 +262,17 @@ resource "aws_iam_role_policy" "test" {
   role   = aws_iam_role.test.id
 }
 
+resource "aws_iam_role_policy_attachment" "test_s3" {
+  role       = aws_iam_role.test.id
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonS3FullAccess"
+}
+
+resource "aws_iam_role_policy_attachment" "test_lambda" {
+  role       = aws_iam_role.test.id
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AWSLambda_FullAccess"
+}
+
+
 data "aws_caller_identity" "current" {}
 
 data "aws_region" "current" {}
