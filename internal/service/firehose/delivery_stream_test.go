@@ -90,6 +90,7 @@ func TestAccFirehoseDeliveryStream_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.key_arn", ""),
 					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.key_type", "AWS_OWNED_CMK"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "splunk_configuration.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttrSet(resourceName, "version_id"),
