@@ -484,7 +484,7 @@ func waitAgentPrepared(ctx context.Context, conn *bedrockagent.Client, id string
 	return nil, err
 }
 
-func waitAgentVersioned(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*bedrockagent.GetAgentOutput, error) {
+func waitAgentVersioned(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.Agent, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AgentStatusVersioning),
 		Target:  enum.Slice(awstypes.AgentStatusPrepared),
@@ -494,8 +494,8 @@ func waitAgentVersioned(ctx context.Context, conn *bedrockagent.Client, id strin
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*bedrockagent.GetAgentOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString((*string)(&output.Agent.AgentStatus))))
+	if output, ok := outputRaw.(*awstypes.Agent); ok {
+		tfresource.SetLastError(err, errors.Join(tfslices.ApplyToAll(output.FailureReasons, func(s string) error { return errors.New(s) })...))
 
 		return output, err
 	}
