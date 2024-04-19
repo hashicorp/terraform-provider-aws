@@ -324,7 +324,7 @@ service/bedrockagent:
       - changed-files:
           - any-glob-to-any-file:
               - 'internal/service/bedrockagent/**/*'
-              - 'website/**/bedrock_agent_*'
+              - 'website/**/bedrockagent_*'
 service/billingconductor:
   - any:
       - changed-files:

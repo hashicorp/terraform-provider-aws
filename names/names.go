@@ -36,6 +36,7 @@ const (
 	AuditManagerEndpointID               = "auditmanager"
 	AutoScalingPlansEndpointID           = "autoscaling-plans"
 	BatchEndpointID                      = "batch"
+	BedrockAgentEndpointID               = "bedrockagent"
 	BedrockEndpointID                    = "bedrock"
 	BudgetsEndpointID                    = "budgets"
 	ChimeSDKMediaPipelinesEndpointID     = "media-pipelines-chime"
