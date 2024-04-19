@@ -74,10 +74,10 @@ In addition to all arguments above, the following attributes are exported:
 * `direction` - Direction of the queries to or from the Resolver Endpoint .
 * `ipAddresses` - List of IPaddresses that have been associated with the Resolver Endpoint.
 * `protocols` - The protocols used by the Resolver endpoint.
-* `resolver_endpoint_type` - The Resolver endpoint IP address type.
+* `resolverEndpointType` - The Resolver endpoint IP address type.
 * `status` - Current status of the Resolver Endpoint.
 * `vpcId` - ID of the Host VPC that the Resolver Endpoint resides in.
 
 [1]: https://docs.aws.amazon.com/Route53/latest/APIReference/API_route53resolver_Filter.html
 
-<!-- cache-key: cdktf-0.20.0 input-73b7255c606bdd7f26f6f50041bf26c9a3da0c7d704249f150a7d21ba2ce026c -->
+<!-- cache-key: cdktf-0.20.1 input-73b7255c606bdd7f26f6f50041bf26c9a3da0c7d704249f150a7d21ba2ce026c -->

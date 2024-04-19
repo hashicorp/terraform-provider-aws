@@ -84,7 +84,7 @@ func sweepDefaultPatchBaselines(region string) error {
 			return b.DefaultBaseline
 		}) {
 			baselineID := aws.ToString(identity.BaselineId)
-			pb, err := findPatchBaselineByID(ctx, conn, baselineID)
+			pb, err := findPatchBaselineByIDV2(ctx, conn, baselineID)
 			if err != nil {
 				errs = multierror.Append(errs, fmt.Errorf("reading Patch Baseline (%s): %w", baselineID, err))
 				continue
@@ -202,7 +202,7 @@ func sweepPatchBaselines(region string) error {
 
 		for _, identity := range page.BaselineIdentities {
 			baselineID := aws.ToString(identity.BaselineId)
-			r := ResourcePatchBaseline()
+			r := resourcePatchBaseline()
 			d := r.Data(nil)
 			d.SetId(baselineID)
 			d.Set("operating_system", identity.OperatingSystem)

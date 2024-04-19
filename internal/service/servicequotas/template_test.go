@@ -48,7 +48,7 @@ func testAccTemplate_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.ServiceQuotasEndpointID)
 			testAccPreCheckTemplate(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -83,7 +83,7 @@ func testAccTemplate_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.ServiceQuotasEndpointID)
 			testAccPreCheckTemplate(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTemplateDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -112,7 +112,7 @@ func testAccTemplate_value(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.ServiceQuotasEndpointID)
 			testAccPreCheckTemplate(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceQuotasServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckTemplateDestroy(ctx),
 		Steps: []resource.TestStep{

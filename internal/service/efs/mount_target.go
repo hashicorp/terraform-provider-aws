@@ -162,20 +162,21 @@ func resourceMountTargetRead(ctx context.Context, d *schema.ResourceData, meta i
 		return sdkdiag.AppendErrorf(diags, "reading EFS Mount Target (%s): %s", d.Id(), err)
 	}
 
-	arn := arn.ARN{
+	fsID := aws.StringValue(mt.FileSystemId)
+	fsARN := arn.ARN{
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Partition: meta.(*conns.AWSClient).Partition,
 		Region:    meta.(*conns.AWSClient).Region,
-		Resource:  fmt.Sprintf("file-system/%s", aws.StringValue(mt.FileSystemId)),
+		Resource:  "file-system/" + fsID,
 		Service:   "elasticfilesystem",
 	}.String()
 	d.Set("availability_zone_id", mt.AvailabilityZoneId)
 	d.Set("availability_zone_name", mt.AvailabilityZoneName)
-	d.Set("dns_name", meta.(*conns.AWSClient).RegionalHostname(fmt.Sprintf("%s.efs", aws.StringValue(mt.FileSystemId))))
-	d.Set("file_system_arn", arn)
-	d.Set("file_system_id", mt.FileSystemId)
+	d.Set("dns_name", meta.(*conns.AWSClient).RegionalHostname(ctx, fsID+".efs"))
+	d.Set("file_system_arn", fsARN)
+	d.Set("file_system_id", fsID)
 	d.Set("ip_address", mt.IpAddress)
-	d.Set("mount_target_dns_name", meta.(*conns.AWSClient).RegionalHostname(fmt.Sprintf("%s.%s.efs", aws.StringValue(mt.AvailabilityZoneName), aws.StringValue(mt.FileSystemId))))
+	d.Set("mount_target_dns_name", meta.(*conns.AWSClient).RegionalHostname(ctx, fmt.Sprintf("%s.%s.efs", aws.StringValue(mt.AvailabilityZoneName), aws.StringValue(mt.FileSystemId))))
 	d.Set("network_interface_id", mt.NetworkInterfaceId)
 	d.Set("owner_id", mt.OwnerId)
 	d.Set("subnet_id", mt.SubnetId)

@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfgrafana "github.com/hashicorp/terraform-provider-aws/internal/service/grafana"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccWorkspaceSAMLConfiguration_basic(t *testing.T) {
@@ -25,7 +26,7 @@ func testAccWorkspaceSAMLConfiguration_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, managedgrafana.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, managedgrafana.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GrafanaServiceID),
 		CheckDestroy:             nil,
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -54,7 +55,7 @@ func testAccWorkspaceSAMLConfiguration_loginValidity(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, managedgrafana.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, managedgrafana.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GrafanaServiceID),
 		CheckDestroy:             nil,
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
@@ -84,7 +85,7 @@ func testAccWorkspaceSAMLConfiguration_assertions(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, managedgrafana.EndpointsID) },
-		ErrorCheck:               acctest.ErrorCheck(t, managedgrafana.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.GrafanaServiceID),
 		CheckDestroy:             nil,
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{

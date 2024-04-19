@@ -6,6 +6,7 @@ package cloudformation
 import (
 	"fmt"
 	"log"
+	"slices"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
@@ -15,7 +16,6 @@ import (
 	tforganizations "github.com/hashicorp/terraform-provider-aws/internal/service/organizations"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
-	"golang.org/x/exp/slices"
 )
 
 func RegisterSweepers() {

@@ -5,7 +5,6 @@ package efs
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/efs"
@@ -146,13 +145,14 @@ func dataSourceFileSystemRead(ctx context.Context, d *schema.ResourceData, meta 
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("EFS file system", err))
 	}
 
-	d.SetId(aws.StringValue(fs.FileSystemId))
+	fsID := aws.StringValue(fs.FileSystemId)
+	d.SetId(fsID)
 	d.Set("arn", fs.FileSystemArn)
 	d.Set("availability_zone_id", fs.AvailabilityZoneId)
 	d.Set("availability_zone_name", fs.AvailabilityZoneName)
 	d.Set("creation_token", fs.CreationToken)
-	d.Set("dns_name", meta.(*conns.AWSClient).RegionalHostname(fmt.Sprintf("%s.efs", aws.StringValue(fs.FileSystemId))))
-	d.Set("file_system_id", fs.FileSystemId)
+	d.Set("dns_name", meta.(*conns.AWSClient).RegionalHostname(ctx, d.Id()+".efs"))
+	d.Set("file_system_id", fsID)
 	d.Set("encrypted", fs.Encrypted)
 	d.Set("kms_key_id", fs.KmsKeyId)
 	d.Set("name", fs.Name)

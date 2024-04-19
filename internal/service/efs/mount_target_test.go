@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfefs "github.com/hashicorp/terraform-provider-aws/internal/service/efs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEFSMountTarget_basic(t *testing.T) {
@@ -28,7 +29,7 @@ func TestAccEFSMountTarget_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMountTargetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -72,7 +73,7 @@ func TestAccEFSMountTarget_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMountTargetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -96,7 +97,7 @@ func TestAccEFSMountTarget_ipAddress(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMountTargetDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -125,7 +126,7 @@ func TestAccEFSMountTarget_IPAddress_emptyString(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, efs.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EFSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckMountTargetDestroy(ctx),
 		Steps: []resource.TestStep{

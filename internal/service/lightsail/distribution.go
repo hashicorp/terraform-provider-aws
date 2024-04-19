@@ -351,6 +351,10 @@ func resourceDistributionCreate(ctx context.Context, d *schema.ResourceData, met
 		in.IpAddressType = types.IpAddressType(v.(string))
 	}
 
+	if v, ok := d.GetOk("certificate_name"); ok {
+		in.CertificateName = aws.String(v.(string))
+	}
+
 	out, err := conn.CreateDistribution(ctx, in)
 
 	if err != nil {
@@ -488,6 +492,11 @@ func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, met
 
 	if d.HasChanges("origin") {
 		in.Origin = expandInputOrigin(d.Get("origin").([]interface{})[0].(map[string]interface{}))
+		update = true
+	}
+
+	if d.HasChanges("certificate_name") {
+		in.CertificateName = aws.String(d.Get("certificate_name").(string))
 		update = true
 	}
 

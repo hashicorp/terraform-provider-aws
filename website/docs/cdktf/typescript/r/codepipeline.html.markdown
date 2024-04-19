@@ -192,12 +192,16 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `name` - (Required) The name of the pipeline.
-* `pipeline_type` - (Optional) Type of the pipeline. Possible values are: `V1` and `V2`. Default value is `V1`.
+* `pipelineType` - (Optional) Type of the pipeline. Possible values are: `V1` and `V2`. Default value is `V1`.
 * `roleArn` - (Required) A service role Amazon Resource Name (ARN) that grants AWS CodePipeline permission to make calls to AWS services on your behalf.
 * `artifactStore` (Required) One or more artifact_store blocks. Artifact stores are documented below.
+* `executionMode` (Optional) The method that the pipeline will use to handle multiple executions. The default mode is `SUPERSEDED`. For value values, refer to the [AWS documentation](https://docs.aws.amazon.com/codepipeline/latest/APIReference/API_PipelineDeclaration.html#CodePipeline-Type-PipelineDeclaration-executionMode).
+
+  **Note:** `QUEUED` or `PARALLEL` mode can only be used with V2 pipelines.
 * `stage` (Minimum of at least two `stage` blocks is required) A stage block. Stages are documented below.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`defaultTags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
-* `variable` - (Optional) A pipeline-level variable block. Valid only when `pipeline_type` is `V2`. Variable are documented below.
+* `trigger` - (Optional) A trigger block. Valid only when `pipelineType` is `V2`. Triggers are documented below.
+* `variable` - (Optional) A pipeline-level variable block. Valid only when `pipelineType` is `V2`. Variable are documented below.
 
 An `artifactStore` block supports the following arguments:
 
@@ -231,6 +235,44 @@ An `action` block supports the following arguments:
 * `region` - (Optional) The region in which to run the action.
 * `namespace` - (Optional) The namespace all output variables will be accessed from.
 
+A `trigger` block supports the following arguments:
+
+* `providerType` - (Required) The source provider for the event. Possible value is `CodeStarSourceConnection`.
+* `gitConfiguration` - (Required) Provides the filter criteria and the source stage for the repository event that starts the pipeline. For more information, refer to the [AWS documentation](https://docs.aws.amazon.com/codepipeline/latest/userguide/pipelines-filter.html). A `gitConfiguration` block is documented below.
+
+A `gitConfiguration` block supports the following arguments:
+
+* `sourceActionName` - (Required) The name of the pipeline source action where the trigger configuration.
+* `pullRequest` - (Optional) The field where the repository event that will start the pipeline is specified as pull requests. A `pullRequest` block is documented below.
+* `push` - (Optional) The field where the repository event that will start the pipeline, such as pushing Git tags, is specified with details. A `push` block is documented below.
+
+A `pullRequest` block supports the following arguments:
+
+* `events` - (Optional) A list that specifies which pull request events to filter on (opened, updated, closed) for the trigger configuration. Possible values are `OPEN`, `UPDATED ` and `CLOSED`.
+* `branches` - (Optional) The field that specifies to filter on branches for the pull request trigger configuration. A `branches` block is documented below.
+* `filePaths` - (Optional) The field that specifies to filter on file paths for the pull request trigger configuration. A `filePaths` block is documented below.
+
+A `push` block supports the following arguments:
+
+* `branches` - (Optional) The field that specifies to filter on branches for the push trigger configuration. A `branches` block is documented below.
+* `filePaths` - (Optional) The field that specifies to filter on file paths for the push trigger configuration. A `filePaths` block is documented below.
+* `tags` - (Optional) The field that contains the details for the Git tags trigger configuration. A `tags` block is documented below.
+
+A `branches` block supports the following arguments:
+
+* `includes` - (Optional) A list of patterns of Git branches that, when a commit is pushed, are to be included as criteria that starts the pipeline.
+* `excludes` - (Optional) A list of patterns of Git branches that, when a commit is pushed, are to be excluded from starting the pipeline.
+
+A `filePaths` block supports the following arguments:
+
+* `includes` - (Optional) A list of patterns of Git repository file paths that, when a commit is pushed, are to be included as criteria that starts the pipeline.
+* `excludes` - (Optional) A list of patterns of Git repository file paths that, when a commit is pushed, are to be excluded from starting the pipeline.
+
+A `tags` block supports the following arguments:
+
+* `includes` - (Optional) A list of patterns of Git tags that, when pushed, are to be included as criteria that starts the pipeline.
+* `excludes` - (Optional) A list of patterns of Git tags that, when pushed, are to be excluded from starting the pipeline.
+
 A `variable` block supports the following arguments:
 
 * `name` - (Required) The name of a pipeline-level variable.
@@ -255,9 +297,15 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { Codepipeline } from "./.gen/providers/aws/codepipeline";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    Codepipeline.generateConfigForImport(this, "foo", "example");
   }
 }
 
@@ -269,4 +317,4 @@ Using `terraform import`, import CodePipelines using the name. For example:
 % terraform import aws_codepipeline.foo example
 ```
 
-<!-- cache-key: cdktf-0.20.0 input-e1025a278a59d0c266797634d95f819b31425f7facb05b1eeff5d7b24738c176 -->
+<!-- cache-key: cdktf-0.20.1 input-5520b5342dee2a90566e4663f10c917fd65e66a2734a38eeddba35384d88a406 -->

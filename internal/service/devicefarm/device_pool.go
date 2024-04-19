@@ -280,7 +280,7 @@ func decodeProjectARN(id, typ string, meta interface{}) (string, error) {
 	}
 
 	poolArnResouce := poolArn.Resource
-	parts := strings.Split(strings.TrimPrefix(poolArnResouce, fmt.Sprintf("%s:", typ)), "/")
+	parts := strings.Split(strings.TrimPrefix(poolArnResouce, typ+":"), "/")
 	if len(parts) != 2 {
 		return "", fmt.Errorf("Unexpected format of ID (%q), expected project-id/%q-id", poolArnResouce, typ)
 	}
@@ -290,7 +290,7 @@ func decodeProjectARN(id, typ string, meta interface{}) (string, error) {
 		AccountID: meta.(*conns.AWSClient).AccountID,
 		Partition: meta.(*conns.AWSClient).Partition,
 		Region:    meta.(*conns.AWSClient).Region,
-		Resource:  fmt.Sprintf("project:%s", projectId),
+		Resource:  "project:" + projectId,
 		Service:   devicefarm.ServiceName,
 	}.String()
 

@@ -56,7 +56,7 @@ func sweepClusters(region string) error {
 				log.Printf("[ERROR] unsetting EMR Cluster (%s) termination protection: %s", id, err)
 			}
 
-			r := ResourceCluster()
+			r := resourceCluster()
 			d := r.Data(nil)
 			d.SetId(id)
 
@@ -103,7 +103,7 @@ func sweepStudios(region string) error {
 		}
 
 		for _, studio := range page.Studios {
-			r := ResourceStudio()
+			r := resourceStudio()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(studio.StudioId))
 

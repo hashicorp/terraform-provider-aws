@@ -47,7 +47,11 @@ func DataSourceVPCDHCPOptions() *schema.Resource {
 				Computed: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
-			"filter": CustomFiltersSchema(),
+			"filter": customFiltersSchema(),
+			"ipv6_address_preferred_lease_time": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"netbios_name_servers": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -82,7 +86,7 @@ func dataSourceVPCDHCPOptionsRead(ctx context.Context, d *schema.ResourceData, m
 		input.DhcpOptionsIds = []*string{aws.String(v.(string))}
 	}
 
-	input.Filters = append(input.Filters, BuildCustomFilterList(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 	if len(input.Filters) == 0 {

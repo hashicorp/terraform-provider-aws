@@ -26,8 +26,8 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	{{- end }}
 	{{- if .ParentNotFoundErrCode }}
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	{{- end }}
 	{{- if .TfLogPkg }}
     "github.com/hashicorp/terraform-plugin-log/tflog"
@@ -37,6 +37,9 @@ import (
 	{{- end }}
 	{{- if .LoggingPkg }}
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
+	{{- end }}
+	{{- if .TfSlicesPkg }}
+    tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	{{- end }}
 	{{- if .TfResourcePkg }}
     "github.com/hashicorp/terraform-provider-aws/internal/tfresource"

@@ -10,18 +10,19 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	tfiam "github.com/hashicorp/terraform-provider-aws/internal/service/iam"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestResourceSortByExpirationDate(t *testing.T) {
 	t.Parallel()
 
-	certs := []*iam.ServerCertificateMetadata{
+	certs := []awstypes.ServerCertificateMetadata{
 		{
 			ServerCertificateName: aws.String("oldest"),
 			Expiration:            aws.Time(time.Now()),
@@ -36,7 +37,7 @@ func TestResourceSortByExpirationDate(t *testing.T) {
 		},
 	}
 	sort.Sort(tfiam.CertificateByExpiration(certs))
-	if aws.StringValue(certs[0].ServerCertificateName) != "latest" {
+	if aws.ToString(certs[0].ServerCertificateName) != "latest" {
 		t.Fatalf("Expected first item to be %q, but was %q", "latest", *certs[0].ServerCertificateName)
 	}
 }
@@ -50,7 +51,7 @@ func TestAccIAMServerCertificateDataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServerCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -75,7 +76,7 @@ func TestAccIAMServerCertificateDataSource_matchNamePrefix(t *testing.T) {
 	ctx := acctest.Context(t)
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServerCertificateDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -98,7 +99,7 @@ func TestAccIAMServerCertificateDataSource_path(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iam.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IAMServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServerCertificateDestroy(ctx),
 		Steps: []resource.TestStep{

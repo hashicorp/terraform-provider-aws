@@ -26,12 +26,16 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-// @SDKDataSource("aws_s3_object")
-func DataSourceObject() *schema.Resource {
+// @SDKDataSource("aws_s3_object", name="Object")
+func dataSourceObject() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceObjectRead,
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"body": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -201,6 +205,12 @@ func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta inte
 	}
 	d.SetId(id)
 
+	arn, err := newObjectARN(meta.(*conns.AWSClient).Partition, bucket, key)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading S3 Bucket (%s) Object (%s): %s", bucket, key, err)
+	}
+	d.Set("arn", arn.String())
+
 	d.Set("bucket_key_enabled", output.BucketKeyEnabled)
 	d.Set("cache_control", output.CacheControl)
 	d.Set("checksum_crc32", output.ChecksumCRC32)
@@ -261,7 +271,7 @@ func dataSourceObjectRead(ctx context.Context, d *schema.ResourceData, meta inte
 		d.Set("body", string(buf.Bytes()))
 	}
 
-	if tags, err := ObjectListTags(ctx, conn, bucket, key, optFns...); err == nil {
+	if tags, err := objectListTags(ctx, conn, bucket, key, optFns...); err == nil {
 		if err := d.Set("tags", tags.IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 		}

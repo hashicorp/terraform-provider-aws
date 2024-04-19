@@ -41,6 +41,7 @@ func TestAccTransfer_serial(t *testing.T) {
 			"LambdaFunction":                testAccServer_lambdaFunction,
 			"Protocols":                     testAccServer_protocols,
 			"ProtocolDetails":               testAccServer_protocolDetails,
+			"S3StorageOptions":              testAccServer_s3StorageOptions,
 			"SecurityPolicy":                testAccServer_securityPolicy,
 			"SecurityPolicyFIPS":            testAccServer_securityPolicyFIPS,
 			"StructuredLogDestinations":     testAccServer_structuredLogDestinations,

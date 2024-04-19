@@ -983,22 +983,27 @@ func validExperimentTemplateStopConditionSource() schema.SchemaValidateFunc {
 
 func validExperimentTemplateActionTargetKey() schema.SchemaValidateFunc {
 	// See https://docs.aws.amazon.com/fis/latest/userguide/actions.html#action-targets
-	allowedStopConditionSources := []string{
+	allowedActionTargets := []string{
+		"AutoScalingGroups",
+		"Buckets",
 		"Cluster",
 		"Clusters",
 		"DBInstances",
 		"Instances",
 		"Nodegroups",
 		"Pods",
+		"ReplicationGroups",
 		"Roles",
 		"SpotInstances",
 		"Subnets",
+		"Tables",
 		"Tasks",
+		"TransitGateways",
 		"Volumes",
 	}
 
 	return validation.All(
 		validation.StringLenBetween(0, 64),
-		validation.StringInSlice(allowedStopConditionSources, false),
+		validation.StringInSlice(allowedActionTargets, false),
 	)
 }
