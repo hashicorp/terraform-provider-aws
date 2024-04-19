@@ -22,7 +22,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 	return []*types.ServicePackageFrameworkResource{
 		{
 			Factory: newAgentActionGroupResource,
-			Name:    "Bedrock Agent Action Group",
+			Name:    "Agent Action Group",
 		},
 		{
 			Factory: newAgentAliasResource,
