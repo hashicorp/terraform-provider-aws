@@ -36,7 +36,7 @@ data "aws_ec2_transit_gateway_vpn_attachment" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `transit_gateway_id` - (Optional) Identifier of the EC2 Transit Gateway.
 * `vpn_connection_id` - (Optional) Identifier of the EC2 VPN Connection.
@@ -45,14 +45,14 @@ The following arguments are supported:
 
 ### filter Configuration Block
 
-The following arguments are supported by the `filter` configuration block:
+The `filter` configuration block supports the following arguments:
 
 * `name` - (Required) Name of the filter field. Valid values can be found in the [EC2 DescribeTransitGatewayAttachments API Reference](https://docs.aws.amazon.com/AWSEC2/latest/APIReference/API_DescribeTransitGatewayAttachments.html).
 * `values` - (Required) Set of values that are accepted for the given filter field. Results will be selected if any given value matches.
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `id` - EC2 Transit Gateway VPN Attachment identifier
 * `tags` - Key-value tags for the EC2 Transit Gateway VPN Attachment

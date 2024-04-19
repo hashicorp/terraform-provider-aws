@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -13,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
@@ -45,12 +49,13 @@ var routeTableValidTargets = []string{
 
 // @SDKResource("aws_route_table", name="Route Table")
 // @Tags(identifierAttribute="id")
-func ResourceRouteTable() *schema.Resource {
+func resourceRouteTable() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceRouteTableCreate,
 		ReadWithoutTimeout:   resourceRouteTableRead,
 		UpdateWithoutTimeout: resourceRouteTableUpdate,
 		DeleteWithoutTimeout: resourceRouteTableDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -165,8 +170,9 @@ func resourceRouteTableCreate(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.CreateRouteTableInput{
-		VpcId:             aws.String(d.Get("vpc_id").(string)),
+		ClientToken:       aws.String(id.UniqueId()),
 		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeRouteTable),
+		VpcId:             aws.String(d.Get("vpc_id").(string)),
 	}
 
 	output, err := conn.CreateRouteTableWithContext(ctx, input)
@@ -240,7 +246,7 @@ func resourceRouteTableRead(ctx context.Context, d *schema.ResourceData, meta in
 	if err := d.Set("propagating_vgws", propagatingVGWs); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting propagating_vgws: %s", err)
 	}
-	if err := d.Set("route", flattenRoutes(ctx, conn, routeTable.Routes)); err != nil {
+	if err := d.Set("route", flattenRoutes(ctx, conn, d, routeTable.Routes)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting route: %s", err)
 	}
 	d.Set("vpc_id", routeTable.VpcId)
@@ -347,6 +353,10 @@ func resourceRouteTableDelete(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	routeTable, err := FindRouteTableByID(ctx, conn, d.Id())
+
+	if tfresource.NotFound(err) {
+		return diags
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Route Table (%s): %s", d.Id(), err)
@@ -476,6 +486,25 @@ func routeTableAddRoute(ctx context.Context, conn *ec2.EC2, routeTableID string,
 	}
 
 	input.RouteTableId = aws.String(routeTableID)
+
+	_, target := routeTableRouteTargetAttribute(tfMap)
+
+	if target == gatewayIDLocal {
+		// created by AWS so probably doesn't need a retry but just to be sure
+		// we provide a small one
+		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, time.Second*15,
+			func() (interface{}, error) {
+				return routeFinder(ctx, conn, routeTableID, destination)
+			},
+			errCodeInvalidRouteNotFound,
+		)
+
+		if tfresource.NotFound(err) {
+			return fmt.Errorf("local route cannot be created but must exist to be adopted, %s %s does not exist", target, destination)
+		}
+
+		return nil
+	}
 
 	_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, timeout,
 		func() (interface{}, error) {
@@ -716,7 +745,11 @@ func expandReplaceRouteInput(tfMap map[string]interface{}) *ec2.ReplaceRouteInpu
 	}
 
 	if v, ok := tfMap["gateway_id"].(string); ok && v != "" {
-		apiObject.GatewayId = aws.String(v)
+		if v == gatewayIDLocal {
+			apiObject.LocalTarget = aws.Bool(true)
+		} else {
+			apiObject.GatewayId = aws.String(v)
+		}
 	}
 
 	if v, ok := tfMap["local_gateway_id"].(string); ok && v != "" {
@@ -808,7 +841,7 @@ func flattenRoute(apiObject *ec2.Route) map[string]interface{} {
 	return tfMap
 }
 
-func flattenRoutes(ctx context.Context, conn *ec2.EC2, apiObjects []*ec2.Route) []interface{} {
+func flattenRoutes(ctx context.Context, conn *ec2.EC2, d *schema.ResourceData, apiObjects []*ec2.Route) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -820,7 +853,13 @@ func flattenRoutes(ctx context.Context, conn *ec2.EC2, apiObjects []*ec2.Route) 
 			continue
 		}
 
-		if gatewayID := aws.StringValue(apiObject.GatewayId); gatewayID == gatewayIDLocal || gatewayID == gatewayIDVPCLattice {
+		if gatewayID := aws.StringValue(apiObject.GatewayId); gatewayID == gatewayIDVPCLattice {
+			continue
+		}
+
+		// local routes from config need to be included but not default local routes, as determined by hasLocalConfig
+		// see local route tests
+		if gatewayID := aws.StringValue(apiObject.GatewayId); gatewayID == gatewayIDLocal && !hasLocalConfig(d, apiObject) {
 			continue
 		}
 
@@ -849,6 +888,35 @@ func flattenRoutes(ctx context.Context, conn *ec2.EC2, apiObjects []*ec2.Route) 
 	}
 
 	return tfList
+}
+
+// hasLocalConfig along with flattenRoutes prevents default local routes from
+// being stored in state but allows configured local routes to be stored in
+// state. hasLocalConfig checks the ResourceData and flattenRoutes skips or
+// includes the route. Normally, you can't count on ResourceData to represent
+// config. However, in this case, a local gateway route in ResourceData must
+// come from config because of the gatekeeping done by hasLocalConfig and
+// flattenRoutes.
+func hasLocalConfig(d *schema.ResourceData, apiObject *ec2.Route) bool {
+	if apiObject.GatewayId == nil {
+		return false
+	}
+	if v, ok := d.GetOk("route"); ok && v.(*schema.Set).Len() > 0 {
+		for _, v := range v.(*schema.Set).List() {
+			v := v.(map[string]interface{})
+			if v["cidr_block"].(string) != aws.StringValue(apiObject.DestinationCidrBlock) &&
+				v["destination_prefix_list_id"] != aws.StringValue(apiObject.DestinationPrefixListId) &&
+				v["ipv6_cidr_block"] != aws.StringValue(apiObject.DestinationIpv6CidrBlock) {
+				continue
+			}
+
+			if v["gateway_id"].(string) == gatewayIDLocal {
+				return true
+			}
+		}
+	}
+
+	return false
 }
 
 // routeTableRouteDestinationAttribute returns the attribute key and value of the route table route's destination.

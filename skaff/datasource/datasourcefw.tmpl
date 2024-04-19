@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package {{ .ServicePackage }}
 
 {{- if .IncludeComments }}
@@ -50,7 +53,9 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+{{- if .IncludeTags }}
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+{{- end }}
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 {{ if .IncludeComments }}
@@ -118,7 +123,9 @@ func (d *dataSource{{ .DataSource }}) Schema(ctx context.Context, req datasource
 			"name": schema.StringAttribute{
 				Required: true,
 			},
-			names.AttrTags: tftags.TagsAttribute(),
+			{{- if .IncludeTags }}
+			names.AttrTags: tftags.TagsAttributeComputedOnly(),
+			{{- end }}
 			"type": schema.StringAttribute{
 				Computed: true,
 			},
@@ -212,9 +219,11 @@ func (d *dataSource{{ .DataSource }}) Read(ctx context.Context, req datasource.R
 	{{ if .IncludeComments }}
 	// TIP: -- 5. Set the tags
 	{{- end }}
+	{{- if .IncludeTags }}
 	ignoreTagsConfig := d.Meta().IgnoreTagsConfig
 	tags := KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 	data.Tags = flex.FlattenFrameworkStringValueMapLegacy(ctx, tags.Map())
+	{{- end }}
 	{{ if .IncludeComments }}
 	// TIP: -- 6. Set the state
 	{{- end }}
@@ -241,7 +250,9 @@ type dataSource{{ .DataSource }}Data struct {
 	Description     types.String   `tfsdk:"description"`
 	ID              types.String   `tfsdk:"id"`
 	Name            types.String   `tfsdk:"name"`
+	{{- if .IncludeTags }}
 	Tags            types.Map      `tfsdk:"tags"`
+	{{- end }}
 	Type            types.String   `tfsdk:"type"`
 }
 

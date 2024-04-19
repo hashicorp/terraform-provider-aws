@@ -1,16 +1,19 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package dynamodb
 
 import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
+	"maps"
+	"slices"
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/dynamodb"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
-	"golang.org/x/exp/maps"
-	"golang.org/x/exp/slices"
 )
 
 func TestExpandTableItemAttributes(t *testing.T) {

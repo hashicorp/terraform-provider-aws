@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package opensearchserverless
 
@@ -10,13 +10,15 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
-	"github.com/hashicorp/go-multierror"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/framework"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_opensearchserverless_access_policy", &resource.Sweeper{
 		Name: "aws_opensearchserverless_access_policy",
 		F:    sweepAccessPolicies,
@@ -41,24 +43,25 @@ func init() {
 
 func sweepAccessPolicies(region string) error {
 	ctx := sweep.Context(region)
+	if region == names.USWest1RegionID {
+		log.Printf("[WARN] Skipping OpenSearch Serverless Access Policy sweep for region: %s", region)
+		return nil
+	}
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-
 	conn := client.OpenSearchServerlessClient(ctx)
-	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
 	input := &opensearchserverless.ListAccessPoliciesInput{
 		Type: types.AccessPolicyTypeData,
 	}
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	pages := opensearchserverless.NewListAccessPoliciesPaginator(conn, input)
 
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-		if sweep.SkipSweepError(err) {
+		if awsv2.SkipSweepError(err) || skipSweepErr(err) {
 			log.Printf("[WARN] Skipping OpenSearch Serverless Access Policies sweep for %s: %s", region, err)
 			return nil
 		}
@@ -78,35 +81,32 @@ func sweepAccessPolicies(region string) error {
 		}
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping OpenSearch Serverless Access Policies for %s: %w", region, err))
-	}
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping OpenSearch Serverless Access Policies sweep for %s: %s", region, errs)
-		return nil
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		return fmt.Errorf("error sweeping OpenSearch Serverless Access Policies for %s: %w", region, err)
 	}
 
-	return errs.ErrorOrNil()
+	return nil
 }
 
 func sweepCollections(region string) error {
 	ctx := sweep.Context(region)
+	if region == names.USWest1RegionID {
+		log.Printf("[WARN] Skipping OpenSearch Serverless Collection sweep for region: %s", region)
+		return nil
+	}
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-
 	conn := client.OpenSearchServerlessClient(ctx)
-	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
 	input := &opensearchserverless.ListCollectionsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	pages := opensearchserverless.NewListCollectionsPaginator(conn, input)
 
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-		if sweep.SkipSweepError(err) {
+		if awsv2.SkipSweepError(err) || skipSweepErr(err) {
 			log.Printf("[WARN] Skipping OpenSearch Serverless Collections sweep for %s: %s", region, err)
 			return nil
 		}
@@ -124,37 +124,34 @@ func sweepCollections(region string) error {
 		}
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping OpenSearch Serverless Collections for %s: %w", region, err))
-	}
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping OpenSearch Serverless Collections sweep for %s: %s", region, errs)
-		return nil
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		return fmt.Errorf("error sweeping OpenSearch Serverless Collections for %s: %w", region, err)
 	}
 
-	return errs.ErrorOrNil()
+	return nil
 }
 
 func sweepSecurityConfigs(region string) error {
 	ctx := sweep.Context(region)
+	if region == names.USWest1RegionID {
+		log.Printf("[WARN] Skipping OpenSearch Serverless Security Config sweep for region: %s", region)
+		return nil
+	}
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-
 	conn := client.OpenSearchServerlessClient(ctx)
-	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
-
 	input := &opensearchserverless.ListSecurityConfigsInput{
 		Type: types.SecurityConfigTypeSaml,
 	}
+	sweepResources := make([]sweep.Sweepable, 0)
+
 	pages := opensearchserverless.NewListSecurityConfigsPaginator(conn, input)
 
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-		if sweep.SkipSweepError(err) {
+		if awsv2.SkipSweepError(err) || skipSweepErr(err) {
 			log.Printf("[WARN] Skipping OpenSearch Serverless Security Configs sweep for %s: %s", region, err)
 			return nil
 		}
@@ -172,37 +169,34 @@ func sweepSecurityConfigs(region string) error {
 		}
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping OpenSearch Serverless Security Configs for %s: %w", region, err))
-	}
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping OpenSearch Serverless Security Configs sweep for %s: %s", region, errs)
-		return nil
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		return fmt.Errorf("error sweeping OpenSearch Serverless Security Configs for %s: %w", region, err)
 	}
 
-	return errs.ErrorOrNil()
+	return nil
 }
 
 func sweepSecurityPolicies(region string) error {
 	ctx := sweep.Context(region)
+	if region == names.USWest1RegionID {
+		log.Printf("[WARN] Skipping OpenSearch Serverless Security Policy sweep for region: %s", region)
+		return nil
+	}
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-
 	conn := client.OpenSearchServerlessClient(ctx)
-	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
-
 	inputEncryption := &opensearchserverless.ListSecurityPoliciesInput{
 		Type: types.SecurityPolicyTypeEncryption,
 	}
+	sweepResources := make([]sweep.Sweepable, 0)
+
 	pagesEncryption := opensearchserverless.NewListSecurityPoliciesPaginator(conn, inputEncryption)
 
 	for pagesEncryption.HasMorePages() {
 		page, err := pagesEncryption.NextPage(ctx)
-		if sweep.SkipSweepError(err) {
+		if awsv2.SkipSweepError(err) || skipSweepErr(err) {
 			log.Printf("[WARN] Skipping OpenSearch Serverless Security Policies sweep for %s: %s", region, err)
 			return nil
 		}
@@ -229,7 +223,7 @@ func sweepSecurityPolicies(region string) error {
 
 	for pagesNetwork.HasMorePages() {
 		page, err := pagesNetwork.NextPage(ctx)
-		if sweep.SkipSweepError(err) {
+		if awsv2.SkipSweepError(err) || skipSweepErr(err) {
 			log.Printf("[WARN] Skipping OpenSearch Serverless Security Policies sweep for %s: %s", region, err)
 			return nil
 		}
@@ -249,35 +243,32 @@ func sweepSecurityPolicies(region string) error {
 		}
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping OpenSearch Serverless Security Policies for %s: %w", region, err))
-	}
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping OpenSearch Serverless Security Policies sweep for %s: %s", region, errs)
-		return nil
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		return fmt.Errorf("error sweeping OpenSearch Serverless Security Policies for %s: %w", region, err)
 	}
 
-	return errs.ErrorOrNil()
+	return nil
 }
 
 func sweepVPCEndpoints(region string) error {
 	ctx := sweep.Context(region)
+	if region == names.USWest1RegionID {
+		log.Printf("[WARN] Skipping OpenSearch Serverless Security Policy sweep for region: %s", region)
+		return nil
+	}
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
-
 	if err != nil {
 		return fmt.Errorf("error getting client: %w", err)
 	}
-
 	conn := client.OpenSearchServerlessClient(ctx)
-	sweepResources := make([]sweep.Sweepable, 0)
-	var errs *multierror.Error
 	input := &opensearchserverless.ListVpcEndpointsInput{}
+	sweepResources := make([]sweep.Sweepable, 0)
 
 	pages := opensearchserverless.NewListVpcEndpointsPaginator(conn, input)
 
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
-		if sweep.SkipSweepError(err) {
+		if awsv2.SkipSweepError(err) || skipSweepErr(err) {
 			log.Printf("[WARN] Skipping OpenSearch Serverless VPC Endpoints sweep for %s: %s", region, err)
 			return nil
 		}
@@ -295,13 +286,14 @@ func sweepVPCEndpoints(region string) error {
 		}
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error sweeping OpenSearch Serverless VPC Endpoints for %s: %w", region, err))
-	}
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping OpenSearch Serverless VPC Endpoint sweep for %s: %s", region, errs)
-		return nil
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		return fmt.Errorf("error sweeping OpenSearch Serverless VPC Endpoints for %s: %w", region, err)
 	}
 
-	return errs.ErrorOrNil()
+	return nil
+}
+
+func skipSweepErr(err error) bool {
+	// OpenSearch Serverless returns this error when the service is not supported in the region
+	return tfawserr.ErrMessageContains(err, "AccessDeniedException", "UnknownError")
 }

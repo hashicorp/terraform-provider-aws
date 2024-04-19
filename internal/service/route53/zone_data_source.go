@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package route53
 
 import (
@@ -120,7 +123,7 @@ func dataSourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interf
 				hostedZoneFound = hostedZone
 				break
 				// we check if the name is the same as requested and if private zone field is the same as requested or if there is a vpc_id
-			} else if (TrimTrailingPeriod(aws.StringValue(hostedZone.Name)) == TrimTrailingPeriod(name)) && (aws.BoolValue(hostedZone.Config.PrivateZone) == d.Get("private_zone").(bool) || (aws.BoolValue(hostedZone.Config.PrivateZone) && vpcIdExists)) {
+			} else if (NormalizeZoneName(aws.StringValue(hostedZone.Name)) == NormalizeZoneName(name)) && (aws.BoolValue(hostedZone.Config.PrivateZone) == d.Get("private_zone").(bool) || (aws.BoolValue(hostedZone.Config.PrivateZone) && vpcIdExists)) {
 				matchingVPC := false
 				if vpcIdExists {
 					reqHostedZone := &route53.GetHostedZoneInput{}
@@ -175,7 +178,7 @@ func dataSourceZoneRead(ctx context.Context, d *schema.ResourceData, meta interf
 	d.Set("zone_id", idHostedZone)
 	// To be consistent with other AWS services (e.g. ACM) that do not accept a trailing period,
 	// we remove the suffix from the Hosted Zone Name returned from the API
-	d.Set("name", TrimTrailingPeriod(aws.StringValue(hostedZoneFound.Name)))
+	d.Set("name", NormalizeZoneName(aws.StringValue(hostedZoneFound.Name)))
 	d.Set("comment", hostedZoneFound.Config.Comment)
 	d.Set("private_zone", hostedZoneFound.Config.PrivateZone)
 	d.Set("caller_reference", hostedZoneFound.CallerReference)

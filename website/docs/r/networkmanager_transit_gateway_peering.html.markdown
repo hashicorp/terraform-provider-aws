@@ -21,15 +21,15 @@ resource "aws_networkmanager_transit_gateway_peering" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `core_network_id` - (Required) The ID of a core network.
 * `tags` - (Optional) Key-value tags for the peering. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `transit_gateway_arn` - (Required) The ARN of the transit gateway for the peering request.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Peering Amazon Resource Name (ARN).
 * `core_network_arn` - The ARN of the core network.
@@ -43,8 +43,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-`aws_networkmanager_transit_gateway_peering` can be imported using the peering ID, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_networkmanager_transit_gateway_peering` using the peering ID. For example:
 
+```terraform
+import {
+  to = aws_networkmanager_transit_gateway_peering.example
+  id = "peering-444555aaabbb11223"
+}
 ```
-$ terraform import aws_networkmanager_transit_gateway_peering.example peering-444555aaabbb11223
+
+Using `terraform import`, import `aws_networkmanager_transit_gateway_peering` using the peering ID. For example:
+
+```console
+% terraform import aws_networkmanager_transit_gateway_peering.example peering-444555aaabbb11223
 ```

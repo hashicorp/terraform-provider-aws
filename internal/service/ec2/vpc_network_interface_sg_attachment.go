@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -5,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
@@ -22,8 +26,15 @@ func ResourceNetworkInterfaceSGAttachment() *schema.Resource {
 		CreateWithoutTimeout: resourceNetworkInterfaceSGAttachmentCreate,
 		ReadWithoutTimeout:   resourceNetworkInterfaceSGAttachmentRead,
 		DeleteWithoutTimeout: resourceNetworkInterfaceSGAttachmentDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: resourceNetworkInterfaceSGAttachmentImport,
+		},
+
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(3 * time.Minute),
+			Read:   schema.DefaultTimeout(3 * time.Minute),
+			Delete: schema.DefaultTimeout(3 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -96,7 +107,7 @@ func resourceNetworkInterfaceSGAttachmentRead(ctx context.Context, d *schema.Res
 
 	networkInterfaceID := d.Get("network_interface_id").(string)
 	sgID := d.Get("security_group_id").(string)
-	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, ec2PropagationTimeout, func() (interface{}, error) {
+	outputRaw, err := tfresource.RetryWhenNewResourceNotFound(ctx, maxDuration(ec2PropagationTimeout, d.Timeout(schema.TimeoutRead)), func() (interface{}, error) {
 		return FindNetworkInterfaceSecurityGroup(ctx, conn, networkInterfaceID, sgID)
 	}, d.IsNewResource())
 
@@ -116,6 +127,14 @@ func resourceNetworkInterfaceSGAttachmentRead(ctx context.Context, d *schema.Res
 	d.Set("security_group_id", groupIdentifier.GroupId)
 
 	return diags
+}
+
+func maxDuration(a, b time.Duration) time.Duration {
+	if a >= b {
+		return a
+	}
+
+	return b
 }
 
 func resourceNetworkInterfaceSGAttachmentDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {

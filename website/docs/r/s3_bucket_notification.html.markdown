@@ -12,6 +12,8 @@ Manages a S3 Bucket Notification Configuration. For additional information, see 
 
 ~> **NOTE:** S3 Buckets only support a single notification configuration. Declaring multiple `aws_s3_bucket_notification` resources to the same S3 Bucket will cause a perpetual difference in configuration. See the example "Trigger multiple Lambda functions" for an option.
 
+-> This resource cannot be used with S3 directory buckets.
+
 ## Example Usage
 
 ### Add notification configuration to SNS Topic
@@ -158,14 +160,16 @@ resource "aws_s3_bucket_notification" "bucket_notification" {
 
 ```terraform
 data "aws_iam_policy_document" "assume_role" {
-  effect = "Allow"
+  statement {
+    effect = "Allow"
 
-  principals {
-    type        = "Service"
-    identifiers = ["lambda.amazonaws.com"]
+    principals {
+      type        = "Service"
+      identifiers = ["lambda.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
   }
-
-  actions = ["sts:AssumeRole"]
 }
 
 resource "aws_iam_role" "iam_for_lambda" {
@@ -355,14 +359,23 @@ The following arguments are optional:
 * `id` - (Optional) Unique identifier for each of the notification configurations.
 * `topic_arn` - (Required) SNS topic ARN.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-S3 bucket notification can be imported using the `bucket`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import S3 bucket notification using the `bucket`. For example:
 
+```terraform
+import {
+  to = aws_s3_bucket_notification.bucket_notification
+  id = "bucket-name"
+}
 ```
-$ terraform import aws_s3_bucket_notification.bucket_notification bucket-name
+
+Using `terraform import`, import S3 bucket notification using the `bucket`. For example:
+
+```console
+% terraform import aws_s3_bucket_notification.bucket_notification bucket-name
 ```

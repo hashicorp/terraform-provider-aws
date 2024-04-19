@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -10,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	sdkid "github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -18,12 +22,13 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_ec2_client_vpn_authorization_rule")
+// @SDKResource("aws_ec2_client_vpn_authorization_rule", name="Client VPN Authorization Rule")
 func ResourceClientVPNAuthorizationRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClientVPNAuthorizationRuleCreate,
 		ReadWithoutTimeout:   resourceClientVPNAuthorizationRuleRead,
 		DeleteWithoutTimeout: resourceClientVPNAuthorizationRuleDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -73,8 +78,8 @@ func resourceClientVPNAuthorizationRuleCreate(ctx context.Context, d *schema.Res
 
 	endpointID := d.Get("client_vpn_endpoint_id").(string)
 	targetNetworkCIDR := d.Get("target_network_cidr").(string)
-
 	input := &ec2.AuthorizeClientVpnIngressInput{
+		ClientToken:         aws.String(sdkid.UniqueId()),
 		ClientVpnEndpointId: aws.String(endpointID),
 		TargetNetworkCidr:   aws.String(targetNetworkCIDR),
 	}
@@ -94,8 +99,6 @@ func resourceClientVPNAuthorizationRuleCreate(ctx context.Context, d *schema.Res
 	}
 
 	id := ClientVPNAuthorizationRuleCreateResourceID(endpointID, targetNetworkCIDR, accessGroupID)
-
-	log.Printf("[DEBUG] Creating EC2 Client VPN Authorization Rule: %s", input)
 	_, err := conn.AuthorizeClientVpnIngressWithContext(ctx, input)
 
 	if err != nil {
@@ -116,9 +119,8 @@ func resourceClientVPNAuthorizationRuleRead(ctx context.Context, d *schema.Resou
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	endpointID, targetNetworkCIDR, accessGroupID, err := ClientVPNAuthorizationRuleParseResourceID(d.Id())
-
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading EC2 Client VPN Authorization Rule (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	rule, err := FindClientVPNAuthorizationRuleByThreePartKey(ctx, conn, endpointID, targetNetworkCIDR, accessGroupID)
@@ -147,9 +149,8 @@ func resourceClientVPNAuthorizationRuleDelete(ctx context.Context, d *schema.Res
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	endpointID, targetNetworkCIDR, accessGroupID, err := ClientVPNAuthorizationRuleParseResourceID(d.Id())
-
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting EC2 Client VPN Authorization Rule (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := &ec2.RevokeClientVpnIngressInput{

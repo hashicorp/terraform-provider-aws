@@ -4,6 +4,7 @@
 package tftypes
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"sort"
@@ -230,27 +231,89 @@ func valueFromObject(types map[string]Type, optionalAttrs map[string]struct{}, i
 }
 
 // MarshalJSON returns a JSON representation of the full type signature of `o`,
-// including the AttributeTypes.
+// including the AttributeTypes and, if present, OptionalAttributes.
 //
 // Deprecated: this is not meant to be called by third-party code.
 func (o Object) MarshalJSON() ([]byte, error) {
-	attrs, err := json.Marshal(o.AttributeTypes)
-	if err != nil {
-		return nil, err
+	var buf bytes.Buffer
+
+	buf.WriteString(`["object",{`)
+
+	attributeTypeNames := make([]string, 0, len(o.AttributeTypes))
+
+	for attributeTypeName := range o.AttributeTypes {
+		attributeTypeNames = append(attributeTypeNames, attributeTypeName)
 	}
-	var optionalAttrs []byte
+
+	// Ensure consistent ordering for human readability and unit testing.
+	// The slices package was introduced in Go 1.21, so it is not usable until
+	// this Go module is updated to Go 1.21 minimum.
+	sort.Strings(attributeTypeNames)
+
+	for index, attributeTypeName := range attributeTypeNames {
+		if index > 0 {
+			buf.WriteString(`,`)
+		}
+
+		buf.Write(marshalJSONObjectAttributeName(attributeTypeName))
+		buf.WriteString(`:`)
+
+		// MarshalJSON is always error safe
+		attributeTypeBytes, _ := o.AttributeTypes[attributeTypeName].MarshalJSON()
+
+		buf.Write(attributeTypeBytes)
+	}
+
+	buf.WriteString(`}`)
+
 	if len(o.OptionalAttributes) > 0 {
-		optionalAttrs = append(optionalAttrs, []byte(",")...)
-		names := make([]string, 0, len(o.OptionalAttributes))
-		for k := range o.OptionalAttributes {
-			names = append(names, k)
+		buf.WriteString(`,[`)
+
+		optionalAttributeNames := make([]string, 0, len(o.OptionalAttributes))
+
+		for optionalAttributeName := range o.OptionalAttributes {
+			optionalAttributeNames = append(optionalAttributeNames, optionalAttributeName)
 		}
-		sort.Strings(names)
-		optionalsJSON, err := json.Marshal(names)
-		if err != nil {
-			return nil, err
+
+		// Ensure consistent ordering for human readability and unit testing.
+		// The slices package was introduced in Go 1.21, so it is not usable
+		// until this Go module is updated to Go 1.21 minimum.
+		sort.Strings(optionalAttributeNames)
+
+		for index, optionalAttributeName := range optionalAttributeNames {
+			if index > 0 {
+				buf.WriteString(`,`)
+			}
+
+			buf.Write(marshalJSONObjectAttributeName(optionalAttributeName))
 		}
-		optionalAttrs = append(optionalAttrs, optionalsJSON...)
+
+		buf.WriteString(`]`)
 	}
-	return []byte(`["object",` + string(attrs) + string(optionalAttrs) + `]`), nil
+
+	buf.WriteString(`]`)
+
+	return buf.Bytes(), nil
+}
+
+// marshalJSONObjectAttributeName an object attribute name string into JSON or
+// panics.
+//
+// JSON encoding a string has some non-trivial rules and go-cty already depends
+// on the Go standard library for this, so for now this logic also offloads this
+// effort the same way to handle user input. As of Go 1.21, it is not possible
+// for a caller to input something that would trigger an encoding error. There
+// is FuzzMarshalJSONObjectAttributeName to verify this assertion.
+//
+// If a panic can be induced, a Type Validate() method or requiring the use of
+// Type construction functions that require validation are better solutions than
+// handling validation errors at this point.
+func marshalJSONObjectAttributeName(name string) []byte {
+	result, err := json.Marshal(name)
+
+	if err != nil {
+		panic(fmt.Sprintf("unable to JSON encode object attribute name: %s", name))
+	}
+
+	return result
 }

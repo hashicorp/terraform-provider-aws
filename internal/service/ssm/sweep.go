@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package ssm
 
@@ -20,13 +20,15 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_ssm_default_patch_baseline", &resource.Sweeper{
 		Name: "aws_ssm_default_patch_baseline",
-		F:    sweepResourceDefaultPatchBaselines,
+		F:    sweepDefaultPatchBaselines,
 	})
 
 	resource.AddTestSweepers("aws_ssm_maintenance_window", &resource.Sweeper{
@@ -36,10 +38,16 @@ func init() {
 
 	resource.AddTestSweepers("aws_ssm_patch_baseline", &resource.Sweeper{
 		Name: "aws_ssm_patch_baseline",
-		F:    sweepResourcePatchBaselines,
+		F:    sweepPatchBaselines,
 		Dependencies: []string{
 			"aws_ssm_default_patch_baseline",
+			"aws_ssm_patch_group",
 		},
+	})
+
+	resource.AddTestSweepers("aws_ssm_patch_group", &resource.Sweeper{
+		Name: "aws_ssm_patch_group",
+		F:    sweepPatchGroups,
 	})
 
 	resource.AddTestSweepers("aws_ssm_resource_data_sync", &resource.Sweeper{
@@ -48,7 +56,7 @@ func init() {
 	})
 }
 
-func sweepResourceDefaultPatchBaselines(region string) error {
+func sweepDefaultPatchBaselines(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
@@ -63,6 +71,10 @@ func sweepResourceDefaultPatchBaselines(region string) error {
 	paginator := patchBaselinesPaginator(conn, ownerIsSelfFilter())
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Default Patch Baselines sweep for %s: %s", region, errs)
+			break
+		}
 		if err != nil {
 			errs = multierror.Append(errs, fmt.Errorf("listing Default Patch Baselines for %s: %w", region, err))
 			break
@@ -72,7 +84,7 @@ func sweepResourceDefaultPatchBaselines(region string) error {
 			return b.DefaultBaseline
 		}) {
 			baselineID := aws.ToString(identity.BaselineId)
-			pb, err := findPatchBaselineByID(ctx, conn, baselineID)
+			pb, err := findPatchBaselineByIDV2(ctx, conn, baselineID)
 			if err != nil {
 				errs = multierror.Append(errs, fmt.Errorf("reading Patch Baseline (%s): %w", baselineID, err))
 				continue
@@ -84,13 +96,8 @@ func sweepResourceDefaultPatchBaselines(region string) error {
 		}
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepables); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepables); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping Default Patch Baselines for %s: %w", region, err))
-	}
-
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Default Patch Baselines sweep for %s: %s", region, errs)
-		return nil
 	}
 
 	return errs.ErrorOrNil()
@@ -130,7 +137,7 @@ func sweepMaintenanceWindows(region string) error {
 	for {
 		output, err := conn.DescribeMaintenanceWindowsWithContext(ctx, input)
 
-		if sweep.SkipSweepError(err) {
+		if awsv1.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping SSM Maintenance Window sweep for %s: %s", region, err)
 			return nil
 		}
@@ -154,9 +161,7 @@ func sweepMaintenanceWindows(region string) error {
 			}
 
 			if err != nil {
-				sweeperErr := fmt.Errorf("deleting SSM Maintenance Window (%s): %w", id, err)
-				log.Printf("[ERROR] %s", sweeperErr)
-				sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
+				sweeperErrs = multierror.Append(sweeperErrs, fmt.Errorf("deleting SSM Maintenance Window (%s): %w", id, err))
 				continue
 			}
 		}
@@ -171,7 +176,7 @@ func sweepMaintenanceWindows(region string) error {
 	return nil
 }
 
-func sweepResourcePatchBaselines(region string) error {
+func sweepPatchBaselines(region string) error {
 	ctx := sweep.Context(region)
 	client, err := sweep.SharedRegionalSweepClient(ctx, region)
 	if err != nil {
@@ -186,6 +191,10 @@ func sweepResourcePatchBaselines(region string) error {
 	paginator := patchBaselinesPaginator(conn, ownerIsSelfFilter())
 	for paginator.HasMorePages() {
 		page, err := paginator.NextPage(ctx)
+		if awsv2.SkipSweepError(err) {
+			log.Printf("[WARN] Skipping Patch Baselines sweep for %s: %s", region, errs)
+			break
+		}
 		if err != nil {
 			errs = multierror.Append(errs, fmt.Errorf("listing Patch Baselines for %s: %w", region, err))
 			break
@@ -193,21 +202,60 @@ func sweepResourcePatchBaselines(region string) error {
 
 		for _, identity := range page.BaselineIdentities {
 			baselineID := aws.ToString(identity.BaselineId)
-			r := ResourcePatchBaseline()
+			r := resourcePatchBaseline()
 			d := r.Data(nil)
-
 			d.SetId(baselineID)
+			d.Set("operating_system", identity.OperatingSystem)
 
 			sweepables = append(sweepables, sweep.NewSweepResource(r, d, client))
 		}
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepables); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepables); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping Patch Baselines for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(err) {
-		log.Printf("[WARN] Skipping Patch Baselines sweep for %s: %s", region, errs)
+	return errs.ErrorOrNil()
+}
+
+func sweepPatchGroups(region string) error {
+	ctx := sweep.Context(region)
+	client, err := sweep.SharedRegionalSweepClient(ctx, region)
+	if err != nil {
+		return fmt.Errorf("getting client: %w", err)
+	}
+	conn := client.SSMConn(ctx)
+	sweepResources := make([]sweep.Sweepable, 0)
+	var errs *multierror.Error
+
+	input := &ssm_sdkv1.DescribePatchGroupsInput{}
+
+	err = conn.DescribePatchGroupsPagesWithContext(ctx, input, func(page *ssm_sdkv1.DescribePatchGroupsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, mapping := range page.Mappings {
+			r := ResourcePatchGroup()
+			d := r.Data(nil)
+			d.SetId(fmt.Sprintf("%s,%s", aws.ToString(mapping.PatchGroup), aws.ToString(mapping.BaselineIdentity.BaselineId)))
+
+			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("listing SSM Patch Groups for %s: %w", region, err))
+	}
+
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
+		errs = multierror.Append(errs, fmt.Errorf("sweeping SSM Patch Groups for %s: %w", region, err))
+	}
+
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
+		log.Printf("[WARN] Skipping SSM Patch Group sweep for %s: %s", region, errs)
 		return nil
 	}
 
@@ -251,11 +299,11 @@ func sweepResourceDataSyncs(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("listing SSM Resource Data Sync for %s: %w", region, err))
 	}
 
-	if err := sweep.SweepOrchestratorWithContext(ctx, sweepResources); err != nil {
+	if err := sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping SSM Resource Data Sync for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping SSM Resource Data Sync sweep for %s: %s", region, errs)
 		return nil
 	}

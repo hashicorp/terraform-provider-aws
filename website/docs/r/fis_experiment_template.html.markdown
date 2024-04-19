@@ -81,7 +81,7 @@ For a list of parameters supported by each action, see [AWS FIS actions referenc
 
 #### `target` (`action.*.target`)
 
-* `key` - (Required) Target type. Valid values are `Cluster` (EKS Cluster), `Clusters` (ECS Clusters), `DBInstances` (RDS DB Instances), `Instances` (EC2 Instances), `Nodegroups` (EKS Node groups), `Roles` (IAM Roles), `SpotInstances` (EC2 Spot Instances), `Subnets` (VPC Subnets), `Volumes` (EBS Volumes) , `Pods` (EKS Pods), `Tasks` (ECS Tasks). See the [documentation](https://docs.aws.amazon.com/fis/latest/userguide/actions.html#action-targets) for more details.
+* `key` - (Required) Target type. Valid values are `AutoScalingGroups` (EC2 Auto Scaling groups), `Buckets` (S3 Buckets), `Cluster` (EKS Cluster), `Clusters` (ECS Clusters), `DBInstances` (RDS DB Instances), `Instances` (EC2 Instances), `Nodegroups` (EKS Node groups), `Pods` (EKS Pods), `ReplicationGroups`(ElastiCache Redis Replication Groups), `Roles` (IAM Roles), `SpotInstances` (EC2 Spot Instances), `Subnets` (VPC Subnets), `Tables` (DynamoDB encrypted global tables), `Tasks` (ECS Tasks), `TransitGateways` (Transit gateways), `Volumes` (EBS Volumes). See the [documentation](https://docs.aws.amazon.com/fis/latest/userguide/actions.html#action-targets) for more details.
 * `value` - (Required) Target name, referencing a corresponding target.
 
 ### `stop_condition`
@@ -128,16 +128,25 @@ For a list of parameters supported by each action, see [AWS FIS actions referenc
 * `bucket_name` - (Required) The name of the destination bucket.
 * `prefix` - (Optional) The bucket prefix.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Experiment Template ID.
 
 ## Import
 
-FIS Experiment Templates can be imported using the `id`, e.g.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import FIS Experiment Templates using the `id`. For example:
 
+```terraform
+import {
+  to = aws_fis_experiment_template.template
+  id = "EXT123AbCdEfGhIjK"
+}
 ```
-$ terraform import aws_fis_experiment_template.template EXT123AbCdEfGhIjK
+
+Using `terraform import`, import FIS Experiment Templates using the `id`. For example:
+
+```console
+% terraform import aws_fis_experiment_template.template EXT123AbCdEfGhIjK
 ```

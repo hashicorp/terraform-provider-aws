@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssmincidents_test
 
 import (
@@ -34,7 +37,7 @@ func testResponsePlan_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMIncidentsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResponsePlanDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -87,7 +90,7 @@ func testResponsePlan_updateRequiredFields(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMIncidentsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResponsePlanDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -178,7 +181,7 @@ func testResponsePlan_updateTags(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMIncidentsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResponsePlanDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -264,7 +267,7 @@ func testResponsePlan_updateEmptyTags(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMIncidentsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResponsePlanDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -331,7 +334,7 @@ func testResponsePlan_disappears(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMIncidentsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResponsePlanDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -376,7 +379,7 @@ func testResponsePlan_incidentTemplateOptionalFields(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMIncidentsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResponsePlanDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -437,7 +440,7 @@ func testResponsePlan_displayName(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMIncidentsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResponsePlanDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -488,7 +491,7 @@ func testResponsePlan_chatChannel(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMIncidentsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResponsePlanDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -573,7 +576,7 @@ func testResponsePlan_engagement(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMIncidentsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResponsePlanDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -652,7 +655,7 @@ func testResponsePlan_action(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMIncidentsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResponsePlanDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -801,7 +804,7 @@ func testResponsePlan_action(t *testing.T) {
 //			acctest.PreCheck(ctx, t)
 //			acctest.PreCheckPartitionHasService(t, names.SSMIncidentsEndpointID)
 //		},
-//		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsEndpointID),
+//		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsServiceID),
 //		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 //		CheckDestroy:             testAccCheckResponsePlanDestroy(ctx),
 //		Steps: []resource.TestStep{

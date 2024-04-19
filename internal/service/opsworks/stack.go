@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opsworks
 
 import (
@@ -8,7 +11,6 @@ import (
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/aws/endpoints"
 	"github.com/aws/aws-sdk-go/service/opsworks"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -322,11 +324,7 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 	conn := meta.(*conns.AWSClient).OpsWorksConn(ctx)
 
 	if v, ok := d.GetOk("stack_endpoint"); ok {
-		log.Printf(`[DEBUG] overriding region using "stack_endpoint": %s`, v)
-		conn, err = regionalConn(ctx, meta.(*conns.AWSClient), v.(string))
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, `reading OpsWorks Stack (%s): creating client for "stack_endpoint" (%s): %s`, d.Id(), v, err)
-		}
+		conn = meta.(*conns.AWSClient).OpsWorksConnForRegion(ctx, v.(string))
 	}
 
 	stack, err := FindStackByID(ctx, conn, d.Id())
@@ -335,12 +333,7 @@ func resourceStackRead(ctx context.Context, d *schema.ResourceData, meta interfa
 		// If it's not found in the default region we're in, we check us-east-1
 		// in the event this stack was created with Terraform before version 0.9.
 		// See https://github.com/hashicorp/terraform/issues/12842.
-		v := endpoints.UsEast1RegionID
-		log.Printf(`[DEBUG] overriding region using legacy region: %s`, v)
-		conn, err = regionalConn(ctx, meta.(*conns.AWSClient), v)
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, `reading OpsWorks Stack (%s): creating client for legacy region (%s): %s`, d.Id(), v, err)
-		}
+		conn = meta.(*conns.AWSClient).OpsWorksConnForRegion(ctx, names.USEast1RegionID)
 
 		stack, err = FindStackByID(ctx, conn, d.Id())
 	}
@@ -428,10 +421,7 @@ func resourceStackUpdate(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).OpsWorksConn(ctx)
 
 	if v, ok := d.GetOk("stack_endpoint"); ok {
-		conn, err = regionalConn(ctx, meta.(*conns.AWSClient), v.(string))
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, `updating OpsWorks Stack (%s): creating client for "stack_endpoint" (%s): %s`, d.Id(), v, err)
-		}
+		conn = meta.(*conns.AWSClient).OpsWorksConnForRegion(ctx, v.(string))
 	}
 
 	if d.HasChangesExcept("tags", "tags_all") {
@@ -544,10 +534,7 @@ func resourceStackDelete(ctx context.Context, d *schema.ResourceData, meta inter
 	conn := meta.(*conns.AWSClient).OpsWorksConn(ctx)
 
 	if v, ok := d.GetOk("stack_endpoint"); ok {
-		conn, err = regionalConn(ctx, meta.(*conns.AWSClient), v.(string))
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, `deleting OpsWorks Stack (%s): creating client for "stack_endpoint" (%s): %s`, d.Id(), v, err)
-		}
+		conn = meta.(*conns.AWSClient).OpsWorksConnForRegion(ctx, v.(string))
 	}
 
 	log.Printf("[DEBUG] Deleting OpsWorks Stack: %s", d.Id())
@@ -677,28 +664,4 @@ func flattenSource(apiObject *opsworks.Source) map[string]interface{} {
 	}
 
 	return tfMap
-}
-
-// opsworksConn will return a connection for the stack_endpoint in the
-// configuration. Stacks can only be accessed or managed within the endpoint
-// in which they are created, so we allow users to specify an original endpoint
-// for Stacks created before multiple endpoints were offered (Terraform v0.9.0).
-// See:
-//   - https://github.com/hashicorp/terraform/pull/12688
-//   - https://github.com/hashicorp/terraform/issues/12842
-func regionalConn(ctx context.Context, client *conns.AWSClient, regionName string) (*opsworks.OpsWorks, error) {
-	conn := client.OpsWorksConn(ctx)
-
-	// Regions are the same, no need to reconfigure.
-	if aws.StringValue(conn.Config.Region) == regionName {
-		return conn, nil
-	}
-
-	sess, err := conns.NewSessionForRegion(&conn.Config, regionName, client.TerraformVersion)
-
-	if err != nil {
-		return nil, fmt.Errorf("creating AWS session (%s): %w", regionName, err)
-	}
-
-	return opsworks.New(sess), nil
 }

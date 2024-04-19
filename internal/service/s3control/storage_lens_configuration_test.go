@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package s3control_test
 
 import (
@@ -5,7 +8,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/s3control"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -13,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfs3control "github.com/hashicorp/terraform-provider-aws/internal/service/s3control"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccS3ControlStorageLensConfiguration_basic(t *testing.T) {
@@ -22,7 +25,7 @@ func TestAccS3ControlStorageLensConfiguration_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStorageLensConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -68,7 +71,7 @@ func TestAccS3ControlStorageLensConfiguration_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStorageLensConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -91,7 +94,7 @@ func TestAccS3ControlStorageLensConfiguration_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStorageLensConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -136,7 +139,7 @@ func TestAccS3ControlStorageLensConfiguration_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStorageLensConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -242,7 +245,7 @@ func TestAccS3ControlStorageLensConfiguration_advancedMetrics(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckStorageLensConfigurationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -331,7 +334,6 @@ func testAccCheckStorageLensConfigurationDestroy(ctx context.Context) resource.T
 			}
 
 			accountID, configID, err := tfs3control.StorageLensConfigurationParseResourceID(rs.Primary.ID)
-
 			if err != nil {
 				return err
 			}
@@ -360,12 +362,7 @@ func testAccCheckStorageLensConfigurationExists(ctx context.Context, n string) r
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No S3 Storage Lens Configuration ID is set")
-		}
-
 		accountID, configID, err := tfs3control.StorageLensConfigurationParseResourceID(rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}

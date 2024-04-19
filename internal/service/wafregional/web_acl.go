@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package wafregional
 
 import (
@@ -23,12 +26,13 @@ import (
 
 // @SDKResource("aws_wafregional_web_acl", name="Web ACL")
 // @Tags(identifierAttribute="arn")
-func ResourceWebACL() *schema.Resource {
+func resourceWebACL() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceWebACLCreate,
 		ReadWithoutTimeout:   resourceWebACLRead,
 		UpdateWithoutTimeout: resourceWebACLUpdate,
 		DeleteWithoutTimeout: resourceWebACLDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -368,38 +372,47 @@ func resourceWebACLDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 	region := meta.(*conns.AWSClient).Region
+	wr := NewRetryer(conn, region)
 
-	// First, need to delete all rules
-	rules := d.Get("rule").(*schema.Set).List()
-	if len(rules) > 0 {
-		wr := NewRetryer(conn, region)
+	if rules := d.Get("rule").(*schema.Set).List(); len(rules) > 0 {
 		_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
-			req := &waf.UpdateWebACLInput{
+			input := &waf.UpdateWebACLInput{
 				ChangeToken:   token,
 				DefaultAction: tfwaf.ExpandAction(d.Get("default_action").([]interface{})),
 				Updates:       diffWebACLRules(rules, []interface{}{}),
 				WebACLId:      aws.String(d.Id()),
 			}
-			return conn.UpdateWebACLWithContext(ctx, req)
+
+			return conn.UpdateWebACLWithContext(ctx, input)
 		})
+
+		if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentContainerException, wafregional.ErrCodeWAFNonexistentItemException) {
+			return diags
+		}
+
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "Removing WAF Regional ACL Rules: %s", err)
+			return sdkdiag.AppendErrorf(diags, "updating WAF Regional Web ACL (%s): %s", d.Id(), err)
 		}
 	}
 
-	wr := NewRetryer(conn, region)
+	log.Printf("[INFO] Deleting WAF Regional Web ACL: %s", d.Id())
 	_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
 		req := &waf.DeleteWebACLInput{
 			ChangeToken: token,
 			WebACLId:    aws.String(d.Id()),
 		}
 
-		log.Printf("[INFO] Deleting WAF ACL")
 		return conn.DeleteWebACLWithContext(ctx, req)
 	})
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "Deleting WAF Regional ACL: %s", err)
+
+	if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
+		return diags
 	}
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting WAF Regional Web ACL (%s): %s", d.Id(), err)
+	}
+
 	return diags
 }
 

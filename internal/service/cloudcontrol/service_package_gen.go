@@ -25,8 +25,9 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
 	return []*types.ServicePackageSDKDataSource{
 		{
-			Factory:  DataSourceResource,
+			Factory:  dataSourceResource,
 			TypeName: "aws_cloudcontrolapi_resource",
+			Name:     "Resource",
 		},
 	}
 }
@@ -34,8 +35,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceResource,
+			Factory:  resourceResource,
 			TypeName: "aws_cloudcontrolapi_resource",
+			Name:     "Resource",
 		},
 	}
 }
@@ -50,7 +52,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 
 	return cloudcontrol_sdkv2.NewFromConfig(cfg, func(o *cloudcontrol_sdkv2.Options) {
 		if endpoint := config["endpoint"].(string); endpoint != "" {
-			o.EndpointResolver = cloudcontrol_sdkv2.EndpointResolverFromURL(endpoint)
+			o.BaseEndpoint = aws_sdkv2.String(endpoint)
 		}
 	}), nil
 }

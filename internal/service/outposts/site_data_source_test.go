@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package outposts_test
 
 import (
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/outposts"
+	"github.com/YakDriver/regexache"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccOutpostsSiteDataSource_id(t *testing.T) {
@@ -15,7 +18,7 @@ func TestAccOutpostsSiteDataSource_id(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSites(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, outposts.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OutpostsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
@@ -24,8 +27,8 @@ func TestAccOutpostsSiteDataSource_id(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					acctest.CheckResourceAttrAccountID(dataSourceName, "account_id"),
 					resource.TestCheckResourceAttrSet(dataSourceName, "description"),
-					resource.TestMatchResourceAttr(dataSourceName, "id", regexp.MustCompile(`^os-.+$`)),
-					resource.TestMatchResourceAttr(dataSourceName, "name", regexp.MustCompile(`^.+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, "id", regexache.MustCompile(`^os-.+$`)),
+					resource.TestMatchResourceAttr(dataSourceName, "name", regexache.MustCompile(`^.+$`)),
 				),
 			},
 		},
@@ -39,7 +42,7 @@ func TestAccOutpostsSiteDataSource_name(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheckSites(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, outposts.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.OutpostsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{

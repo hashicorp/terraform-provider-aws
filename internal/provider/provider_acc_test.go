@@ -1,14 +1,21 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package provider_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"reflect"
 	"strings"
 	"testing"
 
+	awsmiddleware "github.com/aws/aws-sdk-go-v2/aws/middleware"
+	sts_sdkv2 "github.com/aws/aws-sdk-go-v2/service/sts"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/endpoints"
+	"github.com/aws/smithy-go/middleware"
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
@@ -538,7 +545,7 @@ func testAccCheckDNSSuffix(ctx context.Context, t *testing.T, p **schema.Provide
 			return fmt.Errorf("provider not initialized")
 		}
 
-		providerDnsSuffix := (*p).Meta().(*conns.AWSClient).DNSSuffix
+		providerDnsSuffix := (*p).Meta().(*conns.AWSClient).DNSSuffix(ctx)
 
 		if providerDnsSuffix != expectedDnsSuffix {
 			return fmt.Errorf("expected DNS Suffix (%s), got: %s", expectedDnsSuffix, providerDnsSuffix)
@@ -562,13 +569,28 @@ func testAccCheckRegion(ctx context.Context, t *testing.T, p **schema.Provider, 
 	}
 }
 
-func testAccCheckSTSRegion(ctx context.Context, t *testing.T, p **schema.Provider, expectedRegion string) resource.TestCheckFunc { //nolint:unparam
+func testAccCheckSTSRegion(ctx context.Context, t *testing.T, p **schema.Provider, expectedRegion string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		if p == nil || *p == nil || (*p).Meta() == nil || (*p).Meta().(*conns.AWSClient) == nil {
 			return fmt.Errorf("provider not initialized")
 		}
 
-		stsRegion := aws.StringValue((*p).Meta().(*conns.AWSClient).STSConn(ctx).Config.Region)
+		var stsRegion string
+
+		stsClient := (*p).Meta().(*conns.AWSClient).STSClient(ctx)
+		_, err := stsClient.GetCallerIdentity(ctx, &sts_sdkv2.GetCallerIdentityInput{},
+			func(opts *sts_sdkv2.Options) {
+				opts.APIOptions = append(opts.APIOptions,
+					addRegionRetrieverMiddleware(&stsRegion),
+					addCancelRequestMiddleware(),
+				)
+			},
+		)
+		if err == nil {
+			t.Fatal("Expected an error, got none")
+		} else if !errors.Is(err, errCancelOperation) {
+			t.Fatalf("Unexpected error: %s", err)
+		}
 
 		if stsRegion != expectedRegion {
 			return fmt.Errorf("expected STS Region (%s), got: %s", expectedRegion, stsRegion)
@@ -578,12 +600,51 @@ func testAccCheckSTSRegion(ctx context.Context, t *testing.T, p **schema.Provide
 	}
 }
 
+var errCancelOperation = fmt.Errorf("Test: Cancelling request")
+
+func addCancelRequestMiddleware() func(*middleware.Stack) error {
+	return func(stack *middleware.Stack) error {
+		return stack.Finalize.Add(
+			cancelRequestMiddleware(),
+			middleware.After,
+		)
+	}
+}
+
+func cancelRequestMiddleware() middleware.FinalizeMiddleware {
+	return middleware.FinalizeMiddlewareFunc(
+		"Test: Cancel Requests",
+		func(_ context.Context, in middleware.FinalizeInput, next middleware.FinalizeHandler) (middleware.FinalizeOutput, middleware.Metadata, error) {
+			return middleware.FinalizeOutput{}, middleware.Metadata{}, errCancelOperation
+		})
+}
+
+func addRegionRetrieverMiddleware(region *string) func(*middleware.Stack) error {
+	return func(stack *middleware.Stack) error {
+		return stack.Serialize.Add(
+			retrieveRegionMiddleware(region),
+			middleware.After,
+		)
+	}
+}
+
+func retrieveRegionMiddleware(region *string) middleware.SerializeMiddleware {
+	return middleware.SerializeMiddlewareFunc(
+		"Test: Retrieve Region",
+		func(ctx context.Context, in middleware.SerializeInput, next middleware.SerializeHandler) (middleware.SerializeOutput, middleware.Metadata, error) {
+			*region = awsmiddleware.GetRegion(ctx)
+
+			return next.HandleSerialize(ctx, in)
+		},
+	)
+}
+
 func testAccCheckReverseDNSPrefix(ctx context.Context, t *testing.T, p **schema.Provider, expectedReverseDnsPrefix string) resource.TestCheckFunc { //nolint:unparam
 	return func(s *terraform.State) error {
 		if p == nil || *p == nil || (*p).Meta() == nil || (*p).Meta().(*conns.AWSClient) == nil {
 			return fmt.Errorf("provider not initialized")
 		}
-		providerReverseDnsPrefix := (*p).Meta().(*conns.AWSClient).ReverseDNSPrefix
+		providerReverseDnsPrefix := (*p).Meta().(*conns.AWSClient).ReverseDNSPrefix(ctx)
 
 		if providerReverseDnsPrefix != expectedReverseDnsPrefix {
 			return fmt.Errorf("expected DNS Suffix (%s), got: %s", expectedReverseDnsPrefix, providerReverseDnsPrefix)
@@ -772,12 +833,22 @@ func testAccCheckEndpoints(_ context.Context, p **schema.Provider) resource.Test
 
 		providerClient := (*p).Meta().(*conns.AWSClient)
 
-		for _, serviceKey := range names.ProviderPackages() {
-			method := reflect.ValueOf(providerClient).MethodByName(serviceConn(serviceKey))
+		for _, serviceKey := range names.Aliases() {
+			methodName := serviceConn(serviceKey)
+			method := reflect.ValueOf(providerClient).MethodByName(methodName)
 			if !method.IsValid() {
 				continue
 			}
-			result := method.Call([]reflect.Value{})
+			if method.Kind() != reflect.Func {
+				return fmt.Errorf("value %q is not a function", methodName)
+			}
+			if !funcHasConnFuncSignature(method) {
+				return fmt.Errorf("function %q does not match expected signature", methodName)
+			}
+
+			result := method.Call([]reflect.Value{
+				reflect.ValueOf(context.Background()),
+			})
 			if l := len(result); l != 1 {
 				return fmt.Errorf("expected 1 result, got %d", l)
 			}
@@ -811,7 +882,18 @@ func testAccCheckUnusualEndpoints(_ context.Context, p **schema.Provider, unusua
 
 		providerClient := (*p).Meta().(*conns.AWSClient)
 
-		result := reflect.ValueOf(providerClient).MethodByName(serviceConn(unusual.thing)).Call([]reflect.Value{})
+		methodName := serviceConn(unusual.thing)
+		method := reflect.ValueOf(providerClient).MethodByName(methodName)
+		if method.Kind() != reflect.Func {
+			return fmt.Errorf("value %q is not a function", methodName)
+		}
+		if !funcHasConnFuncSignature(method) {
+			return fmt.Errorf("function %q does not match expected signature", methodName)
+		}
+
+		result := method.Call([]reflect.Value{
+			reflect.ValueOf(context.Background()),
+		})
 		if l := len(result); l != 1 {
 			return fmt.Errorf("expected 1 result, got %d", l)
 		}
@@ -830,6 +912,18 @@ func testAccCheckUnusualEndpoints(_ context.Context, p **schema.Provider, unusua
 
 		return nil
 	}
+}
+
+func funcHasConnFuncSignature(method reflect.Value) bool {
+	typ := method.Type()
+	if typ.NumIn() != 1 {
+		return false
+	}
+
+	fn := func(ctx context.Context) {}
+	ftyp := reflect.TypeOf(fn)
+
+	return typ.In(0) == ftyp.In(0)
 }
 
 func serviceConn(key string) string {

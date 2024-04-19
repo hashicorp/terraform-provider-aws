@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package resourcegroups_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/resourcegroups"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/service/resourcegroups/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -14,11 +17,12 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfresourcegroups "github.com/hashicorp/terraform-provider-aws/internal/service/resourcegroups"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccResourceGroupsGroup_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v resourcegroups.Group
+	var v types.Group
 	resourceName := "aws_resourcegroups_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -41,7 +45,7 @@ func TestAccResourceGroupsGroup_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, resourcegroups.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceGroupsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResourceGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -71,16 +75,40 @@ func TestAccResourceGroupsGroup_basic(t *testing.T) {
 	})
 }
 
+func TestAccResourceGroupsGroup_disappears(t *testing.T) {
+	ctx := acctest.Context(t)
+	var v types.Group
+	resourceName := "aws_resourcegroups_group.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceGroupsServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckResourceGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccGroupConfig_basic(rName, "Hello World", testAccResourceGroupQueryConfig),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckResourceGroupExists(ctx, resourceName, &v),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfresourcegroups.ResourceGroup(), resourceName),
+				),
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func TestAccResourceGroupsGroup_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v resourcegroups.Group
+	var v types.Group
 	resourceName := "aws_resourcegroups_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	desc1 := "Hello World"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, resourcegroups.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceGroupsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResourceGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -120,7 +148,7 @@ func TestAccResourceGroupsGroup_tags(t *testing.T) {
 
 func TestAccResourceGroupsGroup_Configuration(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v resourcegroups.Group
+	var v types.Group
 	resourceName := "aws_resourcegroups_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -131,7 +159,7 @@ func TestAccResourceGroupsGroup_Configuration(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, resourcegroups.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceGroupsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResourceGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -180,7 +208,7 @@ func TestAccResourceGroupsGroup_Configuration(t *testing.T) {
 			// Check that trying to change the configuration group to a resource-query group fails
 			{
 				Config:      testAccGroupConfig_basic(rName, desc1, testAccResourceGroupQueryConfig),
-				ExpectError: regexp.MustCompile(`conversion between resource-query and configuration group types is not possible`),
+				ExpectError: regexache.MustCompile(`conversion between resource-query and configuration group types is not possible`),
 			},
 		},
 	})
@@ -188,7 +216,7 @@ func TestAccResourceGroupsGroup_Configuration(t *testing.T) {
 
 func TestAccResourceGroupsGroup_configurationParametersOptional(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v resourcegroups.Group
+	var v types.Group
 	resourceName := "aws_resourcegroups_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -197,7 +225,7 @@ func TestAccResourceGroupsGroup_configurationParametersOptional(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, resourcegroups.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceGroupsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResourceGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -225,7 +253,7 @@ func TestAccResourceGroupsGroup_configurationParametersOptional(t *testing.T) {
 
 func TestAccResourceGroupsGroup_resourceQueryAndConfiguration(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v resourcegroups.Group
+	var v types.Group
 	resourceName := "aws_resourcegroups_group.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -233,7 +261,7 @@ func TestAccResourceGroupsGroup_resourceQueryAndConfiguration(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, resourcegroups.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ResourceGroupsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckResourceGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -257,18 +285,14 @@ func TestAccResourceGroupsGroup_resourceQueryAndConfiguration(t *testing.T) {
 	})
 }
 
-func testAccCheckResourceGroupExists(ctx context.Context, n string, v *resourcegroups.Group) resource.TestCheckFunc {
+func testAccCheckResourceGroupExists(ctx context.Context, n string, v *types.Group) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Resource Groups Group ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ResourceGroupsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ResourceGroupsClient(ctx)
 
 		output, err := tfresourcegroups.FindGroupByName(ctx, conn, rs.Primary.ID)
 
@@ -284,7 +308,7 @@ func testAccCheckResourceGroupExists(ctx context.Context, n string, v *resourceg
 
 func testAccCheckResourceGroupDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ResourceGroupsConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ResourceGroupsClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_resourcegroups_group" {

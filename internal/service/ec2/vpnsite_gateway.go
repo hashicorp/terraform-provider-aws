@@ -1,10 +1,12 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
 	"context"
 	"fmt"
 	"log"
-	"strconv"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -14,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -22,7 +25,7 @@ import (
 
 // @SDKResource("aws_vpn_gateway", name="VPN Gateway")
 // @Tags(identifierAttribute="id")
-func ResourceVPNGateway() *schema.Resource {
+func resourceVPNGateway() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPNGatewayCreate,
 		ReadWithoutTimeout:   resourceVPNGatewayRead,
@@ -74,13 +77,7 @@ func resourceVPNGatewayCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	if v, ok := d.GetOk("amazon_side_asn"); ok {
-		v, err := strconv.ParseInt(v.(string), 10, 64)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating EC2 VPN Gateway: %s", err)
-		}
-
-		input.AmazonSideAsn = aws.Int64(v)
+		input.AmazonSideAsn = flex.StringValueToInt64(v.(string))
 	}
 
 	output, err := conn.CreateVpnGatewayWithContext(ctx, input)
@@ -91,9 +88,13 @@ func resourceVPNGatewayCreate(ctx context.Context, d *schema.ResourceData, meta 
 
 	d.SetId(aws.StringValue(output.VpnGateway.VpnGatewayId))
 
+	if _, err := WaitVPNGatewayCreated(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EC2 VPN Gateway (%s) create: %s", d.Id(), err)
+	}
+
 	if v, ok := d.GetOk("vpc_id"); ok {
 		if err := attachVPNGatewayToVPC(ctx, conn, d.Id(), v.(string)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "creating EC2 VPN Gateway: %s", err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
@@ -120,7 +121,7 @@ func resourceVPNGatewayRead(ctx context.Context, d *schema.ResourceData, meta in
 
 	vpnGateway := outputRaw.(*ec2.VpnGateway)
 
-	d.Set("amazon_side_asn", strconv.FormatInt(aws.Int64Value(vpnGateway.AmazonSideAsn), 10))
+	d.Set("amazon_side_asn", flex.Int64ToStringValue(vpnGateway.AmazonSideAsn))
 	arn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   ec2.ServiceName,
@@ -132,7 +133,6 @@ func resourceVPNGatewayRead(ctx context.Context, d *schema.ResourceData, meta in
 	if aws.StringValue(vpnGateway.AvailabilityZone) != "" {
 		d.Set("availability_zone", vpnGateway.AvailabilityZone)
 	}
-
 	d.Set("vpc_id", nil)
 	for _, vpcAttachment := range vpnGateway.VpcAttachments {
 		if aws.StringValue(vpcAttachment.State) == ec2.AttachmentStatusAttached {
@@ -154,13 +154,13 @@ func resourceVPNGatewayUpdate(ctx context.Context, d *schema.ResourceData, meta 
 
 		if vpcID, ok := o.(string); ok && vpcID != "" {
 			if err := detachVPNGatewayFromVPC(ctx, conn, d.Id(), vpcID); err != nil {
-				return sdkdiag.AppendErrorf(diags, "updating EC2 VPN Gateway (%s): %s", d.Id(), err)
+				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
 
 		if vpcID, ok := n.(string); ok && vpcID != "" {
 			if err := attachVPNGatewayToVPC(ctx, conn, d.Id(), vpcID); err != nil {
-				return sdkdiag.AppendErrorf(diags, "updating EC2 VPN Gateway (%s): %s", d.Id(), err)
+				return sdkdiag.AppendFromErr(diags, err)
 			}
 		}
 	}
@@ -174,7 +174,7 @@ func resourceVPNGatewayDelete(ctx context.Context, d *schema.ResourceData, meta 
 
 	if v, ok := d.GetOk("vpc_id"); ok {
 		if err := detachVPNGatewayFromVPC(ctx, conn, d.Id(), v.(string)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "deleting EC2 VPN Gateway (%s): %s", d.Id(), err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 	}
 
@@ -191,6 +191,10 @@ func resourceVPNGatewayDelete(ctx context.Context, d *schema.ResourceData, meta 
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 VPN Gateway (%s): %s", d.Id(), err)
+	}
+
+	if _, err := WaitVPNGatewayDeleted(ctx, conn, d.Id()); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for EC2 VPN Gateway (%s) delete: %s", d.Id(), err)
 	}
 
 	return diags
@@ -211,7 +215,7 @@ func attachVPNGatewayToVPC(ctx context.Context, conn *ec2.EC2, vpnGatewayID, vpc
 	}
 
 	if _, err := WaitVPNGatewayVPCAttachmentAttached(ctx, conn, vpnGatewayID, vpcID); err != nil {
-		return fmt.Errorf("waiting for EC2 VPN Gateway (%s) to VPC (%s) attachment create: %w", vpnGatewayID, vpcID, err)
+		return fmt.Errorf("waiting for EC2 VPN Gateway (%s) VPC (%s) attachment create: %w", vpnGatewayID, vpcID, err)
 	}
 
 	return nil
@@ -234,7 +238,7 @@ func detachVPNGatewayFromVPC(ctx context.Context, conn *ec2.EC2, vpnGatewayID, v
 	}
 
 	if _, err := WaitVPNGatewayVPCAttachmentDetached(ctx, conn, vpnGatewayID, vpcID); err != nil {
-		return fmt.Errorf("waiting for EC2 VPN Gateway (%s) to VPC (%s) attachment delete: %w", vpnGatewayID, vpcID, err)
+		return fmt.Errorf("waiting for EC2 VPN Gateway (%s) VPC (%s) attachment delete: %w", vpnGatewayID, vpcID, err)
 	}
 
 	return nil

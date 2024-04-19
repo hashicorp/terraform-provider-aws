@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package batch_test
 
 import (
@@ -13,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfbatch "github.com/hashicorp/terraform-provider-aws/internal/service/batch"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccBatchSchedulingPolicy_basic(t *testing.T) {
@@ -23,7 +27,7 @@ func TestAccBatchSchedulingPolicy_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, batch.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSchedulingPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -71,7 +75,7 @@ func TestAccBatchSchedulingPolicy_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, batch.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckSchedulingPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -183,4 +187,69 @@ resource "aws_batch_scheduling_policy" "test" {
   }
 }
 `, rName)
+}
+
+func testAccSchedulingPolicyConfig_tags0(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_batch_scheduling_policy" "test" {
+  name = %[1]q
+
+  fair_share_policy {
+    compute_reservation = 0
+    share_decay_seconds = 0
+  }
+}
+`, rName)
+}
+
+func testAccSchedulingPolicyConfig_tags1(rName, tagKey1, tagValue1 string) string {
+	return fmt.Sprintf(`
+resource "aws_batch_scheduling_policy" "test" {
+  name = %[1]q
+
+  fair_share_policy {
+    compute_reservation = 0
+    share_decay_seconds = 0
+  }
+
+  tags = {
+    %[2]q = %[3]q
+  }
+}
+`, rName, tagKey1, tagValue1)
+}
+
+func testAccSchedulingPolicyConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return fmt.Sprintf(`
+resource "aws_batch_scheduling_policy" "test" {
+  name = %[1]q
+
+  fair_share_policy {
+    compute_reservation = 0
+    share_decay_seconds = 0
+  }
+
+  tags = {
+    %[2]q = %[3]q
+    %[4]q = %[5]q
+  }
+}
+`, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccSchedulingPolicyConfig_tagsNull(rName, tagKey1 string) string {
+	return fmt.Sprintf(`
+resource "aws_batch_scheduling_policy" "test" {
+  name = %[1]q
+
+  fair_share_policy {
+    compute_reservation = 0
+    share_decay_seconds = 0
+  }
+
+  tags = {
+    %[2]q = null
+  }
+}
+`, rName, tagKey1)
 }

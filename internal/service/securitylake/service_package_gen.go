@@ -19,7 +19,34 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
+	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory: newAWSLogSourceResource,
+			Name:    "AWS Log Source",
+		},
+		{
+			Factory: newCustomLogSourceResource,
+			Name:    "Custom Log Source",
+		},
+		{
+			Factory: newDataLakeResource,
+			Name:    "Data Lake",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
+			Factory: newSubscriberNotificationResource,
+			Name:    "Subscriber Notification",
+		},
+		{
+			Factory: newSubscriberResource,
+			Name:    "Subscriber",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {
@@ -40,7 +67,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 
 	return securitylake_sdkv2.NewFromConfig(cfg, func(o *securitylake_sdkv2.Options) {
 		if endpoint := config["endpoint"].(string); endpoint != "" {
-			o.EndpointResolver = securitylake_sdkv2.EndpointResolverFromURL(endpoint)
+			o.BaseEndpoint = aws_sdkv2.String(endpoint)
 		}
 	}), nil
 }

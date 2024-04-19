@@ -26,9 +26,9 @@ The following arguments are required:
 
 * `collection_name` - (Required) Name of the geofence collection.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `collection_arn` - ARN for the geofence collection resource. Used when you need to specify a resource across all AWS.
 * `create_time` - Timestamp for when the geofence collection resource was created in ISO 8601 format.

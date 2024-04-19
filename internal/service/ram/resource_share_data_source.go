@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ram
 
 import (
@@ -10,15 +13,23 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKDataSource("aws_ram_resource_share")
-func DataSourceResourceShare() *schema.Resource {
+// @SDKDataSource("aws_ram_resource_share", name="Resource Shared")
+// @Tags
+func dataSourceResourceShare() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceResourceShareRead,
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"filter": {
 				Type:     schema.TypeSet,
 				Optional: true,
@@ -36,40 +47,37 @@ func DataSourceResourceShare() *schema.Resource {
 					},
 				},
 			},
-
+			"name": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"owning_account_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"resource_arns": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Schema{
+					Type: schema.TypeString,
+				},
+			},
 			"resource_owner": {
 				Type:         schema.TypeString,
 				Required:     true,
 				ValidateFunc: validation.StringInSlice(ram.ResourceOwner_Values(), false),
 			},
-
 			"resource_share_status": {
 				Type:         schema.TypeString,
 				Optional:     true,
 				ValidateFunc: validation.StringInSlice(ram.ResourceShareStatus_Values(), false),
 			},
-
-			"name": {
-				Type:     schema.TypeString,
-				Required: true,
-			},
-
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"owning_account_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-
-			"tags": tftags.TagsSchemaComputed(),
-
 			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
@@ -77,80 +85,97 @@ func DataSourceResourceShare() *schema.Resource {
 func dataSourceResourceShareRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).RAMConn(ctx)
-	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
-	name := d.Get("name").(string)
-	owner := d.Get("resource_owner").(string)
+	resourceOwner := d.Get("resource_owner").(string)
+	inputG := &ram.GetResourceSharesInput{
+		ResourceOwner: aws.String(resourceOwner),
+	}
 
-	filters, filtersOk := d.GetOk("filter")
+	if v, ok := d.GetOk("name"); ok {
+		inputG.Name = aws.String(v.(string))
+	}
 
-	params := &ram.GetResourceSharesInput{
-		Name:          aws.String(name),
-		ResourceOwner: aws.String(owner),
+	if v, ok := d.GetOk("filter"); ok && v.(*schema.Set).Len() > 0 {
+		inputG.TagFilters = expandTagFilters(v.(*schema.Set).List())
 	}
 
 	if v, ok := d.GetOk("resource_share_status"); ok {
-		params.ResourceShareStatus = aws.String(v.(string))
+		inputG.ResourceShareStatus = aws.String(v.(string))
 	}
 
-	if filtersOk {
-		params.TagFilters = buildTagFilters(filters.(*schema.Set))
+	share, err := findResourceShare(ctx, conn, inputG)
+
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("RAM Resource Share", err))
 	}
 
-	for {
-		resp, err := conn.GetResourceSharesWithContext(ctx, params)
+	arn := aws.StringValue(share.ResourceShareArn)
+	d.SetId(arn)
+	d.Set("arn", arn)
+	d.Set("name", share.Name)
+	d.Set("owning_account_id", share.OwningAccountId)
+	d.Set("status", share.Status)
 
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "retrieving resource share: empty response for: %s", params)
-		}
+	setTagsOut(ctx, share.Tags)
 
-		if len(resp.ResourceShares) > 1 {
-			return sdkdiag.AppendErrorf(diags, "Multiple resource shares found for: %s", name)
-		}
-
-		if resp == nil || len(resp.ResourceShares) == 0 {
-			return sdkdiag.AppendErrorf(diags, "No matching resource found: %s", err)
-		}
-
-		for _, r := range resp.ResourceShares {
-			if aws.StringValue(r.Name) == name {
-				d.SetId(aws.StringValue(r.ResourceShareArn))
-				d.Set("arn", r.ResourceShareArn)
-				d.Set("owning_account_id", r.OwningAccountId)
-				d.Set("status", r.Status)
-
-				if err := d.Set("tags", KeyValueTags(ctx, r.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-					return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
-				}
-
-				break
-			}
-		}
-
-		if resp.NextToken == nil {
-			break
-		}
-
-		params.NextToken = resp.NextToken
+	inputL := &ram.ListResourcesInput{
+		ResourceOwner:     aws.String(resourceOwner),
+		ResourceShareArns: aws.StringSlice([]string{arn}),
 	}
+	resources, err := findResources(ctx, conn, inputL)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading RAM Resource Share (%s) resources: %s", arn, err)
+	}
+
+	resourceARNs := tfslices.ApplyToAll(resources, func(r *ram.Resource) string {
+		return aws.StringValue(r.Arn)
+	})
+	d.Set("resource_arns", resourceARNs)
 
 	return diags
 }
 
-func buildTagFilters(set *schema.Set) []*ram.TagFilter {
-	var filters []*ram.TagFilter
-
-	for _, v := range set.List() {
-		m := v.(map[string]interface{})
-		var filterValues []*string
-		for _, e := range m["values"].([]interface{}) {
-			filterValues = append(filterValues, aws.String(e.(string)))
-		}
-		filters = append(filters, &ram.TagFilter{
-			TagKey:    aws.String(m["name"].(string)),
-			TagValues: filterValues,
-		})
+func expandTagFilter(tfMap map[string]interface{}) *ram.TagFilter {
+	if tfMap == nil {
+		return nil
 	}
 
-	return filters
+	apiObject := &ram.TagFilter{}
+
+	if v, ok := tfMap["name"].(string); ok && v != "" {
+		apiObject.TagKey = aws.String(v)
+	}
+
+	if v, ok := tfMap["values"].([]interface{}); ok && len(v) > 0 {
+		apiObject.TagValues = flex.ExpandStringList(v)
+	}
+
+	return apiObject
+}
+
+func expandTagFilters(tfList []interface{}) []*ram.TagFilter {
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	var apiObjects []*ram.TagFilter
+
+	for _, tfMapRaw := range tfList {
+		tfMap, ok := tfMapRaw.(map[string]interface{})
+
+		if !ok {
+			continue
+		}
+
+		apiObject := expandTagFilter(tfMap)
+
+		if apiObject == nil {
+			continue
+		}
+
+		apiObjects = append(apiObjects, apiObject)
+	}
+
+	return apiObjects
 }

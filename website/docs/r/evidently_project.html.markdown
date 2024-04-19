@@ -66,7 +66,7 @@ resource "aws_evidently_project" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `data_delivery` - (Optional) A block that contains information about where Evidently is to store evaluation events for longer term storage, if you choose to do so. If you choose not to store these events, Evidently deletes them after using them to produce metrics and other experiment results that you can view. See below.
 * `description` - (Optional) Specifies the description of the project.
@@ -97,9 +97,9 @@ The `s3_destination` block supports the following arguments:
 * `delete` - (Default `2m`)
 * `update` - (Default `2m`)
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `active_experiment_count` - The number of ongoing experiments currently in the project.
 * `active_launch_count` - The number of ongoing launches currently in the project.
@@ -115,8 +115,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CloudWatch Evidently Project can be imported using the `arn`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CloudWatch Evidently Project using the `arn`. For example:
 
+```terraform
+import {
+  to = aws_evidently_project.example
+  id = "arn:aws:evidently:us-east-1:123456789012:segment/example"
+}
 ```
-$ terraform import aws_evidently_project.example arn:aws:evidently:us-east-1:123456789012:segment/example
+
+Using `terraform import`, import CloudWatch Evidently Project using the `arn`. For example:
+
+```console
+% terraform import aws_evidently_project.example arn:aws:evidently:us-east-1:123456789012:segment/example
 ```

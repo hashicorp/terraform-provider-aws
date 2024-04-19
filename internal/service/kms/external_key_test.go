@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package kms_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/kms"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
@@ -17,6 +20,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfkms "github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccKMSExternalKey_basic(t *testing.T) {
@@ -26,7 +30,7 @@ func TestAccKMSExternalKey_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckExternalKeyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -34,7 +38,7 @@ func TestAccKMSExternalKey_basic(t *testing.T) {
 				Config: testAccExternalKeyConfig_basic(),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExternalKeyExists(ctx, resourceName, &key),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kms", regexp.MustCompile(`key/.+`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "kms", regexache.MustCompile(`key/.+`)),
 					resource.TestCheckResourceAttr(resourceName, "bypass_policy_lockout_safety_check", "false"),
 					resource.TestCheckResourceAttr(resourceName, "deletion_window_in_days", "30"),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
@@ -43,7 +47,7 @@ func TestAccKMSExternalKey_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "key_state", "PendingImport"),
 					resource.TestCheckResourceAttr(resourceName, "key_usage", "ENCRYPT_DECRYPT"),
 					resource.TestCheckResourceAttr(resourceName, "multi_region", "false"),
-					resource.TestMatchResourceAttr(resourceName, "policy", regexp.MustCompile(`Enable IAM User Permissions`)),
+					resource.TestMatchResourceAttr(resourceName, "policy", regexache.MustCompile(`Enable IAM User Permissions`)),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestCheckResourceAttr(resourceName, "valid_to", ""),
 				),
@@ -55,7 +59,6 @@ func TestAccKMSExternalKey_basic(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"bypass_policy_lockout_safety_check",
 					"deletion_window_in_days",
-					"key_material_base64",
 				},
 			},
 		},
@@ -69,7 +72,7 @@ func TestAccKMSExternalKey_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckExternalKeyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -93,7 +96,7 @@ func TestAccKMSExternalKey_multiRegion(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckExternalKeyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -111,7 +114,6 @@ func TestAccKMSExternalKey_multiRegion(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"bypass_policy_lockout_safety_check",
 					"deletion_window_in_days",
-					"key_material_base64",
 				},
 			},
 		},
@@ -126,7 +128,7 @@ func TestAccKMSExternalKey_deletionWindowInDays(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckExternalKeyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -144,7 +146,6 @@ func TestAccKMSExternalKey_deletionWindowInDays(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"bypass_policy_lockout_safety_check",
 					"deletion_window_in_days",
-					"key_material_base64",
 				},
 			},
 			{
@@ -167,7 +168,7 @@ func TestAccKMSExternalKey_description(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckExternalKeyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -185,7 +186,6 @@ func TestAccKMSExternalKey_description(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"bypass_policy_lockout_safety_check",
 					"deletion_window_in_days",
-					"key_material_base64",
 				},
 			},
 			{
@@ -208,7 +208,7 @@ func TestAccKMSExternalKey_enabled(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckExternalKeyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -257,7 +257,7 @@ func TestAccKMSExternalKey_keyMaterialBase64(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckExternalKeyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -302,7 +302,7 @@ func TestAccKMSExternalKey_policy(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckExternalKeyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -320,7 +320,6 @@ func TestAccKMSExternalKey_policy(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"bypass_policy_lockout_safety_check",
 					"deletion_window_in_days",
-					"key_material_base64",
 				},
 			},
 			{
@@ -344,7 +343,7 @@ func TestAccKMSExternalKey_policyBypass(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckExternalKeyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -363,7 +362,6 @@ func TestAccKMSExternalKey_policyBypass(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"bypass_policy_lockout_safety_check",
 					"deletion_window_in_days",
-					"key_material_base64",
 				},
 			},
 		},
@@ -378,7 +376,7 @@ func TestAccKMSExternalKey_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckExternalKeyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -397,7 +395,6 @@ func TestAccKMSExternalKey_tags(t *testing.T) {
 				ImportStateVerifyIgnore: []string{
 					"bypass_policy_lockout_safety_check",
 					"deletion_window_in_days",
-					"key_material_base64",
 				},
 			},
 			{
@@ -419,6 +416,23 @@ func TestAccKMSExternalKey_tags(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
 				),
 			},
+			{
+				Config: testAccExternalKeyConfig_tags0(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckExternalKeyExists(ctx, resourceName, &key3),
+					testAccCheckExternalKeyNotRecreated(&key2, &key3),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"bypass_policy_lockout_safety_check",
+					"deletion_window_in_days",
+				},
+			},
 		},
 	})
 }
@@ -433,7 +447,7 @@ func TestAccKMSExternalKey_validTo(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, kms.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KMSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckExternalKeyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -699,6 +713,15 @@ resource "aws_kms_external_key" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2)
+}
+
+func testAccExternalKeyConfig_tags0(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_kms_external_key" "test" {
+  description             = %[1]q
+  deletion_window_in_days = 7
+}
+`, rName)
 }
 
 func testAccExternalKeyConfig_validTo(rName, validTo string) string {

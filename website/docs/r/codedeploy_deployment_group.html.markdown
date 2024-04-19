@@ -80,6 +80,9 @@ resource "aws_codedeploy_deployment_group" "example" {
     alarms  = ["my-alarm-name"]
     enabled = true
   }
+
+  outdated_instances_strategy = "UPDATE"
+
 }
 ```
 
@@ -183,7 +186,7 @@ resource "aws_codedeploy_deployment_group" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `app_name` - (Required) The name of the application.
 * `deployment_group_name` - (Required) The name of the deployment group.
@@ -200,6 +203,7 @@ The following arguments are supported:
 * `load_balancer_info` - (Optional) Single configuration block of the load balancer to use in a blue/green deployment (documented below).
 * `on_premises_instance_tag_filter` - (Optional) On premise tag filters associated with the group. See the AWS docs for details.
 * `trigger_configuration` - (Optional) Configuration block(s) of the triggers for the deployment group (documented below).
+* `outdated_instances_strategy` - (Optional) Configuration block of Indicates what happens when new Amazon EC2 instances are launched mid-deployment and do not receive the deployed application revision. Valid values are `UPDATE` and `IGNORE`. Defaults to `UPDATE`.
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ### alarm_configuration Argument Reference
@@ -219,7 +223,7 @@ _Only one `alarm_configuration` is allowed_.
 You can configure a deployment group to automatically rollback when a deployment fails or when a monitoring threshold you specify is met. In this case, the last known good version of an application revision is deployed. `auto_rollback_configuration` supports the following:
 
 * `enabled` - (Optional) Indicates whether a defined automatic rollback configuration is currently enabled for this Deployment Group. If you enable automatic rollback, you must specify at least one event type.
-* `events` - (Optional) The event type or types that trigger a rollback. Supported types are `DEPLOYMENT_FAILURE` and `DEPLOYMENT_STOP_ON_ALARM`.
+* `events` - (Optional) The event type or types that trigger a rollback. Supported types are `DEPLOYMENT_FAILURE`, `DEPLOYMENT_STOP_ON_ALARM` and `DEPLOYMENT_STOP_ON_REQUEST`.
 
 _Only one `auto_rollback_configuration` is allowed_.
 
@@ -345,9 +349,9 @@ Add triggers to a Deployment Group to receive notifications about events related
 * `trigger_name` - (Required) The name of the notification trigger.
 * `trigger_target_arn` - (Required) The ARN of the SNS topic through which notifications are sent.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the CodeDeploy deployment group.
 * `id` - Application name and deployment group name.
@@ -357,10 +361,19 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-CodeDeploy Deployment Groups can be imported by their `app_name`, a colon, and `deployment_group_name`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import CodeDeploy Deployment Groups using `app_name`, a colon, and `deployment_group_name`. For example:
 
+```terraform
+import {
+  to = aws_codedeploy_deployment_group.example
+  id = "my-application:my-deployment-group"
+}
 ```
-$ terraform import aws_codedeploy_deployment_group.example my-application:my-deployment-group
+
+Using `terraform import`, import CodeDeploy Deployment Groups using `app_name`, a colon, and `deployment_group_name`. For example:
+
+```console
+% terraform import aws_codedeploy_deployment_group.example my-application:my-deployment-group
 ```
 
 [1]: http://docs.aws.amazon.com/codedeploy/latest/userguide/monitoring-sns-event-notifications-create-trigger.html

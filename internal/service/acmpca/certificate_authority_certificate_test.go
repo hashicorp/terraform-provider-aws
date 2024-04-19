@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package acmpca_test
 
 import (
@@ -5,27 +8,26 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/acmpca"
+	"github.com/aws/aws-sdk-go-v2/service/acmpca"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfacmpca "github.com/hashicorp/terraform-provider-aws/internal/service/acmpca"
-	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccACMPCACertificateAuthorityCertificate_rootCA(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v acmpca.GetCertificateAuthorityCertificateOutput
 	resourceName := "aws_acmpca_certificate_authority_certificate.test"
-
 	commonName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             nil, // Certificate authority certificates cannot be deleted
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateAuthorityCertificateConfig_rootCA(commonName),
@@ -50,14 +52,13 @@ func TestAccACMPCACertificateAuthorityCertificate_updateRootCA(t *testing.T) {
 	var v acmpca.GetCertificateAuthorityCertificateOutput
 	resourceName := "aws_acmpca_certificate_authority_certificate.test"
 	updatedResourceName := "aws_acmpca_certificate_authority_certificate.updated"
-
 	commonName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             nil, // Certificate authority certificates cannot be deleted
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateAuthorityCertificateConfig_rootCA(commonName),
@@ -85,14 +86,13 @@ func TestAccACMPCACertificateAuthorityCertificate_subordinateCA(t *testing.T) {
 	ctx := acctest.Context(t)
 	var v acmpca.GetCertificateAuthorityCertificateOutput
 	resourceName := "aws_acmpca_certificate_authority_certificate.test"
-
 	commonName := acctest.RandomDomainName()
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, acmpca.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.ACMPCAServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             nil, // Certificate authority certificates cannot be deleted
+		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccCertificateAuthorityCertificateConfig_subordinateCA(commonName),
@@ -112,24 +112,22 @@ func TestAccACMPCACertificateAuthorityCertificate_subordinateCA(t *testing.T) {
 	})
 }
 
-func testAccCheckCertificateAuthorityCertificateExists(ctx context.Context, resourceName string, certificate *acmpca.GetCertificateAuthorityCertificateOutput) resource.TestCheckFunc {
+func testAccCheckCertificateAuthorityCertificateExists(ctx context.Context, n string, v *acmpca.GetCertificateAuthorityCertificateOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("not found: %s", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ACMPCAClient(ctx)
 
 		output, err := tfacmpca.FindCertificateAuthorityCertificateByARN(ctx, conn, rs.Primary.ID)
+
 		if err != nil {
 			return err
 		}
-		if tfresource.NotFound(err) {
-			return fmt.Errorf("ACM PCA Certificate (%s) does not exist", rs.Primary.ID)
-		}
 
-		*certificate = *output
+		*v = *output
 
 		return nil
 	}

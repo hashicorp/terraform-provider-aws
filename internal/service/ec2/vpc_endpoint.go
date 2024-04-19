@@ -1,9 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
 	"context"
 	"fmt"
 	"log"
+	"regexp"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -85,6 +89,7 @@ func ResourceVPCEndpoint() *schema.Resource {
 						"dns_record_ip_type": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							Computed:     true,
 							ValidateFunc: validation.StringInSlice(ec2.DnsRecordIpType_Values(), false),
 						},
 						"private_dns_only_for_inbound_resolver_endpoint": {
@@ -202,7 +207,13 @@ func resourceVPCEndpointCreate(ctx context.Context, d *schema.ResourceData, meta
 	}
 
 	if v, ok := d.GetOk("dns_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
-		input.DnsOptions = expandDNSOptionsSpecification(v.([]interface{})[0].(map[string]interface{}))
+		// PrivateDnsOnlyForInboundResolverEndpoint is only supported for services
+		// that support both gateway and interface endpoints, i.e. S3.
+		if isAmazonS3VPCEndpoint(serviceName) {
+			input.DnsOptions = expandDNSOptionsSpecificationWithPrivateDNSOnly(v.([]interface{})[0].(map[string]interface{}))
+		} else {
+			input.DnsOptions = expandDNSOptionsSpecification(v.([]interface{})[0].(map[string]interface{}))
+		}
 	}
 
 	if v, ok := d.GetOk("ip_address_type"); ok {
@@ -375,12 +386,13 @@ func resourceVPCEndpointUpdate(ctx context.Context, d *schema.ResourceData, meta
 		if d.HasChange("dns_options") {
 			if v, ok := d.GetOk("dns_options"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				tfMap := v.([]interface{})[0].(map[string]interface{})
-				apiObject := expandDNSOptionsSpecification(tfMap)
-				if privateDNSEnabled {
-					// Always send PrivateDnsOnlyForInboundResolverEndpoint on update.
-					apiObject.PrivateDnsOnlyForInboundResolverEndpoint = aws.Bool(tfMap["private_dns_only_for_inbound_resolver_endpoint"].(bool))
+				// PrivateDnsOnlyForInboundResolverEndpoint is only supported for services
+				// that support both gateway and interface endpoints, i.e. S3.
+				if isAmazonS3VPCEndpoint(d.Get("service_name").(string)) {
+					input.DnsOptions = expandDNSOptionsSpecificationWithPrivateDNSOnly(tfMap)
+				} else {
+					input.DnsOptions = expandDNSOptionsSpecification(tfMap)
 				}
-				input.DnsOptions = apiObject
 			}
 		}
 
@@ -481,6 +493,11 @@ func vpcEndpointAccept(ctx context.Context, conn *ec2.EC2, vpceID, serviceName s
 	return nil
 }
 
+func isAmazonS3VPCEndpoint(serviceName string) bool {
+	ok, _ := regexp.MatchString("com\\.amazonaws\\.([a-z]+\\-[a-z]+\\-[0-9])\\.s3", serviceName)
+	return ok
+}
+
 func expandDNSOptionsSpecification(tfMap map[string]interface{}) *ec2.DnsOptionsSpecification {
 	if tfMap == nil {
 		return nil
@@ -492,7 +509,21 @@ func expandDNSOptionsSpecification(tfMap map[string]interface{}) *ec2.DnsOptions
 		apiObject.DnsRecordIpType = aws.String(v)
 	}
 
-	if v, ok := tfMap["private_dns_only_for_inbound_resolver_endpoint"].(bool); ok && v {
+	return apiObject
+}
+
+func expandDNSOptionsSpecificationWithPrivateDNSOnly(tfMap map[string]interface{}) *ec2.DnsOptionsSpecification {
+	if tfMap == nil {
+		return nil
+	}
+
+	apiObject := &ec2.DnsOptionsSpecification{}
+
+	if v, ok := tfMap["dns_record_ip_type"].(string); ok && v != "" {
+		apiObject.DnsRecordIpType = aws.String(v)
+	}
+
+	if v, ok := tfMap["private_dns_only_for_inbound_resolver_endpoint"].(bool); ok {
 		apiObject.PrivateDnsOnlyForInboundResolverEndpoint = aws.Bool(v)
 	}
 

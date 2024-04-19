@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package keyspaces_test
 
 import (
@@ -6,7 +9,6 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go/aws/endpoints"
-	"github.com/aws/aws-sdk-go/service/keyspaces"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -14,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfkeyspaces "github.com/hashicorp/terraform-provider-aws/internal/service/keyspaces"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccPreCheck(t *testing.T) {
@@ -27,7 +30,7 @@ func TestAccKeyspacesKeyspace_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, keyspaces.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KeyspacesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckKeyspaceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -56,7 +59,7 @@ func TestAccKeyspacesKeyspace_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, keyspaces.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KeyspacesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckKeyspaceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -79,7 +82,7 @@ func TestAccKeyspacesKeyspace_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(t) },
-		ErrorCheck:               acctest.ErrorCheck(t, keyspaces.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.KeyspacesServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckKeyspaceDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -119,7 +122,7 @@ func TestAccKeyspacesKeyspace_tags(t *testing.T) {
 
 func testAccCheckKeyspaceDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KeyspacesConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KeyspacesClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_keyspaces_keyspace" {
@@ -154,7 +157,7 @@ func testAccCheckKeyspaceExists(ctx context.Context, n string) resource.TestChec
 			return fmt.Errorf("No Keyspaces Keyspace ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).KeyspacesConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KeyspacesClient(ctx)
 
 		_, err := tfkeyspaces.FindKeyspaceByName(ctx, conn, rs.Primary.Attributes["name"])
 

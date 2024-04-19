@@ -1,10 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package nullable
 
 import (
 	"errors"
-	"regexp"
 	"strconv"
 	"testing"
+
+	"github.com/YakDriver/regexache"
 )
 
 func TestNullableFloat(t *testing.T) {
@@ -88,12 +92,12 @@ func TestValidationFloat(t *testing.T) {
 		{
 			val:         "A",
 			f:           ValidateTypeStringNullableFloat,
-			expectedErr: regexp.MustCompile(`^\w+: cannot parse 'A' as float: .+$`),
+			expectedErr: regexache.MustCompile(`^\w+: cannot parse 'A' as float: .+$`),
 		},
 		{
 			val:         1,
 			f:           ValidateTypeStringNullableFloat,
-			expectedErr: regexp.MustCompile(`^expected type of \w+ to be string$`),
+			expectedErr: regexache.MustCompile(`^expected type of \w+ to be string$`),
 		},
 	})
 }

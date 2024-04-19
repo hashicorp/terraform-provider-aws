@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package emr
 
 import (
@@ -9,6 +12,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"slices"
 	"strings"
 	"time"
 
@@ -29,12 +33,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"golang.org/x/exp/slices"
 )
 
 // @SDKResource("aws_emr_cluster", name="Cluster")
 // @Tags(identifierAttribute="id")
-func ResourceCluster() *schema.Resource {
+func resourceCluster() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceClusterCreate,
 		ReadWithoutTimeout:   resourceClusterRead,
@@ -47,717 +50,722 @@ func ResourceCluster() *schema.Resource {
 
 		CustomizeDiff: verify.SetTagsDiff,
 
-		Schema: map[string]*schema.Schema{
-			"additional_info": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
-				StateFunc: func(v interface{}) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
-			},
-			"applications": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-				Set:      schema.HashString,
-			},
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"auto_termination_policy": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				Elem: &schema.Resource{
+		SchemaFunc: func() map[string]*schema.Schema {
+			instanceFleetConfigSchema := func() *schema.Resource {
+				return &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"idle_timeout": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ValidateFunc: validation.IntBetween(60, 604800),
+						"id": {
+							Type:     schema.TypeString,
+							Computed: true,
 						},
-					},
-				},
-			},
-			"autoscaling_role": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Optional: true,
-			},
-			"bootstrap_action": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"args": {
+						"instance_type_configs": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							ForceNew: true,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"bid_price": {
+										Type:     schema.TypeString,
+										Optional: true,
+										ForceNew: true,
+									},
+									"bid_price_as_percentage_of_on_demand_price": {
+										Type:     schema.TypeFloat,
+										Optional: true,
+										ForceNew: true,
+										Default:  100,
+									},
+									"configurations": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										ForceNew: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"classification": {
+													Type:     schema.TypeString,
+													Optional: true,
+													ForceNew: true,
+												},
+												"properties": {
+													Type:     schema.TypeMap,
+													Optional: true,
+													ForceNew: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+									"ebs_config": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Computed: true,
+										ForceNew: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"iops": {
+													Type:     schema.TypeInt,
+													Optional: true,
+													ForceNew: true,
+												},
+												"size": {
+													Type:     schema.TypeInt,
+													Required: true,
+													ForceNew: true,
+												},
+												"type": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ForceNew:     true,
+													ValidateFunc: validEBSVolumeType(),
+												},
+												"volumes_per_instance": {
+													Type:     schema.TypeInt,
+													Optional: true,
+													ForceNew: true,
+													Default:  1,
+												},
+											},
+										},
+										Set: resourceClusterEBSHashConfig,
+									},
+									"instance_type": {
+										Type:     schema.TypeString,
+										Required: true,
+										ForceNew: true,
+									},
+									"weighted_capacity": {
+										Type:     schema.TypeInt,
+										Optional: true,
+										ForceNew: true,
+										Default:  1,
+									},
+								},
+							},
+							Set: resourceInstanceTypeHashConfig,
+						},
+						"launch_specifications": {
 							Type:     schema.TypeList,
 							Optional: true,
 							ForceNew: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"path": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-					},
-				},
-			},
-			"cluster_state": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"configurations": {
-				Type:          schema.TypeString,
-				ForceNew:      true,
-				Optional:      true,
-				ConflictsWith: []string{"configurations_json"},
-			},
-			"configurations_json": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				ForceNew:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
-				StateFunc: func(v interface{}) string {
-					json, _ := structure.NormalizeJsonString(v)
-					return json
-				},
-				ConflictsWith: []string{"configurations"},
-			},
-			"core_instance_fleet": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				ForceNew:      true,
-				Computed:      true,
-				MaxItems:      1,
-				Elem:          instanceFleetConfigSchema(),
-				ConflictsWith: []string{"core_instance_group", "master_instance_group"},
-			},
-			"core_instance_group": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"autoscaling_policy": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
-							ValidateFunc:     validation.StringIsJSON,
-						},
-						"bid_price": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-						"ebs_config": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
+							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
-									"iops": {
-										Type:     schema.TypeInt,
-										Optional: true,
-										ForceNew: true,
-									},
-									"size": {
-										Type:     schema.TypeInt,
-										Required: true,
-										ForceNew: true,
-									},
-									"throughput": {
-										Type:     schema.TypeInt,
-										Optional: true,
-										ForceNew: true,
-									},
-									"type": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ForceNew:     true,
-										ValidateFunc: validEBSVolumeType(),
-									},
-									"volumes_per_instance": {
-										Type:     schema.TypeInt,
-										Optional: true,
-										ForceNew: true,
-										Default:  1,
-									},
-								},
-							},
-							Set: resourceClusterEBSHashConfig,
-						},
-						"id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"instance_count": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							Default:      1,
-							ValidateFunc: validation.IntAtLeast(1),
-						},
-						"instance_type": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-					},
-				},
-			},
-			"custom_ami_id": {
-				Type:         schema.TypeString,
-				ForceNew:     true,
-				Optional:     true,
-				ValidateFunc: validCustomAMIID,
-			},
-			"ebs_root_volume_size": {
-				Type:     schema.TypeInt,
-				ForceNew: true,
-				Optional: true,
-			},
-			"ec2_attributes": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"additional_master_security_groups": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-						"additional_slave_security_groups": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-						"emr_managed_master_security_group": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-							Computed: true,
-						},
-						"emr_managed_slave_security_group": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-							Computed: true,
-						},
-						"instance_profile": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						"key_name": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-						"service_access_security_group": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-							Computed: true,
-						},
-						"subnet_id": {
-							Type:          schema.TypeString,
-							Optional:      true,
-							Computed:      true,
-							ForceNew:      true,
-							ConflictsWith: []string{"ec2_attributes.0.subnet_ids"},
-						},
-						"subnet_ids": {
-							Type:          schema.TypeSet,
-							Optional:      true,
-							Computed:      true,
-							ForceNew:      true,
-							Elem:          &schema.Schema{Type: schema.TypeString},
-							Set:           schema.HashString,
-							ConflictsWith: []string{"ec2_attributes.0.subnet_id"},
-						},
-					},
-				},
-			},
-			"keep_job_flow_alive_when_no_steps": {
-				Type:     schema.TypeBool,
-				ForceNew: true,
-				Optional: true,
-				Computed: true,
-			},
-			"kerberos_attributes": {
-				Type:     schema.TypeList,
-				MaxItems: 1,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"ad_domain_join_password": {
-							Type:      schema.TypeString,
-							Optional:  true,
-							Sensitive: true,
-							ForceNew:  true,
-						},
-						"ad_domain_join_user": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-						"cross_realm_trust_principal_password": {
-							Type:      schema.TypeString,
-							Optional:  true,
-							Sensitive: true,
-							ForceNew:  true,
-						},
-						"kdc_admin_password": {
-							Type:      schema.TypeString,
-							Required:  true,
-							Sensitive: true,
-							ForceNew:  true,
-						},
-						"realm": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-					},
-				},
-			},
-			"list_steps_states": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(emr.StepState_Values(), false),
-				},
-			},
-			"log_encryption_kms_key_id": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Optional: true,
-			},
-			"log_uri": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Optional: true,
-				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-					// EMR uses a proprietary filesystem called EMRFS
-					// and both s3n & s3 protocols are mapped to that FS
-					// so they're equvivalent in this context (confirmed by AWS support)
-					old = strings.Replace(old, "s3n://", "s3://", -1)
-					return old == new
-				},
-			},
-			"master_instance_fleet": {
-				Type:          schema.TypeList,
-				Optional:      true,
-				ForceNew:      true,
-				Computed:      true,
-				MaxItems:      1,
-				Elem:          instanceFleetConfigSchema(),
-				ConflictsWith: []string{"core_instance_group", "master_instance_group"},
-			},
-			"master_instance_group": {
-				Type:     schema.TypeList,
-				Optional: true,
-				Computed: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"bid_price": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-						"ebs_config": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Computed: true,
-							ForceNew: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"iops": {
-										Type:     schema.TypeInt,
-										Optional: true,
-										ForceNew: true,
-									},
-									"size": {
-										Type:     schema.TypeInt,
-										Required: true,
-										ForceNew: true,
-									},
-									"throughput": {
-										Type:     schema.TypeInt,
-										Optional: true,
-										ForceNew: true,
-									},
-									"type": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ForceNew:     true,
-										ValidateFunc: validEBSVolumeType(),
-									},
-									"volumes_per_instance": {
-										Type:     schema.TypeInt,
-										Optional: true,
-										ForceNew: true,
-										Default:  1,
-									},
-								},
-							},
-							Set: resourceClusterEBSHashConfig,
-						},
-						"id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"instance_count": {
-							Type:         schema.TypeInt,
-							Optional:     true,
-							ForceNew:     true,
-							Default:      1,
-							ValidateFunc: validation.IntInSlice([]int{1, 3}),
-						},
-						"instance_type": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-						"name": {
-							Type:     schema.TypeString,
-							Optional: true,
-							ForceNew: true,
-						},
-					},
-				},
-			},
-			"master_public_dns": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"name": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-			},
-			"placement_group_config": {
-				Type:       schema.TypeList,
-				ForceNew:   true,
-				Optional:   true,
-				ConfigMode: schema.SchemaConfigModeAttr,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"instance_role": {
-							Type:         schema.TypeString,
-							ForceNew:     true,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(emr.InstanceRoleType_Values(), false),
-						},
-						"placement_strategy": {
-							Type:         schema.TypeString,
-							ForceNew:     true,
-							Optional:     true,
-							Computed:     true,
-							ValidateFunc: validation.StringInSlice(emr.PlacementGroupStrategy_Values(), false),
-						},
-					},
-				},
-			},
-			"release_label": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-			},
-			"scale_down_behavior": {
-				Type:         schema.TypeString,
-				ForceNew:     true,
-				Optional:     true,
-				Computed:     true,
-				ValidateFunc: validation.StringInSlice(emr.ScaleDownBehavior_Values(), false),
-			},
-			"security_configuration": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Optional: true,
-			},
-			"service_role": {
-				Type:     schema.TypeString,
-				ForceNew: true,
-				Required: true,
-			},
-			"step": {
-				Type:       schema.TypeList,
-				Optional:   true,
-				Computed:   true,
-				ForceNew:   true,
-				ConfigMode: schema.SchemaConfigModeAttr,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"action_on_failure": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ForceNew:     true,
-							ValidateFunc: validation.StringInSlice(emr.ActionOnFailure_Values(), false),
-						},
-						"hadoop_jar_step": {
-							Type:       schema.TypeList,
-							MaxItems:   1,
-							Required:   true,
-							ForceNew:   true,
-							ConfigMode: schema.SchemaConfigModeAttr,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"args": {
+									"on_demand_specification": {
 										Type:     schema.TypeList,
 										Optional: true,
 										ForceNew: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
+										MinItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"allocation_strategy": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ForceNew:     true,
+													ValidateFunc: validation.StringInSlice(emr.OnDemandProvisioningAllocationStrategy_Values(), false),
+												},
+											},
+										},
 									},
-									"jar": {
-										Type:     schema.TypeString,
-										Required: true,
-										ForceNew: true,
-									},
-									"main_class": {
-										Type:     schema.TypeString,
+									"spot_specification": {
+										Type:     schema.TypeList,
 										Optional: true,
 										ForceNew: true,
-									},
-									"properties": {
-										Type:     schema.TypeMap,
-										Optional: true,
-										ForceNew: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
+										MinItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"allocation_strategy": {
+													Type:         schema.TypeString,
+													ForceNew:     true,
+													Required:     true,
+													ValidateFunc: validation.StringInSlice(emr.SpotProvisioningAllocationStrategy_Values(), false),
+												},
+												"block_duration_minutes": {
+													Type:     schema.TypeInt,
+													Optional: true,
+													ForceNew: true,
+													Default:  0,
+												},
+												"timeout_action": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ForceNew:     true,
+													ValidateFunc: validation.StringInSlice(emr.SpotProvisioningTimeoutAction_Values(), false),
+												},
+												"timeout_duration_minutes": {
+													Type:     schema.TypeInt,
+													ForceNew: true,
+													Required: true,
+												},
+											},
+										},
 									},
 								},
 							},
 						},
 						"name": {
 							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
-						},
-					},
-				},
-			},
-			"step_concurrency_level": {
-				Type:         schema.TypeInt,
-				Optional:     true,
-				Default:      1,
-				ValidateFunc: validation.IntBetween(1, 256),
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"termination_protection": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Computed: true,
-			},
-			"visible_to_all_users": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  true,
-			},
-		},
-	}
-}
-
-func instanceFleetConfigSchema() *schema.Resource {
-	return &schema.Resource{
-		Schema: map[string]*schema.Schema{
-			"id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"instance_type_configs": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				ForceNew: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"bid_price": {
-							Type:     schema.TypeString,
 							Optional: true,
 							ForceNew: true,
 						},
-						"bid_price_as_percentage_of_on_demand_price": {
-							Type:     schema.TypeFloat,
-							Optional: true,
-							ForceNew: true,
-							Default:  100,
-						},
-						"configurations": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							ForceNew: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"classification": {
-										Type:     schema.TypeString,
-										Optional: true,
-										ForceNew: true,
-									},
-									"properties": {
-										Type:     schema.TypeMap,
-										Optional: true,
-										ForceNew: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-								},
-							},
-						},
-						"ebs_config": {
-							Type:     schema.TypeSet,
-							Optional: true,
+						"provisioned_on_demand_capacity": {
+							Type:     schema.TypeInt,
 							Computed: true,
-							ForceNew: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"iops": {
-										Type:     schema.TypeInt,
-										Optional: true,
-										ForceNew: true,
-									},
-									"size": {
-										Type:     schema.TypeInt,
-										Required: true,
-										ForceNew: true,
-									},
-									"type": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ForceNew:     true,
-										ValidateFunc: validEBSVolumeType(),
-									},
-									"volumes_per_instance": {
-										Type:     schema.TypeInt,
-										Optional: true,
-										ForceNew: true,
-										Default:  1,
-									},
-								},
-							},
-							Set: resourceClusterEBSHashConfig,
 						},
-						"instance_type": {
-							Type:     schema.TypeString,
-							Required: true,
-							ForceNew: true,
+						"provisioned_spot_capacity": {
+							Type:     schema.TypeInt,
+							Computed: true,
 						},
-						"weighted_capacity": {
+						"target_on_demand_capacity": {
 							Type:     schema.TypeInt,
 							Optional: true,
 							ForceNew: true,
-							Default:  1,
+							Default:  0,
+						},
+						"target_spot_capacity": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							ForceNew: true,
+							Default:  0,
 						},
 					},
+				}
+			}
+
+			return map[string]*schema.Schema{
+				"additional_info": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					ValidateFunc:     validation.StringIsJSON,
+					DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
+					StateFunc: func(v interface{}) string {
+						json, _ := structure.NormalizeJsonString(v)
+						return json
+					},
 				},
-				Set: resourceInstanceTypeHashConfig,
-			},
-			"launch_specifications": {
-				Type:     schema.TypeList,
-				Optional: true,
-				ForceNew: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"on_demand_specification": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							MinItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"allocation_strategy": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.StringInSlice(emr.OnDemandProvisioningAllocationStrategy_Values(), false),
-									},
-								},
-							},
-						},
-						"spot_specification": {
-							Type:     schema.TypeList,
-							Optional: true,
-							ForceNew: true,
-							MinItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"allocation_strategy": {
-										Type:         schema.TypeString,
-										ForceNew:     true,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice(emr.SpotProvisioningAllocationStrategy_Values(), false),
-									},
-									"block_duration_minutes": {
-										Type:     schema.TypeInt,
-										Optional: true,
-										ForceNew: true,
-										Default:  0,
-									},
-									"timeout_action": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ForceNew:     true,
-										ValidateFunc: validation.StringInSlice(emr.SpotProvisioningTimeoutAction_Values(), false),
-									},
-									"timeout_duration_minutes": {
-										Type:     schema.TypeInt,
-										ForceNew: true,
-										Required: true,
-									},
-								},
+				"applications": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					ForceNew: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				"arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"auto_termination_policy": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"idle_timeout": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ValidateFunc: validation.IntBetween(60, 604800),
 							},
 						},
 					},
 				},
-			},
-			"name": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-			},
-			"provisioned_on_demand_capacity": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"provisioned_spot_capacity": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"target_on_demand_capacity": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				ForceNew: true,
-				Default:  0,
-			},
-			"target_spot_capacity": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				ForceNew: true,
-				Default:  0,
-			},
+				"autoscaling_role": {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Optional: true,
+				},
+				"bootstrap_action": {
+					Type:     schema.TypeList,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"args": {
+								Type:     schema.TypeList,
+								Optional: true,
+								ForceNew: true,
+								Elem:     &schema.Schema{Type: schema.TypeString},
+							},
+							"name": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"path": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+						},
+					},
+				},
+				"cluster_state": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"configurations": {
+					Type:          schema.TypeString,
+					ForceNew:      true,
+					Optional:      true,
+					ConflictsWith: []string{"configurations_json"},
+				},
+				"configurations_json": {
+					Type:             schema.TypeString,
+					Optional:         true,
+					ForceNew:         true,
+					ValidateFunc:     validation.StringIsJSON,
+					DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
+					StateFunc: func(v interface{}) string {
+						json, _ := structure.NormalizeJsonString(v)
+						return json
+					},
+					ConflictsWith: []string{"configurations"},
+				},
+				"core_instance_fleet": {
+					Type:          schema.TypeList,
+					Optional:      true,
+					ForceNew:      true,
+					Computed:      true,
+					MaxItems:      1,
+					Elem:          instanceFleetConfigSchema(),
+					ConflictsWith: []string{"core_instance_group", "master_instance_group"},
+				},
+				"core_instance_group": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"autoscaling_policy": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
+								ValidateFunc:     validation.StringIsJSON,
+							},
+							"bid_price": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
+							"ebs_config": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"iops": {
+											Type:     schema.TypeInt,
+											Optional: true,
+											ForceNew: true,
+										},
+										"size": {
+											Type:     schema.TypeInt,
+											Required: true,
+											ForceNew: true,
+										},
+										"throughput": {
+											Type:     schema.TypeInt,
+											Optional: true,
+											ForceNew: true,
+										},
+										"type": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ForceNew:     true,
+											ValidateFunc: validEBSVolumeType(),
+										},
+										"volumes_per_instance": {
+											Type:     schema.TypeInt,
+											Optional: true,
+											ForceNew: true,
+											Default:  1,
+										},
+									},
+								},
+								Set: resourceClusterEBSHashConfig,
+							},
+							"id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"instance_count": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      1,
+								ValidateFunc: validation.IntAtLeast(1),
+							},
+							"instance_type": {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+							"name": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
+						},
+					},
+				},
+				"custom_ami_id": {
+					Type:         schema.TypeString,
+					ForceNew:     true,
+					Optional:     true,
+					ValidateFunc: validCustomAMIID,
+				},
+				"ebs_root_volume_size": {
+					Type:     schema.TypeInt,
+					ForceNew: true,
+					Optional: true,
+				},
+				"ec2_attributes": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"additional_master_security_groups": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
+							"additional_slave_security_groups": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
+							"emr_managed_master_security_group": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+								Computed: true,
+							},
+							"emr_managed_slave_security_group": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+								Computed: true,
+							},
+							"instance_profile": {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+							"key_name": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
+							"service_access_security_group": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+								Computed: true,
+							},
+							"subnet_id": {
+								Type:          schema.TypeString,
+								Optional:      true,
+								Computed:      true,
+								ForceNew:      true,
+								ConflictsWith: []string{"ec2_attributes.0.subnet_ids"},
+							},
+							"subnet_ids": {
+								Type:          schema.TypeSet,
+								Optional:      true,
+								Computed:      true,
+								ForceNew:      true,
+								Elem:          &schema.Schema{Type: schema.TypeString},
+								ConflictsWith: []string{"ec2_attributes.0.subnet_id"},
+							},
+						},
+					},
+				},
+				"keep_job_flow_alive_when_no_steps": {
+					Type:     schema.TypeBool,
+					ForceNew: true,
+					Optional: true,
+					Computed: true,
+				},
+				"kerberos_attributes": {
+					Type:     schema.TypeList,
+					MaxItems: 1,
+					Optional: true,
+					ForceNew: true,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"ad_domain_join_password": {
+								Type:      schema.TypeString,
+								Optional:  true,
+								Sensitive: true,
+								ForceNew:  true,
+							},
+							"ad_domain_join_user": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
+							"cross_realm_trust_principal_password": {
+								Type:      schema.TypeString,
+								Optional:  true,
+								Sensitive: true,
+								ForceNew:  true,
+							},
+							"kdc_admin_password": {
+								Type:      schema.TypeString,
+								Required:  true,
+								Sensitive: true,
+								ForceNew:  true,
+							},
+							"realm": {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+						},
+					},
+				},
+				"list_steps_states": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Elem: &schema.Schema{
+						Type:         schema.TypeString,
+						ValidateFunc: validation.StringInSlice(emr.StepState_Values(), false),
+					},
+				},
+				"log_encryption_kms_key_id": {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Optional: true,
+				},
+				"log_uri": {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Optional: true,
+					DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+						// EMR uses a proprietary filesystem called EMRFS
+						// and both s3n & s3 protocols are mapped to that FS
+						// so they're equvivalent in this context (confirmed by AWS support)
+						old = strings.Replace(old, "s3n://", "s3://", -1)
+						return old == new
+					},
+				},
+				"master_instance_fleet": {
+					Type:          schema.TypeList,
+					Optional:      true,
+					ForceNew:      true,
+					Computed:      true,
+					MaxItems:      1,
+					Elem:          instanceFleetConfigSchema(),
+					ConflictsWith: []string{"core_instance_group", "master_instance_group"},
+				},
+				"master_instance_group": {
+					Type:     schema.TypeList,
+					Optional: true,
+					Computed: true,
+					ForceNew: true,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"bid_price": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
+							"ebs_config": {
+								Type:     schema.TypeSet,
+								Optional: true,
+								Computed: true,
+								ForceNew: true,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"iops": {
+											Type:     schema.TypeInt,
+											Optional: true,
+											ForceNew: true,
+										},
+										"size": {
+											Type:     schema.TypeInt,
+											Required: true,
+											ForceNew: true,
+										},
+										"throughput": {
+											Type:     schema.TypeInt,
+											Optional: true,
+											ForceNew: true,
+										},
+										"type": {
+											Type:         schema.TypeString,
+											Required:     true,
+											ForceNew:     true,
+											ValidateFunc: validEBSVolumeType(),
+										},
+										"volumes_per_instance": {
+											Type:     schema.TypeInt,
+											Optional: true,
+											ForceNew: true,
+											Default:  1,
+										},
+									},
+								},
+								Set: resourceClusterEBSHashConfig,
+							},
+							"id": {
+								Type:     schema.TypeString,
+								Computed: true,
+							},
+							"instance_count": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								ForceNew:     true,
+								Default:      1,
+								ValidateFunc: validation.IntInSlice([]int{1, 3}),
+							},
+							"instance_type": {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+							"name": {
+								Type:     schema.TypeString,
+								Optional: true,
+								ForceNew: true,
+							},
+						},
+					},
+				},
+				"master_public_dns": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"name": {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Required: true,
+				},
+				"placement_group_config": {
+					Type:       schema.TypeList,
+					ForceNew:   true,
+					Optional:   true,
+					ConfigMode: schema.SchemaConfigModeAttr,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"instance_role": {
+								Type:         schema.TypeString,
+								ForceNew:     true,
+								Required:     true,
+								ValidateFunc: validation.StringInSlice(emr.InstanceRoleType_Values(), false),
+							},
+							"placement_strategy": {
+								Type:         schema.TypeString,
+								ForceNew:     true,
+								Optional:     true,
+								Computed:     true,
+								ValidateFunc: validation.StringInSlice(emr.PlacementGroupStrategy_Values(), false),
+							},
+						},
+					},
+				},
+				"release_label": {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Required: true,
+				},
+				"scale_down_behavior": {
+					Type:         schema.TypeString,
+					ForceNew:     true,
+					Optional:     true,
+					Computed:     true,
+					ValidateFunc: validation.StringInSlice(emr.ScaleDownBehavior_Values(), false),
+				},
+				"security_configuration": {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Optional: true,
+				},
+				"service_role": {
+					Type:     schema.TypeString,
+					ForceNew: true,
+					Required: true,
+				},
+				"step": {
+					Type:       schema.TypeList,
+					Optional:   true,
+					Computed:   true,
+					ForceNew:   true,
+					ConfigMode: schema.SchemaConfigModeAttr,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"action_on_failure": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ForceNew:     true,
+								ValidateFunc: validation.StringInSlice(emr.ActionOnFailure_Values(), false),
+							},
+							"hadoop_jar_step": {
+								Type:       schema.TypeList,
+								MaxItems:   1,
+								Required:   true,
+								ForceNew:   true,
+								ConfigMode: schema.SchemaConfigModeAttr,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"args": {
+											Type:     schema.TypeList,
+											Optional: true,
+											ForceNew: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+										"jar": {
+											Type:     schema.TypeString,
+											Required: true,
+											ForceNew: true,
+										},
+										"main_class": {
+											Type:     schema.TypeString,
+											Optional: true,
+											ForceNew: true,
+										},
+										"properties": {
+											Type:     schema.TypeMap,
+											Optional: true,
+											ForceNew: true,
+											Elem:     &schema.Schema{Type: schema.TypeString},
+										},
+									},
+								},
+							},
+							"name": {
+								Type:     schema.TypeString,
+								Required: true,
+								ForceNew: true,
+							},
+						},
+					},
+				},
+				"step_concurrency_level": {
+					Type:         schema.TypeInt,
+					Optional:     true,
+					Default:      1,
+					ValidateFunc: validation.IntBetween(1, 256),
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"termination_protection": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Computed: true,
+				},
+				"unhealthy_node_replacement": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  false,
+				},
+				"visible_to_all_users": {
+					Type:     schema.TypeBool,
+					Optional: true,
+					Default:  true,
+				},
+			}
 		},
 	}
 }
@@ -781,9 +789,16 @@ func resourceClusterCreate(ctx context.Context, d *schema.ResourceData, meta int
 	if v, ok := d.GetOk("termination_protection"); ok {
 		terminationProtection = v.(bool)
 	}
+
+	unhealthyNodeReplacement := false
+	if v, ok := d.GetOk("unhealthy_node_replacement"); ok {
+		unhealthyNodeReplacement = v.(bool)
+	}
+
 	instanceConfig := &emr.JobFlowInstancesConfig{
 		KeepJobFlowAliveWhenNoSteps: aws.Bool(keepJobFlowAliveWhenNoSteps),
 		TerminationProtected:        aws.Bool(terminationProtection),
+		UnhealthyNodeReplacement:    aws.Bool(unhealthyNodeReplacement),
 	}
 
 	if l := d.Get("master_instance_group").([]interface{}); len(l) > 0 && l[0] != nil {
@@ -1045,7 +1060,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EMRConn(ctx)
 
-	cluster, err := FindClusterByID(ctx, conn, d.Id())
+	cluster, err := findClusterByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EMR Cluster (%s) not found, removing from state", d.Id())
@@ -1113,6 +1128,7 @@ func resourceClusterRead(ctx context.Context, d *schema.ResourceData, meta inter
 	d.Set("ebs_root_volume_size", cluster.EbsRootVolumeSize)
 	d.Set("scale_down_behavior", cluster.ScaleDownBehavior)
 	d.Set("termination_protection", cluster.TerminationProtected)
+	d.Set("unhealthy_node_replacement", cluster.UnhealthyNodeReplacement)
 	d.Set("step_concurrency_level", cluster.StepConcurrencyLevel)
 
 	d.Set("custom_ami_id", cluster.CustomAmiId)
@@ -1256,6 +1272,16 @@ func resourceClusterUpdate(ctx context.Context, d *schema.ResourceData, meta int
 		})
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "updating EMR Cluster (%s): setting termination protection: %s", d.Id(), err)
+		}
+	}
+
+	if d.HasChange("unhealthy_node_replacement") {
+		_, err := conn.SetUnhealthyNodeReplacementWithContext(ctx, &emr.SetUnhealthyNodeReplacementInput{
+			JobFlowIds:               []*string{aws.String(d.Id())},
+			UnhealthyNodeReplacement: aws.Bool(d.Get("unhealthy_node_replacement").(bool)),
+		})
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating EMR Cluster (%s): setting unhealthy node replacement: %s", d.Id(), err)
 		}
 	}
 
@@ -1434,6 +1460,127 @@ func resourceClusterDelete(ctx context.Context, d *schema.ResourceData, meta int
 	}
 
 	return diags
+}
+
+func findCluster(ctx context.Context, conn *emr.EMR, input *emr.DescribeClusterInput) (*emr.Cluster, error) {
+	output, err := conn.DescribeClusterWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, ErrCodeClusterNotFound) || tfawserr.ErrMessageContains(err, emr.ErrCodeInvalidRequestException, "is not valid") {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Cluster == nil || output.Cluster.Status == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Cluster, nil
+}
+
+func findClusterByID(ctx context.Context, conn *emr.EMR, id string) (*emr.Cluster, error) {
+	input := &emr.DescribeClusterInput{
+		ClusterId: aws.String(id),
+	}
+
+	output, err := findCluster(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.Id) != id {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	if state := aws.StringValue(output.Status.State); state == emr.ClusterStateTerminated || state == emr.ClusterStateTerminatedWithErrors {
+		return nil, &retry.NotFoundError{
+			Message:     state,
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func statusCluster(ctx context.Context, conn *emr.EMR, id string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		input := &emr.DescribeClusterInput{
+			ClusterId: aws.String(id),
+		}
+
+		output, err := findCluster(ctx, conn, input)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, aws.StringValue(output.Status.State), nil
+	}
+}
+
+func waitClusterCreated(ctx context.Context, conn *emr.EMR, id string) (*emr.Cluster, error) {
+	const (
+		timeout = 75 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{emr.ClusterStateBootstrapping, emr.ClusterStateStarting},
+		Target:     []string{emr.ClusterStateRunning, emr.ClusterStateWaiting},
+		Refresh:    statusCluster(ctx, conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*emr.Cluster); ok {
+		if stateChangeReason := output.Status.StateChangeReason; stateChangeReason != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(stateChangeReason.Code), aws.StringValue(stateChangeReason.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitClusterDeleted(ctx context.Context, conn *emr.EMR, id string) (*emr.Cluster, error) {
+	const (
+		timeout = 20 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{emr.ClusterStateTerminating},
+		Target:     []string{emr.ClusterStateTerminated, emr.ClusterStateTerminatedWithErrors},
+		Refresh:    statusCluster(ctx, conn, id),
+		Timeout:    timeout,
+		MinTimeout: 10 * time.Second,
+		Delay:      30 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*emr.Cluster); ok {
+		if stateChangeReason := output.Status.StateChangeReason; stateChangeReason != nil {
+			tfresource.SetLastError(err, fmt.Errorf("%s: %s", aws.StringValue(stateChangeReason.Code), aws.StringValue(stateChangeReason.Message)))
+		}
+
+		return output, err
+	}
+
+	return nil, err
 }
 
 func expandApplications(apps []interface{}) []*emr.Application {
@@ -1737,7 +1884,7 @@ func expandBootstrapActions(bootstrapActions []interface{}) []*emr.BootstrapActi
 			Name: aws.String(actionName),
 			ScriptBootstrapAction: &emr.ScriptBootstrapActionConfig{
 				Path: aws.String(actionPath),
-				Args: flex.ExpandStringList(actionArgs),
+				Args: flex.ExpandStringListEmpty(actionArgs),
 			},
 		}
 		actionsOut = append(actionsOut, action)
@@ -2079,9 +2226,9 @@ func flattenOnDemandSpecification(onDemandSpecification *emr.OnDemandProvisionin
 		return []interface{}{}
 	}
 	m := map[string]interface{}{
-		// The return value from api is wrong. it return "LOWEST_PRICE" instead of "lowest-price"
-		// "allocation_strategy": aws.StringValue(onDemandSpecification.AllocationStrategy),
-		"allocation_strategy": emr.OnDemandProvisioningAllocationStrategyLowestPrice,
+		// The return value from api is wrong. it return the value with uppercase letters and '_' vs. '-'
+		// The value needs to be normalized to avoid perpetual difference in the Terraform plan
+		"allocation_strategy": strings.Replace(strings.ToLower(aws.StringValue(onDemandSpecification.AllocationStrategy)), "_", "-", -1),
 	}
 	return []interface{}{m}
 }
@@ -2098,9 +2245,9 @@ func flattenSpotSpecification(spotSpecification *emr.SpotProvisioningSpecificati
 		m["block_duration_minutes"] = aws.Int64Value(spotSpecification.BlockDurationMinutes)
 	}
 	if spotSpecification.AllocationStrategy != nil {
-		// The return value from api is wrong. It return "CAPACITY_OPTIMIZED" instead of "capacity-optimized"
-		// m["allocation_strategy"] = aws.StringValue(spotSpecification.AllocationStrategy)
-		m["allocation_strategy"] = emr.SpotProvisioningAllocationStrategyCapacityOptimized
+		// The return value from api is wrong. it return the value with uppercase letters and '_' vs. '-'
+		// The value needs to be normalized to avoid perpetual difference in the Terraform plan
+		m["allocation_strategy"] = strings.Replace(strings.ToLower(aws.StringValue(spotSpecification.AllocationStrategy)), "_", "-", -1)
 	}
 
 	return []interface{}{m}

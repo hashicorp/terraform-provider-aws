@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lightsail
 
 import (
@@ -16,7 +19,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 
 	return lightsail_sdkv2.NewFromConfig(cfg, func(o *lightsail_sdkv2.Options) {
 		if endpoint := config["endpoint"].(string); endpoint != "" {
-			o.EndpointResolver = lightsail_sdkv2.EndpointResolverFromURL(endpoint)
+			o.BaseEndpoint = aws_sdkv2.String(endpoint)
 		}
 
 		retryable := retry_sdkv2.IsErrorRetryableFunc(func(e error) aws_sdkv2.Ternary {

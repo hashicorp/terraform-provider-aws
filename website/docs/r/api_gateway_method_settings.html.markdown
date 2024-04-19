@@ -14,7 +14,11 @@ Manages API Gateway Stage Method Settings. For example, CloudWatch logging and m
 
 ## Example Usage
 
+### End-to-end
+
 An end-to-end example of a REST API configured with OpenAPI can be found in the [`/examples/api-gateway-rest-api-openapi` directory within the GitHub repository](https://github.com/hashicorp/terraform-provider-aws/tree/main/examples/api-gateway-rest-api-openapi).
+
+### Basic Usage
 
 ```terraform
 resource "aws_api_gateway_rest_api" "example" {
@@ -82,9 +86,75 @@ resource "aws_api_gateway_method_settings" "path_specific" {
 }
 ```
 
+### CloudWatch Logging and Tracing
+
+The AWS Console API Gateway Editor displays multiple options for CloudWatch Logs that don't directly map to the options in the AWS API and Terraform. These examples show the `settings` blocks that are equivalent to the options the AWS Console gives for CloudWatch Logs.
+
+#### Off
+
+```terraform
+resource "aws_api_gateway_method_settings" "path_specific" {
+  rest_api_id = aws_api_gateway_rest_api.example.id
+  stage_name  = aws_api_gateway_stage.example.stage_name
+  method_path = "path1/GET"
+
+  settings {
+    logging_level = "OFF"
+  }
+}
+```
+
+#### Errors Only
+
+```terraform
+resource "aws_api_gateway_method_settings" "path_specific" {
+  rest_api_id = aws_api_gateway_rest_api.example.id
+  stage_name  = aws_api_gateway_stage.example.stage_name
+  method_path = "path1/GET"
+
+  settings {
+    logging_level      = "ERROR"
+    metrics_enabled    = true
+    data_trace_enabled = false
+  }
+}
+```
+
+#### Errors and Info Logs
+
+```terraform
+resource "aws_api_gateway_method_settings" "path_specific" {
+  rest_api_id = aws_api_gateway_rest_api.example.id
+  stage_name  = aws_api_gateway_stage.example.stage_name
+  method_path = "path1/GET"
+
+  settings {
+    logging_level      = "INFO"
+    metrics_enabled    = true
+    data_trace_enabled = false
+  }
+}
+```
+
+#### Full Request and Response Logs
+
+```terraform
+resource "aws_api_gateway_method_settings" "path_specific" {
+  rest_api_id = aws_api_gateway_rest_api.example.id
+  stage_name  = aws_api_gateway_stage.example.stage_name
+  method_path = "path1/GET"
+
+  settings {
+    logging_level      = "INFO"
+    metrics_enabled    = true
+    data_trace_enabled = true
+  }
+}
+```
+
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `rest_api_id` - (Required) ID of the REST API
 * `stage_name` - (Required) Name of the stage
@@ -104,14 +174,23 @@ The following arguments are supported:
 * `require_authorization_for_cache_control` - (Optional) Whether authorization is required for a cache invalidation request.
 * `unauthorized_cache_control_header_strategy` - (Optional) How to handle unauthorized requests for cache invalidation. The available values are `FAIL_WITH_403`, `SUCCEED_WITH_RESPONSE_HEADER`, `SUCCEED_WITHOUT_RESPONSE_HEADER`.
 
-## Attributes Reference
+## Attribute Reference
 
-No additional attributes are exported.
+This resource exports no additional attributes.
 
 ## Import
 
-`aws_api_gateway_method_settings` can be imported using `REST-API-ID/STAGE-NAME/METHOD-PATH`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_api_gateway_method_settings` using `REST-API-ID/STAGE-NAME/METHOD-PATH`. For example:
 
+```terraform
+import {
+  to = aws_api_gateway_method_settings.example
+  id = "12345abcde/example/test/GET"
+}
 ```
-$ terraform import aws_api_gateway_method_settings.example 12345abcde/example/test/GET
+
+Using `terraform import`, import `aws_api_gateway_method_settings` using `REST-API-ID/STAGE-NAME/METHOD-PATH`. For example:
+
+```console
+% terraform import aws_api_gateway_method_settings.example 12345abcde/example/test/GET
 ```

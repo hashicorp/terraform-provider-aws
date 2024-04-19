@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package athena_test
 
 import (
@@ -5,15 +8,14 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/athena"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfathena "github.com/hashicorp/terraform-provider-aws/internal/service/athena"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccAthenaDataCatalog_basic(t *testing.T) {
@@ -23,7 +25,7 @@ func TestAccAthenaDataCatalog_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, athena.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataCatalogDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -57,7 +59,7 @@ func TestAccAthenaDataCatalog_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, athena.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataCatalogDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -80,7 +82,7 @@ func TestAccAthenaDataCatalog_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, athena.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataCatalogDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -126,7 +128,7 @@ func TestAccAthenaDataCatalog_type_lambda(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, athena.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataCatalogDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -158,7 +160,7 @@ func TestAccAthenaDataCatalog_type_hive(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, athena.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataCatalogDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -189,7 +191,7 @@ func TestAccAthenaDataCatalog_type_glue(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, athena.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataCatalogDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -220,7 +222,7 @@ func TestAccAthenaDataCatalog_parameters(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, athena.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.AthenaServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDataCatalogDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -258,17 +260,9 @@ func testAccCheckDataCatalogExists(ctx context.Context, n string) resource.TestC
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No Athena Data Catalog name is set")
-		}
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaClient(ctx)
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn(ctx)
-
-		input := &athena.GetDataCatalogInput{
-			Name: aws.String(rs.Primary.ID),
-		}
-
-		_, err := conn.GetDataCatalogWithContext(ctx, input)
+		_, err := tfathena.FindDataCatalogByName(ctx, conn, rs.Primary.ID)
 
 		return err
 	}
@@ -276,20 +270,16 @@ func testAccCheckDataCatalogExists(ctx context.Context, n string) resource.TestC
 
 func testAccCheckDataCatalogDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).AthenaClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_athena_data_catalog" {
 				continue
 			}
 
-			input := &athena.GetDataCatalogInput{
-				Name: aws.String(rs.Primary.ID),
-			}
+			_, err := tfathena.FindDataCatalogByName(ctx, conn, rs.Primary.ID)
 
-			output, err := conn.GetDataCatalogWithContext(ctx, input)
-
-			if tfawserr.ErrMessageContains(err, athena.ErrCodeInvalidRequestException, "was not found") {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
@@ -297,9 +287,7 @@ func testAccCheckDataCatalogDestroy(ctx context.Context) resource.TestCheckFunc 
 				return err
 			}
 
-			if output.DataCatalog != nil {
-				return fmt.Errorf("Athena Data Catalog (%s) found", rs.Primary.ID)
-			}
+			return fmt.Errorf("Athena Data Catalog %s still exists", rs.Primary.ID)
 		}
 
 		return nil

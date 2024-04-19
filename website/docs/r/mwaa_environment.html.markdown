@@ -124,7 +124,7 @@ resource "aws_mwaa_environment" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `airflow_configuration_options` - (Optional) The `airflow_configuration_options` parameter specifies airflow override options. Check the [Official documentation](https://docs.aws.amazon.com/mwaa/latest/userguide/configuring-env-variables.html#configuring-env-variables-reference) for all possible configuration options.
 * `airflow_version` - (Optional) Airflow version of your environment, will be set by default to the latest version that MWAA supports.
@@ -173,17 +173,19 @@ The `network_configuration` block supports the following arguments. More informa
 * `security_group_ids` - (Required) Security groups IDs for the environment. At least one of the security group needs to allow MWAA resources to talk to each other, otherwise MWAA cannot be provisioned.
 * `subnet_ids` - (Required)  The private subnet IDs in which the environment should be created. MWAA requires two subnets.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the MWAA Environment
 * `created_at` - The Created At date of the MWAA Environment
+* `database_vpc_endpoint_service` - The VPC endpoint for the environment's Amazon RDS database
 * `logging_configuration[0].<LOG_CONFIGURATION_TYPE>[0].cloud_watch_log_group_arn` - Provides the ARN for the CloudWatch group where the logs will be published
 * `service_role_arn` - The Service Role ARN of the Amazon MWAA Environment
 * `status` - The status of the Amazon MWAA Environment
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `webserver_url` - The webserver URL of the MWAA Environment
+* `webserver_vpc_endpoint_service` - The VPC endpoint for the environment's web server
 
 ## Timeouts
 
@@ -195,8 +197,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-MWAA Environment can be imported using `Name` e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import MWAA Environment using `Name`. For example:
 
+```terraform
+import {
+  to = aws_mwaa_environment.example
+  id = "MyAirflowEnvironment"
+}
 ```
-$ terraform import aws_mwaa_environment.example MyAirflowEnvironment
+
+Using `terraform import`, import MWAA Environment using `Name`. For example:
+
+```console
+% terraform import aws_mwaa_environment.example MyAirflowEnvironment
 ```

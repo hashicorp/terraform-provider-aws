@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sesv2
 
 import (
@@ -61,18 +64,11 @@ func ResourceEmailIdentity() *schema.Resource {
 						"domain_signing_private_key": {
 							Type:         schema.TypeString,
 							Optional:     true,
+							Sensitive:    true,
 							RequiredWith: []string{"dkim_signing_attributes.0.domain_signing_selector"},
 							ValidateFunc: validation.All(
 								validation.StringLenBetween(1, 20480),
-								func(v interface{}, name string) (warns []string, errs []error) {
-									s := v.(string)
-									if !verify.IsBase64Encoded([]byte(s)) {
-										errs = append(errs, fmt.Errorf(
-											"%s: must be base64-encoded", name,
-										))
-									}
-									return
-								},
+								verify.ValidBase64String,
 							),
 						},
 						"domain_signing_selector": {

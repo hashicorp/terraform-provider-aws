@@ -45,7 +45,7 @@ resource "aws_route53recoverycontrolconfig_safety_rule" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `control_panel_arn` - (Required) ARN of the control panel in which this safety rule will reside.
 * `name` - (Required) Name describing the safety rule.
@@ -64,17 +64,26 @@ The following arguments are optional:
 * `threshold` - (Required) Number of controls that must be set when you specify an `ATLEAST` type rule.
 * `type` - (Required) Rule type. Valid values are `ATLEAST`, `AND`, and `OR`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the safety rule.
 * `status` - Status of the safety rule. `PENDING` when it is being created/updated, `PENDING_DELETION` when it is being deleted, and `DEPLOYED` otherwise.
 
 ## Import
 
-Route53 Recovery Control Config Safety Rule can be imported via the safety rule ARN, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Route53 Recovery Control Config Safety Rule using the safety rule ARN. For example:
 
+```terraform
+import {
+  to = aws_route53recoverycontrolconfig_safety_rule.myrule
+  id = "arn:aws:route53-recovery-control::313517334327:controlpanel/1bfba17df8684f5dab0467b71424f7e8/safetyrule/3bacc77003364c0f"
+}
 ```
-$ terraform import aws_route53recoverycontrolconfig_safety_rule.myrule arn:aws:route53-recovery-control::313517334327:controlpanel/1bfba17df8684f5dab0467b71424f7e8/safetyrule/3bacc77003364c0f
+
+Using `terraform import`, import Route53 Recovery Control Config Safety Rule using the safety rule ARN. For example:
+
+```console
+% terraform import aws_route53recoverycontrolconfig_safety_rule.myrule arn:aws:route53-recovery-control::313517334327:controlpanel/1bfba17df8684f5dab0467b71424f7e8/safetyrule/3bacc77003364c0f
 ```

@@ -1,13 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package lightsail_test
 
 import (
 	"context"
 	"errors"
 	"fmt"
-	"regexp"
 	"strings"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/service/lightsail"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -39,9 +42,9 @@ func TestAccLightsailBucketAccessKey_basic(t *testing.T) {
 				Config: testAccBucketAccessKeyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketAccessKeyExists(ctx, resourceName),
-					resource.TestMatchResourceAttr(resourceName, "access_key_id", regexp.MustCompile(`((?:ASIA|AKIA|AROA|AIDA)([A-Z0-7]{16}))`)),
+					resource.TestMatchResourceAttr(resourceName, "access_key_id", regexache.MustCompile(`((?:ASIA|AKIA|AROA|AIDA)([0-7A-Z]{16}))`)),
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
-					resource.TestMatchResourceAttr(resourceName, "secret_access_key", regexp.MustCompile(`([a-zA-Z0-9+/]{40})`)),
+					resource.TestMatchResourceAttr(resourceName, "secret_access_key", regexache.MustCompile(`([0-9A-Za-z+/]{40})`)),
 					resource.TestCheckResourceAttrSet(resourceName, "status"),
 				),
 			},

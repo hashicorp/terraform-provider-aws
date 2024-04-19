@@ -35,26 +35,35 @@ The following arguments are required:
 The following arguments are optional:
 
 * `aws_account_id` - (Optional) AWS account ID.
-* `identities` - (Optional) Amazon QuickSight users, groups, or both to assign the policy to. See [`identities`](#identities).
+* `identities` - (Optional) Amazon QuickSight users, groups, or both to assign the policy to. See [`identities` block](#identities-block).
 * `namespace` - (Optional) Namespace that contains the assignment. Defaults to `default`.
 * `policy_arn` - (Optional) ARN of the IAM policy to apply to the Amazon QuickSight users and groups specified in this assignment.
 
-### identities
+### `identities` block
 
-* `groups` - (Optional) Array of Quicksight group names to assign the policy to.
+* `group` - (Optional) Array of Quicksight group names to assign the policy to.
 * `user` - (Optional) Array of Quicksight user names to assign the policy to.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `assignment_id` - Assignment ID.
 * `id` - A comma-delimited string joining AWS account ID, namespace, and assignment name.
 
 ## Import
 
-QuickSight IAM Policy Assignment can be imported using the AWS account ID, namespace, and assignment name separated by commas (`,`) e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import QuickSight IAM Policy Assignment using the AWS account ID, namespace, and assignment name separated by commas (`,`). For example:
 
+```terraform
+import {
+  to = aws_quicksight_iam_policy_assignment.example
+  id = "123456789012,default,example"
+}
 ```
-$ terraform import aws_quicksight_iam_policy_assignment.example 123456789012,default,example
+
+Using `terraform import`, import QuickSight IAM Policy Assignment using the AWS account ID, namespace, and assignment name separated by commas (`,`). For example:
+
+```console
+% terraform import aws_quicksight_iam_policy_assignment.example 123456789012,default,example
 ```

@@ -76,7 +76,7 @@ resource "aws_cloudtrail_event_data_store" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 - `name` - (Required) The name of the event data store.
 - `advanced_event_selector` - (Optional) The advanced event selectors to use to select the events for the data store. For more information about how to use advanced event selectors, see [Log events by using advanced event selectors](https://docs.aws.amazon.com/awscloudtrail/latest/userguide/logging-data-events-with-cloudtrail.html#creating-data-event-selectors-advanced) in the CloudTrail User Guide.
@@ -89,14 +89,14 @@ The following arguments are supported:
 
 ### Advanced Event Selector Arguments
 
-For **advanced_event_selector** the following attributes are supported.
+`advanced_event_selector` supports the following arguments:
 
 - `name` (Optional) - Specifies the name of the advanced event selector.
 - `field_selector` (Required) - Specifies the selector statements in an advanced event selector. Fields documented below.
 
 #### Field Selector Arguments
 
-For **field_selector** the following attributes are supported.
+`field_selector` supports the following arguments:
 
 - `field` (Required) - Specifies a field in an event record on which to filter events to be logged. You can specify only the following values: `readOnly`, `eventSource`, `eventName`, `eventCategory`, `resources.type`, `resources.ARN`.
 - `equals` (Optional) - A list of values that includes events that match the exact value of the event record field specified as the value of `field`. This is the only valid operator that you can use with the `readOnly`, `eventCategory`, and `resources.type` fields.
@@ -106,9 +106,9 @@ For **field_selector** the following attributes are supported.
 - `ends_with` (Optional) - A list of values that includes events that match the last few characters of the event record field specified as the value of `field`.
 - `not_ends_with` (Optional) - A list of values that excludes events that match the last few characters of the event record field specified as the value of `field`.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 - `arn` - ARN of the event data store.
 - `id` - Name of the event data store.
@@ -116,8 +116,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Event data stores can be imported using their `arn`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import event data stores using their `arn`. For example:
 
+```terraform
+import {
+  to = aws_cloudtrail_event_data_store.example
+  id = "arn:aws:cloudtrail:us-east-1:123456789123:eventdatastore/22333815-4414-412c-b155-dd254033gfhf"
+}
 ```
-$ terraform import aws_cloudtrail_event_data_store.example arn:aws:cloudtrail:us-east-1:123456789123:eventdatastore/22333815-4414-412c-b155-dd254033gfhf
+
+Using `terraform import`, import event data stores using their `arn`. For example:
+
+```console
+% terraform import aws_cloudtrail_event_data_store.example arn:aws:cloudtrail:us-east-1:123456789123:eventdatastore/22333815-4414-412c-b155-dd254033gfhf
 ```

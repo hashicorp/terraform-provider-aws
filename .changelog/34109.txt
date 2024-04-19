@@ -1,0 +1,11 @@
+```release-note:enhancement
+resource/aws_networkmanager_connect_attachment: Add `NO_ENCAP` as a valid `options.protocol` value
+```
+
+```release-note:enhancement
+resource/aws_networkmanager_connect_peer: Add `subnet_arn` argument to support [Tunnel-less Connect attachments](https://docs.aws.amazon.com/network-manager/latest/cloudwan/cloudwan-connect-attachment.html#cloudwan-connect-tlc)
+```
+
+```release-note:enhancement
+resource/aws_networkmanager_connect_peer: `inside_cidr_blocks` is Optional
+```

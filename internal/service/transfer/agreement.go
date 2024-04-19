@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package transfer
 
 import (
@@ -18,7 +21,7 @@ import (
 )
 
 // @SDKResource("aws_transfer_agreement", name="Agreement")
-// @Tags(identifierAttribute="agreement_id")
+// @Tags(identifierAttribute="arn")
 func ResourceAgreement() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceAgreementCreate,
@@ -37,6 +40,10 @@ func ResourceAgreement() *schema.Resource {
 				ValidateFunc: verify.ValidARN,
 			},
 			"agreement_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -123,6 +130,7 @@ func resourceAgreementRead(ctx context.Context, d *schema.ResourceData, meta int
 
 	d.Set("access_role", output.AccessRole)
 	d.Set("agreement_id", output.AgreementId)
+	d.Set("arn", output.Arn)
 	d.Set("base_directory", output.BaseDirectory)
 	d.Set("description", output.Description)
 	d.Set("local_profile_id", output.LocalProfileId)

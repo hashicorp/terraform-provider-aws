@@ -22,14 +22,14 @@ data "aws_ecs_service" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `service_name` - (Required) Name of the ECS Service
 * `cluster_arn` - (Required) ARN of the ECS Cluster
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` - ARN of the ECS Service
 * `desired_count` - Number of tasks for the ECS Service

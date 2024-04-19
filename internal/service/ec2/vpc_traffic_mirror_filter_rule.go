@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -9,7 +12,9 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
 	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -18,7 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_ec2_traffic_mirror_filter_rule")
+// @SDKResource("aws_ec2_traffic_mirror_filter_rule", name="Traffic Mirror Filter Rule")
 func ResourceTrafficMirrorFilterRule() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTrafficMirrorFilterRuleCreate,
@@ -119,6 +124,7 @@ func resourceTrafficMirrorFilterRuleCreate(ctx context.Context, d *schema.Resour
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.CreateTrafficMirrorFilterRuleInput{
+		ClientToken:           aws.String(id.UniqueId()),
 		DestinationCidrBlock:  aws.String(d.Get("destination_cidr_block").(string)),
 		RuleAction:            aws.String(d.Get("rule_action").(string)),
 		RuleNumber:            aws.Int64(int64(d.Get("rule_number").(int))),
@@ -244,16 +250,16 @@ func resourceTrafficMirrorFilterRuleUpdate(ctx context.Context, d *schema.Resour
 		}
 	}
 
-	if d.HasChange("source_cidr_block") {
-		input.SourceCidrBlock = aws.String(d.Get("source_cidr_block").(string))
-	}
-
 	if d.HasChange("rule_action") {
 		input.RuleAction = aws.String(d.Get("rule_action").(string))
 	}
 
 	if d.HasChange("rule_number") {
-		input.RuleNumber = aws.Int64(int64(d.Get("rule_action").(int)))
+		input.RuleNumber = aws.Int64(int64(d.Get("rule_number").(int)))
+	}
+
+	if d.HasChange("source_cidr_block") {
+		input.SourceCidrBlock = aws.String(d.Get("source_cidr_block").(string))
 	}
 
 	if d.HasChange("source_port_range") {
@@ -291,6 +297,10 @@ func resourceTrafficMirrorFilterRuleDelete(ctx context.Context, d *schema.Resour
 	_, err := conn.DeleteTrafficMirrorFilterRuleWithContext(ctx, &ec2.DeleteTrafficMirrorFilterRuleInput{
 		TrafficMirrorFilterRuleId: aws.String(d.Id()),
 	})
+
+	if tfawserr.ErrCodeEquals(err, errCodeInvalidTrafficMirrorFilterRuleIdNotFound) {
+		return diags
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting EC2 Traffic Mirror Filter Rule (%s): %s", d.Id(), err)

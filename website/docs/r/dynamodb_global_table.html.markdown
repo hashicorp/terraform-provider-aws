@@ -80,7 +80,7 @@ resource "aws_dynamodb_global_table" "myTable" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `name` - (Required) The name of the global table. Must match underlying DynamoDB Table names in all regions.
 * `replica` - (Required) Underlying DynamoDB Table. At least 1 replica must be defined. See below.
@@ -91,17 +91,26 @@ The following arguments are supported:
 
 * `region_name` - (Required) AWS region name of replica DynamoDB TableE.g., `us-east-1`
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - The name of the DynamoDB Global Table
 * `arn` - The ARN of the DynamoDB Global Table
 
 ## Import
 
-DynamoDB Global Tables can be imported using the global table name, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import DynamoDB Global Tables using the global table name. For example:
 
+```terraform
+import {
+  to = aws_dynamodb_global_table.MyTable
+  id = "MyTable"
+}
 ```
-$ terraform import aws_dynamodb_global_table.MyTable MyTable
+
+Using `terraform import`, import DynamoDB Global Tables using the global table name. For example:
+
+```console
+% terraform import aws_dynamodb_global_table.MyTable MyTable
 ```

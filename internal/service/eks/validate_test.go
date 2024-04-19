@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package eks
 
 import (
@@ -15,6 +18,10 @@ func TestValidClusterName(t *testing.T) {
 	}{
 		{
 			Value:    "my-valid-eks-cluster_1_dev",
+			ErrCount: 0,
+		},
+		{
+			Value:    "a",
 			ErrCount: 0,
 		},
 		{

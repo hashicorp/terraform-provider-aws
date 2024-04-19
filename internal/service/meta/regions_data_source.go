@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package meta
 
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
@@ -13,10 +16,9 @@ import (
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 )
 
-// @FrameworkDataSource
+// @FrameworkDataSource(name=Regions)
 func newDataSourceRegions(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceRegions{}
-	d.SetMigratedFromPluginSDK(true)
 
 	return d, nil
 }
@@ -64,14 +66,14 @@ func (d *dataSourceRegions) Read(ctx context.Context, request datasource.ReadReq
 		return
 	}
 
-	conn := d.Meta().EC2Conn(ctx)
+	conn := d.Meta().EC2Client(ctx)
 
 	input := &ec2.DescribeRegionsInput{
 		AllRegions: flex.BoolFromFramework(ctx, data.AllRegions),
-		Filters:    tfec2.BuildCustomFilters(ctx, data.Filters),
+		Filters:    tfec2.NewCustomFilterListFrameworkV2(ctx, data.Filters),
 	}
 
-	output, err := conn.DescribeRegionsWithContext(ctx, input)
+	output, err := conn.DescribeRegions(ctx, input)
 
 	if err != nil {
 		response.Diagnostics.AddError("reading Regions", err.Error())
@@ -81,7 +83,7 @@ func (d *dataSourceRegions) Read(ctx context.Context, request datasource.ReadReq
 
 	var names []string
 	for _, v := range output.Regions {
-		names = append(names, aws.StringValue(v.RegionName))
+		names = append(names, aws.ToString(v.RegionName))
 	}
 
 	data.ID = types.StringValue(d.Meta().Partition)

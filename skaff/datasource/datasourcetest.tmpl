@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package {{ .ServicePackage }}_test
 
 {{- if .IncludeComments }}
@@ -37,10 +40,11 @@ import (
 	// types.<Type Name>.
 {{- end }}
 	"fmt"
-	"regexp"
 	"strings"
 	"testing"
-{{ if .AWSGoSDKV2 }}
+
+	"github.com/YakDriver/regexache"
+{{- if .AWSGoSDKV2 }}
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/{{ .ServicePackage }}"
 	"github.com/aws/aws-sdk-go-v2/service/{{ .ServicePackage }}/types"
@@ -99,6 +103,8 @@ import (
 // intricate, they should be unit tested.
 {{- end }}
 func Test{{ .DataSource }}ExampleUnitTest(t *testing.T) {
+	t.Parallel()
+
 	testCases := []struct {
 		TestName string
 		Input    string
@@ -126,7 +132,9 @@ func Test{{ .DataSource }}ExampleUnitTest(t *testing.T) {
 	}
 
 	for _, testCase := range testCases {
+		testCase := testCase
 		t.Run(testCase.TestName, func(t *testing.T) {
+			t.Parallel()
 			got, err := tf{{ .ServicePackage }}.FunctionFromDataSource(testCase.Input)
 
 			if err != nil && !testCase.Error {
@@ -170,11 +178,15 @@ func TestAcc{{ .Service }}{{ .DataSource }}DataSource_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
+			{{- if .AWSGoSDKV2 }}
+			acctest.PreCheckPartitionHasService(t, names.{{ .Service }}EndpointID)
+			{{- else }}
 			acctest.PreCheckPartitionHasService(t, {{ .ServicePackage }}.EndpointsID)
+			{{- end }}
 			testAccPreCheck(ctx, t)
 		},
 		{{- if .AWSGoSDKV2 }}
-		ErrorCheck:               acctest.ErrorCheck(t, names.{{ .Service }}EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.{{ .Service }}ServiceID),
 		{{- else }}
 		ErrorCheck:               acctest.ErrorCheck(t, {{ .ServicePackage }}.EndpointsID),
 		{{- end }}
@@ -193,7 +205,7 @@ func TestAcc{{ .Service }}{{ .DataSource }}DataSource_basic(t *testing.T) {
 						"username":       "Test",
 						"password":       "TestTest1234",
 					}),
-					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "{{ .ServicePackage }}", regexp.MustCompile(`{{ .DataSourceLower }}:+.`)),
+					acctest.MatchResourceAttrRegionalARN(dataSourceName, "arn", "{{ .ServicePackage }}", regexache.MustCompile(`{{ .DataSourceLower }}:+.`)),
 				),
 			},
 		},

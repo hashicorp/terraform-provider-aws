@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 /*
 This file is a hard copy of:
 https://github.com/kubernetes-sigs/aws-iam-authenticator/blob/7547c74e660f8d34d9980f2c69aa008eed1f48d0/pkg/token/token_test.go
@@ -197,7 +200,7 @@ func TestVerifyBodyReadError(t *testing.T) {
 			Transport: &roundTripper{
 				err: nil,
 				resp: &http.Response{
-					StatusCode: 200,
+					StatusCode: http.StatusOK,
 					Body:       errorReadCloser{},
 				},
 			},

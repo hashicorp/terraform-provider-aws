@@ -1,8 +1,10 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package wafregional
 
 import (
 	"context"
-	"fmt"
 	"log"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -17,13 +19,14 @@ import (
 	tfwaf "github.com/hashicorp/terraform-provider-aws/internal/service/waf"
 )
 
-// @SDKResource("aws_wafregional_xss_match_set")
-func ResourceXSSMatchSet() *schema.Resource {
+// @SDKResource("aws_wafregional_xss_match_set", name="XSS Match Set")
+func resourceXSSMatchSet() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceXSSMatchSetCreate,
 		ReadWithoutTimeout:   resourceXSSMatchSetRead,
 		UpdateWithoutTimeout: resourceXSSMatchSetUpdate,
 		DeleteWithoutTimeout: resourceXSSMatchSetDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -93,9 +96,8 @@ func resourceXSSMatchSetCreate(ctx context.Context, d *schema.ResourceData, meta
 	d.SetId(aws.StringValue(resp.XssMatchSet.XssMatchSetId))
 
 	if v, ok := d.Get("xss_match_tuple").(*schema.Set); ok && v.Len() > 0 {
-		err := updateXSSMatchSetResourceWR(ctx, d.Id(), nil, v.List(), conn, region)
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating WAF Regional XSS Match Set: %s", err)
+		if err := updateXSSMatchSetResourceWR(ctx, conn, region, d.Id(), nil, v.List()); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating WAF Regional XSS Match Set (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -139,9 +141,8 @@ func resourceXSSMatchSetUpdate(ctx context.Context, d *schema.ResourceData, meta
 		o, n := d.GetChange("xss_match_tuple")
 		oldT, newT := o.(*schema.Set).List(), n.(*schema.Set).List()
 
-		err := updateXSSMatchSetResourceWR(ctx, d.Id(), oldT, newT, conn, region)
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating regional WAF XSS Match Set: %s", err)
+		if err := updateXSSMatchSetResourceWR(ctx, conn, region, d.Id(), oldT, newT); err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating WAF Regional XSS Match Set (%s): %s", d.Id(), err)
 		}
 	}
 
@@ -153,50 +154,53 @@ func resourceXSSMatchSetDelete(ctx context.Context, d *schema.ResourceData, meta
 	conn := meta.(*conns.AWSClient).WAFRegionalConn(ctx)
 	region := meta.(*conns.AWSClient).Region
 
-	if v, ok := d.GetOk("xss_match_tuple"); ok {
-		oldTuples := v.(*schema.Set).List()
-		if len(oldTuples) > 0 {
-			noTuples := []interface{}{}
-			err := updateXSSMatchSetResourceWR(ctx, d.Id(), oldTuples, noTuples, conn, region)
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "updating regional WAF XSS Match Set: %s", err)
-			}
+	if oldT := d.Get("xss_match_tuple").(*schema.Set).List(); len(oldT) > 0 {
+		var newT []interface{}
+
+		err := updateXSSMatchSetResourceWR(ctx, conn, region, d.Id(), oldT, newT)
+
+		if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentContainerException, wafregional.ErrCodeWAFNonexistentItemException) {
+			return diags
+		}
+
+		if err != nil {
+			return sdkdiag.AppendErrorf(diags, "updating WAF Regional XSS Match Set (%s): %s", d.Id(), err)
 		}
 	}
 
-	wr := NewRetryer(conn, region)
-	_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
-		req := &waf.DeleteXssMatchSetInput{
+	log.Printf("[INFO] Deleting WAF Regional XSS Match Set: %s", d.Id())
+	_, err := NewRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+		input := &waf.DeleteXssMatchSetInput{
 			ChangeToken:   token,
 			XssMatchSetId: aws.String(d.Id()),
 		}
 
-		return conn.DeleteXssMatchSetWithContext(ctx, req)
+		return conn.DeleteXssMatchSetWithContext(ctx, input)
 	})
+
+	if tfawserr.ErrCodeEquals(err, wafregional.ErrCodeWAFNonexistentItemException) {
+		return diags
+	}
+
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting regional WAF XSS Match Set: %s", err)
+		return sdkdiag.AppendErrorf(diags, "deleting WAF Regional XSS Match Set (%s): %s", d.Id(), err)
 	}
 
 	return diags
 }
 
-func updateXSSMatchSetResourceWR(ctx context.Context, id string, oldT, newT []interface{}, conn *wafregional.WAFRegional, region string) error {
-	wr := NewRetryer(conn, region)
-	_, err := wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
-		req := &waf.UpdateXssMatchSetInput{
+func updateXSSMatchSetResourceWR(ctx context.Context, conn *wafregional.WAFRegional, region, xssMatchSetID string, oldT, newT []interface{}) error {
+	_, err := NewRetryer(conn, region).RetryWithToken(ctx, func(token *string) (interface{}, error) {
+		input := &waf.UpdateXssMatchSetInput{
 			ChangeToken:   token,
-			XssMatchSetId: aws.String(id),
 			Updates:       diffXSSMatchSetTuples(oldT, newT),
+			XssMatchSetId: aws.String(xssMatchSetID),
 		}
 
-		log.Printf("[INFO] Updating XSS Match Set tuples: %s", req)
-		return conn.UpdateXssMatchSetWithContext(ctx, req)
+		return conn.UpdateXssMatchSetWithContext(ctx, input)
 	})
-	if err != nil {
-		return fmt.Errorf("Failed updating regional WAF XSS Match Set: %w", err)
-	}
 
-	return nil
+	return err
 }
 
 func flattenXSSMatchTuples(ts []*waf.XssMatchTuple) []interface{} {

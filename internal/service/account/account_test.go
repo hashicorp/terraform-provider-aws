@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package account_test
 
 import (
@@ -17,6 +20,10 @@ func TestAccAccount_serial(t *testing.T) {
 		},
 		"PrimaryContact": {
 			"basic": testAccPrimaryContact_basic,
+		},
+		"Region": {
+			"basic":     testAccRegion_basic,
+			"AccountID": testAccRegion_accountID,
 		},
 	}
 

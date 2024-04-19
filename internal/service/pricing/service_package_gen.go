@@ -45,7 +45,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 
 	return pricing_sdkv2.NewFromConfig(cfg, func(o *pricing_sdkv2.Options) {
 		if endpoint := config["endpoint"].(string); endpoint != "" {
-			o.EndpointResolver = pricing_sdkv2.EndpointResolverFromURL(endpoint)
+			o.BaseEndpoint = aws_sdkv2.String(endpoint)
 		}
 	}), nil
 }

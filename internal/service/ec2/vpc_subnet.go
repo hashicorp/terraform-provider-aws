@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -9,11 +12,13 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/hashicorp/terraform-plugin-log/tflog"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -185,7 +190,6 @@ func resourceSubnetCreate(ctx context.Context, d *schema.ResourceData, meta inte
 		input.OutpostArn = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating EC2 Subnet: %s", input)
 	output, err := conn.CreateSubnetWithContext(ctx, input)
 
 	if err != nil {
@@ -297,6 +301,20 @@ func resourceSubnetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
+	// If we're disabling IPv6 assignment for new ENIs, do that before modifying the IPv6 CIDR block.
+	if d.HasChange("assign_ipv6_address_on_creation") && !d.Get("assign_ipv6_address_on_creation").(bool) {
+		if err := modifySubnetAssignIPv6AddressOnCreation(ctx, conn, d.Id(), false); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
+	// If we're enabling dns64 and resource_name_dns_aaaa_record_on_launch, do that after modifying the IPv6 CIDR block.
+	if d.HasChange("ipv6_cidr_block") {
+		if err := modifySubnetIPv6CIDRBlockAssociation(ctx, conn, d.Id(), d.Get("ipv6_cidr_block_association_id").(string), d.Get("ipv6_cidr_block").(string)); err != nil {
+			return sdkdiag.AppendFromErr(diags, err)
+		}
+	}
+
 	if d.HasChange("enable_dns64") {
 		if err := modifySubnetEnableDNS64(ctx, conn, d.Id(), d.Get("enable_dns64").(bool)); err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
@@ -333,19 +351,6 @@ func resourceSubnetUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	// If we're disabling IPv6 assignment for new ENIs, do that before modifying the IPv6 CIDR block.
-	if d.HasChange("assign_ipv6_address_on_creation") && !d.Get("assign_ipv6_address_on_creation").(bool) {
-		if err := modifySubnetAssignIPv6AddressOnCreation(ctx, conn, d.Id(), false); err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
-		}
-	}
-
-	if d.HasChange("ipv6_cidr_block") {
-		if err := modifySubnetIPv6CIDRBlockAssociation(ctx, conn, d.Id(), d.Get("ipv6_cidr_block_association_id").(string), d.Get("ipv6_cidr_block").(string)); err != nil {
-			return sdkdiag.AppendFromErr(diags, err)
-		}
-	}
-
 	// If we're enabling IPv6 assignment for new ENIs, do that after modifying the IPv6 CIDR block.
 	if d.HasChange("assign_ipv6_address_on_creation") && d.Get("assign_ipv6_address_on_creation").(bool) {
 		if err := modifySubnetAssignIPv6AddressOnCreation(ctx, conn, d.Id(), true); err != nil {
@@ -360,9 +365,11 @@ func resourceSubnetDelete(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
-	log.Printf("[INFO] Deleting EC2 Subnet: %s", d.Id())
+	ctx = tflog.SetField(ctx, logging.KeyResourceId, d.Id())
 
-	if err := deleteLingeringENIs(ctx, conn, "subnet-id", d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
+	tflog.Info(ctx, "Deleting EC2 Subnet")
+
+	if err := deleteLingeringENIs(ctx, meta.(*conns.AWSClient).EC2Client(ctx), "subnet-id", d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting ENIs for EC2 Subnet (%s): %s", d.Id(), err)
 	}
 

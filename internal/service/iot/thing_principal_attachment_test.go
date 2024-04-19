@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package iot_test
 
 import (
@@ -14,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfiot "github.com/hashicorp/terraform-provider-aws/internal/service/iot"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccIoTThingPrincipalAttachment_basic(t *testing.T) {
@@ -21,9 +25,9 @@ func TestAccIoTThingPrincipalAttachment_basic(t *testing.T) {
 	thingName := sdkacctest.RandomWithPrefix("tf-acc")
 	thingName2 := sdkacctest.RandomWithPrefix("tf-acc2")
 
-	resource.Test(t, resource.TestCase{
+	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, iot.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.IoTServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckThingPrincipalAttachmentDestroy(ctx),
 		Steps: []resource.TestStep{

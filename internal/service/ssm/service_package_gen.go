@@ -67,8 +67,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_ssm_association",
 		},
 		{
-			Factory:  ResourceDefaultPatchBaseline,
+			Factory:  resourceDefaultPatchBaseline,
 			TypeName: "aws_ssm_default_patch_baseline",
+			Name:     "Default Patch Baseline",
 		},
 		{
 			Factory:  ResourceDocument,
@@ -106,7 +107,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourcePatchBaseline,
+			Factory:  resourcePatchBaseline,
 			TypeName: "aws_ssm_patch_baseline",
 			Name:     "Patch Baseline",
 			Tags: &types.ServicePackageResourceTags{
@@ -146,7 +147,7 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 
 	return ssm_sdkv2.NewFromConfig(cfg, func(o *ssm_sdkv2.Options) {
 		if endpoint := config["endpoint"].(string); endpoint != "" {
-			o.EndpointResolver = ssm_sdkv2.EndpointResolverFromURL(endpoint)
+			o.BaseEndpoint = aws_sdkv2.String(endpoint)
 		}
 	}), nil
 }

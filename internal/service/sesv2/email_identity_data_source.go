@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sesv2
 
 import (
@@ -36,8 +39,9 @@ func DataSourceEmailIdentity() *schema.Resource {
 							Computed: true,
 						},
 						"domain_signing_private_key": {
-							Type:     schema.TypeString,
-							Computed: true,
+							Type:      schema.TypeString,
+							Computed:  true,
+							Sensitive: true,
 						},
 						"domain_signing_selector": {
 							Type:     schema.TypeString,

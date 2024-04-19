@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -37,19 +40,21 @@ func ResourceSpotInstanceRequest() *schema.Resource {
 
 		Timeouts: &schema.ResourceTimeout{
 			Create: schema.DefaultTimeout(10 * time.Minute),
+			Read:   schema.DefaultTimeout(15 * time.Minute),
 			Delete: schema.DefaultTimeout(20 * time.Minute),
 		},
 
 		Schema: func() map[string]*schema.Schema {
 			// The Spot Instance Request Schema is based on the AWS Instance schema.
-			s := ResourceInstance().Schema
+			s := ResourceInstance().SchemaMap()
 
-			// Everything on a spot instance is ForceNew (except tags).
+			// Everything on a spot instance is ForceNew (except tags/tags_all).
 			for k, v := range s {
 				if v.Computed && !v.Optional {
 					continue
 				}
-				if k == names.AttrTags {
+				// tags_all is Optional+Computed.
+				if k == names.AttrTags || k == names.AttrTagsAll {
 					continue
 				}
 				v.ForceNew = true
@@ -312,7 +317,7 @@ func readInstance(ctx context.Context, d *schema.ResourceData, meta interface{})
 			"host": *instance.PrivateIpAddress,
 		})
 	}
-	if err := readBlockDevices(ctx, d, instance, conn); err != nil {
+	if err := readBlockDevices(ctx, d, meta, instance, false); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
@@ -344,7 +349,7 @@ func readInstance(ctx context.Context, d *schema.ResourceData, meta interface{})
 	}
 
 	if d.Get("get_password_data").(bool) {
-		passwordData, err := getInstancePasswordData(ctx, *instance.InstanceId, conn)
+		passwordData, err := getInstancePasswordData(ctx, *instance.InstanceId, conn, d.Timeout(schema.TimeoutRead))
 		if err != nil {
 			return sdkdiag.AppendFromErr(diags, err)
 		}

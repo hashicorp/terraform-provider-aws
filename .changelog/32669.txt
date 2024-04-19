@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_elasticache_parameter_group: Remove from state on resource Read if deleted outside of Terraform
+```

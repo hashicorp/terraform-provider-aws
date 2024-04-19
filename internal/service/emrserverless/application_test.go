@@ -1,12 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package emrserverless_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/emrserverless"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/service/emrserverless/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -14,17 +17,18 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfemrserverless "github.com/hashicorp/terraform-provider-aws/internal/service/emrserverless"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccEMRServerlessApplication_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var application emrserverless.Application
+	var application types.Application
 	resourceName := "aws_emrserverless_application.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, emrserverless.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -32,7 +36,7 @@ func TestAccEMRServerlessApplication_basic(t *testing.T) {
 				Config: testAccApplicationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckApplicationExists(ctx, resourceName, &application),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "emr-serverless", regexp.MustCompile(`/applications/.+$`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "emr-serverless", regexache.MustCompile(`/applications/.+$`)),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 					resource.TestCheckResourceAttr(resourceName, "type", "hive"),
 					resource.TestCheckResourceAttr(resourceName, "architecture", "X86_64"),
@@ -58,13 +62,13 @@ func TestAccEMRServerlessApplication_basic(t *testing.T) {
 
 func TestAccEMRServerlessApplication_arch(t *testing.T) {
 	ctx := acctest.Context(t)
-	var application emrserverless.Application
+	var application types.Application
 	resourceName := "aws_emrserverless_application.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, emrserverless.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -93,13 +97,13 @@ func TestAccEMRServerlessApplication_arch(t *testing.T) {
 
 func TestAccEMRServerlessApplication_releaseLabel(t *testing.T) {
 	ctx := acctest.Context(t)
-	var application emrserverless.Application
+	var application types.Application
 	resourceName := "aws_emrserverless_application.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, emrserverless.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -128,13 +132,13 @@ func TestAccEMRServerlessApplication_releaseLabel(t *testing.T) {
 
 func TestAccEMRServerlessApplication_initialCapacity(t *testing.T) {
 	ctx := acctest.Context(t)
-	var application emrserverless.Application
+	var application types.Application
 	resourceName := "aws_emrserverless_application.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, emrserverless.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -178,12 +182,12 @@ func TestAccEMRServerlessApplication_imageConfiguration(t *testing.T) {
 	if testing.Short() {
 		t.Skip("skipping long-running test in short mode")
 	}
-	var application emrserverless.Application
+	var application types.Application
 	resourceName := "aws_emrserverless_application.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
-	firstVersionRegex := regexp.MustCompile(`1\.0\.0`)
-	secondVersionRegex := regexp.MustCompile(`1\.0\.1`)
+	firstVersionRegex := regexache.MustCompile(`1\.0\.0`)
+	secondVersionRegex := regexache.MustCompile(`1\.0\.1`)
 
 	firstImageConfig, err := testAccApplicationConfig_imageConfiguration(rName, "1.0.0", "1.0.1", "1.0.0")
 	if err != nil {
@@ -197,7 +201,7 @@ func TestAccEMRServerlessApplication_imageConfiguration(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, emrserverless.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -228,13 +232,13 @@ func TestAccEMRServerlessApplication_imageConfiguration(t *testing.T) {
 
 func TestAccEMRServerlessApplication_maxCapacity(t *testing.T) {
 	ctx := acctest.Context(t)
-	var application emrserverless.Application
+	var application types.Application
 	resourceName := "aws_emrserverless_application.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, emrserverless.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -266,13 +270,13 @@ func TestAccEMRServerlessApplication_maxCapacity(t *testing.T) {
 
 func TestAccEMRServerlessApplication_network(t *testing.T) {
 	ctx := acctest.Context(t)
-	var application emrserverless.Application
+	var application types.Application
 	resourceName := "aws_emrserverless_application.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, emrserverless.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -296,13 +300,13 @@ func TestAccEMRServerlessApplication_network(t *testing.T) {
 
 func TestAccEMRServerlessApplication_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var application emrserverless.Application
+	var application types.Application
 	resourceName := "aws_emrserverless_application.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, emrserverless.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -321,13 +325,13 @@ func TestAccEMRServerlessApplication_disappears(t *testing.T) {
 
 func TestAccEMRServerlessApplication_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var application emrserverless.Application
+	var application types.Application
 	resourceName := "aws_emrserverless_application.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, emrserverless.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServerlessServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckApplicationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -365,14 +369,14 @@ func TestAccEMRServerlessApplication_tags(t *testing.T) {
 	})
 }
 
-func testAccCheckApplicationExists(ctx context.Context, resourceName string, application *emrserverless.Application) resource.TestCheckFunc {
+func testAccCheckApplicationExists(ctx context.Context, resourceName string, application *types.Application) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[resourceName]
 		if !ok {
 			return fmt.Errorf("Not found: %s", resourceName)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRServerlessConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRServerlessClient(ctx)
 
 		output, err := tfemrserverless.FindApplicationByID(ctx, conn, rs.Primary.ID)
 		if err != nil {
@@ -391,7 +395,7 @@ func testAccCheckApplicationExists(ctx context.Context, resourceName string, app
 
 func testAccCheckApplicationDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRServerlessConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRServerlessClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_emrserverless_application" {
@@ -399,6 +403,7 @@ func testAccCheckApplicationDestroy(ctx context.Context) resource.TestCheckFunc 
 			}
 
 			_, err := tfemrserverless.FindApplicationByID(ctx, conn, rs.Primary.ID)
+
 			if tfresource.NotFound(err) {
 				continue
 			}
@@ -490,6 +495,10 @@ resource "aws_security_group" "test" {
     protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_emrserverless_application" "test" {
@@ -574,6 +583,10 @@ resource "aws_ecr_repository" "test" {
 
 resource "aws_vpc" "test" {
   cidr_block = "10.0.0.0/16"
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_default_route_table" "test" {
@@ -587,12 +600,20 @@ resource "aws_default_route_table" "test" {
 
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_subnet" "test" {
   cidr_block              = cidrsubnet(aws_vpc.test.cidr_block, 8, 0)
   map_public_ip_on_launch = true
   vpc_id                  = aws_vpc.test.id
+
+  tags = {
+    Name = %[1]q
+  }
 }
 
 resource "aws_default_security_group" "test" {

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package fsx
 
 import (
@@ -71,6 +74,22 @@ func DataSourceWindowsFileSystem() *schema.Resource {
 			"deployment_type": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"disk_iops_configuration": {
+				Type:     schema.TypeList,
+				Computed: true,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"iops": {
+							Type:     schema.TypeInt,
+							Computed: true,
+						},
+						"mode": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
+					},
+				},
 			},
 			"dns_name": {
 				Type:     schema.TypeString,
@@ -154,44 +173,41 @@ func dataSourceWindowsFileSystemRead(ctx context.Context, d *schema.ResourceData
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	id := d.Get("id").(string)
-	filesystem, err := FindFileSystemByID(ctx, conn, id)
+	filesystem, err := FindWindowsFileSystemByID(ctx, conn, id)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading FSx Windows File System (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading FSx for Windows File Server File System (%s): %s", id, err)
 	}
 
-	if filesystem.LustreConfiguration != nil {
-		return sdkdiag.AppendErrorf(diags, "expected FSx Windows File System, found FSx Lustre File System: %s", d.Id())
-	}
-
-	if filesystem.WindowsConfiguration == nil {
-		return sdkdiag.AppendErrorf(diags, "reading FSx Windows File System (%s): empty WindowsConfiguration", d.Id())
-	}
+	windowsConfig := filesystem.WindowsConfiguration
 
 	d.SetId(aws.StringValue(filesystem.FileSystemId))
-	d.Set("active_directory_id", filesystem.WindowsConfiguration.ActiveDirectoryId)
-	d.Set("aliases", aws.StringValueSlice(expandAliasValues(filesystem.WindowsConfiguration.Aliases)))
+	d.Set("active_directory_id", windowsConfig.ActiveDirectoryId)
+	d.Set("aliases", aws.StringValueSlice(expandAliasValues(windowsConfig.Aliases)))
 	d.Set("arn", filesystem.ResourceARN)
-	if err := d.Set("audit_log_configuration", flattenWindowsAuditLogConfiguration(filesystem.WindowsConfiguration.AuditLogConfiguration)); err != nil {
+	if err := d.Set("audit_log_configuration", flattenWindowsAuditLogConfiguration(windowsConfig.AuditLogConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting audit_log_configuration: %s", err)
 	}
-	d.Set("automatic_backup_retention_days", filesystem.WindowsConfiguration.AutomaticBackupRetentionDays)
-	d.Set("copy_tags_to_backups", filesystem.WindowsConfiguration.CopyTagsToBackups)
-	d.Set("daily_automatic_backup_start_time", filesystem.WindowsConfiguration.DailyAutomaticBackupStartTime)
-	d.Set("deployment_type", filesystem.WindowsConfiguration.DeploymentType)
+	d.Set("automatic_backup_retention_days", windowsConfig.AutomaticBackupRetentionDays)
+	d.Set("copy_tags_to_backups", windowsConfig.CopyTagsToBackups)
+	d.Set("daily_automatic_backup_start_time", windowsConfig.DailyAutomaticBackupStartTime)
+	d.Set("deployment_type", windowsConfig.DeploymentType)
+	if err := d.Set("disk_iops_configuration", flattenWindowsDiskIopsConfiguration(windowsConfig.DiskIopsConfiguration)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting disk_iops_configuration: %s", err)
+	}
 	d.Set("dns_name", filesystem.DNSName)
 	d.Set("id", filesystem.FileSystemId)
 	d.Set("kms_key_id", filesystem.KmsKeyId)
 	d.Set("network_interface_ids", aws.StringValueSlice(filesystem.NetworkInterfaceIds))
 	d.Set("owner_id", filesystem.OwnerId)
-	d.Set("preferred_subnet_id", filesystem.WindowsConfiguration.PreferredSubnetId)
-	d.Set("preferred_file_server_ip", filesystem.WindowsConfiguration.PreferredFileServerIp)
+	d.Set("preferred_file_server_ip", windowsConfig.PreferredFileServerIp)
+	d.Set("preferred_subnet_id", windowsConfig.PreferredSubnetId)
 	d.Set("storage_capacity", filesystem.StorageCapacity)
 	d.Set("storage_type", filesystem.StorageType)
 	d.Set("subnet_ids", aws.StringValueSlice(filesystem.SubnetIds))
-	d.Set("throughput_capacity", filesystem.WindowsConfiguration.ThroughputCapacity)
+	d.Set("throughput_capacity", windowsConfig.ThroughputCapacity)
 	d.Set("vpc_id", filesystem.VpcId)
-	d.Set("weekly_maintenance_start_time", filesystem.WindowsConfiguration.WeeklyMaintenanceStartTime)
+	d.Set("weekly_maintenance_start_time", windowsConfig.WeeklyMaintenanceStartTime)
 
 	tags := KeyValueTags(ctx, filesystem.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
@@ -200,5 +216,5 @@ func dataSourceWindowsFileSystemRead(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

@@ -43,7 +43,7 @@ resource "aws_ami_launch_permission" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `account_id` - (Optional) AWS account ID for the launch permission.
 * `group` - (Optional) Name of the group for the launch permission. Valid values: `"all"`.
@@ -51,16 +51,25 @@ The following arguments are supported:
 * `organization_arn` - (Optional) ARN of an organization for the launch permission.
 * `organizational_unit_arn` - (Optional) ARN of an organizational unit for the launch permission.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `id` - Launch permission ID.
 
 ## Import
 
-AMI Launch Permissions can be imported using `[ACCOUNT-ID|GROUP-NAME|ORGANIZATION-ARN|ORGANIZATIONAL-UNIT-ARN]/IMAGE-ID`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import AMI Launch Permissions using `[ACCOUNT-ID|GROUP-NAME|ORGANIZATION-ARN|ORGANIZATIONAL-UNIT-ARN]/IMAGE-ID`. For example:
 
-```sh
-$ terraform import aws_ami_launch_permission.example 123456789012/ami-12345678
+```terraform
+import {
+  to = aws_ami_launch_permission.example
+  id = "123456789012/ami-12345678"
+}
+```
+
+Using `terraform import`, import AMI Launch Permissions using `[ACCOUNT-ID|GROUP-NAME|ORGANIZATION-ARN|ORGANIZATIONAL-UNIT-ARN]/IMAGE-ID`. For example:
+
+```console
+% terraform import aws_ami_launch_permission.example 123456789012/ami-12345678
 ```

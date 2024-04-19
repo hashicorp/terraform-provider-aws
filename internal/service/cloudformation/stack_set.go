@@ -1,11 +1,16 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudformation
 
 import (
 	"context"
+	"fmt"
 	"log"
-	"regexp"
+	"strings"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/cloudformation"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
@@ -32,7 +37,7 @@ func ResourceStackSet() *schema.Resource {
 		DeleteWithoutTimeout: resourceStackSetDelete,
 
 		Importer: &schema.ResourceImporter{
-			StateContext: schema.ImportStatePassthroughContext,
+			StateContext: resourceStackSetImport,
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -119,8 +124,8 @@ func ResourceStackSet() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 128),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z]`), "must begin with alphabetic character"),
-					validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-]+$`), "must contain only alphanumeric and hyphen characters"),
+					validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "must contain only alphanumeric and hyphen characters"),
 				),
 			},
 			"operation_preferences": {
@@ -164,7 +169,7 @@ func ResourceStackSet() *schema.Resource {
 							MinItems: 1,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
-								ValidateFunc: validation.StringMatch(regexp.MustCompile(`^[a-zA-Z0-9-]{1,128}$`), ""),
+								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]{1,128}$`), ""),
 							},
 						},
 					},
@@ -225,6 +230,10 @@ func resourceStackSetCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.AutoDeployment = expandAutoDeployment(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("call_as"); ok {
+		input.CallAs = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("capabilities"); ok {
 		input.Capabilities = flex.ExpandStringSet(v.(*schema.Set))
 	}
@@ -249,10 +258,6 @@ func resourceStackSetCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.PermissionModel = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("call_as"); ok {
-		input.CallAs = aws.String(v.(string))
-	}
-
 	if v, ok := d.GetOk("template_body"); ok {
 		input.TemplateBody = aws.String(v.(string))
 	}
@@ -261,8 +266,57 @@ func resourceStackSetCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.TemplateURL = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating CloudFormation StackSet: %s", input)
-	_, err := conn.CreateStackSetWithContext(ctx, input)
+	_, err := tfresource.RetryWhen(ctx, propagationTimeout,
+		func() (interface{}, error) {
+			output, err := conn.CreateStackSetWithContext(ctx, input)
+			if err != nil {
+				return nil, err
+			}
+
+			operation, err := WaitStackSetCreated(ctx, conn, name, d.Get("call_as").(string), d.Timeout(schema.TimeoutCreate))
+			if err != nil {
+				return nil, fmt.Errorf("waiting for completion (%s): %w", aws.StringValue(output.StackSetId), err)
+			}
+			return operation, nil
+		},
+		func(err error) (bool, error) {
+			if err == nil {
+				return false, nil
+			}
+
+			message := err.Error()
+
+			// IAM eventual consistency
+			if strings.Contains(message, "AccountGate check failed") {
+				return true, err
+			}
+
+			// IAM eventual consistency
+			// User: XXX is not authorized to perform: cloudformation:CreateStack on resource: YYY
+			if strings.Contains(message, "is not authorized") {
+				return true, err
+			}
+
+			// IAM eventual consistency
+			// XXX role has insufficient YYY permissions
+			if strings.Contains(message, "role has insufficient") {
+				return true, err
+			}
+
+			// IAM eventual consistency
+			// Account XXX should have YYY role with trust relationship to Role ZZZ
+			if strings.Contains(message, "role with trust relationship") {
+				return true, err
+			}
+
+			// IAM eventual consistency
+			if strings.Contains(message, "The security token included in the request is invalid") {
+				return true, err
+			}
+
+			return false, err
+		},
+	)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating CloudFormation StackSet (%s): %s", name, err)
@@ -292,34 +346,24 @@ func resourceStackSetRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.Set("administration_role_arn", stackSet.AdministrationRoleARN)
 	d.Set("arn", stackSet.StackSetARN)
-
 	if err := d.Set("auto_deployment", flattenStackSetAutoDeploymentResponse(stackSet.AutoDeployment)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting auto_deployment: %s", err)
 	}
-
-	if err := d.Set("capabilities", aws.StringValueSlice(stackSet.Capabilities)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting capabilities: %s", err)
-	}
-
+	d.Set("capabilities", aws.StringValueSlice(stackSet.Capabilities))
 	d.Set("description", stackSet.Description)
 	d.Set("execution_role_name", stackSet.ExecutionRoleName)
-
 	if err := d.Set("managed_execution", flattenStackSetManagedExecution(stackSet.ManagedExecution)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting managed_execution: %s", err)
 	}
-
 	d.Set("name", stackSet.StackSetName)
 	d.Set("permission_model", stackSet.PermissionModel)
-
 	if err := d.Set("parameters", flattenAllParameters(stackSet.Parameters)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting parameters: %s", err)
 	}
-
 	d.Set("stack_set_id", stackSet.StackSetId)
+	d.Set("template_body", stackSet.TemplateBody)
 
 	setTagsOut(ctx, stackSet.Tags)
-
-	d.Set("template_body", stackSet.TemplateBody)
 
 	return diags
 }
@@ -337,6 +381,11 @@ func resourceStackSetUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 	if v, ok := d.GetOk("administration_role_arn"); ok {
 		input.AdministrationRoleARN = aws.String(v.(string))
+	}
+
+	callAs := d.Get("call_as").(string)
+	if v, ok := d.GetOk("call_as"); ok {
+		input.CallAs = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("capabilities"); ok {
@@ -367,11 +416,6 @@ func resourceStackSetUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		input.PermissionModel = aws.String(v.(string))
 	}
 
-	callAs := d.Get("call_as").(string)
-	if v, ok := d.GetOk("call_as"); ok {
-		input.CallAs = aws.String(v.(string))
-	}
-
 	if tags := getTagsIn(ctx); len(tags) > 0 {
 		input.Tags = tags
 	}
@@ -392,7 +436,6 @@ func resourceStackSetUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		input.AutoDeployment = expandAutoDeployment(v.([]interface{}))
 	}
 
-	log.Printf("[DEBUG] Updating CloudFormation StackSet: %s", input)
 	output, err := conn.UpdateStackSetWithContext(ctx, input)
 
 	if err != nil {
@@ -432,6 +475,21 @@ func resourceStackSetDelete(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
+func resourceStackSetImport(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
+	const stackSetImportIDSeparator = ","
+
+	switch parts := strings.Split(d.Id(), stackSetImportIDSeparator); len(parts) {
+	case 1:
+	case 2:
+		d.SetId(parts[0])
+		d.Set("call_as", parts[1])
+	default:
+		return []*schema.ResourceData{}, fmt.Errorf("unexpected format for import ID (%[1]s), use: STACKSETNAME or STACKSETNAME%[2]sCALLAS", d.Id(), stackSetImportIDSeparator)
+	}
+
+	return []*schema.ResourceData{d}, nil
+}
+
 func expandAutoDeployment(l []interface{}) *cloudformation.AutoDeployment {
 	if len(l) == 0 {
 		return nil
@@ -439,9 +497,13 @@ func expandAutoDeployment(l []interface{}) *cloudformation.AutoDeployment {
 
 	m := l[0].(map[string]interface{})
 
+	enabled := m["enabled"].(bool)
 	autoDeployment := &cloudformation.AutoDeployment{
-		Enabled:                      aws.Bool(m["enabled"].(bool)),
-		RetainStacksOnAccountRemoval: aws.Bool(m["retain_stacks_on_account_removal"].(bool)),
+		Enabled: aws.Bool(enabled),
+	}
+
+	if enabled {
+		autoDeployment.RetainStacksOnAccountRemoval = aws.Bool(m["retain_stacks_on_account_removal"].(bool))
 	}
 
 	return autoDeployment

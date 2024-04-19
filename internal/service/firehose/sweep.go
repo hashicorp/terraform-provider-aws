@@ -1,5 +1,5 @@
-//go:build sweep
-// +build sweep
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
 
 package firehose
 
@@ -7,14 +7,14 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/firehose"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/firehose"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_kinesis_firehose_delivery_stream", &resource.Sweeper{
 		Name: "aws_kinesis_firehose_delivery_stream",
 		F:    sweepDeliveryStreams,
@@ -27,7 +27,7 @@ func sweepDeliveryStreams(region string) error {
 	if err != nil {
 		return fmt.Errorf("error getting client: %s", err)
 	}
-	conn := client.FirehoseConn(ctx)
+	conn := client.FirehoseClient(ctx)
 	input := &firehose.ListDeliveryStreamsInput{}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -37,12 +37,12 @@ func sweepDeliveryStreams(region string) error {
 		}
 
 		for _, v := range page.DeliveryStreamNames {
-			r := ResourceDeliveryStream()
+			r := resourceDeliveryStream()
 			d := r.Data(nil)
-			name := aws.StringValue(v)
+			name := v
 			arn := arn.ARN{
 				Partition: client.Partition,
-				Service:   firehose.ServiceName,
+				Service:   "firehose",
 				Region:    client.Region,
 				AccountID: client.AccountID,
 				Resource:  fmt.Sprintf("deliverystream/%s", name),
@@ -56,7 +56,7 @@ func sweepDeliveryStreams(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv2.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Kinesis Firehose Delivery Stream sweep for %s: %s", region, err)
 		return nil
 	}
@@ -65,7 +65,7 @@ func sweepDeliveryStreams(region string) error {
 		return fmt.Errorf("error listing Kinesis Firehose Delivery Streams (%s): %w", region, err)
 	}
 
-	err = sweep.SweepOrchestratorWithContext(ctx, sweepResources)
+	err = sweep.SweepOrchestrator(ctx, sweepResources)
 
 	if err != nil {
 		return fmt.Errorf("error sweeping Kinesis Firehose Delivery Streams (%s): %w", region, err)

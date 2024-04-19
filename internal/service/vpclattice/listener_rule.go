@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package vpclattice
 
 import (
@@ -87,7 +90,6 @@ func ResourceListenerRule() *schema.Resource {
 										Type:     schema.TypeList,
 										Required: true,
 										MinItems: 1,
-										MaxItems: 2,
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"target_group_identifier": {

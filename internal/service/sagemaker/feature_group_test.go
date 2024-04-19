@@ -1,11 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package sagemaker_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/sagemaker"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -14,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfsagemaker "github.com/hashicorp/terraform-provider-aws/internal/service/sagemaker"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccSageMakerFeatureGroup_serial(t *testing.T) {
@@ -21,6 +26,7 @@ func TestAccSageMakerFeatureGroup_serial(t *testing.T) {
 
 	testCases := map[string]func(t *testing.T){
 		"basic":                         testAccFeatureGroup_basic,
+		"storageType":                   testAccFeatureGroup_storageType,
 		"description":                   testAccFeatureGroup_description,
 		"disappears":                    TestAccSageMakerFeatureGroup_disappears,
 		"multipleFeatures":              testAccFeatureGroup_multipleFeatures,
@@ -29,6 +35,7 @@ func TestAccSageMakerFeatureGroup_serial(t *testing.T) {
 		"offlineConfig_createCatalog":   testAccFeatureGroup_offlineConfig_createCatalog,
 		"offlineConfig_providedCatalog": TestAccSageMakerFeatureGroup_Offline_providedCatalog,
 		"onlineConfigSecurityConfig":    testAccFeatureGroup_onlineConfigSecurityConfig,
+		"onlineConfig_TTLDuration":      testAccFeatureGroup_onlineConfigTTLDuration,
 		"tags":                          testAccFeatureGroup_tags,
 	}
 
@@ -43,7 +50,7 @@ func testAccFeatureGroup_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFeatureGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -72,6 +79,37 @@ func testAccFeatureGroup_basic(t *testing.T) {
 	})
 }
 
+func testAccFeatureGroup_storageType(t *testing.T) {
+	ctx := acctest.Context(t)
+	var featureGroup sagemaker.DescribeFeatureGroupOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_feature_group.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFeatureGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFeatureGroupConfig_storageType(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFeatureGroupExists(ctx, resourceName, &featureGroup),
+					resource.TestCheckResourceAttr(resourceName, "feature_definition.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "feature_definition.0.feature_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "feature_definition.0.feature_type", "String"),
+					resource.TestCheckResourceAttr(resourceName, "online_store_config.0.storage_type", "InMemory"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccFeatureGroup_description(t *testing.T) {
 	ctx := acctest.Context(t)
 	var featureGroup sagemaker.DescribeFeatureGroupOutput
@@ -80,7 +118,7 @@ func testAccFeatureGroup_description(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFeatureGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -109,7 +147,7 @@ func testAccFeatureGroup_tags(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFeatureGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -158,7 +196,7 @@ func testAccFeatureGroup_multipleFeatures(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFeatureGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -191,7 +229,7 @@ func testAccFeatureGroup_onlineConfigSecurityConfig(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFeatureGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -215,6 +253,53 @@ func testAccFeatureGroup_onlineConfigSecurityConfig(t *testing.T) {
 	})
 }
 
+func testAccFeatureGroup_onlineConfigTTLDuration(t *testing.T) {
+	ctx := acctest.Context(t)
+	var featureGroup1, featureGroup2 sagemaker.DescribeFeatureGroupOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_sagemaker_feature_group.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckFeatureGroupDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccFeatureGroupConfig_TTLDuration(rName, "Seconds"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFeatureGroupExists(ctx, resourceName, &featureGroup1),
+					resource.TestCheckResourceAttr(resourceName, "online_store_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "online_store_config.0.ttl_duration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "online_store_config.0.ttl_duration.0.unit", "Seconds"),
+					resource.TestCheckResourceAttr(resourceName, "online_store_config.0.ttl_duration.0.value", "1"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+			{
+				Config: testAccFeatureGroupConfig_TTLDuration(rName, "Minutes"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckFeatureGroupExists(ctx, resourceName, &featureGroup2),
+					func(*terraform.State) error {
+						if !aws.TimeValue(featureGroup1.CreationTime).Equal(aws.TimeValue(featureGroup1.CreationTime)) {
+							return errors.New("SageMaker Feature Group was recreated")
+						}
+						return nil
+					},
+					resource.TestCheckResourceAttr(resourceName, "online_store_config.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "online_store_config.0.ttl_duration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "online_store_config.0.ttl_duration.0.unit", "Minutes"),
+					resource.TestCheckResourceAttr(resourceName, "online_store_config.0.ttl_duration.0.value", "1"),
+				),
+			},
+		},
+	})
+}
+
 func testAccFeatureGroup_offlineConfig_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var featureGroup sagemaker.DescribeFeatureGroupOutput
@@ -223,7 +308,7 @@ func testAccFeatureGroup_offlineConfig_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFeatureGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -257,7 +342,7 @@ func testAccFeatureGroup_offlineConfig_format(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFeatureGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -291,7 +376,7 @@ func testAccFeatureGroup_offlineConfig_createCatalog(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFeatureGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -307,7 +392,7 @@ func testAccFeatureGroup_offlineConfig_createCatalog(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.data_catalog_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.data_catalog_config.0.catalog", "AwsDataCatalog"),
 					resource.TestCheckResourceAttr(resourceName, "offline_store_config.0.data_catalog_config.0.database", "sagemaker_featurestore"),
-					resource.TestMatchResourceAttr(resourceName, "offline_store_config.0.data_catalog_config.0.table_name", regexp.MustCompile(fmt.Sprintf("^%s-", rName))),
+					resource.TestCheckResourceAttrSet(resourceName, "offline_store_config.0.data_catalog_config.0.table_name"),
 				),
 			},
 			{
@@ -328,7 +413,7 @@ func TestAccSageMakerFeatureGroup_Offline_providedCatalog(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFeatureGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -364,7 +449,7 @@ func TestAccSageMakerFeatureGroup_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, sagemaker.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SageMakerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckFeatureGroupDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -502,6 +587,52 @@ resource "aws_sagemaker_feature_group" "test" {
   }
 }
 `, rName))
+}
+
+func testAccFeatureGroupConfig_storageType(rName string) string {
+	return acctest.ConfigCompose(testAccFeatureGroupConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_feature_group" "test" {
+  feature_group_name             = %[1]q
+  record_identifier_feature_name = %[1]q
+  event_time_feature_name        = %[1]q
+  role_arn                       = aws_iam_role.test.arn
+
+  feature_definition {
+    feature_name = %[1]q
+    feature_type = "String"
+  }
+
+  online_store_config {
+    enable_online_store = true
+    storage_type        = "InMemory"
+  }
+}
+`, rName))
+}
+
+func testAccFeatureGroupConfig_TTLDuration(rName, unit string) string {
+	return acctest.ConfigCompose(testAccFeatureGroupConfig_base(rName), fmt.Sprintf(`
+resource "aws_sagemaker_feature_group" "test" {
+  feature_group_name             = %[1]q
+  record_identifier_feature_name = %[1]q
+  event_time_feature_name        = %[1]q
+  role_arn                       = aws_iam_role.test.arn
+
+  feature_definition {
+    feature_name = %[1]q
+    feature_type = "String"
+  }
+
+  online_store_config {
+    enable_online_store = true
+
+    ttl_duration {
+      unit  = %[2]q
+      value = 1
+    }
+  }
+}
+`, rName, unit))
 }
 
 func testAccFeatureGroupConfig_description(rName string) string {

@@ -178,6 +178,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_sagemaker_notebook_instance_lifecycle_configuration",
 		},
 		{
+			Factory:  ResourcePipeline,
+			TypeName: "aws_sagemaker_pipeline",
+			Name:     "Pipeline",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "arn",
+			},
+		},
+		{
 			Factory:  ResourceProject,
 			TypeName: "aws_sagemaker_project",
 			Name:     "Project",

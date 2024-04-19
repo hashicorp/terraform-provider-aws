@@ -41,6 +41,7 @@ The following arguments are required:
 The following arguments are optional:
 
 * `capacity_provider_strategy` - (Optional) Set of capacity provider strategies to use for the cluster. See below.
+* `client_token` - (Optional) An identifier that you provide to ensure the idempotency of the request. It must be unique and is case sensitive. Up to 64 characters are allowed. The valid characters are characters in the range of 33-126, inclusive. For more information, see [Ensuring idempotency](https://docs.aws.amazon.com/AmazonECS/latest/APIReference/ECS_Idempotency.html).
 * `desired_count` - (Optional) Number of instantiations of the specified task to place on your cluster. You can specify up to 10 tasks for each call.
 * `enable_ecs_managed_tags` - (Optional) Specifies whether to enable Amazon ECS managed tags for the tasks within the service.
 * `enable_execute_command` - (Optional) Specifies whether to enable Amazon ECS Exec for the tasks within the service.
@@ -116,9 +117,9 @@ For more information, see the [Task Networking](https://docs.aws.amazon.com/Amaz
 
 For more information, see the [Placement Strategy](https://docs.aws.amazon.com/AmazonECS/latest/APIReference/API_PlacementStrategy.html) documentation.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `task_arns` - A list of the provisioned task ARNs.
 * `id` - The unique identifier, which is a comma-delimited string joining the `cluster` and `task_definition` attributes.

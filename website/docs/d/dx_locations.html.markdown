@@ -23,6 +23,8 @@ data "aws_dx_locations" "available" {}
 
 There are no arguments available for this data source.
 
-## Attributes Reference
+## Attribute Reference
+
+This data source exports the following attributes in addition to the arguments above:
 
 * `location_codes` - Code for the locations.

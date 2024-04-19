@@ -20,6 +20,15 @@ You should not use the `aws_vpc_security_group_ingress_rule` resource in conjunc
 ## Example Usage
 
 ```terraform
+resource "aws_security_group" "example" {
+  name        = "example"
+  description = "example"
+  vpc_id      = aws_vpc.main.id
+  tags = {
+    Name = "example"
+  }
+}
+
 resource "aws_vpc_security_group_ingress_rule" "example" {
   security_group_id = aws_security_group.example.id
 
@@ -32,7 +41,7 @@ resource "aws_vpc_security_group_ingress_rule" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 ~> **Note** Although `cidr_ipv4`, `cidr_ipv6`, `prefix_list_id`, and `referenced_security_group_id` are all marked as optional, you *must* provide one of them in order to configure the destination of the traffic. The `from_port` and `to_port` arguments are required unless `ip_protocol` is set to `-1` or `icmpv6`.
 
@@ -47,9 +56,9 @@ The following arguments are supported:
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `to_port` - (Optional) The end of port range for the TCP and UDP protocols, or an ICMP/ICMPv6 code.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The Amazon Resource Name (ARN) of the security group rule.
 * `security_group_rule_id` - The ID of the security group rule.
@@ -57,8 +66,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-Security group ingress rules can be imported using the `security_group_rule_id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import security group ingress rules using the `security_group_rule_id`. For example:
 
+```terraform
+import {
+  to = aws_vpc_security_group_ingress_rule.example
+  id = "sgr-02108b27edd666983"
+}
 ```
-$ terraform import aws_vpc_security_group_ingress_rule.example sgr-02108b27edd666983
+
+Using `terraform import`, import security group ingress rules using the `security_group_rule_id`. For example:
+
+```console
+% terraform import aws_vpc_security_group_ingress_rule.example sgr-02108b27edd666983
 ```

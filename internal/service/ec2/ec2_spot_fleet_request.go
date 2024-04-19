@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
@@ -1250,7 +1253,7 @@ func buildSpotFleetLaunchSpecification(ctx context.Context, d map[string]interfa
 	}
 
 	if v, ok := d["user_data"]; ok {
-		opts.UserData = aws.String(verify.Base64Encode([]byte(v.(string))))
+		opts.UserData = flex.StringValueToBase64String(v.(string))
 	}
 
 	if v, ok := d["key_name"]; ok && v != "" {

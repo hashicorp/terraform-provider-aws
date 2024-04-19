@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opsworks
 
 import (
@@ -17,11 +20,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	tfmaps "github.com/hashicorp/terraform-provider-aws/internal/maps"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"golang.org/x/exp/maps"
 )
 
 // OpsWorks has a single concept of "layer" which represents several different
@@ -458,7 +461,9 @@ func (lt *opsworksLayerType) resourceSchema() *schema.Resource {
 			StateContext: schema.ImportStatePassthroughContext,
 		},
 
-		Schema: resourceSchema,
+		SchemaFunc: func() map[string]*schema.Schema {
+			return resourceSchema
+		},
 
 		CustomizeDiff: verify.SetTagsDiff,
 	}
@@ -713,7 +718,7 @@ func (lt *opsworksLayerType) Update(ctx context.Context, d *schema.ResourceData,
 			LayerId: aws.String(d.Id()),
 		}
 
-		if d.HasChanges(maps.Keys(lt.Attributes)...) {
+		if d.HasChanges(tfmaps.Keys(lt.Attributes)...) {
 			attributes, err := lt.Attributes.resourceDataToAPIAttributes(d)
 
 			if err != nil {

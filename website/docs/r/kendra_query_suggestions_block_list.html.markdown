@@ -68,8 +68,17 @@ Configuration options for operation timeouts can be found [here](https://develop
 
 ## Import
 
-The `aws_kendra_query_suggestions_block_list` resource can be imported using the unique identifiers of the block list and index separated by a slash (`/`), for example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import the `aws_kendra_query_suggestions_block_list` resource using the unique identifiers of the block list and index separated by a slash (`/`). For example:
 
+```terraform
+import {
+  to = aws_kendra_query_suggestions_block_list.example
+  id = "blocklist-123456780/idx-8012925589"
+}
 ```
-$ terraform import aws_kendra_query_suggestions_block_list.example blocklist-123456780/idx-8012925589
+
+Using `terraform import`, import the `aws_kendra_query_suggestions_block_list` resource using the unique identifiers of the block list and index separated by a slash (`/`). For example:
+
+```console
+% terraform import aws_kendra_query_suggestions_block_list.example blocklist-123456780/idx-8012925589
 ```

@@ -84,7 +84,7 @@ resource "aws_appautoscaling_target" "ecs_target" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `max_capacity` - (Required) Max capacity of the scalable target.
 * `min_capacity` - (Required) Min capacity of the scalable target.
@@ -94,17 +94,26 @@ The following arguments are supported:
 * `service_namespace` - (Required) AWS service namespace of the scalable target. Documentation can be found in the `ServiceNamespace` parameter at: [AWS Application Auto Scaling API Reference](https://docs.aws.amazon.com/autoscaling/application/APIReference/API_RegisterScalableTarget.html#API_RegisterScalableTarget_RequestParameters)
 * `tags` - (Optional) Map of tags to assign to the scalable target. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - The ARN of the scalable target.
 * `tags_all` - Map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Import
 
-Application AutoScaling Target can be imported using the `service-namespace` , `resource-id` and `scalable-dimension` separated by `/`.
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import Application AutoScaling Target using the `service-namespace` , `resource-id` and `scalable-dimension` separated by `/`. For example:
 
+```terraform
+import {
+  to = aws_appautoscaling_target.test-target
+  id = "service-namespace/resource-id/scalable-dimension"
+}
 ```
-$ terraform import aws_appautoscaling_target.test-target service-namespace/resource-id/scalable-dimension
+
+Using `terraform import`, import Application AutoScaling Target using the `service-namespace` , `resource-id` and `scalable-dimension` separated by `/`. For example:
+
+```console
+% terraform import aws_appautoscaling_target.test-target service-namespace/resource-id/scalable-dimension
 ```

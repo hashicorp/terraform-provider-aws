@@ -1,11 +1,15 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package workspaces
 
 import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/workspaces"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/workspaces"
+	"github.com/aws/aws-sdk-go-v2/service/workspaces/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -79,13 +83,13 @@ func DataSourceBundle() *schema.Resource {
 
 func dataSourceWorkspaceBundleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).WorkSpacesConn(ctx)
+	conn := meta.(*conns.AWSClient).WorkSpacesClient(ctx)
 
-	var bundle *workspaces.WorkspaceBundle
+	var bundle types.WorkspaceBundle
 
 	if bundleID, ok := d.GetOk("bundle_id"); ok {
-		resp, err := conn.DescribeWorkspaceBundlesWithContext(ctx, &workspaces.DescribeWorkspaceBundlesInput{
-			BundleIds: []*string{aws.String(bundleID.(string))},
+		resp, err := conn.DescribeWorkspaceBundles(ctx, &workspaces.DescribeWorkspaceBundlesInput{
+			BundleIds: []string{bundleID.(string)},
 		})
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "reading WorkSpaces Workspace Bundle (%s): %s", bundleID, err)
@@ -95,11 +99,11 @@ func dataSourceWorkspaceBundleRead(ctx context.Context, d *schema.ResourceData, 
 			return sdkdiag.AppendErrorf(diags, "expected 1 result for WorkSpaces Workspace Bundle %q, found %d", bundleID, len(resp.Bundles))
 		}
 
-		bundle = resp.Bundles[0]
-
-		if bundle == nil {
+		if len(resp.Bundles) == 0 {
 			return sdkdiag.AppendErrorf(diags, "no WorkSpaces Workspace Bundle with ID %q found", bundleID)
 		}
+
+		bundle = resp.Bundles[0]
 	}
 
 	if name, ok := d.GetOk("name"); ok {
@@ -112,26 +116,31 @@ func dataSourceWorkspaceBundleRead(ctx context.Context, d *schema.ResourceData, 
 		}
 
 		name := name.(string)
-		err := conn.DescribeWorkspaceBundlesPagesWithContext(ctx, input, func(out *workspaces.DescribeWorkspaceBundlesOutput, lastPage bool) bool {
-			for _, b := range out.Bundles {
-				if aws.StringValue(b.Name) == name {
-					bundle = b
-					return true
-				}
+
+		paginator := workspaces.NewDescribeWorkspaceBundlesPaginator(conn, input, func(out *workspaces.DescribeWorkspaceBundlesPaginatorOptions) {})
+
+		entryNotFound := true
+		for paginator.HasMorePages() && entryNotFound {
+			out, err := paginator.NextPage(ctx)
+
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "reading WorkSpaces Workspace Bundle (%s): %s", id, err)
 			}
 
-			return !lastPage
-		})
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading WorkSpaces Workspace Bundle (%s): %s", id, err)
+			for _, b := range out.Bundles {
+				if aws.ToString(b.Name) == name {
+					bundle = b
+					entryNotFound = false
+				}
+			}
 		}
 
-		if bundle == nil {
+		if entryNotFound {
 			return sdkdiag.AppendErrorf(diags, "no WorkSpaces Workspace Bundle with name %q found", name)
 		}
 	}
 
-	d.SetId(aws.StringValue(bundle.BundleId))
+	d.SetId(aws.ToString(bundle.BundleId))
 	d.Set("bundle_id", bundle.BundleId)
 	d.Set("description", bundle.Description)
 	d.Set("name", bundle.Name)
@@ -140,7 +149,7 @@ func dataSourceWorkspaceBundleRead(ctx context.Context, d *schema.ResourceData, 
 	computeType := make([]map[string]interface{}, 1)
 	if bundle.ComputeType != nil {
 		computeType[0] = map[string]interface{}{
-			"name": aws.StringValue(bundle.ComputeType.Name),
+			"name": string(bundle.ComputeType.Name),
 		}
 	}
 	if err := d.Set("compute_type", computeType); err != nil {
@@ -150,7 +159,7 @@ func dataSourceWorkspaceBundleRead(ctx context.Context, d *schema.ResourceData, 
 	rootStorage := make([]map[string]interface{}, 1)
 	if bundle.RootStorage != nil {
 		rootStorage[0] = map[string]interface{}{
-			"capacity": aws.StringValue(bundle.RootStorage.Capacity),
+			"capacity": aws.ToString(bundle.RootStorage.Capacity),
 		}
 	}
 	if err := d.Set("root_storage", rootStorage); err != nil {
@@ -160,7 +169,7 @@ func dataSourceWorkspaceBundleRead(ctx context.Context, d *schema.ResourceData, 
 	userStorage := make([]map[string]interface{}, 1)
 	if bundle.UserStorage != nil {
 		userStorage[0] = map[string]interface{}{
-			"capacity": aws.StringValue(bundle.UserStorage.Capacity),
+			"capacity": aws.ToString(bundle.UserStorage.Capacity),
 		}
 	}
 	if err := d.Set("user_storage", userStorage); err != nil {

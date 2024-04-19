@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudformation
 
 import (
@@ -36,45 +39,7 @@ func FindChangeSetByStackIDAndChangeSetName(ctx context.Context, conn *cloudform
 	return output, nil
 }
 
-func FindStackByID(ctx context.Context, conn *cloudformation.CloudFormation, id string) (*cloudformation.Stack, error) {
-	input := &cloudformation.DescribeStacksInput{
-		StackName: aws.String(id),
-	}
-
-	output, err := conn.DescribeStacksWithContext(ctx, input)
-
-	if tfawserr.ErrMessageContains(err, ErrCodeValidationError, "does not exist") {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || len(output.Stacks) == 0 || output.Stacks[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(output.Stacks); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	stack := output.Stacks[0]
-
-	if status := aws.StringValue(stack.StackStatus); status == cloudformation.StackStatusDeleteComplete {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-			Message:     status,
-		}
-	}
-
-	return stack, nil
-}
-
-func FindStackInstanceAccountIdByOrgIDs(ctx context.Context, conn *cloudformation.CloudFormation, stackSetName, region, callAs string, orgIDs []string) (string, error) {
+func FindStackInstanceSummariesByOrgIDs(ctx context.Context, conn *cloudformation.CloudFormation, stackSetName, region, callAs string, orgIDs []string) ([]*cloudformation.StackInstanceSummary, error) {
 	input := &cloudformation.ListStackInstancesInput{
 		StackInstanceRegion: aws.String(region),
 		StackSetName:        aws.String(stackSetName),
@@ -84,7 +49,7 @@ func FindStackInstanceAccountIdByOrgIDs(ctx context.Context, conn *cloudformatio
 		input.CallAs = aws.String(callAs)
 	}
 
-	var result string
+	var result []*cloudformation.StackInstanceSummary
 
 	err := conn.ListStackInstancesPagesWithContext(ctx, input, func(page *cloudformation.ListStackInstancesOutput, lastPage bool) bool {
 		if page == nil {
@@ -98,8 +63,7 @@ func FindStackInstanceAccountIdByOrgIDs(ctx context.Context, conn *cloudformatio
 
 			for _, orgID := range orgIDs {
 				if aws.StringValue(s.OrganizationalUnitId) == orgID {
-					result = aws.StringValue(s.Account)
-					return false
+					result = append(result, s)
 				}
 			}
 		}
@@ -108,14 +72,14 @@ func FindStackInstanceAccountIdByOrgIDs(ctx context.Context, conn *cloudformatio
 	})
 
 	if tfawserr.ErrCodeEquals(err, cloudformation.ErrCodeStackSetNotFoundException) {
-		return "", &retry.NotFoundError{
+		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
 		}
 	}
 
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
 	return result, nil
@@ -164,6 +128,13 @@ func FindStackSetByName(ctx context.Context, conn *cloudformation.CloudFormation
 	output, err := conn.DescribeStackSetWithContext(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, cloudformation.ErrCodeStackSetNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if callAs == cloudformation.CallAsDelegatedAdmin && tfawserr.ErrMessageContains(err, errCodeValidationError, "Failed to check account is Delegated Administrator") {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,

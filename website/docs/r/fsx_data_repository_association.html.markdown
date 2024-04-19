@@ -51,7 +51,7 @@ resource "aws_fsx_data_repository_association" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `batch_import_meta_data_on_create` - (Optional) Set to true to run an import data repository task to import metadata from the data repository to the file system after the data repository association is created. Defaults to `false`.
 * `data_repository_path` - (Required) The path to the Amazon S3 data repository that will be linked to the file system. The path must be an S3 bucket s3://myBucket/myPrefix/. This path specifies where in the S3 data repository files will be imported from or exported to. The same S3 bucket cannot be linked more than once to the same file system.
@@ -72,9 +72,9 @@ The configuration for an Amazon S3 data repository linked to an Amazon FSx Lustr
 
 * `events` - (Optional) A list of file event types to automatically export to your linked S3 bucket or import from the linked S3 bucket. Valid values are `NEW`, `CHANGED`, `DELETED`. Max of 3.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name of the file system.
 * `id` - Identifier of the data repository association, e.g., `dra-12345678`
@@ -90,8 +90,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-FSx Data Repository Associations can be imported using the `id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import FSx Data Repository Associations using the `id`. For example:
 
+```terraform
+import {
+  to = aws_fsx_data_repository_association.example
+  id = "dra-0b1cfaeca11088b10"
+}
 ```
-$ terraform import aws_fsx_data_repository_association.example dra-0b1cfaeca11088b10
+
+Using `terraform import`, import FSx Data Repository Associations using the `id`. For example:
+
+```console
+% terraform import aws_fsx_data_repository_association.example dra-0b1cfaeca11088b10
 ```

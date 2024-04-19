@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package grafana
 
 import (
@@ -62,11 +65,12 @@ func ResourceWorkspace() *schema.Resource {
 				},
 			},
 			"configuration": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Computed:         true,
-				ValidateFunc:     validation.StringIsJSON,
-				DiffSuppressFunc: verify.SuppressEquivalentJSONDiffs,
+				Type:                  schema.TypeString,
+				Optional:              true,
+				Computed:              true,
+				ValidateFunc:          validation.StringIsJSON,
+				DiffSuppressFunc:      verify.SuppressEquivalentJSONDiffs,
+				DiffSuppressOnRefresh: true,
 				StateFunc: func(v interface{}) string {
 					json, _ := structure.NormalizeJsonString(v)
 					return json
@@ -90,7 +94,6 @@ func ResourceWorkspace() *schema.Resource {
 			},
 			"grafana_version": {
 				Type:     schema.TypeString,
-				ForceNew: true,
 				Optional: true,
 				Computed: true,
 			},
@@ -209,12 +212,16 @@ func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.WorkspaceDescription = aws.String(v.(string))
 	}
 
+	if v, ok := d.GetOk("grafana_version"); ok {
+		input.GrafanaVersion = aws.String(v.(string))
+	}
+
 	if v, ok := d.GetOk("name"); ok {
 		input.WorkspaceName = aws.String(v.(string))
 	}
 
-	if v, ok := d.GetOk("grafana_version"); ok {
-		input.GrafanaVersion = aws.String(v.(string))
+	if v, ok := d.GetOk("network_access_control"); ok {
+		input.NetworkAccessControl = expandNetworkAccessControl(v.([]interface{}))
 	}
 
 	if v, ok := d.GetOk("notification_destinations"); ok {
@@ -241,11 +248,6 @@ func resourceWorkspaceCreate(ctx context.Context, d *schema.ResourceData, meta i
 		input.VpcConfiguration = expandVPCConfiguration(v.([]interface{}))
 	}
 
-	if v, ok := d.GetOk("network_access_control"); ok {
-		input.NetworkAccessControl = expandNetworkAccessControl(v.([]interface{}))
-	}
-
-	log.Printf("[DEBUG] Creating Grafana Workspace: %s", input)
 	output, err := conn.CreateWorkspaceWithContext(ctx, input)
 
 	if err != nil {
@@ -293,6 +295,9 @@ func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("endpoint", workspace.Endpoint)
 	d.Set("grafana_version", workspace.GrafanaVersion)
 	d.Set("name", workspace.Name)
+	if err := d.Set("network_access_control", flattenNetworkAccessControl(workspace.NetworkAccessControl)); err != nil {
+		return sdkdiag.AppendErrorf(diags, "setting network_access_control: %s", err)
+	}
 	d.Set("notification_destinations", workspace.NotificationDestinations)
 	d.Set("organization_role_name", workspace.OrganizationRoleName)
 	d.Set("organizational_units", workspace.OrganizationalUnits)
@@ -300,13 +305,8 @@ func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta int
 	d.Set("role_arn", workspace.WorkspaceRoleArn)
 	d.Set("saml_configuration_status", workspace.Authentication.SamlConfigurationStatus)
 	d.Set("stack_set_name", workspace.StackSetName)
-
 	if err := d.Set("vpc_configuration", flattenVPCConfiguration(workspace.VpcConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting vpc_configuration: %s", err)
-	}
-
-	if err := d.Set("network_access_control", flattenNetworkAccessControl(workspace.NetworkAccessControl)); err != nil {
-		return sdkdiag.AppendErrorf(diags, "setting network_access_control: %s", err)
 	}
 
 	setTagsOut(ctx, workspace.Tags)
@@ -318,7 +318,7 @@ func resourceWorkspaceRead(ctx context.Context, d *schema.ResourceData, meta int
 	output, err := conn.DescribeWorkspaceConfigurationWithContext(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Grafana Workspace (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Grafana Workspace (%s) configuration: %s", d.Id(), err)
 	}
 
 	d.Set("configuration", output.Configuration)
@@ -330,7 +330,7 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GrafanaConn(ctx)
 
-	if d.HasChangesExcept("configuration", "tags", "tags_all") {
+	if d.HasChangesExcept("configuration", "grafana_version", "tags", "tags_all") {
 		input := &managedgrafana.UpdateWorkspaceInput{
 			WorkspaceId: aws.String(d.Id()),
 		}
@@ -349,6 +349,16 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 
 		if d.HasChange("name") {
 			input.WorkspaceName = aws.String(d.Get("name").(string))
+		}
+
+		if d.HasChange("network_access_control") {
+			if v, ok := d.Get("network_access_control").([]interface{}); ok {
+				if len(v) > 0 {
+					input.NetworkAccessControl = expandNetworkAccessControl(v)
+				} else {
+					input.RemoveNetworkAccessConfiguration = aws.Bool(true)
+				}
+			}
 		}
 
 		if d.HasChange("notification_destinations") {
@@ -385,16 +395,6 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 			}
 		}
 
-		if d.HasChange("network_access_control") {
-			if v, ok := d.Get("network_access_control").([]interface{}); ok {
-				if len(v) > 0 {
-					input.NetworkAccessControl = expandNetworkAccessControl(v)
-				} else {
-					input.RemoveNetworkAccessConfiguration = aws.Bool(true)
-				}
-			}
-		}
-
 		_, err := conn.UpdateWorkspaceWithContext(ctx, input)
 
 		if err != nil {
@@ -406,10 +406,14 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 	}
 
-	if d.HasChange("configuration") {
+	if d.HasChanges("configuration", "grafana_version") {
 		input := &managedgrafana.UpdateWorkspaceConfigurationInput{
-			WorkspaceId:   aws.String(d.Id()),
 			Configuration: aws.String(d.Get("configuration").(string)),
+			WorkspaceId:   aws.String(d.Id()),
+		}
+
+		if d.HasChange("grafana_version") {
+			input.GrafanaVersion = aws.String(d.Get("grafana_version").(string))
 		}
 
 		_, err := conn.UpdateWorkspaceConfigurationWithContext(ctx, input)
@@ -419,7 +423,7 @@ func resourceWorkspaceUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		}
 
 		if _, err := waitWorkspaceUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating Grafana Workspace (%s) configuration: waiting for completion: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "waiting for Grafana Workspace (%s) configuration update: %s", d.Id(), err)
 		}
 	}
 

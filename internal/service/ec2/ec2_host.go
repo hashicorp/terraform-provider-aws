@@ -1,9 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ec2
 
 import (
 	"context"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
@@ -36,10 +40,23 @@ func ResourceHost() *schema.Resource {
 
 		CustomizeDiff: verify.SetTagsDiff,
 
+		Timeouts: &schema.ResourceTimeout{
+			Create: schema.DefaultTimeout(10 * time.Minute),
+			Update: schema.DefaultTimeout(10 * time.Minute),
+			Delete: schema.DefaultTimeout(20 * time.Minute),
+		},
+
 		Schema: map[string]*schema.Schema{
 			"arn": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"asset_id": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				RequiredWith: []string{"outpost_arn"},
+				Computed:     true,
 			},
 			"auto_placement": {
 				Type:         schema.TypeString,
@@ -96,6 +113,10 @@ func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta interf
 		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeDedicatedHost),
 	}
 
+	if v, ok := d.GetOk("asset_id"); ok {
+		input.AssetIds = aws.StringSlice([]string{v.(string)})
+	}
+
 	if v, ok := d.GetOk("instance_family"); ok {
 		input.InstanceFamily = aws.String(v.(string))
 	}
@@ -116,7 +137,7 @@ func resourceHostCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	d.SetId(aws.StringValue(output.HostIds[0]))
 
-	if _, err := WaitHostCreated(ctx, conn, d.Id()); err != nil {
+	if _, err := WaitHostCreated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Host (%s) create: %s", d.Id(), err)
 	}
 
@@ -147,6 +168,7 @@ func resourceHostRead(ctx context.Context, d *schema.ResourceData, meta interfac
 		Resource:  fmt.Sprintf("dedicated-host/%s", d.Id()),
 	}.String()
 	d.Set("arn", arn)
+	d.Set("asset_id", host.AssetId)
 	d.Set("auto_placement", host.AutoPlacement)
 	d.Set("availability_zone", host.AvailabilityZone)
 	d.Set("host_recovery", host.HostRecovery)
@@ -195,7 +217,7 @@ func resourceHostUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 			return sdkdiag.AppendErrorf(diags, "modifying EC2 Host (%s): %s", d.Id(), err)
 		}
 
-		if _, err := WaitHostUpdated(ctx, conn, d.Id()); err != nil {
+		if _, err := WaitHostUpdated(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for EC2 Host (%s) update: %s", d.Id(), err)
 		}
 	}
@@ -224,7 +246,7 @@ func resourceHostDelete(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "releasing EC2 Host (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitHostDeleted(ctx, conn, d.Id()); err != nil {
+	if _, err := WaitHostDeleted(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for EC2 Host (%s) delete: %s", d.Id(), err)
 	}
 

@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package transfer
 
 import (
@@ -20,7 +23,7 @@ import (
 )
 
 // @SDKResource("aws_transfer_profile", name="Profile")
-// @Tags(identifierAttribute="profile_id")
+// @Tags(identifierAttribute="arn")
 func ResourceProfile() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceProfileCreate,
@@ -33,6 +36,10 @@ func ResourceProfile() *schema.Resource {
 		},
 
 		Schema: map[string]*schema.Schema{
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
 			"as2_id": {
 				Type:     schema.TypeString,
 				Required: true,
@@ -102,6 +109,7 @@ func resourceProfileRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "reading Transfer Profile (%s): %s", d.Id(), err)
 	}
 
+	d.Set("arn", output.Arn)
 	d.Set("as2_id", output.As2Id)
 	d.Set("certificate_ids", aws.StringValueSlice(output.CertificateIds))
 	d.Set("profile_id", output.ProfileId)

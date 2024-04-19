@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package wafregional
 
 import (
@@ -11,8 +14,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// @SDKDataSource("aws_wafregional_rate_based_rule")
-func DataSourceRateBasedRule() *schema.Resource {
+// @SDKDataSource("aws_wafregional_rate_based_rule", name="Rate Based Rule")
+func dataSourceRateBasedRule() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceRateBasedRuleRead,
 

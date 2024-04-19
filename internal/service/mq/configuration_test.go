@@ -1,18 +1,21 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package mq_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/mq"
+	"github.com/YakDriver/regexache"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfmq "github.com/hashicorp/terraform-provider-aws/internal/service/mq"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccMQConfiguration_basic(t *testing.T) {
@@ -23,10 +26,10 @@ func TestAccMQConfiguration_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
@@ -34,11 +37,11 @@ func TestAccMQConfiguration_basic(t *testing.T) {
 				Config: testAccConfigurationConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`configuration:+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexache.MustCompile(`configuration:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "authentication_strategy", "simple"),
 					resource.TestCheckResourceAttr(resourceName, "description", "TfAccTest MQ Configuration"),
 					resource.TestCheckResourceAttr(resourceName, "engine_type", "ActiveMQ"),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.15.0"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.17.6"),
 					resource.TestCheckResourceAttr(resourceName, "latest_revision", "2"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
@@ -52,10 +55,10 @@ func TestAccMQConfiguration_basic(t *testing.T) {
 				Config: testAccConfigurationConfig_descriptionUpdated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`configuration:+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexache.MustCompile(`configuration:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "description", "TfAccTest MQ Configuration Updated"),
 					resource.TestCheckResourceAttr(resourceName, "engine_type", "ActiveMQ"),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.15.0"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.17.6"),
 					resource.TestCheckResourceAttr(resourceName, "latest_revision", "3"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
@@ -64,7 +67,7 @@ func TestAccMQConfiguration_basic(t *testing.T) {
 	})
 }
 
-func TestAccMQConfiguration_withData(t *testing.T) {
+func TestAccMQConfiguration_withActiveMQData(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_configuration.test"
@@ -72,21 +75,21 @@ func TestAccMQConfiguration_withData(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigurationConfig_data(rName),
+				Config: testAccConfigurationConfig_activeData(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`configuration:+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexache.MustCompile(`configuration:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "description", "TfAccTest MQ Configuration"),
 					resource.TestCheckResourceAttr(resourceName, "engine_type", "ActiveMQ"),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.15.0"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.17.6"),
 					resource.TestCheckResourceAttr(resourceName, "latest_revision", "2"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
 				),
@@ -100,7 +103,7 @@ func TestAccMQConfiguration_withData(t *testing.T) {
 	})
 }
 
-func TestAccMQConfiguration_withLdapData(t *testing.T) {
+func TestAccMQConfiguration_withActiveMQLdapData(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_configuration.test"
@@ -108,24 +111,61 @@ func TestAccMQConfiguration_withLdapData(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccConfigurationConfig_ldapData(rName),
+				Config: testAccConfigurationConfig_activeLdapData(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckConfigurationExists(ctx, resourceName),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`configuration:+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexache.MustCompile(`configuration:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "authentication_strategy", "ldap"),
 					resource.TestCheckResourceAttr(resourceName, "description", "TfAccTest MQ Configuration"),
 					resource.TestCheckResourceAttr(resourceName, "engine_type", "ActiveMQ"),
-					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.15.0"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "5.17.6"),
 					resource.TestCheckResourceAttr(resourceName, "latest_revision", "2"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
+func TestAccMQConfiguration_withRabbitMQData(t *testing.T) {
+	ctx := acctest.Context(t)
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_mq_configuration.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccConfigurationConfig_rabbitData(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckConfigurationExists(ctx, resourceName),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexache.MustCompile(`configuration:+.`)),
+					resource.TestCheckResourceAttr(resourceName, "description", "TfAccTest MQ Configuration"),
+					resource.TestCheckResourceAttr(resourceName, "engine_type", "RabbitMQ"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", "3.11.16"),
+					resource.TestCheckResourceAttr(resourceName, "latest_revision", "2"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "data", "consumer_timeout = 60000\n"),
 				),
 			},
 			{
@@ -145,10 +185,10 @@ func TestAccMQConfiguration_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             acctest.CheckDestroyNoop,
 		Steps: []resource.TestStep{
@@ -193,11 +233,7 @@ func testAccCheckConfigurationExists(ctx context.Context, n string) resource.Tes
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No MQ Configuration ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MQConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MQClient(ctx)
 
 		_, err := tfmq.FindConfigurationByID(ctx, conn, rs.Primary.ID)
 
@@ -211,7 +247,7 @@ resource "aws_mq_configuration" "test" {
   description             = "TfAccTest MQ Configuration"
   name                    = %[1]q
   engine_type             = "ActiveMQ"
-  engine_version          = "5.15.0"
+  engine_version          = "5.17.6"
   authentication_strategy = "simple"
 
   data = <<DATA
@@ -229,7 +265,7 @@ resource "aws_mq_configuration" "test" {
   description    = "TfAccTest MQ Configuration Updated"
   name           = %[1]q
   engine_type    = "ActiveMQ"
-  engine_version = "5.15.0"
+  engine_version = "5.17.6"
 
   data = <<DATA
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -240,13 +276,13 @@ DATA
 `, rName)
 }
 
-func testAccConfigurationConfig_data(rName string) string {
+func testAccConfigurationConfig_activeData(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_mq_configuration" "test" {
   description    = "TfAccTest MQ Configuration"
   name           = %[1]q
   engine_type    = "ActiveMQ"
-  engine_version = "5.15.0"
+  engine_version = "5.17.6"
 
   data = <<DATA
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -275,13 +311,13 @@ DATA
 `, rName)
 }
 
-func testAccConfigurationConfig_ldapData(rName string) string {
+func testAccConfigurationConfig_activeLdapData(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_mq_configuration" "test" {
   description             = "TfAccTest MQ Configuration"
   name                    = %[1]q
   engine_type             = "ActiveMQ"
-  engine_version          = "5.15.0"
+  engine_version          = "5.17.6"
   authentication_strategy = "ldap"
 
   data = <<DATA
@@ -303,13 +339,28 @@ DATA
 `, rName)
 }
 
+func testAccConfigurationConfig_rabbitData(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_mq_configuration" "test" {
+  description    = "TfAccTest MQ Configuration"
+  name           = %[1]q
+  engine_type    = "RabbitMQ"
+  engine_version = "3.11.16"
+
+  data = <<DATA
+consumer_timeout = 60000
+DATA
+}
+`, rName)
+}
+
 func testAccConfigurationConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return fmt.Sprintf(`
 resource "aws_mq_configuration" "test" {
   description             = "TfAccTest MQ Configuration"
   name                    = %[1]q
   engine_type             = "ActiveMQ"
-  engine_version          = "5.15.0"
+  engine_version          = "5.17.6"
   authentication_strategy = "simple"
 
   tags = {
@@ -331,7 +382,7 @@ resource "aws_mq_configuration" "test" {
   description             = "TfAccTest MQ Configuration"
   name                    = %[1]q
   engine_type             = "ActiveMQ"
-  engine_version          = "5.15.0"
+  engine_version          = "5.17.6"
   authentication_strategy = "simple"
 
   tags = {

@@ -1,14 +1,21 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package mq_test
 
 import (
 	"context"
 	"fmt"
-	"regexp"
 	"strings"
 	"testing"
+	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/mq"
+	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/mq"
+	"github.com/aws/aws-sdk-go-v2/service/mq/types"
+	"github.com/google/go-cmp/cmp"
+	"github.com/google/go-cmp/cmp/cmpopts"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -17,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfmq "github.com/hashicorp/terraform-provider-aws/internal/service/mq"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestValidateBrokerName(t *testing.T) {
@@ -109,92 +117,101 @@ func TestDiffUsers(t *testing.T) {
 		OldUsers []interface{}
 		NewUsers []interface{}
 
-		Creations []*mq.CreateUserRequest
+		Creations []*mq.CreateUserInput
 		Deletions []*mq.DeleteUserInput
-		Updates   []*mq.UpdateUserRequest
+		Updates   []*mq.UpdateUserInput
 	}{
 		{
 			OldUsers: []interface{}{},
 			NewUsers: []interface{}{
 				map[string]interface{}{
-					"console_access": false,
-					"username":       "second",
-					"password":       "TestTest2222",
-					"groups":         schema.NewSet(schema.HashString, []interface{}{"admin"}),
+					"console_access":   false,
+					"username":         "second",
+					"password":         "TestTest2222",
+					"groups":           schema.NewSet(schema.HashString, []interface{}{"admin"}),
+					"replication_user": false,
 				},
 			},
-			Creations: []*mq.CreateUserRequest{
+			Creations: []*mq.CreateUserInput{
 				{
-					BrokerId:      aws.String("test"),
-					ConsoleAccess: aws.Bool(false),
-					Username:      aws.String("second"),
-					Password:      aws.String("TestTest2222"),
-					Groups:        aws.StringSlice([]string{"admin"}),
+					BrokerId:        aws.String("test"),
+					ConsoleAccess:   aws.Bool(false),
+					Username:        aws.String("second"),
+					Password:        aws.String("TestTest2222"),
+					Groups:          []string{"admin"},
+					ReplicationUser: aws.Bool(false),
 				},
 			},
-			Deletions: []*mq.DeleteUserInput{},
-			Updates:   []*mq.UpdateUserRequest{},
+			Deletions: nil,
+			Updates:   nil,
 		},
 		{
 			OldUsers: []interface{}{
 				map[string]interface{}{
-					"console_access": true,
-					"username":       "first",
-					"password":       "TestTest1111",
+					"console_access":   true,
+					"username":         "first",
+					"password":         "TestTest1111",
+					"replication_user": false,
 				},
 			},
 			NewUsers: []interface{}{
 				map[string]interface{}{
-					"console_access": false,
-					"username":       "second",
-					"password":       "TestTest2222",
+					"console_access":   false,
+					"username":         "second",
+					"password":         "TestTest2222",
+					"replication_user": false,
 				},
 			},
-			Creations: []*mq.CreateUserRequest{
+			Creations: []*mq.CreateUserInput{
 				{
-					BrokerId:      aws.String("test"),
-					ConsoleAccess: aws.Bool(false),
-					Username:      aws.String("second"),
-					Password:      aws.String("TestTest2222"),
+					BrokerId:        aws.String("test"),
+					ConsoleAccess:   aws.Bool(false),
+					Username:        aws.String("second"),
+					Password:        aws.String("TestTest2222"),
+					ReplicationUser: aws.Bool(false),
 				},
 			},
 			Deletions: []*mq.DeleteUserInput{
 				{BrokerId: aws.String("test"), Username: aws.String("first")},
 			},
-			Updates: []*mq.UpdateUserRequest{},
+			Updates: nil,
 		},
 		{
 			OldUsers: []interface{}{
 				map[string]interface{}{
-					"console_access": true,
-					"username":       "first",
-					"password":       "TestTest1111updated",
+					"console_access":   true,
+					"username":         "first",
+					"password":         "TestTest1111updated",
+					"replication_user": false,
 				},
 				map[string]interface{}{
-					"console_access": false,
-					"username":       "second",
-					"password":       "TestTest2222",
+					"console_access":   false,
+					"username":         "second",
+					"password":         "TestTest2222",
+					"replication_user": false,
 				},
 			},
 			NewUsers: []interface{}{
 				map[string]interface{}{
-					"console_access": false,
-					"username":       "second",
-					"password":       "TestTest2222",
-					"groups":         schema.NewSet(schema.HashString, []interface{}{"admin"}),
+					"console_access":   false,
+					"username":         "second",
+					"password":         "TestTest2222",
+					"groups":           schema.NewSet(schema.HashString, []interface{}{"admin"}),
+					"replication_user": false,
 				},
 			},
-			Creations: []*mq.CreateUserRequest{},
+			Creations: nil,
 			Deletions: []*mq.DeleteUserInput{
 				{BrokerId: aws.String("test"), Username: aws.String("first")},
 			},
-			Updates: []*mq.UpdateUserRequest{
+			Updates: []*mq.UpdateUserInput{
 				{
-					BrokerId:      aws.String("test"),
-					ConsoleAccess: aws.Bool(false),
-					Username:      aws.String("second"),
-					Password:      aws.String("TestTest2222"),
-					Groups:        aws.StringSlice([]string{"admin"}),
+					BrokerId:        aws.String("test"),
+					ConsoleAccess:   aws.Bool(false),
+					Username:        aws.String("second"),
+					Password:        aws.String("TestTest2222"),
+					Groups:          []string{"admin"},
+					ReplicationUser: aws.Bool(false),
 				},
 			},
 		},
@@ -206,30 +223,27 @@ func TestDiffUsers(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		expectedCreations := fmt.Sprintf("%s", tc.Creations)
-		creationsString := fmt.Sprintf("%s", creations)
-		if creationsString != expectedCreations {
-			t.Fatalf("Expected creations: %s\nGiven: %s", expectedCreations, creationsString)
+		var got, want any = creations, tc.Creations
+		if diff := cmp.Diff(got, want, cmpopts.IgnoreUnexported(mq.CreateUserInput{})); diff != "" {
+			t.Fatalf("unexpected CreateUserInput diff (+wanted, -got): %s", diff)
 		}
 
-		expectedDeletions := fmt.Sprintf("%s", tc.Deletions)
-		deletionsString := fmt.Sprintf("%s", deletions)
-		if deletionsString != expectedDeletions {
-			t.Fatalf("Expected deletions: %s\nGiven: %s", expectedDeletions, deletionsString)
+		got, want = deletions, tc.Deletions
+		if diff := cmp.Diff(got, want, cmpopts.IgnoreUnexported(mq.DeleteUserInput{})); diff != "" {
+			t.Fatalf("unexpected DeleteUserInput diff (+wanted, -got): %s", diff)
 		}
 
-		expectedUpdates := fmt.Sprintf("%s", tc.Updates)
-		updatesString := fmt.Sprintf("%s", updates)
-		if updatesString != expectedUpdates {
-			t.Fatalf("Expected updates: %s\nGiven: %s", expectedUpdates, updatesString)
+		got, want = updates, tc.Updates
+		if diff := cmp.Diff(got, want, cmpopts.IgnoreUnexported(mq.UpdateUserInput{})); diff != "" {
+			t.Fatalf("unexpected UpdateUserInput diff (+wanted, -got): %s", diff)
 		}
 	}
 }
 
 const (
-	testAccBrokerVersionNewer = "5.16.3"  // before changing, check b/c must be valid on GovCloud
-	testAccBrokerVersionOlder = "5.15.12" // before changing, check b/c must be valid on GovCloud
-	testAccRabbitVersion      = "3.8.6"   // before changing, check b/c must be valid on GovCloud
+	testAccBrokerVersionNewer = "5.17.6"  // before changing, check b/c must be valid on GovCloud
+	testAccBrokerVersionOlder = "5.16.7"  // before changing, check b/c must be valid on GovCloud
+	testAccRabbitVersion      = "3.11.20" // before changing, check b/c must be valid on GovCloud
 )
 
 func TestAccMQBroker_basic(t *testing.T) {
@@ -238,17 +252,17 @@ func TestAccMQBroker_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var broker mq.DescribeBrokerResponse
+	var broker mq.DescribeBrokerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -256,13 +270,13 @@ func TestAccMQBroker_basic(t *testing.T) {
 				Config: testAccBrokerConfig_basic(rName, testAccBrokerVersionNewer),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`broker:+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexache.MustCompile(`broker:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
 					resource.TestCheckResourceAttr(resourceName, "authentication_strategy", "simple"),
 					resource.TestCheckResourceAttr(resourceName, "broker_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
-					resource.TestMatchResourceAttr(resourceName, "configuration.0.id", regexp.MustCompile(`^c-[a-z0-9-]+$`)),
-					resource.TestMatchResourceAttr(resourceName, "configuration.0.revision", regexp.MustCompile(`^[0-9]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "configuration.0.id", regexache.MustCompile(`^c-[0-9a-z-]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "configuration.0.revision", regexache.MustCompile(`^[0-9]+$`)),
 					resource.TestCheckResourceAttr(resourceName, "deployment_mode", "SINGLE_INSTANCE"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_options.0.use_aws_owned_key", "true"),
@@ -271,15 +285,15 @@ func TestAccMQBroker_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "host_instance_type", "mq.t2.micro"),
 					resource.TestCheckResourceAttr(resourceName, "instances.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "instances.0.console_url",
-						regexp.MustCompile(`^https://[a-f0-9-]+\.mq.[a-z0-9-]+.amazonaws.com:8162$`)),
+						regexache.MustCompile(`^https://[0-9a-f-]+\.mq.[0-9a-z-]+.amazonaws.com:8162$`)),
 					resource.TestCheckResourceAttr(resourceName, "instances.0.endpoints.#", "5"),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.0", regexp.MustCompile(`^ssl://[a-z0-9-\.]+:61617$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.1", regexp.MustCompile(`^amqp\+ssl://[a-z0-9-\.]+:5671$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.2", regexp.MustCompile(`^stomp\+ssl://[a-z0-9-\.]+:61614$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.3", regexp.MustCompile(`^mqtt\+ssl://[a-z0-9-\.]+:8883$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.4", regexp.MustCompile(`^wss://[a-z0-9-\.]+:61619$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.0", regexache.MustCompile(`^ssl://[0-9a-z.-]+:61617$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.1", regexache.MustCompile(`^amqp\+ssl://[0-9a-z.-]+:5671$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.2", regexache.MustCompile(`^stomp\+ssl://[0-9a-z.-]+:61614$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.3", regexache.MustCompile(`^mqtt\+ssl://[0-9a-z.-]+:8883$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.4", regexache.MustCompile(`^wss://[0-9a-z.-]+:61619$`)),
 					resource.TestMatchResourceAttr(resourceName, "instances.0.ip_address",
-						regexp.MustCompile(`^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$`)),
+						regexache.MustCompile(`^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$`)),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_window_start_time.#", "1"),
 					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.day_of_week"),
 					resource.TestCheckResourceAttrSet(resourceName, "maintenance_window_start_time.0.time_of_day"),
@@ -317,17 +331,17 @@ func TestAccMQBroker_disappears(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var broker mq.DescribeBrokerResponse
+	var broker mq.DescribeBrokerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -349,17 +363,17 @@ func TestAccMQBroker_tags(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var broker mq.DescribeBrokerResponse
+	var broker mq.DescribeBrokerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -404,17 +418,17 @@ func TestAccMQBroker_throughputOptimized(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var broker mq.DescribeBrokerResponse
+	var broker mq.DescribeBrokerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -425,8 +439,8 @@ func TestAccMQBroker_throughputOptimized(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "false"),
 					resource.TestCheckResourceAttr(resourceName, "broker_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
-					resource.TestMatchResourceAttr(resourceName, "configuration.0.id", regexp.MustCompile(`^c-[a-z0-9-]+$`)),
-					resource.TestMatchResourceAttr(resourceName, "configuration.0.revision", regexp.MustCompile(`^[0-9]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "configuration.0.id", regexache.MustCompile(`^c-[0-9a-z-]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "configuration.0.revision", regexache.MustCompile(`^[0-9]+$`)),
 					resource.TestCheckResourceAttr(resourceName, "deployment_mode", "SINGLE_INSTANCE"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_options.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "encryption_options.0.use_aws_owned_key", "true"),
@@ -451,18 +465,18 @@ func TestAccMQBroker_throughputOptimized(t *testing.T) {
 						"username":       "Test",
 						"password":       "TestTest1234",
 					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`broker:+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexache.MustCompile(`broker:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "instances.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "instances.0.console_url",
-						regexp.MustCompile(`^https://[a-f0-9-]+\.mq.[a-z0-9-]+.amazonaws.com:8162$`)),
+						regexache.MustCompile(`^https://[0-9a-f-]+\.mq.[0-9a-z-]+.amazonaws.com:8162$`)),
 					resource.TestMatchResourceAttr(resourceName, "instances.0.ip_address",
-						regexp.MustCompile(`^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$`)),
+						regexache.MustCompile(`^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$`)),
 					resource.TestCheckResourceAttr(resourceName, "instances.0.endpoints.#", "5"),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.0", regexp.MustCompile(`^ssl://[a-z0-9-\.]+:61617$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.1", regexp.MustCompile(`^amqp\+ssl://[a-z0-9-\.]+:5671$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.2", regexp.MustCompile(`^stomp\+ssl://[a-z0-9-\.]+:61614$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.3", regexp.MustCompile(`^mqtt\+ssl://[a-z0-9-\.]+:8883$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.4", regexp.MustCompile(`^wss://[a-z0-9-\.]+:61619$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.0", regexache.MustCompile(`^ssl://[0-9a-z.-]+:61617$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.1", regexache.MustCompile(`^amqp\+ssl://[0-9a-z.-]+:5671$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.2", regexache.MustCompile(`^stomp\+ssl://[0-9a-z.-]+:61614$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.3", regexache.MustCompile(`^mqtt\+ssl://[0-9a-z.-]+:8883$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.4", regexache.MustCompile(`^wss://[0-9a-z.-]+:61619$`)),
 				),
 			},
 		},
@@ -475,7 +489,7 @@ func TestAccMQBroker_AllFields_defaultVPC(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var broker mq.DescribeBrokerResponse
+	var broker mq.DescribeBrokerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameUpdated := sdkacctest.RandomWithPrefix("tf-acc-test-updated")
 	resourceName := "aws_mq_broker.test"
@@ -495,10 +509,10 @@ func TestAccMQBroker_AllFields_defaultVPC(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -509,7 +523,7 @@ func TestAccMQBroker_AllFields_defaultVPC(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
 					resource.TestCheckResourceAttr(resourceName, "broker_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
-					resource.TestMatchResourceAttr(resourceName, "configuration.0.id", regexp.MustCompile(`^c-[a-z0-9-]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "configuration.0.id", regexache.MustCompile(`^c-[0-9a-z-]+$`)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.revision", "2"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_mode", "ACTIVE_STANDBY_MULTI_AZ"),
 					resource.TestCheckResourceAttr(resourceName, "engine_type", "ActiveMQ"),
@@ -523,7 +537,7 @@ func TestAccMQBroker_AllFields_defaultVPC(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "logs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logs.0.general", "false"),
 					resource.TestCheckResourceAttr(resourceName, "logs.0.audit", "false"),
-					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "true"),
+					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "2"),
 					resource.TestCheckResourceAttr(resourceName, "user.#", "2"),
@@ -542,28 +556,28 @@ func TestAccMQBroker_AllFields_defaultVPC(t *testing.T) {
 						"username":       "Test",
 						"password":       "TestTest1234",
 					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`broker:+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexache.MustCompile(`broker:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "instances.#", "2"),
 					resource.TestMatchResourceAttr(resourceName, "instances.0.console_url",
-						regexp.MustCompile(`^https://[a-f0-9-]+\.mq.[a-z0-9-]+.amazonaws.com:8162$`)),
+						regexache.MustCompile(`^https://[0-9a-f-]+\.mq.[0-9a-z-]+.amazonaws.com:8162$`)),
 					resource.TestMatchResourceAttr(resourceName, "instances.0.ip_address",
-						regexp.MustCompile(`^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$`)),
+						regexache.MustCompile(`^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$`)),
 					resource.TestCheckResourceAttr(resourceName, "instances.0.endpoints.#", "5"),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.0", regexp.MustCompile(`^ssl://[a-z0-9-\.]+:61617$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.1", regexp.MustCompile(`^amqp\+ssl://[a-z0-9-\.]+:5671$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.2", regexp.MustCompile(`^stomp\+ssl://[a-z0-9-\.]+:61614$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.3", regexp.MustCompile(`^mqtt\+ssl://[a-z0-9-\.]+:8883$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.4", regexp.MustCompile(`^wss://[a-z0-9-\.]+:61619$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.0", regexache.MustCompile(`^ssl://[0-9a-z.-]+:61617$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.1", regexache.MustCompile(`^amqp\+ssl://[0-9a-z.-]+:5671$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.2", regexache.MustCompile(`^stomp\+ssl://[0-9a-z.-]+:61614$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.3", regexache.MustCompile(`^mqtt\+ssl://[0-9a-z.-]+:8883$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.4", regexache.MustCompile(`^wss://[0-9a-z.-]+:61619$`)),
 					resource.TestMatchResourceAttr(resourceName, "instances.1.console_url",
-						regexp.MustCompile(`^https://[a-f0-9-]+\.mq.[a-z0-9-]+.amazonaws.com:8162$`)),
+						regexache.MustCompile(`^https://[0-9a-f-]+\.mq.[0-9a-z-]+.amazonaws.com:8162$`)),
 					resource.TestMatchResourceAttr(resourceName, "instances.1.ip_address",
-						regexp.MustCompile(`^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$`)),
+						regexache.MustCompile(`^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$`)),
 					resource.TestCheckResourceAttr(resourceName, "instances.1.endpoints.#", "5"),
-					resource.TestMatchResourceAttr(resourceName, "instances.1.endpoints.0", regexp.MustCompile(`^ssl://[a-z0-9-\.]+:61617$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.1.endpoints.1", regexp.MustCompile(`^amqp\+ssl://[a-z0-9-\.]+:5671$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.1.endpoints.2", regexp.MustCompile(`^stomp\+ssl://[a-z0-9-\.]+:61614$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.1.endpoints.3", regexp.MustCompile(`^mqtt\+ssl://[a-z0-9-\.]+:8883$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.1.endpoints.4", regexp.MustCompile(`^wss://[a-z0-9-\.]+:61619$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.1.endpoints.0", regexache.MustCompile(`^ssl://[0-9a-z.-]+:61617$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.1.endpoints.1", regexache.MustCompile(`^amqp\+ssl://[0-9a-z.-]+:5671$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.1.endpoints.2", regexache.MustCompile(`^stomp\+ssl://[0-9a-z.-]+:61614$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.1.endpoints.3", regexache.MustCompile(`^mqtt\+ssl://[0-9a-z.-]+:8883$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.1.endpoints.4", regexache.MustCompile(`^wss://[0-9a-z.-]+:61619$`)),
 				),
 			},
 			{
@@ -579,7 +593,7 @@ func TestAccMQBroker_AllFields_defaultVPC(t *testing.T) {
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "broker_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
-					resource.TestMatchResourceAttr(resourceName, "configuration.0.id", regexp.MustCompile(`^c-[a-z0-9-]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "configuration.0.id", regexache.MustCompile(`^c-[0-9a-z-]+$`)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.revision", "3"),
 				),
 			},
@@ -590,7 +604,7 @@ func TestAccMQBroker_AllFields_defaultVPC(t *testing.T) {
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "broker_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
-					resource.TestMatchResourceAttr(resourceName, "configuration.0.id", regexp.MustCompile(`^c-[a-z0-9-]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "configuration.0.id", regexache.MustCompile(`^c-[0-9a-z-]+$`)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.revision", "2"),
 				),
 			},
@@ -604,7 +618,7 @@ func TestAccMQBroker_AllFields_customVPC(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var broker mq.DescribeBrokerResponse
+	var broker mq.DescribeBrokerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rNameUpdated := sdkacctest.RandomWithPrefix("tf-acc-test-updated")
 	resourceName := "aws_mq_broker.test"
@@ -624,10 +638,10 @@ func TestAccMQBroker_AllFields_customVPC(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -638,7 +652,7 @@ func TestAccMQBroker_AllFields_customVPC(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "auto_minor_version_upgrade", "true"),
 					resource.TestCheckResourceAttr(resourceName, "broker_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
-					resource.TestMatchResourceAttr(resourceName, "configuration.0.id", regexp.MustCompile(`^c-[a-z0-9-]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "configuration.0.id", regexache.MustCompile(`^c-[0-9a-z-]+$`)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.revision", "2"),
 					resource.TestCheckResourceAttr(resourceName, "deployment_mode", "ACTIVE_STANDBY_MULTI_AZ"),
 					resource.TestCheckResourceAttr(resourceName, "engine_type", "ActiveMQ"),
@@ -671,28 +685,28 @@ func TestAccMQBroker_AllFields_customVPC(t *testing.T) {
 						"username":       "Test",
 						"password":       "TestTest1234",
 					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`broker:+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexache.MustCompile(`broker:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "instances.#", "2"),
 					resource.TestMatchResourceAttr(resourceName, "instances.0.console_url",
-						regexp.MustCompile(`^https://[a-f0-9-]+\.mq.[a-z0-9-]+.amazonaws.com:8162$`)),
+						regexache.MustCompile(`^https://[0-9a-f-]+\.mq.[0-9a-z-]+.amazonaws.com:8162$`)),
 					resource.TestMatchResourceAttr(resourceName, "instances.0.ip_address",
-						regexp.MustCompile(`^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$`)),
+						regexache.MustCompile(`^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$`)),
 					resource.TestCheckResourceAttr(resourceName, "instances.0.endpoints.#", "5"),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.0", regexp.MustCompile(`^ssl://[a-z0-9-\.]+:61617$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.1", regexp.MustCompile(`^amqp\+ssl://[a-z0-9-\.]+:5671$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.2", regexp.MustCompile(`^stomp\+ssl://[a-z0-9-\.]+:61614$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.3", regexp.MustCompile(`^mqtt\+ssl://[a-z0-9-\.]+:8883$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.4", regexp.MustCompile(`^wss://[a-z0-9-\.]+:61619$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.0", regexache.MustCompile(`^ssl://[0-9a-z.-]+:61617$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.1", regexache.MustCompile(`^amqp\+ssl://[0-9a-z.-]+:5671$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.2", regexache.MustCompile(`^stomp\+ssl://[0-9a-z.-]+:61614$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.3", regexache.MustCompile(`^mqtt\+ssl://[0-9a-z.-]+:8883$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.4", regexache.MustCompile(`^wss://[0-9a-z.-]+:61619$`)),
 					resource.TestMatchResourceAttr(resourceName, "instances.1.console_url",
-						regexp.MustCompile(`^https://[a-f0-9-]+\.mq.[a-z0-9-]+.amazonaws.com:8162$`)),
+						regexache.MustCompile(`^https://[0-9a-f-]+\.mq.[0-9a-z-]+.amazonaws.com:8162$`)),
 					resource.TestMatchResourceAttr(resourceName, "instances.1.ip_address",
-						regexp.MustCompile(`^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$`)),
+						regexache.MustCompile(`^\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}$`)),
 					resource.TestCheckResourceAttr(resourceName, "instances.1.endpoints.#", "5"),
-					resource.TestMatchResourceAttr(resourceName, "instances.1.endpoints.0", regexp.MustCompile(`^ssl://[a-z0-9-\.]+:61617$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.1.endpoints.1", regexp.MustCompile(`^amqp\+ssl://[a-z0-9-\.]+:5671$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.1.endpoints.2", regexp.MustCompile(`^stomp\+ssl://[a-z0-9-\.]+:61614$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.1.endpoints.3", regexp.MustCompile(`^mqtt\+ssl://[a-z0-9-\.]+:8883$`)),
-					resource.TestMatchResourceAttr(resourceName, "instances.1.endpoints.4", regexp.MustCompile(`^wss://[a-z0-9-\.]+:61619$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.1.endpoints.0", regexache.MustCompile(`^ssl://[0-9a-z.-]+:61617$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.1.endpoints.1", regexache.MustCompile(`^amqp\+ssl://[0-9a-z.-]+:5671$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.1.endpoints.2", regexache.MustCompile(`^stomp\+ssl://[0-9a-z.-]+:61614$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.1.endpoints.3", regexache.MustCompile(`^mqtt\+ssl://[0-9a-z.-]+:8883$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.1.endpoints.4", regexache.MustCompile(`^wss://[0-9a-z.-]+:61619$`)),
 				),
 			},
 			{
@@ -708,7 +722,7 @@ func TestAccMQBroker_AllFields_customVPC(t *testing.T) {
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "broker_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
-					resource.TestMatchResourceAttr(resourceName, "configuration.0.id", regexp.MustCompile(`^c-[a-z0-9-]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "configuration.0.id", regexache.MustCompile(`^c-[0-9a-z-]+$`)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.revision", "3"),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_window_start_time.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "maintenance_window_start_time.0.day_of_week", "TUESDAY"),
@@ -723,7 +737,7 @@ func TestAccMQBroker_AllFields_customVPC(t *testing.T) {
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
 					resource.TestCheckResourceAttr(resourceName, "broker_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
-					resource.TestMatchResourceAttr(resourceName, "configuration.0.id", regexp.MustCompile(`^c-[a-z0-9-]+$`)),
+					resource.TestMatchResourceAttr(resourceName, "configuration.0.id", regexache.MustCompile(`^c-[0-9a-z-]+$`)),
 					resource.TestCheckResourceAttr(resourceName, "configuration.0.revision", "2"),
 				),
 			},
@@ -737,7 +751,7 @@ func TestAccMQBroker_EncryptionOptions_kmsKeyID(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var broker mq.DescribeBrokerResponse
+	var broker mq.DescribeBrokerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	kmsKeyResourceName := "aws_kms_key.test"
 	resourceName := "aws_mq_broker.test"
@@ -745,10 +759,10 @@ func TestAccMQBroker_EncryptionOptions_kmsKeyID(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -777,17 +791,17 @@ func TestAccMQBroker_EncryptionOptions_managedKeyDisabled(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var broker mq.DescribeBrokerResponse
+	var broker mq.DescribeBrokerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -815,17 +829,17 @@ func TestAccMQBroker_EncryptionOptions_managedKeyEnabled(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var broker mq.DescribeBrokerResponse
+	var broker mq.DescribeBrokerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -853,17 +867,17 @@ func TestAccMQBroker_Update_users(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var broker mq.DescribeBrokerResponse
+	var broker mq.DescribeBrokerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -931,17 +945,17 @@ func TestAccMQBroker_Update_securityGroup(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var broker mq.DescribeBrokerResponse
+	var broker mq.DescribeBrokerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -989,17 +1003,17 @@ func TestAccMQBroker_Update_engineVersion(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var broker mq.DescribeBrokerResponse
+	var broker mq.DescribeBrokerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1033,17 +1047,17 @@ func TestAccMQBroker_Update_hostInstanceType(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var broker1, broker2 mq.DescribeBrokerResponse
+	var broker1, broker2 mq.DescribeBrokerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1072,17 +1086,17 @@ func TestAccMQBroker_RabbitMQ_basic(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var broker mq.DescribeBrokerResponse
+	var broker mq.DescribeBrokerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1090,13 +1104,61 @@ func TestAccMQBroker_RabbitMQ_basic(t *testing.T) {
 				Config: testAccBrokerConfig_rabbit(rName, testAccRabbitVersion),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "engine_type", "RabbitMQ"),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", testAccRabbitVersion),
 					resource.TestCheckResourceAttr(resourceName, "host_instance_type", "mq.t3.micro"),
 					resource.TestCheckResourceAttr(resourceName, "instances.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "instances.0.endpoints.#", "1"),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.0", regexp.MustCompile(`^amqps://[a-z0-9-\.]+:5671$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.0", regexache.MustCompile(`^amqps://[0-9a-z.-]+:5671$`)),
+					resource.TestCheckResourceAttr(resourceName, "logs.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "logs.0.general", "false"),
+					resource.TestCheckResourceAttr(resourceName, "logs.0.audit", ""),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+			},
+		},
+	})
+}
+
+func TestAccMQBroker_RabbitMQ_config(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var broker mq.DescribeBrokerOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_mq_broker.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBrokerConfig_rabbitConfig(rName, testAccRabbitVersion),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBrokerExists(ctx, resourceName, &broker),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
+					resource.TestMatchResourceAttr(resourceName, "configuration.0.id", regexache.MustCompile(`^c-[0-9a-z-]+$`)),
+					resource.TestCheckResourceAttr(resourceName, "configuration.0.revision", "2"),
+					resource.TestCheckResourceAttr(resourceName, "engine_type", "RabbitMQ"),
+					resource.TestCheckResourceAttr(resourceName, "engine_version", testAccRabbitVersion),
+					resource.TestCheckResourceAttr(resourceName, "host_instance_type", "mq.t3.micro"),
+					resource.TestCheckResourceAttr(resourceName, "instances.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "instances.0.endpoints.#", "1"),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.0", regexache.MustCompile(`^amqps://[0-9a-z.-]+:5671$`)),
 					resource.TestCheckResourceAttr(resourceName, "logs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logs.0.general", "false"),
 					resource.TestCheckResourceAttr(resourceName, "logs.0.audit", ""),
@@ -1118,17 +1180,17 @@ func TestAccMQBroker_RabbitMQ_logs(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var broker mq.DescribeBrokerResponse
+	var broker mq.DescribeBrokerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1136,13 +1198,13 @@ func TestAccMQBroker_RabbitMQ_logs(t *testing.T) {
 				Config: testAccBrokerConfig_rabbitLogs(rName, testAccRabbitVersion),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBrokerExists(ctx, resourceName, &broker),
-					resource.TestCheckResourceAttr(resourceName, "configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "engine_type", "RabbitMQ"),
 					resource.TestCheckResourceAttr(resourceName, "engine_version", testAccRabbitVersion),
 					resource.TestCheckResourceAttr(resourceName, "host_instance_type", "mq.t3.micro"),
 					resource.TestCheckResourceAttr(resourceName, "instances.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "instances.0.endpoints.#", "1"),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.0", regexp.MustCompile(`^amqps://[a-z0-9-\.]+:5671$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.0", regexache.MustCompile(`^amqps://[0-9a-z.-]+:5671$`)),
 					resource.TestCheckResourceAttr(resourceName, "logs.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "logs.0.general", "true"),
 					resource.TestCheckResourceAttr(resourceName, "logs.0.audit", ""),
@@ -1164,23 +1226,23 @@ func TestAccMQBroker_RabbitMQ_validationAuditLog(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var broker mq.DescribeBrokerResponse
+	var broker mq.DescribeBrokerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config:      testAccBrokerConfig_rabbitAuditLog(rName, testAccRabbitVersion, true),
-				ExpectError: regexp.MustCompile(`logs.audit: Can not be configured when engine is RabbitMQ`),
+				ExpectError: regexache.MustCompile(`logs.audit: Can not be configured when engine is RabbitMQ`),
 			},
 			{
 				// Special case: allow explicitly setting logs.0.audit to false,
@@ -1203,17 +1265,17 @@ func TestAccMQBroker_RabbitMQ_cluster(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var broker mq.DescribeBrokerResponse
+	var broker mq.DescribeBrokerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1238,7 +1300,7 @@ func TestAccMQBroker_RabbitMQ_cluster(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "maintenance_window_start_time.0.time_zone", "UTC"),
 					resource.TestCheckResourceAttr(resourceName, "publicly_accessible", "false"),
 					resource.TestCheckResourceAttr(resourceName, "security_groups.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "subnet_ids.#", "4"),
+					resource.TestCheckResourceAttrPair(resourceName, "subnet_ids.#", "data.aws_subnets.default", "ids.#"),
 					resource.TestCheckResourceAttr(resourceName, "user.#", "1"),
 					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "user.*", map[string]string{
 						"console_access": "false",
@@ -1246,12 +1308,12 @@ func TestAccMQBroker_RabbitMQ_cluster(t *testing.T) {
 						"username":       "Test",
 						"password":       "TestTest1234",
 					}),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexp.MustCompile(`broker:+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "mq", regexache.MustCompile(`broker:+.`)),
 					resource.TestCheckResourceAttr(resourceName, "instances.#", "1"),
 					resource.TestMatchResourceAttr(resourceName, "instances.0.console_url",
-						regexp.MustCompile(`^https://[a-f0-9-]+\.mq.[a-z0-9-]+.amazonaws.com$`)),
+						regexache.MustCompile(`^https://[0-9a-f-]+\.mq.[0-9a-z-]+.amazonaws.com$`)),
 					resource.TestCheckResourceAttr(resourceName, "instances.0.endpoints.#", "1"),
-					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.0", regexp.MustCompile(`^amqps://[a-z0-9-\.]+:5671$`)),
+					resource.TestMatchResourceAttr(resourceName, "instances.0.endpoints.0", regexache.MustCompile(`^amqps://[0-9a-z.-]+:5671$`)),
 				),
 			},
 			{
@@ -1270,17 +1332,17 @@ func TestAccMQBroker_ldap(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var broker mq.DescribeBrokerResponse
+	var broker mq.DescribeBrokerOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_mq_broker.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, mq.EndpointsID)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, mq.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -1309,9 +1371,75 @@ func TestAccMQBroker_ldap(t *testing.T) {
 	})
 }
 
+func TestAccMQBroker_dataReplicationMode(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var broker mq.DescribeBrokerOutput
+	var brokerAlternate mq.DescribeBrokerOutput
+	var providers []*schema.Provider
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_mq_broker.test"
+	primaryBrokerResourceName := "aws_mq_broker.primary"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckMultipleRegion(t, 2)
+			acctest.PreCheckPartitionHasService(t, names.MQEndpointID)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.MQServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesPlusProvidersAlternate(ctx, t, &providers),
+		CheckDestroy:             testAccCheckBrokerDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccBrokerConfig_dataReplicationMode(rName, testAccBrokerVersionNewer, string(types.DataReplicationModeCrdr)),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckBrokerExists(ctx, resourceName, &broker),
+					testAccCheckBrokerExistsWithProvider(ctx, primaryBrokerResourceName, &brokerAlternate, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers)),
+					resource.TestCheckResourceAttr(resourceName, "broker_name", rName),
+					resource.TestCheckResourceAttr(resourceName, "deployment_mode", string(types.DeploymentModeActiveStandbyMultiAz)),
+					// data_replication_mode is not returned until after reboot
+					resource.TestCheckResourceAttr(resourceName, "data_replication_mode", ""),
+					resource.TestCheckResourceAttr(resourceName, "pending_data_replication_mode", string(types.DataReplicationModeCrdr)),
+					resource.TestCheckResourceAttrPair(resourceName, "data_replication_primary_broker_arn", primaryBrokerResourceName, "arn"),
+				),
+			},
+			{
+				Config:                  testAccBrokerConfig_dataReplicationMode(rName, testAccBrokerVersionNewer, string(types.DataReplicationModeCrdr)),
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"apply_immediately", "user", "data_replication_primary_broker_arn"},
+			},
+			{
+				// Preparation for destruction would require multiple configuration changes
+				// and applies to unpair brokers. Instead, complete the necessary update, reboot,
+				// and delete opreations on the primary cluster out-of-band to ensure remaining
+				// resources will be freed for clean up.
+				PreConfig: func() {
+					// In order to delete, replicated brokers must first be unpaired by setting
+					// data replication mode on the primary broker to "NONE".
+					testAccUnpairBrokerWithProvider(ctx, t, &brokerAlternate, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers))
+					// The primary broker must be deleted before replica broker. The direct
+					// dependency in the Terraform configuration would cause this to happen
+					// in the opposite order, so delete the primary out of band instead.
+					testAccDeleteBrokerWithProvider(ctx, t, &brokerAlternate, acctest.RegionProviderFunc(acctest.AlternateRegion(), &providers))
+				},
+				Config:             testAccBrokerConfig_dataReplicationMode(rName, testAccBrokerVersionNewer, string(types.DataReplicationModeNone)),
+				PlanOnly:           true,
+				ExpectNonEmptyPlan: true,
+			},
+		},
+	})
+}
+
 func testAccCheckBrokerDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MQConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MQClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_mq_broker" {
@@ -1335,18 +1463,35 @@ func testAccCheckBrokerDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckBrokerExists(ctx context.Context, n string, v *mq.DescribeBrokerResponse) resource.TestCheckFunc {
+func testAccCheckBrokerExists(ctx context.Context, n string, v *mq.DescribeBrokerOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No MQ Broker ID is set")
+		conn := acctest.Provider.Meta().(*conns.AWSClient).MQClient(ctx)
+
+		output, err := tfmq.FindBrokerByID(ctx, conn, rs.Primary.ID)
+
+		if err != nil {
+			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).MQConn(ctx)
+		*v = *output
+
+		return nil
+	}
+}
+
+func testAccCheckBrokerExistsWithProvider(ctx context.Context, n string, v *mq.DescribeBrokerOutput, providerF func() *schema.Provider) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		rs, ok := s.RootModule().Resources[n]
+		if !ok {
+			return fmt.Errorf("Not found: %s", n)
+		}
+
+		conn := providerF().Meta().(*conns.AWSClient).MQClient(ctx)
 
 		output, err := tfmq.FindBrokerByID(ctx, conn, rs.Primary.ID)
 
@@ -1361,11 +1506,11 @@ func testAccCheckBrokerExists(ctx context.Context, n string, v *mq.DescribeBroke
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).MQConn(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).MQClient(ctx)
 
 	input := &mq.ListBrokersInput{}
 
-	_, err := conn.ListBrokersWithContext(ctx, input)
+	_, err := conn.ListBrokers(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)
@@ -1376,9 +1521,49 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccCheckBrokerNotRecreated(before, after *mq.DescribeBrokerResponse) resource.TestCheckFunc {
+func testAccUnpairBrokerWithProvider(ctx context.Context, t *testing.T, broker *mq.DescribeBrokerOutput, providerF func() *schema.Provider) {
+	brokerID := aws.ToString(broker.BrokerId)
+	deadline := tfresource.NewDeadline(30 * time.Minute)
+	conn := providerF().Meta().(*conns.AWSClient).MQClient(ctx)
+
+	_, err := conn.UpdateBroker(ctx, &mq.UpdateBrokerInput{
+		BrokerId:            aws.String(brokerID),
+		DataReplicationMode: types.DataReplicationModeNone,
+	})
+	if err != nil {
+		t.Fatalf("updating broker (%s): %s", brokerID, err)
+	}
+
+	_, err = conn.RebootBroker(ctx, &mq.RebootBrokerInput{BrokerId: aws.String(brokerID)})
+	if err != nil {
+		t.Fatalf("rebooting broker (%s): %s", brokerID, err)
+	}
+
+	_, err = tfmq.WaitBrokerRebooted(ctx, conn, brokerID, deadline.Remaining())
+	if err != nil {
+		t.Fatalf("waiting for broker (%s) reboot: %s", brokerID, err)
+	}
+}
+
+func testAccDeleteBrokerWithProvider(ctx context.Context, t *testing.T, broker *mq.DescribeBrokerOutput, providerF func() *schema.Provider) {
+	brokerID := aws.ToString(broker.BrokerId)
+	deadline := tfresource.NewDeadline(30 * time.Minute)
+	conn := providerF().Meta().(*conns.AWSClient).MQClient(ctx)
+
+	_, err := conn.DeleteBroker(ctx, &mq.DeleteBrokerInput{BrokerId: aws.String(brokerID)})
+	if err != nil {
+		t.Fatalf("deleting broker (%s): %s", brokerID, err)
+	}
+
+	_, err = tfmq.WaitBrokerDeleted(ctx, conn, brokerID, deadline.Remaining())
+	if err != nil {
+		t.Fatalf("waiting for broker (%s) deletion: %s", brokerID, err)
+	}
+}
+
+func testAccCheckBrokerNotRecreated(before, after *mq.DescribeBrokerOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if before, after := aws.StringValue(before.BrokerId), aws.StringValue(after.BrokerId); before != after {
+		if before, after := aws.ToString(before.BrokerId), aws.ToString(after.BrokerId); before != after {
 			return fmt.Errorf("MQ Broker (%s/%s) recreated", before, after)
 		}
 
@@ -1521,7 +1706,7 @@ resource "aws_mq_broker" "test" {
     time_zone   = "CET"
   }
 
-  publicly_accessible = true
+  publicly_accessible = false
   security_groups     = aws_security_group.test[*].id
 
   user {
@@ -1539,7 +1724,7 @@ resource "aws_mq_broker" "test" {
 `, rName, version, cfgName, cfgBody)
 }
 
-func testAccBrokerConfig_allFieldsCustomVPC(rName, version, cfgName, cfgBody, tz string) string {
+func testAccBrokerConfig_baseCustomVPC(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_internet_gateway" "test" {
   vpc_id = aws_vpc.test.id
@@ -1579,7 +1764,11 @@ resource "aws_security_group" "test" {
     Name = %[1]q
   }
 }
+`, rName))
+}
 
+func testAccBrokerConfig_allFieldsCustomVPC(rName, version, cfgName, cfgBody, tz string) string {
+	return acctest.ConfigCompose(testAccBrokerConfig_baseCustomVPC(rName), fmt.Sprintf(`
 resource "aws_mq_configuration" "test" {
   name           = %[3]q
   engine_type    = "ActiveMQ"
@@ -1957,6 +2146,49 @@ resource "aws_mq_broker" "test" {
 `, rName, version)
 }
 
+func testAccBrokerConfig_rabbitConfig(rName, version string) string {
+	return fmt.Sprintf(`
+resource "aws_security_group" "test" {
+  name = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_mq_configuration" "test" {
+  description    = "TfAccTest MQ Configuration"
+  name           = %[1]q
+  engine_type    = "RabbitMQ"
+  engine_version = %[2]q
+
+  data = <<DATA
+  # Default RabbitMQ delivery acknowledgement timeout is 30 minutes
+  consumer_timeout = 1800000
+  
+  DATA
+}
+
+resource "aws_mq_broker" "test" {
+  broker_name        = %[1]q
+  engine_type        = "RabbitMQ"
+  engine_version     = %[2]q
+  host_instance_type = "mq.t3.micro"
+  security_groups    = [aws_security_group.test.id]
+
+  configuration {
+    id       = aws_mq_configuration.test.id
+    revision = aws_mq_configuration.test.latest_revision
+  }
+
+  user {
+    username = "Test"
+    password = "TestTest1234"
+  }
+}
+`, rName, version)
+}
+
 func testAccBrokerConfig_rabbitLogs(rName, version string) string {
 	return fmt.Sprintf(`
 resource "aws_mq_broker" "test" {
@@ -2040,6 +2272,17 @@ resource "aws_mq_broker" "test" {
     password = "TestTest1234"
   }
 }
+
+data "aws_subnets" "default" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.default.id]
+  }
+}
+
+data "aws_vpc" "default" {
+  default = true
+}
 `, rName, version)
 }
 
@@ -2116,4 +2359,83 @@ resource "aws_mq_broker" "test" {
   }
 }
 `, rName, version, instanceType)
+}
+
+// testAccBrokerConfig_dataReplicationMode creates a primary and replica broker
+// in different regions, linking the former using the data replication arguments
+func testAccBrokerConfig_dataReplicationMode(rName, version, dataReplicationMode string) string {
+	return acctest.ConfigCompose(
+		acctest.ConfigMultipleRegionProvider(2),
+		fmt.Sprintf(`
+resource "aws_security_group" "primary" {
+  provider = awsalternate
+
+  name = "%[1]s-primary"
+
+  tags = {
+    Name = "%[1]s-primary"
+  }
+}
+
+resource "aws_mq_broker" "primary" {
+  provider = awsalternate
+
+  apply_immediately  = true
+  broker_name        = "%[1]s-primary"
+  engine_type        = "ActiveMQ"
+  engine_version     = %[2]q
+  host_instance_type = "mq.m5.large"
+  security_groups    = [aws_security_group.primary.id]
+  deployment_mode    = "ACTIVE_STANDBY_MULTI_AZ"
+
+  logs {
+    general = true
+  }
+
+  user {
+    username = "Test"
+    password = "TestTest1234"
+  }
+  user {
+    username         = "Test-ReplicationUser"
+    password         = "TestTest1234"
+    replication_user = true
+  }
+}
+
+resource "aws_security_group" "test" {
+  name = %[1]q
+
+  tags = {
+    Name = %[1]q
+  }
+}
+
+resource "aws_mq_broker" "test" {
+  apply_immediately  = true
+  broker_name        = %[1]q
+  engine_type        = "ActiveMQ"
+  engine_version     = %[2]q
+  host_instance_type = "mq.m5.large"
+  security_groups    = [aws_security_group.test.id]
+  deployment_mode    = "ACTIVE_STANDBY_MULTI_AZ"
+
+  data_replication_mode               = %[3]q
+  data_replication_primary_broker_arn = aws_mq_broker.primary.arn
+
+  logs {
+    general = true
+  }
+
+  user {
+    username = "Test"
+    password = "TestTest1234"
+  }
+  user {
+    username         = "Test-ReplicationUser"
+    password         = "TestTest1234"
+    replication_user = true
+  }
+}
+`, rName, version, dataReplicationMode))
 }

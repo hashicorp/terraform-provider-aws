@@ -26,6 +26,11 @@ func timeDecoder(d *Decoder, v reflect.Value, extLen int) error {
 		return err
 	}
 
+	if tm.IsZero() {
+		// Zero time does not have timezone information.
+		tm = tm.UTC()
+	}
+
 	ptr := v.Addr().Interface().(*time.Time)
 	*ptr = tm
 
@@ -103,7 +108,8 @@ func (d *Decoder) DecodeTime() (time.Time, error) {
 		return time.Time{}, err
 	}
 
-	if extID != timeExtID {
+	// NodeJS seems to use extID 13.
+	if extID != timeExtID && extID != 13 {
 		return time.Time{}, fmt.Errorf("msgpack: invalid time ext id=%d", extID)
 	}
 

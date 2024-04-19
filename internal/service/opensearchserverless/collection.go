@@ -1,11 +1,14 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package opensearchserverless
 
 import (
 	"context"
 	"errors"
-	"regexp"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/opensearchserverless"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/opensearchserverless/types"
@@ -48,6 +51,7 @@ type resourceCollectionData struct {
 	ID                 types.String   `tfsdk:"id"`
 	KmsKeyARN          types.String   `tfsdk:"kms_key_arn"`
 	Name               types.String   `tfsdk:"name"`
+	StandbyReplicas    types.String   `tfsdk:"standby_replicas"`
 	Tags               types.Map      `tfsdk:"tags"`
 	TagsAll            types.Map      `tfsdk:"tags_all"`
 	Timeouts           timeouts.Value `tfsdk:"timeouts"`
@@ -103,8 +107,19 @@ func (r *resourceCollection) Schema(ctx context.Context, req resource.SchemaRequ
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 32),
-					stringvalidator.RegexMatches(regexp.MustCompile(`^[a-z][a-z0-9-]+$`),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-z][0-9a-z-]+$`),
 						`must start with any lower case letter and can can include any lower case letter, number, or "-"`),
+				},
+			},
+			"standby_replicas": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+				},
+				Validators: []validator.String{
+					enum.FrameworkValidate[awstypes.StandbyReplicas](),
 				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
@@ -155,6 +170,10 @@ func (r *resourceCollection) Create(ctx context.Context, req resource.CreateRequ
 		in.Type = awstypes.CollectionType(plan.Type.ValueString())
 	}
 
+	if !plan.StandbyReplicas.IsNull() {
+		in.StandbyReplicas = awstypes.StandbyReplicas(plan.StandbyReplicas.ValueString())
+	}
+
 	out, err := conn.CreateCollection(ctx, in)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -184,6 +203,7 @@ func (r *resourceCollection) Create(ctx context.Context, req resource.CreateRequ
 	state.Description = flex.StringToFramework(ctx, waitOut.Description)
 	state.KmsKeyARN = flex.StringToFramework(ctx, waitOut.KmsKeyArn)
 	state.Name = flex.StringToFramework(ctx, waitOut.Name)
+	state.StandbyReplicas = flex.StringValueToFramework(ctx, waitOut.StandbyReplicas)
 	state.Type = flex.StringValueToFramework(ctx, waitOut.Type)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
@@ -198,10 +218,18 @@ func (r *resourceCollection) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
-	out, err := FindCollectionByID(ctx, conn, state.ID.ValueString())
+	out, err := findCollectionByID(ctx, conn, state.ID.ValueString())
 	if tfresource.NotFound(err) {
 		resp.Diagnostics.Append(fwdiag.NewResourceNotFoundWarningDiagnostic(err))
 		resp.State.RemoveResource(ctx)
+		return
+	}
+
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, ResNameCollection, state.ID.ValueString(), nil),
+			err.Error(),
+		)
 		return
 	}
 
@@ -212,6 +240,7 @@ func (r *resourceCollection) Read(ctx context.Context, req resource.ReadRequest,
 	state.ID = flex.StringToFramework(ctx, out.Id)
 	state.KmsKeyARN = flex.StringToFramework(ctx, out.KmsKeyArn)
 	state.Name = flex.StringToFramework(ctx, out.Name)
+	state.StandbyReplicas = flex.StringValueToFramework(ctx, out.StandbyReplicas)
 	state.Type = flex.StringValueToFramework(ctx, out.Type)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
@@ -339,7 +368,7 @@ func waitCollectionDeleted(ctx context.Context, conn *opensearchserverless.Clien
 
 func statusCollection(ctx context.Context, conn *opensearchserverless.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindCollectionByID(ctx, conn, id)
+		output, err := findCollectionByID(ctx, conn, id)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil

@@ -33,7 +33,7 @@ data "aws_ec2_client_vpn_endpoint" "example" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This data source supports the following arguments:
 
 * `client_vpn_endpoint_id` - (Optional) ID of the Client VPN endpoint.
 * `filter` - (Optional) One or more configuration blocks containing name-values filters. Detailed below.
@@ -50,7 +50,7 @@ The following arguments are required:
 
 ## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This data source exports the following attributes in addition to the arguments above:
 
 * `arn` -  The ARN of the Client VPN endpoint.
 * `authentication_options` - Information about the authentication method used by the Client VPN endpoint.
@@ -63,6 +63,7 @@ In addition to all arguments above, the following attributes are exported:
 * `dns_servers` - Information about the DNS servers to be used for DNS resolution.
 * `security_group_ids` - IDs of the security groups for the target network associated with the Client VPN endpoint.
 * `self_service_portal` - Whether the self-service portal for the Client VPN endpoint is enabled.
+* `self_service_portal_url` - The URL of the self-service portal.
 * `server_certificate_arn` - The ARN of the server certificate.
 * `session_timeout_hours` - The maximum VPN session duration time in hours.
 * `split_tunnel` - Whether split-tunnel is enabled in the AWS Client VPN endpoint.

@@ -1,10 +1,13 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package ssmincidents_test
 
 import (
 	"fmt"
-	"regexp"
 	"testing"
 
+	"github.com/YakDriver/regexache"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -29,7 +32,7 @@ func testResponsePlanDataSource_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.SSMIncidentsEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SSMIncidentsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -172,7 +175,7 @@ func testResponsePlanDataSource_basic(t *testing.T) {
 					resource.TestCheckResourceAttrPair(resourceName, "tags.a", dataSourceName, "tags.a"),
 					resource.TestCheckResourceAttrPair(resourceName, "tags.b", dataSourceName, "tags.b"),
 
-					acctest.MatchResourceAttrGlobalARN(dataSourceName, "arn", "ssm-incidents", regexp.MustCompile(`response-plan/+.`)),
+					acctest.MatchResourceAttrGlobalARN(dataSourceName, "arn", "ssm-incidents", regexache.MustCompile(`response-plan/+.`)),
 				),
 			},
 		},

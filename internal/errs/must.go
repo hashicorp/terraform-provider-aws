@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package errs
 
 // Must is a generic implementation of the Go Must idiom [1, 2]. It panics if

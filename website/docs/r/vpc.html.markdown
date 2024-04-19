@@ -52,7 +52,7 @@ resource "aws_vpc_ipam_pool" "test" {
 
 resource "aws_vpc_ipam_pool_cidr" "test" {
   ipam_pool_id = aws_vpc_ipam_pool.test.id
-  cidr         = "172.2.0.0/16"
+  cidr         = "172.20.0.0/16"
 }
 
 resource "aws_vpc" "test" {
@@ -66,7 +66,7 @@ resource "aws_vpc" "test" {
 
 ## Argument Reference
 
-The following arguments are supported:
+This resource supports the following arguments:
 
 * `cidr_block` - (Optional) The IPv4 CIDR block for the VPC. CIDR can be explicitly set or it can be derived from IPAM using `ipv4_netmask_length`.
 * `instance_tenancy` - (Optional) A tenancy option for instances launched into the VPC. Default is `default`, which ensures that EC2 instances launched in this VPC use the EC2 instance tenancy attribute specified when the EC2 instance is launched. The only other option is `dedicated`, which ensures that EC2 instances launched in this VPC are run on dedicated tenancy instances regardless of the tenancy attribute specified at launch. This has a dedicated per region fee of $2 per hour, plus an hourly per instance usage fee.
@@ -82,13 +82,14 @@ The following arguments are supported:
 * `assign_generated_ipv6_cidr_block` - (Optional) Requests an Amazon-provided IPv6 CIDR block with a /56 prefix length for the VPC. You cannot specify the range of IP addresses, or the size of the CIDR block. Default is `false`. Conflicts with `ipv6_ipam_pool_id`
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
-## Attributes Reference
+## Attribute Reference
 
-In addition to all arguments above, the following attributes are exported:
+This resource exports the following attributes in addition to the arguments above:
 
 * `arn` - Amazon Resource Name (ARN) of VPC
 * `id` - The ID of the VPC
 * `instance_tenancy` - Tenancy of instances spin up within VPC
+* `dhcp_options_id` - DHCP options id of the desired VPC.
 * `enable_dns_support` - Whether or not the VPC has DNS support
 * `enable_network_address_usage_metrics` - Whether Network Address Usage metrics are enabled for the VPC
 * `enable_dns_hostnames` - Whether or not the VPC has DNS hostname support
@@ -105,8 +106,17 @@ In addition to all arguments above, the following attributes are exported:
 
 ## Import
 
-VPCs can be imported using the `vpc id`, e.g.,
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import VPCs using the VPC `id`. For example:
 
+```terraform
+import {
+  to = aws_vpc.test_vpc
+  id = "vpc-a01106c2"
+}
 ```
-$ terraform import aws_vpc.test_vpc vpc-a01106c2
+
+Using `terraform import`, import VPCs using the VPC `id`. For example:
+
+```console
+% terraform import aws_vpc.test_vpc vpc-a01106c2
 ```

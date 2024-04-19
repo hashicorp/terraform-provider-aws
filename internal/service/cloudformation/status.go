@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package cloudformation
 
 import (
@@ -25,9 +28,9 @@ func StatusChangeSet(ctx context.Context, conn *cloudformation.CloudFormation, s
 	}
 }
 
-func StatusStackSetOperation(ctx context.Context, conn *cloudformation.CloudFormation, stackSetName, operationID, callAs string) retry.StateRefreshFunc {
+func StatusStackSet(ctx context.Context, conn *cloudformation.CloudFormation, name, callAs string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		output, err := FindStackSetOperationByStackSetNameAndOperationID(ctx, conn, stackSetName, operationID, callAs)
+		output, err := FindStackSetByName(ctx, conn, name, callAs)
 
 		if tfresource.NotFound(err) {
 			return nil, "", nil
@@ -41,25 +44,19 @@ func StatusStackSetOperation(ctx context.Context, conn *cloudformation.CloudForm
 	}
 }
 
-const (
-	stackStatusError    = "Error"
-	stackStatusNotFound = "NotFound"
-)
-
-func StatusStack(ctx context.Context, conn *cloudformation.CloudFormation, stackName string) retry.StateRefreshFunc {
+func StatusStackSetOperation(ctx context.Context, conn *cloudformation.CloudFormation, stackSetName, operationID, callAs string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		resp, err := conn.DescribeStacksWithContext(ctx, &cloudformation.DescribeStacksInput{
-			StackName: aws.String(stackName),
-		})
+		output, err := FindStackSetOperationByStackSetNameAndOperationID(ctx, conn, stackSetName, operationID, callAs)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
 		if err != nil {
-			return nil, stackStatusError, err
+			return nil, "", err
 		}
 
-		if resp.Stacks == nil || len(resp.Stacks) == 0 {
-			return nil, stackStatusNotFound, nil
-		}
-
-		return resp.Stacks[0], aws.StringValue(resp.Stacks[0].StackStatus), err
+		return output, aws.StringValue(output.Status), nil
 	}
 }
 

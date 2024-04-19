@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 //go:build !generate
 // +build !generate
 
@@ -10,6 +13,7 @@ import (
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/servicecatalog"
 	"github.com/aws/aws-sdk-go/service/servicecatalog/servicecatalogiface"
+	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -49,4 +53,10 @@ func recordKeyValueTags(ctx context.Context, tags []*servicecatalog.RecordTag) t
 	}
 
 	return tftags.New(ctx, m)
+}
+
+// UpdateTags updates servicecatalog service tags.
+// It is called from outside this package.
+func (p *servicePackage) UpdateTags(ctx context.Context, meta any, identifier string, oldTags, newTags any) error {
+	return productUpdateTags(ctx, meta.(*conns.AWSClient).ServiceCatalogConn(ctx), identifier, oldTags, newTags)
 }
