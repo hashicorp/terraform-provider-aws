@@ -26,7 +26,7 @@ data "aws_identitystore_groups" "example" {
 
 The following arguments are required:
 
-* `identity_store_id` - (Required) Identity Store ID associated with the Single Sign-On Instance.
+* `identity_store_id` - (Required) Identity Store ID associated with the Single Sign-On (SSO) Instance.
 
 ## Attribute Reference
 
