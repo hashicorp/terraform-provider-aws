@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/plancheck"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -87,6 +88,55 @@ func testAccDetectorFeature_additionalConfiguration(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "additional_configuration.0.status", "DISABLED"),
 					resource.TestCheckResourceAttr(resourceName, "name", "EKS_RUNTIME_MONITORING"),
 					resource.TestCheckResourceAttr(resourceName, "status", "ENABLED"),
+				),
+			},
+		},
+	})
+}
+
+func testAccDetectorFeature_additionalConfigurationOrder(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_guardduty_detector_feature.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheckDetectorNotExists(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.GuardDutyServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             acctest.CheckDestroyNoop,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccDetectorFeatureConfig_additionalConfiguration_multiple([]string{"EKS_ADDON_MANAGEMENT", "EC2_AGENT_MANAGEMENT", "ECS_FARGATE_AGENT_MANAGEMENT"}),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDetectorFeatureExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "3"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "additional_configuration.*",
+						map[string]string{"name": "EKS_ADDON_MANAGEMENT", "status": "ENABLED"}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "additional_configuration.*",
+						map[string]string{"name": "EC2_AGENT_MANAGEMENT", "status": "ENABLED"}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "additional_configuration.*",
+						map[string]string{"name": "ECS_FARGATE_AGENT_MANAGEMENT", "status": "ENABLED"}),
+				),
+			},
+			{
+				// Change the order of the additional_configuration blocks and ensure that there is an empty plan
+				Config: testAccDetectorFeatureConfig_additionalConfiguration_multiple([]string{"EC2_AGENT_MANAGEMENT", "ECS_FARGATE_AGENT_MANAGEMENT", "EKS_ADDON_MANAGEMENT"}),
+				ConfigPlanChecks: resource.ConfigPlanChecks{
+					PreApply: []plancheck.PlanCheck{
+						plancheck.ExpectEmptyPlan(),
+					},
+				},
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckDetectorFeatureExists(ctx, resourceName),
+					resource.TestCheckResourceAttr(resourceName, "additional_configuration.#", "3"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "additional_configuration.*",
+						map[string]string{"name": "EKS_ADDON_MANAGEMENT", "status": "ENABLED"}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "additional_configuration.*",
+						map[string]string{"name": "EC2_AGENT_MANAGEMENT", "status": "ENABLED"}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "additional_configuration.*",
+						map[string]string{"name": "ECS_FARGATE_AGENT_MANAGEMENT", "status": "ENABLED"}),
 				),
 			},
 		},
@@ -209,6 +259,35 @@ resource "aws_guardduty_detector_feature" "test" {
   }
 }
 `, featureStatus, additionalConfigurationStatus)
+}
+
+func testAccDetectorFeatureConfig_additionalConfiguration_multiple(configNames []string) string {
+	return fmt.Sprintf(`
+resource "aws_guardduty_detector" "test" {
+  enable = true
+}
+
+resource "aws_guardduty_detector_feature" "test" {
+  detector_id = aws_guardduty_detector.test.id
+  name        = "RUNTIME_MONITORING"
+  status      = "ENABLED" 
+
+  additional_configuration {
+    name   = %[1]q
+    status = "ENABLED"
+  }
+
+  additional_configuration {
+    name   = %[2]q
+    status = "ENABLED"
+  }
+
+  additional_configuration {
+    name   = %[3]q
+    status = "ENABLED"
+  }
+}
+`, configNames[0], configNames[1], configNames[2])
 }
 
 func testAccDetectorFeatureConfig_multiple(status1, status2, status3 string) string {

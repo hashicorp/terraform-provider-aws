@@ -29,9 +29,10 @@ func TestAccGuardDuty_serial(t *testing.T) {
 			"datasource_id":                     testAccDetectorDataSource_ID,
 		},
 		"DetectorFeature": {
-			"basic":                    testAccDetectorFeature_basic,
-			"additional_configuration": testAccDetectorFeature_additionalConfiguration,
-			"multiple":                 testAccDetectorFeature_multiple,
+			"basic":                          testAccDetectorFeature_basic,
+			"additional_configuration":       testAccDetectorFeature_additionalConfiguration,
+			"additional_configuration_order": testAccDetectorFeature_additionalConfigurationOrder,
+			"multiple":                       testAccDetectorFeature_multiple,
 		},
 		"Filter": {
 			"basic":      testAccFilter_basic,
