@@ -612,7 +612,7 @@ resource "aws_kinesis_firehose_delivery_stream" "example_snowflake_destination" 
       snowflake_role = "string"
     }
     data_loading_option   = "JSON_MAPPING"
-    meta_data_column_name = "string"
+    metadata_column_name  = "string"
     content_column_name   = "string"
     snowflake_vpc_configuration {
       private_link_vpce_id = "string"
@@ -848,15 +848,18 @@ The `snowflake_configuration` configuration block supports the following argumen
 * `database` - (Required) The Snowflake database name.
 * `schema` - (Required) The Snowflake schema name.
 * `table` - (Required) The Snowflake table name.
-* `snowflake_role_configuration` - (Optional) The configuration for Snowflake role. See [`snowflake_role_configuration` block](#snowflake_role_configuration-block) below for details.
+* `snowflake_role_configuration` - (Optional) The configuration for Snowflake role.
+    * `enabled` - (Optional) Whether the Snowflake role is enabled.
+    * `snowflake_role` - (Optional) The Snowflake role.
 * `data_loading_option` - (Optional) The data loading option.
-* `meta_data_column_name` - (Optional) The name of the metadata column.
+* `metadata_column_name` - (Optional) The name of the metadata column.
 * `content_column_name` - (Optional) The name of the content column.
-* `snowflake_vpc_configuration` - (Optional) The VPC configuration for Snowflake. See [`snowflake_vpc_configuration` block](#snowflake_vpc_configuration-block) below for details.
-* `cloud_watch_logging_options` - (Optional) The CloudWatch logging options. See [`cloud_watch_logging_options` block](#cloud_watch_logging_options-block) below for details.
+* `snowflake_vpc_configuration` - (Optional) The VPC configuration for Snowflake.
+    * `private_link_vpce_id` - (Required) The VPCE ID for Firehose to privately connect with Snowflake.
+* `cloudwatch_logging_options` - (Optional) The CloudWatch logging options. See [`cloud_watch_logging_options` block](#cloud_watch_logging_options-block) below for details.
 * `processing_configuration` - (Optional) The processing configuration. See [`processing_configuration` block](#processing_configuration-block) below for details.
 * `role_arn` - (Required) The ARN of the IAM role.
-* `retry_options` - (Optional) The retry options. See [`retry_options` block](#retry_options-block) below for details.
+* `retry_duration` - (Optional) After an initial failure to deliver to Snowflake, the total amount of time, in seconds between 0 to 7200, during which Firehose re-attempts delivery (including the first attempt).  After this time has elapsed, the failed documents are written to Amazon S3.  The default value is 60s.  There will be no retry if the value is 0.
 * `s3_backup_mode` - (Optional) The S3 backup mode.
 * `s3_configuration` - (Required) The S3 configuration. See [`s3_configuration` block](#s3_configuration-block) below for details.
 

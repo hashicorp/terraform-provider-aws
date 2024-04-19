@@ -986,35 +986,63 @@ func resourceDeliveryStream() *schema.Resource {
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
 							"account_url": {
+								Type:     schema.TypeString,
+								Required: true,
+							},
+							"cloudwatch_logging_options": cloudWatchLoggingOptionsSchema(),
+							"content_column_name": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(1, 255),
+							},
+							"data_loading_option": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[types.SnowflakeDataLoadingOption](),
+							},
+							"database": {
 								Type:         schema.TypeString,
 								Required:     true,
-								ValidateFunc: validateSnowflakeAccountURL,
+								ValidateFunc: validation.StringLenBetween(1, 255),
+							},
+							"key_passphrase": {
+								Type:         schema.TypeString,
+								Required:     true,
+								Sensitive:    true,
+								ValidateFunc: validation.StringLenBetween(7, 255),
+							},
+							"metadata_column_name": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringLenBetween(1, 255),
 							},
 							"private_key": {
 								Type:      schema.TypeString,
 								Required:  true,
 								Sensitive: true,
 							},
-							"key_passphrase": {
-								Type:      schema.TypeString,
-								Required:  true,
-								Sensitive: true,
+							"processing_configuration": processingConfigurationSchema(),
+							"retry_duration": {
+								Type:         schema.TypeInt,
+								Optional:     true,
+								Default:      60,
+								ValidateFunc: validation.IntBetween(0, 7200),
 							},
-							"user": {
-								Type:     schema.TypeString,
-								Required: true,
+							"role_arn": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: verify.ValidARN,
 							},
-							"database": {
-								Type:     schema.TypeString,
-								Required: true,
+							"s3_backup_mode": {
+								Type:             schema.TypeString,
+								Optional:         true,
+								ValidateDiagFunc: enum.Validate[types.SnowflakeS3BackupMode](),
 							},
+							"s3_configuration": s3ConfigurationSchema(),
 							"schema": {
-								Type:     schema.TypeString,
-								Required: true,
-							},
-							"table": {
-								Type:     schema.TypeString,
-								Required: true,
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 255),
 							},
 							"snowflake_role_configuration": {
 								Type:     schema.TypeList,
@@ -1028,23 +1056,12 @@ func resourceDeliveryStream() *schema.Resource {
 											Default:  false,
 										},
 										"snowflake_role": {
-											Type:     schema.TypeString,
-											Optional: true,
+											Type:         schema.TypeString,
+											Optional:     true,
+											ValidateFunc: validation.StringLenBetween(1, 255),
 										},
 									},
 								},
-							},
-							"data_loading_option": {
-								Type:     schema.TypeString,
-								Optional: true,
-							},
-							"meta_data_column_name": {
-								Type:     schema.TypeString,
-								Optional: true,
-							},
-							"content_column_name": {
-								Type:     schema.TypeString,
-								Optional: true,
 							},
 							"snowflake_vpc_configuration": {
 								Type:     schema.TypeList,
@@ -1059,30 +1076,16 @@ func resourceDeliveryStream() *schema.Resource {
 									},
 								},
 							},
-							"cloud_watch_logging_options": cloudWatchLoggingOptionsSchema(),
-							"processing_configuration":    processingConfigurationSchema(),
-							"role_arn": {
-								Type:     schema.TypeString,
-								Required: true,
+							"table": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 255),
 							},
-							"retry_options": {
-								Type:     schema.TypeList,
-								Optional: true,
-								MaxItems: 1,
-								Elem: &schema.Resource{
-									Schema: map[string]*schema.Schema{
-										"duration_in_seconds": {
-											Type:     schema.TypeInt,
-											Required: true,
-										},
-									},
-								},
+							"user": {
+								Type:         schema.TypeString,
+								Required:     true,
+								ValidateFunc: validation.StringLenBetween(1, 255),
 							},
-							"s3_backup_mode": {
-								Type:     schema.TypeString,
-								Optional: true,
-							},
-							"s3_configuration": s3ConfigurationSchema(),
 						},
 					},
 				},
@@ -3700,14 +3703,4 @@ func defaultProcessorParameters(destinationType destinationType, processorType t
 	default:
 		return make(map[types.ProcessorParameterName]string)
 	}
-}
-
-func validateSnowflakeAccountURL(v interface{}, k string) (ws []string, errors []error) {
-	value := v.(string)
-	if !strings.HasPrefix(value, "https://") {
-		errors = append(errors, fmt.Errorf("%q must start with 'https://'", k))
-	}
-	// Add more validation logic if needed, such as checking the format of the account URL
-	// You can use regular expressions or other methods for this validation.
-	return
 }
