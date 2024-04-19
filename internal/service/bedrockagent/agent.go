@@ -9,6 +9,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
@@ -69,6 +70,9 @@ func (r *agentResource) Schema(ctx context.Context, request resource.SchemaReque
 			"agent_id":  framework.IDAttribute(),
 			"agent_name": schema.StringAttribute{
 				Required: true,
+				Validators: []validator.String{
+					stringvalidator.RegexMatches(regexache.MustCompile(`^([0-9a-zA-Z][_-]?){1,100}$`), "valid characters are a-z, A-Z, 0-9, _ (underscore) and - (hyphen). The name can have up to 100 characters"),
+				},
 			},
 			"agent_resource_role_arn": schema.StringAttribute{
 				CustomType: fwtypes.ARNType,
