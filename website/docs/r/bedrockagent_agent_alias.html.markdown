@@ -98,8 +98,6 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `agent_alias_arn` - ARN of the Agent Alias.
 * `agent_alias_status` - Status of the Agent Alias.
-* `created_at` - Timestamp the Agent Alias was created at.
-* `updated_at` - Timestamp the Agent Alias was updated at.
 
 ## Timeouts
 

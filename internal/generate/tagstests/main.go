@@ -109,6 +109,8 @@ type ResourceDatum struct {
 	Generator         string
 	ImportIgnore      []string
 	Implementation    implementation
+	Serialize         bool
+	PreCheck          bool
 }
 
 //go:embed file.tmpl
@@ -226,6 +228,22 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 				}
 				if attr, ok := args.Keyword["name"]; ok {
 					d.Name = strings.ReplaceAll(attr, " ", "")
+				}
+				if attr, ok := args.Keyword["preCheck"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid preCheck value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						d.PreCheck = b
+					}
+				}
+				if attr, ok := args.Keyword["serialize"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid serialize value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						d.Serialize = b
+					}
 				}
 				if attr, ok := args.Keyword["tagsTest"]; ok {
 					if b, err := strconv.ParseBool(attr); err != nil {

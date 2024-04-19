@@ -33,7 +33,7 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 		},
 		{
 			Factory: newAgentResource,
-			Name:    "Bedrock Agent",
+			Name:    "Agent",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "agent_arn",
 			},

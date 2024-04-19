@@ -249,140 +249,7 @@ func findAgentByID(ctx context.Context, conn *bedrockagent.Client, id string) (*
 	return output, nil
 }
 
-func testAccAgentConfig_basic(rName, model, description string) string {
-	return acctest.ConfigCompose(testAccBedrockRole(rName, model), fmt.Sprintf(`
-resource "aws_bedrockagent_agent" "test" {
-  agent_name              = %[1]q
-  agent_resource_role_arn = aws_iam_role.test.arn
-  description             = %[3]q
-  idle_ttl                = 500
-  instruction             = file("${path.module}/test-fixtures/instruction.txt")
-  foundation_model        = %[2]q
-}
-`, rName, model, description))
-}
-
-func testAccAgentConfig_tags1(rName, model, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccBedrockRole(rName, model), fmt.Sprintf(`
-resource "aws_bedrockagent_agent" "test" {
-  agent_name              = %[1]q
-  agent_resource_role_arn = aws_iam_role.test.arn
-  idle_ttl                = 500
-  instruction             = file("${path.module}/test-fixtures/instruction.txt")
-  foundation_model        = %[2]q
-
-  tags = {
-    %[3]q = %[4]q
-  }
-}
-`, rName, model, tagKey1, tagValue1))
-}
-
-func testAccAgentConfig_tags2(rName, model, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccBedrockRole(rName, model), fmt.Sprintf(`
-resource "aws_bedrockagent_agent" "test" {
-  agent_name              = %[1]q
-  agent_resource_role_arn = aws_iam_role.test.arn
-  idle_ttl                = 500
-  instruction             = file("${path.module}/test-fixtures/instruction.txt")
-  foundation_model        = %[2]q
-
-  tags = {
-    %[3]q = %[4]q
-    %[5]q = %[6]q
-  }
-}
-`, rName, model, tagKey1, tagValue1, tagKey2, tagValue2))
-}
-
-func testAccAgentConfig_full(rName, model, desc string) string {
-	return acctest.ConfigCompose(testAccBedrockRole(rName, model), fmt.Sprintf(`
-resource "aws_bedrockagent_agent" "test" {
-  agent_name              = %[1]q
-  agent_resource_role_arn = aws_iam_role.test.arn
-  description             = %[3]q
-  idle_ttl                = 500
-  instruction             = file("${path.module}/test-fixtures/instruction.txt")
-  foundation_model        = %[2]q
-  prompt_override_configuration {
-    override_lambda = null
-    prompt_configurations = [
-      {
-        base_prompt_template = file("${path.module}/test-fixtures/pre-processing.txt")
-        inference_configuration = [
-          {
-            max_length     = 2048
-            stop_sequences = ["Human:"]
-            temperature    = 0
-            topk           = 250
-            topp           = 1
-          },
-        ]
-        parser_mode          = "DEFAULT"
-        prompt_creation_mode = "OVERRIDDEN"
-        prompt_state         = "ENABLED"
-        prompt_type          = "PRE_PROCESSING"
-      },
-      {
-        base_prompt_template = file("${path.module}/test-fixtures/knowledge-base-response-generation.txt")
-        inference_configuration = [
-          {
-            max_length     = 2048
-            stop_sequences = ["Human:"]
-            temperature    = 0
-            topk           = 250
-            topp           = 1
-          },
-        ]
-        parser_mode          = "DEFAULT"
-        prompt_creation_mode = "OVERRIDDEN"
-        prompt_state         = "ENABLED"
-        prompt_type          = "KNOWLEDGE_BASE_RESPONSE_GENERATION"
-      },
-      {
-        base_prompt_template = file("${path.module}/test-fixtures/orchestration.txt")
-        inference_configuration = [
-          {
-            max_length = 2048
-            stop_sequences = [
-              "</function_call>",
-              "</answer>",
-              "</error>",
-            ]
-            temperature = 0
-            topk        = 250
-            topp        = 1
-          },
-        ]
-        parser_mode          = "DEFAULT"
-        prompt_creation_mode = "OVERRIDDEN"
-        prompt_state         = "ENABLED"
-        prompt_type          = "ORCHESTRATION"
-      },
-      {
-        base_prompt_template = file("${path.module}/test-fixtures/post-processing.txt")
-        inference_configuration = [
-          {
-            max_length     = 2048
-            stop_sequences = ["Human:"]
-            temperature    = 0
-            topk           = 250
-            topp           = 1
-          },
-        ]
-        parser_mode          = "DEFAULT"
-        prompt_creation_mode = "OVERRIDDEN"
-        prompt_state         = "DISABLED"
-        prompt_type          = "POST_PROCESSING"
-      },
-    ]
-  }
-
-}
-`, rName, model, desc))
-}
-
-func testAccBedrockRole(rName, model string) string {
+func testAccAgent_base(rName, model string) string {
 	return fmt.Sprintf(`
 resource "aws_iam_role" "test" {
   assume_role_policy = data.aws_iam_policy_document.test_agent_trust.json
@@ -441,4 +308,136 @@ data "aws_region" "current" {}
 
 data "aws_partition" "current" {}
 `, rName, model)
+}
+
+func testAccAgentConfig_basic(rName, model, description string) string {
+	return acctest.ConfigCompose(testAccAgent_base(rName, model), fmt.Sprintf(`
+resource "aws_bedrockagent_agent" "test" {
+  agent_name                  = %[1]q
+  agent_resource_role_arn     = aws_iam_role.test.arn
+  description                 = %[3]q
+  idle_session_ttl_in_seconds = 500
+  instruction                 = file("${path.module}/test-fixtures/instruction.txt")
+  foundation_model            = %[2]q
+}
+`, rName, model, description))
+}
+
+func testAccAgentConfig_tags1(rName, model, tagKey1, tagValue1 string) string {
+	return acctest.ConfigCompose(testAccAgent_base(rName, model), fmt.Sprintf(`
+resource "aws_bedrockagent_agent" "test" {
+  agent_name              = %[1]q
+  agent_resource_role_arn = aws_iam_role.test.arn
+  instruction             = file("${path.module}/test-fixtures/instruction.txt")
+  foundation_model        = %[2]q
+
+  tags = {
+    %[3]q = %[4]q
+  }
+}
+`, rName, model, tagKey1, tagValue1))
+}
+
+func testAccAgentConfig_tags2(rName, model, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+	return acctest.ConfigCompose(testAccAgent_base(rName, model), fmt.Sprintf(`
+resource "aws_bedrockagent_agent" "test" {
+  agent_name              = %[1]q
+  agent_resource_role_arn = aws_iam_role.test.arn
+  instruction             = file("${path.module}/test-fixtures/instruction.txt")
+  foundation_model        = %[2]q
+
+  tags = {
+    %[3]q = %[4]q
+    %[5]q = %[6]q
+  }
+}
+`, rName, model, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccAgentConfig_full(rName, model, desc string) string {
+	return acctest.ConfigCompose(testAccAgent_base(rName, model), fmt.Sprintf(`
+resource "aws_bedrockagent_agent" "test" {
+  agent_name                  = %[1]q
+  agent_resource_role_arn     = aws_iam_role.test.arn
+  description                 = %[3]q
+  idle_session_ttl_in_seconds = 500
+  instruction                 = file("${path.module}/test-fixtures/instruction.txt")
+  foundation_model            = %[2]q
+
+  prompt_override_configuration {
+    override_lambda = null
+    prompt_configurations = [
+      {
+        base_prompt_template = file("${path.module}/test-fixtures/pre-processing.txt")
+        inference_configuration = [
+          {
+            max_length     = 2048
+            stop_sequences = ["Human:"]
+            temperature    = 0
+            top_k          = 250
+            top_p          = 1
+          },
+        ]
+        parser_mode          = "DEFAULT"
+        prompt_creation_mode = "OVERRIDDEN"
+        prompt_state         = "ENABLED"
+        prompt_type          = "PRE_PROCESSING"
+      },
+      {
+        base_prompt_template = file("${path.module}/test-fixtures/knowledge-base-response-generation.txt")
+        inference_configuration = [
+          {
+            max_length     = 2048
+            stop_sequences = ["Human:"]
+            temperature    = 0
+            top_k          = 250
+            top_p          = 1
+          },
+        ]
+        parser_mode          = "DEFAULT"
+        prompt_creation_mode = "OVERRIDDEN"
+        prompt_state         = "ENABLED"
+        prompt_type          = "KNOWLEDGE_BASE_RESPONSE_GENERATION"
+      },
+      {
+        base_prompt_template = file("${path.module}/test-fixtures/orchestration.txt")
+        inference_configuration = [
+          {
+            max_length = 2048
+            stop_sequences = [
+              "</function_call>",
+              "</answer>",
+              "</error>",
+            ]
+            temperature = 0
+            top_k       = 250
+            top_p       = 1
+          },
+        ]
+        parser_mode          = "DEFAULT"
+        prompt_creation_mode = "OVERRIDDEN"
+        prompt_state         = "ENABLED"
+        prompt_type          = "ORCHESTRATION"
+      },
+      {
+        base_prompt_template = file("${path.module}/test-fixtures/post-processing.txt")
+        inference_configuration = [
+          {
+            max_length     = 2048
+            stop_sequences = ["Human:"]
+            temperature    = 0
+            top_k          = 250
+            top_p          = 1
+          },
+        ]
+        parser_mode          = "DEFAULT"
+        prompt_creation_mode = "OVERRIDDEN"
+        prompt_state         = "DISABLED"
+        prompt_type          = "POST_PROCESSING"
+      },
+    ]
+  }
+
+}
+`, rName, model, desc))
 }

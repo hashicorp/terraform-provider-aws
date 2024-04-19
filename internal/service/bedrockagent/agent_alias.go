@@ -13,7 +13,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
-	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/path"
@@ -87,10 +86,6 @@ func (r *agentAliasResource) Schema(ctx context.Context, request resource.Schema
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-			"created_at": schema.StringAttribute{
-				Computed:   true,
-				CustomType: timetypes.RFC3339Type{},
-			},
 			"description": schema.StringAttribute{
 				Optional: true,
 				Computed: true,
@@ -112,48 +107,11 @@ func (r *agentAliasResource) Schema(ctx context.Context, request resource.Schema
 					},
 				},
 			},
-			"updated_at": schema.StringAttribute{
-				Computed:   true,
-				CustomType: timetypes.RFC3339Type{},
-			},
 			names.AttrID:      framework.IDAttribute(),
 			names.AttrTags:    tftags.TagsAttribute(),
 			names.AttrTagsAll: tftags.TagsAttributeComputedOnly(),
 		},
 		Blocks: map[string]schema.Block{
-			"agent_alias_history_events": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[history](ctx),
-				Validators: []validator.List{
-					listvalidator.SizeAtMost(10),
-				},
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"end_date": schema.StringAttribute{
-							CustomType: timetypes.RFC3339Type{},
-							Computed:   true,
-						},
-						"start_date": schema.StringAttribute{
-							CustomType: timetypes.RFC3339Type{},
-							Computed:   true,
-						},
-					},
-					Blocks: map[string]schema.Block{
-						"routing_configuration": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[roc](ctx),
-							Validators: []validator.List{
-								listvalidator.SizeAtMost(1),
-							},
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"agent_version": schema.StringAttribute{
-										Computed: true,
-									},
-								},
-							},
-						},
-					},
-				},
-			},
 			"timeouts": timeouts.Block(ctx, timeouts.Opts{
 				Create: true,
 				Update: true,
@@ -204,7 +162,7 @@ func (r *agentAliasResource) Create(ctx context.Context, request resource.Create
 		return
 	}
 
-	_, err = waitAgentVersioned(ctx, conn, *alias.AgentAlias.AgentId, r.CreateTimeout(ctx, data.Timeouts))
+	_, err = waitAgentVersioned(ctx, conn, *alias.AgentId, r.CreateTimeout(ctx, data.Timeouts))
 
 	if err != nil {
 		response.Diagnostics.AddError(fmt.Sprintf("waiting for Alias Agent (%s) create", data.ID.ValueString()), err.Error())
@@ -212,7 +170,7 @@ func (r *agentAliasResource) Create(ctx context.Context, request resource.Create
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, alias.AgentAlias, &data)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, alias, &data)...)
 
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
@@ -245,7 +203,7 @@ func (r *agentAliasResource) Read(ctx context.Context, request resource.ReadRequ
 
 		return
 	}
-	response.Diagnostics.Append(fwflex.Flatten(ctx, output.AgentAlias, &data)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
 
 	if response.Diagnostics.HasError() {
 		return
@@ -296,7 +254,7 @@ func (r *agentAliasResource) Update(ctx context.Context, request resource.Update
 		return
 	}
 
-	response.Diagnostics.Append(fwflex.Flatten(ctx, alias.AgentAlias, &plan)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, alias, &plan)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -339,7 +297,7 @@ func (r *agentAliasResource) ImportState(ctx context.Context, request resource.I
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), request, resp)
 }
 
-func findAgentAliasByID(ctx context.Context, conn *bedrockagent.Client, id string) (*bedrockagent.GetAgentAliasOutput, error) {
+func findAgentAliasByID(ctx context.Context, conn *bedrockagent.Client, id string) (*awstypes.AgentAlias, error) {
 	parts, err := intflex.ExpandResourceId(id, agentAliasIdParts, false)
 	if err != nil {
 		return nil, err
@@ -366,7 +324,7 @@ func findAgentAliasByID(ctx context.Context, conn *bedrockagent.Client, id strin
 		return nil, tfresource.NewEmptyResultError(input)
 	}
 
-	return output, nil
+	return output.AgentAlias, nil
 }
 
 func statusAlias(ctx context.Context, conn *bedrockagent.Client, id string) retry.StateRefreshFunc {
@@ -381,11 +339,11 @@ func statusAlias(ctx context.Context, conn *bedrockagent.Client, id string) retr
 			return nil, "", err
 		}
 
-		return output, string(output.AgentAlias.AgentAliasStatus), nil
+		return output, string(output.AgentAliasStatus), nil
 	}
 }
 
-func waitAliasCreated(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*bedrockagent.GetAgentAliasOutput, error) {
+func waitAliasCreated(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.AgentAlias, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AgentAliasStatusCreating),
 		Target:  enum.Slice(awstypes.AgentAliasStatusPrepared),
@@ -395,8 +353,8 @@ func waitAliasCreated(ctx context.Context, conn *bedrockagent.Client, id string,
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*bedrockagent.GetAgentAliasOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString((*string)(&output.AgentAlias.AgentAliasStatus))))
+	if output, ok := outputRaw.(*awstypes.AgentAlias); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString((*string)(&output.AgentAliasStatus))))
 
 		return output, err
 	}
@@ -404,7 +362,7 @@ func waitAliasCreated(ctx context.Context, conn *bedrockagent.Client, id string,
 	return nil, err
 }
 
-func waitAliasUpdated(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*bedrockagent.GetAgentAliasOutput, error) {
+func waitAliasUpdated(ctx context.Context, conn *bedrockagent.Client, id string, timeout time.Duration) (*awstypes.AgentAlias, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.AgentAliasStatusUpdating),
 		Target:  enum.Slice(awstypes.AgentAliasStatusPrepared),
@@ -414,8 +372,8 @@ func waitAliasUpdated(ctx context.Context, conn *bedrockagent.Client, id string,
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*bedrockagent.GetAgentAliasOutput); ok {
-		tfresource.SetLastError(err, errors.New(aws.ToString((*string)(&output.AgentAlias.AgentAliasStatus))))
+	if output, ok := outputRaw.(*awstypes.AgentAlias); ok {
+		tfresource.SetLastError(err, errors.New(aws.ToString((*string)(&output.AgentAliasStatus))))
 
 		return output, err
 	}
@@ -424,30 +382,21 @@ func waitAliasUpdated(ctx context.Context, conn *bedrockagent.Client, id string,
 }
 
 type bedrockAliasResourceModel struct {
-	AgentAliasARN        types.String                             `tfsdk:"agent_alias_arn"`
-	AgentAliasId         types.String                             `tfsdk:"agent_alias_id"`
-	AgentAliasName       types.String                             `tfsdk:"agent_alias_name"`
-	AgentAliasStatus     types.String                             `tfsdk:"agent_alias_status"`
-	AgentAliasHistory    fwtypes.ListNestedObjectValueOf[history] `tfsdk:"agent_alias_history_events"`
-	AgentId              types.String                             `tfsdk:"agent_id"`
-	CreatedAt            timetypes.RFC3339                        `tfsdk:"created_at"`
-	Description          types.String                             `tfsdk:"description"`
-	ID                   types.String                             `tfsdk:"id"`
-	RoutingConfiguration fwtypes.ListNestedObjectValueOf[roc]     `tfsdk:"routing_configuration"`
-	UpdatedAt            timetypes.RFC3339                        `tfsdk:"updated_at"`
-	Tags                 types.Map                                `tfsdk:"tags"`
-	TagsAll              types.Map                                `tfsdk:"tags_all"`
-	Timeouts             timeouts.Value                           `tfsdk:"timeouts"`
+	AgentAliasARN        types.String                         `tfsdk:"agent_alias_arn"`
+	AgentAliasId         types.String                         `tfsdk:"agent_alias_id"`
+	AgentAliasName       types.String                         `tfsdk:"agent_alias_name"`
+	AgentAliasStatus     types.String                         `tfsdk:"agent_alias_status"`
+	AgentId              types.String                         `tfsdk:"agent_id"`
+	Description          types.String                         `tfsdk:"description"`
+	ID                   types.String                         `tfsdk:"id"`
+	RoutingConfiguration fwtypes.ListNestedObjectValueOf[roc] `tfsdk:"routing_configuration"`
+	Tags                 types.Map                            `tfsdk:"tags"`
+	TagsAll              types.Map                            `tfsdk:"tags_all"`
+	Timeouts             timeouts.Value                       `tfsdk:"timeouts"`
 }
 
 type roc struct {
 	AgentVersion types.String `tfsdk:"agent_version"`
-}
-
-type history struct {
-	EndDate              types.String                         `tfsdk:"end_date"`
-	StartDate            types.String                         `tfsdk:"start_date"`
-	RoutingConfiguration fwtypes.ListNestedObjectValueOf[roc] `tfsdk:"routing_configuration"`
 }
 
 func bedrockAliasHasChanges(_ context.Context, plan, state bedrockAliasResourceModel) bool {

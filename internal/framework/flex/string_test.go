@@ -266,3 +266,43 @@ func TestStringToFrameworkARN(t *testing.T) {
 		})
 	}
 }
+
+func TestEmptyStringAsNull(t *testing.T) {
+	t.Parallel()
+
+	type testCase struct {
+		input    types.String
+		expected types.String
+	}
+	tests := map[string]testCase{
+		"valid": {
+			input:    types.StringValue("TEST"),
+			expected: types.StringValue("TEST"),
+		},
+		"empty": {
+			input:    types.StringValue(""),
+			expected: types.StringNull(),
+		},
+		"null": {
+			input:    types.StringNull(),
+			expected: types.StringNull(),
+		},
+		"unknown": {
+			input:    types.StringUnknown(),
+			expected: types.StringUnknown(),
+		},
+	}
+
+	for name, test := range tests {
+		name, test := name, test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			got := flex.EmptyStringAsNull(test.input)
+
+			if diff := cmp.Diff(got, test.expected); diff != "" {
+				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			}
+		})
+	}
+}

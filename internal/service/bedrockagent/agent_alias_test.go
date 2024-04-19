@@ -9,7 +9,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -18,7 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
-	tfagent "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagent"
+	tftypes "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagent"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -26,7 +25,7 @@ func TestAccBedrockAgentAlias_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_alias.test"
-	var v bedrockagent.GetAgentAliasOutput
+	var v awstypes.AgentAlias
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
@@ -43,7 +42,6 @@ func TestAccBedrockAgentAlias_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "agent_alias_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "agent_alias_status"),
 					resource.TestCheckResourceAttrSet(resourceName, "agent_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttrSet(resourceName, "description"),
 					resource.TestCheckResourceAttr(resourceName, "routing_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
@@ -62,7 +60,7 @@ func TestAccBedrockAgentAlias_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_alias.test"
-	var v bedrockagent.GetAgentAliasOutput
+	var v awstypes.AgentAlias
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
@@ -74,7 +72,7 @@ func TestAccBedrockAgentAlias_disappears(t *testing.T) {
 				Config: testAccAgentAliasConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAgentAliasExists(ctx, resourceName, &v),
-					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfagent.ResourceAgentAlias, resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tftypes.ResourceAgentAlias, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -88,7 +86,7 @@ func TestAccBedrockAgentAlias_update(t *testing.T) {
 	descriptionOld := "Agent Alias Before Update"
 	descriptionNew := "Agent Alias After Update"
 	resourceName := "aws_bedrockagent_agent_alias.test"
-	var v bedrockagent.GetAgentAliasOutput
+	var v awstypes.AgentAlias
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
@@ -105,7 +103,6 @@ func TestAccBedrockAgentAlias_update(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "agent_alias_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "agent_alias_status"),
 					resource.TestCheckResourceAttrSet(resourceName, "agent_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttr(resourceName, "description", descriptionOld),
 					resource.TestCheckResourceAttr(resourceName, "routing_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "routing_configuration.0.agent_version", "1"),
@@ -126,7 +123,6 @@ func TestAccBedrockAgentAlias_update(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "agent_alias_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "agent_alias_status"),
 					resource.TestCheckResourceAttrSet(resourceName, "agent_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttr(resourceName, "description", descriptionNew),
 					resource.TestCheckResourceAttr(resourceName, "routing_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "routing_configuration.0.agent_version", "1"),
@@ -142,7 +138,7 @@ func TestAccBedrockAgentAlias_routingUpdate(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_alias.test"
 	updatedVersion := "2"
-	var v bedrockagent.GetAgentAliasOutput
+	var v awstypes.AgentAlias
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
@@ -159,7 +155,6 @@ func TestAccBedrockAgentAlias_routingUpdate(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "agent_alias_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "agent_alias_status"),
 					resource.TestCheckResourceAttrSet(resourceName, "agent_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttr(resourceName, "description", "Test ALias"),
 					resource.TestCheckResourceAttr(resourceName, "routing_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "routing_configuration.0.agent_version", "1"),
@@ -180,7 +175,6 @@ func TestAccBedrockAgentAlias_routingUpdate(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "agent_alias_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "agent_alias_status"),
 					resource.TestCheckResourceAttrSet(resourceName, "agent_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
 					resource.TestCheckResourceAttr(resourceName, "description", "Test ALias"),
 					resource.TestCheckResourceAttr(resourceName, "routing_configuration.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "routing_configuration.0.agent_version", updatedVersion),
@@ -195,7 +189,7 @@ func TestAccBedrockAgentAlias_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent_alias.test"
-	var v bedrockagent.GetAgentAliasOutput
+	var v awstypes.AgentAlias
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
@@ -246,7 +240,7 @@ func testAccCheckAgentAliasDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := tfagent.FindAgentAliasByID(ctx, conn, rs.Primary.ID)
+			_, err := tftypes.FindAgentAliasByID(ctx, conn, rs.Primary.ID)
 
 			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				return nil
@@ -262,7 +256,7 @@ func testAccCheckAgentAliasDestroy(ctx context.Context) resource.TestCheckFunc {
 	}
 }
 
-func testAccCheckAgentAliasExists(ctx context.Context, n string, v *bedrockagent.GetAgentAliasOutput) resource.TestCheckFunc {
+func testAccCheckAgentAliasExists(ctx context.Context, n string, v *awstypes.AgentAlias) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -271,7 +265,7 @@ func testAccCheckAgentAliasExists(ctx context.Context, n string, v *bedrockagent
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentClient(ctx)
 
-		output, err := tfagent.FindAgentAliasByID(ctx, conn, rs.Primary.ID)
+		output, err := tftypes.FindAgentAliasByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err

@@ -452,7 +452,7 @@ Each `custom_response_body` block supports the following arguments:
 
 The `default_action` block supports the following arguments:
 
-~> **Note** One of `allow` or `block`, expressed as an empty configuration block `{}`, is required when specifying a `default_action`
+~> **Note** One of `allow` or `block` is required when specifying a `default_action`
 
 * `allow` - (Optional) Specifies that AWS WAF should allow requests by default. See [`allow`](#allow-block) below for details.
 * `block` - (Optional) Specifies that AWS WAF should block requests by default. See [`block`](#block-block) below for details.

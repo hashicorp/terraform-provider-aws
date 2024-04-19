@@ -59,10 +59,10 @@ data "aws_caller_identity" "current" {}
 data "aws_region" "current" {}
 
 resource "aws_bedrockagent_agent" "test" {
-  agent_name              = "my-agent-name"
-  agent_resource_role_arn = aws_iam_role.example.arn
-  idle_ttl                = 500
-  foundation_model        = "anthropic.claude-v2"
+  agent_name                  = "my-agent-name"
+  agent_resource_role_arn     = aws_iam_role.example.arn
+  idle_session_ttl_in_seconds = 500
+  foundation_model            = "anthropic.claude-v2"
 }
 ```
 
@@ -73,12 +73,12 @@ The following arguments are required:
 * `agent_name` - (Required) Name for the agent.
 * `agent_resource_role_arn` - (Required) ARN of the Role for the agent.
 * `foundation_model` - (Required) Foundation model for the agent to use.
-* `idle_ttl` - (Required) TTL in seconds for the agent to idle.
 
 The following arguments are optional:
 
 * `customer_encryption_key_arn` - (Optional) ARN of customer manager key to use for encryption.
 * `description` - (Optional) Description of the agent.
+* `idle_session_ttl_in_seconds` - (Optional) TTL in seconds for the agent to idle.
 * `instruction` - (Optional) Instructions to tell agent what it should do.
 * `prompt_override_configuration` (Optional) Prompt Override Configuration
 * `tags` - (Optional) Key-value tags for the place index. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
@@ -117,8 +117,8 @@ The following arguments are required:
 * `max_length` - (Required) Maximum number of tokens in the response between 0 and 4096.
 * `stop_sequences` - (Required) List of stop sequences that cause the model to stop generating the response.
 * `temperature` - (Required) Likelihood of model selecting higher-probability options when generating a response.
-* `topk` - (Required) Defines the number of most-likely candidates the model chooses the next token from.
-* `topp` - (Required) Defines the number of most-likely candidates the model chooses the next token from.
+* `top_k` - (Required) Defines the number of most-likely candidates the model chooses the next token from.
+* `top_p` - (Required) Defines the number of most-likely candidates the model chooses the next token from.
 
 ## Attribute Reference
 
@@ -126,13 +126,7 @@ This resource exports the following attributes in addition to the arguments abov
 
 * `agent_arn` - ARN of the Agent.
 * `agent_id` - ID of the Agent.
-* `agent_status` - Status of the Agent.
 * `agent_version` - Version of the Agent.
-* `created_at` - Timestamp the Agent was created at.
-* `failure_reasons` - Failure reasons for the Agent.
-* `prepared_at` - Timestamp the Agent was prepared at.
-* `recommended_actions` - Recommended actions to make your Agent to succeed.
-* `updated_at` - Timestamp the Agent was updated at.
 
 ## Timeouts
 

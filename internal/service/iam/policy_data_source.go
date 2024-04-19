@@ -31,6 +31,10 @@ func dataSourcePolicy() *schema.Resource {
 				ValidateFunc:  verify.ValidARN,
 				ConflictsWith: []string{"name", "path_prefix"},
 			},
+			"attachment_count": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"description": {
 				Type:     schema.TypeString,
 				Computed: true,
@@ -97,6 +101,7 @@ func dataSourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.SetId(arn)
 	d.Set("arn", arn)
+	d.Set("attachment_count", policy.AttachmentCount)
 	d.Set("description", policy.Description)
 	d.Set("name", policy.PolicyName)
 	d.Set("path", policy.Path)
