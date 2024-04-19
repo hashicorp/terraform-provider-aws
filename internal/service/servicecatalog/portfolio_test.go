@@ -30,7 +30,7 @@ func TestAccServiceCatalogPortfolio_basic(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServiceCatlaogPortfolioDestroy(ctx),
+		CheckDestroy:             testAccCheckPortfolioDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPortfolioConfig_basic(name),
@@ -63,7 +63,7 @@ func TestAccServiceCatalogPortfolio_disappears(t *testing.T) {
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.ServiceCatalogServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckServiceCatlaogPortfolioDestroy(ctx),
+		CheckDestroy:             testAccCheckPortfolioDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccPortfolioConfig_basic(name),
@@ -151,7 +151,7 @@ func testAccCheckPortfolioExists(ctx context.Context, n string, v *servicecatalo
 	}
 }
 
-func testAccCheckServiceCatlaogPortfolioDestroy(ctx context.Context) resource.TestCheckFunc {
+func testAccCheckPortfolioDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ServiceCatalogConn(ctx)
 
