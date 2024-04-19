@@ -21,7 +21,6 @@ import (
 // @FrameworkDataSource
 func newDataSourceAccelerator(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceAccelerator{}
-	d.SetMigratedFromPluginSDK(true)
 
 	return d, nil
 }

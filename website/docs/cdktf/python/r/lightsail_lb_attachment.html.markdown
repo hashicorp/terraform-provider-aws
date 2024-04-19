@@ -48,7 +48,7 @@ class MyConvertedCode(TerraformStack):
         aws_lightsail_instance_test = LightsailInstance(self, "test_2",
             availability_zone=Token.as_string(Fn.lookup_nested(available.names, ["0"])),
             blueprint_id="amazon_linux_2",
-            bundle_id="nano_1_0",
+            bundle_id="nano_3_0",
             name="test-instance"
         )
         # This allows the Terraform resource name to match the original name. You can remove the call if you don't need them to match.
@@ -99,4 +99,4 @@ Using `terraform import`, import `aws_lightsail_lb_attachment` using the name at
 % terraform import aws_lightsail_lb_attachment.test example-load-balancer,example-instance
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-1f5a78fef900db643827102ff8c8ece3850d79f4a93a4cdfb83fba4a5ff25956 -->
+<!-- cache-key: cdktf-0.20.1 input-d7f55c172f805ac505cedcf63850df8db630bc587a21a031b9908cb01167fd47 -->

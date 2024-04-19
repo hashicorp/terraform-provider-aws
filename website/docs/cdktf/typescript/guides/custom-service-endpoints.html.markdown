@@ -253,6 +253,7 @@ class MyConvertedCode extends TerraformStack {
   <li><code>mq</code></li>
   <li><code>mwaa</code></li>
   <li><code>neptune</code></li>
+  <li><code>neptunegraph</code></li>
   <li><code>networkfirewall</code></li>
   <li><code>networkmanager</code></li>
   <li><code>oam</code> (or <code>cloudwatchobservabilityaccessmanager</code>)</li>
@@ -439,4 +440,4 @@ class MyConvertedCode extends TerraformStack {
 
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-97385fed76aa6b76cff3b66d6b73c564e3ee03b61d017ef9e3b767820ce669d4 -->
+<!-- cache-key: cdktf-0.20.1 input-d65f1f0b651e175fa2bfe7882a2a41b16b6ea0a04040101331fe126be0abcbfe -->

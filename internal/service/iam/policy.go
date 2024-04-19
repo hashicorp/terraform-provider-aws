@@ -53,6 +53,10 @@ func resourcePolicy() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			"attachment_count": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
 			"description": {
 				Type:     schema.TypeString,
 				ForceNew: true,
@@ -194,6 +198,7 @@ func resourcePolicyRead(ctx context.Context, d *schema.ResourceData, meta interf
 	policy := output.policy
 
 	d.Set("arn", policy.Arn)
+	d.Set("attachment_count", policy.AttachmentCount)
 	d.Set("description", policy.Description)
 	d.Set("name", policy.PolicyName)
 	d.Set("name_prefix", create.NamePrefixFromName(aws.ToString(policy.PolicyName)))

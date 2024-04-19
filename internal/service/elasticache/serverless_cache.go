@@ -196,7 +196,13 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"maximum": schema.Int64Attribute{
-										Required: true,
+										Optional: true,
+										PlanModifiers: []planmodifier.Int64{
+											int64planmodifier.RequiresReplace(),
+										},
+									},
+									"minimum": schema.Int64Attribute{
+										Optional: true,
 										PlanModifiers: []planmodifier.Int64{
 											int64planmodifier.RequiresReplace(),
 										},
@@ -216,7 +222,16 @@ func (r *serverlessCacheResource) Schema(ctx context.Context, request resource.S
 							NestedObject: schema.NestedBlockObject{
 								Attributes: map[string]schema.Attribute{
 									"maximum": schema.Int64Attribute{
-										Required: true,
+										Optional: true,
+										Validators: []validator.Int64{
+											int64validator.Between(1000, 15000000),
+										},
+										PlanModifiers: []planmodifier.Int64{
+											int64planmodifier.RequiresReplace(),
+										},
+									},
+									"minimum": schema.Int64Attribute{
+										Optional: true,
 										Validators: []validator.Int64{
 											int64validator.Between(1000, 15000000),
 										},
@@ -482,11 +497,13 @@ type cacheUsageLimitsModel struct {
 
 type dataStorageModel struct {
 	Maximum types.Int64                                  `tfsdk:"maximum"`
+	Minimum types.Int64                                  `tfsdk:"minimum"`
 	Unit    fwtypes.StringEnum[awstypes.DataStorageUnit] `tfsdk:"unit"`
 }
 
 type ecpuPerSecondModel struct {
 	Maximum types.Int64 `tfsdk:"maximum"`
+	Minimum types.Int64 `tfsdk:"minimum"`
 }
 
 type endpointModel struct {

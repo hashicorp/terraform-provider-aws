@@ -5,7 +5,6 @@ package appconfig
 
 import (
 	"context"
-	"errors"
 
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	retry_sdkv2 "github.com/aws/aws-sdk-go-v2/aws/retry"
@@ -28,13 +27,11 @@ func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (
 		// if ongoing deployments are in-progress, thus we handle them
 		// here for the service client.
 		o.Retryer = conns.AddIsErrorRetryables(cfg.Retryer().(aws_sdkv2.RetryerV2), retry_sdkv2.IsErrorRetryableFunc(func(err error) aws_sdkv2.Ternary {
-			if err != nil {
-				var oe *smithy.OperationError
-				if errors.As(err, &oe) {
-					if oe.OperationName == "StartDeployment" {
-						if errs.IsA[*awstypes.ConflictException](err) {
-							return aws_sdkv2.TrueTernary
-						}
+			if v, ok := errs.As[*smithy.OperationError](err); ok {
+				switch v.OperationName {
+				case "StartDeployment":
+					if errs.IsA[*awstypes.ConflictException](err) {
+						return aws_sdkv2.TrueTernary
 					}
 				}
 			}

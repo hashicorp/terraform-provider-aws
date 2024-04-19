@@ -8,9 +8,10 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
+	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -18,8 +19,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_eip_association")
-func ResourceEIPAssociation() *schema.Resource {
+// @SDKResource("aws_eip_association", name="EIP Association")
+func resourceEIPAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceEIPAssociationCreate,
 		ReadWithoutTimeout:   resourceEIPAssociationRead,
@@ -71,7 +72,7 @@ func ResourceEIPAssociation() *schema.Resource {
 
 func resourceEIPAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	input := &ec2.AssociateAddressInput{}
 
@@ -99,17 +100,17 @@ func resourceEIPAssociationCreate(ctx context.Context, d *schema.ResourceData, m
 		input.PublicIp = aws.String(v.(string))
 	}
 
-	output, err := conn.AssociateAddressWithContext(ctx, input)
+	output, err := conn.AssociateAddress(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating EC2 EIP Association: %s", err)
 	}
 
-	d.SetId(aws.StringValue(output.AssociationId))
+	d.SetId(aws.ToString(output.AssociationId))
 
 	_, err = tfresource.RetryWhen(ctx, ec2PropagationTimeout,
 		func() (interface{}, error) {
-			return FindEIPByAssociationID(ctx, conn, d.Id())
+			return findEIPByAssociationID(ctx, conn, d.Id())
 		},
 		func(err error) (bool, error) {
 			if tfresource.NotFound(err) {
@@ -134,13 +135,13 @@ func resourceEIPAssociationCreate(ctx context.Context, d *schema.ResourceData, m
 
 func resourceEIPAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	if !eipAssociationID(d.Id()).IsVPC() {
-		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic %s domain EC2 EIPs are no longer supported`, ec2.DomainTypeStandard)
+		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic %s domain EC2 EIPs are no longer supported`, types.DomainTypeStandard)
 	}
 
-	address, err := FindEIPByAssociationID(ctx, conn, d.Id())
+	address, err := findEIPByAssociationID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] EC2 EIP Association (%s) not found, removing from state", d.Id())
@@ -163,10 +164,10 @@ func resourceEIPAssociationRead(ctx context.Context, d *schema.ResourceData, met
 
 func resourceEIPAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
+	conn := meta.(*conns.AWSClient).EC2Client(ctx)
 
 	if !eipAssociationID(d.Id()).IsVPC() {
-		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic %s domain EC2 EIPs are no longer supported`, ec2.DomainTypeStandard)
+		return sdkdiag.AppendErrorf(diags, `with the retirement of EC2-Classic %s domain EC2 EIPs are no longer supported`, types.DomainTypeStandard)
 	}
 
 	input := &ec2.DisassociateAddressInput{
@@ -174,7 +175,7 @@ func resourceEIPAssociationDelete(ctx context.Context, d *schema.ResourceData, m
 	}
 
 	log.Printf("[DEBUG] Deleting EC2 EIP Association: %s", d.Id())
-	_, err := conn.DisassociateAddressWithContext(ctx, input)
+	_, err := conn.DisassociateAddress(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeInvalidAssociationIDNotFound) {
 		return diags
