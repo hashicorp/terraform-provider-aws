@@ -111,6 +111,7 @@ type ResourceDatum struct {
 	Implementation    implementation
 	Serialize         bool
 	PreCheck          bool
+	SkipEmptyTags     bool // TODO: Remove when we have a strategy for resources that have a minimum tag value length of 1
 	GoImports         []goImport
 }
 
@@ -279,6 +280,14 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					} else if !b {
 						v.g.Infof("Skipping tags test for %s.%s", v.packageName, v.functionName)
 						skip = true
+					}
+				}
+				if attr, ok := args.Keyword["skipEmptyTags"]; ok {
+					if b, err := strconv.ParseBool(attr); err != nil {
+						v.errs = append(v.errs, fmt.Errorf("invalid skipEmptyTags value: %q at %s. Should be boolean value.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					} else {
+						d.SkipEmptyTags = b
 					}
 				}
 			}

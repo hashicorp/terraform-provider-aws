@@ -176,6 +176,9 @@ func {{ template "testname" . }}_tags_AddOnUpdate(t *testing.T) {
 }
 
 func {{ template "testname" . }}_tags_EmptyTag_OnCreate(t *testing.T) {
+{{- if .SkipEmptyTags }}
+	t.Skip("Resource {{ .Name }} does not support empty tags")
+{{ end }}
 	{{- template "Init" . }}
 
 	resource.{{ if .Serialize }}Test{{ else }}ParallelTest{{ end }}(t, resource.TestCase{
@@ -203,6 +206,9 @@ func {{ template "testname" . }}_tags_EmptyTag_OnCreate(t *testing.T) {
 }
 
 func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
+{{- if .SkipEmptyTags }}
+	t.Skip("Resource {{ .Name }} does not support empty tags")
+{{ end }}
 	{{- template "Init" . }}
 
 	resource.{{ if .Serialize }}Test{{ else }}ParallelTest{{ end }}(t, resource.TestCase{
@@ -240,6 +246,9 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 }
 
 func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
+{{- if .SkipEmptyTags }}
+	t.Skip("Resource {{ .Name }} does not support empty tags")
+{{ end }}
 	{{- template "Init" . }}
 
 	resource.{{ if .Serialize }}Test{{ else }}ParallelTest{{ end }}(t, resource.TestCase{
@@ -503,6 +512,9 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToResourceOnly(t *testin
 }
 
 func {{ template "testname" . }}_tags_DefaultTags_emptyResourceTag(t *testing.T) {
+{{- if .SkipEmptyTags }}
+	t.Skip("Resource {{ .Name }} does not support empty tags")
+{{ end }}
 	{{- template "Init" . }}
 
 	resource.{{ if .Serialize }}Test{{ else }}ParallelTest{{ end }}(t, resource.TestCase{
