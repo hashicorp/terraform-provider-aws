@@ -24,6 +24,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -279,8 +280,6 @@ func (r *resourceExport) Update(ctx context.Context, req resource.UpdateRequest,
 		return
 	}
 
-	log.Printf("[WARN] BEFORE EXPAND do i get here")
-
 	if !plan.Export.Equal(state.Export) {
 		in := &bcmdataexports.UpdateExportInput{}
 		resp.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
@@ -289,10 +288,7 @@ func (r *resourceExport) Update(ctx context.Context, req resource.UpdateRequest,
 		}
 
 		in.ExportArn = aws.String(plan.ID.ValueString())
-		in.Export.ExportArn = aws.String(state.ID.ValueString())
-
-		log.Printf("[WARN] do i get here")
-		log.Printf("[WARN] export arn: %s", state.ID.ValueString())
+		in.Export.ExportArn = aws.String(plan.ID.ValueString())
 
 		out, err := conn.UpdateExport(ctx, in)
 		if err != nil {
@@ -311,11 +307,6 @@ func (r *resourceExport) Update(ctx context.Context, req resource.UpdateRequest,
 		}
 
 		resp.Diagnostics.Append(flex.Flatten(ctx, out, &plan)...)
-
-		// resp.Diagnostics.Append(flex.Flatten(context.WithValue(ctx, flex.ResourcePrefix, ResNameExport), out, &plan)...)
-		// if resp.Diagnostics.HasError() {
-		// 	return
-		// }
 	}
 
 	updateTimeout := r.UpdateTimeout(ctx, plan.Timeouts)
@@ -375,7 +366,7 @@ const (
 func waitExportCreated(ctx context.Context, conn *bcmdataexports.Client, id string, timeout time.Duration) (*bcmdataexports.GetExportOutput, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending:                   []string{},
-		Target:                    []string{string(statusHealthy)},
+		Target:                    enum.Slice(awstypes.ExportStatusCodeHealthy),
 		Refresh:                   statusExport(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
@@ -392,8 +383,8 @@ func waitExportCreated(ctx context.Context, conn *bcmdataexports.Client, id stri
 
 func waitExportUpdated(ctx context.Context, conn *bcmdataexports.Client, id string, timeout time.Duration) (*bcmdataexports.GetExportOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:                   []string{string(statusUnhealthy)},
-		Target:                    []string{string(statusHealthy)},
+		Pending:                   enum.Slice(awstypes.ExportStatusCodeUnhealthy),
+		Target:                    enum.Slice(awstypes.ExportStatusCodeHealthy),
 		Refresh:                   statusExport(ctx, conn, id),
 		Timeout:                   timeout,
 		NotFoundChecks:            20,
