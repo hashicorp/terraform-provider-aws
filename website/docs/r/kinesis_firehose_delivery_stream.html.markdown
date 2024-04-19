@@ -680,13 +680,14 @@ This resource supports the following arguments:
 * `server_side_encryption` - (Optional) Encrypt at rest options. See [`server_side_encryption` block](#server_side_encryption-block) below for details.
 
   **NOTE:** Server-side encryption should not be enabled when a kinesis stream is configured as the source of the firehose delivery stream.
-* `destination` – (Required) This is the destination to where the data is delivered. The only options are `s3` (Deprecated, use `extended_s3` instead), `extended_s3`, `redshift`, `elasticsearch`, `splunk`, `http_endpoint`, `opensearch` and `opensearchserverless`.
+* `destination` – (Required) This is the destination to where the data is delivered. The only options are `s3` (Deprecated, use `extended_s3` instead), `extended_s3`, `redshift`, `elasticsearch`, `splunk`, `http_endpoint`, `opensearch`, `opensearchserverless` and `snowflake`.
 * `elasticsearch_configuration` - (Optional) Configuration options when `destination` is `elasticsearch`. See [`elasticsearch_configuration` block](#elasticsearch_configuration-block) below for details.
 * `extended_s3_configuration` - (Optional, only Required when `destination` is `extended_s3`) Enhanced configuration options for the s3 destination. See [`extended_s3_configuration` block](#extended_s3_configuration-block) below for details.
 * `http_endpoint_configuration` - (Optional) Configuration options when `destination` is `http_endpoint`. Requires the user to also specify an `s3_configuration` block.  See [`http_endpoint_configuration` block](#http_endpoint_configuration-block) below for details.
 * `opensearch_configuration` - (Optional) Configuration options when `destination` is `opensearch`. See [`opensearch_configuration` block](#opensearch_configuration-block) below for details.
 * `opensearchserverless_configuration` - (Optional) Configuration options when `destination` is `opensearchserverless`. See [`opensearchserverless_configuration` block](#opensearchserverless_configuration-block) below for details.
 * `redshift_configuration` - (Optional) Configuration options when `destination` is `redshift`. Requires the user to also specify an `s3_configuration` block. See [`redshift_configuration` block](#redshift_configuration-block) below for details.
+* `snowflake_configuration` - (Optional) Configuration options when `destination` is `snowflake`. See [`snowflake_configuration` block](#snowflake_configuration-block) below for details.
 * `splunk_configuration` - (Optional) Configuration options when `destination` is `splunk`. See [`splunk_configuration` block](#splunk_configuration-block) below for details.
 
 ### `kinesis_source_configuration` block

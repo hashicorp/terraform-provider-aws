@@ -41,8 +41,8 @@ const (
 	destinationTypeOpenSearch           destinationType = "opensearch"
 	destinationTypeOpenSearchServerless destinationType = "opensearchserverless"
 	destinationTypeRedshift             destinationType = "redshift"
-	destinationTypeSplunk               destinationType = "splunk"
 	destinationTypeSnowflake            destinationType = "snowflake"
+	destinationTypeSplunk               destinationType = "splunk"
 )
 
 func (destinationType) Values() []destinationType {
@@ -53,8 +53,8 @@ func (destinationType) Values() []destinationType {
 		destinationTypeOpenSearch,
 		destinationTypeOpenSearchServerless,
 		destinationTypeRedshift,
-		destinationTypeSplunk,
 		destinationTypeSnowflake,
+		destinationTypeSplunk,
 	}
 }
 
@@ -1007,7 +1007,7 @@ func resourceDeliveryStream() *schema.Resource {
 							},
 							"key_passphrase": {
 								Type:         schema.TypeString,
-								Required:     true,
+								Optional:     true,
 								Sensitive:    true,
 								ValidateFunc: validation.StringLenBetween(7, 255),
 							},
@@ -1332,6 +1332,7 @@ func resourceDeliveryStream() *schema.Resource {
 					destinationTypeOpenSearch:           "opensearch_configuration",
 					destinationTypeOpenSearchServerless: "opensearchserverless_configuration",
 					destinationTypeRedshift:             "redshift_configuration",
+					destinationTypeSnowflake:            "snowflake_configuration",
 					destinationTypeSplunk:               "splunk_configuration",
 				}[destination]
 
@@ -1388,6 +1389,10 @@ func resourceDeliveryStreamCreate(ctx context.Context, d *schema.ResourceData, m
 	case destinationTypeRedshift:
 		if v, ok := d.GetOk("redshift_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 			input.RedshiftDestinationConfiguration = expandRedshiftDestinationConfiguration(v.([]interface{})[0].(map[string]interface{}))
+		}
+	case destinationTypeSnowflake:
+		if v, ok := d.GetOk("snowflake_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+			input.SnowflakeDestinationConfiguration = expandSnowflakeDestinationConfiguration(v.([]interface{})[0].(map[string]interface{}))
 		}
 	case destinationTypeSplunk:
 		if v, ok := d.GetOk("splunk_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -1510,6 +1515,13 @@ func resourceDeliveryStreamRead(ctx context.Context, d *schema.ResourceData, met
 			if err := d.Set("redshift_configuration", flattenRedshiftDestinationDescription(destination.RedshiftDestinationDescription, configuredPassword)); err != nil {
 				return sdkdiag.AppendErrorf(diags, "setting redshift_configuration: %s", err)
 			}
+		case destination.SnowflakeDestinationDescription != nil:
+			d.Set("destination", destinationTypeSnowflake)
+			configuredKeyPassphrase := d.Get("snowflake_configuration.0.key_passphrase").(string)
+			configuredPrivateKey := d.Get("snowflake_configuration.0.private_key").(string)
+			if err := d.Set("snowflake_configuration", flattenSnowflakeDestinationDescription(destination.SnowflakeDestinationDescription, configuredKeyPassphrase, configuredPrivateKey)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "setting snowflake_configuration: %s", err)
+			}
 		case destination.SplunkDestinationDescription != nil:
 			d.Set("destination", destinationTypeSplunk)
 			if err := d.Set("splunk_configuration", flattenSplunkDestinationDescription(destination.SplunkDestinationDescription)); err != nil {
@@ -1564,6 +1576,10 @@ func resourceDeliveryStreamUpdate(ctx context.Context, d *schema.ResourceData, m
 		case destinationTypeRedshift:
 			if v, ok := d.GetOk("redshift_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 				input.RedshiftDestinationUpdate = expandRedshiftDestinationUpdate(v.([]interface{})[0].(map[string]interface{}))
+			}
+		case destinationTypeSnowflake:
+			if v, ok := d.GetOk("snowflake_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
+				input.SnowflakeDestinationUpdate = expandSnowflakeDestinationUpdate(v.([]interface{})[0].(map[string]interface{}))
 			}
 		case destinationTypeSplunk:
 			if v, ok := d.GetOk("splunk_configuration"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
@@ -2627,6 +2643,108 @@ func expandAmazonOpenSearchServerlessDestinationUpdate(oss map[string]interface{
 	return update
 }
 
+func expandSnowflakeDestinationConfiguration(tfMap map[string]interface{}) *types.SnowflakeDestinationConfiguration {
+	roleARN := tfMap["role_arn"].(string)
+	apiObject := &types.SnowflakeDestinationConfiguration{
+		AccountUrl:      aws.String(tfMap["account_url"].(string)),
+		Database:        aws.String(tfMap["database"].(string)),
+		PrivateKey:      aws.String(tfMap["private_key"].(string)),
+		RetryOptions:    expandSnowflakeRetryOptions(tfMap),
+		RoleARN:         aws.String(roleARN),
+		S3Configuration: expandS3DestinationConfiguration(tfMap["s3_configuration"].([]interface{})),
+		Schema:          aws.String(tfMap["schema"].(string)),
+		Table:           aws.String(tfMap["table"].(string)),
+		User:            aws.String(tfMap["user"].(string)),
+	}
+
+	if _, ok := tfMap["cloudwatch_logging_options"]; ok {
+		apiObject.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(tfMap)
+	}
+
+	if v, ok := tfMap["content_column_name"]; ok && v.(string) != "" {
+		apiObject.ContentColumnName = aws.String(v.(string))
+	}
+
+	if v, ok := tfMap["data_loading_option"]; ok && v.(string) != "" {
+		apiObject.DataLoadingOption = types.SnowflakeDataLoadingOption(v.(string))
+	}
+
+	if v, ok := tfMap["key_passphrase"]; ok && v.(string) != "" {
+		apiObject.KeyPassphrase = aws.String(v.(string))
+	}
+
+	if v, ok := tfMap["metadata_column_name"]; ok && v.(string) != "" {
+		apiObject.MetaDataColumnName = aws.String(v.(string))
+	}
+
+	if _, ok := tfMap["processing_configuration"]; ok {
+		apiObject.ProcessingConfiguration = expandProcessingConfiguration(tfMap, destinationTypeSnowflake, roleARN)
+	}
+
+	if v, ok := tfMap["s3_backup_mode"]; ok {
+		apiObject.S3BackupMode = types.SnowflakeS3BackupMode(v.(string))
+	}
+
+	if _, ok := tfMap["snowflake_role_configuration"]; ok {
+		apiObject.SnowflakeRoleConfiguration = expandSnowflakeRoleConfiguration(tfMap)
+	}
+
+	if _, ok := tfMap["snowflake_vpc_configuration"]; ok {
+		apiObject.SnowflakeVpcConfiguration = expandSnowflakeVPCConfiguration(tfMap)
+	}
+
+	return apiObject
+}
+
+func expandSnowflakeDestinationUpdate(tfMap map[string]interface{}) *types.SnowflakeDestinationUpdate {
+	roleARN := tfMap["role_arn"].(string)
+	apiObject := &types.SnowflakeDestinationUpdate{
+		AccountUrl:   aws.String(tfMap["account_url"].(string)),
+		Database:     aws.String(tfMap["database"].(string)),
+		PrivateKey:   aws.String(tfMap["private_key"].(string)),
+		RetryOptions: expandSnowflakeRetryOptions(tfMap),
+		RoleARN:      aws.String(roleARN),
+		S3Update:     expandS3DestinationUpdate(tfMap["s3_configuration"].([]interface{})),
+		Schema:       aws.String(tfMap["schema"].(string)),
+		Table:        aws.String(tfMap["table"].(string)),
+		User:         aws.String(tfMap["user"].(string)),
+	}
+
+	if _, ok := tfMap["cloudwatch_logging_options"]; ok {
+		apiObject.CloudWatchLoggingOptions = expandCloudWatchLoggingOptions(tfMap)
+	}
+
+	if v, ok := tfMap["content_column_name"]; ok && v.(string) != "" {
+		apiObject.ContentColumnName = aws.String(v.(string))
+	}
+
+	if v, ok := tfMap["data_loading_option"]; ok && v.(string) != "" {
+		apiObject.DataLoadingOption = types.SnowflakeDataLoadingOption(v.(string))
+	}
+
+	if v, ok := tfMap["key_passphrase"]; ok && v.(string) != "" {
+		apiObject.KeyPassphrase = aws.String(v.(string))
+	}
+
+	if v, ok := tfMap["metadata_column_name"]; ok && v.(string) != "" {
+		apiObject.MetaDataColumnName = aws.String(v.(string))
+	}
+
+	if _, ok := tfMap["processing_configuration"]; ok {
+		apiObject.ProcessingConfiguration = expandProcessingConfiguration(tfMap, destinationTypeSnowflake, roleARN)
+	}
+
+	if v, ok := tfMap["s3_backup_mode"]; ok {
+		apiObject.S3BackupMode = types.SnowflakeS3BackupMode(v.(string))
+	}
+
+	if _, ok := tfMap["snowflake_role_configuration"]; ok {
+		apiObject.SnowflakeRoleConfiguration = expandSnowflakeRoleConfiguration(tfMap)
+	}
+
+	return apiObject
+}
+
 func expandSplunkDestinationConfiguration(splunk map[string]interface{}) *types.SplunkDestinationConfiguration {
 	configuration := &types.SplunkDestinationConfiguration{
 		HECToken:                          aws.String(splunk["hec_token"].(string)),
@@ -2911,6 +3029,47 @@ func expandRedshiftRetryOptions(redshift map[string]interface{}) *types.Redshift
 	}
 
 	return retryOptions
+}
+
+func expandSnowflakeRetryOptions(tfMap map[string]interface{}) *types.SnowflakeRetryOptions {
+	apiObject := &types.SnowflakeRetryOptions{}
+
+	if v, ok := tfMap["retry_duration"].(int); ok {
+		apiObject.DurationInSeconds = aws.Int32(int32(v))
+	}
+
+	return apiObject
+}
+
+func expandSnowflakeRoleConfiguration(tfMap map[string]interface{}) *types.SnowflakeRoleConfiguration {
+	tfList := tfMap["snowflake_role_configuration"].([]interface{})
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	tfMap = tfList[0].(map[string]interface{})
+
+	apiObject := &types.SnowflakeRoleConfiguration{
+		Enabled:       aws.Bool(tfMap["enabled"].(bool)),
+		SnowflakeRole: aws.String(tfMap["snowflake_role"].(string)),
+	}
+
+	return apiObject
+}
+
+func expandSnowflakeVPCConfiguration(tfMap map[string]interface{}) *types.SnowflakeVpcConfiguration {
+	tfList := tfMap["snowflake_vpc_configuration"].([]interface{})
+	if len(tfList) == 0 {
+		return nil
+	}
+
+	tfMap = tfList[0].(map[string]interface{})
+
+	apiObject := &types.SnowflakeVpcConfiguration{
+		PrivateLinkVpceId: aws.String(tfMap["private_link_vpce_id"].(string)),
+	}
+
+	return apiObject
 }
 
 func expandSplunkRetryOptions(splunk map[string]interface{}) *types.SplunkRetryOptions {
@@ -3239,6 +3398,39 @@ func flattenRedshiftDestinationDescription(description *types.RedshiftDestinatio
 	}
 
 	return []map[string]interface{}{m}
+}
+
+func flattenSnowflakeDestinationDescription(apiObject *types.SnowflakeDestinationDescription, configuredKeyPassphrase, configuredPrivateKey string) []map[string]interface{} {
+	if apiObject == nil {
+		return []map[string]interface{}{}
+	}
+
+	roleARN := aws.ToString(apiObject.RoleARN)
+	tfMap := map[string]interface{}{
+		"account_url":                  aws.ToString(apiObject.AccountUrl),
+		"cloudwatch_logging_options":   flattenCloudWatchLoggingOptions(apiObject.CloudWatchLoggingOptions),
+		"content_column_name":          aws.ToString(apiObject.ContentColumnName),
+		"data_loading_option":          apiObject.DataLoadingOption,
+		"database":                     aws.ToString(apiObject.Database),
+		"key_passphrase":               configuredKeyPassphrase,
+		"metadata_column_name":         aws.ToString(apiObject.MetaDataColumnName),
+		"private_key":                  configuredPrivateKey,
+		"processing_configuration":     flattenProcessingConfiguration(apiObject.ProcessingConfiguration, destinationTypeSnowflake, roleARN),
+		"role_arn":                     roleARN,
+		"s3_backup_mode":               apiObject.S3BackupMode,
+		"s3_configuration":             flattenS3DestinationDescription(apiObject.S3DestinationDescription),
+		"schema":                       aws.ToString(apiObject.Schema),
+		"snowflake_role_configuration": flattenSnowflakeRoleConfiguration(apiObject.SnowflakeRoleConfiguration),
+		"snowflake_vpc_configuration":  flattenSnowflakeVPCConfiguration(apiObject.SnowflakeVpcConfiguration),
+		"table":                        aws.ToString(apiObject.Table),
+		"user":                         aws.ToString(apiObject.User),
+	}
+
+	if apiObject.RetryOptions != nil {
+		tfMap["retry_duration"] = int(aws.ToInt32(apiObject.RetryOptions.DurationInSeconds))
+	}
+
+	return []map[string]interface{}{tfMap}
 }
 
 func flattenSplunkDestinationDescription(description *types.SplunkDestinationDescription) []map[string]interface{} {
@@ -3664,6 +3856,31 @@ func flattenDocumentIDOptions(apiObject *types.DocumentIdOptions) map[string]int
 	}
 
 	return tfMap
+}
+
+func flattenSnowflakeRoleConfiguration(apiObject *types.SnowflakeRoleConfiguration) []map[string]interface{} {
+	if apiObject == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"enabled":        aws.ToBool(apiObject.Enabled),
+		"snowflake_role": aws.ToString(apiObject.SnowflakeRole),
+	}
+
+	return []map[string]interface{}{m}
+}
+
+func flattenSnowflakeVPCConfiguration(apiObject *types.SnowflakeVpcConfiguration) []map[string]interface{} {
+	if apiObject == nil {
+		return []map[string]interface{}{}
+	}
+
+	m := map[string]interface{}{
+		"private_link_vpce_id": aws.ToString(apiObject.PrivateLinkVpceId),
+	}
+
+	return []map[string]interface{}{m}
 }
 
 func isDeliveryStreamOptionDisabled(v interface{}) bool {
