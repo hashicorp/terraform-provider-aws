@@ -18,7 +18,7 @@ require (
 	github.com/agext/levenshtein v1.2.3 // indirect
 	github.com/apparentlymart/go-textseg/v15 v15.0.0 // indirect
 	github.com/armon/go-radix v1.0.0 // indirect
-	github.com/aws/aws-sdk-go v1.51.23 // indirect
+	github.com/aws/aws-sdk-go v1.51.24 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.26.1 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.2 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.27.11 // indirect
@@ -44,7 +44,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/athena v1.40.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/auditmanager v1.32.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.40.5 // indirect
-	github.com/aws/aws-sdk-go-v2/service/autoscalingplans v1.20.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/autoscalingplans v1.20.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/batch v1.37.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.3.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.7.7 // indirect
@@ -98,7 +98,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/elasticbeanstalk v1.23.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.30.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/emr v1.39.5 // indirect
-	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.18.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/emrserverless v1.19.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/eventbridge v1.30.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/evidently v1.19.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/finspace v1.24.1 // indirect
@@ -157,10 +157,10 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.10.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.22.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/resourcegroupstaggingapi v1.21.4 // indirect
-	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.10.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/rolesanywhere v1.11.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/route53domains v1.23.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.53.1 // indirect
-	github.com/aws/aws-sdk-go-v2/service/s3control v1.44.5 // indirect
+	github.com/aws/aws-sdk-go-v2/service/s3control v1.44.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/scheduler v1.8.4 // indirect
 	github.com/aws/aws-sdk-go-v2/service/secretsmanager v1.28.6 // indirect
 	github.com/aws/aws-sdk-go-v2/service/securityhub v1.47.2 // indirect
@@ -188,7 +188,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.13.1 // indirect
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.7.5 // indirect
 	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.30.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/workspaces v1.38.4 // indirect
+	github.com/aws/aws-sdk-go-v2/service/workspaces v1.39.0 // indirect
 	github.com/aws/aws-sdk-go-v2/service/xray v1.25.4 // indirect
 	github.com/aws/smithy-go v1.20.2 // indirect
 	github.com/beevik/etree v1.3.0 // indirect
