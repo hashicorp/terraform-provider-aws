@@ -97,7 +97,6 @@ The following arguments are required:
 This resource exports the following attributes in addition to the arguments above:
 
 * `agent_alias_arn` - ARN of the Agent Alias.
-* `agent_alias_status` - Status of the Agent Alias.
 
 ## Timeouts
 

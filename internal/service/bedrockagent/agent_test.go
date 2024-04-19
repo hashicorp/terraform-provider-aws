@@ -5,21 +5,16 @@ package bedrockagent_test
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/bedrockagent"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/bedrockagent/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	tfbedrockagent "github.com/hashicorp/terraform-provider-aws/internal/service/bedrockagent"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -28,7 +23,7 @@ func TestAccBedrockAgent_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent.test"
-	var v bedrockagent.GetAgentOutput
+	var v awstypes.Agent
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
@@ -58,7 +53,7 @@ func TestAccBedrockAgent_full(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent.test"
-	var v bedrockagent.GetAgentOutput
+	var v awstypes.Agent
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
@@ -88,7 +83,7 @@ func TestAccBedrockAgent_update(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent.test"
-	var v bedrockagent.GetAgentOutput
+	var v awstypes.Agent
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
@@ -136,7 +131,7 @@ func TestAccBedrockAgent_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_bedrockagent_agent.test"
-	var agent bedrockagent.GetAgentOutput
+	var agent awstypes.Agent
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.BedrockEndpointID) },
@@ -187,23 +182,24 @@ func testAccCheckAgentDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := findAgentByID(ctx, conn, rs.Primary.ID)
+			_, err := tfbedrockagent.FindAgentByID(ctx, conn, rs.Primary.ID)
 
-			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-				return nil
+			if tfresource.NotFound(err) {
+				continue
 			}
+
 			if err != nil {
-				return create.Error(names.BedrockAgent, create.ErrActionCheckingDestroyed, "Bedrock Agent", rs.Primary.ID, err)
+				return err
 			}
 
-			return create.Error(names.BedrockAgent, create.ErrActionCheckingDestroyed, "Bedrock Agent", rs.Primary.ID, errors.New("not destroyed"))
+			return fmt.Errorf("Bedrock Agent %s still exists", rs.Primary.ID)
 		}
 
 		return nil
 	}
 }
 
-func testAccCheckAgentExists(ctx context.Context, n string, v *bedrockagent.GetAgentOutput) resource.TestCheckFunc {
+func testAccCheckAgentExists(ctx context.Context, n string, v *awstypes.Agent) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -212,7 +208,7 @@ func testAccCheckAgentExists(ctx context.Context, n string, v *bedrockagent.GetA
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).BedrockAgentClient(ctx)
 
-		output, err := findAgentByID(ctx, conn, rs.Primary.ID)
+		output, err := tfbedrockagent.FindAgentByID(ctx, conn, rs.Primary.ID)
 
 		if err != nil {
 			return err
@@ -222,31 +218,6 @@ func testAccCheckAgentExists(ctx context.Context, n string, v *bedrockagent.GetA
 
 		return nil
 	}
-}
-
-func findAgentByID(ctx context.Context, conn *bedrockagent.Client, id string) (*bedrockagent.GetAgentOutput, error) {
-	input := &bedrockagent.GetAgentInput{
-		AgentId: aws.String(id),
-	}
-
-	output, err := conn.GetAgent(ctx, input)
-
-	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output, nil
 }
 
 func testAccAgent_base(rName, model string) string {
