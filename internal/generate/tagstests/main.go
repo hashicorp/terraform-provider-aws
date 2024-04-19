@@ -111,6 +111,12 @@ type ResourceDatum struct {
 	Implementation    implementation
 	Serialize         bool
 	PreCheck          bool
+	GoImports         []goImport
+}
+
+type goImport struct {
+	Path  string
+	Alias string
 }
 
 //go:embed file.tmpl
@@ -221,7 +227,28 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 					d.ExistsTypeName = typeName
 				}
 				if attr, ok := args.Keyword["generator"]; ok {
-					d.Generator = attr
+					parts := strings.Split(attr, ";")
+					switch len(parts) {
+					case 1:
+						d.Generator = parts[0]
+
+					case 2:
+						d.Generator = parts[1]
+						d.GoImports = append(d.GoImports, goImport{
+							Path: parts[0],
+						})
+
+					case 3:
+						d.Generator = parts[2]
+						d.GoImports = append(d.GoImports, goImport{
+							Path:  parts[0],
+							Alias: parts[1],
+						})
+
+					default:
+						v.errs = append(v.errs, fmt.Errorf("invalid generator value: %q at %s.", attr, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+						continue
+					}
 				}
 				if attr, ok := args.Keyword["importIgnore"]; ok {
 					d.ImportIgnore = strings.Split(attr, ";")
