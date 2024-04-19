@@ -10,107 +10,72 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/datasource"
 	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
 	"github.com/hashicorp/terraform-plugin-framework/types"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
-	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
-	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @FrameworkDataSource(name="Groups")
-func newDataSourceGroups(context.Context) (datasource.DataSourceWithConfigure, error) {
-	return &dataSourceGroups{}, nil
+func newGroupsDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &groupsDataSource{}, nil
 }
 
-const (
-	DSNameGroups = "Groups Data Source"
-)
-
-type dataSourceGroups struct {
+type groupsDataSource struct {
 	framework.DataSourceWithConfigure
 }
 
-func (d *dataSourceGroups) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
+func (*groupsDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
 	response.TypeName = "aws_identitystore_groups"
 }
 
-func (d *dataSourceGroups) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+func (d *groupsDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
 	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
+			"groups": schema.ListAttribute{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[groupModel](ctx),
+				Computed:   true,
+				ElementType: types.ObjectType{
+					AttrTypes: fwtypes.AttributeTypesMust[groupModel](ctx),
+				},
+			},
 			"identity_store_id": schema.StringAttribute{
 				Required: true,
-			},
-		},
-		Blocks: map[string]schema.Block{
-			"groups": schema.ListNestedBlock{
-				CustomType: fwtypes.NewListNestedObjectTypeOf[groupsData](ctx),
-				NestedObject: schema.NestedBlockObject{
-					Attributes: map[string]schema.Attribute{
-						"group_id": schema.StringAttribute{
-							Computed: true,
-						},
-						"description": schema.StringAttribute{
-							Computed: true,
-						},
-						"display_name": schema.StringAttribute{
-							Computed: true,
-						},
-					},
-					Blocks: map[string]schema.Block{
-						"external_ids": schema.ListNestedBlock{
-							CustomType: fwtypes.NewListNestedObjectTypeOf[externalIdsData](ctx),
-							NestedObject: schema.NestedBlockObject{
-								Attributes: map[string]schema.Attribute{
-									"id": schema.StringAttribute{
-										Computed: true,
-									},
-									"issuer": schema.StringAttribute{
-										Computed: true,
-									},
-								},
-							},
-						},
-					},
-				},
 			},
 		},
 	}
 }
 
-func (d *dataSourceGroups) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
-	conn := d.Meta().IdentityStoreClient(ctx)
-
-	var data dataSourceGroupsData
+func (d *groupsDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	var data groupsDataSourceModel
 	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	input := &identitystore.ListGroupsInput{}
-	response.Diagnostics.Append(flex.Expand(ctx, data, input)...)
-	if response.Diagnostics.HasError() {
-		return
+	conn := d.Meta().IdentityStoreClient(ctx)
+
+	input := &identitystore.ListGroupsInput{
+		IdentityStoreId: fwflex.StringFromFramework(ctx, data.IdentityStoreID),
 	}
 
-	paginator := identitystore.NewListGroupsPaginator(conn, input)
-	var out identitystore.ListGroupsOutput
-
-	for paginator.HasMorePages() {
-		page, err := paginator.NextPage(ctx)
+	var output *identitystore.ListGroupsOutput
+	pages := identitystore.NewListGroupsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 		if err != nil {
-			response.Diagnostics.AddError(
-				create.ProblemStandardMessage(names.IdentityStore, create.ErrActionReading, DSNameGroups, data.IdentityStoreId.String(), err),
-				err.Error(),
-			)
+			response.Diagnostics.AddError("listing IdentityStore Groups", err.Error())
+
 			return
 		}
 
-		if page != nil && len(page.Groups) > 0 {
-			out.Groups = append(out.Groups, page.Groups...)
+		if output == nil {
+			output = page
+		} else {
+			output.Groups = append(output.Groups, page.Groups...)
 		}
 	}
 
-	response.Diagnostics.Append(flex.Flatten(ctx, out, &data)...)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
@@ -118,19 +83,20 @@ func (d *dataSourceGroups) Read(ctx context.Context, request datasource.ReadRequ
 	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-type dataSourceGroupsData struct {
-	IdentityStoreId types.String                                `tfsdk:"identity_store_id"`
-	Groups          fwtypes.ListNestedObjectValueOf[groupsData] `tfsdk:"groups"`
+type groupsDataSourceModel struct {
+	IdentityStoreID types.String                                `tfsdk:"identity_store_id"`
+	Groups          fwtypes.ListNestedObjectValueOf[groupModel] `tfsdk:"groups"`
 }
 
-type groupsData struct {
-	GroupId     types.String                                     `tfsdk:"group_id"`
-	Description types.String                                     `tfsdk:"description"`
-	DisplayName types.String                                     `tfsdk:"display_name"`
-	ExternalIds fwtypes.ListNestedObjectValueOf[externalIdsData] `tfsdk:"external_ids"`
+type groupModel struct {
+	Description     types.String                                     `tfsdk:"description"`
+	DisplayName     types.String                                     `tfsdk:"display_name"`
+	ExternalIDs     fwtypes.ListNestedObjectValueOf[externalIDModel] `tfsdk:"external_ids"`
+	GroupID         types.String                                     `tfsdk:"group_id"`
+	IdentityStoreID types.String                                     `tfsdk:"identity_store_id"`
 }
 
-type externalIdsData struct {
-	Id     types.String `tfsdk:"id"`
+type externalIDModel struct {
+	ID     types.String `tfsdk:"id"`
 	Issuer types.String `tfsdk:"issuer"`
 }
