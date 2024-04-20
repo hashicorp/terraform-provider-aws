@@ -53,6 +53,9 @@ func TestAccTransitGatewayDataSource_serial(t *testing.T) {
 			"IDDifferentAccount":     testAccTransitGatewayPeeringAttachmentDataSource_ID_differentAccount,
 			"Tags":                   testAccTransitGatewayPeeringAttachmentDataSource_Tags,
 		},
+		"PeeringAttachments": {
+			"Filter": testAccTransitGatewayPeeringAttachmentsDataSource_Filter,
+		},
 		"RouteTable": {
 			"Filter": testAccTransitGatewayRouteTableDataSource_Filter,
 			"ID":     testAccTransitGatewayRouteTableDataSource_ID,
