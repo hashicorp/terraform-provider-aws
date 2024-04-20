@@ -359,6 +359,12 @@ func (r *resourceKey) Delete(ctx context.Context, request resource.DeleteRequest
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return
 		}
+		if errs.IsA[*awstypes.ValidationException](err) {
+			// Check if the errors is about the key not being in CREATE_COMPLETE, if it's been deleted outside.
+			if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "not in CREATE_COMPLETE state.") {
+				return
+			}
+		}
 		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.PaymentCryptography, create.ErrActionDeleting, ResNameKey, state.ID.String(), err),
 			err.Error(),
