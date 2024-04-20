@@ -242,6 +242,10 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Tags:     &types.ServicePackageResourceTags{},
 		},
 		{
+			Factory:  DataSourceTransitGatewayPeeringAttachments,
+			TypeName: "aws_ec2_transit_gateway_peering_attachments",
+		},
+		{
 			Factory:  DataSourceTransitGatewayRouteTable,
 			TypeName: "aws_ec2_transit_gateway_route_table",
 		},
