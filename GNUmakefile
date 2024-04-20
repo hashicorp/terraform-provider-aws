@@ -333,7 +333,7 @@ sanity: prereq-go ## Run sanity checks with failures allowed
 
 semall: semgrep-validate ## Run semgrep on all files
 	@echo "make: running Semgrep checks locally (must have semgrep installed)..."
-	@SEMGREP_TIMEOUT=300 semgrep --error --metrics=off \
+	@docker run --rm --volume "${PWD}:/src" semgrep/semgrep semgrep --timeout 300 --error --metrics=off \
 		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
 		--config .ci/.semgrep.yml \
 		--config .ci/.semgrep-caps-aws-ec2.yml \
@@ -354,7 +354,7 @@ semfix: semgrep-validate ## Run semgrep on all files
 	@echo "make: running Semgrep checks locally (must have semgrep installed)..."
 	@echo "make: applying fixes with --autofix"
 	@echo "make: WARNING: This will not fix rules that don't have autofixes"
-	@SEMGREP_TIMEOUT=300 semgrep --error --metrics=off --autofix \
+	@docker run --rm --volume "${PWD}:/src" semgrep/semgrep semgrep --timeout 300 --error --metrics=off --autofix \
 		$(if $(filter-out $(origin PKG), undefined),--include $(PKG_NAME),) \
 		--config .ci/.semgrep.yml \
 		--config .ci/.semgrep-caps-aws-ec2.yml \
@@ -372,7 +372,7 @@ semfix: semgrep-validate ## Run semgrep on all files
 		--config 'r/dgryski.semgrep-go.oserrors'
 
 semgrep-validate: ## Validate semgrep configuration files
-	@SEMGREP_TIMEOUT=300 semgrep --error --validate \
+	@docker run --rm --volume "${PWD}:/src" semgrep/semgrep semgrep --timeout 300 --error --validate \
 		--config .ci/.semgrep.yml \
 		--config .ci/.semgrep-caps-aws-ec2.yml \
 		--config .ci/.semgrep-configs.yml \
@@ -384,7 +384,7 @@ semgrep-validate: ## Validate semgrep configuration files
 
 semgrep: semgrep-validate ## Run semgrep
 	@echo "make: running Semgrep static analysis..."
-	@docker run --rm --volume "${PWD}:/src" returntocorp/semgrep semgrep --config .ci/.semgrep.yml
+	@docker run --rm --volume "${PWD}:/src" semgrep/semgrep semgrep --config .ci/.semgrep.yml
 
 skaff: prereq-go ## Install skaff
 	cd skaff && $(GO_VER) install github.com/hashicorp/terraform-provider-aws/skaff
