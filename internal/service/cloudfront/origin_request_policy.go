@@ -343,7 +343,7 @@ func flattenOriginRequestPolicyCookiesConfig(apiObject *awstypes.OriginRequestPo
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.CookieBehavior; v != awstypes.OriginRequestPolicyCookieBehavior("") {
-		tfMap["cookie_behavior"] = v
+		tfMap["cookie_behavior"] = awstypes.OriginRequestPolicyCookieBehavior(v)
 	}
 
 	if v := flattenCookieNames(apiObject.Cookies); len(v) > 0 {
@@ -361,7 +361,7 @@ func flattenOriginRequestPolicyHeadersConfig(apiObject *awstypes.OriginRequestPo
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.HeaderBehavior; v != awstypes.OriginRequestPolicyHeaderBehavior("") {
-		tfMap["header_behavior"] = v
+		tfMap["header_behavior"] = awstypes.OriginRequestPolicyHeaderBehavior(v)
 	}
 
 	if v := flattenHeaders(apiObject.Headers); len(v) > 0 {
@@ -379,7 +379,7 @@ func flattenOriginRequestPolicyQueryStringsConfig(apiObject *awstypes.OriginRequ
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.QueryStringBehavior; v != awstypes.OriginRequestPolicyQueryStringBehavior("") {
-		tfMap["query_string_behavior"] = v
+		tfMap["query_string_behavior"] = awstypes.OriginRequestPolicyQueryStringBehavior(v)
 	}
 
 	if v := flattenQueryStringNames(apiObject.QueryStrings); len(v) > 0 {

@@ -783,6 +783,10 @@ func expandResponseHeadersPolicyCustomHeaders(tfList []interface{}) []awstypes.R
 }
 
 func flattenResponseHeadersPolicyCustomHeadersConfig(apiObject awstypes.ResponseHeadersPolicyCustomHeadersConfig) map[string]interface{} {
+	if &apiObject == nil {
+		return nil
+	}
+
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.Items; len(v) > 0 {
@@ -821,9 +825,8 @@ func flattenResponseHeadersPolicyCustomHeaders(apiObjects []awstypes.ResponseHea
 
 	var tfList []interface{}
 
-	emptyObj := awstypes.ResponseHeadersPolicyCustomHeader{}
 	for _, apiObject := range apiObjects {
-		if apiObject == emptyObj {
+		if &apiObject == nil {
 			continue
 		}
 
@@ -930,9 +933,8 @@ func flattenResponseHeadersPolicyRemoveHeaders(apiObjects []awstypes.ResponseHea
 
 	var tfList []interface{}
 
-	emptyHeader := awstypes.ResponseHeadersPolicyRemoveHeader{}
 	for _, apiObject := range apiObjects {
-		if apiObject == emptyHeader {
+		if &apiObject == nil {
 			continue
 		}
 
@@ -1175,7 +1177,7 @@ func flattenResponseHeadersPolicyFrameOptions(apiObject *awstypes.ResponseHeader
 
 	tfMap := map[string]interface{}{}
 
-	if v := string(apiObject.FrameOption); v != "" {
+	if v := string(apiObject.FrameOption); &v != nil {
 		tfMap["frame_option"] = aws.ToString(&v)
 	}
 
@@ -1197,8 +1199,8 @@ func flattenResponseHeadersPolicyReferrerPolicy(apiObject *awstypes.ResponseHead
 		tfMap["override"] = aws.Bool(*v)
 	}
 
-	if v := apiObject.ReferrerPolicy; v != awstypes.ReferrerPolicyList("") {
-		tfMap["referrer_policy"] = v
+	if v := apiObject.ReferrerPolicy; &v != nil {
+		tfMap["referrer_policy"] = awstypes.ReferrerPolicyList(v)
 	}
 
 	return tfMap

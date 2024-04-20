@@ -261,9 +261,8 @@ func expandEncryptionEntityItems(tfList []interface{}) []awstypes.EncryptionEnti
 		}
 
 		apiObject := *expandEncryptionEntity(tfMap)
-		emptyObj := awstypes.EncryptionEntity{}
 
-		if apiObject == emptyObj {
+		if &apiObject == nil {
 			continue
 		}
 
@@ -332,9 +331,8 @@ func flattenEncryptionEntityItems(apiObjects []awstypes.EncryptionEntity) []inte
 
 	var tfList []interface{}
 
-	emptyObj := awstypes.EncryptionEntity{}
 	for _, apiObject := range apiObjects {
-		if apiObject == emptyObj {
+		if &apiObject == nil {
 			continue
 		}
 

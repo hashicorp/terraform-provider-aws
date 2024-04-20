@@ -98,7 +98,7 @@ func dataSourceDistributionRead(ctx context.Context, d *schema.ResourceData, met
 			}
 		}
 	}
-	tags, err := listTags(ctx, *conn, d.Get("arn").(string))
+	tags, err := listTags(ctx, conn, d.Get("arn").(string))
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "listing tags for CloudFront Distribution (%s): %s", d.Id(), err)
 	}

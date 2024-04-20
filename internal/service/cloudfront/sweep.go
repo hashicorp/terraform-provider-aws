@@ -689,7 +689,7 @@ func sweepResponseHeadersPolicies(region string) error {
 	}
 	conn := client.CloudFrontClient(ctx)
 	input := &cloudfront.ListResponseHeadersPoliciesInput{
-		Type: awstypes.ResponseHeadersPolicyTypeCustom,
+		Type: awstypes.ResponseHeadersPolicyType(awstypes.ResponseHeadersPolicyTypeCustom),
 	}
 	sweepResources := make([]sweep.Sweepable, 0)
 

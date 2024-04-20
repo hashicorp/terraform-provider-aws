@@ -7,6 +7,7 @@ import (
 	"reflect"
 	"testing"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
@@ -314,11 +315,23 @@ func TestStructure_expandDefaultCacheBehavior(t *testing.T) {
 	if *dcb.TargetOriginId != "myS3Origin" {
 		t.Fatalf("Expected TargetOriginId to be allow-all, got %v", *dcb.TargetOriginId)
 	}
-	if !reflect.DeepEqual(dcb.TrustedSigners.Items, flex.ExpandStringValueList(trustedSignersConf())) {
+	if !reflect.DeepEqual(dcb.ForwardedValues.Headers.Items, flex.ExpandStringSet(headersConf())) {
+		t.Fatalf("Expected Items to be %v, got %v", headersConf(), dcb.ForwardedValues.Headers.Items)
+	}
+	if *dcb.MinTTL != 0 {
+		t.Fatalf("Expected MinTTL to be 0, got %v", *dcb.MinTTL)
+	}
+	if !reflect.DeepEqual(dcb.TrustedSigners.Items, flex.ExpandStringList(trustedSignersConf())) {
 		t.Fatalf("Expected TrustedSigners.Items to be %v, got %v", trustedSignersConf(), dcb.TrustedSigners.Items)
+	}
+	if *dcb.MaxTTL != 31536000 {
+		t.Fatalf("Expected MaxTTL to be 31536000, got %v", *dcb.MaxTTL)
 	}
 	if *dcb.SmoothStreaming {
 		t.Fatalf("Expected SmoothStreaming to be false, got %v", *dcb.SmoothStreaming)
+	}
+	if *dcb.DefaultTTL != 86400 {
+		t.Fatalf("Expected DefaultTTL to be 86400, got %v", *dcb.DefaultTTL)
 	}
 	if *dcb.LambdaFunctionAssociations.Quantity != 2 {
 		t.Fatalf("Expected LambdaFunctionAssociations to be 2, got %v", *dcb.LambdaFunctionAssociations.Quantity)
@@ -326,10 +339,10 @@ func TestStructure_expandDefaultCacheBehavior(t *testing.T) {
 	if *dcb.FunctionAssociations.Quantity != 2 {
 		t.Fatalf("Expected FunctionAssociations to be 2, got %v", *dcb.FunctionAssociations.Quantity)
 	}
-	if !reflect.DeepEqual(tfcloudfront.FlattenMethods(dcb.AllowedMethods.Items), flex.ExpandStringValueSet(allowedMethodsConf())) {
+	if !reflect.DeepEqual(dcb.AllowedMethods.Items, flex.ExpandStringSet(allowedMethodsConf())) {
 		t.Fatalf("Expected AllowedMethods.Items to be %v, got %v", allowedMethodsConf().List(), dcb.AllowedMethods.Items)
 	}
-	if !reflect.DeepEqual(tfcloudfront.FlattenMethods(dcb.AllowedMethods.CachedMethods.Items), flex.ExpandStringValueSet(cachedMethodsConf())) {
+	if !reflect.DeepEqual(dcb.AllowedMethods.CachedMethods.Items, flex.ExpandStringSet(cachedMethodsConf())) {
 		t.Fatalf("Expected AllowedMethods.CachedMethods.Items to be %v, got %v", cachedMethodsConf().List(), dcb.AllowedMethods.CachedMethods.Items)
 	}
 }
@@ -345,8 +358,8 @@ func TestStructure_expandTrustedSigners(t *testing.T) {
 	if !*ts.Enabled {
 		t.Fatalf("Expected Enabled to be true, got %v", *ts.Enabled)
 	}
-	if !reflect.DeepEqual(ts.Items, flex.ExpandStringValueList(data)) {
-		t.Fatalf("Expected Items to be %v, got %v", flex.ExpandStringValueList(data), ts.Items)
+	if !reflect.DeepEqual(ts.Items, flex.ExpandStringList(data)) {
+		t.Fatalf("Expected Items to be %v, got %v", data, ts.Items)
 	}
 }
 
@@ -420,7 +433,7 @@ func TestStructure_expandlambdaFunctionAssociations_empty(t *testing.T) {
 	if len(lfa.Items) != 0 {
 		t.Fatalf("Expected Items to be len 0, got %v", len(lfa.Items))
 	}
-	if !reflect.DeepEqual(lfa.Items, []awstypes.LambdaFunctionAssociation{}) {
+	if !reflect.DeepEqual(lfa.Items, []*awstypes.LambdaFunctionAssociation{}) {
 		t.Fatalf("Expected Items to be empty, got %v", lfa.Items)
 	}
 }
@@ -467,8 +480,8 @@ func TestStructure_expandFunctionAssociations_empty(t *testing.T) {
 	if len(lfa.Items) != 0 {
 		t.Fatalf("Expected Items to be len 0, got %v", len(lfa.Items))
 	}
-	if !reflect.DeepEqual(lfa.Items, []awstypes.FunctionAssociation{}) {
-		t.Fatalf("Expected items to be empty, got %v", lfa.Items)
+	if !reflect.DeepEqual(lfa.Items, []*awstypes.FunctionAssociation{}) {
+		t.Fatalf("Expected Items to be empty, got %v", lfa.Items)
 	}
 }
 
@@ -480,10 +493,10 @@ func TestStructure_expandForwardedValues(t *testing.T) {
 	if !*fv.QueryString {
 		t.Fatalf("Expected QueryString to be true, got %v", *fv.QueryString)
 	}
-	if !reflect.DeepEqual(fv.Cookies.WhitelistedNames.Items, flex.ExpandStringValueSet(cookieNamesConf())) {
+	if !reflect.DeepEqual(fv.Cookies.WhitelistedNames.Items, flex.ExpandStringSet(cookieNamesConf())) {
 		t.Fatalf("Expected Cookies.WhitelistedNames.Items to be %v, got %v", cookieNamesConf(), fv.Cookies.WhitelistedNames.Items)
 	}
-	if !reflect.DeepEqual(fv.Headers.Items, flex.ExpandStringValueSet(headersConf())) {
+	if !reflect.DeepEqual(fv.Headers.Items, flex.ExpandStringSet(headersConf())) {
 		t.Fatalf("Expected Headers.Items to be %v, got %v", headersConf(), fv.Headers.Items)
 	}
 }
@@ -508,8 +521,8 @@ func TestStructure_expandHeaders(t *testing.T) {
 	if *h.Quantity != 2 {
 		t.Fatalf("Expected Quantity to be 2, got %v", *h.Quantity)
 	}
-	if !reflect.DeepEqual(h.Items, flex.ExpandStringValueSet(data)) {
-		t.Fatalf("Expected Items to be %v, got %v", flex.ExpandStringValueSet(data), h.Items)
+	if !reflect.DeepEqual(h.Items, flex.ExpandStringSet(data)) {
+		t.Fatalf("Expected Items to be %v, got %v", data, h.Items)
 	}
 }
 
@@ -533,8 +546,8 @@ func TestStructure_expandQueryStringCacheKeys(t *testing.T) {
 	if *k.Quantity != 2 {
 		t.Fatalf("Expected Quantity to be 2, got %v", *k.Quantity)
 	}
-	if !reflect.DeepEqual(k.Items, flex.ExpandStringValueList(data)) {
-		t.Fatalf("Expected Items to be %v, got %v", flex.ExpandStringValueList(data), k.Items)
+	if !reflect.DeepEqual(k.Items, flex.ExpandStringList(data)) {
+		t.Fatalf("Expected Items to be %v, got %v", data, k.Items)
 	}
 }
 
@@ -558,7 +571,7 @@ func TestStructure_expandCookiePreference(t *testing.T) {
 	if cp.Forward != awstypes.ItemSelection("whitelist") {
 		t.Fatalf("Expected Forward to be whitelist, got %v", cp.Forward)
 	}
-	if !reflect.DeepEqual(cp.WhitelistedNames.Items, flex.ExpandStringValueSet(cookieNamesConf())) {
+	if !reflect.DeepEqual(cp.WhitelistedNames.Items, flex.ExpandStringSet(cookieNamesConf())) {
 		t.Fatalf("Expected WhitelistedNames.Items to be %v, got %v", cookieNamesConf(), cp.WhitelistedNames.Items)
 	}
 }
@@ -583,8 +596,8 @@ func TestStructure_expandCookieNames(t *testing.T) {
 	if *cn.Quantity != 2 {
 		t.Fatalf("Expected Quantity to be 2, got %v", *cn.Quantity)
 	}
-	if !reflect.DeepEqual(cn.Items, flex.ExpandStringValueSet(data)) {
-		t.Fatalf("Expected Items to be %v, got %v", flex.ExpandStringValueSet(data), cn.Items)
+	if !reflect.DeepEqual(cn.Items, flex.ExpandStringSet(data)) {
+		t.Fatalf("Expected Items to be %v, got %v", data, cn.Items)
 	}
 }
 
@@ -608,8 +621,8 @@ func TestStructure_expandAllowedMethods(t *testing.T) {
 	if *am.Quantity != 7 {
 		t.Fatalf("Expected Quantity to be 7, got %v", *am.Quantity)
 	}
-	if !reflect.DeepEqual(tfcloudfront.FlattenMethods(am.Items), flex.ExpandStringValueSet(data)) {
-		t.Fatalf("Expected Items to be %v, got %v", flex.ExpandStringValueSet(data), am.Items)
+	if !reflect.DeepEqual(am.Items, flex.ExpandStringSet(data)) {
+		t.Fatalf("Expected Items to be %v, got %v", data, am.Items)
 	}
 }
 
@@ -633,10 +646,8 @@ func TestStructure_expandCachedMethods(t *testing.T) {
 	if *cm.Quantity != 3 {
 		t.Fatalf("Expected Quantity to be 3, got %v", *cm.Quantity)
 	}
-	in := tfcloudfront.FlattenMethods(cm.Items)
-	out := flex.ExpandStringValueSet(data)
-	if !reflect.DeepEqual(in, out) {
-		t.Fatalf("Expected Items to be %v, got %v", in, out)
+	if !reflect.DeepEqual(cm.Items, flex.ExpandStringSet(data)) {
+		t.Fatalf("Expected Items to be %v, got %v", data, cm.Items)
 	}
 }
 
@@ -1057,7 +1068,7 @@ func TestStructure_expandAliases(t *testing.T) {
 	if *a.Quantity != 2 {
 		t.Fatalf("Expected Quantity to be 2, got %v", *a.Quantity)
 	}
-	if !reflect.DeepEqual(a.Items, flex.ExpandStringValueSet(data)) {
+	if !reflect.DeepEqual(a.Items, flex.ExpandStringSet(data)) {
 		t.Fatalf("Expected Items to be [example.com www.example.com], got %v", a.Items)
 	}
 }
@@ -1096,8 +1107,8 @@ func TestStructure_expandGeoRestriction_whitelist(t *testing.T) {
 	if *gr.Quantity != 3 {
 		t.Fatalf("Expected Quantity to be 3, got %v", *gr.Quantity)
 	}
-	if !reflect.DeepEqual(gr.Items, []string{"GB", "US", "CA"}) {
-		t.Fatalf("Expected Items be [CA, GB, US], got %v", gr.Items)
+	if !reflect.DeepEqual(aws.StringSlice(gr.Items), []string{"GB", "US", "CA"}) {
+		t.Fatalf("Expected Items be [CA, GB, US], got %v", aws.StringSlice(gr.Items))
 	}
 }
 
