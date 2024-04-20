@@ -483,7 +483,7 @@ func instanceDescriptionAttributes(ctx context.Context, d *schema.ResourceData, 
 	d.Set("ami", instance.ImageId)
 	d.Set("instance_type", instanceType)
 	d.Set("key_name", instance.KeyName)
-	d.Set("launch_time", instance.LaunchTime)
+	d.Set("launch_time", instance.LaunchTime.Format(time.RFC3339))
 	d.Set("outpost_arn", instance.OutpostArn)
 	d.Set("private_dns", instance.PrivateDnsName)
 	d.Set("private_ip", instance.PrivateIpAddress)
