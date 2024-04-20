@@ -8,18 +8,15 @@ import (
 	"errors"
 	"log"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
-	"github.com/aws/aws-sdk-go-v2/service/route53domains/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/cloudfront"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -53,19 +50,19 @@ func ResourceOriginAccessControl() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 64),
 			},
 			"origin_access_control_origin_type": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.OriginAccessControlOriginTypes](),
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(cloudfront.OriginAccessControlOriginTypes_Values(), false),
 			},
 			"signing_behavior": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.OriginAccessControlSigningBehaviors](),
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(cloudfront.OriginAccessControlSigningBehaviors_Values(), false),
 			},
 			"signing_protocol": {
-				Type:             schema.TypeString,
-				Required:         true,
-				ValidateDiagFunc: enum.Validate[awstypes.OriginAccessControlSigningProtocols](),
+				Type:         schema.TypeString,
+				Required:     true,
+				ValidateFunc: validation.StringInSlice(cloudfront.OriginAccessControlSigningProtocols_Values(), false),
 			},
 		},
 	}
@@ -78,19 +75,19 @@ const (
 func resourceOriginAccessControlCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	in := &cloudfront.CreateOriginAccessControlInput{
-		OriginAccessControlConfig: &awstypes.OriginAccessControlConfig{
+		OriginAccessControlConfig: &cloudfront.OriginAccessControlConfig{
 			Description:                   aws.String(d.Get("description").(string)),
 			Name:                          aws.String(d.Get("name").(string)),
-			OriginAccessControlOriginType: awstypes.OriginAccessControlOriginTypes(d.Get("origin_access_control_origin_type").(string)),
-			SigningBehavior:               awstypes.OriginAccessControlSigningBehaviors(d.Get("signing_behavior").(string)),
-			SigningProtocol:               awstypes.OriginAccessControlSigningProtocols(d.Get("signing_protocol").(string)),
+			OriginAccessControlOriginType: aws.String(d.Get("origin_access_control_origin_type").(string)),
+			SigningBehavior:               aws.String(d.Get("signing_behavior").(string)),
+			SigningProtocol:               aws.String(d.Get("signing_protocol").(string)),
 		},
 	}
 
-	out, err := conn.CreateOriginAccessControl(ctx, in)
+	out, err := conn.CreateOriginAccessControlWithContext(ctx, in)
 	if err != nil {
 		return create.AppendDiagError(diags, names.CloudFront, create.ErrActionCreating, ResNameOriginAccessControl, d.Get("name").(string), err)
 	}
@@ -99,7 +96,7 @@ func resourceOriginAccessControlCreate(ctx context.Context, d *schema.ResourceDa
 		return create.AppendDiagError(diags, names.CloudFront, create.ErrActionCreating, ResNameOriginAccessControl, d.Get("name").(string), errors.New("empty output"))
 	}
 
-	d.SetId(aws.ToString(out.OriginAccessControl.Id))
+	d.SetId(aws.StringValue(out.OriginAccessControl.Id))
 
 	return append(diags, resourceOriginAccessControlRead(ctx, d, meta)...)
 }
@@ -107,7 +104,7 @@ func resourceOriginAccessControlCreate(ctx context.Context, d *schema.ResourceDa
 func resourceOriginAccessControlRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	out, err := findOriginAccessControlByID(ctx, conn, d.Id())
 
@@ -140,22 +137,22 @@ func resourceOriginAccessControlRead(ctx context.Context, d *schema.ResourceData
 func resourceOriginAccessControlUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	in := &cloudfront.UpdateOriginAccessControlInput{
 		Id:      aws.String(d.Id()),
 		IfMatch: aws.String(d.Get("etag").(string)),
-		OriginAccessControlConfig: &awstypes.OriginAccessControlConfig{
+		OriginAccessControlConfig: &cloudfront.OriginAccessControlConfig{
 			Description:                   aws.String(d.Get("description").(string)),
 			Name:                          aws.String(d.Get("name").(string)),
-			OriginAccessControlOriginType: awstypes.OriginAccessControlOriginTypes(d.Get("origin_access_control_origin_type").(string)),
-			SigningBehavior:               awstypes.OriginAccessControlSigningBehaviors(d.Get("signing_behavior").(string)),
-			SigningProtocol:               awstypes.OriginAccessControlSigningProtocols(d.Get("signing_protocol").(string)),
+			OriginAccessControlOriginType: aws.String(d.Get("origin_access_control_origin_type").(string)),
+			SigningBehavior:               aws.String(d.Get("signing_behavior").(string)),
+			SigningProtocol:               aws.String(d.Get("signing_protocol").(string)),
 		},
 	}
 
 	log.Printf("[DEBUG] Updating CloudFront Origin Access Control (%s): %#v", d.Id(), in)
-	_, err := conn.UpdateOriginAccessControl(ctx, in)
+	_, err := conn.UpdateOriginAccessControlWithContext(ctx, in)
 	if err != nil {
 		return create.AppendDiagError(diags, names.CloudFront, create.ErrActionUpdating, ResNameOriginAccessControl, d.Id(), err)
 	}
@@ -166,16 +163,16 @@ func resourceOriginAccessControlUpdate(ctx context.Context, d *schema.ResourceDa
 func resourceOriginAccessControlDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	log.Printf("[INFO] Deleting CloudFront Origin Access Control %s", d.Id())
 
-	_, err := conn.DeleteOriginAccessControl(ctx, &cloudfront.DeleteOriginAccessControlInput{
+	_, err := conn.DeleteOriginAccessControlWithContext(ctx, &cloudfront.DeleteOriginAccessControlInput{
 		Id:      aws.String(d.Id()),
 		IfMatch: aws.String(d.Get("etag").(string)),
 	})
 
-	if errs.IsAErrorMessageContains[*types.InvalidInput](err, "not found") {
+	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchOriginAccessControl) {
 		return diags
 	}
 
@@ -186,12 +183,12 @@ func resourceOriginAccessControlDelete(ctx context.Context, d *schema.ResourceDa
 	return diags
 }
 
-func findOriginAccessControlByID(ctx context.Context, conn *cloudfront.Client, id string) (*cloudfront.GetOriginAccessControlOutput, error) {
+func findOriginAccessControlByID(ctx context.Context, conn *cloudfront.CloudFront, id string) (*cloudfront.GetOriginAccessControlOutput, error) {
 	in := &cloudfront.GetOriginAccessControlInput{
 		Id: aws.String(id),
 	}
-	out, err := conn.GetOriginAccessControl(ctx, in)
-	if errs.IsA[*awstypes.NoSuchOriginAccessControl](err) {
+	out, err := conn.GetOriginAccessControlWithContext(ctx, in)
+	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchOriginAccessControl) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,

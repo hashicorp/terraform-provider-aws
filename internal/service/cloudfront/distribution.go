@@ -6,21 +6,17 @@ package cloudfront
 import (
 	"context"
 	"log"
-
 	"time"
 
-	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
-
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/cloudfront"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -105,9 +101,9 @@ func ResourceDistribution() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"forward": {
-													Type:             schema.TypeString,
-													Required:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.ItemSelection](),
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringInSlice(cloudfront.ItemSelection_Values(), false),
 												},
 												"whitelisted_names": {
 													Type:     schema.TypeSet,
@@ -143,9 +139,9 @@ func ResourceDistribution() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"event_type": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.EventType](),
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(cloudfront.EventType_Values(), false),
 									},
 									"lambda_arn": {
 										Type:         schema.TypeString,
@@ -168,9 +164,9 @@ func ResourceDistribution() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"event_type": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.EventType](),
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(cloudfront.EventType_Values(), false),
 									},
 									"function_arn": {
 										Type:         schema.TypeString,
@@ -226,9 +222,9 @@ func ResourceDistribution() *schema.Resource {
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"viewer_protocol_policy": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.ViewerProtocolPolicy](),
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(cloudfront.ViewerProtocolPolicy_Values(), false),
 						},
 					},
 				},
@@ -315,9 +311,9 @@ func ResourceDistribution() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"forward": {
-													Type:             schema.TypeString,
-													Required:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.ItemSelection](),
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringInSlice(cloudfront.ItemSelection_Values(), false),
 												},
 												"whitelisted_names": {
 													Type:     schema.TypeSet,
@@ -354,9 +350,9 @@ func ResourceDistribution() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"event_type": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.EventType](),
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(cloudfront.EventType_Values(), false),
 									},
 									"lambda_arn": {
 										Type:         schema.TypeString,
@@ -379,9 +375,9 @@ func ResourceDistribution() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"event_type": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.EventType](),
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(cloudfront.EventType_Values(), false),
 									},
 									"function_arn": {
 										Type:         schema.TypeString,
@@ -435,9 +431,9 @@ func ResourceDistribution() *schema.Resource {
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"viewer_protocol_policy": {
-							Type:             schema.TypeString,
-							Required:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.ViewerProtocolPolicy](),
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.StringInSlice(cloudfront.ViewerProtocolPolicy_Values(), false),
 						},
 					},
 				},
@@ -451,10 +447,10 @@ func ResourceDistribution() *schema.Resource {
 				Required: true,
 			},
 			"http_version": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.HttpVersionHttp2,
-				ValidateDiagFunc: enum.Validate[awstypes.HttpVersion](),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      cloudfront.HttpVersionHttp2,
+				ValidateFunc: validation.StringInSlice(cloudfront.HttpVersion_Values(), false),
 			},
 			"logging_config": {
 				Type:     schema.TypeList,
@@ -566,16 +562,16 @@ func ResourceDistribution() *schema.Resource {
 										ValidateFunc: validation.IntAtLeast(1),
 									},
 									"origin_protocol_policy": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.OriginProtocolPolicy](),
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(cloudfront.OriginProtocolPolicy_Values(), false),
 									},
 									"origin_ssl_protocols": {
 										Type:     schema.TypeSet,
 										Required: true,
 										Elem: &schema.Schema{
-											Type:             schema.TypeString,
-											ValidateDiagFunc: enum.Validate[awstypes.SslProtocol](),
+											Type:         schema.TypeString,
+											ValidateFunc: validation.StringInSlice(cloudfront.SslProtocol_Values(), false),
 										},
 									},
 								},
@@ -653,10 +649,10 @@ func ResourceDistribution() *schema.Resource {
 				},
 			},
 			"price_class": {
-				Type:             schema.TypeString,
-				Optional:         true,
-				Default:          awstypes.PriceClassPriceClassAll,
-				ValidateDiagFunc: enum.Validate[awstypes.PriceClass](),
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      cloudfront.PriceClassPriceClassAll,
+				ValidateFunc: validation.StringInSlice(cloudfront.PriceClass_Values(), false),
 			},
 			"restrictions": {
 				Type:     schema.TypeList,
@@ -677,9 +673,9 @@ func ResourceDistribution() *schema.Resource {
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
 									"restriction_type": {
-										Type:             schema.TypeString,
-										Required:         true,
-										ValidateDiagFunc: enum.Validate[awstypes.GeoRestrictionType](),
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: validation.StringInSlice(cloudfront.GeoRestrictionType_Values(), false),
 									},
 								},
 							},
@@ -707,15 +703,15 @@ func ResourceDistribution() *schema.Resource {
 							Optional: true,
 						},
 						"minimum_protocol_version": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							Default:          awstypes.MinimumProtocolVersionTLSv1,
-							ValidateDiagFunc: enum.Validate[awstypes.MinimumProtocolVersion](),
+							Type:         schema.TypeString,
+							Optional:     true,
+							Default:      cloudfront.MinimumProtocolVersionTlsv1,
+							ValidateFunc: validation.StringInSlice(cloudfront.MinimumProtocolVersion_Values(), false),
 						},
 						"ssl_support_method": {
-							Type:             schema.TypeString,
-							Optional:         true,
-							ValidateDiagFunc: enum.Validate[awstypes.SSLSupportMethod](),
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: validation.StringInSlice(cloudfront.SSLSupportMethod_Values(), false),
 						},
 					},
 				},
@@ -848,12 +844,12 @@ func ResourceDistribution() *schema.Resource {
 
 func resourceDistributionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	input := &cloudfront.CreateDistributionWithTagsInput{
-		DistributionConfigWithTags: &awstypes.DistributionConfigWithTags{
+		DistributionConfigWithTags: &cloudfront.DistributionConfigWithTags{
 			DistributionConfig: expandDistributionConfig(d),
-			Tags:               &awstypes.Tags{Items: []awstypes.Tag{}},
+			Tags:               &cloudfront.Tags{Items: []*cloudfront.Tag{}},
 		},
 	}
 
@@ -864,14 +860,14 @@ func resourceDistributionCreate(ctx context.Context, d *schema.ResourceData, met
 	// ACM and IAM certificate eventual consistency.
 	// InvalidViewerCertificate: The specified SSL certificate doesn't exist, isn't in us-east-1 region, isn't valid, or doesn't include a valid certificate chain.
 	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 1*time.Minute, func() (interface{}, error) {
-		return conn.CreateDistributionWithTags(ctx, input)
-	}, "InvalidViewerCertificate")
+		return conn.CreateDistributionWithTagsWithContext(ctx, input)
+	}, cloudfront.ErrCodeInvalidViewerCertificate)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating CloudFront Distribution: %s", err)
 	}
 
-	d.SetId(aws.ToString(outputRaw.(*cloudfront.CreateDistributionWithTagsOutput).Distribution.Id))
+	d.SetId(aws.StringValue(outputRaw.(*cloudfront.CreateDistributionWithTagsOutput).Distribution.Id))
 
 	if d.Get("wait_for_deployment").(bool) {
 		log.Printf("[DEBUG] Waiting until CloudFront Distribution (%s) is deployed", d.Id())
@@ -885,7 +881,7 @@ func resourceDistributionCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	output, err := FindDistributionByID(ctx, conn, d.Id())
 
@@ -925,7 +921,7 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &cloudfront.UpdateDistributionInput{
@@ -937,18 +933,18 @@ func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, met
 		// ACM and IAM certificate eventual consistency.
 		// InvalidViewerCertificate: The specified SSL certificate doesn't exist, isn't in us-east-1 region, isn't valid, or doesn't include a valid certificate chain.
 		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 1*time.Minute, func() (interface{}, error) {
-			return conn.UpdateDistribution(ctx, input)
-		}, "InvalidViewerCertificate")
+			return conn.UpdateDistributionWithContext(ctx, input)
+		}, cloudfront.ErrCodeInvalidViewerCertificate)
 
 		// Refresh our ETag if it is out of date and attempt update again.
-		if errs.IsA[*awstypes.PreconditionFailed](err) {
+		if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodePreconditionFailed) {
 			getDistributionInput := &cloudfront.GetDistributionInput{
 				Id: aws.String(d.Id()),
 			}
 			var getDistributionOutput *cloudfront.GetDistributionOutput
 
 			log.Printf("[DEBUG] Refreshing CloudFront Distribution (%s) ETag", d.Id())
-			getDistributionOutput, err = conn.GetDistribution(ctx, getDistributionInput)
+			getDistributionOutput, err = conn.GetDistributionWithContext(ctx, getDistributionInput)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "refreshing CloudFront Distribution (%s) ETag: %s", d.Id(), err)
@@ -960,7 +956,7 @@ func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, met
 
 			input.IfMatch = getDistributionOutput.ETag
 
-			_, err = conn.UpdateDistribution(ctx, input)
+			_, err = conn.UpdateDistributionWithContext(ctx, input)
 		}
 
 		if err != nil {
@@ -980,7 +976,7 @@ func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceDistributionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	if d.Get("arn").(string) == "" {
 		diags = append(diags, resourceDistributionRead(ctx, d, meta)...)
@@ -1006,34 +1002,34 @@ func resourceDistributionDelete(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	err := deleteDistribution(ctx, conn, d.Id())
-	if err == nil || errs.IsA[*awstypes.NoSuchDistribution](err) {
+	if err == nil || tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchDistribution) {
 		return diags
 	}
 
 	// Disable distribution if it is not yet disabled and attempt deletion again.
 	// Here we update via the deployed configuration to ensure we are not submitting an out of date
 	// configuration from the Terraform configuration, should other changes have occurred manually.
-	if errs.IsA[*awstypes.DistributionNotDisabled](err) {
+	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeDistributionNotDisabled) {
 		if err = disableDistribution(ctx, conn, d.Id()); err != nil {
 			return sdkdiag.AppendErrorf(diags, "disabling CloudFront Distribution (%s): %s", d.Id(), err)
 		}
 
 		_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, 3*time.Minute, func() (interface{}, error) {
 			return nil, deleteDistribution(ctx, conn, d.Id())
-		}, "DistributionNotDisabled")
+		}, cloudfront.ErrCodeDistributionNotDisabled)
 	}
 
-	if errs.IsA[*awstypes.PreconditionFailed](err) || errs.IsA[*awstypes.InvalidIfMatchVersion](err) {
+	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodePreconditionFailed, cloudfront.ErrCodeInvalidIfMatchVersion) {
 		_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, 1*time.Minute, func() (interface{}, error) {
 			return nil, deleteDistribution(ctx, conn, d.Id())
-		}, "PreconditionFailed", "InvalidIfMatchVersion")
+		}, cloudfront.ErrCodePreconditionFailed, cloudfront.ErrCodeInvalidIfMatchVersion)
 	}
 
-	if errs.IsA[*awstypes.NoSuchDistribution](err) {
+	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchDistribution) {
 		return diags
 	}
 
-	if errs.IsA[*awstypes.DistributionNotDisabled](err) {
+	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeDistributionNotDisabled) {
 		if err = disableDistribution(ctx, conn, d.Id()); err != nil {
 			return sdkdiag.AppendErrorf(diags, "disabling CloudFront Distribution (%s): %s", d.Id(), err)
 		}
@@ -1048,7 +1044,7 @@ func resourceDistributionDelete(ctx context.Context, d *schema.ResourceData, met
 	return diags
 }
 
-func deleteDistribution(ctx context.Context, conn *cloudfront.Client, id string) error {
+func deleteDistribution(ctx context.Context, conn *cloudfront.CloudFront, id string) error {
 	etag, err := distroETag(ctx, conn, id)
 	if err != nil {
 		return err
@@ -1059,7 +1055,7 @@ func deleteDistribution(ctx context.Context, conn *cloudfront.Client, id string)
 		IfMatch: aws.String(etag),
 	}
 
-	if _, err := conn.DeleteDistribution(ctx, in); err != nil {
+	if _, err := conn.DeleteDistributionWithContext(ctx, in); err != nil {
 		return err
 	}
 
@@ -1070,22 +1066,22 @@ func deleteDistribution(ctx context.Context, conn *cloudfront.Client, id string)
 	return nil
 }
 
-func distroETag(ctx context.Context, conn *cloudfront.Client, id string) (string, error) {
+func distroETag(ctx context.Context, conn *cloudfront.CloudFront, id string) (string, error) {
 	output, err := FindDistributionByID(ctx, conn, id)
 	if err != nil {
 		return "", err
 	}
 
-	return aws.ToString(output.ETag), nil
+	return aws.StringValue(output.ETag), nil
 }
 
-func disableDistribution(ctx context.Context, conn *cloudfront.Client, id string) error {
+func disableDistribution(ctx context.Context, conn *cloudfront.CloudFront, id string) error {
 	out, err := FindDistributionByID(ctx, conn, id)
 	if err != nil {
 		return err
 	}
 
-	if aws.ToString(out.Distribution.Status) == "InProgress" {
+	if aws.StringValue(out.Distribution.Status) == "InProgress" {
 		if err := WaitDistributionDeployed(ctx, conn, id); err != nil {
 			return err
 		}
@@ -1096,7 +1092,7 @@ func disableDistribution(ctx context.Context, conn *cloudfront.Client, id string
 		}
 	}
 
-	if !aws.ToBool(out.Distribution.DistributionConfig.Enabled) {
+	if !aws.BoolValue(out.Distribution.DistributionConfig.Enabled) {
 		return nil
 	}
 
@@ -1107,7 +1103,7 @@ func disableDistribution(ctx context.Context, conn *cloudfront.Client, id string
 	}
 	in.DistributionConfig.Enabled = aws.Bool(false)
 
-	_, err = conn.UpdateDistribution(ctx, in)
+	_, err = conn.UpdateDistributionWithContext(ctx, in)
 	if err != nil {
 		return err
 	}
@@ -1119,14 +1115,14 @@ func disableDistribution(ctx context.Context, conn *cloudfront.Client, id string
 	return nil
 }
 
-func FindDistributionByID(ctx context.Context, conn *cloudfront.Client, id string) (*cloudfront.GetDistributionOutput, error) {
+func FindDistributionByID(ctx context.Context, conn *cloudfront.CloudFront, id string) (*cloudfront.GetDistributionOutput, error) {
 	input := &cloudfront.GetDistributionInput{
 		Id: aws.String(id),
 	}
 
-	output, err := conn.GetDistribution(ctx, input)
+	output, err := conn.GetDistributionWithContext(ctx, input)
 
-	if errs.IsA[*awstypes.NoSuchDistribution](err) {
+	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchDistribution) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -1147,7 +1143,7 @@ func FindDistributionByID(ctx context.Context, conn *cloudfront.Client, id strin
 // resourceAwsCloudFrontWebDistributionWaitUntilDeployed blocks until the
 // distribution is deployed. It currently takes exactly 15 minutes to deploy
 // but that might change in the future.
-func WaitDistributionDeployed(ctx context.Context, conn *cloudfront.Client, id string) error {
+func WaitDistributionDeployed(ctx context.Context, conn *cloudfront.CloudFront, id string) error {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"InProgress"},
 		Target:     []string{"Deployed"},
@@ -1161,7 +1157,7 @@ func WaitDistributionDeployed(ctx context.Context, conn *cloudfront.Client, id s
 	return err
 }
 
-func WaitDistributionDeleted(ctx context.Context, conn *cloudfront.Client, id string) error {
+func WaitDistributionDeleted(ctx context.Context, conn *cloudfront.CloudFront, id string) error {
 	stateConf := &retry.StateChangeConf{
 		Pending:    []string{"InProgress", "Deployed"},
 		Target:     []string{},
@@ -1175,7 +1171,7 @@ func WaitDistributionDeleted(ctx context.Context, conn *cloudfront.Client, id st
 	return err
 }
 
-func distributionDeleteRefreshFunc(ctx context.Context, conn *cloudfront.Client, id string) retry.StateRefreshFunc {
+func distributionDeleteRefreshFunc(ctx context.Context, conn *cloudfront.CloudFront, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := FindDistributionByID(ctx, conn, id)
 		if tfresource.NotFound(err) {
@@ -1190,11 +1186,11 @@ func distributionDeleteRefreshFunc(ctx context.Context, conn *cloudfront.Client,
 			return nil, "", nil
 		}
 
-		return out.Distribution, aws.ToString(out.Distribution.Status), nil
+		return out.Distribution, aws.StringValue(out.Distribution.Status), nil
 	}
 }
 
-func distributionDeployRefreshFunc(ctx context.Context, conn *cloudfront.Client, id string) retry.StateRefreshFunc {
+func distributionDeployRefreshFunc(ctx context.Context, conn *cloudfront.CloudFront, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		out, err := FindDistributionByID(ctx, conn, id)
 		if err != nil {
@@ -1205,6 +1201,6 @@ func distributionDeployRefreshFunc(ctx context.Context, conn *cloudfront.Client,
 			return nil, "", nil
 		}
 
-		return out.Distribution, aws.ToString(out.Distribution.Status), nil
+		return out.Distribution, aws.StringValue(out.Distribution.Status), nil
 	}
 }

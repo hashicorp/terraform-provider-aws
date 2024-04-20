@@ -7,16 +7,14 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
-	"github.com/aws/aws-sdk-go-v2/service/route53domains/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/cloudfront"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -63,9 +61,9 @@ func ResourceFieldLevelEncryptionConfig() *schema.Resource {
 													Required: true,
 												},
 												"format": {
-													Type:             schema.TypeString,
-													Required:         true,
-													ValidateDiagFunc: enum.Validate[awstypes.Format](),
+													Type:         schema.TypeString,
+													Required:     true,
+													ValidateFunc: validation.StringInSlice(cloudfront.Format_Values(), false),
 												},
 												"profile_id": {
 													Type:     schema.TypeString,
@@ -132,9 +130,9 @@ func ResourceFieldLevelEncryptionConfig() *schema.Resource {
 
 func resourceFieldLevelEncryptionConfigCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
-	apiObject := &awstypes.FieldLevelEncryptionConfig{
+	apiObject := &cloudfront.FieldLevelEncryptionConfig{
 		CallerReference: aws.String(id.UniqueId()),
 	}
 
@@ -154,20 +152,21 @@ func resourceFieldLevelEncryptionConfigCreate(ctx context.Context, d *schema.Res
 		FieldLevelEncryptionConfig: apiObject,
 	}
 
-	output, err := conn.CreateFieldLevelEncryptionConfig(ctx, input)
+	log.Printf("[DEBUG] Creating CloudFront Field-level Encryption Config: (%s)", input)
+	output, err := conn.CreateFieldLevelEncryptionConfigWithContext(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating CloudFront Field-level Encryption Config (%s): %s", d.Id(), err)
 	}
 
-	d.SetId(aws.ToString(output.FieldLevelEncryption.Id))
+	d.SetId(aws.StringValue(output.FieldLevelEncryption.Id))
 
 	return append(diags, resourceFieldLevelEncryptionConfigRead(ctx, d, meta)...)
 }
 
 func resourceFieldLevelEncryptionConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	output, err := FindFieldLevelEncryptionConfigByID(ctx, conn, d.Id())
 
@@ -205,9 +204,9 @@ func resourceFieldLevelEncryptionConfigRead(ctx context.Context, d *schema.Resou
 
 func resourceFieldLevelEncryptionConfigUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
-	apiObject := &awstypes.FieldLevelEncryptionConfig{
+	apiObject := &cloudfront.FieldLevelEncryptionConfig{
 		CallerReference: aws.String(d.Get("caller_reference").(string)),
 	}
 
@@ -229,7 +228,8 @@ func resourceFieldLevelEncryptionConfigUpdate(ctx context.Context, d *schema.Res
 		IfMatch:                    aws.String(d.Get("etag").(string)),
 	}
 
-	_, err := conn.UpdateFieldLevelEncryptionConfig(ctx, input)
+	log.Printf("[DEBUG] Updating CloudFront Field-level Encryption Config: (%s)", input)
+	_, err := conn.UpdateFieldLevelEncryptionConfigWithContext(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating CloudFront Field-level Encryption Config (%s): %s", d.Id(), err)
@@ -240,15 +240,15 @@ func resourceFieldLevelEncryptionConfigUpdate(ctx context.Context, d *schema.Res
 
 func resourceFieldLevelEncryptionConfigDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	log.Printf("[DEBUG] Deleting CloudFront Field-level Encryption Config: (%s)", d.Id())
-	_, err := conn.DeleteFieldLevelEncryptionConfig(ctx, &cloudfront.DeleteFieldLevelEncryptionConfigInput{
+	_, err := conn.DeleteFieldLevelEncryptionConfigWithContext(ctx, &cloudfront.DeleteFieldLevelEncryptionConfigInput{
 		Id:      aws.String(d.Id()),
 		IfMatch: aws.String(d.Get("etag").(string)),
 	})
 
-	if errs.IsAErrorMessageContains[*types.InvalidInput](err, "not found") {
+	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchFieldLevelEncryptionConfig) {
 		return diags
 	}
 
@@ -259,12 +259,12 @@ func resourceFieldLevelEncryptionConfigDelete(ctx context.Context, d *schema.Res
 	return diags
 }
 
-func expandContentTypeProfileConfig(tfMap map[string]interface{}) *awstypes.ContentTypeProfileConfig {
+func expandContentTypeProfileConfig(tfMap map[string]interface{}) *cloudfront.ContentTypeProfileConfig {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &awstypes.ContentTypeProfileConfig{}
+	apiObject := &cloudfront.ContentTypeProfileConfig{}
 
 	if v, ok := tfMap["content_type_profiles"].([]interface{}); ok && len(v) > 0 && v[0] != nil {
 		apiObject.ContentTypeProfiles = expandContentTypeProfiles(v[0].(map[string]interface{}))
@@ -277,39 +277,35 @@ func expandContentTypeProfileConfig(tfMap map[string]interface{}) *awstypes.Cont
 	return apiObject
 }
 
-func expandContentTypeProfiles(tfMap map[string]interface{}) *awstypes.ContentTypeProfiles {
+func expandContentTypeProfiles(tfMap map[string]interface{}) *cloudfront.ContentTypeProfiles {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &awstypes.ContentTypeProfiles{}
+	apiObject := &cloudfront.ContentTypeProfiles{}
 
 	if v, ok := tfMap["items"].(*schema.Set); ok && v.Len() > 0 {
-		apiItems := []awstypes.ContentTypeProfile{}
 		items := expandContentTypeProfileItems(v.List())
-		for _, v := range items {
-			apiItems = append(apiItems, *v)
-		}
-		apiObject.Items = apiItems
-		apiObject.Quantity = aws.Int32(int32(len(items)))
+		apiObject.Items = items
+		apiObject.Quantity = aws.Int64(int64(len(items)))
 	}
 
 	return apiObject
 }
 
-func expandContentTypeProfile(tfMap map[string]interface{}) *awstypes.ContentTypeProfile {
+func expandContentTypeProfile(tfMap map[string]interface{}) *cloudfront.ContentTypeProfile {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &awstypes.ContentTypeProfile{}
+	apiObject := &cloudfront.ContentTypeProfile{}
 
 	if v, ok := tfMap["content_type"].(string); ok && v != "" {
 		apiObject.ContentType = aws.String(v)
 	}
 
 	if v, ok := tfMap["format"].(string); ok && v != "" {
-		apiObject.Format = awstypes.Format(v)
+		apiObject.Format = aws.String(v)
 	}
 
 	if v, ok := tfMap["profile_id"].(string); ok && v != "" {
@@ -319,12 +315,12 @@ func expandContentTypeProfile(tfMap map[string]interface{}) *awstypes.ContentTyp
 	return apiObject
 }
 
-func expandContentTypeProfileItems(tfList []interface{}) []*awstypes.ContentTypeProfile {
+func expandContentTypeProfileItems(tfList []interface{}) []*cloudfront.ContentTypeProfile {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []*awstypes.ContentTypeProfile
+	var apiObjects []*cloudfront.ContentTypeProfile
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -345,12 +341,12 @@ func expandContentTypeProfileItems(tfList []interface{}) []*awstypes.ContentType
 	return apiObjects
 }
 
-func expandQueryArgProfileConfig(tfMap map[string]interface{}) *awstypes.QueryArgProfileConfig {
+func expandQueryArgProfileConfig(tfMap map[string]interface{}) *cloudfront.QueryArgProfileConfig {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &awstypes.QueryArgProfileConfig{}
+	apiObject := &cloudfront.QueryArgProfileConfig{}
 
 	if v, ok := tfMap["forward_when_query_arg_profile_is_unknown"].(bool); ok {
 		apiObject.ForwardWhenQueryArgProfileIsUnknown = aws.Bool(v)
@@ -363,28 +359,28 @@ func expandQueryArgProfileConfig(tfMap map[string]interface{}) *awstypes.QueryAr
 	return apiObject
 }
 
-func expandQueryArgProfiles(tfMap map[string]interface{}) *awstypes.QueryArgProfiles {
+func expandQueryArgProfiles(tfMap map[string]interface{}) *cloudfront.QueryArgProfiles {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &awstypes.QueryArgProfiles{}
+	apiObject := &cloudfront.QueryArgProfiles{}
 
 	if v, ok := tfMap["items"].(*schema.Set); ok && v.Len() > 0 {
 		items := expandQueryArgProfileItems(v.List())
 		apiObject.Items = items
-		apiObject.Quantity = aws.Int32(int32(len(items)))
+		apiObject.Quantity = aws.Int64(int64(len(items)))
 	}
 
 	return apiObject
 }
 
-func expandQueryArgProfile(tfMap map[string]interface{}) *awstypes.QueryArgProfile {
+func expandQueryArgProfile(tfMap map[string]interface{}) *cloudfront.QueryArgProfile {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &awstypes.QueryArgProfile{}
+	apiObject := &cloudfront.QueryArgProfile{}
 
 	if v, ok := tfMap["profile_id"].(string); ok && v != "" {
 		apiObject.ProfileId = aws.String(v)
@@ -397,12 +393,12 @@ func expandQueryArgProfile(tfMap map[string]interface{}) *awstypes.QueryArgProfi
 	return apiObject
 }
 
-func expandQueryArgProfileItems(tfList []interface{}) []awstypes.QueryArgProfile {
+func expandQueryArgProfileItems(tfList []interface{}) []*cloudfront.QueryArgProfile {
 	if len(tfList) == 0 {
 		return nil
 	}
 
-	var apiObjects []awstypes.QueryArgProfile
+	var apiObjects []*cloudfront.QueryArgProfile
 
 	for _, tfMapRaw := range tfList {
 		tfMap, ok := tfMapRaw.(map[string]interface{})
@@ -411,9 +407,9 @@ func expandQueryArgProfileItems(tfList []interface{}) []awstypes.QueryArgProfile
 			continue
 		}
 
-		apiObject := *expandQueryArgProfile(tfMap)
+		apiObject := expandQueryArgProfile(tfMap)
 
-		if &apiObject == nil {
+		if apiObject == nil {
 			continue
 		}
 
@@ -423,7 +419,7 @@ func expandQueryArgProfileItems(tfList []interface{}) []awstypes.QueryArgProfile
 	return apiObjects
 }
 
-func flattenContentTypeProfileConfig(apiObject *awstypes.ContentTypeProfileConfig) map[string]interface{} {
+func flattenContentTypeProfileConfig(apiObject *cloudfront.ContentTypeProfileConfig) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -435,32 +431,27 @@ func flattenContentTypeProfileConfig(apiObject *awstypes.ContentTypeProfileConfi
 	}
 
 	if v := apiObject.ForwardWhenContentTypeIsUnknown; v != nil {
-		tfMap["forward_when_content_type_is_unknown"] = aws.ToBool(v)
+		tfMap["forward_when_content_type_is_unknown"] = aws.BoolValue(v)
 	}
 
 	return tfMap
 }
 
-func flattenContentTypeProfiles(apiObject *awstypes.ContentTypeProfiles) map[string]interface{} {
+func flattenContentTypeProfiles(apiObject *cloudfront.ContentTypeProfiles) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 
-	tfmapItems := make([]*awstypes.ContentTypeProfile, 0)
-	for _, v := range apiObject.Items {
-		tfmapItems = append(tfmapItems, &v)
-	}
-
 	if v := apiObject.Items; len(v) > 0 {
-		tfMap["items"] = flattenContentTypeProfileItems(tfmapItems)
+		tfMap["items"] = flattenContentTypeProfileItems(v)
 	}
 
 	return tfMap
 }
 
-func flattenContentTypeProfile(apiObject *awstypes.ContentTypeProfile) map[string]interface{} {
+func flattenContentTypeProfile(apiObject *cloudfront.ContentTypeProfile) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -468,21 +459,21 @@ func flattenContentTypeProfile(apiObject *awstypes.ContentTypeProfile) map[strin
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.ContentType; v != nil {
-		tfMap["content_type"] = aws.ToString(v)
+		tfMap["content_type"] = aws.StringValue(v)
 	}
 
-	if v := apiObject.Format; v != awstypes.Format("") {
-		tfMap["format"] = awstypes.Format(v)
+	if v := apiObject.Format; v != nil {
+		tfMap["format"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.ProfileId; v != nil {
-		tfMap["profile_id"] = aws.ToString(v)
+		tfMap["profile_id"] = aws.StringValue(v)
 	}
 
 	return tfMap
 }
 
-func flattenContentTypeProfileItems(apiObjects []*awstypes.ContentTypeProfile) []interface{} {
+func flattenContentTypeProfileItems(apiObjects []*cloudfront.ContentTypeProfile) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -502,7 +493,7 @@ func flattenContentTypeProfileItems(apiObjects []*awstypes.ContentTypeProfile) [
 	return tfList
 }
 
-func flattenQueryArgProfileConfig(apiObject *awstypes.QueryArgProfileConfig) map[string]interface{} {
+func flattenQueryArgProfileConfig(apiObject *cloudfront.QueryArgProfileConfig) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -510,7 +501,7 @@ func flattenQueryArgProfileConfig(apiObject *awstypes.QueryArgProfileConfig) map
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.ForwardWhenQueryArgProfileIsUnknown; v != nil {
-		tfMap["forward_when_query_arg_profile_is_unknown"] = aws.ToBool(v)
+		tfMap["forward_when_query_arg_profile_is_unknown"] = aws.BoolValue(v)
 	}
 
 	if v := flattenQueryArgProfiles(apiObject.QueryArgProfiles); len(v) > 0 {
@@ -520,7 +511,7 @@ func flattenQueryArgProfileConfig(apiObject *awstypes.QueryArgProfileConfig) map
 	return tfMap
 }
 
-func flattenQueryArgProfiles(apiObject *awstypes.QueryArgProfiles) map[string]interface{} {
+func flattenQueryArgProfiles(apiObject *cloudfront.QueryArgProfiles) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -534,7 +525,7 @@ func flattenQueryArgProfiles(apiObject *awstypes.QueryArgProfiles) map[string]in
 	return tfMap
 }
 
-func flattenQueryArgProfile(apiObject *awstypes.QueryArgProfile) map[string]interface{} {
+func flattenQueryArgProfile(apiObject *cloudfront.QueryArgProfile) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -542,17 +533,17 @@ func flattenQueryArgProfile(apiObject *awstypes.QueryArgProfile) map[string]inte
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.ProfileId; v != nil {
-		tfMap["profile_id"] = aws.ToString(v)
+		tfMap["profile_id"] = aws.StringValue(v)
 	}
 
 	if v := apiObject.QueryArg; v != nil {
-		tfMap["query_arg"] = aws.ToString(v)
+		tfMap["query_arg"] = aws.StringValue(v)
 	}
 
 	return tfMap
 }
 
-func flattenQueryArgProfileItems(apiObjects []awstypes.QueryArgProfile) []interface{} {
+func flattenQueryArgProfileItems(apiObjects []*cloudfront.QueryArgProfile) []interface{} {
 	if len(apiObjects) == 0 {
 		return nil
 	}
@@ -560,11 +551,11 @@ func flattenQueryArgProfileItems(apiObjects []awstypes.QueryArgProfile) []interf
 	var tfList []interface{}
 
 	for _, apiObject := range apiObjects {
-		if &apiObject == nil {
+		if apiObject == nil {
 			continue
 		}
 
-		if v := flattenQueryArgProfile(&apiObject); len(v) > 0 {
+		if v := flattenQueryArgProfile(apiObject); len(v) > 0 {
 			tfList = append(tfList, v)
 		}
 	}

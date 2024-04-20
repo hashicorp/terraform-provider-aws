@@ -7,14 +7,14 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/aws/arn"
-	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/aws/aws-sdk-go/service/cloudfront"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
 // @SDKDataSource("aws_cloudfront_origin_access_identities")
@@ -49,26 +49,40 @@ func DataSourceOriginAccessIdentities() *schema.Resource {
 
 func dataSourceOriginAccessIdentitiesRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	var comments []interface{}
 
 	if v, ok := d.GetOk("comments"); ok && v.(*schema.Set).Len() > 0 {
 		comments = v.(*schema.Set).List()
 	}
-	var output []*awstypes.CloudFrontOriginAccessIdentitySummary
 
-	input := &cloudfront.ListCloudFrontOriginAccessIdentitiesInput{}
+	var output []*cloudfront.OriginAccessIdentitySummary
 
-	pages := cloudfront.NewListCloudFrontOriginAccessIdentitiesPaginator(conn, input)
-
-	for pages.HasMorePages() {
-		page, err := pages.NextPage(ctx)
-
-		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "listing CloudFront origin access identities: %s", err)
+	err := conn.ListCloudFrontOriginAccessIdentitiesPagesWithContext(ctx, &cloudfront.ListCloudFrontOriginAccessIdentitiesInput{}, func(page *cloudfront.ListCloudFrontOriginAccessIdentitiesOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
 		}
-		comments = append(comments, page)
+
+		for _, v := range page.CloudFrontOriginAccessIdentityList.Items {
+			if v == nil {
+				continue
+			}
+
+			if len(comments) > 0 {
+				if idx := tfslices.IndexOf(comments, aws.StringValue(v.Comment)); idx == -1 {
+					continue
+				}
+			}
+
+			output = append(output, v)
+		}
+
+		return !lastPage
+	})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "listing CloudFront origin access identities: %s", err)
 	}
 
 	var iamARNs, ids, s3CanonicalUserIDs []string
@@ -82,8 +96,8 @@ func dataSourceOriginAccessIdentitiesRead(ctx context.Context, d *schema.Resourc
 			Resource:  fmt.Sprintf("user/CloudFront Origin Access Identity %s", *v.Id),
 		}.String()
 		iamARNs = append(iamARNs, iamARN)
-		ids = append(ids, aws.ToString(v.Id))
-		s3CanonicalUserIDs = append(s3CanonicalUserIDs, aws.ToString(v.S3CanonicalUserId))
+		ids = append(ids, aws.StringValue(v.Id))
+		s3CanonicalUserIDs = append(s3CanonicalUserIDs, aws.StringValue(v.S3CanonicalUserId))
 	}
 
 	d.SetId(meta.(*conns.AWSClient).AccountID)

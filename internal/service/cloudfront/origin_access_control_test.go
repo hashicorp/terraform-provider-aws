@@ -9,32 +9,29 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
-	"github.com/aws/aws-sdk-go-v2/service/route53domains/types"
-
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/cloudfront"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfcloudfront "github.com/hashicorp/terraform-provider-aws/internal/service/cloudfront"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCloudFrontOriginAccessControl_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var originaccesscontrol awstypes.OriginAccessControl
+	var originaccesscontrol cloudfront.OriginAccessControl
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_origin_access_control.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, cloudfront.ServiceID)
+			acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
@@ -52,7 +49,7 @@ func TestAccCloudFrontOriginAccessControl_basic(t *testing.T) {
 							return fmt.Errorf("expected attribute to be set")
 						}
 
-						if id := aws.ToString(originaccesscontrol.Id); value != id {
+						if id := aws.StringValue(originaccesscontrol.Id); value != id {
 							return fmt.Errorf("expected attribute to be equal to %s", id)
 						}
 
@@ -75,14 +72,14 @@ func TestAccCloudFrontOriginAccessControl_basic(t *testing.T) {
 
 func TestAccCloudFrontOriginAccessControl_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
-	var originaccesscontrol awstypes.OriginAccessControl
+	var originaccesscontrol cloudfront.OriginAccessControl
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_cloudfront_origin_access_control.test"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, cloudfront.ServiceID)
+			acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
@@ -110,7 +107,7 @@ func TestAccCloudFrontOriginAccessControl_Name(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, cloudfront.ServiceID)
+			acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
@@ -146,7 +143,7 @@ func TestAccCloudFrontOriginAccessControl_Description(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, cloudfront.ServiceID)
+			acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
@@ -193,7 +190,7 @@ func TestAccCloudFrontOriginAccessControl_SigningBehavior(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, cloudfront.ServiceID)
+			acctest.PreCheckPartitionHasService(t, cloudfront.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFrontServiceID),
@@ -223,18 +220,18 @@ func TestAccCloudFrontOriginAccessControl_SigningBehavior(t *testing.T) {
 
 func testAccCheckOriginAccessControlDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cloudfront_origin_access_control" {
 				continue
 			}
 
-			_, err := conn.GetOriginAccessControl(ctx, &cloudfront.GetOriginAccessControlInput{
+			_, err := conn.GetOriginAccessControlWithContext(ctx, &cloudfront.GetOriginAccessControlInput{
 				Id: aws.String(rs.Primary.ID),
 			})
 			if err != nil {
-				if errs.IsAErrorMessageContains[*types.InvalidInput](err, "not found") {
+				if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchOriginAccessControl) {
 					return nil
 				}
 				return err
@@ -247,7 +244,7 @@ func testAccCheckOriginAccessControlDestroy(ctx context.Context) resource.TestCh
 	}
 }
 
-func testAccCheckOriginAccessControlExists(ctx context.Context, name string, originaccesscontrol *awstypes.OriginAccessControl) resource.TestCheckFunc {
+func testAccCheckOriginAccessControlExists(ctx context.Context, name string, originaccesscontrol *cloudfront.OriginAccessControl) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[name]
 		if !ok {
@@ -258,9 +255,9 @@ func testAccCheckOriginAccessControlExists(ctx context.Context, name string, ori
 			return create.Error(names.CloudFront, create.ErrActionCheckingExistence, tfcloudfront.ResNameOriginAccessControl, name, errors.New("not set"))
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn(ctx)
 
-		resp, err := conn.GetOriginAccessControl(ctx, &cloudfront.GetOriginAccessControlInput{
+		resp, err := conn.GetOriginAccessControlWithContext(ctx, &cloudfront.GetOriginAccessControlInput{
 			Id: aws.String(rs.Primary.ID),
 		})
 
@@ -275,10 +272,10 @@ func testAccCheckOriginAccessControlExists(ctx context.Context, name string, ori
 }
 
 func testAccPreCheck(ctx context.Context, t *testing.T) {
-	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)
+	conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn(ctx)
 
 	input := &cloudfront.ListOriginAccessControlsInput{}
-	_, err := conn.ListOriginAccessControls(ctx, input)
+	_, err := conn.ListOriginAccessControlsWithContext(ctx, input)
 
 	if acctest.PreCheckSkipError(err) {
 		t.Skipf("skipping acceptance testing: %s", err)

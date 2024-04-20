@@ -8,9 +8,9 @@ import (
 	"errors"
 	"time"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/cloudfront"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-framework-validators/listvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
@@ -21,7 +21,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -141,7 +140,7 @@ func (r *resourceContinuousDeploymentPolicy) Schema(ctx context.Context, req res
 }
 
 func (r *resourceContinuousDeploymentPolicy) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
-	conn := r.Meta().CloudFrontClient(ctx)
+	conn := r.Meta().CloudFrontConn(ctx)
 
 	var plan resourceContinuousDeploymentPolicyData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -159,7 +158,7 @@ func (r *resourceContinuousDeploymentPolicy) Create(ctx context.Context, req res
 		ContinuousDeploymentPolicyConfig: cfg,
 	}
 
-	out, err := conn.CreateContinuousDeploymentPolicy(ctx, in)
+	out, err := conn.CreateContinuousDeploymentPolicyWithContext(ctx, in)
 	if err != nil {
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.CloudFront, create.ErrActionCreating, ResNameContinuousDeploymentPolicy, "", err),
@@ -183,7 +182,7 @@ func (r *resourceContinuousDeploymentPolicy) Create(ctx context.Context, req res
 }
 
 func (r *resourceContinuousDeploymentPolicy) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
-	conn := r.Meta().CloudFrontClient(ctx)
+	conn := r.Meta().CloudFrontConn(ctx)
 
 	var state resourceContinuousDeploymentPolicyData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -214,7 +213,7 @@ func (r *resourceContinuousDeploymentPolicy) Read(ctx context.Context, req resou
 }
 
 func (r *resourceContinuousDeploymentPolicy) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-	conn := r.Meta().CloudFrontClient(ctx)
+	conn := r.Meta().CloudFrontConn(ctx)
 
 	var plan, state resourceContinuousDeploymentPolicyData
 	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
@@ -239,7 +238,7 @@ func (r *resourceContinuousDeploymentPolicy) Update(ctx context.Context, req res
 			ContinuousDeploymentPolicyConfig: cfg,
 		}
 
-		out, err := conn.UpdateContinuousDeploymentPolicy(ctx, in)
+		out, err := conn.UpdateContinuousDeploymentPolicyWithContext(ctx, in)
 		if err != nil {
 			resp.Diagnostics.AddError(
 				create.ProblemStandardMessage(names.CloudFront, create.ErrActionUpdating, ResNameContinuousDeploymentPolicy, plan.ID.String(), err),
@@ -264,7 +263,7 @@ func (r *resourceContinuousDeploymentPolicy) Update(ctx context.Context, req res
 }
 
 func (r *resourceContinuousDeploymentPolicy) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
-	conn := r.Meta().CloudFrontClient(ctx)
+	conn := r.Meta().CloudFrontConn(ctx)
 
 	var state resourceContinuousDeploymentPolicyData
 	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
@@ -283,7 +282,7 @@ func (r *resourceContinuousDeploymentPolicy) Delete(ctx context.Context, req res
 	}
 }
 
-func DeleteCDP(ctx context.Context, conn *cloudfront.Client, id string) error {
+func DeleteCDP(ctx context.Context, conn *cloudfront.CloudFront, id string) error {
 	etag, err := cdpETag(ctx, conn, id)
 	if tfresource.NotFound(err) {
 		return nil
@@ -298,12 +297,12 @@ func DeleteCDP(ctx context.Context, conn *cloudfront.Client, id string) error {
 		IfMatch: etag,
 	}
 
-	_, err = conn.DeleteContinuousDeploymentPolicy(ctx, in)
-	if errs.IsA[*awstypes.NoSuchContinuousDeploymentPolicy](err) {
+	_, err = conn.DeleteContinuousDeploymentPolicyWithContext(ctx, in)
+	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchContinuousDeploymentPolicy) {
 		return nil
 	}
 
-	if errs.IsA[*awstypes.PreconditionFailed](err) || errs.IsA[*awstypes.InvalidIfMatchVersion](err) {
+	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodePreconditionFailed, cloudfront.ErrCodeInvalidIfMatchVersion) {
 		etag, err := cdpETag(ctx, conn, id)
 		if tfresource.NotFound(err) {
 			return nil
@@ -313,27 +312,28 @@ func DeleteCDP(ctx context.Context, conn *cloudfront.Client, id string) error {
 			return err
 		}
 
-		in.IfMatch = etag
+		in.SetIfMatch(aws.StringValue(etag))
 
-		_, err = conn.DeleteContinuousDeploymentPolicy(ctx, in)
-		if errs.IsA[*awstypes.NoSuchContinuousDeploymentPolicy](err) {
+		_, err = conn.DeleteContinuousDeploymentPolicyWithContext(ctx, in)
+		if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchContinuousDeploymentPolicy) {
 			return nil
 		}
 	}
+
 	return err
 }
 
-func disableContinuousDeploymentPolicy(ctx context.Context, conn *cloudfront.Client, id string) error {
+func disableContinuousDeploymentPolicy(ctx context.Context, conn *cloudfront.CloudFront, id string) error {
 	out, err := FindContinuousDeploymentPolicyByID(ctx, conn, id)
 	if tfresource.NotFound(err) || out == nil || out.ContinuousDeploymentPolicy == nil || out.ContinuousDeploymentPolicy.ContinuousDeploymentPolicyConfig == nil {
 		return nil
 	}
 
-	if !aws.ToBool(out.ContinuousDeploymentPolicy.ContinuousDeploymentPolicyConfig.Enabled) {
+	if !aws.BoolValue(out.ContinuousDeploymentPolicy.ContinuousDeploymentPolicyConfig.Enabled) {
 		return nil
 	}
 
-	out.ContinuousDeploymentPolicy.ContinuousDeploymentPolicyConfig.Enabled = aws.Bool(false)
+	out.ContinuousDeploymentPolicy.ContinuousDeploymentPolicyConfig.SetEnabled(false)
 
 	in := &cloudfront.UpdateContinuousDeploymentPolicyInput{
 		Id:                               out.ContinuousDeploymentPolicy.Id,
@@ -341,11 +341,11 @@ func disableContinuousDeploymentPolicy(ctx context.Context, conn *cloudfront.Cli
 		ContinuousDeploymentPolicyConfig: out.ContinuousDeploymentPolicy.ContinuousDeploymentPolicyConfig,
 	}
 
-	_, err = conn.UpdateContinuousDeploymentPolicy(ctx, in)
+	_, err = conn.UpdateContinuousDeploymentPolicyWithContext(ctx, in)
 	return err
 }
 
-func cdpETag(ctx context.Context, conn *cloudfront.Client, id string) (*string, error) {
+func cdpETag(ctx context.Context, conn *cloudfront.CloudFront, id string) (*string, error) {
 	output, err := FindContinuousDeploymentPolicyByID(ctx, conn, id)
 	if err != nil {
 		return nil, err
@@ -358,13 +358,13 @@ func (r *resourceContinuousDeploymentPolicy) ImportState(ctx context.Context, re
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
-func FindContinuousDeploymentPolicyByID(ctx context.Context, conn *cloudfront.Client, id string) (*cloudfront.GetContinuousDeploymentPolicyOutput, error) {
+func FindContinuousDeploymentPolicyByID(ctx context.Context, conn *cloudfront.CloudFront, id string) (*cloudfront.GetContinuousDeploymentPolicyOutput, error) {
 	in := &cloudfront.GetContinuousDeploymentPolicyInput{
 		Id: aws.String(id),
 	}
 
-	out, err := conn.GetContinuousDeploymentPolicy(ctx, in)
-	if errs.IsA[*awstypes.NoSuchContinuousDeploymentPolicy](err) {
+	out, err := conn.GetContinuousDeploymentPolicyWithContext(ctx, in)
+	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchContinuousDeploymentPolicy) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: in,
@@ -382,7 +382,7 @@ func FindContinuousDeploymentPolicyByID(ctx context.Context, conn *cloudfront.Cl
 	return out, nil
 }
 
-func flattenStagingDistributionDNSNames(ctx context.Context, apiObject *awstypes.StagingDistributionDnsNames) (types.List, diag.Diagnostics) {
+func flattenStagingDistributionDNSNames(ctx context.Context, apiObject *cloudfront.StagingDistributionDnsNames) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	elemType := types.ObjectType{AttrTypes: stagingDistributionDNSNamesAttrTypes}
 
@@ -391,8 +391,8 @@ func flattenStagingDistributionDNSNames(ctx context.Context, apiObject *awstypes
 	}
 
 	obj := map[string]attr.Value{
-		"items":    flex.FlattenFrameworkStringValueSet(ctx, apiObject.Items),
-		"quantity": flex.Int64ToFramework(ctx, aws.Int64(int64(*apiObject.Quantity))),
+		"items":    flex.FlattenFrameworkStringSet(ctx, apiObject.Items),
+		"quantity": flex.Int64ToFramework(ctx, apiObject.Quantity),
 	}
 	objVal, d := types.ObjectValue(stagingDistributionDNSNamesAttrTypes, obj)
 	diags.Append(d...)
@@ -403,7 +403,7 @@ func flattenStagingDistributionDNSNames(ctx context.Context, apiObject *awstypes
 	return listVal, diags
 }
 
-func flattenTrafficConfig(ctx context.Context, apiObject *awstypes.TrafficConfig) (types.List, diag.Diagnostics) {
+func flattenTrafficConfig(ctx context.Context, apiObject *cloudfront.TrafficConfig) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	elemType := types.ObjectType{AttrTypes: trafficConfigAttrTypes}
 
@@ -416,10 +416,9 @@ func flattenTrafficConfig(ctx context.Context, apiObject *awstypes.TrafficConfig
 
 	singleWeightConfig, d := flattenSingleWeightConfig(ctx, apiObject.SingleWeightConfig)
 	diags.Append(d...)
-	objType := string(apiObject.Type)
 
 	obj := map[string]attr.Value{
-		"type":                 flex.StringToFramework(ctx, &objType),
+		"type":                 flex.StringToFramework(ctx, apiObject.Type),
 		"single_header_config": singleHeaderConfig,
 		"single_weight_config": singleWeightConfig,
 	}
@@ -432,7 +431,7 @@ func flattenTrafficConfig(ctx context.Context, apiObject *awstypes.TrafficConfig
 	return listVal, diags
 }
 
-func flattenSingleHeaderConfig(ctx context.Context, apiObject *awstypes.ContinuousDeploymentSingleHeaderConfig) (types.List, diag.Diagnostics) {
+func flattenSingleHeaderConfig(ctx context.Context, apiObject *cloudfront.ContinuousDeploymentSingleHeaderConfig) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	elemType := types.ObjectType{AttrTypes: singleHeaderConfigAttrTypes}
 
@@ -453,7 +452,7 @@ func flattenSingleHeaderConfig(ctx context.Context, apiObject *awstypes.Continuo
 	return listVal, diags
 }
 
-func flattenSingleWeightConfig(ctx context.Context, apiObject *awstypes.ContinuousDeploymentSingleWeightConfig) (types.List, diag.Diagnostics) {
+func flattenSingleWeightConfig(ctx context.Context, apiObject *cloudfront.ContinuousDeploymentSingleWeightConfig) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	elemType := types.ObjectType{AttrTypes: singleWeightConfigAttrTypes}
 
@@ -466,7 +465,7 @@ func flattenSingleWeightConfig(ctx context.Context, apiObject *awstypes.Continuo
 
 	obj := map[string]attr.Value{
 		"session_stickiness_config": sessionStickinessConfig,
-		"weight":                    flex.Float32ToFramework(ctx, apiObject.Weight),
+		"weight":                    flex.Float64ToFramework(ctx, apiObject.Weight),
 	}
 	objVal, d := types.ObjectValue(singleWeightConfigAttrTypes, obj)
 	diags.Append(d...)
@@ -477,7 +476,7 @@ func flattenSingleWeightConfig(ctx context.Context, apiObject *awstypes.Continuo
 	return listVal, diags
 }
 
-func flattenSessionStickinessConfig(ctx context.Context, apiObject *awstypes.SessionStickinessConfig) (types.List, diag.Diagnostics) {
+func flattenSessionStickinessConfig(ctx context.Context, apiObject *cloudfront.SessionStickinessConfig) (types.List, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	elemType := types.ObjectType{AttrTypes: sessionStickinessConfigAttrTypes}
 
@@ -486,8 +485,8 @@ func flattenSessionStickinessConfig(ctx context.Context, apiObject *awstypes.Ses
 	}
 
 	obj := map[string]attr.Value{
-		"idle_ttl":    flex.Int32ToFramework(ctx, apiObject.IdleTTL),
-		"maximum_ttl": flex.Int32ToFramework(ctx, apiObject.MaximumTTL),
+		"idle_ttl":    flex.Int64ToFramework(ctx, apiObject.IdleTTL),
+		"maximum_ttl": flex.Int64ToFramework(ctx, apiObject.MaximumTTL),
 	}
 	objVal, d := types.ObjectValue(sessionStickinessConfigAttrTypes, obj)
 	diags.Append(d...)
@@ -500,12 +499,12 @@ func flattenSessionStickinessConfig(ctx context.Context, apiObject *awstypes.Ses
 
 // expandContinuousDeploymentPolicyConfig translates a resource plan into a
 // continuous deployment policy config
-func expandContinuousDeploymentPolicyConfig(ctx context.Context, data resourceContinuousDeploymentPolicyData) (*awstypes.ContinuousDeploymentPolicyConfig, diag.Diagnostics) {
+func expandContinuousDeploymentPolicyConfig(ctx context.Context, data resourceContinuousDeploymentPolicyData) (*cloudfront.ContinuousDeploymentPolicyConfig, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	var stagingDistributionDNSNames []stagingDistributionDNSNamesData
 	diags.Append(data.StagingDistributionDNSNames.ElementsAs(ctx, &stagingDistributionDNSNames, false)...)
 
-	apiObject := &awstypes.ContinuousDeploymentPolicyConfig{
+	apiObject := &cloudfront.ContinuousDeploymentPolicyConfig{
 		Enabled:                     aws.Bool(data.Enabled.ValueBool()),
 		StagingDistributionDnsNames: expandStagingDistributionDNSNames(ctx, stagingDistributionDNSNames),
 	}
@@ -522,29 +521,29 @@ func expandContinuousDeploymentPolicyConfig(ctx context.Context, data resourceCo
 	return apiObject, diags
 }
 
-func expandStagingDistributionDNSNames(ctx context.Context, tfList []stagingDistributionDNSNamesData) *awstypes.StagingDistributionDnsNames {
+func expandStagingDistributionDNSNames(ctx context.Context, tfList []stagingDistributionDNSNamesData) *cloudfront.StagingDistributionDnsNames {
 	if len(tfList) == 0 {
 		return nil
 	}
 
 	tfObj := tfList[0]
-	apiObject := &awstypes.StagingDistributionDnsNames{
-		Quantity: aws.Int32(tfObj.Quantity),
-		Items:    flex.ExpandFrameworkStringValueSet(ctx, tfObj.Items),
+	apiObject := &cloudfront.StagingDistributionDnsNames{
+		Quantity: aws.Int64(tfObj.Quantity.ValueInt64()),
+		Items:    flex.ExpandFrameworkStringSet(ctx, tfObj.Items),
 	}
 
 	return apiObject
 }
 
-func expandTrafficConfig(ctx context.Context, tfList []trafficConfigData) (*awstypes.TrafficConfig, diag.Diagnostics) {
+func expandTrafficConfig(ctx context.Context, tfList []trafficConfigData) (*cloudfront.TrafficConfig, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if len(tfList) == 0 {
 		return nil, diags
 	}
 
 	tfObj := tfList[0]
-	apiObject := &awstypes.TrafficConfig{
-		Type: awstypes.ContinuousDeploymentPolicyType(tfObj.Type.ValueString()),
+	apiObject := &cloudfront.TrafficConfig{
+		Type: aws.String(tfObj.Type.ValueString()),
 	}
 	if !tfObj.SingleHeaderConfig.IsNull() {
 		var data []singleHeaderConfigData
@@ -565,13 +564,13 @@ func expandTrafficConfig(ctx context.Context, tfList []trafficConfigData) (*awst
 	return apiObject, diags
 }
 
-func expandSingleHeaderConfig(tfList []singleHeaderConfigData) *awstypes.ContinuousDeploymentSingleHeaderConfig {
+func expandSingleHeaderConfig(tfList []singleHeaderConfigData) *cloudfront.ContinuousDeploymentSingleHeaderConfig {
 	if len(tfList) == 0 {
 		return nil
 	}
 
 	tfObj := tfList[0]
-	apiObject := &awstypes.ContinuousDeploymentSingleHeaderConfig{
+	apiObject := &cloudfront.ContinuousDeploymentSingleHeaderConfig{
 		Header: aws.String(tfObj.Header.ValueString()),
 		Value:  aws.String(tfObj.Value.ValueString()),
 	}
@@ -579,15 +578,15 @@ func expandSingleHeaderConfig(tfList []singleHeaderConfigData) *awstypes.Continu
 	return apiObject
 }
 
-func expandSingleWeightConfig(ctx context.Context, tfList []singleWeightConfigData) (*awstypes.ContinuousDeploymentSingleWeightConfig, diag.Diagnostics) {
+func expandSingleWeightConfig(ctx context.Context, tfList []singleWeightConfigData) (*cloudfront.ContinuousDeploymentSingleWeightConfig, diag.Diagnostics) {
 	var diags diag.Diagnostics
 	if len(tfList) == 0 {
 		return nil, diags
 	}
 
 	tfObj := tfList[0]
-	apiObject := &awstypes.ContinuousDeploymentSingleWeightConfig{
-		Weight: aws.Float32(float32(tfObj.Weight.ValueFloat64())),
+	apiObject := &cloudfront.ContinuousDeploymentSingleWeightConfig{
+		Weight: aws.Float64(tfObj.Weight.ValueFloat64()),
 	}
 	if !tfObj.SessionStickinessConfig.IsNull() {
 		var data []sessionStickinessConfigData
@@ -599,15 +598,15 @@ func expandSingleWeightConfig(ctx context.Context, tfList []singleWeightConfigDa
 	return apiObject, diags
 }
 
-func expandSessionStickinessConfig(tfList []sessionStickinessConfigData) *awstypes.SessionStickinessConfig {
+func expandSessionStickinessConfig(tfList []sessionStickinessConfigData) *cloudfront.SessionStickinessConfig {
 	if len(tfList) == 0 {
 		return nil
 	}
 
 	tfObj := tfList[0]
-	apiObject := &awstypes.SessionStickinessConfig{
-		IdleTTL:    aws.Int32(int32(tfObj.IdleTTL.ValueInt64())),
-		MaximumTTL: aws.Int32(int32(tfObj.MaximumTTL.ValueInt64())),
+	apiObject := &cloudfront.SessionStickinessConfig{
+		IdleTTL:    aws.Int64(tfObj.IdleTTL.ValueInt64()),
+		MaximumTTL: aws.Int64(tfObj.MaximumTTL.ValueInt64()),
 	}
 
 	return apiObject
@@ -623,8 +622,8 @@ type resourceContinuousDeploymentPolicyData struct {
 }
 
 type stagingDistributionDNSNamesData struct {
-	Items    types.Set `tfsdk:"items"`
-	Quantity int32     `tfsdk:"quantity"`
+	Items    types.Set   `tfsdk:"items"`
+	Quantity types.Int64 `tfsdk:"quantity"`
 }
 
 type trafficConfigData struct {
@@ -675,7 +674,7 @@ var sessionStickinessConfigAttrTypes = map[string]attr.Type{
 }
 
 // refresh updates state data from the returned API response
-func (rd *resourceContinuousDeploymentPolicyData) refresh(ctx context.Context, apiObject *awstypes.ContinuousDeploymentPolicyConfig) diag.Diagnostics {
+func (rd *resourceContinuousDeploymentPolicyData) refresh(ctx context.Context, apiObject *cloudfront.ContinuousDeploymentPolicyConfig) diag.Diagnostics {
 	var diags diag.Diagnostics
 	if apiObject == nil {
 		return diags

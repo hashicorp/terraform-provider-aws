@@ -7,13 +7,12 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
-	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
+	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go/service/cloudfront"
+	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 )
@@ -54,7 +53,7 @@ func ResourceKeyGroup() *schema.Resource {
 
 func resourceKeyGroupCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	input := &cloudfront.CreateKeyGroupInput{
 		KeyGroupConfig: expandKeyGroupConfig(d),
@@ -62,7 +61,7 @@ func resourceKeyGroupCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 	log.Println("[DEBUG] Create CloudFront Key Group:", input)
 
-	output, err := conn.CreateKeyGroup(ctx, input)
+	output, err := conn.CreateKeyGroupWithContext(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating CloudFront Key Group: %s", err)
 	}
@@ -71,20 +70,20 @@ func resourceKeyGroupCreate(ctx context.Context, d *schema.ResourceData, meta in
 		return sdkdiag.AppendErrorf(diags, "creating CloudFront Key Group: empty response")
 	}
 
-	d.SetId(aws.ToString(output.KeyGroup.Id))
+	d.SetId(aws.StringValue(output.KeyGroup.Id))
 	return append(diags, resourceKeyGroupRead(ctx, d, meta)...)
 }
 
 func resourceKeyGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 	input := &cloudfront.GetKeyGroupInput{
 		Id: aws.String(d.Id()),
 	}
 
-	output, err := conn.GetKeyGroup(ctx, input)
+	output, err := conn.GetKeyGroupWithContext(ctx, input)
 	if err != nil {
-		if !d.IsNewResource() && errs.IsA[*awstypes.NoSuchResource](err) {
+		if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchResource) {
 			log.Printf("[WARN] No key group found: %s, removing from state", d.Id())
 			d.SetId("")
 			return diags
@@ -100,7 +99,7 @@ func resourceKeyGroupRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 	d.Set("name", keyGroupConfig.Name)
 	d.Set("comment", keyGroupConfig.Comment)
-	d.Set("items", flex.FlattenStringValueSet(keyGroupConfig.Items))
+	d.Set("items", flex.FlattenStringSet(keyGroupConfig.Items))
 	d.Set("etag", output.ETag)
 
 	return diags
@@ -108,7 +107,7 @@ func resourceKeyGroupRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceKeyGroupUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	input := &cloudfront.UpdateKeyGroupInput{
 		Id:             aws.String(d.Id()),
@@ -116,7 +115,7 @@ func resourceKeyGroupUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		IfMatch:        aws.String(d.Get("etag").(string)),
 	}
 
-	_, err := conn.UpdateKeyGroup(ctx, input)
+	_, err := conn.UpdateKeyGroupWithContext(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating CloudFront Key Group (%s): %s", d.Id(), err)
 	}
@@ -126,16 +125,16 @@ func resourceKeyGroupUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceKeyGroupDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
+	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
 
 	input := &cloudfront.DeleteKeyGroupInput{
 		Id:      aws.String(d.Id()),
 		IfMatch: aws.String(d.Get("etag").(string)),
 	}
 
-	_, err := conn.DeleteKeyGroup(ctx, input)
+	_, err := conn.DeleteKeyGroupWithContext(ctx, input)
 	if err != nil {
-		if errs.IsA[*awstypes.NoSuchResource](err) {
+		if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchResource) {
 			return diags
 		}
 		return sdkdiag.AppendErrorf(diags, "deleting CloudFront Key Group (%s): %s", d.Id(), err)
@@ -144,9 +143,9 @@ func resourceKeyGroupDelete(ctx context.Context, d *schema.ResourceData, meta in
 	return diags
 }
 
-func expandKeyGroupConfig(d *schema.ResourceData) *awstypes.KeyGroupConfig {
-	keyGroupConfig := &awstypes.KeyGroupConfig{
-		Items: flex.ExpandStringValueSet(d.Get("items").(*schema.Set)),
+func expandKeyGroupConfig(d *schema.ResourceData) *cloudfront.KeyGroupConfig {
+	keyGroupConfig := &cloudfront.KeyGroupConfig{
+		Items: flex.ExpandStringSet(d.Get("items").(*schema.Set)),
 		Name:  aws.String(d.Get("name").(string)),
 	}
 
