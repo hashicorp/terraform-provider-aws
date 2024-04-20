@@ -357,7 +357,6 @@ func (r *resourceKey) Update(ctx context.Context, request resource.UpdateRequest
 				)
 				return
 			}
-
 		}
 		out, err := findKeyByID(ctx, conn, new.ID.ValueString())
 		if err != nil {
@@ -499,7 +498,6 @@ func findKeyByID(ctx context.Context, conn *paymentcryptography.Client, id strin
 			Message:     string(state),
 			LastRequest: in,
 		}
-
 	}
 
 	return out.Key, nil
