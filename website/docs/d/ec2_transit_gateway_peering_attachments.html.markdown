@@ -8,7 +8,7 @@ description: |-
 
 # Data Source: aws_ec2_transit_gateway_peering_attachments
 
-Get information on EC2 Transit Gateway VPC Attachments.
+Get information on EC2 Transit Gateway Peering Attachments.
 
 ## Example Usage
 
