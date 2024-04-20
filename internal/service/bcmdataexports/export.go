@@ -288,7 +288,6 @@ func (r *resourceExport) Update(ctx context.Context, req resource.UpdateRequest,
 		}
 
 		in.ExportArn = aws.String(plan.ID.ValueString())
-		in.Export.ExportArn = aws.String(plan.ID.ValueString())
 
 		out, err := conn.UpdateExport(ctx, in)
 		if err != nil {
