@@ -1137,9 +1137,84 @@ func TestAccFirehoseDeliveryStream_snowflakeUpdates(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"snowflake_configuration.0.private_key"},
+			},
+			{
+				Config: testAccDeliveryStreamConfig_snowflakeUpdate(rName, key),
+				Check: resource.ComposeAggregateTestCheckFunc(
+					testAccCheckDeliveryStreamExists(ctx, resourceName, &stream),
+					resource.TestCheckResourceAttrSet(resourceName, "arn"),
+					resource.TestCheckResourceAttr(resourceName, "destination", "snowflake"),
+					resource.TestCheckResourceAttrSet(resourceName, "destination_id"),
+					resource.TestCheckResourceAttr(resourceName, "elasticsearch_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "extended_s3_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "http_endpoint_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "kinesis_source_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "name", rName),
+					resource.TestCheckResourceAttr(resourceName, "opensearch_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "opensearchserverless_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "redshift_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.key_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "server_side_encryption.0.key_type", "AWS_OWNED_CMK"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.account_url", fmt.Sprintf("https://%s.snowflakecomputing.com", rName)),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.cloudwatch_logging_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.cloudwatch_logging_options.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.cloudwatch_logging_options.0.log_group_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.cloudwatch_logging_options.0.log_stream_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.content_column_name", "test-content"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.data_loading_option", "VARIANT_CONTENT_MAPPING"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.database", "test-db"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.key_passphrase", ""),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.metadata_column_name", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "snowflake_configuration.0.private_key"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.processing_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.processing_configuration.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.processing_configuration.0.processors.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.processing_configuration.0.processors.0.type", "Lambda"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.processing_configuration.0.processors.0.parameters.#", "3"),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "snowflake_configuration.0.processing_configuration.0.processors.0.parameters.*", map[string]string{
+						"parameter_name": "LambdaArn",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "snowflake_configuration.0.processing_configuration.0.processors.0.parameters.*", map[string]string{
+						"parameter_name":  "BufferSizeInMBs",
+						"parameter_value": "1.1",
+					}),
+					resource.TestCheckTypeSetElemNestedAttrs(resourceName, "snowflake_configuration.0.processing_configuration.0.processors.0.parameters.*", map[string]string{
+						"parameter_name":  "BufferIntervalInSeconds",
+						"parameter_value": "70",
+					}),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.retry_duration", "60"),
+					resource.TestCheckResourceAttrSet(resourceName, "snowflake_configuration.0.role_arn"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.s3_backup_mode", "FailedDataOnly"),
+					resource.TestCheckResourceAttrSet(resourceName, "snowflake_configuration.0.s3_configuration.0.bucket_arn"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.s3_configuration.0.buffering_interval", "400"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.s3_configuration.0.buffering_size", "10"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.s3_configuration.0.cloudwatch_logging_options.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.s3_configuration.0.cloudwatch_logging_options.0.enabled", "false"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.s3_configuration.0.cloudwatch_logging_options.0.log_group_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.s3_configuration.0.cloudwatch_logging_options.0.log_stream_name", ""),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.s3_configuration.0.compression_format", "GZIP"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.s3_configuration.0.error_output_prefix", ""),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.s3_configuration.0.kms_key_arn", ""),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.s3_configuration.0.prefix", ""),
+					resource.TestCheckResourceAttrSet(resourceName, "snowflake_configuration.0.s3_configuration.0.role_arn"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.schema", "test-schema"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.snowflake_role_configuration.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.snowflake_role_configuration.0.enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.snowflake_role_configuration.0.snowflake_role", "test-role"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.snowflake_vpc_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.table", "test-table"),
+					resource.TestCheckResourceAttr(resourceName, "snowflake_configuration.0.user", "test-usr"),
+					resource.TestCheckResourceAttr(resourceName, "splunk_configuration.#", "0"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
+					resource.TestCheckResourceAttrSet(resourceName, "version_id"),
+				),
 			},
 		},
 	})
@@ -3655,6 +3730,63 @@ resource "aws_kinesis_firehose_delivery_stream" "test" {
       buffering_size     = 10
       buffering_interval = 400
       compression_format = "GZIP"
+    }
+  }
+}
+`, rName, acctest.TLSPEMRemoveRSAPrivateKeyEncapsulationBoundaries(acctest.TLSPEMRemoveNewlines(privateKey))))
+}
+
+func testAccDeliveryStreamConfig_snowflakeUpdate(rName, privateKey string) string {
+	return acctest.ConfigCompose(testAccDeliveryStreamConfig_base(rName), testAccDeliveryStreamConfig_baseLambda(rName), fmt.Sprintf(`
+resource "aws_kinesis_firehose_delivery_stream" "test" {
+  depends_on  = [aws_iam_role_policy.firehose]
+  name        = %[1]q
+  destination = "snowflake"
+
+  snowflake_configuration {
+    account_url = "https://%[1]s.snowflakecomputing.com"
+    database    = "test-db"
+    private_key = "%[2]s"
+    role_arn    = aws_iam_role.firehose.arn
+    schema      = "test-schema"
+    table       = "test-table"
+    user        = "test-usr"
+
+    s3_configuration {
+      role_arn           = aws_iam_role.firehose.arn
+      bucket_arn         = aws_s3_bucket.bucket.arn
+      buffering_size     = 10
+      buffering_interval = 400
+      compression_format = "GZIP"
+    }
+
+    data_loading_option = "VARIANT_CONTENT_MAPPING"
+    content_column_name = "test-content"
+
+    snowflake_role_configuration {
+      enabled        = true
+      snowflake_role = "test-role"
+    }
+
+    processing_configuration {
+      enabled = false
+
+      processors {
+        type = "Lambda"
+
+        parameters {
+          parameter_name  = "LambdaArn"
+          parameter_value = "${aws_lambda_function.lambda_function_test.arn}:$LATEST"
+        }
+        parameters {
+          parameter_name  = "BufferSizeInMBs"
+          parameter_value = "1.1"
+        }
+        parameters {
+          parameter_name  = "BufferIntervalInSeconds"
+          parameter_value = "70"
+        }
+      }
     }
   }
 }
