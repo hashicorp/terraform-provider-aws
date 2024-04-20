@@ -111,7 +111,7 @@ func updateTags(ctx context.Context, conn *cloudfront.Client, identifier string,
 	if len(removedTags) > 0 {
 		input := &cloudfront.UntagResourceInput{
 			Resource: aws.String(identifier),
-			TagKeys:  &cloudfront.TagKeys{Items: aws.StringSlice(removedTags.Keys())},
+			TagKeys:  &awstypes.TagKeys{Items: removedTags.Keys()},
 		}
 
 		_, err := conn.UntagResource(ctx, input, optFns...)
@@ -126,7 +126,7 @@ func updateTags(ctx context.Context, conn *cloudfront.Client, identifier string,
 	if len(updatedTags) > 0 {
 		input := &cloudfront.TagResourceInput{
 			Resource: aws.String(identifier),
-			Tags:     &cloudfront.Tags{Items: Tags(updatedTags)},
+			Tags:     &awstypes.Tags{Items: Tags(updatedTags)},
 		}
 
 		_, err := conn.TagResource(ctx, input, optFns...)
