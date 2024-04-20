@@ -341,12 +341,12 @@ func (r *resourceKey) Update(ctx context.Context, request resource.UpdateRequest
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)
 }
 
-func (r *resourceKey) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *resourceKey) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
 	conn := r.Meta().PaymentCryptographyClient(ctx)
 
 	var state resourceKeyModel
-	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-	if resp.Diagnostics.HasError() {
+	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
+	if response.Diagnostics.HasError() {
 		return
 	}
 
@@ -359,7 +359,7 @@ func (r *resourceKey) Delete(ctx context.Context, req resource.DeleteRequest, re
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return
 		}
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.PaymentCryptography, create.ErrActionDeleting, ResNameKey, state.ID.String(), err),
 			err.Error(),
 		)
@@ -369,7 +369,7 @@ func (r *resourceKey) Delete(ctx context.Context, req resource.DeleteRequest, re
 	deleteTimeout := r.DeleteTimeout(ctx, state.Timeouts)
 	_, err = waitKeyDeleted(ctx, conn, state.ID.ValueString(), deleteTimeout)
 	if err != nil {
-		resp.Diagnostics.AddError(
+		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.PaymentCryptography, create.ErrActionWaitingForDeletion, ResNameKey, state.ID.String(), err),
 			err.Error(),
 		)
@@ -377,8 +377,8 @@ func (r *resourceKey) Delete(ctx context.Context, req resource.DeleteRequest, re
 	}
 }
 
-func (r *resourceKey) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
-	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
+func (r *resourceKey) ImportState(ctx context.Context, request resource.ImportStateRequest, response *resource.ImportStateResponse) {
+	resource.ImportStatePassthroughID(ctx, path.Root("id"), request, response)
 }
 func (r *resourceKey) ModifyPlan(ctx context.Context, request resource.ModifyPlanRequest, response *resource.ModifyPlanResponse) {
 	r.SetTagsAll(ctx, request, response)
