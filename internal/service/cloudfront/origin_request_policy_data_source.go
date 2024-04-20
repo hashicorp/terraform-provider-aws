@@ -129,7 +129,7 @@ func dataSourceOriginRequestPolicyRead(ctx context.Context, d *schema.ResourceDa
 		name := d.Get("name").(string)
 		input := &cloudfront.ListOriginRequestPoliciesInput{}
 
-		err := ListOriginRequestPoliciesPages(ctx, conn, input, func(page *cloudfront.ListOriginRequestPoliciesOutput, lastPage bool) bool {
+		err := listOriginRequestPoliciesPages(ctx, conn, input, func(page *cloudfront.ListOriginRequestPoliciesOutput, lastPage bool) bool {
 			if page == nil {
 				return !lastPage
 			}
