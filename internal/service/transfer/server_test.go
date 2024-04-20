@@ -1005,7 +1005,7 @@ func testAccServer_apiGateway(t *testing.T) {
 					testAccCheckServerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", "API_GATEWAY"),
 					resource.TestCheckResourceAttrPair(resourceName, "invocation_role", "aws_iam_role.test", "arn"),
-					resource.TestCheckResourceAttrSet(resourceName, "sftp_authentication_methods"),
+					resource.TestCheckResourceAttr(resourceName, "sftp_authentication_methods", "PUBLIC_KEY_OR_PASSWORD"),
 				),
 			},
 			{
@@ -1211,7 +1211,7 @@ func testAccServer_lambdaFunction(t *testing.T) {
 					testAccCheckServerExists(ctx, resourceName, &conf),
 					resource.TestCheckResourceAttrPair(resourceName, "function", "aws_lambda_function.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", "AWS_LAMBDA"),
-					resource.TestCheckResourceAttrSet(resourceName, "sftp_authentication_methods"),
+					resource.TestCheckResourceAttr(resourceName, "sftp_authentication_methods", "PUBLIC_KEY_OR_PASSWORD"),
 				),
 			},
 			{
@@ -2247,9 +2247,9 @@ resource "aws_lambda_function" "test" {
 }
 
 resource "aws_transfer_server" "test" {
-  identity_provider_type = "AWS_LAMBDA"
-  function               = aws_lambda_function.test.arn
-  logging_role           = aws_iam_role.test.arn
+  identity_provider_type      = "AWS_LAMBDA"
+  function                    = aws_lambda_function.test.arn
+  logging_role                = aws_iam_role.test.arn
   sftp_authentication_methods = "PASSWORD"
 
   tags = {
@@ -2273,9 +2273,9 @@ resource "aws_lambda_function" "test" {
 }
 
 resource "aws_transfer_server" "test" {
-  identity_provider_type = "AWS_LAMBDA"
-  function               = aws_lambda_function.test.arn
-  logging_role           = aws_iam_role.test.arn
+  identity_provider_type      = "AWS_LAMBDA"
+  function                    = aws_lambda_function.test.arn
+  logging_role                = aws_iam_role.test.arn
   sftp_authentication_methods = "PUBLIC_KEY_AND_PASSWORD"
 
   tags = {

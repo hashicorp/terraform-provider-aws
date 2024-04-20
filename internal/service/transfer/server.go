@@ -246,7 +246,7 @@ func resourceServer() *schema.Resource {
 			"sftp_authentication_methods": {
 				Type:         schema.TypeString,
 				Optional:     true,
-				Computed:     true,
+				Default:      transfer.SftpAuthenticationMethodsPublicKeyOrPassword,
 				ValidateFunc: validation.StringInSlice(transfer.SftpAuthenticationMethods_Values(), false),
 			},
 			"structured_log_destinations": {
