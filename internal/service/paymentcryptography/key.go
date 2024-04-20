@@ -77,6 +77,9 @@ func (r *resourceKey) Schema(ctx context.Context, request resource.SchemaRequest
 			"enabled": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"exportable": schema.BoolAttribute{
 				Required: true,
