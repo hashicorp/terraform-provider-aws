@@ -132,7 +132,7 @@ func TestAccKafkaReplicator_update(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.topic_replication.0.copy_access_control_lists_for_topics", "false"),
 					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.topic_replication.0.detect_and_copy_new_topics", "false"),
 					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.topic_replication.0.starting_position.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.topic_replication.0.starting_position.type", "EARLIEST"),
+					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.topic_replication.0.starting_position.0.type", "EARLIEST"),
 					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.consumer_group_replication.0.consumer_groups_to_replicate.#", "3"),
 					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.consumer_group_replication.0.consumer_groups_to_exclude.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "replication_info_list.0.consumer_group_replication.0.synchronise_consumer_group_offsets", "false"),
