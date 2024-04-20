@@ -13,31 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindCachePolicyByID(ctx context.Context, conn *cloudfront.CloudFront, id string) (*cloudfront.GetCachePolicyOutput, error) {
-	input := &cloudfront.GetCachePolicyInput{
-		Id: aws.String(id),
-	}
-
-	output, err := conn.GetCachePolicyWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchCachePolicy) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.CachePolicy == nil || output.CachePolicy.CachePolicyConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output, nil
-}
-
 func FindFieldLevelEncryptionConfigByID(ctx context.Context, conn *cloudfront.CloudFront, id string) (*cloudfront.GetFieldLevelEncryptionConfigOutput, error) {
 	input := &cloudfront.GetFieldLevelEncryptionConfigInput{
 		Id: aws.String(id),

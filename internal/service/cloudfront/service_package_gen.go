@@ -76,8 +76,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceCachePolicy,
+			Factory:  resourceCachePolicy,
 			TypeName: "aws_cloudfront_cache_policy",
+			Name:     "Cache Policy",
 		},
 		{
 			Factory:  ResourceDistribution,
