@@ -182,6 +182,7 @@ func testAccAccountSettingDefault_containerInsights(t *testing.T) {
 func testAccAccountSettingDefault_fargateTaskRetirementWaitPeriod(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_ecs_account_setting_default.test"
+	settingName := ecs.SettingNameFargateTaskRetirementWaitPeriod
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -190,7 +191,7 @@ func testAccAccountSettingDefault_fargateTaskRetirementWaitPeriod(t *testing.T) 
 		CheckDestroy:             testAccCheckAccountSettingDefaultDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccAccountSettingDefaultConfig_fargateTaskRetirementWaitPeriod(),
+				Config: testAccAccountSettingDefaultConfig_fargateTaskRetirementWaitPeriod(settingName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", "fargateTaskRetirementWaitPeriod"),
 					resource.TestCheckResourceAttr(resourceName, "value", "14"),
@@ -262,11 +263,11 @@ resource "aws_ecs_account_setting_default" "test" {
 `, settingName)
 }
 
-func testAccAccountSettingDefaultConfig_fargateTaskRetirementWaitPeriod() string {
+func testAccAccountSettingDefaultConfig_fargateTaskRetirementWaitPeriod(settingName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_account_setting_default" "test" {
-  name  = "fargateTaskRetirementWaitPeriod"
+  name  = %[1]q
   value = "14"
 }
-`)
+`, settingName)
 }
