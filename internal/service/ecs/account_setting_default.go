@@ -146,7 +146,11 @@ func resourceAccountSettingDefaultDelete(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	settingName := d.Get("name").(string)
-	settingValue := d.Get("value").(string)
+	settingValue := "disabled"
+
+	if settingName == "fargateTaskRetirementWaitPeriod" {
+		settingValue = "7"
+	}
 
 	log.Printf("[WARN] Disabling ECS Account Setting Default %s", settingName)
 	input := ecs.PutAccountSettingDefaultInput{
