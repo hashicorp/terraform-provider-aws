@@ -176,7 +176,7 @@ func TestAccWAFRegionalRuleGroup_disappears(t *testing.T) {
 				Config: testAccRuleGroupConfig_basic(ruleName, groupName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckRuleGroupExists(ctx, resourceName, &group),
-					testAccCheckRuleGroupDisappears(ctx, &group),
+					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfwafregional.ResourceRuleGroup(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -280,53 +280,6 @@ func TestAccWAFRegionalRuleGroup_noActivatedRules(t *testing.T) {
 			},
 		},
 	})
-}
-
-func testAccCheckRuleGroupDisappears(ctx context.Context, group *waf.RuleGroup) resource.TestCheckFunc {
-	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).WAFRegionalConn(ctx)
-		region := acctest.Provider.Meta().(*conns.AWSClient).Region
-
-		rResp, err := conn.ListActivatedRulesInRuleGroupWithContext(ctx, &waf.ListActivatedRulesInRuleGroupInput{
-			RuleGroupId: group.RuleGroupId,
-		})
-		if err != nil {
-			return fmt.Errorf("error listing activated rules in WAF Regional Rule Group (%s): %s", aws.StringValue(group.RuleGroupId), err)
-		}
-
-		wr := tfwafregional.NewRetryer(conn, region)
-		_, err = wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
-			req := &waf.UpdateRuleGroupInput{
-				ChangeToken: token,
-				RuleGroupId: group.RuleGroupId,
-			}
-
-			for _, rule := range rResp.ActivatedRules {
-				rule := &waf.RuleGroupUpdate{
-					Action:        aws.String("DELETE"),
-					ActivatedRule: rule,
-				}
-				req.Updates = append(req.Updates, rule)
-			}
-
-			return conn.UpdateRuleGroupWithContext(ctx, req)
-		})
-		if err != nil {
-			return fmt.Errorf("Error Updating WAF Regional Rule Group: %s", err)
-		}
-
-		_, err = wr.RetryWithToken(ctx, func(token *string) (interface{}, error) {
-			opts := &waf.DeleteRuleGroupInput{
-				ChangeToken: token,
-				RuleGroupId: group.RuleGroupId,
-			}
-			return conn.DeleteRuleGroupWithContext(ctx, opts)
-		})
-		if err != nil {
-			return fmt.Errorf("Error Deleting WAF Regional Rule Group: %s", err)
-		}
-		return nil
-	}
 }
 
 func testAccCheckRuleGroupDestroy(ctx context.Context) resource.TestCheckFunc {

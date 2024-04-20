@@ -12,9 +12,6 @@ import (
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
-	"github.com/google/go-cmp/cmp"
-	"github.com/hashicorp/terraform-plugin-framework/path"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -26,31 +23,29 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
-func TestNormalizeIPProtocol(t *testing.T) {
+func TestIPProtocol(t *testing.T) {
 	ctx := acctest.Context(t)
 	t.Parallel()
 
 	type testCase struct {
-		plannedValue  types.String
-		currentValue  types.String
-		expectedValue types.String
-		expectError   bool
+		val1, val2 tfec2.IPProtocol
+		equals     bool
 	}
 	tests := map[string]testCase{
-		"planned name, current number (equivalent)": {
-			plannedValue:  types.StringValue("icmp"),
-			currentValue:  types.StringValue("1"),
-			expectedValue: types.StringValue("1"),
+		"name, number (equivalent)": {
+			val1:   tfec2.IPProtocol{StringValue: types.StringValue("icmp")},
+			val2:   tfec2.IPProtocol{StringValue: types.StringValue("1")},
+			equals: true,
 		},
-		"planned number, current name (equivalent)": {
-			plannedValue:  types.StringValue("1"),
-			currentValue:  types.StringValue("icmp"),
-			expectedValue: types.StringValue("icmp"),
+		"number, name (equivalent)": {
+			val1:   tfec2.IPProtocol{StringValue: types.StringValue("1")},
+			val2:   tfec2.IPProtocol{StringValue: types.StringValue("icmp")},
+			equals: true,
 		},
-		"planned name, current number (not equivalent)": {
-			plannedValue:  types.StringValue("icmp"),
-			currentValue:  types.StringValue("2"),
-			expectedValue: types.StringValue("icmp"),
+		"name, number (not equivalent)": {
+			val1:   tfec2.IPProtocol{StringValue: types.StringValue("icmp")},
+			val2:   tfec2.IPProtocol{StringValue: types.StringValue("2")},
+			equals: false,
 		},
 	}
 
@@ -59,26 +54,10 @@ func TestNormalizeIPProtocol(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
-			request := planmodifier.StringRequest{
-				Path:       path.Root("test"),
-				PlanValue:  test.plannedValue,
-				StateValue: test.currentValue,
-			}
-			response := planmodifier.StringResponse{
-				PlanValue: request.PlanValue,
-			}
-			tfec2.NormalizeIPProtocol().PlanModifyString(ctx, request, &response)
+			equals, _ := test.val1.StringSemanticEquals(ctx, test.val2)
 
-			if !response.Diagnostics.HasError() && test.expectError {
-				t.Fatal("expected error, got no error")
-			}
-
-			if response.Diagnostics.HasError() && !test.expectError {
-				t.Fatalf("got unexpected error: %s", response.Diagnostics)
-			}
-
-			if diff := cmp.Diff(response.PlanValue, test.expectedValue); diff != "" {
-				t.Errorf("unexpected diff (+wanted, -got): %s", diff)
+			if got, want := equals, test.equals; got != want {
+				t.Errorf("StringSemanticEquals(%q, %q) = %v, want %v", test.val1, test.val2, got, want)
 			}
 		})
 	}

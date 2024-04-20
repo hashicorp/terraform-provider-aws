@@ -1702,6 +1702,56 @@ func TestAccEMRCluster_InstanceFleetMaster_only(t *testing.T) {
 	})
 }
 
+func TestAccEMRCluster_unhealthyNodeReplacement(t *testing.T) {
+	ctx := acctest.Context(t)
+	var cluster emr.Cluster
+
+	resourceName := "aws_emr_cluster.test"
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EMRServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckClusterDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccClusterConfig_unhealthyNodeReplacement(rName, "true"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "unhealthy_node_replacement", "true"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_state", // Ignore RUNNING versus WAITING changes
+					"configurations",
+					"keep_job_flow_alive_when_no_steps",
+				},
+			},
+			{
+				Config: testAccClusterConfig_unhealthyNodeReplacement(rName, "false"),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckClusterExists(ctx, resourceName, &cluster),
+					resource.TestCheckResourceAttr(resourceName, "unhealthy_node_replacement", "false"),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportState:       true,
+				ImportStateVerify: true,
+				ImportStateVerifyIgnore: []string{
+					"cluster_state", // Ignore RUNNING versus WAITING changes
+					"configurations",
+					"keep_job_flow_alive_when_no_steps",
+				},
+			},
+		},
+	})
+}
+
 func testAccCheckClusterDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).EMRConn(ctx)
@@ -4291,4 +4341,35 @@ resource "aws_emr_cluster" "test" {
   ebs_root_volume_size = 21
 }
 `, rName))
+}
+
+func testAccClusterConfig_unhealthyNodeReplacement(rName, unhealthyNodeReplacement string) string {
+	return acctest.ConfigCompose(
+		testAccClusterConfig_baseVPC(rName, false),
+		fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_emr_cluster" "test" {
+  applications                      = ["Spark"]
+  keep_job_flow_alive_when_no_steps = true
+  name                              = %[1]q
+  release_label                     = "emr-5.33.1"
+  service_role                      = "EMR_DefaultRole"
+  termination_protection            = false
+  unhealthy_node_replacement        = %[2]s
+
+  ec2_attributes {
+    instance_profile                  = "EMR_EC2_DefaultRole"
+    subnet_id                         = aws_subnet.test.id
+    emr_managed_master_security_group = aws_security_group.test.id
+    emr_managed_slave_security_group  = aws_security_group.test.id
+  }
+
+  master_instance_group {
+    instance_type = "m4.large"
+  }
+
+  depends_on = [aws_route_table_association.test]
+}
+`, rName, unhealthyNodeReplacement))
 }

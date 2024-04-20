@@ -1,8 +1,6 @@
 module github.com/hashicorp/terraform-provider-aws/tools
 
-go 1.21.1
-
-toolchain go1.21.5
+go 1.22.0
 
 require (
 	github.com/YakDriver/tfproviderdocs v0.12.0
@@ -14,6 +12,7 @@ require (
 	github.com/pavius/impi v0.0.3
 	github.com/rhysd/actionlint v1.6.27
 	github.com/terraform-linters/tflint v0.50.3
+	github.com/uber-go/gopatch v0.3.0
 	mvdan.cc/gofumpt v0.6.0
 )
 
@@ -119,6 +118,7 @@ require (
 	github.com/google/go-cmp v0.6.0 // indirect
 	github.com/google/go-github/v45 v45.2.0 // indirect
 	github.com/google/go-github/v53 v53.2.0 // indirect
+	github.com/google/go-intervals v0.0.2 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/s2a-go v0.1.7 // indirect
 	github.com/google/uuid v1.6.0 // indirect
@@ -214,6 +214,7 @@ require (
 	github.com/owenrumney/go-sarif v1.1.1 // indirect
 	github.com/pelletier/go-toml/v2 v2.2.0 // indirect
 	github.com/pjbgf/sha1cd v0.3.0 // indirect
+	github.com/pkg/diff v0.0.0-20210226163009-20ebb0f2a09e // indirect
 	github.com/pmezard/go-difflib v1.0.1-0.20181226105442-5d4384ee4fb2 // indirect
 	github.com/polyfloyd/go-errorlint v1.4.8 // indirect
 	github.com/posener/complete v1.2.3 // indirect
@@ -299,7 +300,7 @@ require (
 	golang.org/x/exp v0.0.0-20240222234643-814bf88cf225 // indirect
 	golang.org/x/exp/typeparams v0.0.0-20240314144324-c7f7c6466f7f // indirect
 	golang.org/x/mod v0.16.0 // indirect
-	golang.org/x/net v0.22.0 // indirect
+	golang.org/x/net v0.23.0 // indirect
 	golang.org/x/oauth2 v0.16.0 // indirect
 	golang.org/x/sync v0.6.0 // indirect
 	golang.org/x/sys v0.18.0 // indirect

@@ -85,6 +85,7 @@ func TestNormalizeAliasName(t *testing.T) {
 		{"ipv6.name-123456789.region.elb.amazonaws.com", "ipv6.name-123456789.region.elb.amazonaws.com"},
 		{"NAME-123456789.region.elb.amazonaws.com", "name-123456789.region.elb.amazonaws.com"},
 		{"name-123456789.region.elb.amazonaws.com", "name-123456789.region.elb.amazonaws.com"},
+		{"\\052.example.com", "*.example.com"},
 	}
 
 	for _, tc := range cases {

@@ -1631,52 +1631,6 @@ func TestAccBatchComputeEnvironment_UpdateSecurityGroupsAndSubnets_fargate(t *te
 	})
 }
 
-func TestAccBatchComputeEnvironment_tags(t *testing.T) {
-	ctx := acctest.Context(t)
-	var ce batch.ComputeEnvironmentDetail
-	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	resourceName := "aws_batch_compute_environment.test"
-
-	resource.ParallelTest(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.BatchServiceID),
-		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckComputeEnvironmentDestroy(ctx),
-		Steps: []resource.TestStep{
-			{
-				Config: testAccComputeEnvironmentConfig_tags1(rName, "key1", "value1"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1"),
-				),
-			},
-			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
-				Config: testAccComputeEnvironmentConfig_tags2(rName, "key1", "value1updated", "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key1", "value1updated"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-			{
-				Config: testAccComputeEnvironmentConfig_tags1(rName, "key2", "value2"),
-				Check: resource.ComposeTestCheckFunc(
-					testAccCheckComputeEnvironmentExists(ctx, resourceName, &ce),
-					resource.TestCheckResourceAttr(resourceName, "tags.%", "1"),
-					resource.TestCheckResourceAttr(resourceName, "tags.key2", "value2"),
-				),
-			},
-		},
-	})
-}
-
 func TestAccBatchComputeEnvironment_createUnmanagedWithComputeResources(t *testing.T) {
 	ctx := acctest.Context(t)
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
@@ -2959,7 +2913,19 @@ resource "aws_batch_compute_environment" "test" {
 `, rName, version))
 }
 
-func testAccComputeEnvironmentConfig_tags1(rName string, tagKey1, tagValue1 string) string {
+func testAccComputeEnvironmentConfig_tags0(rName string) string {
+	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_base(rName), fmt.Sprintf(`
+resource "aws_batch_compute_environment" "test" {
+  depends_on = [aws_iam_role_policy_attachment.batch_service]
+
+  compute_environment_name = %[1]q
+  service_role             = aws_iam_role.batch_service.arn
+  type                     = "UNMANAGED"
+}
+`, rName))
+}
+
+func testAccComputeEnvironmentConfig_tags1(rName, tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
   depends_on = [aws_iam_role_policy_attachment.batch_service]
@@ -2975,7 +2941,7 @@ resource "aws_batch_compute_environment" "test" {
 `, rName, tagKey1, tagValue1))
 }
 
-func testAccComputeEnvironmentConfig_tags2(rName string, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
+func testAccComputeEnvironmentConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
 	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_base(rName), fmt.Sprintf(`
 resource "aws_batch_compute_environment" "test" {
   depends_on = [aws_iam_role_policy_attachment.batch_service]
@@ -2990,6 +2956,22 @@ resource "aws_batch_compute_environment" "test" {
   }
 }
 `, rName, tagKey1, tagValue1, tagKey2, tagValue2))
+}
+
+func testAccComputeEnvironmentConfig_tagsNull(rName, tagKey1 string) string {
+	return acctest.ConfigCompose(testAccComputeEnvironmentConfig_base(rName), fmt.Sprintf(`
+resource "aws_batch_compute_environment" "test" {
+  depends_on = [aws_iam_role_policy_attachment.batch_service]
+
+  compute_environment_name = %[1]q
+  service_role             = aws_iam_role.batch_service.arn
+  type                     = "UNMANAGED"
+
+  tags = {
+    %[2]q = null
+  }
+}
+`, rName, tagKey1))
 }
 
 func testAccComputeEnvironmentConfig_ec2Configuration(rName string) string {

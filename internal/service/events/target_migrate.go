@@ -172,7 +172,7 @@ func resourceTargetV0() *schema.Resource {
 	}
 }
 
-func TargetStateUpgradeV0(_ context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
+func targetStateUpgradeV0(_ context.Context, rawState map[string]interface{}, meta interface{}) (map[string]interface{}, error) {
 	if rawState == nil {
 		rawState = map[string]interface{}{}
 	}
