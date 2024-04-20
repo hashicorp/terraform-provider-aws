@@ -316,7 +316,7 @@ resource "aws_paymentcryptography_key" "test" {
   }
   tags = {
     Name2 = %[1]q
-    Other     = "Value2"
+    Other = "Value2"
   }
 }
 `, rName)
