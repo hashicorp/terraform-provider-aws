@@ -23,7 +23,7 @@ func ResourceWorkerConfiguration() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceWorkerConfigurationCreate,
 		ReadWithoutTimeout:   resourceWorkerConfigurationRead,
-		DeleteWithoutTimeout: schema.NoopContext,
+		DeleteWithoutTimeout: resourceWorkerConfigurationDelete,
 
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
@@ -119,6 +119,22 @@ func resourceWorkerConfigurationRead(ctx context.Context, d *schema.ResourceData
 	} else {
 		d.Set("latest_revision", nil)
 		d.Set("properties_file_content", nil)
+	}
+
+	return diags
+}
+
+func resourceWorkerConfigurationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).KafkaConnectConn(ctx)
+
+	_, err := conn.DeleteWorkerConfigurationWithContext(ctx, &kafkaconnect.DeleteWorkerConfigurationInput{
+		WorkerConfigurationArn: aws.String(d.Id()),
+	})
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "deleting MSK Connect Worker Configuration (%s): %s", d.Id(), err)
 	}
 
 	return diags

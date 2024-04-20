@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfkafkaconnect "github.com/hashicorp/terraform-provider-aws/internal/service/kafkaconnect"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
@@ -26,7 +27,7 @@ func TestAccKafkaConnectWorkerConfiguration_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, kafkaconnect.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaConnectServiceID),
-		CheckDestroy:             nil,
+		CheckDestroy:             testAccCheckWorkerConfigurationDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -56,7 +57,7 @@ func TestAccKafkaConnectWorkerConfiguration_description(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, kafkaconnect.EndpointsID) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.KafkaConnectServiceID),
-		CheckDestroy:             nil,
+		CheckDestroy:             testAccCheckWorkerConfigurationDestroy(ctx),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
@@ -119,4 +120,30 @@ value.converter=org.apache.kafka.connect.storage.StringConverter
 EOF
 }
 `, rName)
+}
+
+func testAccCheckWorkerConfigurationDestroy(ctx context.Context) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).KafkaConnectConn(ctx)
+
+		for _, rs := range s.RootModule().Resources {
+			if rs.Type != "aws_mskconnect_worker_configuration" {
+				continue
+			}
+
+			_, err := tfkafkaconnect.FindWorkerConfigurationByARN(ctx, conn, rs.Primary.ID)
+
+			if tfresource.NotFound(err) {
+				continue
+			}
+
+			if err != nil {
+				return err
+			}
+
+			return fmt.Errorf("MSK Connect Worker Configuration %s still exists", rs.Primary.ID)
+		}
+
+		return nil
+	}
 }
