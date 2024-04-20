@@ -6,6 +6,7 @@ package paymentcryptography
 import (
 	"context"
 	"errors"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -16,10 +17,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -50,7 +48,8 @@ func newResourceKey(_ context.Context) (resource.ResourceWithConfigure, error) {
 }
 
 const (
-	ResNameKey = "Key"
+	ResNameKey                  = "Key"
+	defaultDeletionWindowInDays = 7
 )
 
 type resourceKey struct {
@@ -70,7 +69,7 @@ func (r *resourceKey) Schema(ctx context.Context, request resource.SchemaRequest
 			"deletion_window_in_days": schema.Int64Attribute{
 				Optional: true,
 				Computed: true,
-				Default:  int64default.StaticInt64(7),
+				Default:  int64default.StaticInt64(defaultDeletionWindowInDays),
 				Validators: []validator.Int64{
 					int64validator.Between(3, 180),
 				},
@@ -78,7 +77,6 @@ func (r *resourceKey) Schema(ctx context.Context, request resource.SchemaRequest
 			"enabled": schema.BoolAttribute{
 				Optional: true,
 				Computed: true,
-				Default:  booldefault.StaticBool(true),
 			},
 			"exportable": schema.BoolAttribute{
 				Required: true,
@@ -98,6 +96,7 @@ func (r *resourceKey) Schema(ctx context.Context, request resource.SchemaRequest
 				Computed:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
 				},
 			},
 			"key_origin": schema.StringAttribute{
@@ -120,9 +119,6 @@ func (r *resourceKey) Schema(ctx context.Context, request resource.SchemaRequest
 		Blocks: map[string]schema.Block{
 			"key_attributes": schema.SingleNestedBlock{
 				CustomType: fwtypes.NewObjectTypeOf[keyAttributesModel](ctx),
-				PlanModifiers: []planmodifier.Object{
-					objectplanmodifier.RequiresReplace(),
-				},
 				Attributes: map[string]schema.Attribute{
 					"key_algorithm": schema.StringAttribute{
 						Required:   true,
@@ -149,54 +145,78 @@ func (r *resourceKey) Schema(ctx context.Context, request resource.SchemaRequest
 				Blocks: map[string]schema.Block{
 					"key_modes_of_use": schema.SingleNestedBlock{
 						CustomType: fwtypes.NewObjectTypeOf[keyModesOfUseModel](ctx),
-						PlanModifiers: []planmodifier.Object{
-							objectplanmodifier.RequiresReplace(),
-						},
 						Attributes: map[string]schema.Attribute{
 							"decrypt": schema.BoolAttribute{
 								Optional: true,
 								Computed: true,
-								Default:  booldefault.StaticBool(false),
+								PlanModifiers: []planmodifier.Bool{
+									boolplanmodifier.RequiresReplace(),
+									boolplanmodifier.UseStateForUnknown(),
+								},
 							},
 							"derive_key": schema.BoolAttribute{
 								Optional: true,
 								Computed: true,
-								Default:  booldefault.StaticBool(false),
+								PlanModifiers: []planmodifier.Bool{
+									boolplanmodifier.RequiresReplace(),
+									boolplanmodifier.UseStateForUnknown(),
+								},
 							},
 							"encrypt": schema.BoolAttribute{
 								Optional: true,
 								Computed: true,
-								Default:  booldefault.StaticBool(false),
+								PlanModifiers: []planmodifier.Bool{
+									boolplanmodifier.RequiresReplace(),
+									boolplanmodifier.UseStateForUnknown(),
+								},
 							},
 							"generate": schema.BoolAttribute{
 								Optional: true,
 								Computed: true,
-								Default:  booldefault.StaticBool(false),
+								PlanModifiers: []planmodifier.Bool{
+									boolplanmodifier.RequiresReplace(),
+									boolplanmodifier.UseStateForUnknown(),
+								},
 							},
 							"no_restrictions": schema.BoolAttribute{
 								Optional: true,
 								Computed: true,
-								Default:  booldefault.StaticBool(false),
+								PlanModifiers: []planmodifier.Bool{
+									boolplanmodifier.RequiresReplace(),
+									boolplanmodifier.UseStateForUnknown(),
+								},
 							},
 							"sign": schema.BoolAttribute{
 								Optional: true,
 								Computed: true,
-								Default:  booldefault.StaticBool(false),
+								PlanModifiers: []planmodifier.Bool{
+									boolplanmodifier.RequiresReplace(),
+									boolplanmodifier.UseStateForUnknown(),
+								},
 							},
 							"unwrap": schema.BoolAttribute{
 								Optional: true,
 								Computed: true,
-								Default:  booldefault.StaticBool(false),
+								PlanModifiers: []planmodifier.Bool{
+									boolplanmodifier.RequiresReplace(),
+									boolplanmodifier.UseStateForUnknown(),
+								},
 							},
 							"verify": schema.BoolAttribute{
 								Optional: true,
 								Computed: true,
-								Default:  booldefault.StaticBool(false),
+								PlanModifiers: []planmodifier.Bool{
+									boolplanmodifier.RequiresReplace(),
+									boolplanmodifier.UseStateForUnknown(),
+								},
 							},
 							"wrap": schema.BoolAttribute{
 								Optional: true,
 								Computed: true,
-								Default:  booldefault.StaticBool(false),
+								PlanModifiers: []planmodifier.Bool{
+									boolplanmodifier.RequiresReplace(),
+									boolplanmodifier.UseStateForUnknown(),
+								},
 							},
 						},
 					},

@@ -67,7 +67,7 @@ func TestAccPaymentCryptographyKey_tags(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var key paymentcryptography.GetKeyOutput
+	var key1, key2 paymentcryptography.GetKeyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_paymentcryptography_key.test"
 
@@ -83,7 +83,7 @@ func TestAccPaymentCryptographyKey_tags(t *testing.T) {
 			{
 				Config: testAccKeyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &key),
+					testAccCheckKeyExists(ctx, resourceName, &key1),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
@@ -100,7 +100,8 @@ func TestAccPaymentCryptographyKey_tags(t *testing.T) {
 			{
 				Config: testAccKeyConfig_tags2(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &key),
+					testAccCheckKeyExists(ctx, resourceName, &key2),
+					testAccCheckKeyNotRecreated(&key1, &key2),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
 					resource.TestCheckResourceAttr(resourceName, "tags.Name2", rName),
@@ -118,7 +119,7 @@ func TestAccPaymentCryptographyKey_update(t *testing.T) {
 		t.Skip("skipping long-running test in short mode")
 	}
 
-	var key paymentcryptography.GetKeyOutput
+	var key1, key2, key3 paymentcryptography.GetKeyOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_paymentcryptography_key.test"
 
@@ -134,7 +135,7 @@ func TestAccPaymentCryptographyKey_update(t *testing.T) {
 			{
 				Config: testAccKeyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &key),
+					testAccCheckKeyExists(ctx, resourceName, &key1),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "payment-cryptography", regexache.MustCompile(`key/.+`)),
 				),
@@ -148,7 +149,8 @@ func TestAccPaymentCryptographyKey_update(t *testing.T) {
 			{
 				Config: testAccKeyConfig_disable(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &key),
+					testAccCheckKeyExists(ctx, resourceName, &key2),
+					testAccCheckKeyNotRecreated(&key1, &key2),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "payment-cryptography", regexache.MustCompile(`key/.+`)),
 				),
@@ -156,7 +158,8 @@ func TestAccPaymentCryptographyKey_update(t *testing.T) {
 			{
 				Config: testAccKeyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckKeyExists(ctx, resourceName, &key),
+					testAccCheckKeyExists(ctx, resourceName, &key3),
+					testAccCheckKeyNotRecreated(&key2, &key3),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
 					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "payment-cryptography", regexache.MustCompile(`key/.+`)),
 				),
@@ -266,9 +269,9 @@ func testAccPreCheck(ctx context.Context, t *testing.T) {
 	}
 }
 
-func testAccCheckKeyNotRecreated(before, after *paymentcryptography.GetKeyInput) resource.TestCheckFunc {
+func testAccCheckKeyNotRecreated(before, after *paymentcryptography.GetKeyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		if before, after := aws.ToString(before.KeyIdentifier), aws.ToString(after.KeyIdentifier); before != after {
+		if before, after := aws.ToString(before.Key.KeyArn), aws.ToString(after.Key.KeyArn); before != after {
 			return create.Error(names.PaymentCryptography, create.ErrActionCheckingNotRecreated, tfpaymentcryptography.ResNameKey, before, errors.New("recreated"))
 		}
 
