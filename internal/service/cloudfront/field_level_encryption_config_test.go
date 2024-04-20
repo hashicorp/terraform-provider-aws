@@ -101,7 +101,6 @@ func TestAccCloudFrontFieldLevelEncryptionConfig_disappears(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckFieldLevelEncryptionConfigExists(ctx, resourceName, &v),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudfront.ResourceFieldLevelEncryptionConfig(), resourceName),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfcloudfront.ResourceFieldLevelEncryptionConfig(), resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},

@@ -95,8 +95,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Field-level Encryption Config",
 		},
 		{
-			Factory:  ResourceFieldLevelEncryptionProfile,
+			Factory:  resourceFieldLevelEncryptionProfile,
 			TypeName: "aws_cloudfront_field_level_encryption_profile",
+			Name:     "Field-level Encryption Profile",
 		},
 		{
 			Factory:  resourceFunction,
