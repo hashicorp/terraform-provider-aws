@@ -6,12 +6,14 @@ package cloudfront
 // Exports for use in tests only.
 var (
 	ResourceCachePolicy                = resourceCachePolicy
-	ResourceContinuousDeploymentPolicy = newResourceContinuousDeploymentPolicy
+	ResourceContinuousDeploymentPolicy = newContinuousDeploymentPolicyResource
+	ResourceFieldLevelEncryptionConfig = resourceFieldLevelEncryptionConfig
 	ResourceFunction                   = resourceFunction
 	ResourceKeyValueStore              = newKeyValueStoreResource
 
-	FindCachePolicyByID      = findCachePolicyByID
-	FindFunctionByTwoPartKey = findFunctionByTwoPartKey
-	FindKeyValueStoreByName  = findKeyValueStoreByName
-	FindPublicKeyByID        = findPublicKeyByID
+	FindCachePolicyByID                = findCachePolicyByID
+	FindFieldLevelEncryptionConfigByID = findFieldLevelEncryptionConfigByID
+	FindFunctionByTwoPartKey           = findFunctionByTwoPartKey
+	FindKeyValueStoreByName            = findKeyValueStoreByName
+	FindPublicKeyByID                  = findPublicKeyByID
 )

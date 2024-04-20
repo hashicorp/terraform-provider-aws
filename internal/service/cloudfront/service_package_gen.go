@@ -21,12 +21,12 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
 	return []*types.ServicePackageFrameworkResource{
 		{
-			Factory: newKeyValueStoreResource,
-			Name:    "Key Value Store",
+			Factory: newContinuousDeploymentPolicyResource,
+			Name:    "Continuous Deployment Policy",
 		},
 		{
-			Factory: newResourceContinuousDeploymentPolicy,
-			Name:    "Continuous Deployment Policy",
+			Factory: newKeyValueStoreResource,
+			Name:    "Key Value Store",
 		},
 	}
 }
@@ -90,8 +90,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceFieldLevelEncryptionConfig,
+			Factory:  resourceFieldLevelEncryptionConfig,
 			TypeName: "aws_cloudfront_field_level_encryption_config",
+			Name:     "Field-level Encryption Config",
 		},
 		{
 			Factory:  ResourceFieldLevelEncryptionProfile,

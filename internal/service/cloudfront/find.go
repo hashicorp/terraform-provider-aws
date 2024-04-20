@@ -13,31 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindFieldLevelEncryptionConfigByID(ctx context.Context, conn *cloudfront.CloudFront, id string) (*cloudfront.GetFieldLevelEncryptionConfigOutput, error) {
-	input := &cloudfront.GetFieldLevelEncryptionConfigInput{
-		Id: aws.String(id),
-	}
-
-	output, err := conn.GetFieldLevelEncryptionConfigWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchFieldLevelEncryptionConfig) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.FieldLevelEncryptionConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output, nil
-}
-
 func FindFieldLevelEncryptionProfileByID(ctx context.Context, conn *cloudfront.CloudFront, id string) (*cloudfront.GetFieldLevelEncryptionProfileOutput, error) {
 	input := &cloudfront.GetFieldLevelEncryptionProfileInput{
 		Id: aws.String(id),

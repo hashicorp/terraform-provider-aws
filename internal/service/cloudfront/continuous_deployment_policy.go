@@ -28,24 +28,24 @@ import (
 )
 
 // @FrameworkResource(name="Continuous Deployment Policy")
-func newResourceContinuousDeploymentPolicy(_ context.Context) (resource.ResourceWithConfigure, error) {
-	return &resourceContinuousDeploymentPolicy{}, nil
+func newContinuousDeploymentPolicyResource(context.Context) (resource.ResourceWithConfigure, error) {
+	return &continuousDeploymentPolicyResource{}, nil
 }
 
 const (
 	ResNameContinuousDeploymentPolicy = "Continuous Deployment Policy"
 )
 
-type resourceContinuousDeploymentPolicy struct {
+type continuousDeploymentPolicyResource struct {
 	framework.ResourceWithConfigure
 }
 
-func (r *resourceContinuousDeploymentPolicy) Metadata(_ context.Context, req resource.MetadataRequest, resp *resource.MetadataResponse) {
-	resp.TypeName = "aws_cloudfront_continuous_deployment_policy"
+func (*continuousDeploymentPolicyResource) Metadata(_ context.Context, request resource.MetadataRequest, response *resource.MetadataResponse) {
+	response.TypeName = "aws_cloudfront_continuous_deployment_policy"
 }
 
-func (r *resourceContinuousDeploymentPolicy) Schema(ctx context.Context, req resource.SchemaRequest, resp *resource.SchemaResponse) {
-	resp.Schema = schema.Schema{
+func (r *continuousDeploymentPolicyResource) Schema(ctx context.Context, request resource.SchemaRequest, response *resource.SchemaResponse) {
+	response.Schema = schema.Schema{
 		Attributes: map[string]schema.Attribute{
 			"enabled": schema.BoolAttribute{
 				Required: true,
@@ -139,7 +139,7 @@ func (r *resourceContinuousDeploymentPolicy) Schema(ctx context.Context, req res
 	}
 }
 
-func (r *resourceContinuousDeploymentPolicy) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
+func (r *continuousDeploymentPolicyResource) Create(ctx context.Context, req resource.CreateRequest, resp *resource.CreateResponse) {
 	conn := r.Meta().CloudFrontConn(ctx)
 
 	var plan resourceContinuousDeploymentPolicyData
@@ -181,7 +181,7 @@ func (r *resourceContinuousDeploymentPolicy) Create(ctx context.Context, req res
 	resp.Diagnostics.Append(resp.State.Set(ctx, plan)...)
 }
 
-func (r *resourceContinuousDeploymentPolicy) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
+func (r *continuousDeploymentPolicyResource) Read(ctx context.Context, req resource.ReadRequest, resp *resource.ReadResponse) {
 	conn := r.Meta().CloudFrontConn(ctx)
 
 	var state resourceContinuousDeploymentPolicyData
@@ -212,7 +212,7 @@ func (r *resourceContinuousDeploymentPolicy) Read(ctx context.Context, req resou
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
 
-func (r *resourceContinuousDeploymentPolicy) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
+func (r *continuousDeploymentPolicyResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
 	conn := r.Meta().CloudFrontConn(ctx)
 
 	var plan, state resourceContinuousDeploymentPolicyData
@@ -262,7 +262,7 @@ func (r *resourceContinuousDeploymentPolicy) Update(ctx context.Context, req res
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
-func (r *resourceContinuousDeploymentPolicy) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
+func (r *continuousDeploymentPolicyResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
 	conn := r.Meta().CloudFrontConn(ctx)
 
 	var state resourceContinuousDeploymentPolicyData
@@ -354,7 +354,7 @@ func cdpETag(ctx context.Context, conn *cloudfront.CloudFront, id string) (*stri
 	return output.ETag, nil
 }
 
-func (r *resourceContinuousDeploymentPolicy) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
+func (r *continuousDeploymentPolicyResource) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {
 	resource.ImportStatePassthroughID(ctx, path.Root("id"), req, resp)
 }
 
