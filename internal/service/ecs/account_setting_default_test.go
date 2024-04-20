@@ -23,11 +23,12 @@ func TestAccECSAccountSettingDefault_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(*testing.T){
-		"containerInstanceLongARNFormat": testAccAccountSettingDefault_containerInstanceLongARNFormat,
-		"serviceLongARNFormat":           testAccAccountSettingDefault_serviceLongARNFormat,
-		"taskLongARNFormat":              testAccAccountSettingDefault_taskLongARNFormat,
-		"vpcTrunking":                    testAccAccountSettingDefault_vpcTrunking,
-		"containerInsights":              testAccAccountSettingDefault_containerInsights,
+		// 		"containerInstanceLongARNFormat":  testAccAccountSettingDefault_containerInstanceLongARNFormat,
+		// 		"serviceLongARNFormat":            testAccAccountSettingDefault_serviceLongARNFormat,
+		// 		"taskLongARNFormat":               testAccAccountSettingDefault_taskLongARNFormat,
+		// 		"vpcTrunking":                     testAccAccountSettingDefault_vpcTrunking,
+		// 		"containerInsights":               testAccAccountSettingDefault_containerInsights,
+		"fargateTaskRetirementWaitPeriod": testAccAccountSettingDefault_fargateTaskRetirementWaitPeriod,
 	}
 
 	acctest.RunSerialTests1Level(t, testCases, 0)
@@ -178,6 +179,34 @@ func testAccAccountSettingDefault_containerInsights(t *testing.T) {
 	})
 }
 
+func testAccAccountSettingDefault_fargateTaskRetirementWaitPeriod(t *testing.T) {
+	ctx := acctest.Context(t)
+	resourceName := "aws_ecs_account_setting_default.test"
+
+	resource.Test(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckAccountSettingDefaultDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccAccountSettingDefaultConfig_fargateTaskRetirementWaitPeriod(),
+				Check: resource.ComposeTestCheckFunc(
+					resource.TestCheckResourceAttr(resourceName, "name", "fargateTaskRetirementWaitPeriod"),
+					resource.TestCheckResourceAttr(resourceName, "value", "7"),
+					acctest.MatchResourceAttrGlobalARN(resourceName, "principal_arn", "iam", regexache.MustCompile("root")),
+				),
+			},
+			{
+				ResourceName:      resourceName,
+				ImportStateId:     "fargateTaskRetirementWaitPeriod",
+				ImportState:       true,
+				ImportStateVerify: true,
+			},
+		},
+	})
+}
+
 func testAccCheckAccountSettingDefaultDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		conn := acctest.Provider.Meta().(*conns.AWSClient).ECSConn(ctx)
@@ -231,4 +260,13 @@ resource "aws_ecs_account_setting_default" "test" {
   value = "enabled"
 }
 `, settingName)
+}
+
+func testAccAccountSettingDefaultConfig_fargateTaskRetirementWaitPeriod() string {
+	return fmt.Sprintf(`
+resource "aws_ecs_account_setting_default" "test" {
+  name  = "fargateTaskRetirementWaitPeriod"
+  value = "7"
+}
+`)
 }

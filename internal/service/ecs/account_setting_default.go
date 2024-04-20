@@ -146,11 +146,12 @@ func resourceAccountSettingDefaultDelete(ctx context.Context, d *schema.Resource
 	conn := meta.(*conns.AWSClient).ECSConn(ctx)
 
 	settingName := d.Get("name").(string)
+	settingValue := d.Get("value").(string)
 
 	log.Printf("[WARN] Disabling ECS Account Setting Default %s", settingName)
 	input := ecs.PutAccountSettingDefaultInput{
 		Name:  aws.String(settingName),
-		Value: aws.String("disabled"),
+		Value: aws.String(settingValue),
 	}
 
 	_, err := conn.PutAccountSettingDefaultWithContext(ctx, &input)
