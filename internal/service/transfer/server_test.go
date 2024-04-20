@@ -1240,8 +1240,8 @@ func testAccServer_identityProviderType_sftpAuthenticationMethods(t *testing.T) 
 				Config: testAccServerConfig_identityProviderType_sftpAuthenticationMethods(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrPair(resourceName, "function", "aws_lambda_function.test", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", "AWS_LAMBDA"),
+					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", "API_GATEWAY"),
+					resource.TestCheckResourceAttrPair(resourceName, "invocation_role", "aws_iam_role.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "sftp_authentication_methods", "PASSWORD"),
 				),
 			},
@@ -1262,7 +1262,7 @@ func testAccServer_updateIdentityProviderType_sftpAuthenticationMethods(t *testi
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServerDestroy(ctx),
@@ -1271,8 +1271,8 @@ func testAccServer_updateIdentityProviderType_sftpAuthenticationMethods(t *testi
 				Config: testAccServerConfig_identityProviderType_sftpAuthenticationMethods(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrPair(resourceName, "function", "aws_lambda_function.test", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", "AWS_LAMBDA"),
+					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", "API_GATEWAY"),
+					resource.TestCheckResourceAttrPair(resourceName, "invocation_role", "aws_iam_role.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "sftp_authentication_methods", "PASSWORD"),
 				),
 			},
@@ -1280,8 +1280,8 @@ func testAccServer_updateIdentityProviderType_sftpAuthenticationMethods(t *testi
 				Config: testAccServerConfig_identityProviderType_sftpAuthenticationMethods_updated(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckServerExists(ctx, resourceName, &conf),
-					resource.TestCheckResourceAttrPair(resourceName, "function", "aws_lambda_function.test", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", "AWS_LAMBDA"),
+					resource.TestCheckResourceAttr(resourceName, "identity_provider_type", "API_GATEWAY"),
+					resource.TestCheckResourceAttrPair(resourceName, "invocation_role", "aws_iam_role.test", "arn"),
 					resource.TestCheckResourceAttr(resourceName, "sftp_authentication_methods", "PUBLIC_KEY_AND_PASSWORD"),
 				),
 			},
@@ -1301,7 +1301,7 @@ func testAccServer_authenticationLoginBanners(t *testing.T) {
 	resourceName := "aws_transfer_server.test"
 
 	resource.Test(t, resource.TestCase{
-		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
+		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckAPIGatewayTypeEDGE(t); testAccPreCheck(ctx, t) },
 		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckServerDestroy(ctx),
@@ -2234,21 +2234,11 @@ resource "aws_transfer_server" "test" {
 }
 
 func testAccServerConfig_identityProviderType_sftpAuthenticationMethods(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigLambdaBase(rName, rName, rName),
-		testAccServerConfig_loggingRoleBase(rName+"-logging"),
-		fmt.Sprintf(`
-resource "aws_lambda_function" "test" {
-  filename      = "test-fixtures/lambdatest.zip"
-  function_name = %[1]q
-  role          = aws_iam_role.iam_for_lambda.arn
-  handler       = "index.handler"
-  runtime       = "nodejs20.x"
-}
-
+	return acctest.ConfigCompose(testAccServerConfig_apiGatewayBase(rName), testAccServerConfig_loggingRoleBase(rName), fmt.Sprintf(`
 resource "aws_transfer_server" "test" {
-  identity_provider_type      = "AWS_LAMBDA"
-  function                    = aws_lambda_function.test.arn
+  identity_provider_type      = "API_GATEWAY"
+  url                         = "${aws_api_gateway_deployment.test.invoke_url}${aws_api_gateway_resource.test.path}"
+  invocation_role             = aws_iam_role.test.arn
   logging_role                = aws_iam_role.test.arn
   sftp_authentication_methods = "PASSWORD"
 
@@ -2260,21 +2250,11 @@ resource "aws_transfer_server" "test" {
 }
 
 func testAccServerConfig_identityProviderType_sftpAuthenticationMethods_updated(rName string) string {
-	return acctest.ConfigCompose(
-		acctest.ConfigLambdaBase(rName, rName, rName),
-		testAccServerConfig_loggingRoleBase(rName+"-logging"),
-		fmt.Sprintf(`
-resource "aws_lambda_function" "test" {
-  filename      = "test-fixtures/lambdatest.zip"
-  function_name = %[1]q
-  role          = aws_iam_role.iam_for_lambda.arn
-  handler       = "index.handler"
-  runtime       = "nodejs20.x"
-}
-
+	return acctest.ConfigCompose(testAccServerConfig_apiGatewayBase(rName), testAccServerConfig_loggingRoleBase(rName), fmt.Sprintf(`
 resource "aws_transfer_server" "test" {
-  identity_provider_type      = "AWS_LAMBDA"
-  function                    = aws_lambda_function.test.arn
+  identity_provider_type      = "API_GATEWAY"
+  url                         = "${aws_api_gateway_deployment.test.invoke_url}${aws_api_gateway_resource.test.path}"
+  invocation_role             = aws_iam_role.test.arn
   logging_role                = aws_iam_role.test.arn
   sftp_authentication_methods = "PUBLIC_KEY_AND_PASSWORD"
 
