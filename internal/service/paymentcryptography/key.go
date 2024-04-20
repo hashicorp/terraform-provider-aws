@@ -356,6 +356,18 @@ func (r *resourceKey) Update(ctx context.Context, request resource.UpdateRequest
 			}
 
 		}
+		out, err := findKeyByID(ctx, conn, new.ID.ValueString())
+		if err != nil {
+			response.Diagnostics.AddError(
+				create.ProblemStandardMessage(names.PaymentCryptography, create.ErrActionSetting, ResNameKey, new.ID.String(), err),
+				err.Error(),
+			)
+			return
+		}
+		response.Diagnostics.Append(flex.Flatten(ctx, out, &new)...)
+		if response.Diagnostics.HasError() {
+			return
+		}
 	}
 
 	response.Diagnostics.Append(response.State.Set(ctx, &new)...)

@@ -156,7 +156,7 @@ func TestAccPaymentCryptographyKey_update(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccKeyConfig_basic(rName),
+				Config: testAccKeyConfig_enable(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key3),
 					testAccCheckKeyNotRecreated(&key2, &key3),
@@ -329,6 +329,30 @@ func testAccKeyConfig_disable(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_paymentcryptography_key" "test" {
   enabled    = false
+  exportable = true
+  key_attributes {
+    key_algorithm = "TDES_3KEY"
+    key_class     = "SYMMETRIC_KEY"
+    key_usage     = "TR31_P0_PIN_ENCRYPTION_KEY"
+    key_modes_of_use {
+      decrypt = true
+      encrypt = true
+      wrap    = true
+      unwrap  = true
+    }
+  }
+  tags = {
+    Name  = %[1]q
+    Other = "Value"
+  }
+}
+`, rName)
+}
+
+func testAccKeyConfig_enable(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_paymentcryptography_key" "test" {
+  enabled    = true
   exportable = true
   key_attributes {
     key_algorithm = "TDES_3KEY"
