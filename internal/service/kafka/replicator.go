@@ -169,6 +169,7 @@ func resourceReplicator() *schema.Resource {
 												"type": {
 													Type:             schema.TypeString,
 													Optional:         true,
+													ForceNew:         true,
 													ValidateDiagFunc: enum.Validate[types.ReplicationStartingPositionType](),
 												},
 											},
