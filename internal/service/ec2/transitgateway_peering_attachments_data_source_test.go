@@ -50,7 +50,7 @@ resource "aws_vpc" "test1" {
 
 resource "aws_ec2_transit_gateway" "test1" {
   amazon_side_asn = "64512"
-  
+
   tags = {
     Name = %[1]q
   }
@@ -58,7 +58,7 @@ resource "aws_ec2_transit_gateway" "test1" {
 
 resource "aws_ec2_transit_gateway" "test2" {
   amazon_side_asn = "64513"
-  
+
   tags = {
     Name = %[1]q
   }
