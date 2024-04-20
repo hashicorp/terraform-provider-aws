@@ -193,7 +193,7 @@ func testAccAccountSettingDefault_fargateTaskRetirementWaitPeriod(t *testing.T) 
 				Config: testAccAccountSettingDefaultConfig_fargateTaskRetirementWaitPeriod(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "name", "fargateTaskRetirementWaitPeriod"),
-					resource.TestCheckResourceAttr(resourceName, "value", "7"),
+					resource.TestCheckResourceAttr(resourceName, "value", "14"),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "principal_arn", "iam", regexache.MustCompile("root")),
 				),
 			},
@@ -234,7 +234,7 @@ func testAccCheckAccountSettingDefaultDestroy(ctx context.Context) resource.Test
 			}
 
 			for _, value := range resp.Settings {
-				if aws.StringValue(value.Value) != "disabled" {
+				if aws.StringValue(value.Value) != "disabled" && aws.StringValue(value.Value) != "7" {
 					switch name {
 					case ecs.SettingNameContainerInstanceLongArnFormat:
 						return nil
@@ -266,7 +266,7 @@ func testAccAccountSettingDefaultConfig_fargateTaskRetirementWaitPeriod() string
 	return fmt.Sprintf(`
 resource "aws_ecs_account_setting_default" "test" {
   name  = "fargateTaskRetirementWaitPeriod"
-  value = "7"
+  value = "14"
 }
 `)
 }
