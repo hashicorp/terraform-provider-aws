@@ -23,11 +23,11 @@ func TestAccECSAccountSettingDefault_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]func(*testing.T){
-		// 		"containerInstanceLongARNFormat":  testAccAccountSettingDefault_containerInstanceLongARNFormat,
-		// 		"serviceLongARNFormat":            testAccAccountSettingDefault_serviceLongARNFormat,
-		// 		"taskLongARNFormat":               testAccAccountSettingDefault_taskLongARNFormat,
-		// 		"vpcTrunking":                     testAccAccountSettingDefault_vpcTrunking,
-		// 		"containerInsights":               testAccAccountSettingDefault_containerInsights,
+		"containerInstanceLongARNFormat":  testAccAccountSettingDefault_containerInstanceLongARNFormat,
+		"serviceLongARNFormat":            testAccAccountSettingDefault_serviceLongARNFormat,
+		"taskLongARNFormat":               testAccAccountSettingDefault_taskLongARNFormat,
+		"vpcTrunking":                     testAccAccountSettingDefault_vpcTrunking,
+		"containerInsights":               testAccAccountSettingDefault_containerInsights,
 		"fargateTaskRetirementWaitPeriod": testAccAccountSettingDefault_fargateTaskRetirementWaitPeriod,
 	}
 
