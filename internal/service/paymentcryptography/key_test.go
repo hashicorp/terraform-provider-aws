@@ -37,7 +37,7 @@ func TestAccPaymentCryptographyKey_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.PaymentCryptographyEndpointID)
+			//acctest.PreCheckPartitionHasService(t, names.PaymentCryptographyEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PaymentCryptographyServiceID),
@@ -49,14 +49,14 @@ func TestAccPaymentCryptographyKey_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckKeyExists(ctx, resourceName, &key),
 					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
-					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "paymentcryptography", regexache.MustCompile(`key:+.`)),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "payment-cryptography", regexache.MustCompile(`key/.+`)),
 				),
 			},
 			{
 				ResourceName:            resourceName,
 				ImportState:             true,
 				ImportStateVerify:       true,
-				ImportStateVerifyIgnore: []string{"apply_immediately", "user"},
+				ImportStateVerifyIgnore: []string{"deletion_window_in_days"},
 			},
 		},
 	})
@@ -75,7 +75,8 @@ func TestAccPaymentCryptographyKey_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			acctest.PreCheckPartitionHasService(t, names.PaymentCryptographyEndpointID)
+			// go sdk v1 doesn't seem to know this endpoint
+			//acctest.PreCheckPartitionHasService(t, names.PaymentCryptographyEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PaymentCryptographyServiceID),
@@ -103,7 +104,7 @@ func testAccCheckKeyDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			_, err := conn.GetKey(ctx, &paymentcryptography.GetKeyInput{
+			out, err := conn.GetKey(ctx, &paymentcryptography.GetKeyInput{
 				KeyIdentifier: aws.String(rs.Primary.ID),
 			})
 			if errs.IsA[*types.ResourceNotFoundException](err) {
@@ -111,6 +112,10 @@ func testAccCheckKeyDestroy(ctx context.Context) resource.TestCheckFunc {
 			}
 			if err != nil {
 				return create.Error(names.PaymentCryptography, create.ErrActionCheckingDestroyed, tfpaymentcryptography.ResNameKey, rs.Primary.ID, err)
+			}
+
+			if state := out.Key.KeyState; state == types.KeyStateDeletePending || state == types.KeyStateDeleteComplete {
+				return nil // Key is logically deleted
 			}
 
 			return create.Error(names.PaymentCryptography, create.ErrActionCheckingDestroyed, tfpaymentcryptography.ResNameKey, rs.Primary.ID, errors.New("not destroyed"))
@@ -173,6 +178,7 @@ func testAccCheckKeyNotRecreated(before, after *paymentcryptography.GetKeyInput)
 func testAccKeyConfig_basic(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_paymentcryptography_key" "test" {
+  exportable = true
   key_attributes {
     key_algorithm = "TDES_3KEY"
     key_class     = "SYMMETRIC_KEY"

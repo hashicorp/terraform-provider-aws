@@ -5,4 +5,6 @@ package paymentcryptography
 
 var (
 	ResourceKey = newResourceKey
+
+	FindKeyByID = findKeyByID
 )

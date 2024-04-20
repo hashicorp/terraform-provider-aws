@@ -69,6 +69,7 @@ func (r *resourceKey) Schema(ctx context.Context, request resource.SchemaRequest
 			"id":  framework.IDAttribute(),
 			"deletion_window_in_days": schema.Int64Attribute{
 				Optional: true,
+				Computed: true,
 				Default:  int64default.StaticInt64(7),
 				Validators: []validator.Int64{
 					int64validator.Between(3, 180),
@@ -76,6 +77,7 @@ func (r *resourceKey) Schema(ctx context.Context, request resource.SchemaRequest
 			},
 			"enabled": schema.BoolAttribute{
 				Optional: true,
+				Computed: true,
 				Default:  booldefault.StaticBool(true),
 			},
 			"exportable": schema.BoolAttribute{
@@ -93,6 +95,7 @@ func (r *resourceKey) Schema(ctx context.Context, request resource.SchemaRequest
 			"key_check_value_algorithm": schema.StringAttribute{
 				CustomType: fwtypes.StringEnumType[awstypes.KeyCheckValueAlgorithm](),
 				Optional:   true,
+				Computed:   true,
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
@@ -152,38 +155,47 @@ func (r *resourceKey) Schema(ctx context.Context, request resource.SchemaRequest
 						Attributes: map[string]schema.Attribute{
 							"decrypt": schema.BoolAttribute{
 								Optional: true,
+								Computed: true,
 								Default:  booldefault.StaticBool(false),
 							},
 							"derive_key": schema.BoolAttribute{
 								Optional: true,
+								Computed: true,
 								Default:  booldefault.StaticBool(false),
 							},
 							"encrypt": schema.BoolAttribute{
 								Optional: true,
+								Computed: true,
 								Default:  booldefault.StaticBool(false),
 							},
 							"generate": schema.BoolAttribute{
 								Optional: true,
+								Computed: true,
 								Default:  booldefault.StaticBool(false),
 							},
 							"no_restrictions": schema.BoolAttribute{
 								Optional: true,
+								Computed: true,
 								Default:  booldefault.StaticBool(false),
 							},
 							"sign": schema.BoolAttribute{
 								Optional: true,
+								Computed: true,
 								Default:  booldefault.StaticBool(false),
 							},
 							"unwrap": schema.BoolAttribute{
 								Optional: true,
+								Computed: true,
 								Default:  booldefault.StaticBool(false),
 							},
 							"verify": schema.BoolAttribute{
 								Optional: true,
+								Computed: true,
 								Default:  booldefault.StaticBool(false),
 							},
 							"wrap": schema.BoolAttribute{
 								Optional: true,
+								Computed: true,
 								Default:  booldefault.StaticBool(false),
 							},
 						},
@@ -209,7 +221,7 @@ func (r *resourceKey) Create(ctx context.Context, request resource.CreateRequest
 	}
 
 	in := &paymentcryptography.CreateKeyInput{}
-	response.Diagnostics.Append(flex.Expand(ctx, plan, in)...)
+	response.Diagnostics.Append(flex.Expand(ctx, &plan, in)...)
 
 	if response.Diagnostics.HasError() {
 		return
@@ -246,12 +258,12 @@ func (r *resourceKey) Create(ctx context.Context, request resource.CreateRequest
 		return
 	}
 
-	response.Diagnostics.Append(flex.Flatten(ctx, created, plan)...)
+	response.Diagnostics.Append(flex.Flatten(ctx, created, &plan)...)
 	if response.Diagnostics.HasError() {
 		return
 	}
 
-	response.Diagnostics.Append(response.State.Set(ctx, plan)...)
+	response.Diagnostics.Append(response.State.Set(ctx, &plan)...)
 }
 
 func (r *resourceKey) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
@@ -393,7 +405,7 @@ func waitKeyCreated(ctx context.Context, conn *paymentcryptography.Client, id st
 func waitKeyDeleted(ctx context.Context, conn *paymentcryptography.Client, id string, timeout time.Duration) (*awstypes.Key, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: enum.Slice(awstypes.KeyStateCreateComplete),
-		Target:  enum.Slice(awstypes.KeyStateDeletePending, awstypes.KeyStateDeleteComplete),
+		Target:  []string{},
 		Refresh: statusKey(ctx, conn, id),
 		Timeout: timeout,
 	}
@@ -460,7 +472,7 @@ type resourceKeyModel struct {
 	Enabled                types.Bool                                          `tfsdk:"enabled"`
 	Exportable             types.Bool                                          `tfsdk:"exportable"`
 	ID                     types.String                                        `tfsdk:"id"`
-	KeyAttributes          fwtypes.ListNestedObjectValueOf[keyAttributesModel] `tfsdk:"key_attributes"`
+	KeyAttributes          fwtypes.ObjectValueOf[keyAttributesModel]           `tfsdk:"key_attributes"`
 	KeyCheckValue          types.String                                        `tfsdk:"key_check_value"`
 	KeyCheckValueAlgorithm fwtypes.StringEnum[awstypes.KeyCheckValueAlgorithm] `tfsdk:"key_check_value_algorithm"`
 	KeyOrigin              fwtypes.StringEnum[awstypes.KeyOrigin]              `tfsdk:"key_origin"`
@@ -475,10 +487,10 @@ func (k *resourceKeyModel) setId() {
 }
 
 type keyAttributesModel struct {
-	KeyAlgorithm  fwtypes.StringEnum[awstypes.KeyAlgorithm]           `tfsdk:"key_algorithm"`
-	KeyClass      fwtypes.StringEnum[awstypes.KeyClass]               `tfsdk:"key_class"`
-	KeyModesOfUse fwtypes.ListNestedObjectValueOf[keyModesOfUseModel] `tfsdk:"key_modes_of_use"`
-	KeyUsage      fwtypes.StringEnum[awstypes.KeyUsage]               `tfsdk:"key_usage"`
+	KeyAlgorithm  fwtypes.StringEnum[awstypes.KeyAlgorithm] `tfsdk:"key_algorithm"`
+	KeyClass      fwtypes.StringEnum[awstypes.KeyClass]     `tfsdk:"key_class"`
+	KeyModesOfUse fwtypes.ObjectValueOf[keyModesOfUseModel] `tfsdk:"key_modes_of_use"`
+	KeyUsage      fwtypes.StringEnum[awstypes.KeyUsage]     `tfsdk:"key_usage"`
 }
 
 type keyModesOfUseModel struct {
