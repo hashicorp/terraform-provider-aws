@@ -37,7 +37,6 @@ func TestAccPaymentCryptographyKey_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			//acctest.PreCheckPartitionHasService(t, names.PaymentCryptographyEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PaymentCryptographyServiceID),
@@ -62,6 +61,110 @@ func TestAccPaymentCryptographyKey_basic(t *testing.T) {
 	})
 }
 
+func TestAccPaymentCryptographyKey_tags(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var key paymentcryptography.GetKeyOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_paymentcryptography_key.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.PaymentCryptographyServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKeyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKeyConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeyExists(ctx, resourceName, &key),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.Other", "Value"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "payment-cryptography", regexache.MustCompile(`key/.+`)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"deletion_window_in_days"},
+			},
+			{
+				Config: testAccKeyConfig_tags2(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeyExists(ctx, resourceName, &key),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					resource.TestCheckResourceAttr(resourceName, "tags.%", "2"),
+					resource.TestCheckResourceAttr(resourceName, "tags.Name2", rName),
+					resource.TestCheckResourceAttr(resourceName, "tags.Other", "Value2"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "payment-cryptography", regexache.MustCompile(`key/.+`)),
+				),
+			},
+		},
+	})
+}
+
+func TestAccPaymentCryptographyKey_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	if testing.Short() {
+		t.Skip("skipping long-running test in short mode")
+	}
+
+	var key paymentcryptography.GetKeyOutput
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_paymentcryptography_key.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.PaymentCryptographyServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckKeyDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccKeyConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeyExists(ctx, resourceName, &key),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "payment-cryptography", regexache.MustCompile(`key/.+`)),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"deletion_window_in_days"},
+			},
+			{
+				Config: testAccKeyConfig_disable(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeyExists(ctx, resourceName, &key),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "false"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "payment-cryptography", regexache.MustCompile(`key/.+`)),
+				),
+			},
+			{
+				Config: testAccKeyConfig_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckKeyExists(ctx, resourceName, &key),
+					resource.TestCheckResourceAttr(resourceName, "enabled", "true"),
+					acctest.MatchResourceAttrRegionalARN(resourceName, "arn", "payment-cryptography", regexache.MustCompile(`key/.+`)),
+				),
+			},
+		},
+	})
+}
+
 func TestAccPaymentCryptographyKey_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	if testing.Short() {
@@ -75,8 +178,6 @@ func TestAccPaymentCryptographyKey_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
-			// go sdk v1 doesn't seem to know this endpoint
-			//acctest.PreCheckPartitionHasService(t, names.PaymentCryptographyEndpointID)
 			testAccPreCheck(ctx, t)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.PaymentCryptographyServiceID),
@@ -190,6 +291,57 @@ resource "aws_paymentcryptography_key" "test" {
       unwrap  = true
     }
   }
+  tags = {
+    Name  = %[1]q
+    Other = "Value"
+  }
 }
-`)
+`, rName)
+}
+
+func testAccKeyConfig_tags2(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_paymentcryptography_key" "test" {
+  exportable = true
+  key_attributes {
+    key_algorithm = "TDES_3KEY"
+    key_class     = "SYMMETRIC_KEY"
+    key_usage     = "TR31_P0_PIN_ENCRYPTION_KEY"
+    key_modes_of_use {
+      decrypt = true
+      encrypt = true
+      wrap    = true
+      unwrap  = true
+    }
+  }
+  tags = {
+    Name2 = %[1]q
+    Other     = "Value2"
+  }
+}
+`, rName)
+}
+
+func testAccKeyConfig_disable(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_paymentcryptography_key" "test" {
+  enabled    = false
+  exportable = true
+  key_attributes {
+    key_algorithm = "TDES_3KEY"
+    key_class     = "SYMMETRIC_KEY"
+    key_usage     = "TR31_P0_PIN_ENCRYPTION_KEY"
+    key_modes_of_use {
+      decrypt = true
+      encrypt = true
+      wrap    = true
+      unwrap  = true
+    }
+  }
+  tags = {
+    Name  = %[1]q
+    Other = "Value"
+  }
+}
+`, rName)
 }
