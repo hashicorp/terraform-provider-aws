@@ -6,31 +6,31 @@ package paymentcryptography
 import (
 	"context"
 	"errors"
-	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	"github.com/hashicorp/terraform-provider-aws/internal/enum"
-	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/paymentcryptography"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/paymentcryptography/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
+	"github.com/hashicorp/terraform-plugin-framework-validators/int64validator"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/booldefault"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64default"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/objectplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -359,11 +359,9 @@ func (r *resourceKey) Delete(ctx context.Context, request resource.DeleteRequest
 		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 			return
 		}
-		if errs.IsA[*awstypes.ValidationException](err) {
-			// Check if the errors is about the key not being in CREATE_COMPLETE, if it's been deleted outside.
-			if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "not in CREATE_COMPLETE state.") {
-				return
-			}
+		// Check if the errors is about the key not being in CREATE_COMPLETE, if it's been deleted outside.
+		if errs.IsAErrorMessageContains[*awstypes.ValidationException](err, "not in CREATE_COMPLETE state.") {
+			return
 		}
 		response.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.PaymentCryptography, create.ErrActionDeleting, ResNameKey, state.ID.String(), err),
