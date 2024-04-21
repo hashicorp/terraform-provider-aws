@@ -253,6 +253,31 @@ func lineChartVisualSchema() *schema.Schema {
 									},
 								},
 							},
+							"single_axis_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SingleAxisOptions.html
+								Type:     schema.TypeList,
+								Optional: true,
+								MinItems: 1,
+								MaxItems: 1,
+								Elem: &schema.Resource{
+									Schema: map[string]*schema.Schema{
+										"y_axis_options": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_YAxisOptions.html
+											Type:     schema.TypeList,
+											Optional: true,
+											MinItems: 1,
+											MaxItems: 1,
+											Elem: &schema.Resource{
+												Schema: map[string]*schema.Schema{
+													"y_axis": {
+														Type:         schema.TypeString,
+														Required:     true,
+														ValidateFunc: validation.StringInSlice(quicksight.SingleYAxisOption_Values(), false),
+													},
+												},
+											},
+										},
+									},
+								},
+							},
 							"small_multiples_options": smallMultiplesOptionsSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_SmallMultiplesOptions.html
 							"sort_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_LineChartSortConfiguration.html
 								Type:             schema.TypeList,
@@ -410,6 +435,9 @@ func expandLineChartConfiguration(tfList []interface{}) *quicksight.LineChartCon
 	}
 	if v, ok := tfMap["series"].([]interface{}); ok && len(v) > 0 {
 		config.Series = expandSeriesItems(v)
+	}
+	if v, ok := tfMap["single_axis_options"].([]interface{}); ok && len(v) > 0 {
+		config.SingleAxisOptions = expandComboChartSingleAxisOptions(v)
 	}
 	if v, ok := tfMap["small_multiples_options"].([]interface{}); ok && len(v) > 0 {
 		config.SmallMultiplesOptions = expandSmallMultiplesOptions(v)
@@ -913,6 +941,44 @@ func expandLineChartSeriesSettings(tfList []interface{}) *quicksight.LineChartSe
 	return options
 }
 
+func expandComboChartSingleAxisOptions(tfList []interface{}) *quicksight.SingleAxisOptions {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	config := &quicksight.SingleAxisOptions{}
+
+	if v, ok := tfMap["y_axis_options"].([]interface{}); ok && len(v) > 0 {
+		config.YAxisOptions = expandComboChartYAxisOptions(v)
+	}
+
+	return config
+}
+
+func expandComboChartYAxisOptions(tfList []interface{}) *quicksight.YAxisOptions {
+	if len(tfList) == 0 || tfList[0] == nil {
+		return nil
+	}
+
+	tfMap, ok := tfList[0].(map[string]interface{})
+	if !ok {
+		return nil
+	}
+
+	config := &quicksight.YAxisOptions{}
+
+	if v, ok := tfMap["y_axis"].(string); ok {
+		config.BarValues = aws.String(v)
+	}
+
+	return config
+}
+
 func flattenLineChartVisual(apiObject *quicksight.LineChartVisual) []interface{} {
 	if apiObject == nil {
 		return nil
@@ -981,6 +1047,9 @@ func flattenLineChartConfiguration(apiObject *quicksight.LineChartConfiguration)
 	}
 	if apiObject.Series != nil {
 		tfMap["series"] = flattenSeriesItem(apiObject.Series)
+	}
+	if apiObject.SingleAxisOptions != nil {
+		tfMap["single_axis_options"] = flattenComboChartSingleAxisOptions(apiObject.SingleAxisOptions)
 	}
 	if apiObject.SmallMultiplesOptions != nil {
 		tfMap["small_multiples_options"] = flattenSmallMultiplesOptions(apiObject.SmallMultiplesOptions)
@@ -1349,6 +1418,32 @@ func flattenLineChartSortConfiguration(apiObject *quicksight.LineChartSortConfig
 	}
 	if apiObject.SmallMultiplesSort != nil {
 		tfMap["small_multiples_sort"] = flattenFieldSortOptions(apiObject.SmallMultiplesSort)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenComboChartSingleAxisOptions(apiObject *quicksight.SingleAxisOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.YAxisOptions != nil {
+		tfMap["y_axis_options"] = flattenComboChartYAxisOptions(apiObject.YAxisOptions)
+	}
+
+	return []interface{}{tfMap}
+}
+
+func flattenComboChartYAxisOptions(apiObject *quicksight.YAxisOptions) []interface{} {
+	if apiObject == nil {
+		return nil
+	}
+
+	tfMap := map[string]interface{}{}
+	if apiObject.YAxis != nil {
+		tfMap["y_axis"] = aws.StringValue(apiObject.YAxis)
 	}
 
 	return []interface{}{tfMap}
