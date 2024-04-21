@@ -530,7 +530,7 @@ func ResourceService() *schema.Resource {
 						},
 						"managed_ebs_volume": {
 							Type:     schema.TypeList,
-							Optional: true,
+							Required: true,
 							MaxItems: 1,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
