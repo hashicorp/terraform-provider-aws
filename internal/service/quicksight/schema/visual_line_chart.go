@@ -941,44 +941,6 @@ func expandLineChartSeriesSettings(tfList []interface{}) *quicksight.LineChartSe
 	return options
 }
 
-func expandComboChartSingleAxisOptions(tfList []interface{}) *quicksight.SingleAxisOptions {
-	if len(tfList) == 0 || tfList[0] == nil {
-		return nil
-	}
-
-	tfMap, ok := tfList[0].(map[string]interface{})
-	if !ok {
-		return nil
-	}
-
-	config := &quicksight.SingleAxisOptions{}
-
-	if v, ok := tfMap["y_axis_options"].([]interface{}); ok && len(v) > 0 {
-		config.YAxisOptions = expandComboChartYAxisOptions(v)
-	}
-
-	return config
-}
-
-func expandComboChartYAxisOptions(tfList []interface{}) *quicksight.YAxisOptions {
-	if len(tfList) == 0 || tfList[0] == nil {
-		return nil
-	}
-
-	tfMap, ok := tfList[0].(map[string]interface{})
-	if !ok {
-		return nil
-	}
-
-	config := &quicksight.YAxisOptions{}
-
-	if v, ok := tfMap["y_axis"].(string); ok {
-		config.BarValues = aws.String(v)
-	}
-
-	return config
-}
-
 func flattenLineChartVisual(apiObject *quicksight.LineChartVisual) []interface{} {
 	if apiObject == nil {
 		return nil
@@ -1418,32 +1380,6 @@ func flattenLineChartSortConfiguration(apiObject *quicksight.LineChartSortConfig
 	}
 	if apiObject.SmallMultiplesSort != nil {
 		tfMap["small_multiples_sort"] = flattenFieldSortOptions(apiObject.SmallMultiplesSort)
-	}
-
-	return []interface{}{tfMap}
-}
-
-func flattenComboChartSingleAxisOptions(apiObject *quicksight.SingleAxisOptions) []interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-	if apiObject.YAxisOptions != nil {
-		tfMap["y_axis_options"] = flattenComboChartYAxisOptions(apiObject.YAxisOptions)
-	}
-
-	return []interface{}{tfMap}
-}
-
-func flattenComboChartYAxisOptions(apiObject *quicksight.YAxisOptions) []interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
-	tfMap := map[string]interface{}{}
-	if apiObject.YAxis != nil {
-		tfMap["y_axis"] = aws.StringValue(apiObject.YAxis)
 	}
 
 	return []interface{}{tfMap}
