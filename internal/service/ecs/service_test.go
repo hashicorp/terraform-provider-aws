@@ -307,6 +307,28 @@ func TestAccECSService_CapacityProviderStrategy_update(t *testing.T) {
 	})
 }
 
+func TestAccECSService_VolumeConfigurations_basic(t *testing.T) {
+	ctx := acctest.Context(t)
+	var service ecs.Service
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_volumeConfigurations_basic(rName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+				),
+			},
+		},
+	})
+}
+
 func TestAccECSService_familyAndRevision(t *testing.T) {
 	ctx := acctest.Context(t)
 	var service ecs.Service
@@ -2086,6 +2108,48 @@ resource "aws_ecs_service" "test" {
   force_new_deployment = true
 }
 `, rName))
+}
+
+func testAccServiceConfig_volumeConfigurations_basic(rName string) string {
+	return fmt.Sprintf(`
+resource "aws_ecs_cluster" "test" {
+  name = %[1]q
+}
+
+resource "aws_ecs_task_definition" "test" {
+  family = %[1]q
+
+  container_definitions = <<DEFINITION
+[
+  {
+    "cpu": 128,
+    "essential": true,
+    "image": "mongo:latest",
+    "memory": 128,
+    "name": "mongodb"
+  },
+  "mountPoints": [
+    {"sourceVolume": "vol1", "containerPath": "/vol1"}
+  ],
+]
+DEFINITION
+
+  volume {
+    name      = "vol1"
+    host_path = "/host/vol1"
+  }
+}
+
+resource "aws_ecs_service" "test" {
+  name            = %[1]q
+  cluster         = aws_ecs_cluster.test.id
+  task_definition = aws_ecs_task_definition.test.arn
+  desired_count   = 1
+  volume_configuration {
+    name = "vol1"
+  }
+}
+`, rName)
 }
 
 func testAccServiceConfig_forceNewDeployment(rName string) string {
