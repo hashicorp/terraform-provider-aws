@@ -2250,8 +2250,8 @@ resource "aws_ecs_service" "test" {
   volume_configuration {
     name = "vol1"
     managed_ebs_volume {
-        role_arn = aws_iam_role.test.arn
-        size_in_gb = %[3]d
+        role_arn    = aws_iam_role.test.arn
+        size_in_gb  = %[3]d
         volume_type = %[2]q
     }
   }
