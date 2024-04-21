@@ -16,3 +16,8 @@ func StreamType_Values() []string {
 		StreamTypeKinesis,
 	}
 }
+
+const (
+	keyValueStoreStatusProvisioning = "PROVISIONING"
+	keyValueStoreStatusReady        = "READY"
+)

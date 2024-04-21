@@ -13,31 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindMonitoringSubscriptionByDistributionID(ctx context.Context, conn *cloudfront.CloudFront, id string) (*cloudfront.GetMonitoringSubscriptionOutput, error) {
-	input := &cloudfront.GetMonitoringSubscriptionInput{
-		DistributionId: aws.String(id),
-	}
-
-	output, err := conn.GetMonitoringSubscriptionWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchDistribution, cloudfront.ErrCodeNoSuchMonitoringSubscription) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output, nil
-}
-
 func FindOriginRequestPolicyByID(ctx context.Context, conn *cloudfront.CloudFront, id string) (*cloudfront.GetOriginRequestPolicyOutput, error) {
 	input := &cloudfront.GetOriginRequestPolicyInput{
 		Id: aws.String(id),

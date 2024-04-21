@@ -12,12 +12,14 @@ var (
 	ResourceFunction                    = resourceFunction
 	ResourceKeyGroup                    = resourceKeyGroup
 	ResourceKeyValueStore               = newKeyValueStoreResource
+	ResourceMonitoringSubscription      = resourceMonitoringSubscription
 
-	FindCachePolicyByID                 = findCachePolicyByID
-	FindFieldLevelEncryptionConfigByID  = findFieldLevelEncryptionConfigByID
-	FindFieldLevelEncryptionProfileByID = findFieldLevelEncryptionProfileByID
-	FindFunctionByTwoPartKey            = findFunctionByTwoPartKey
-	FindKeyGroupByID                    = findKeyGroupByID
-	FindKeyValueStoreByName             = findKeyValueStoreByName
-	FindPublicKeyByID                   = findPublicKeyByID
+	FindCachePolicyByID                        = findCachePolicyByID
+	FindFieldLevelEncryptionConfigByID         = findFieldLevelEncryptionConfigByID
+	FindFieldLevelEncryptionProfileByID        = findFieldLevelEncryptionProfileByID
+	FindFunctionByTwoPartKey                   = findFunctionByTwoPartKey
+	FindKeyGroupByID                           = findKeyGroupByID
+	FindKeyValueStoreByName                    = findKeyValueStoreByName
+	FindMonitoringSubscriptionByDistributionID = findMonitoringSubscriptionByDistributionID
+	FindPublicKeyByID                          = findPublicKeyByID
 )
