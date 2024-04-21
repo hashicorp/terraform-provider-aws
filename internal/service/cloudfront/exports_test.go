@@ -14,6 +14,7 @@ var (
 	ResourceKeyValueStore               = newKeyValueStoreResource
 	ResourceMonitoringSubscription      = resourceMonitoringSubscription
 	ResourceOriginAccessControl         = resourceOriginAccessControl
+	ResourceOriginAccessIdentity        = resourceOriginAccessIdentity
 
 	FindCachePolicyByID                        = findCachePolicyByID
 	FindFieldLevelEncryptionConfigByID         = findFieldLevelEncryptionConfigByID
@@ -23,5 +24,6 @@ var (
 	FindKeyValueStoreByName                    = findKeyValueStoreByName
 	FindMonitoringSubscriptionByDistributionID = findMonitoringSubscriptionByDistributionID
 	FindOriginAccessControlByID                = findOriginAccessControlByID
+	FindOriginAccessIdentityByID               = findOriginAccessIdentityByID
 	FindPublicKeyByID                          = findPublicKeyByID
 )

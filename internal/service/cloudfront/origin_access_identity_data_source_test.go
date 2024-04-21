@@ -27,7 +27,7 @@ func TestAccCloudFrontOriginAccessIdentityDataSource_basic(t *testing.T) {
 			{
 				Config: testAccOriginAccessIdentityDataSourceConfig_basic,
 				Check: resource.ComposeTestCheckFunc(
-					testAccCheckOriginAccessIdentityExistence(ctx, resourceName, &origin),
+					testAccCheckOriginAccessIdentityExists(ctx, resourceName, &origin),
 					resource.TestCheckResourceAttrPair(dataSourceName, "iam_arn", resourceName, "iam_arn"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "comment", resourceName, "comment"),
 					resource.TestCheckResourceAttrPair(dataSourceName, "caller_reference", resourceName, "caller_reference"),

@@ -86,7 +86,9 @@ func resourceMonitoringSubscriptionCreate(ctx context.Context, d *schema.Resourc
 		return sdkdiag.AppendErrorf(diags, "creating CloudFront Monitoring Subscription (%s): %s", id, err)
 	}
 
-	d.SetId(id)
+	if d.IsNewResource() {
+		d.SetId(id)
+	}
 
 	return append(diags, resourceMonitoringSubscriptionRead(ctx, d, meta)...)
 }

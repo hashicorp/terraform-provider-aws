@@ -121,8 +121,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Origin Access Control",
 		},
 		{
-			Factory:  ResourceOriginAccessIdentity,
+			Factory:  resourceOriginAccessIdentity,
 			TypeName: "aws_cloudfront_origin_access_identity",
+			Name:     "Origin Access Identity",
 		},
 		{
 			Factory:  ResourceOriginRequestPolicy,
