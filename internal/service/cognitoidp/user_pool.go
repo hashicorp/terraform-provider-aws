@@ -12,16 +12,19 @@ import (
 	"time"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -58,9 +61,9 @@ func resourceUserPool() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"name": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice(cognitoidentityprovider.RecoveryOptionNameType_Values(), false),
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.RecoveryOptionNameType](),
 									},
 									"priority": {
 										Type:     schema.TypeInt,
@@ -115,8 +118,8 @@ func resourceUserPool() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(cognitoidentityprovider.AliasAttributeType_Values(), false),
+					Type:             schema.TypeString,
+					ValidateDiagFunc: enum.Validate[awstypes.AliasAttributeType](),
 				},
 				ConflictsWith: []string{"username_attributes"},
 			},
@@ -128,8 +131,8 @@ func resourceUserPool() *schema.Resource {
 				Type:     schema.TypeSet,
 				Optional: true,
 				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(cognitoidentityprovider.VerifiedAttributeType_Values(), false),
+					Type:             schema.TypeString,
+					ValidateDiagFunc: enum.Validate[awstypes.VerifiedAttributeType](),
 				},
 			},
 			"creation_date": {
@@ -141,10 +144,10 @@ func resourceUserPool() *schema.Resource {
 				Computed: true,
 			},
 			"deletion_protection": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      cognitoidentityprovider.DeletionProtectionTypeInactive,
-				ValidateFunc: validation.StringInSlice(cognitoidentityprovider.DeletionProtectionType_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.DeletionProtectionTypeInactive,
+				ValidateDiagFunc: enum.Validate[awstypes.DeletionProtectionType](),
 			},
 			"device_configuration": {
 				Type:     schema.TypeList,
@@ -179,10 +182,10 @@ func resourceUserPool() *schema.Resource {
 							Optional: true,
 						},
 						"email_sending_account": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      cognitoidentityprovider.EmailSendingAccountTypeCognitoDefault,
-							ValidateFunc: validation.StringInSlice(cognitoidentityprovider.EmailSendingAccountType_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          awstypes.EmailSendingAccountTypeCognitoDefault,
+							ValidateDiagFunc: enum.Validate[awstypes.EmailSendingAccountType](),
 						},
 						"from_email_address": {
 							Type:     schema.TypeString,
@@ -251,9 +254,9 @@ func resourceUserPool() *schema.Resource {
 										ValidateFunc: verify.ValidARN,
 									},
 									"lambda_version": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice(cognitoidentityprovider.CustomEmailSenderLambdaVersionType_Values(), false),
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.CustomEmailSenderLambdaVersionType](),
 									},
 								},
 							},
@@ -276,9 +279,9 @@ func resourceUserPool() *schema.Resource {
 										ValidateFunc: verify.ValidARN,
 									},
 									"lambda_version": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice(cognitoidentityprovider.CustomSMSSenderLambdaVersionType_Values(), false),
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.CustomSMSSenderLambdaVersionType](),
 									},
 								},
 							},
@@ -332,9 +335,9 @@ func resourceUserPool() *schema.Resource {
 										ValidateFunc: verify.ValidARN,
 									},
 									"lambda_version": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice(cognitoidentityprovider.PreTokenGenerationLambdaVersionType_Values(), false),
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.PreTokenGenerationLambdaVersionType](),
 									},
 								},
 							},
@@ -357,10 +360,10 @@ func resourceUserPool() *schema.Resource {
 				Computed: true,
 			},
 			"mfa_configuration": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      cognitoidentityprovider.UserPoolMfaTypeOff,
-				ValidateFunc: validation.StringInSlice(cognitoidentityprovider.UserPoolMfaType_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.UserPoolMfaTypeOff,
+				ValidateDiagFunc: enum.Validate[awstypes.UserPoolMfaType](),
 			},
 			"name": {
 				Type:     schema.TypeString,
@@ -416,9 +419,9 @@ func resourceUserPool() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"attribute_data_type": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(cognitoidentityprovider.AttributeDataType_Values(), false),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.AttributeDataType](),
 						},
 						"developer_only_attribute": {
 							Type:     schema.TypeBool,
@@ -537,8 +540,8 @@ func resourceUserPool() *schema.Resource {
 							Type:     schema.TypeSet,
 							Required: true,
 							Elem: &schema.Schema{
-								Type:         schema.TypeString,
-								ValidateFunc: validation.StringInSlice(cognitoidentityprovider.VerifiedAttributeType_Values(), false),
+								Type:             schema.TypeString,
+								ValidateDiagFunc: enum.Validate[awstypes.VerifiedAttributeType](),
 							},
 						},
 					},
@@ -551,9 +554,9 @@ func resourceUserPool() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"advanced_security_mode": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(cognitoidentityprovider.AdvancedSecurityModeType_Values(), false),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.AdvancedSecurityModeType](),
 						},
 					},
 				},
@@ -563,8 +566,8 @@ func resourceUserPool() *schema.Resource {
 				Optional: true,
 				ForceNew: true,
 				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(cognitoidentityprovider.UsernameAttributeType_Values(), false),
+					Type:             schema.TypeString,
+					ValidateDiagFunc: enum.Validate[awstypes.UsernameAttributeType](),
 				},
 				ConflictsWith: []string{"alias_attributes"},
 			},
@@ -590,10 +593,10 @@ func resourceUserPool() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"default_email_option": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      cognitoidentityprovider.DefaultEmailOptionTypeConfirmWithCode,
-							ValidateFunc: validation.StringInSlice(cognitoidentityprovider.DefaultEmailOptionType_Values(), false),
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          awstypes.DefaultEmailOptionTypeConfirmWithCode,
+							ValidateDiagFunc: enum.Validate[awstypes.DefaultEmailOptionType](),
 						},
 						"email_message": {
 							Type:          schema.TypeString,
@@ -639,7 +642,7 @@ func resourceUserPool() *schema.Resource {
 
 func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
+	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
 	name := d.Get("name").(string)
 	input := &cognitoidentityprovider.CreateUserPoolInput{
@@ -663,11 +666,11 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if v, ok := d.GetOk("alias_attributes"); ok {
-		input.AliasAttributes = flex.ExpandStringSet(v.(*schema.Set))
+		input.AliasAttributes = flex.ExpandStringyValueSet[awstypes.AliasAttributeType](v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("auto_verified_attributes"); ok {
-		input.AutoVerifiedAttributes = flex.ExpandStringSet(v.(*schema.Set))
+		input.AutoVerifiedAttributes = flex.ExpandStringyValueSet[awstypes.VerifiedAttributeType](v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("email_configuration"); ok && len(v.([]interface{})) > 0 {
@@ -675,7 +678,7 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if v, ok := d.GetOk("deletion_protection"); ok {
-		input.DeletionProtection = aws.String(v.(string))
+		input.DeletionProtection = awstypes.DeletionProtectionType(v.(string))
 	}
 
 	if v, ok := d.GetOk("device_configuration"); ok {
@@ -709,14 +712,14 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 		config, ok := configs[0].(map[string]interface{})
 
 		if ok && config != nil {
-			policies := &cognitoidentityprovider.UserPoolPolicyType{}
+			policies := &awstypes.UserPoolPolicyType{}
 			policies.PasswordPolicy = expandUserPoolPasswordPolicy(config)
 			input.Policies = policies
 		}
 	}
 
 	if v, ok := d.GetOk("schema"); ok {
-		input.Schema = expandUserPoolSchema(v.(*schema.Set).List())
+		input.Schema = slices.Values(expandUserPoolSchema(v.(*schema.Set).List()))
 	}
 
 	// For backwards compatibility, include this outside of MFA configuration
@@ -736,7 +739,7 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	if v, ok := d.GetOk("username_attributes"); ok {
-		input.UsernameAttributes = flex.ExpandStringSet(v.(*schema.Set))
+		input.UsernameAttributes = flex.ExpandStringyValueSet[awstypes.UsernameAttributeType](v.(*schema.Set))
 	}
 
 	if v, ok := d.GetOk("username_configuration"); ok {
@@ -762,10 +765,10 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 		config, ok := configs[0].(map[string]interface{})
 
 		if ok {
-			userPoolAddons := &cognitoidentityprovider.UserPoolAddOnsType{}
+			userPoolAddons := &awstypes.UserPoolAddOnsType{}
 
 			if v, ok := config["advanced_security_mode"]; ok && v.(string) != "" {
-				userPoolAddons.AdvancedSecurityMode = aws.String(v.(string))
+				userPoolAddons.AdvancedSecurityMode = awstypes.AdvancedSecurityModeType(v.(string))
 			}
 			input.UserPoolAddOns = userPoolAddons
 		}
@@ -781,24 +784,24 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	outputRaw, err := tfresource.RetryWhen(ctx, propagationTimeout, func() (any, error) {
-		return conn.CreateUserPoolWithContext(ctx, input)
+		return conn.CreateUserPool(ctx, input)
 	}, userPoolErrorRetryable)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Cognito User Pool (%s): %s", name, err)
 	}
 
-	d.SetId(aws.StringValue(outputRaw.(*cognitoidentityprovider.CreateUserPoolOutput).UserPool.Id))
+	d.SetId(aws.ToString(outputRaw.(*cognitoidentityprovider.CreateUserPoolOutput).UserPool.Id))
 
-	if v := d.Get("mfa_configuration").(string); v != cognitoidentityprovider.UserPoolMfaTypeOff {
+	if v := d.Get("mfa_configuration").(string); v != string(awstypes.UserPoolMfaTypeOff) {
 		input := &cognitoidentityprovider.SetUserPoolMfaConfigInput{
-			MfaConfiguration:              aws.String(v),
+			MfaConfiguration:              awstypes.UserPoolMfaType(v),
 			SoftwareTokenMfaConfiguration: expandSoftwareTokenMFAConfiguration(d.Get("software_token_mfa_configuration").([]interface{})),
 			UserPoolId:                    aws.String(d.Id()),
 		}
 
 		if v := d.Get("sms_configuration").([]interface{}); len(v) > 0 && v[0] != nil {
-			input.SmsMfaConfiguration = &cognitoidentityprovider.SmsMfaConfigType{
+			input.SmsMfaConfiguration = &awstypes.SmsMfaConfigType{
 				SmsConfiguration: expandSMSConfiguration(v),
 			}
 
@@ -808,7 +811,7 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		_, err := tfresource.RetryWhen(ctx, propagationTimeout, func() (any, error) {
-			return conn.SetUserPoolMfaConfigWithContext(ctx, input)
+			return conn.SetUserPoolMfaConfig(ctx, input)
 		}, userPoolErrorRetryable)
 
 		if err != nil {
@@ -821,7 +824,7 @@ func resourceUserPoolCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceUserPoolRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
+	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
 	userPool, err := findUserPoolByID(ctx, conn, d.Id())
 
@@ -842,10 +845,10 @@ func resourceUserPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "setting admin_create_user_config: %s", err)
 	}
 	if userPool.AliasAttributes != nil {
-		d.Set("alias_attributes", aws.StringValueSlice(userPool.AliasAttributes))
+		d.Set("alias_attributes", flex.FlattenStringyValueList[awstypes.AliasAttributeType](userPool.AliasAttributes))
 	}
 	d.Set("arn", userPool.Arn)
-	d.Set("auto_verified_attributes", aws.StringValueSlice(userPool.AutoVerifiedAttributes))
+	d.Set("auto_verified_attributes", flex.FlattenStringyValueList[awstypes.VerifiedAttributeType](userPool.AutoVerifiedAttributes))
 	d.Set("creation_date", userPool.CreationDate.Format(time.RFC3339))
 	d.Set("custom_domain", userPool.CustomDomain)
 	d.Set("deletion_protection", userPool.DeletionProtection)
@@ -872,7 +875,7 @@ func resourceUserPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 	if v, ok := d.GetOk("schema"); ok {
 		configuredSchema = v.(*schema.Set).List()
 	}
-	if err := d.Set("schema", flattenUserPoolSchema(expandUserPoolSchema(configuredSchema), userPool.SchemaAttributes)); err != nil {
+	if err := d.Set("schema", flattenUserPoolSchema(expandUserPoolSchema(configuredSchema), slices.ToPointers(userPool.SchemaAttributes))); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting schema: %s", err)
 	}
 	d.Set("sms_authentication_message", userPool.SmsAuthenticationMessage)
@@ -886,7 +889,7 @@ func resourceUserPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 	if err := d.Set("user_pool_add_ons", flattenUserPoolUserPoolAddOns(userPool.UserPoolAddOns)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting user_pool_add_ons: %s", err)
 	}
-	d.Set("username_attributes", flex.FlattenStringSet(userPool.UsernameAttributes))
+	d.Set("username_attributes", flex.FlattenStringyValueSet(userPool.UsernameAttributes))
 	if err := d.Set("username_configuration", flattenUserPoolUsernameConfiguration(userPool.UsernameConfiguration)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting username_configuration: %s", err)
 	}
@@ -900,7 +903,7 @@ func resourceUserPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 		UserPoolId: aws.String(d.Id()),
 	}
 
-	output, err := conn.GetUserPoolMfaConfigWithContext(ctx, input)
+	output, err := conn.GetUserPoolMfaConfig(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Cognito User Pool (%s) MFA configuration: %s", d.Id(), err)
@@ -916,7 +919,7 @@ func resourceUserPoolRead(ctx context.Context, d *schema.ResourceData, meta inte
 
 func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
+	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
 	// MFA updates.
 	if d.HasChanges(
@@ -927,7 +930,7 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 	) {
 		mfaConfiguration := d.Get("mfa_configuration").(string)
 		input := &cognitoidentityprovider.SetUserPoolMfaConfigInput{
-			MfaConfiguration:              aws.String(mfaConfiguration),
+			MfaConfiguration:              awstypes.UserPoolMfaType(mfaConfiguration),
 			SoftwareTokenMfaConfiguration: expandSoftwareTokenMFAConfiguration(d.Get("software_token_mfa_configuration").([]interface{})),
 			UserPoolId:                    aws.String(d.Id()),
 		}
@@ -935,8 +938,8 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		// Since SMS configuration applies to both verification and MFA, only include if MFA is enabled.
 		// Otherwise, the API will return the following error:
 		// InvalidParameterException: Invalid MFA configuration given, can't turn off MFA and configure an MFA together.
-		if v := d.Get("sms_configuration").([]interface{}); len(v) > 0 && v[0] != nil && mfaConfiguration != cognitoidentityprovider.UserPoolMfaTypeOff {
-			input.SmsMfaConfiguration = &cognitoidentityprovider.SmsMfaConfigType{
+		if v := d.Get("sms_configuration").([]interface{}); len(v) > 0 && v[0] != nil && mfaConfiguration != string(awstypes.UserPoolMfaTypeOff) {
+			input.SmsMfaConfiguration = &awstypes.SmsMfaConfigType{
 				SmsConfiguration: expandSMSConfiguration(v),
 			}
 
@@ -946,7 +949,7 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		_, err := tfresource.RetryWhen(ctx, propagationTimeout, func() (any, error) {
-			return conn.SetUserPoolMfaConfigWithContext(ctx, input)
+			return conn.SetUserPoolMfaConfig(ctx, input)
 		}, userPoolErrorRetryable)
 
 		if err != nil {
@@ -999,11 +1002,11 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if v, ok := d.GetOk("auto_verified_attributes"); ok {
-			input.AutoVerifiedAttributes = flex.ExpandStringSet(v.(*schema.Set))
+			input.AutoVerifiedAttributes = flex.ExpandStringyValueSet[awstypes.VerifiedAttributeType](v.(*schema.Set))
 		}
 
 		if v, ok := d.GetOk("deletion_protection"); ok {
-			input.DeletionProtection = aws.String(v.(string))
+			input.DeletionProtection = awstypes.DeletionProtectionType(v.(string))
 		}
 
 		if v, ok := d.GetOk("device_configuration"); ok {
@@ -1044,7 +1047,7 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 
 		if v, ok := d.GetOk("mfa_configuration"); ok {
-			input.MfaConfiguration = aws.String(v.(string))
+			input.MfaConfiguration = awstypes.UserPoolMfaType(v.(string))
 		}
 
 		if v, ok := d.GetOk("password_policy"); ok {
@@ -1052,7 +1055,7 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			config, ok := configs[0].(map[string]interface{})
 
 			if ok && config != nil {
-				policies := &cognitoidentityprovider.UserPoolPolicyType{}
+				policies := &awstypes.UserPoolPolicyType{}
 				policies.PasswordPolicy = expandUserPoolPasswordPolicy(config)
 				input.Policies = policies
 			}
@@ -1081,8 +1084,8 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 		if d.HasChange("user_attribute_update_settings") && input.UserAttributeUpdateSettings == nil {
 			// An empty array must be sent to disable this setting if previously enabled. A nil
 			// UserAttibutesUpdateSetting param will result in no modifications.
-			input.UserAttributeUpdateSettings = &cognitoidentityprovider.UserAttributeUpdateSettingsType{
-				AttributesRequireVerificationBeforeUpdate: []*string{},
+			input.UserAttributeUpdateSettings = &awstypes.UserAttributeUpdateSettingsType{
+				AttributesRequireVerificationBeforeUpdate: []awstypes.VerifiedAttributeType{},
 			}
 		}
 
@@ -1091,10 +1094,10 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 			config, ok := configs[0].(map[string]interface{})
 
 			if ok && config != nil {
-				userPoolAddons := &cognitoidentityprovider.UserPoolAddOnsType{}
+				userPoolAddons := &awstypes.UserPoolAddOnsType{}
 
 				if v, ok := config["advanced_security_mode"]; ok && v.(string) != "" {
-					userPoolAddons.AdvancedSecurityMode = aws.String(v.(string))
+					userPoolAddons.AdvancedSecurityMode = awstypes.AdvancedSecurityModeType(v.(string))
 				}
 				input.UserPoolAddOns = userPoolAddons
 			}
@@ -1121,7 +1124,7 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 		_, err := tfresource.RetryWhen(ctx, propagationTimeout,
 			func() (any, error) {
-				return conn.UpdateUserPoolWithContext(ctx, input)
+				return conn.UpdateUserPool(ctx, input)
 			},
 			func(err error) (bool, error) {
 				if ok, err := userPoolErrorRetryable(err); ok {
@@ -1129,8 +1132,7 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 				}
 
 				switch {
-				case tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeInvalidParameterException, "Please use TemporaryPasswordValidityDays in PasswordPolicy instead of UnusedAccountValidityDays") && input.AdminCreateUserConfig.UnusedAccountValidityDays != nil:
-					input.AdminCreateUserConfig.UnusedAccountValidityDays = nil
+				case errs.IsAErrorMessageContains[*awstypes.InvalidParameterException](err, "Please use TemporaryPasswordValidityDays in PasswordPolicy instead of UnusedAccountValidityDays"):
 					return true, err
 
 				default:
@@ -1149,11 +1151,11 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if os.Difference(ns).Len() == 0 {
 			input := &cognitoidentityprovider.AddCustomAttributesInput{
-				CustomAttributes: expandUserPoolSchema(ns.Difference(os).List()),
+				CustomAttributes: slices.Values(expandUserPoolSchema(ns.Difference(os).List())),
 				UserPoolId:       aws.String(d.Id()),
 			}
 
-			_, err := conn.AddCustomAttributesWithContext(ctx, input)
+			_, err := conn.AddCustomAttributes(ctx, input)
 
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "adding Cognito User Pool (%s) custom attributes: %s", d.Id(), err)
@@ -1168,14 +1170,14 @@ func resourceUserPoolUpdate(ctx context.Context, d *schema.ResourceData, meta in
 
 func resourceUserPoolDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
+	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Cognito User Pool: %s", d.Id())
-	_, err := conn.DeleteUserPoolWithContext(ctx, &cognitoidentityprovider.DeleteUserPoolInput{
+	_, err := conn.DeleteUserPool(ctx, &cognitoidentityprovider.DeleteUserPoolInput{
 		UserPoolId: aws.String(d.Id()),
 	})
 
-	if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -1189,8 +1191,8 @@ func resourceUserPoolDelete(ctx context.Context, d *schema.ResourceData, meta in
 // IAM roles & policies can take some time to propagate and be attached to the User Pool.
 func userPoolErrorRetryable(err error) (bool, error) {
 	switch {
-	case tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleTrustRelationshipException, "Role does not have a trust relationship allowing Cognito to assume the role"),
-		tfawserr.ErrMessageContains(err, cognitoidentityprovider.ErrCodeInvalidSmsRoleAccessPolicyException, "Role does not have permission to publish with SNS"):
+	case errs.IsAErrorMessageContains[*awstypes.InvalidSmsRoleTrustRelationshipException](err, "Role does not have a trust relationship allowing Cognito to assume the role"),
+		errs.IsAErrorMessageContains[*awstypes.InvalidSmsRoleAccessPolicyException](err, "Role does not have permission to publish with SNS"):
 		return true, err
 
 	default:
@@ -1198,14 +1200,14 @@ func userPoolErrorRetryable(err error) (bool, error) {
 	}
 }
 
-func findUserPoolByID(ctx context.Context, conn *cognitoidentityprovider.CognitoIdentityProvider, id string) (*cognitoidentityprovider.UserPoolType, error) {
+func findUserPoolByID(ctx context.Context, conn *cognitoidentityprovider.Client, id string) (*awstypes.UserPoolType, error) {
 	input := &cognitoidentityprovider.DescribeUserPoolInput{
 		UserPoolId: aws.String(id),
 	}
 
-	output, err := conn.DescribeUserPoolWithContext(ctx, input)
+	output, err := conn.DescribeUserPool(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -1223,14 +1225,14 @@ func findUserPoolByID(ctx context.Context, conn *cognitoidentityprovider.Cognito
 	return output.UserPool, nil
 }
 
-func expandSMSConfiguration(tfList []interface{}) *cognitoidentityprovider.SmsConfigurationType {
+func expandSMSConfiguration(tfList []interface{}) *awstypes.SmsConfigurationType {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
 	tfMap := tfList[0].(map[string]interface{})
 
-	apiObject := &cognitoidentityprovider.SmsConfigurationType{}
+	apiObject := &awstypes.SmsConfigurationType{}
 
 	if v, ok := tfMap["external_id"].(string); ok && v != "" {
 		apiObject.ExternalId = aws.String(v)
@@ -1247,23 +1249,23 @@ func expandSMSConfiguration(tfList []interface{}) *cognitoidentityprovider.SmsCo
 	return apiObject
 }
 
-func expandSoftwareTokenMFAConfiguration(tfList []interface{}) *cognitoidentityprovider.SoftwareTokenMfaConfigType {
+func expandSoftwareTokenMFAConfiguration(tfList []interface{}) *awstypes.SoftwareTokenMfaConfigType {
 	if len(tfList) == 0 || tfList[0] == nil {
 		return nil
 	}
 
 	tfMap := tfList[0].(map[string]interface{})
 
-	apiObject := &cognitoidentityprovider.SoftwareTokenMfaConfigType{}
+	apiObject := &awstypes.SoftwareTokenMfaConfigType{}
 
 	if v, ok := tfMap["enabled"].(bool); ok {
-		apiObject.Enabled = aws.Bool(v)
+		apiObject.Enabled = v
 	}
 
 	return apiObject
 }
 
-func flattenSMSConfiguration(apiObject *cognitoidentityprovider.SmsConfigurationType) []interface{} {
+func flattenSMSConfiguration(apiObject *awstypes.SmsConfigurationType) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -1271,56 +1273,50 @@ func flattenSMSConfiguration(apiObject *cognitoidentityprovider.SmsConfiguration
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.ExternalId; v != nil {
-		tfMap["external_id"] = aws.StringValue(v)
+		tfMap["external_id"] = aws.ToString(v)
 	}
 
 	if v := apiObject.SnsCallerArn; v != nil {
-		tfMap["sns_caller_arn"] = aws.StringValue(v)
+		tfMap["sns_caller_arn"] = aws.ToString(v)
 	}
 
 	if v := apiObject.SnsRegion; v != nil {
-		tfMap["sns_region"] = aws.StringValue(v)
+		tfMap["sns_region"] = aws.ToString(v)
 	}
 
 	return []interface{}{tfMap}
 }
 
-func flattenSoftwareTokenMFAConfiguration(apiObject *cognitoidentityprovider.SoftwareTokenMfaConfigType) []interface{} {
+func flattenSoftwareTokenMFAConfiguration(apiObject *awstypes.SoftwareTokenMfaConfigType) []interface{} {
 	if apiObject == nil {
 		return nil
 	}
 
 	tfMap := map[string]interface{}{}
 
-	if v := apiObject.Enabled; v != nil {
-		tfMap["enabled"] = aws.BoolValue(v)
-	}
+	tfMap["enabled"] = apiObject.Enabled
 
 	return []interface{}{tfMap}
 }
 
-func expandUserPoolAccountRecoverySettingConfig(config map[string]interface{}) *cognitoidentityprovider.AccountRecoverySettingType {
-	if len(config) == 0 {
-		return nil
-	}
+func expandUserPoolAccountRecoverySettingConfig(config map[string]interface{}) *awstypes.AccountRecoverySettingType {
+	configs := &awstypes.AccountRecoverySettingType{}
 
-	configs := &cognitoidentityprovider.AccountRecoverySettingType{}
-
-	mechs := make([]*cognitoidentityprovider.RecoveryOptionType, 0)
+	mechs := make([]awstypes.RecoveryOptionType, 0)
 
 	if v, ok := config["recovery_mechanism"]; ok {
 		data := v.(*schema.Set).List()
 
 		for _, m := range data {
 			param := m.(map[string]interface{})
-			opt := &cognitoidentityprovider.RecoveryOptionType{}
+			opt := awstypes.RecoveryOptionType{}
 
 			if v, ok := param["name"]; ok {
-				opt.Name = aws.String(v.(string))
+				opt.Name = awstypes.RecoveryOptionNameType(v.(string))
 			}
 
 			if v, ok := param["priority"]; ok {
-				opt.Priority = aws.Int64(int64(v.(int)))
+				opt.Priority = aws.Int32(int32(v.(int)))
 			}
 
 			mechs = append(mechs, opt)
@@ -1332,7 +1328,7 @@ func expandUserPoolAccountRecoverySettingConfig(config map[string]interface{}) *
 	return configs
 }
 
-func flattenUserPoolAccountRecoverySettingConfig(config *cognitoidentityprovider.AccountRecoverySettingType) []interface{} {
+func flattenUserPoolAccountRecoverySettingConfig(config *awstypes.AccountRecoverySettingType) []interface{} {
 	if config == nil || len(config.RecoveryMechanisms) == 0 {
 		return nil
 	}
@@ -1343,8 +1339,8 @@ func flattenUserPoolAccountRecoverySettingConfig(config *cognitoidentityprovider
 
 	for _, conf := range config.RecoveryMechanisms {
 		mech := map[string]interface{}{
-			"name":     aws.StringValue(conf.Name),
-			"priority": aws.Int64Value(conf.Priority),
+			"name":     string(conf.Name),
+			"priority": aws.ToInt32(conf.Priority),
 		}
 		mechanisms = append(mechanisms, mech)
 	}
@@ -1354,7 +1350,7 @@ func flattenUserPoolAccountRecoverySettingConfig(config *cognitoidentityprovider
 	return []interface{}{settings}
 }
 
-func flattenUserPoolEmailConfiguration(s *cognitoidentityprovider.EmailConfigurationType) []map[string]interface{} {
+func flattenUserPoolEmailConfiguration(s *awstypes.EmailConfigurationType) []map[string]interface{} {
 	m := make(map[string]interface{})
 
 	if s == nil {
@@ -1362,23 +1358,21 @@ func flattenUserPoolEmailConfiguration(s *cognitoidentityprovider.EmailConfigura
 	}
 
 	if s.ReplyToEmailAddress != nil {
-		m["reply_to_email_address"] = aws.StringValue(s.ReplyToEmailAddress)
+		m["reply_to_email_address"] = aws.ToString(s.ReplyToEmailAddress)
 	}
 
 	if s.From != nil {
-		m["from_email_address"] = aws.StringValue(s.From)
+		m["from_email_address"] = aws.ToString(s.From)
 	}
 
 	if s.SourceArn != nil {
-		m["source_arn"] = aws.StringValue(s.SourceArn)
+		m["source_arn"] = aws.ToString(s.SourceArn)
 	}
 
-	if s.EmailSendingAccount != nil {
-		m["email_sending_account"] = aws.StringValue(s.EmailSendingAccount)
-	}
+	m["email_sending_account"] = string(s.EmailSendingAccount)
 
 	if s.ConfigurationSet != nil {
-		m["configuration_set"] = aws.StringValue(s.ConfigurationSet)
+		m["configuration_set"] = aws.ToString(s.ConfigurationSet)
 	}
 
 	if len(m) > 0 {
@@ -1388,11 +1382,11 @@ func flattenUserPoolEmailConfiguration(s *cognitoidentityprovider.EmailConfigura
 	return []map[string]interface{}{}
 }
 
-func expandUserPoolAdminCreateUserConfig(config map[string]interface{}) *cognitoidentityprovider.AdminCreateUserConfigType {
-	configs := &cognitoidentityprovider.AdminCreateUserConfigType{}
+func expandUserPoolAdminCreateUserConfig(config map[string]interface{}) *awstypes.AdminCreateUserConfigType {
+	configs := &awstypes.AdminCreateUserConfigType{}
 
 	if v, ok := config["allow_admin_create_user_only"]; ok {
-		configs.AllowAdminCreateUserOnly = aws.Bool(v.(bool))
+		configs.AllowAdminCreateUserOnly = v.(bool)
 	}
 
 	if v, ok := config["invite_message_template"]; ok {
@@ -1402,7 +1396,7 @@ func expandUserPoolAdminCreateUserConfig(config map[string]interface{}) *cognito
 			m, ok := data[0].(map[string]interface{})
 
 			if ok {
-				imt := &cognitoidentityprovider.MessageTemplateType{}
+				imt := &awstypes.MessageTemplateType{}
 
 				if v, ok := m["email_message"]; ok {
 					imt.EmailMessage = aws.String(v.(string))
@@ -1424,30 +1418,28 @@ func expandUserPoolAdminCreateUserConfig(config map[string]interface{}) *cognito
 	return configs
 }
 
-func flattenUserPoolAdminCreateUserConfig(s *cognitoidentityprovider.AdminCreateUserConfigType) []map[string]interface{} {
+func flattenUserPoolAdminCreateUserConfig(s *awstypes.AdminCreateUserConfigType) []map[string]interface{} {
 	config := map[string]interface{}{}
 
 	if s == nil {
 		return nil
 	}
 
-	if s.AllowAdminCreateUserOnly != nil {
-		config["allow_admin_create_user_only"] = aws.BoolValue(s.AllowAdminCreateUserOnly)
-	}
+	config["allow_admin_create_user_only"] = s.AllowAdminCreateUserOnly
 
 	if s.InviteMessageTemplate != nil {
 		subconfig := map[string]interface{}{}
 
 		if s.InviteMessageTemplate.EmailMessage != nil {
-			subconfig["email_message"] = aws.StringValue(s.InviteMessageTemplate.EmailMessage)
+			subconfig["email_message"] = aws.ToString(s.InviteMessageTemplate.EmailMessage)
 		}
 
 		if s.InviteMessageTemplate.EmailSubject != nil {
-			subconfig["email_subject"] = aws.StringValue(s.InviteMessageTemplate.EmailSubject)
+			subconfig["email_subject"] = aws.ToString(s.InviteMessageTemplate.EmailSubject)
 		}
 
 		if s.InviteMessageTemplate.SMSMessage != nil {
-			subconfig["sms_message"] = aws.StringValue(s.InviteMessageTemplate.SMSMessage)
+			subconfig["sms_message"] = aws.ToString(s.InviteMessageTemplate.SMSMessage)
 		}
 
 		if len(subconfig) > 0 {
@@ -1458,22 +1450,22 @@ func flattenUserPoolAdminCreateUserConfig(s *cognitoidentityprovider.AdminCreate
 	return []map[string]interface{}{config}
 }
 
-func expandUserPoolDeviceConfiguration(config map[string]interface{}) *cognitoidentityprovider.DeviceConfigurationType {
-	configs := &cognitoidentityprovider.DeviceConfigurationType{}
+func expandUserPoolDeviceConfiguration(config map[string]interface{}) *awstypes.DeviceConfigurationType {
+	configs := &awstypes.DeviceConfigurationType{}
 
 	if v, ok := config["challenge_required_on_new_device"]; ok {
-		configs.ChallengeRequiredOnNewDevice = aws.Bool(v.(bool))
+		configs.ChallengeRequiredOnNewDevice = v.(bool)
 	}
 
 	if v, ok := config["device_only_remembered_on_user_prompt"]; ok {
-		configs.DeviceOnlyRememberedOnUserPrompt = aws.Bool(v.(bool))
+		configs.DeviceOnlyRememberedOnUserPrompt = v.(bool)
 	}
 
 	return configs
 }
 
-func expandUserPoolLambdaConfig(config map[string]interface{}) *cognitoidentityprovider.LambdaConfigType {
-	configs := &cognitoidentityprovider.LambdaConfigType{}
+func expandUserPoolLambdaConfig(config map[string]interface{}) *awstypes.LambdaConfigType {
+	configs := &awstypes.LambdaConfigType{}
 
 	if v, ok := config["create_auth_challenge"]; ok && v.(string) != "" {
 		configs.CreateAuthChallenge = aws.String(v.(string))
@@ -1543,42 +1535,42 @@ func expandUserPoolLambdaConfig(config map[string]interface{}) *cognitoidentityp
 	return configs
 }
 
-func flattenUserPoolLambdaConfig(s *cognitoidentityprovider.LambdaConfigType) []map[string]interface{} {
+func flattenUserPoolLambdaConfig(s *awstypes.LambdaConfigType) []map[string]interface{} {
 	m := map[string]interface{}{}
 	if s == nil {
 		return nil
 	}
 
 	if s.CreateAuthChallenge != nil {
-		m["create_auth_challenge"] = aws.StringValue(s.CreateAuthChallenge)
+		m["create_auth_challenge"] = aws.ToString(s.CreateAuthChallenge)
 	}
 
 	if s.CustomMessage != nil {
-		m["custom_message"] = aws.StringValue(s.CustomMessage)
+		m["custom_message"] = aws.ToString(s.CustomMessage)
 	}
 
 	if s.DefineAuthChallenge != nil {
-		m["define_auth_challenge"] = aws.StringValue(s.DefineAuthChallenge)
+		m["define_auth_challenge"] = aws.ToString(s.DefineAuthChallenge)
 	}
 
 	if s.PostAuthentication != nil {
-		m["post_authentication"] = aws.StringValue(s.PostAuthentication)
+		m["post_authentication"] = aws.ToString(s.PostAuthentication)
 	}
 
 	if s.PostConfirmation != nil {
-		m["post_confirmation"] = aws.StringValue(s.PostConfirmation)
+		m["post_confirmation"] = aws.ToString(s.PostConfirmation)
 	}
 
 	if s.PreAuthentication != nil {
-		m["pre_authentication"] = aws.StringValue(s.PreAuthentication)
+		m["pre_authentication"] = aws.ToString(s.PreAuthentication)
 	}
 
 	if s.PreSignUp != nil {
-		m["pre_sign_up"] = aws.StringValue(s.PreSignUp)
+		m["pre_sign_up"] = aws.ToString(s.PreSignUp)
 	}
 
 	if s.PreTokenGeneration != nil {
-		m["pre_token_generation"] = aws.StringValue(s.PreTokenGeneration)
+		m["pre_token_generation"] = aws.ToString(s.PreTokenGeneration)
 	}
 
 	if s.PreTokenGenerationConfig != nil {
@@ -1586,15 +1578,15 @@ func flattenUserPoolLambdaConfig(s *cognitoidentityprovider.LambdaConfigType) []
 	}
 
 	if s.UserMigration != nil {
-		m["user_migration"] = aws.StringValue(s.UserMigration)
+		m["user_migration"] = aws.ToString(s.UserMigration)
 	}
 
 	if s.VerifyAuthChallengeResponse != nil {
-		m["verify_auth_challenge_response"] = aws.StringValue(s.VerifyAuthChallengeResponse)
+		m["verify_auth_challenge_response"] = aws.ToString(s.VerifyAuthChallengeResponse)
 	}
 
 	if s.KMSKeyID != nil {
-		m["kms_key_id"] = aws.StringValue(s.KMSKeyID)
+		m["kms_key_id"] = aws.ToString(s.KMSKeyID)
 	}
 
 	if s.CustomSMSSender != nil {
@@ -1612,59 +1604,57 @@ func flattenUserPoolLambdaConfig(s *cognitoidentityprovider.LambdaConfigType) []
 	return []map[string]interface{}{}
 }
 
-func expandUserPoolPasswordPolicy(config map[string]interface{}) *cognitoidentityprovider.PasswordPolicyType {
-	configs := &cognitoidentityprovider.PasswordPolicyType{}
+func expandUserPoolPasswordPolicy(config map[string]interface{}) *awstypes.PasswordPolicyType {
+	configs := &awstypes.PasswordPolicyType{}
 
 	if v, ok := config["minimum_length"]; ok {
-		configs.MinimumLength = aws.Int64(int64(v.(int)))
+		configs.MinimumLength = aws.Int32(int32(v.(int)))
 	}
 
 	if v, ok := config["require_lowercase"]; ok {
-		configs.RequireLowercase = aws.Bool(v.(bool))
+		configs.RequireLowercase = v.(bool)
 	}
 
 	if v, ok := config["require_numbers"]; ok {
-		configs.RequireNumbers = aws.Bool(v.(bool))
+		configs.RequireNumbers = v.(bool)
 	}
 
 	if v, ok := config["require_symbols"]; ok {
-		configs.RequireSymbols = aws.Bool(v.(bool))
+		configs.RequireSymbols = v.(bool)
 	}
 
 	if v, ok := config["require_uppercase"]; ok {
-		configs.RequireUppercase = aws.Bool(v.(bool))
+		configs.RequireUppercase = v.(bool)
 	}
 
 	if v, ok := config["temporary_password_validity_days"]; ok {
-		configs.TemporaryPasswordValidityDays = aws.Int64(int64(v.(int)))
+		configs.TemporaryPasswordValidityDays = int32(v.(int))
 	}
 
 	return configs
 }
 
-func flattenUserPoolUserPoolAddOns(s *cognitoidentityprovider.UserPoolAddOnsType) []map[string]interface{} {
+func flattenUserPoolUserPoolAddOns(s *awstypes.UserPoolAddOnsType) []map[string]interface{} {
 	config := make(map[string]interface{})
 
 	if s == nil {
 		return []map[string]interface{}{}
 	}
 
-	if s.AdvancedSecurityMode != nil {
-		config["advanced_security_mode"] = aws.StringValue(s.AdvancedSecurityMode)
-	}
+	config["advanced_security_mode"] = string(s.AdvancedSecurityMode)
 
 	return []map[string]interface{}{config}
 }
 
-func expandUserPoolSchema(inputs []interface{}) []*cognitoidentityprovider.SchemaAttributeType {
-	configs := make([]*cognitoidentityprovider.SchemaAttributeType, len(inputs))
+func expandUserPoolSchema(inputs []interface{}) []*awstypes.SchemaAttributeType {
+	configs := make([]*awstypes.SchemaAttributeType, len(inputs))
 
 	for i, input := range inputs {
 		param := input.(map[string]interface{})
-		config := &cognitoidentityprovider.SchemaAttributeType{}
+		config := &awstypes.SchemaAttributeType{}
 
 		if v, ok := param["attribute_data_type"]; ok {
-			config.AttributeDataType = aws.String(v.(string))
+			config.AttributeDataType = awstypes.AttributeDataType(v.(string))
 		}
 
 		if v, ok := param["developer_only_attribute"]; ok {
@@ -1689,7 +1679,7 @@ func expandUserPoolSchema(inputs []interface{}) []*cognitoidentityprovider.Schem
 			if len(data) > 0 {
 				m, ok := data[0].(map[string]interface{})
 				if ok {
-					numberAttributeConstraintsType := &cognitoidentityprovider.NumberAttributeConstraintsType{}
+					numberAttributeConstraintsType := &awstypes.NumberAttributeConstraintsType{}
 
 					if v, ok := m["min_value"]; ok && v.(string) != "" {
 						numberAttributeConstraintsType.MinValue = aws.String(v.(string))
@@ -1710,7 +1700,7 @@ func expandUserPoolSchema(inputs []interface{}) []*cognitoidentityprovider.Schem
 			if len(data) > 0 {
 				m, _ := data[0].(map[string]interface{})
 				if ok {
-					stringAttributeConstraintsType := &cognitoidentityprovider.StringAttributeConstraintsType{}
+					stringAttributeConstraintsType := &awstypes.StringAttributeConstraintsType{}
 
 					if l, ok := m["min_length"]; ok && l.(string) != "" {
 						stringAttributeConstraintsType.MinLength = aws.String(l.(string))
@@ -1731,13 +1721,10 @@ func expandUserPoolSchema(inputs []interface{}) []*cognitoidentityprovider.Schem
 	return configs
 }
 
-func flattenUserPoolSchema(configuredAttributes, inputs []*cognitoidentityprovider.SchemaAttributeType) []map[string]interface{} {
+func flattenUserPoolSchema(configuredAttributes, inputs []*awstypes.SchemaAttributeType) []map[string]interface{} {
 	values := make([]map[string]interface{}, 0)
 
 	for _, input := range inputs {
-		if input == nil {
-			continue
-		}
 
 		// The API returns all standard attributes
 		// https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-attributes.html#cognito-user-pools-standard-attributes
@@ -1751,40 +1738,40 @@ func flattenUserPoolSchema(configuredAttributes, inputs []*cognitoidentityprovid
 		}
 
 		if !configured {
-			if UserPoolSchemaAttributeMatchesStandardAttribute(input) {
+			if UserPoolSchemaAttributeMatchesStandardAttribute(*input) {
 				continue
 			}
 			// When adding a Cognito Identity Provider, the API will automatically add an "identities" attribute
-			identitiesAttribute := cognitoidentityprovider.SchemaAttributeType{
-				AttributeDataType:          aws.String(cognitoidentityprovider.AttributeDataTypeString),
+			identitiesAttribute := awstypes.SchemaAttributeType{
+				AttributeDataType:          awstypes.AttributeDataTypeString,
 				DeveloperOnlyAttribute:     aws.Bool(false),
 				Mutable:                    aws.Bool(true),
 				Name:                       aws.String("identities"),
 				Required:                   aws.Bool(false),
-				StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{},
+				StringAttributeConstraints: &awstypes.StringAttributeConstraintsType{},
 			}
-			if reflect.DeepEqual(*input, identitiesAttribute) {
+			if reflect.DeepEqual(input, identitiesAttribute) {
 				continue
 			}
 		}
 
 		var value = map[string]interface{}{
-			"attribute_data_type":      aws.StringValue(input.AttributeDataType),
-			"developer_only_attribute": aws.BoolValue(input.DeveloperOnlyAttribute),
-			"mutable":                  aws.BoolValue(input.Mutable),
-			"name":                     strings.TrimPrefix(strings.TrimPrefix(aws.StringValue(input.Name), "dev:"), "custom:"),
-			"required":                 aws.BoolValue(input.Required),
+			"attribute_data_type":      string(input.AttributeDataType),
+			"developer_only_attribute": aws.ToBool(input.DeveloperOnlyAttribute),
+			"mutable":                  aws.ToBool(input.Mutable),
+			"name":                     strings.TrimPrefix(strings.TrimPrefix(aws.ToString(input.Name), "dev:"), "custom:"),
+			"required":                 aws.ToBool(input.Required),
 		}
 
 		if input.NumberAttributeConstraints != nil {
 			subvalue := make(map[string]interface{})
 
 			if input.NumberAttributeConstraints.MinValue != nil {
-				subvalue["min_value"] = aws.StringValue(input.NumberAttributeConstraints.MinValue)
+				subvalue["min_value"] = aws.ToString(input.NumberAttributeConstraints.MinValue)
 			}
 
 			if input.NumberAttributeConstraints.MaxValue != nil {
-				subvalue["max_value"] = aws.StringValue(input.NumberAttributeConstraints.MaxValue)
+				subvalue["max_value"] = aws.ToString(input.NumberAttributeConstraints.MaxValue)
 			}
 
 			value["number_attribute_constraints"] = []map[string]interface{}{subvalue}
@@ -1794,11 +1781,11 @@ func flattenUserPoolSchema(configuredAttributes, inputs []*cognitoidentityprovid
 			subvalue := make(map[string]interface{})
 
 			if input.StringAttributeConstraints.MinLength != nil {
-				subvalue["min_length"] = aws.StringValue(input.StringAttributeConstraints.MinLength)
+				subvalue["min_length"] = aws.ToString(input.StringAttributeConstraints.MinLength)
 			}
 
 			if input.StringAttributeConstraints.MaxLength != nil {
-				subvalue["max_length"] = aws.StringValue(input.StringAttributeConstraints.MaxLength)
+				subvalue["max_length"] = aws.ToString(input.StringAttributeConstraints.MaxLength)
 			}
 
 			value["string_attribute_constraints"] = []map[string]interface{}{subvalue}
@@ -1810,31 +1797,31 @@ func flattenUserPoolSchema(configuredAttributes, inputs []*cognitoidentityprovid
 	return values
 }
 
-func expandUserPoolUsernameConfiguration(config map[string]interface{}) *cognitoidentityprovider.UsernameConfigurationType {
-	usernameConfigurationType := &cognitoidentityprovider.UsernameConfigurationType{
+func expandUserPoolUsernameConfiguration(config map[string]interface{}) *awstypes.UsernameConfigurationType {
+	usernameConfigurationType := &awstypes.UsernameConfigurationType{
 		CaseSensitive: aws.Bool(config["case_sensitive"].(bool)),
 	}
 
 	return usernameConfigurationType
 }
 
-func flattenUserPoolUsernameConfiguration(u *cognitoidentityprovider.UsernameConfigurationType) []map[string]interface{} {
+func flattenUserPoolUsernameConfiguration(u *awstypes.UsernameConfigurationType) []map[string]interface{} {
 	m := map[string]interface{}{}
 
 	if u == nil {
 		return nil
 	}
 
-	m["case_sensitive"] = aws.BoolValue(u.CaseSensitive)
+	m["case_sensitive"] = aws.ToBool(u.CaseSensitive)
 
 	return []map[string]interface{}{m}
 }
 
-func expandUserPoolVerificationMessageTemplate(config map[string]interface{}) *cognitoidentityprovider.VerificationMessageTemplateType {
-	verificationMessageTemplateType := &cognitoidentityprovider.VerificationMessageTemplateType{}
+func expandUserPoolVerificationMessageTemplate(config map[string]interface{}) *awstypes.VerificationMessageTemplateType {
+	verificationMessageTemplateType := &awstypes.VerificationMessageTemplateType{}
 
 	if v, ok := config["default_email_option"]; ok && v.(string) != "" {
-		verificationMessageTemplateType.DefaultEmailOption = aws.String(v.(string))
+		verificationMessageTemplateType.DefaultEmailOption = awstypes.DefaultEmailOptionType(v.(string))
 	}
 
 	if v, ok := config["email_message"]; ok && v.(string) != "" {
@@ -1860,35 +1847,33 @@ func expandUserPoolVerificationMessageTemplate(config map[string]interface{}) *c
 	return verificationMessageTemplateType
 }
 
-func flattenUserPoolVerificationMessageTemplate(s *cognitoidentityprovider.VerificationMessageTemplateType) []map[string]interface{} {
+func flattenUserPoolVerificationMessageTemplate(s *awstypes.VerificationMessageTemplateType) []map[string]interface{} {
 	m := map[string]interface{}{}
 
 	if s == nil {
 		return nil
 	}
 
-	if s.DefaultEmailOption != nil {
-		m["default_email_option"] = aws.StringValue(s.DefaultEmailOption)
-	}
+	m["default_email_option"] = string(s.DefaultEmailOption)
 
 	if s.EmailMessage != nil {
-		m["email_message"] = aws.StringValue(s.EmailMessage)
+		m["email_message"] = aws.ToString(s.EmailMessage)
 	}
 
 	if s.EmailMessageByLink != nil {
-		m["email_message_by_link"] = aws.StringValue(s.EmailMessageByLink)
+		m["email_message_by_link"] = aws.ToString(s.EmailMessageByLink)
 	}
 
 	if s.EmailSubject != nil {
-		m["email_subject"] = aws.StringValue(s.EmailSubject)
+		m["email_subject"] = aws.ToString(s.EmailSubject)
 	}
 
 	if s.EmailSubjectByLink != nil {
-		m["email_subject_by_link"] = aws.StringValue(s.EmailSubjectByLink)
+		m["email_subject_by_link"] = aws.ToString(s.EmailSubjectByLink)
 	}
 
 	if s.SmsMessage != nil {
-		m["sms_message"] = aws.StringValue(s.SmsMessage)
+		m["sms_message"] = aws.ToString(s.SmsMessage)
 	}
 
 	if len(m) > 0 {
@@ -1898,25 +1883,20 @@ func flattenUserPoolVerificationMessageTemplate(s *cognitoidentityprovider.Verif
 	return []map[string]interface{}{}
 }
 
-func flattenUserPoolDeviceConfiguration(s *cognitoidentityprovider.DeviceConfigurationType) []map[string]interface{} {
+func flattenUserPoolDeviceConfiguration(s *awstypes.DeviceConfigurationType) []map[string]interface{} {
 	config := map[string]interface{}{}
 
 	if s == nil {
 		return nil
 	}
 
-	if s.ChallengeRequiredOnNewDevice != nil {
-		config["challenge_required_on_new_device"] = aws.BoolValue(s.ChallengeRequiredOnNewDevice)
-	}
-
-	if s.DeviceOnlyRememberedOnUserPrompt != nil {
-		config["device_only_remembered_on_user_prompt"] = aws.BoolValue(s.DeviceOnlyRememberedOnUserPrompt)
-	}
+	config["challenge_required_on_new_device"] = s.ChallengeRequiredOnNewDevice
+	config["device_only_remembered_on_user_prompt"] = s.DeviceOnlyRememberedOnUserPrompt
 
 	return []map[string]interface{}{config}
 }
 
-func flattenUserPoolPasswordPolicy(s *cognitoidentityprovider.PasswordPolicyType) []map[string]interface{} {
+func flattenUserPoolPasswordPolicy(s *awstypes.PasswordPolicyType) []map[string]interface{} {
 	m := map[string]interface{}{}
 
 	if s == nil {
@@ -1924,28 +1904,14 @@ func flattenUserPoolPasswordPolicy(s *cognitoidentityprovider.PasswordPolicyType
 	}
 
 	if s.MinimumLength != nil {
-		m["minimum_length"] = aws.Int64Value(s.MinimumLength)
+		m["minimum_length"] = aws.ToInt32(s.MinimumLength)
 	}
 
-	if s.RequireLowercase != nil {
-		m["require_lowercase"] = aws.BoolValue(s.RequireLowercase)
-	}
-
-	if s.RequireNumbers != nil {
-		m["require_numbers"] = aws.BoolValue(s.RequireNumbers)
-	}
-
-	if s.RequireSymbols != nil {
-		m["require_symbols"] = aws.BoolValue(s.RequireSymbols)
-	}
-
-	if s.RequireUppercase != nil {
-		m["require_uppercase"] = aws.BoolValue(s.RequireUppercase)
-	}
-
-	if s.TemporaryPasswordValidityDays != nil {
-		m["temporary_password_validity_days"] = aws.Int64Value(s.TemporaryPasswordValidityDays)
-	}
+	m["require_lowercase"] = s.RequireLowercase
+	m["require_numbers"] = s.RequireNumbers
+	m["require_symbols"] = s.RequireSymbols
+	m["require_uppercase"] = s.RequireUppercase
+	m["temporary_password_validity_days"] = s.TemporaryPasswordValidityDays
 
 	if len(m) > 0 {
 		return []map[string]interface{}{m}
@@ -1954,304 +1920,301 @@ func flattenUserPoolPasswordPolicy(s *cognitoidentityprovider.PasswordPolicyType
 	return []map[string]interface{}{}
 }
 
-func UserPoolSchemaAttributeMatchesStandardAttribute(input *cognitoidentityprovider.SchemaAttributeType) bool {
-	if input == nil {
-		return false
-	}
+func UserPoolSchemaAttributeMatchesStandardAttribute(input awstypes.SchemaAttributeType) bool {
 
 	// All standard attributes always returned by API
 	// https://docs.aws.amazon.com/cognito/latest/developerguide/user-pool-settings-attributes.html#cognito-user-pools-standard-attributes
-	var standardAttributes = []cognitoidentityprovider.SchemaAttributeType{
+	var standardAttributes = []awstypes.SchemaAttributeType{
 		{
-			AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeString),
+			AttributeDataType:      awstypes.AttributeDataTypeString,
 			DeveloperOnlyAttribute: aws.Bool(false),
 			Mutable:                aws.Bool(true),
 			Name:                   aws.String("address"),
 			Required:               aws.Bool(false),
-			StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
+			StringAttributeConstraints: &awstypes.StringAttributeConstraintsType{
 				MaxLength: aws.String("2048"),
 				MinLength: aws.String("0"),
 			},
 		},
 		{
-			AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeString),
+			AttributeDataType:      awstypes.AttributeDataTypeString,
 			DeveloperOnlyAttribute: aws.Bool(false),
 			Mutable:                aws.Bool(true),
 			Name:                   aws.String("birthdate"),
 			Required:               aws.Bool(false),
-			StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
+			StringAttributeConstraints: &awstypes.StringAttributeConstraintsType{
 				MaxLength: aws.String("10"),
 				MinLength: aws.String("10"),
 			},
 		},
 		{
-			AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeString),
+			AttributeDataType:      awstypes.AttributeDataTypeString,
 			DeveloperOnlyAttribute: aws.Bool(false),
 			Mutable:                aws.Bool(true),
 			Name:                   aws.String("email"),
 			Required:               aws.Bool(false),
-			StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
+			StringAttributeConstraints: &awstypes.StringAttributeConstraintsType{
 				MaxLength: aws.String("2048"),
 				MinLength: aws.String("0"),
 			},
 		},
 		{
-			AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeBoolean),
+			AttributeDataType:      awstypes.AttributeDataTypeBoolean,
 			DeveloperOnlyAttribute: aws.Bool(false),
 			Mutable:                aws.Bool(true),
 			Name:                   aws.String("email_verified"),
 			Required:               aws.Bool(false),
 		},
 		{
-			AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeString),
+			AttributeDataType:      awstypes.AttributeDataTypeString,
 			DeveloperOnlyAttribute: aws.Bool(false),
 			Mutable:                aws.Bool(true),
 			Name:                   aws.String("gender"),
 			Required:               aws.Bool(false),
-			StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
+			StringAttributeConstraints: &awstypes.StringAttributeConstraintsType{
 				MaxLength: aws.String("2048"),
 				MinLength: aws.String("0"),
 			},
 		},
 		{
-			AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeString),
+			AttributeDataType:      awstypes.AttributeDataTypeString,
 			DeveloperOnlyAttribute: aws.Bool(false),
 			Mutable:                aws.Bool(true),
 			Name:                   aws.String("given_name"),
 			Required:               aws.Bool(false),
-			StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
+			StringAttributeConstraints: &awstypes.StringAttributeConstraintsType{
 				MaxLength: aws.String("2048"),
 				MinLength: aws.String("0"),
 			},
 		},
 		{
-			AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeString),
+			AttributeDataType:      awstypes.AttributeDataTypeString,
 			DeveloperOnlyAttribute: aws.Bool(false),
 			Mutable:                aws.Bool(true),
 			Name:                   aws.String("family_name"),
 			Required:               aws.Bool(false),
-			StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
+			StringAttributeConstraints: &awstypes.StringAttributeConstraintsType{
 				MaxLength: aws.String("2048"),
 				MinLength: aws.String("0"),
 			},
 		},
 		{
-			AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeString),
+			AttributeDataType:      awstypes.AttributeDataTypeString,
 			DeveloperOnlyAttribute: aws.Bool(false),
 			Mutable:                aws.Bool(true),
 			Name:                   aws.String("locale"),
 			Required:               aws.Bool(false),
-			StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
+			StringAttributeConstraints: &awstypes.StringAttributeConstraintsType{
 				MaxLength: aws.String("2048"),
 				MinLength: aws.String("0"),
 			},
 		},
 		{
-			AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeString),
+			AttributeDataType:      awstypes.AttributeDataTypeString,
 			DeveloperOnlyAttribute: aws.Bool(false),
 			Mutable:                aws.Bool(true),
 			Name:                   aws.String("middle_name"),
 			Required:               aws.Bool(false),
-			StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
+			StringAttributeConstraints: &awstypes.StringAttributeConstraintsType{
 				MaxLength: aws.String("2048"),
 				MinLength: aws.String("0"),
 			},
 		},
 		{
-			AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeString),
+			AttributeDataType:      awstypes.AttributeDataTypeString,
 			DeveloperOnlyAttribute: aws.Bool(false),
 			Mutable:                aws.Bool(true),
 			Name:                   aws.String("name"),
 			Required:               aws.Bool(false),
-			StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
+			StringAttributeConstraints: &awstypes.StringAttributeConstraintsType{
 				MaxLength: aws.String("2048"),
 				MinLength: aws.String("0"),
 			},
 		},
 		{
-			AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeString),
+			AttributeDataType:      awstypes.AttributeDataTypeString,
 			DeveloperOnlyAttribute: aws.Bool(false),
 			Mutable:                aws.Bool(true),
 			Name:                   aws.String("nickname"),
 			Required:               aws.Bool(false),
-			StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
+			StringAttributeConstraints: &awstypes.StringAttributeConstraintsType{
 				MaxLength: aws.String("2048"),
 				MinLength: aws.String("0"),
 			},
 		},
 		{
-			AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeString),
+			AttributeDataType:      awstypes.AttributeDataTypeString,
 			DeveloperOnlyAttribute: aws.Bool(false),
 			Mutable:                aws.Bool(true),
 			Name:                   aws.String("phone_number"),
 			Required:               aws.Bool(false),
-			StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
+			StringAttributeConstraints: &awstypes.StringAttributeConstraintsType{
 				MaxLength: aws.String("2048"),
 				MinLength: aws.String("0"),
 			},
 		},
 		{
-			AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeBoolean),
+			AttributeDataType:      awstypes.AttributeDataTypeBoolean,
 			DeveloperOnlyAttribute: aws.Bool(false),
 			Mutable:                aws.Bool(true),
 			Name:                   aws.String("phone_number_verified"),
 			Required:               aws.Bool(false),
 		},
 		{
-			AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeString),
+			AttributeDataType:      awstypes.AttributeDataTypeString,
 			DeveloperOnlyAttribute: aws.Bool(false),
 			Mutable:                aws.Bool(true),
 			Name:                   aws.String("picture"),
 			Required:               aws.Bool(false),
-			StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
+			StringAttributeConstraints: &awstypes.StringAttributeConstraintsType{
 				MaxLength: aws.String("2048"),
 				MinLength: aws.String("0"),
 			},
 		},
 		{
-			AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeString),
+			AttributeDataType:      awstypes.AttributeDataTypeString,
 			DeveloperOnlyAttribute: aws.Bool(false),
 			Mutable:                aws.Bool(true),
 			Name:                   aws.String("preferred_username"),
 			Required:               aws.Bool(false),
-			StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
+			StringAttributeConstraints: &awstypes.StringAttributeConstraintsType{
 				MaxLength: aws.String("2048"),
 				MinLength: aws.String("0"),
 			},
 		},
 		{
-			AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeString),
+			AttributeDataType:      awstypes.AttributeDataTypeString,
 			DeveloperOnlyAttribute: aws.Bool(false),
 			Mutable:                aws.Bool(true),
 			Name:                   aws.String("profile"),
 			Required:               aws.Bool(false),
-			StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
+			StringAttributeConstraints: &awstypes.StringAttributeConstraintsType{
 				MaxLength: aws.String("2048"),
 				MinLength: aws.String("0"),
 			},
 		},
 		{
-			AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeString),
+			AttributeDataType:      awstypes.AttributeDataTypeString,
 			DeveloperOnlyAttribute: aws.Bool(false),
 			Mutable:                aws.Bool(false),
 			Name:                   aws.String("sub"),
 			Required:               aws.Bool(true),
-			StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
+			StringAttributeConstraints: &awstypes.StringAttributeConstraintsType{
 				MaxLength: aws.String("2048"),
 				MinLength: aws.String("1"),
 			},
 		},
 		{
-			AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeNumber),
+			AttributeDataType:      awstypes.AttributeDataTypeNumber,
 			DeveloperOnlyAttribute: aws.Bool(false),
 			Mutable:                aws.Bool(true),
 			Name:                   aws.String("updated_at"),
-			NumberAttributeConstraints: &cognitoidentityprovider.NumberAttributeConstraintsType{
+			NumberAttributeConstraints: &awstypes.NumberAttributeConstraintsType{
 				MinValue: aws.String("0"),
 			},
 			Required: aws.Bool(false),
 		},
 		{
-			AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeString),
+			AttributeDataType:      awstypes.AttributeDataTypeString,
 			DeveloperOnlyAttribute: aws.Bool(false),
 			Mutable:                aws.Bool(true),
 			Name:                   aws.String("website"),
 			Required:               aws.Bool(false),
-			StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
+			StringAttributeConstraints: &awstypes.StringAttributeConstraintsType{
 				MaxLength: aws.String("2048"),
 				MinLength: aws.String("0"),
 			},
 		},
 		{
-			AttributeDataType:      aws.String(cognitoidentityprovider.AttributeDataTypeString),
+			AttributeDataType:      awstypes.AttributeDataTypeString,
 			DeveloperOnlyAttribute: aws.Bool(false),
 			Mutable:                aws.Bool(true),
 			Name:                   aws.String("zoneinfo"),
 			Required:               aws.Bool(false),
-			StringAttributeConstraints: &cognitoidentityprovider.StringAttributeConstraintsType{
+			StringAttributeConstraints: &awstypes.StringAttributeConstraintsType{
 				MaxLength: aws.String("2048"),
 				MinLength: aws.String("0"),
 			},
 		},
 	}
 	for _, standardAttribute := range standardAttributes {
-		if reflect.DeepEqual(*input, standardAttribute) {
+		if reflect.DeepEqual(input, standardAttribute) {
 			return true
 		}
 	}
 	return false
 }
 
-func expandedUserPoolPreGenerationConfig(config map[string]interface{}) *cognitoidentityprovider.PreTokenGenerationVersionConfigType {
-	preTokenGenerationConfig := &cognitoidentityprovider.PreTokenGenerationVersionConfigType{
+func expandedUserPoolPreGenerationConfig(config map[string]interface{}) *awstypes.PreTokenGenerationVersionConfigType {
+	preTokenGenerationConfig := &awstypes.PreTokenGenerationVersionConfigType{
 		LambdaArn:     aws.String(config["lambda_arn"].(string)),
-		LambdaVersion: aws.String(config["lambda_version"].(string)),
+		LambdaVersion: awstypes.PreTokenGenerationLambdaVersionType(config["lambda_version"].(string)),
 	}
 
 	return preTokenGenerationConfig
 }
 
-func flattenUserPoolPreTokenGenerationConfig(u *cognitoidentityprovider.PreTokenGenerationVersionConfigType) []map[string]interface{} {
+func flattenUserPoolPreTokenGenerationConfig(u *awstypes.PreTokenGenerationVersionConfigType) []map[string]interface{} {
 	m := map[string]interface{}{}
 
 	if u == nil {
 		return nil
 	}
 
-	m["lambda_arn"] = aws.StringValue(u.LambdaArn)
-	m["lambda_version"] = aws.StringValue(u.LambdaVersion)
+	m["lambda_arn"] = aws.ToString(u.LambdaArn)
+	m["lambda_version"] = string(u.LambdaVersion)
 
 	return []map[string]interface{}{m}
 }
 
-func expandUserPoolCustomSMSSender(config map[string]interface{}) *cognitoidentityprovider.CustomSMSLambdaVersionConfigType {
-	usernameConfigurationType := &cognitoidentityprovider.CustomSMSLambdaVersionConfigType{
+func expandUserPoolCustomSMSSender(config map[string]interface{}) *awstypes.CustomSMSLambdaVersionConfigType {
+	usernameConfigurationType := &awstypes.CustomSMSLambdaVersionConfigType{
 		LambdaArn:     aws.String(config["lambda_arn"].(string)),
-		LambdaVersion: aws.String(config["lambda_version"].(string)),
+		LambdaVersion: awstypes.CustomSMSSenderLambdaVersionType(config["lambda_version"].(string)),
 	}
 
 	return usernameConfigurationType
 }
 
-func flattenUserPoolCustomSMSSender(u *cognitoidentityprovider.CustomSMSLambdaVersionConfigType) []map[string]interface{} {
+func flattenUserPoolCustomSMSSender(u *awstypes.CustomSMSLambdaVersionConfigType) []map[string]interface{} {
 	m := map[string]interface{}{}
 
 	if u == nil {
 		return nil
 	}
 
-	m["lambda_arn"] = aws.StringValue(u.LambdaArn)
-	m["lambda_version"] = aws.StringValue(u.LambdaVersion)
+	m["lambda_arn"] = aws.ToString(u.LambdaArn)
+	m["lambda_version"] = string(u.LambdaVersion)
 
 	return []map[string]interface{}{m}
 }
 
-func expandUserPoolCustomEmailSender(config map[string]interface{}) *cognitoidentityprovider.CustomEmailLambdaVersionConfigType {
-	usernameConfigurationType := &cognitoidentityprovider.CustomEmailLambdaVersionConfigType{
+func expandUserPoolCustomEmailSender(config map[string]interface{}) *awstypes.CustomEmailLambdaVersionConfigType {
+	usernameConfigurationType := &awstypes.CustomEmailLambdaVersionConfigType{
 		LambdaArn:     aws.String(config["lambda_arn"].(string)),
-		LambdaVersion: aws.String(config["lambda_version"].(string)),
+		LambdaVersion: awstypes.CustomEmailSenderLambdaVersionType(config["lambda_version"].(string)),
 	}
 
 	return usernameConfigurationType
 }
 
-func flattenUserPoolCustomEmailSender(u *cognitoidentityprovider.CustomEmailLambdaVersionConfigType) []map[string]interface{} {
+func flattenUserPoolCustomEmailSender(u *awstypes.CustomEmailLambdaVersionConfigType) []map[string]interface{} {
 	m := map[string]interface{}{}
 
 	if u == nil {
 		return nil
 	}
 
-	m["lambda_arn"] = aws.StringValue(u.LambdaArn)
-	m["lambda_version"] = aws.StringValue(u.LambdaVersion)
+	m["lambda_arn"] = aws.ToString(u.LambdaArn)
+	m["lambda_version"] = string(u.LambdaVersion)
 
 	return []map[string]interface{}{m}
 }
 
-func expandUserPoolEmailConfig(emailConfig []interface{}) *cognitoidentityprovider.EmailConfigurationType {
+func expandUserPoolEmailConfig(emailConfig []interface{}) *awstypes.EmailConfigurationType {
 	config := emailConfig[0].(map[string]interface{})
 
-	emailConfigurationType := &cognitoidentityprovider.EmailConfigurationType{}
+	emailConfigurationType := &awstypes.EmailConfigurationType{}
 
 	if v, ok := config["reply_to_email_address"]; ok && v.(string) != "" {
 		emailConfigurationType.ReplyToEmailAddress = aws.String(v.(string))
@@ -2266,7 +2229,7 @@ func expandUserPoolEmailConfig(emailConfig []interface{}) *cognitoidentityprovid
 	}
 
 	if v, ok := config["email_sending_account"]; ok && v.(string) != "" {
-		emailConfigurationType.EmailSendingAccount = aws.String(v.(string))
+		emailConfigurationType.EmailSendingAccount = awstypes.EmailSendingAccountType(v.(string))
 	}
 
 	if v, ok := config["configuration_set"]; ok && v.(string) != "" {
@@ -2276,16 +2239,16 @@ func expandUserPoolEmailConfig(emailConfig []interface{}) *cognitoidentityprovid
 	return emailConfigurationType
 }
 
-func expandUserPoolUserAttributeUpdateSettings(config map[string]interface{}) *cognitoidentityprovider.UserAttributeUpdateSettingsType {
-	userAttributeUpdateSettings := &cognitoidentityprovider.UserAttributeUpdateSettingsType{}
+func expandUserPoolUserAttributeUpdateSettings(config map[string]interface{}) *awstypes.UserAttributeUpdateSettingsType {
+	userAttributeUpdateSettings := &awstypes.UserAttributeUpdateSettingsType{}
 	if v, ok := config["attributes_require_verification_before_update"]; ok {
-		userAttributeUpdateSettings.AttributesRequireVerificationBeforeUpdate = flex.ExpandStringSet(v.(*schema.Set))
+		userAttributeUpdateSettings.AttributesRequireVerificationBeforeUpdate = flex.ExpandStringyValueSet[awstypes.VerifiedAttributeType](v.(*schema.Set))
 	}
 
 	return userAttributeUpdateSettings
 }
 
-func flattenUserPoolUserAttributeUpdateSettings(u *cognitoidentityprovider.UserAttributeUpdateSettingsType) []map[string]interface{} {
+func flattenUserPoolUserAttributeUpdateSettings(u *awstypes.UserAttributeUpdateSettingsType) []map[string]interface{} {
 	if u == nil {
 		return nil
 	}
@@ -2295,7 +2258,7 @@ func flattenUserPoolUserAttributeUpdateSettings(u *cognitoidentityprovider.UserA
 	}
 
 	m := map[string]interface{}{}
-	m["attributes_require_verification_before_update"] = flex.FlattenStringSet(u.AttributesRequireVerificationBeforeUpdate)
+	m["attributes_require_verification_before_update"] = flex.FlattenStringyValueSet(u.AttributesRequireVerificationBeforeUpdate)
 
 	return []map[string]interface{}{m}
 }
@@ -2304,7 +2267,7 @@ func flattenUserPoolUserAttributeUpdateSettings(u *cognitoidentityprovider.UserA
 // match an existing configured attribute, except an empty "string_attribute_constraints" block.
 // In this situation the Describe API returns default constraint values, and a persistent diff
 // would be present if written to state.
-func skipFlatteningStringAttributeContraints(configuredAttributes []*cognitoidentityprovider.SchemaAttributeType, input *cognitoidentityprovider.SchemaAttributeType) bool {
+func skipFlatteningStringAttributeContraints(configuredAttributes []*awstypes.SchemaAttributeType, input *awstypes.SchemaAttributeType) bool {
 	skip := false
 	for _, configuredAttribute := range configuredAttributes {
 		// Root elements are all equal
@@ -2314,7 +2277,7 @@ func skipFlatteningStringAttributeContraints(configuredAttributes []*cognitoiden
 			reflect.DeepEqual(input.Name, configuredAttribute.Name) &&
 			reflect.DeepEqual(input.Required, configuredAttribute.Required) &&
 			// The configured "string_attribute_constraints" object is empty, but the returned value is not
-			(aws.StringValue(configuredAttribute.AttributeDataType) == cognitoidentityprovider.AttributeDataTypeString &&
+			(configuredAttribute.AttributeDataType == awstypes.AttributeDataTypeString &&
 				configuredAttribute.StringAttributeConstraints == nil &&
 				input.StringAttributeConstraints != nil) {
 			skip = true

@@ -11,15 +11,17 @@ import (
 	"strings"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -65,8 +67,8 @@ func resourceUser() *schema.Resource {
 			"desired_delivery_mediums": {
 				Type: schema.TypeSet,
 				Elem: &schema.Schema{
-					Type:         schema.TypeString,
-					ValidateFunc: validation.StringInSlice(cognitoidentityprovider.DeliveryMediumType_Values(), false),
+					Type:             schema.TypeString,
+					ValidateDiagFunc: enum.Validate[awstypes.DeliveryMediumType](),
 				},
 				Optional: true,
 			},
@@ -84,9 +86,9 @@ func resourceUser() *schema.Resource {
 				Computed: true,
 			},
 			"message_action": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringInSlice(cognitoidentityprovider.MessageActionType_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.MessageActionType](),
 			},
 			"mfa_setting_list": {
 				Type: schema.TypeSet,
@@ -145,7 +147,7 @@ func resourceUser() *schema.Resource {
 
 func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
+	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
 	username := d.Get("username").(string)
 	userPoolId := d.Get("user_pool_id").(string)
@@ -166,11 +168,11 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 	}
 
 	if v, ok := d.GetOk("force_alias_creation"); ok {
-		params.ForceAliasCreation = aws.Bool(v.(bool))
+		params.ForceAliasCreation = v.(bool)
 	}
 
 	if v, ok := d.GetOk("message_action"); ok {
-		params.MessageAction = aws.String(v.(string))
+		params.MessageAction = awstypes.MessageActionType(v.(string))
 	}
 
 	if v, ok := d.GetOk("attributes"); ok {
@@ -191,12 +193,12 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 	log.Print("[DEBUG] Creating Cognito User")
 
-	resp, err := conn.AdminCreateUserWithContext(ctx, params)
+	resp, err := conn.AdminCreateUser(ctx, params)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Cognito User (%s/%s): %s", userPoolId, username, err)
 	}
 
-	d.SetId(fmt.Sprintf("%s/%s", aws.StringValue(params.UserPoolId), aws.StringValue(resp.User.Username)))
+	d.SetId(fmt.Sprintf("%s/%s", aws.ToString(params.UserPoolId), aws.ToString(resp.User.Username)))
 
 	if v := d.Get("enabled"); !v.(bool) {
 		disableParams := &cognitoidentityprovider.AdminDisableUserInput{
@@ -204,7 +206,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 			UserPoolId: aws.String(d.Get("user_pool_id").(string)),
 		}
 
-		_, err := conn.AdminDisableUserWithContext(ctx, disableParams)
+		_, err := conn.AdminDisableUser(ctx, disableParams)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "disabling Cognito User (%s): %s", d.Id(), err)
 		}
@@ -215,10 +217,10 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 			Username:   aws.String(d.Get("username").(string)),
 			UserPoolId: aws.String(d.Get("user_pool_id").(string)),
 			Password:   aws.String(v.(string)),
-			Permanent:  aws.Bool(true),
+			Permanent:  true,
 		}
 
-		_, err := conn.AdminSetUserPasswordWithContext(ctx, setPasswordParams)
+		_, err := conn.AdminSetUserPassword(ctx, setPasswordParams)
 		if err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting Cognito User's password (%s): %s", d.Id(), err)
 		}
@@ -229,7 +231,7 @@ func resourceUserCreate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
+	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
 	user, err := findUserByTwoPartKey(ctx, conn, d.Get("user_pool_id").(string), d.Get("username").(string))
 
@@ -263,7 +265,7 @@ func resourceUserRead(ctx context.Context, d *schema.ResourceData, meta interfac
 
 func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
+	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
 	log.Println("[DEBUG] Updating Cognito User")
 
@@ -284,7 +286,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 				params.ClientMetadata = expandUserClientMetadata(metadata)
 			}
 
-			_, err := conn.AdminUpdateUserAttributesWithContext(ctx, params)
+			_, err := conn.AdminUpdateUserAttributes(ctx, params)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating Cognito User Attributes (%s): %s", d.Id(), err)
 			}
@@ -295,7 +297,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 				UserPoolId:         aws.String(d.Get("user_pool_id").(string)),
 				UserAttributeNames: expandUserAttributesDelete(del),
 			}
-			_, err := conn.AdminDeleteUserAttributesWithContext(ctx, params)
+			_, err := conn.AdminDeleteUserAttributes(ctx, params)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating Cognito User Attributes (%s): %s", d.Id(), err)
 			}
@@ -310,7 +312,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 				Username:   aws.String(d.Get("username").(string)),
 				UserPoolId: aws.String(d.Get("user_pool_id").(string)),
 			}
-			_, err := conn.AdminEnableUserWithContext(ctx, enableParams)
+			_, err := conn.AdminEnableUser(ctx, enableParams)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "enabling Cognito User (%s): %s", d.Id(), err)
 			}
@@ -319,7 +321,7 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 				Username:   aws.String(d.Get("username").(string)),
 				UserPoolId: aws.String(d.Get("user_pool_id").(string)),
 			}
-			_, err := conn.AdminDisableUserWithContext(ctx, disableParams)
+			_, err := conn.AdminDisableUser(ctx, disableParams)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "disabling Cognito User (%s): %s", d.Id(), err)
 			}
@@ -334,10 +336,10 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 				Username:   aws.String(d.Get("username").(string)),
 				UserPoolId: aws.String(d.Get("user_pool_id").(string)),
 				Password:   aws.String(password),
-				Permanent:  aws.Bool(false),
+				Permanent:  false,
 			}
 
-			_, err := conn.AdminSetUserPasswordWithContext(ctx, setPasswordParams)
+			_, err := conn.AdminSetUserPassword(ctx, setPasswordParams)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "changing Cognito User's temporary password (%s): %s", d.Id(), err)
 			}
@@ -354,10 +356,10 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 				Username:   aws.String(d.Get("username").(string)),
 				UserPoolId: aws.String(d.Get("user_pool_id").(string)),
 				Password:   aws.String(password),
-				Permanent:  aws.Bool(true),
+				Permanent:  true,
 			}
 
-			_, err := conn.AdminSetUserPasswordWithContext(ctx, setPasswordParams)
+			_, err := conn.AdminSetUserPassword(ctx, setPasswordParams)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "changing Cognito User's password (%s): %s", d.Id(), err)
 			}
@@ -371,15 +373,15 @@ func resourceUserUpdate(ctx context.Context, d *schema.ResourceData, meta interf
 
 func resourceUserDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CognitoIDPConn(ctx)
+	conn := meta.(*conns.AWSClient).CognitoIDPClient(ctx)
 
 	log.Printf("[DEBUG] Deleting Cognito User: %s", d.Id())
-	_, err := conn.AdminDeleteUserWithContext(ctx, &cognitoidentityprovider.AdminDeleteUserInput{
+	_, err := conn.AdminDeleteUser(ctx, &cognitoidentityprovider.AdminDeleteUserInput{
 		Username:   aws.String(d.Get("username").(string)),
 		UserPoolId: aws.String(d.Get("user_pool_id").(string)),
 	})
 
-	if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeUserNotFoundException, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.UserNotFoundException](err) && errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -402,15 +404,15 @@ func resourceUserImport(ctx context.Context, d *schema.ResourceData, meta interf
 	return []*schema.ResourceData{d}, nil
 }
 
-func findUserByTwoPartKey(ctx context.Context, conn *cognitoidentityprovider.CognitoIdentityProvider, userPoolID, username string) (*cognitoidentityprovider.AdminGetUserOutput, error) {
+func findUserByTwoPartKey(ctx context.Context, conn *cognitoidentityprovider.Client, userPoolID, username string) (*cognitoidentityprovider.AdminGetUserOutput, error) {
 	input := &cognitoidentityprovider.AdminGetUserInput{
 		Username:   aws.String(username),
 		UserPoolId: aws.String(userPoolID),
 	}
 
-	output, err := conn.AdminGetUserWithContext(ctx, input)
+	output, err := conn.AdminGetUser(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeUserNotFoundException, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.UserNotFoundException](err) && errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -428,18 +430,18 @@ func findUserByTwoPartKey(ctx context.Context, conn *cognitoidentityprovider.Cog
 	return output, nil
 }
 
-func expandAttribute(tfMap map[string]interface{}) []*cognitoidentityprovider.AttributeType {
+func expandAttribute(tfMap map[string]interface{}) []awstypes.AttributeType {
 	if len(tfMap) == 0 {
 		return nil
 	}
 
-	apiList := make([]*cognitoidentityprovider.AttributeType, 0, len(tfMap))
+	apiList := make([]awstypes.AttributeType, 0, len(tfMap))
 
 	for k, v := range tfMap {
 		if !UserAttributeKeyMatchesStandardAttribute(k) && !strings.HasPrefix(k, "custom:") {
 			k = fmt.Sprintf("custom:%v", k)
 		}
-		apiList = append(apiList, &cognitoidentityprovider.AttributeType{
+		apiList = append(apiList, awstypes.AttributeType{
 			Name:  aws.String(k),
 			Value: aws.String(v.(string)),
 		})
@@ -448,31 +450,31 @@ func expandAttribute(tfMap map[string]interface{}) []*cognitoidentityprovider.At
 	return apiList
 }
 
-func expandUserAttributesDelete(input []*string) []*string {
-	result := make([]*string, 0, len(input))
+func expandUserAttributesDelete(input []*string) []string {
+	result := make([]string, 0, len(input))
 
 	for _, v := range input {
 		if !UserAttributeKeyMatchesStandardAttribute(*v) && !strings.HasPrefix(*v, "custom:") {
 			formattedV := fmt.Sprintf("custom:%v", *v)
-			result = append(result, &formattedV)
+			result = append(result, formattedV)
 		} else {
-			result = append(result, v)
+			result = append(result, *v)
 		}
 	}
 
 	return result
 }
 
-func flattenUserAttributes(apiList []*cognitoidentityprovider.AttributeType) map[string]interface{} {
+func flattenUserAttributes(apiList []awstypes.AttributeType) map[string]interface{} {
 	tfMap := make(map[string]interface{})
 
 	for _, apiAttribute := range apiList {
 		if apiAttribute.Name != nil {
 			if UserAttributeKeyMatchesStandardAttribute(*apiAttribute.Name) {
-				tfMap[aws.StringValue(apiAttribute.Name)] = aws.StringValue(apiAttribute.Value)
+				tfMap[aws.ToString(apiAttribute.Name)] = aws.ToString(apiAttribute.Value)
 			} else {
-				name := strings.TrimPrefix(strings.TrimPrefix(aws.StringValue(apiAttribute.Name), "dev:"), "custom:")
-				tfMap[name] = aws.StringValue(apiAttribute.Value)
+				name := strings.TrimPrefix(strings.TrimPrefix(aws.ToString(apiAttribute.Name), "dev:"), "custom:")
+				tfMap[name] = aws.ToString(apiAttribute.Value)
 			}
 		}
 	}
@@ -508,20 +510,20 @@ func computeUserAttributesUpdate(old interface{}, new interface{}) (map[string]i
 	return upd, del
 }
 
-func expandUserDesiredDeliveryMediums(tfSet *schema.Set) []*string {
-	apiList := []*string{}
+func expandUserDesiredDeliveryMediums(tfSet *schema.Set) []awstypes.DeliveryMediumType {
+	apiList := []awstypes.DeliveryMediumType{}
 
 	for _, elem := range tfSet.List() {
-		apiList = append(apiList, aws.String(elem.(string)))
+		apiList = append(apiList, awstypes.DeliveryMediumType(elem.(string)))
 	}
 
 	return apiList
 }
 
-func retrieveUserSub(apiList []*cognitoidentityprovider.AttributeType) string {
+func retrieveUserSub(apiList []awstypes.AttributeType) string {
 	for _, attr := range apiList {
-		if aws.StringValue(attr.Name) == "sub" {
-			return aws.StringValue(attr.Value)
+		if aws.ToString(attr.Name) == "sub" {
+			return aws.ToString(attr.Value)
 		}
 	}
 
@@ -529,10 +531,10 @@ func retrieveUserSub(apiList []*cognitoidentityprovider.AttributeType) string {
 }
 
 // For ClientMetadata we only need expand since AWS doesn't store its value
-func expandUserClientMetadata(tfMap map[string]interface{}) map[string]*string {
-	apiMap := map[string]*string{}
+func expandUserClientMetadata(tfMap map[string]interface{}) map[string]string {
+	apiMap := map[string]string{}
 	for k, v := range tfMap {
-		apiMap[k] = aws.String(v.(string))
+		apiMap[k] = v.(string)
 	}
 
 	return apiMap

@@ -9,21 +9,22 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfcognitoidp "github.com/hashicorp/terraform-provider-aws/internal/service/cognitoidp"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCognitoIDPResourceServer_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var resourceServer cognitoidentityprovider.ResourceServerType
+	var resourceServer awstypes.ResourceServerType
 	identifier := fmt.Sprintf("tf-acc-test-resource-server-id-%s", sdkacctest.RandString(10))
 	name1 := fmt.Sprintf("tf-acc-test-resource-server-name-%s", sdkacctest.RandString(10))
 	name2 := fmt.Sprintf("tf-acc-test-resource-server-name-%s", sdkacctest.RandString(10))
@@ -67,7 +68,7 @@ func TestAccCognitoIDPResourceServer_basic(t *testing.T) {
 
 func TestAccCognitoIDPResourceServer_scope(t *testing.T) {
 	ctx := acctest.Context(t)
-	var resourceServer cognitoidentityprovider.ResourceServerType
+	var resourceServer awstypes.ResourceServerType
 	identifier := fmt.Sprintf("tf-acc-test-resource-server-id-%s", sdkacctest.RandString(10))
 	name := fmt.Sprintf("tf-acc-test-resource-server-name-%s", sdkacctest.RandString(10))
 	poolName := fmt.Sprintf("tf-acc-test-pool-%s", sdkacctest.RandString(10))
@@ -113,7 +114,7 @@ func TestAccCognitoIDPResourceServer_scope(t *testing.T) {
 	})
 }
 
-func testAccCheckResourceServerExists(ctx context.Context, n string, resourceServer *cognitoidentityprovider.ResourceServerType) resource.TestCheckFunc {
+func testAccCheckResourceServerExists(ctx context.Context, n string, resourceServer *awstypes.ResourceServerType) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -124,14 +125,14 @@ func testAccCheckResourceServerExists(ctx context.Context, n string, resourceSer
 			return errors.New("No Cognito Resource Server ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPClient(ctx)
 
 		userPoolID, identifier, err := tfcognitoidp.DecodeResourceServerID(rs.Primary.ID)
 		if err != nil {
 			return err
 		}
 
-		output, err := conn.DescribeResourceServerWithContext(ctx, &cognitoidentityprovider.DescribeResourceServerInput{
+		output, err := conn.DescribeResourceServer(ctx, &cognitoidentityprovider.DescribeResourceServerInput{
 			Identifier: aws.String(identifier),
 			UserPoolId: aws.String(userPoolID),
 		})
@@ -152,7 +153,7 @@ func testAccCheckResourceServerExists(ctx context.Context, n string, resourceSer
 
 func testAccCheckResourceServerDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).CognitoIDPClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_cognito_resource_server" {
@@ -164,13 +165,13 @@ func testAccCheckResourceServerDestroy(ctx context.Context) resource.TestCheckFu
 				return err
 			}
 
-			_, err = conn.DescribeResourceServerWithContext(ctx, &cognitoidentityprovider.DescribeResourceServerInput{
+			_, err = conn.DescribeResourceServer(ctx, &cognitoidentityprovider.DescribeResourceServerInput{
 				Identifier: aws.String(identifier),
 				UserPoolId: aws.String(userPoolID),
 			})
 
 			if err != nil {
-				if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
+				if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 					return nil
 				}
 				return err

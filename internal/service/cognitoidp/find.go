@@ -8,15 +8,16 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cognitoidentityprovider/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
 // FindCognitoUserInGroup checks whether the specified user is present in the specified group. Returns boolean value accordingly.
-func FindCognitoUserInGroup(ctx context.Context, conn *cognitoidentityprovider.CognitoIdentityProvider, groupName, userPoolId, username string) (bool, error) {
+func FindCognitoUserInGroup(ctx context.Context, conn *cognitoidentityprovider.Client, groupName, userPoolId, username string) (bool, error) {
 	input := &cognitoidentityprovider.AdminListGroupsForUserInput{
 		UserPoolId: aws.String(userPoolId),
 		Username:   aws.String(username),
@@ -24,46 +25,36 @@ func FindCognitoUserInGroup(ctx context.Context, conn *cognitoidentityprovider.C
 
 	found := false
 
-	err := conn.AdminListGroupsForUserPagesWithContext(ctx, input, func(page *cognitoidentityprovider.AdminListGroupsForUserOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := cognitoidentityprovider.NewAdminListGroupsForUserPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return false, fmt.Errorf("reading groups for user: %w", err)
 		}
 
 		for _, group := range page.Groups {
-			if group == nil {
-				continue
-			}
-
-			if aws.StringValue(group.GroupName) == groupName {
+			if aws.ToString(group.GroupName) == groupName {
 				found = true
 				break
 			}
 		}
-
-		if found {
-			return false
-		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return false, fmt.Errorf("reading groups for user: %w", err)
 	}
 
 	return found, nil
 }
 
 // FindCognitoUserPoolClientByID returns a Cognito User Pool Client using the ClientId
-func FindCognitoUserPoolClientByID(ctx context.Context, conn *cognitoidentityprovider.CognitoIdentityProvider, userPoolId, clientId string) (*cognitoidentityprovider.UserPoolClientType, error) {
+func FindCognitoUserPoolClientByID(ctx context.Context, conn *cognitoidentityprovider.Client, userPoolId, clientId string) (*awstypes.UserPoolClientType, error) {
 	input := &cognitoidentityprovider.DescribeUserPoolClientInput{
 		ClientId:   aws.String(clientId),
 		UserPoolId: aws.String(userPoolId),
 	}
 
-	output, err := conn.DescribeUserPoolClientWithContext(ctx, input)
+	output, err := conn.DescribeUserPoolClient(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -81,50 +72,54 @@ func FindCognitoUserPoolClientByID(ctx context.Context, conn *cognitoidentitypro
 	return output.UserPoolClient, nil
 }
 
-func FindCognitoUserPoolClientByName(ctx context.Context, conn *cognitoidentityprovider.CognitoIdentityProvider, userPoolId string, nameFilter cognitoUserPoolClientDescriptionNameFilter) (*cognitoidentityprovider.UserPoolClientType, error) {
+func FindCognitoUserPoolClientByName(ctx context.Context, conn *cognitoidentityprovider.Client, userPoolId string, nameFilter cognitoUserPoolClientDescriptionNameFilter) (*awstypes.UserPoolClientType, error) {
 	clientDescs, err := listCognitoUserPoolClientDescriptions(ctx, conn, userPoolId, nameFilter)
 	if err != nil {
 		return nil, err
 	}
 
-	client, err := tfresource.AssertSinglePtrResult(clientDescs)
+	client, err := tfresource.AssertSingleValueResult(clientDescs)
 	if err != nil {
 		return nil, err
 	}
 
-	return FindCognitoUserPoolClientByID(ctx, conn, userPoolId, aws.StringValue(client.ClientId))
+	return FindCognitoUserPoolClientByID(ctx, conn, userPoolId, aws.ToString(client.ClientId))
 }
 
 type cognitoUserPoolClientDescriptionNameFilter func(string) (bool, error)
 
-func listCognitoUserPoolClientDescriptions(ctx context.Context, conn *cognitoidentityprovider.CognitoIdentityProvider, userPoolId string, nameFilter cognitoUserPoolClientDescriptionNameFilter) ([]*cognitoidentityprovider.UserPoolClientDescription, error) {
+func listCognitoUserPoolClientDescriptions(ctx context.Context, conn *cognitoidentityprovider.Client, userPoolId string, nameFilter cognitoUserPoolClientDescriptionNameFilter) ([]awstypes.UserPoolClientDescription, error) {
 	var errs []error
-	var descs []*cognitoidentityprovider.UserPoolClientDescription
+	var descs []awstypes.UserPoolClientDescription
 
 	input := &cognitoidentityprovider.ListUserPoolClientsInput{
 		UserPoolId: aws.String(userPoolId),
 	}
 
-	err := conn.ListUserPoolClientsPagesWithContext(ctx, input, func(page *cognitoidentityprovider.ListUserPoolClientsOutput, lastPage bool) bool {
+	pages := cognitoidentityprovider.NewListUserPoolClientsPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			errs = append(errs, err)
+			return descs, errors.Join(errs...)
+		}
+
 		for _, client := range page.UserPoolClients {
-			if ok, err := nameFilter(aws.StringValue(client.ClientName)); err != nil {
+			if ok, err := nameFilter(aws.ToString(client.ClientName)); err != nil {
 				errs = append(errs, err)
 			} else if ok {
 				descs = append(descs, client)
 			}
 		}
-		return !lastPage
-	})
 
-	if err != nil {
-		errs = append(errs, err)
-		return descs, errors.Join(errs...)
 	}
 
 	return descs, nil
 }
 
-func FindRiskConfigurationById(ctx context.Context, conn *cognitoidentityprovider.CognitoIdentityProvider, id string) (*cognitoidentityprovider.RiskConfigurationType, error) {
+func FindRiskConfigurationById(ctx context.Context, conn *cognitoidentityprovider.Client, id string) (*awstypes.RiskConfigurationType, error) {
 	userPoolId, clientId, err := RiskConfigurationParseID(id)
 	if err != nil {
 		return nil, err
@@ -138,9 +133,9 @@ func FindRiskConfigurationById(ctx context.Context, conn *cognitoidentityprovide
 		input.ClientId = aws.String(clientId)
 	}
 
-	output, err := conn.DescribeRiskConfigurationWithContext(ctx, input)
+	output, err := conn.DescribeRiskConfiguration(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, cognitoidentityprovider.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
