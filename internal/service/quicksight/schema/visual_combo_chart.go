@@ -325,7 +325,7 @@ func expandComboChartYAxisOptions(tfList []interface{}) *quicksight.YAxisOptions
 	config := &quicksight.YAxisOptions{}
 
 	if v, ok := tfMap["y_axis"].(string); ok {
-		config.BarValues = aws.String(v)
+		config.YAxis = aws.String(v)
 	}
 
 	return config
