@@ -3,8 +3,11 @@
 
 package paymentcryptography
 
+// Exports for use in tests only.
 var (
-	ResourceKey = newResourceKey
+	ResourceKey      = newResourceKey
+	ResourceKeyAlias = newKeyAliasResource
 
-	FindKeyByID = findKeyByID
+	FindKeyByID        = findKeyByID
+	FindKeyAliasByName = findkeyAliasByName
 )
