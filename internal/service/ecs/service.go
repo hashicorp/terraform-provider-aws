@@ -525,7 +525,7 @@ func ResourceService() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"name": {
-							Type:     schema.TypeBool,
+							Type:     schema.TypeString,
 							Required: true,
 						},
 						"managed_ebs_volume": {
