@@ -134,11 +134,11 @@ func testAccCheckFieldLevelEncryptionConfigDestroy(ctx context.Context) resource
 	}
 }
 
-func testAccCheckFieldLevelEncryptionConfigExists(ctx context.Context, r string, v *cloudfront.GetFieldLevelEncryptionConfigOutput) resource.TestCheckFunc {
+func testAccCheckFieldLevelEncryptionConfigExists(ctx context.Context, n string, v *cloudfront.GetFieldLevelEncryptionConfigOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[r]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("Not found: %s", r)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontClient(ctx)

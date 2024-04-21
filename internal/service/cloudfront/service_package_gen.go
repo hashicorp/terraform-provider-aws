@@ -106,8 +106,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Function",
 		},
 		{
-			Factory:  ResourceKeyGroup,
+			Factory:  resourceKeyGroup,
 			TypeName: "aws_cloudfront_key_group",
+			Name:     "Key Group",
 		},
 		{
 			Factory:  ResourceMonitoringSubscription,

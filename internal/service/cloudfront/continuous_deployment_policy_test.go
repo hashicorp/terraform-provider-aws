@@ -306,15 +306,15 @@ func testAccCheckContinuousDeploymentPolicyDestroy(ctx context.Context) resource
 	}
 }
 
-func testAccCheckContinuousDeploymentPolicyExists(ctx context.Context, name string, policy *cloudfront.GetContinuousDeploymentPolicyOutput) resource.TestCheckFunc {
+func testAccCheckContinuousDeploymentPolicyExists(ctx context.Context, n string, v *cloudfront.GetContinuousDeploymentPolicyOutput) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[name]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return create.Error(names.CloudFront, create.ErrActionCheckingExistence, tfcloudfront.ResNameContinuousDeploymentPolicy, name, errors.New("not found"))
+			return create.Error(names.CloudFront, create.ErrActionCheckingExistence, tfcloudfront.ResNameContinuousDeploymentPolicy, n, errors.New("not found"))
 		}
 
 		if rs.Primary.ID == "" {
-			return create.Error(names.CloudFront, create.ErrActionCheckingExistence, tfcloudfront.ResNameContinuousDeploymentPolicy, name, errors.New("not set"))
+			return create.Error(names.CloudFront, create.ErrActionCheckingExistence, tfcloudfront.ResNameContinuousDeploymentPolicy, n, errors.New("not set"))
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).CloudFrontConn(ctx)
@@ -323,7 +323,7 @@ func testAccCheckContinuousDeploymentPolicyExists(ctx context.Context, name stri
 			return create.Error(names.CloudFront, create.ErrActionCheckingExistence, tfcloudfront.ResNameContinuousDeploymentPolicy, rs.Primary.ID, err)
 		}
 
-		*policy = *resp
+		*v = *resp
 
 		return nil
 	}

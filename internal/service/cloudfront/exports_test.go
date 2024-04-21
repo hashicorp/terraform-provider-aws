@@ -10,12 +10,14 @@ var (
 	ResourceFieldLevelEncryptionConfig  = resourceFieldLevelEncryptionConfig
 	ResourceFieldLevelEncryptionProfile = resourceFieldLevelEncryptionProfile
 	ResourceFunction                    = resourceFunction
+	ResourceKeyGroup                    = resourceKeyGroup
 	ResourceKeyValueStore               = newKeyValueStoreResource
 
 	FindCachePolicyByID                 = findCachePolicyByID
 	FindFieldLevelEncryptionConfigByID  = findFieldLevelEncryptionConfigByID
 	FindFieldLevelEncryptionProfileByID = findFieldLevelEncryptionProfileByID
 	FindFunctionByTwoPartKey            = findFunctionByTwoPartKey
+	FindKeyGroupByID                    = findKeyGroupByID
 	FindKeyValueStoreByName             = findKeyValueStoreByName
 	FindPublicKeyByID                   = findPublicKeyByID
 )
