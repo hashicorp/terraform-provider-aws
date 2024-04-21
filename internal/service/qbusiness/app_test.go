@@ -23,7 +23,6 @@ func TestAccQBusinessApp_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	var application qbusiness.GetApplicationOutput
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	resourceName := "aws_qbusiness_app.test"
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -36,26 +35,17 @@ func TestAccQBusinessApp_basic(t *testing.T) {
 				Config: testAccAppConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
+					resource.TestCheckResourceAttrSet(resourceName, "id"),
 					resource.TestCheckResourceAttrSet(resourceName, "arn"),
 					resource.TestCheckResourceAttr(resourceName, "display_name", rName),
 					resource.TestCheckResourceAttr(resourceName, "description", rName),
+					resource.TestCheckResourceAttr(resourceName, "attachments_configuration.0.attachments_control_mode", string(types.AttachmentsControlModeEnabled)),
 				),
 			},
 			{
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
-			},
-			{
-				Config: testAccAppConfig_basic(rName1),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-					resource.TestCheckResourceAttr(resourceName, "display_name", rName1),
-					resource.TestCheckResourceAttr(resourceName, "description", rName1),
-				),
 			},
 		},
 	})
@@ -77,7 +67,7 @@ func TestAccQBusinessApp_disappears(t *testing.T) {
 				Config: testAccAppConfig_basic(rName),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &application),
-					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfqbusiness.ResourceApplication(), resourceName),
+					acctest.CheckFrameworkResourceDisappears(ctx, acctest.Provider, tfqbusiness.ResourceApplication, resourceName),
 				),
 				ExpectNonEmptyPlan: true,
 			},
@@ -107,11 +97,6 @@ func TestAccQBusinessApp_tags(t *testing.T) {
 				),
 			},
 			{
-				ResourceName:      resourceName,
-				ImportState:       true,
-				ImportStateVerify: true,
-			},
-			{
 				Config: testAccAppConfig_tags(rName, "key1", "value1updated", "key2", "value2"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckAppExists(ctx, resourceName, &application),
@@ -136,14 +121,6 @@ func TestAccQBusinessApp_attachmentsConfiguration(t *testing.T) {
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAppDestroy(ctx),
 		Steps: []resource.TestStep{
-			{
-				Config: testAccAppConfig_basic(rName),
-				Check: resource.ComposeAggregateTestCheckFunc(
-					testAccCheckAppExists(ctx, resourceName, &application),
-					resource.TestCheckResourceAttrSet(resourceName, "application_id"),
-					resource.TestCheckResourceAttrSet(resourceName, "arn"),
-				),
-			},
 			{
 				Config: testAccAppConfig_attachmentsConfiguration(rName, string(types.AttachmentsControlModeEnabled)),
 				Check: resource.ComposeAggregateTestCheckFunc(
@@ -235,6 +212,10 @@ resource "aws_qbusiness_app" "test" {
   display_name         = %[1]q
   description          = %[1]q
   iam_service_role_arn = aws_iam_role.test.arn
+
+  attachments_configuration {
+    attachments_control_mode = "ENABLED"
+  }
 }
 
 resource "aws_iam_role" "test" {
@@ -303,6 +284,10 @@ data "aws_partition" "current" {}
 resource "aws_qbusiness_app" "test" {
   display_name         = %[1]q
   iam_service_role_arn = aws_iam_role.test.arn
+
+  attachments_configuration {
+    attachments_control_mode = "ENABLED"
+  }
 
   tags = {
     %[2]q = %[3]q

@@ -27,7 +27,7 @@ This resource supports the following arguments:
 * `display_name` - (Required) A name for the Amazon Q application.
 * `iam_service_role_arn` - (Required) The Amazon Resource Name (ARN) of an IAM role with permissions to access your Amazon CloudWatch logs and metrics.
 * `description` - (Optional) A description for the Amazon Q application.
-* `attachments_configuration` - (Optional) Status information about whether file upload functionality is activated or deactivated for your end user.
+* `attachments_configuration` - (Required) Status information about whether file upload functionality is activated or deactivated for your end user.
 * `encryption_configuration` - (Optional) The identifier of the AWS KMS key that is used to encrypt your data. Amazon Q doesn't support asymmetric keys.
 
 `attachments_configuration` supports the following:
