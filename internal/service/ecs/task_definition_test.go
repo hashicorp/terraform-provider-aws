@@ -153,7 +153,8 @@ func TestAccECSTaskDefinition_configuredAtLaunch(t *testing.T) {
 				Config: testAccTaskDefinitionConfig_configuredAtLaunch(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
-					resource.TestCheckResourceAttr(resourceName, "configure_at_launch", "true"),
+					resource.TestCheckResourceAttr(resourceName, "volume.#", "1"),
+					resource.TestCheckResourceAttr(resourceName, "volume.0.configure_at_launch", "true"),
 				),
 			},
 			{
@@ -1836,7 +1837,10 @@ resource "aws_ecs_task_definition" "test" {
     "cpu": 10,
     "command": ["sleep","360"],
     "memory": 10,
-    "essential": true
+    "essential": true,
+    "mountPoints": [
+      {"sourceVolume": %[1]q, "containerPath": "/"}
+    ]
   }
 ]
 TASK_DEFINITION
