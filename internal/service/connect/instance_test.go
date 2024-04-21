@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/connect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -22,7 +22,7 @@ import (
 
 func testAccInstance_basic(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v connect.Instance
+	var v awstypes.Instance
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_instance.test"
 
@@ -42,13 +42,13 @@ func testAccInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "contact_lens_enabled", "true"),             //verified default result from ListInstanceAttributes()
 					resource.TestCheckResourceAttrSet(resourceName, "created_time"),
 					resource.TestCheckResourceAttr(resourceName, "early_media_enabled", "true"), //verified default result from ListInstanceAttributes()
-					resource.TestCheckResourceAttr(resourceName, "identity_management_type", connect.DirectoryTypeConnectManaged),
+					resource.TestCheckResourceAttr(resourceName, "identity_management_type", string(awstypes.DirectoryTypeConnectManaged)),
 					resource.TestCheckResourceAttr(resourceName, "inbound_calls_enabled", "true"),
 					resource.TestMatchResourceAttr(resourceName, "instance_alias", regexache.MustCompile(rName)),
 					resource.TestCheckResourceAttr(resourceName, "multi_party_conference_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "outbound_calls_enabled", "true"),
 					acctest.MatchResourceAttrGlobalARN(resourceName, "service_role", "iam", regexache.MustCompile(`role/aws-service-role/connect.amazonaws.com/.+`)),
-					resource.TestCheckResourceAttr(resourceName, "status", connect.InstanceStatusActive),
+					resource.TestCheckResourceAttr(resourceName, "status", string(awstypes.InstanceStatusActive)),
 				),
 			},
 			{
@@ -70,7 +70,7 @@ func testAccInstance_basic(t *testing.T) {
 					resource.TestMatchResourceAttr(resourceName, "instance_alias", regexache.MustCompile(rName)),
 					resource.TestCheckResourceAttr(resourceName, "multi_party_conference_enabled", "false"),
 					resource.TestCheckResourceAttr(resourceName, "outbound_calls_enabled", "false"),
-					resource.TestCheckResourceAttr(resourceName, "status", connect.InstanceStatusActive),
+					resource.TestCheckResourceAttr(resourceName, "status", string(awstypes.InstanceStatusActive)),
 				),
 			},
 		},
@@ -79,7 +79,7 @@ func testAccInstance_basic(t *testing.T) {
 
 func testAccInstance_directory(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v connect.Instance
+	var v awstypes.Instance
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_instance.test"
 
@@ -95,8 +95,8 @@ func testAccInstance_directory(t *testing.T) {
 				Config: testAccInstanceConfig_directory(rName, domainName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckInstanceExists(ctx, resourceName, &v),
-					resource.TestCheckResourceAttr(resourceName, "identity_management_type", connect.DirectoryTypeExistingDirectory),
-					resource.TestCheckResourceAttr(resourceName, "status", connect.InstanceStatusActive),
+					resource.TestCheckResourceAttr(resourceName, "identity_management_type", string(awstypes.DirectoryTypeExistingDirectory)),
+					resource.TestCheckResourceAttr(resourceName, "status", string(awstypes.InstanceStatusActive)),
 				),
 			},
 			{
@@ -111,7 +111,7 @@ func testAccInstance_directory(t *testing.T) {
 
 func testAccInstance_saml(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v connect.Instance
+	var v awstypes.Instance
 	rName := sdkacctest.RandomWithPrefix("resource-test-terraform")
 	resourceName := "aws_connect_instance.test"
 
@@ -124,7 +124,7 @@ func testAccInstance_saml(t *testing.T) {
 			{
 				Config: testAccInstanceConfig_saml(rName),
 				Check: resource.ComposeTestCheckFunc(
-					resource.TestCheckResourceAttr(resourceName, "identity_management_type", connect.DirectoryTypeSaml),
+					resource.TestCheckResourceAttr(resourceName, "identity_management_type", string(awstypes.DirectoryTypeSaml)),
 					testAccCheckInstanceExists(ctx, resourceName, &v),
 				),
 			},
@@ -137,7 +137,7 @@ func testAccInstance_saml(t *testing.T) {
 	})
 }
 
-func testAccCheckInstanceExists(ctx context.Context, n string, v *connect.Instance) resource.TestCheckFunc {
+func testAccCheckInstanceExists(ctx context.Context, n string, v *awstypes.Instance) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
@@ -148,7 +148,7 @@ func testAccCheckInstanceExists(ctx context.Context, n string, v *connect.Instan
 			return fmt.Errorf("No Connect Instance ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectClient(ctx)
 
 		output, err := tfconnect.FindInstanceByID(ctx, conn, rs.Primary.ID)
 
@@ -169,7 +169,7 @@ func testAccCheckInstanceDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectClient(ctx)
 
 			_, err := tfconnect.FindInstanceByID(ctx, conn, rs.Primary.ID)
 

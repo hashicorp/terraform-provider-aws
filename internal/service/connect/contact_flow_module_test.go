@@ -8,14 +8,15 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/connect"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/connect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -159,14 +160,14 @@ func testAccCheckContactFlowModuleExists(ctx context.Context, resourceName strin
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectClient(ctx)
 
 		params := &connect.DescribeContactFlowModuleInput{
 			ContactFlowModuleId: aws.String(contactFlowModuleID),
 			InstanceId:          aws.String(instanceID),
 		}
 
-		getFunction, err := conn.DescribeContactFlowModuleWithContext(ctx, params)
+		getFunction, err := conn.DescribeContactFlowModule(ctx, params)
 		if err != nil {
 			return err
 		}
@@ -184,7 +185,7 @@ func testAccCheckContactFlowModuleDestroy(ctx context.Context) resource.TestChec
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectClient(ctx)
 
 			instanceID, contactFlowModuleID, err := tfconnect.ContactFlowModuleParseID(rs.Primary.ID)
 
@@ -197,9 +198,9 @@ func testAccCheckContactFlowModuleDestroy(ctx context.Context) resource.TestChec
 				InstanceId:          aws.String(instanceID),
 			}
 
-			_, err = conn.DescribeContactFlowModuleWithContext(ctx, params)
+			_, err = conn.DescribeContactFlowModule(ctx, params)
 
-			if tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				continue
 			}
 

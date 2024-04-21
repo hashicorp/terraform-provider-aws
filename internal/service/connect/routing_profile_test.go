@@ -8,14 +8,15 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/connect"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/connect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -45,7 +46,7 @@ func testAccRoutingProfile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", originalDescription),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.0.channel", connect.ChannelVoice),
+					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.0.channel", string(awstypes.ChannelVoice)),
 					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.0.concurrency", "1"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName3),
 					resource.TestCheckResourceAttrSet(resourceName, "routing_profile_id"),
@@ -66,7 +67,7 @@ func testAccRoutingProfile_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", updatedDescription),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.0.channel", connect.ChannelVoice),
+					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.0.channel", string(awstypes.ChannelVoice)),
 					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.0.concurrency", "1"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName3),
 					resource.TestCheckResourceAttrSet(resourceName, "routing_profile_id"),
@@ -128,7 +129,7 @@ func testAccRoutingProfile_updateConcurrency(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.0.channel", connect.ChannelVoice),
+					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.0.channel", string(awstypes.ChannelVoice)),
 					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.0.concurrency", "1"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName3),
 					resource.TestCheckResourceAttrSet(resourceName, "routing_profile_id"),
@@ -182,7 +183,7 @@ func testAccRoutingProfile_updateDefaultOutboundQueue(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "description"),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.0.channel", connect.ChannelVoice),
+					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.0.channel", string(awstypes.ChannelVoice)),
 					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.0.concurrency", "1"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName3),
 					resource.TestCheckResourceAttrSet(resourceName, "routing_profile_id"),
@@ -203,7 +204,7 @@ func testAccRoutingProfile_updateDefaultOutboundQueue(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "description"),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.0.channel", connect.ChannelVoice),
+					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.0.channel", string(awstypes.ChannelVoice)),
 					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.0.concurrency", "1"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName3),
 					resource.TestCheckResourceAttrSet(resourceName, "routing_profile_id"),
@@ -240,7 +241,7 @@ func testAccRoutingProfile_updateQueues(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.0.channel", connect.ChannelVoice),
+					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.0.channel", string(awstypes.ChannelVoice)),
 					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.0.concurrency", "1"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName3),
 					resource.TestCheckResourceAttr(resourceName, "queue_configs.#", "0"),
@@ -263,11 +264,11 @@ func testAccRoutingProfile_updateQueues(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.0.channel", connect.ChannelVoice),
+					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.0.channel", string(awstypes.ChannelVoice)),
 					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.0.concurrency", "1"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName3),
 					resource.TestCheckResourceAttr(resourceName, "queue_configs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "queue_configs.0.channel", connect.ChannelVoice),
+					resource.TestCheckResourceAttr(resourceName, "queue_configs.0.channel", string(awstypes.ChannelVoice)),
 					resource.TestCheckResourceAttr(resourceName, "queue_configs.0.delay", "2"),
 					resource.TestCheckResourceAttr(resourceName, "queue_configs.0.priority", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "queue_configs.0.queue_arn", "aws_connect_queue.default_outbound_queue", "arn"),
@@ -292,7 +293,7 @@ func testAccRoutingProfile_updateQueues(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.0.channel", connect.ChannelVoice),
+					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.0.channel", string(awstypes.ChannelVoice)),
 					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.0.concurrency", "1"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName3),
 					resource.TestCheckResourceAttr(resourceName, "queue_configs.#", "2"),
@@ -318,11 +319,11 @@ func testAccRoutingProfile_updateQueues(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "description", description),
 					resource.TestCheckResourceAttrPair(resourceName, "instance_id", "aws_connect_instance.test", "id"),
 					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.0.channel", connect.ChannelVoice),
+					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.0.channel", string(awstypes.ChannelVoice)),
 					resource.TestCheckResourceAttr(resourceName, "media_concurrencies.0.concurrency", "1"),
 					resource.TestCheckResourceAttr(resourceName, "name", rName3),
 					resource.TestCheckResourceAttr(resourceName, "queue_configs.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "queue_configs.0.channel", connect.ChannelVoice),
+					resource.TestCheckResourceAttr(resourceName, "queue_configs.0.channel", string(awstypes.ChannelVoice)),
 					resource.TestCheckResourceAttr(resourceName, "queue_configs.0.delay", "2"),
 					resource.TestCheckResourceAttr(resourceName, "queue_configs.0.priority", "1"),
 					resource.TestCheckResourceAttrPair(resourceName, "queue_configs.0.queue_arn", "aws_connect_queue.default_outbound_queue", "arn"),
@@ -673,14 +674,14 @@ func testAccCheckRoutingProfileExists(ctx context.Context, resourceName string, 
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectClient(ctx)
 
 		params := &connect.DescribeRoutingProfileInput{
 			InstanceId:       aws.String(instanceID),
 			RoutingProfileId: aws.String(routingProfileID),
 		}
 
-		getFunction, err := conn.DescribeRoutingProfileWithContext(ctx, params)
+		getFunction, err := conn.DescribeRoutingProfile(ctx, params)
 		if err != nil {
 			return err
 		}
@@ -698,7 +699,7 @@ func testAccCheckRoutingProfileDestroy(ctx context.Context) resource.TestCheckFu
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectClient(ctx)
 
 			instanceID, routingProfileID, err := tfconnect.RoutingProfileParseID(rs.Primary.ID)
 
@@ -711,9 +712,9 @@ func testAccCheckRoutingProfileDestroy(ctx context.Context) resource.TestCheckFu
 				RoutingProfileId: aws.String(routingProfileID),
 			}
 
-			_, err = conn.DescribeRoutingProfileWithContext(ctx, params)
+			_, err = conn.DescribeRoutingProfile(ctx, params)
 
-			if tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				continue
 			}
 

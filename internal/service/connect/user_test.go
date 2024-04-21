@@ -9,14 +9,15 @@ import (
 	"strconv"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/connect"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/connect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -52,7 +53,7 @@ func testAccUser_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "password", "Password123"),
 					resource.TestCheckResourceAttr(resourceName, "phone_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "phone_config.0.after_contact_work_time_limit", "0"),
-					resource.TestCheckResourceAttr(resourceName, "phone_config.0.phone_type", connect.PhoneTypeSoftPhone),
+					resource.TestCheckResourceAttr(resourceName, "phone_config.0.phone_type", string(awstypes.PhoneTypeSoftPhone)),
 					resource.TestCheckResourceAttrPair(resourceName, "routing_profile_id", "data.aws_connect_routing_profile.test", "routing_profile_id"),
 					resource.TestCheckResourceAttr(resourceName, "security_profile_ids.#", "1"),
 					resource.TestCheckTypeSetElemAttrPair(resourceName, "security_profile_ids.*", "data.aws_connect_security_profile.agent", "security_profile_id"),
@@ -189,7 +190,7 @@ func testAccUser_updatePhoneConfig(t *testing.T) {
 					testAccCheckUserExists(ctx, resourceName, &v),
 					resource.TestCheckResourceAttr(resourceName, "phone_config.#", "1"),
 					resource.TestCheckResourceAttr(resourceName, "phone_config.0.after_contact_work_time_limit", "0"),
-					resource.TestCheckResourceAttr(resourceName, "phone_config.0.phone_type", connect.PhoneTypeSoftPhone),
+					resource.TestCheckResourceAttr(resourceName, "phone_config.0.phone_type", string(awstypes.PhoneTypeSoftPhone)),
 				),
 			},
 			{
@@ -206,7 +207,7 @@ func testAccUser_updatePhoneConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "phone_config.0.after_contact_work_time_limit", strconv.Itoa(after_contact_work_time_limit_original)),
 					resource.TestCheckResourceAttr(resourceName, "phone_config.0.auto_accept", strconv.FormatBool(auto_accept_original)),
 					resource.TestCheckResourceAttr(resourceName, "phone_config.0.desk_phone_number", desk_phone_number_original),
-					resource.TestCheckResourceAttr(resourceName, "phone_config.0.phone_type", connect.PhoneTypeDeskPhone),
+					resource.TestCheckResourceAttr(resourceName, "phone_config.0.phone_type", string(awstypes.PhoneTypeDeskPhone)),
 				),
 			},
 			{
@@ -223,7 +224,7 @@ func testAccUser_updatePhoneConfig(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "phone_config.0.after_contact_work_time_limit", strconv.Itoa(after_contact_work_time_limit_updated)),
 					resource.TestCheckResourceAttr(resourceName, "phone_config.0.auto_accept", strconv.FormatBool(auto_accept_updated)),
 					resource.TestCheckResourceAttr(resourceName, "phone_config.0.desk_phone_number", desk_phone_number_updated),
-					resource.TestCheckResourceAttr(resourceName, "phone_config.0.phone_type", connect.PhoneTypeDeskPhone),
+					resource.TestCheckResourceAttr(resourceName, "phone_config.0.phone_type", string(awstypes.PhoneTypeDeskPhone)),
 				),
 			},
 		},
@@ -429,14 +430,14 @@ func testAccCheckUserExists(ctx context.Context, resourceName string, function *
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectClient(ctx)
 
 		params := &connect.DescribeUserInput{
 			UserId:     aws.String(userID),
 			InstanceId: aws.String(instanceID),
 		}
 
-		getFunction, err := conn.DescribeUserWithContext(ctx, params)
+		getFunction, err := conn.DescribeUser(ctx, params)
 		if err != nil {
 			return err
 		}
@@ -454,7 +455,7 @@ func testAccCheckUserDestroy(ctx context.Context) resource.TestCheckFunc {
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectClient(ctx)
 
 			instanceID, userID, err := tfconnect.UserParseID(rs.Primary.ID)
 
@@ -467,9 +468,9 @@ func testAccCheckUserDestroy(ctx context.Context) resource.TestCheckFunc {
 				InstanceId: aws.String(instanceID),
 			}
 
-			_, err = conn.DescribeUserWithContext(ctx, params)
+			_, err = conn.DescribeUser(ctx, params)
 
-			if tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				continue
 			}
 

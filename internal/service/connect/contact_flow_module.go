@@ -10,14 +10,15 @@ import (
 	"os"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/connect"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/connect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -92,7 +93,7 @@ func ResourceContactFlowModule() *schema.Resource {
 func resourceContactFlowModuleCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
 	instanceID := d.Get("instance_id").(string)
 	name := d.Get("name").(string)
@@ -123,7 +124,7 @@ func resourceContactFlowModuleCreate(ctx context.Context, d *schema.ResourceData
 		input.Content = aws.String(v.(string))
 	}
 
-	output, err := conn.CreateContactFlowModuleWithContext(ctx, input)
+	output, err := conn.CreateContactFlowModule(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Connect Contact Flow Module (%s): %s", name, err)
@@ -133,7 +134,7 @@ func resourceContactFlowModuleCreate(ctx context.Context, d *schema.ResourceData
 		return sdkdiag.AppendErrorf(diags, "creating Connect Contact Flow Module (%s): empty output", name)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(output.Id)))
+	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.ToString(output.Id)))
 
 	return append(diags, resourceContactFlowModuleRead(ctx, d, meta)...)
 }
@@ -141,7 +142,7 @@ func resourceContactFlowModuleCreate(ctx context.Context, d *schema.ResourceData
 func resourceContactFlowModuleRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
 	instanceID, contactFlowModuleID, err := ContactFlowModuleParseID(d.Id())
 
@@ -149,12 +150,12 @@ func resourceContactFlowModuleRead(ctx context.Context, d *schema.ResourceData, 
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	resp, err := conn.DescribeContactFlowModuleWithContext(ctx, &connect.DescribeContactFlowModuleInput{
+	resp, err := conn.DescribeContactFlowModule(ctx, &connect.DescribeContactFlowModuleInput{
 		ContactFlowModuleId: aws.String(contactFlowModuleID),
 		InstanceId:          aws.String(instanceID),
 	})
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		log.Printf("[WARN] Connect Contact Flow Module (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -183,7 +184,7 @@ func resourceContactFlowModuleRead(ctx context.Context, d *schema.ResourceData, 
 func resourceContactFlowModuleUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
 	instanceID, contactFlowModuleID, err := ContactFlowModuleParseID(d.Id())
 
@@ -199,7 +200,7 @@ func resourceContactFlowModuleUpdate(ctx context.Context, d *schema.ResourceData
 			Name:                aws.String(d.Get("name").(string)),
 		}
 
-		_, updateMetadataInputErr := conn.UpdateContactFlowModuleMetadataWithContext(ctx, updateMetadataInput)
+		_, updateMetadataInputErr := conn.UpdateContactFlowModuleMetadata(ctx, updateMetadataInput)
 
 		if updateMetadataInputErr != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Connect Contact Flow Module (%s): %s", d.Id(), updateMetadataInputErr)
@@ -228,7 +229,7 @@ func resourceContactFlowModuleUpdate(ctx context.Context, d *schema.ResourceData
 			updateContentInput.Content = aws.String(v.(string))
 		}
 
-		_, updateContentInputErr := conn.UpdateContactFlowModuleContentWithContext(ctx, updateContentInput)
+		_, updateContentInputErr := conn.UpdateContactFlowModuleContent(ctx, updateContentInput)
 
 		if updateContentInputErr != nil {
 			return sdkdiag.AppendErrorf(diags, "updating Connect Contact Flow Module content (%s): %s", d.Id(), updateContentInputErr)
@@ -241,7 +242,7 @@ func resourceContactFlowModuleUpdate(ctx context.Context, d *schema.ResourceData
 func resourceContactFlowModuleDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
 	instanceID, contactFlowModuleID, err := ContactFlowModuleParseID(d.Id())
 	if err != nil {
@@ -253,7 +254,7 @@ func resourceContactFlowModuleDelete(ctx context.Context, d *schema.ResourceData
 		InstanceId:          aws.String(instanceID),
 	}
 
-	_, deleteContactFlowModuleErr := conn.DeleteContactFlowModuleWithContext(ctx, input)
+	_, deleteContactFlowModuleErr := conn.DeleteContactFlowModule(ctx, input)
 	if deleteContactFlowModuleErr != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Connect Contact Flow Module (%s): %s", d.Id(), deleteContactFlowModuleErr)
 	}

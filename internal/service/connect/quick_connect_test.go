@@ -8,14 +8,15 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/connect"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/connect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -193,14 +194,14 @@ func testAccCheckQuickConnectExists(ctx context.Context, resourceName string, fu
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectClient(ctx)
 
 		params := &connect.DescribeQuickConnectInput{
 			QuickConnectId: aws.String(quickConnectID),
 			InstanceId:     aws.String(instanceID),
 		}
 
-		getFunction, err := conn.DescribeQuickConnectWithContext(ctx, params)
+		getFunction, err := conn.DescribeQuickConnect(ctx, params)
 		if err != nil {
 			return err
 		}
@@ -218,7 +219,7 @@ func testAccCheckQuickConnectDestroy(ctx context.Context) resource.TestCheckFunc
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectClient(ctx)
 
 			instanceID, quickConnectID, err := tfconnect.QuickConnectParseID(rs.Primary.ID)
 
@@ -231,9 +232,9 @@ func testAccCheckQuickConnectDestroy(ctx context.Context) resource.TestCheckFunc
 				InstanceId:     aws.String(instanceID),
 			}
 
-			_, err = conn.DescribeQuickConnectWithContext(ctx, params)
+			_, err = conn.DescribeQuickConnect(ctx, params)
 
-			if tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				continue
 			}
 

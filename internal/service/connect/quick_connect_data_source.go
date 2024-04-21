@@ -7,8 +7,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/connect"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/connect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -111,7 +112,7 @@ func DataSourceQuickConnect() *schema.Resource {
 func dataSourceQuickConnectRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	instanceID := d.Get("instance_id").(string)
@@ -137,7 +138,7 @@ func dataSourceQuickConnectRead(ctx context.Context, d *schema.ResourceData, met
 		input.QuickConnectId = quickConnectSummary.Id
 	}
 
-	resp, err := conn.DescribeQuickConnectWithContext(ctx, input)
+	resp, err := conn.DescribeQuickConnect(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "getting Connect Quick Connect: %s", err)
@@ -162,40 +163,33 @@ func dataSourceQuickConnectRead(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(quickConnect.QuickConnectId)))
+	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.ToString(quickConnect.QuickConnectId)))
 
 	return diags
 }
 
-func dataSourceGetQuickConnectSummaryByName(ctx context.Context, conn *connect.Connect, instanceID, name string) (*connect.QuickConnectSummary, error) {
-	var result *connect.QuickConnectSummary
+func dataSourceGetQuickConnectSummaryByName(ctx context.Context, conn *connect.Client, instanceID, name string) (*awstypes.QuickConnectSummary, error) {
+	var result *awstypes.QuickConnectSummary
 
 	input := &connect.ListQuickConnectsInput{
 		InstanceId: aws.String(instanceID),
-		MaxResults: aws.Int64(ListQuickConnectsMaxResults),
+		MaxResults: aws.Int32(ListQuickConnectsMaxResults),
 	}
 
-	err := conn.ListQuickConnectsPagesWithContext(ctx, input, func(page *connect.ListQuickConnectsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := connect.NewListQuickConnectsPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
 		}
 
 		for _, cf := range page.QuickConnectSummaryList {
-			if cf == nil {
-				continue
-			}
-
-			if aws.StringValue(cf.Name) == name {
-				result = cf
-				return false
+			if aws.ToString(cf.Name) == name {
+				result = &cf
 			}
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return nil, err
 	}
 
 	return result, nil

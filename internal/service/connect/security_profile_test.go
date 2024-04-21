@@ -8,14 +8,15 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/connect"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/connect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -213,14 +214,14 @@ func testAccCheckSecurityProfileExists(ctx context.Context, resourceName string,
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectClient(ctx)
 
 		params := &connect.DescribeSecurityProfileInput{
 			InstanceId:        aws.String(instanceID),
 			SecurityProfileId: aws.String(securityProfileID),
 		}
 
-		getFunction, err := conn.DescribeSecurityProfileWithContext(ctx, params)
+		getFunction, err := conn.DescribeSecurityProfile(ctx, params)
 		if err != nil {
 			return err
 		}
@@ -238,7 +239,7 @@ func testAccCheckSecurityProfileDestroy(ctx context.Context) resource.TestCheckF
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectClient(ctx)
 
 			instanceID, securityProfileID, err := tfconnect.SecurityProfileParseID(rs.Primary.ID)
 
@@ -251,9 +252,9 @@ func testAccCheckSecurityProfileDestroy(ctx context.Context) resource.TestCheckF
 				SecurityProfileId: aws.String(securityProfileID),
 			}
 
-			_, err = conn.DescribeSecurityProfileWithContext(ctx, params)
+			_, err = conn.DescribeSecurityProfile(ctx, params)
 
-			if tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				continue
 			}
 

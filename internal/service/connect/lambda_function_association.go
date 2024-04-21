@@ -7,12 +7,13 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/connect"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/connect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -46,7 +47,7 @@ func ResourceLambdaFunctionAssociation() *schema.Resource {
 func resourceLambdaFunctionAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
 	instanceId := d.Get("instance_id").(string)
 	functionArn := d.Get("function_arn").(string)
@@ -56,7 +57,7 @@ func resourceLambdaFunctionAssociationCreate(ctx context.Context, d *schema.Reso
 		FunctionArn: aws.String(functionArn),
 	}
 
-	_, err := conn.AssociateLambdaFunctionWithContext(ctx, input)
+	_, err := conn.AssociateLambdaFunction(ctx, input)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Connect Lambda Function Association (%s,%s): %s", instanceId, functionArn, err)
 	}
@@ -69,7 +70,7 @@ func resourceLambdaFunctionAssociationCreate(ctx context.Context, d *schema.Reso
 func resourceLambdaFunctionAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
 	instanceID, functionArn, err := LambdaFunctionAssociationParseResourceID(d.Id())
 
@@ -98,7 +99,7 @@ func resourceLambdaFunctionAssociationRead(ctx context.Context, d *schema.Resour
 func resourceLambdaFunctionAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
 	instanceID, functionArn, err := LambdaFunctionAssociationParseResourceID(d.Id())
 	if err != nil {
@@ -110,9 +111,9 @@ func resourceLambdaFunctionAssociationDelete(ctx context.Context, d *schema.Reso
 		FunctionArn: aws.String(functionArn),
 	}
 
-	_, err = conn.DisassociateLambdaFunctionWithContext(ctx, input)
+	_, err = conn.DisassociateLambdaFunction(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 

@@ -6,7 +6,7 @@ package connect
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -49,15 +49,15 @@ func DataSourceBotAssociation() *schema.Resource {
 func dataSourceBotAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
 	instanceID := d.Get("instance_id").(string)
 
 	var name, region string
 	if v, ok := d.GetOk("lex_bot"); ok && len(v.([]interface{})) > 0 && v.([]interface{})[0] != nil {
 		lexBot := expandLexBot(v.([]interface{}))
-		name = aws.StringValue(lexBot.Name)
-		region = aws.StringValue(lexBot.LexRegion)
+		name = aws.ToString(lexBot.Name)
+		region = aws.ToString(lexBot.LexRegion)
 	}
 
 	lexBot, err := FindBotAssociationV1ByNameAndRegionWithContext(ctx, conn, instanceID, name, region)

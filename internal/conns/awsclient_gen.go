@@ -51,6 +51,7 @@ import (
 	comprehend_sdkv2 "github.com/aws/aws-sdk-go-v2/service/comprehend"
 	computeoptimizer_sdkv2 "github.com/aws/aws-sdk-go-v2/service/computeoptimizer"
 	configservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/configservice"
+	connect_sdkv2 "github.com/aws/aws-sdk-go-v2/service/connect"
 	connectcases_sdkv2 "github.com/aws/aws-sdk-go-v2/service/connectcases"
 	controltower_sdkv2 "github.com/aws/aws-sdk-go-v2/service/controltower"
 	costandusagereportservice_sdkv2 "github.com/aws/aws-sdk-go-v2/service/costandusagereportservice"
@@ -172,7 +173,6 @@ import (
 	cloudfront_sdkv1 "github.com/aws/aws-sdk-go/service/cloudfront"
 	cloudwatchrum_sdkv1 "github.com/aws/aws-sdk-go/service/cloudwatchrum"
 	cognitoidentityprovider_sdkv1 "github.com/aws/aws-sdk-go/service/cognitoidentityprovider"
-	connect_sdkv1 "github.com/aws/aws-sdk-go/service/connect"
 	databasemigrationservice_sdkv1 "github.com/aws/aws-sdk-go/service/databasemigrationservice"
 	dataexchange_sdkv1 "github.com/aws/aws-sdk-go/service/dataexchange"
 	datapipeline_sdkv1 "github.com/aws/aws-sdk-go/service/datapipeline"
@@ -490,8 +490,8 @@ func (c *AWSClient) ConfigServiceClient(ctx context.Context) *configservice_sdkv
 	return errs.Must(client[*configservice_sdkv2.Client](ctx, c, names.ConfigService, make(map[string]any)))
 }
 
-func (c *AWSClient) ConnectConn(ctx context.Context) *connect_sdkv1.Connect {
-	return errs.Must(conn[*connect_sdkv1.Connect](ctx, c, names.Connect, make(map[string]any)))
+func (c *AWSClient) ConnectClient(ctx context.Context) *connect_sdkv2.Client {
+	return errs.Must(client[*connect_sdkv2.Client](ctx, c, names.Connect, make(map[string]any)))
 }
 
 func (c *AWSClient) ConnectCasesClient(ctx context.Context) *connectcases_sdkv2.Client {

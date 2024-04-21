@@ -4,7 +4,7 @@
 package connect
 
 import (
-	"github.com/aws/aws-sdk-go/service/connect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 )
 
 const (
@@ -60,13 +60,13 @@ const (
 
 func InstanceAttributeMapping() map[string]string {
 	return map[string]string{
-		connect.InstanceAttributeTypeAutoResolveBestVoices: "auto_resolve_best_voices_enabled",
-		connect.InstanceAttributeTypeContactflowLogs:       "contact_flow_logs_enabled",
-		connect.InstanceAttributeTypeContactLens:           "contact_lens_enabled",
-		connect.InstanceAttributeTypeEarlyMedia:            "early_media_enabled",
-		connect.InstanceAttributeTypeInboundCalls:          "inbound_calls_enabled",
-		connect.InstanceAttributeTypeMultiPartyConference:  "multi_party_conference_enabled",
-		connect.InstanceAttributeTypeOutboundCalls:         "outbound_calls_enabled",
+		string(awstypes.InstanceAttributeTypeAutoResolveBestVoices): "auto_resolve_best_voices_enabled",
+		string(awstypes.InstanceAttributeTypeContactflowLogs):       "contact_flow_logs_enabled",
+		string(awstypes.InstanceAttributeTypeContactLens):           "contact_lens_enabled",
+		string(awstypes.InstanceAttributeTypeEarlyMedia):            "early_media_enabled",
+		string(awstypes.InstanceAttributeTypeInboundCalls):          "inbound_calls_enabled",
+		string(awstypes.InstanceAttributeTypeMultiPartyConference):  "multi_party_conference_enabled",
+		string(awstypes.InstanceAttributeTypeOutboundCalls):         "outbound_calls_enabled",
 		// Pre-release feature requiring allow-list from AWS. Removing all functionality until feature is GA
 		//connect.InstanceAttributeTypeUseCustomTtsVoices:    "use_custom_tts_voices_enabled",
 	}

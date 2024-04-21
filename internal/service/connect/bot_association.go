@@ -7,13 +7,14 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/connect"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/connect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
@@ -81,7 +82,7 @@ func ResourceBotAssociation() *schema.Resource {
 func resourceBotAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
 	instanceId := d.Get("instance_id").(string)
 
@@ -105,10 +106,10 @@ func resourceBotAssociationCreate(ctx context.Context, d *schema.ResourceData, m
 
 	_, err := tfresource.RetryWhen(ctx, botAssociationCreateTimeout,
 		func() (interface{}, error) {
-			return conn.AssociateBotWithContext(ctx, input)
+			return conn.AssociateBot(ctx, input)
 		},
 		func(err error) (bool, error) {
-			if tfawserr.ErrCodeEquals(err, connect.ErrCodeInvalidRequestException) {
+			if errs.IsA[*awstypes.InvalidRequestException](err) {
 				return true, err
 			}
 
@@ -116,7 +117,7 @@ func resourceBotAssociationCreate(ctx context.Context, d *schema.ResourceData, m
 		},
 	)
 
-	lbaId := BotV1AssociationCreateResourceID(instanceId, aws.StringValue(input.LexBot.Name), aws.StringValue(input.LexBot.LexRegion))
+	lbaId := BotV1AssociationCreateResourceID(instanceId, aws.ToString(input.LexBot.Name), aws.ToString(input.LexBot.LexRegion))
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Connect Bot Association (%s): %s", lbaId, err)
@@ -130,7 +131,7 @@ func resourceBotAssociationCreate(ctx context.Context, d *schema.ResourceData, m
 func resourceBotAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
 	instanceId, name, region, err := BotV1AssociationParseResourceID(d.Id())
 
@@ -165,7 +166,7 @@ func resourceBotAssociationRead(ctx context.Context, d *schema.ResourceData, met
 func resourceBotAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
 	instanceID, name, region, err := BotV1AssociationParseResourceID(d.Id())
 
@@ -173,7 +174,7 @@ func resourceBotAssociationDelete(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	lexBot := &connect.LexBot{
+	lexBot := &awstypes.LexBot{
 		Name:      aws.String(name),
 		LexRegion: aws.String(region),
 	}
@@ -183,9 +184,9 @@ func resourceBotAssociationDelete(ctx context.Context, d *schema.ResourceData, m
 		LexBot:     lexBot,
 	}
 
-	_, err = conn.DisassociateBotWithContext(ctx, input)
+	_, err = conn.DisassociateBot(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		return diags
 	}
 
@@ -196,7 +197,7 @@ func resourceBotAssociationDelete(ctx context.Context, d *schema.ResourceData, m
 	return diags
 }
 
-func expandLexBot(l []interface{}) *connect.LexBot {
+func expandLexBot(l []interface{}) *awstypes.LexBot {
 	if len(l) == 0 || l[0] == nil {
 		return nil
 	}
@@ -206,7 +207,7 @@ func expandLexBot(l []interface{}) *connect.LexBot {
 		return nil
 	}
 
-	result := &connect.LexBot{
+	result := &awstypes.LexBot{
 		Name: aws.String(tfMap["name"].(string)),
 	}
 
@@ -217,7 +218,7 @@ func expandLexBot(l []interface{}) *connect.LexBot {
 	return result
 }
 
-func flattenLexBot(bot *connect.LexBot) []interface{} {
+func flattenLexBot(bot *awstypes.LexBot) []interface{} {
 	if bot == nil {
 		return []interface{}{}
 	}

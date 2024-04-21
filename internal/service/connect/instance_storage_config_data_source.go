@@ -7,12 +7,14 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/connect"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/connect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
@@ -32,9 +34,9 @@ func DataSourceInstanceStorageConfig() *schema.Resource {
 				ValidateFunc: validation.StringLenBetween(1, 100),
 			},
 			"resource_type": {
-				Type:         schema.TypeString,
-				Required:     true,
-				ValidateFunc: validation.StringInSlice(connect.InstanceStorageResourceType_Values(), false),
+				Type:             schema.TypeString,
+				Required:         true,
+				ValidateDiagFunc: enum.Validate[awstypes.InstanceStorageResourceType](),
 			},
 			"storage_config": {
 				Type:     schema.TypeList,
@@ -143,7 +145,7 @@ func DataSourceInstanceStorageConfig() *schema.Resource {
 func dataSourceInstanceStorageConfigRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
 	associationId := d.Get("association_id").(string)
 	instanceId := d.Get("instance_id").(string)
@@ -152,10 +154,10 @@ func dataSourceInstanceStorageConfigRead(ctx context.Context, d *schema.Resource
 	input := &connect.DescribeInstanceStorageConfigInput{
 		AssociationId: aws.String(associationId),
 		InstanceId:    aws.String(instanceId),
-		ResourceType:  aws.String(resourceType),
+		ResourceType:  awstypes.InstanceStorageResourceType(resourceType),
 	}
 
-	resp, err := conn.DescribeInstanceStorageConfigWithContext(ctx, input)
+	resp, err := conn.DescribeInstanceStorageConfig(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "getting Connect Instance Storage Config for Connect Instance (%s,%s,%s): %s", associationId, instanceId, resourceType, err)

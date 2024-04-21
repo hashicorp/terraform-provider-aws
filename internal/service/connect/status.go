@@ -6,49 +6,50 @@ package connect
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/connect"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/connect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 )
 
-func statusPhoneNumber(ctx context.Context, conn *connect.Connect, phoneNumberId string) retry.StateRefreshFunc {
+func statusPhoneNumber(ctx context.Context, conn *connect.Client, phoneNumberId string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &connect.DescribePhoneNumberInput{
 			PhoneNumberId: aws.String(phoneNumberId),
 		}
 
-		output, err := conn.DescribePhoneNumberWithContext(ctx, input)
+		output, err := conn.DescribePhoneNumber(ctx, input)
 
-		if tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
-			return output, connect.ErrCodeResourceNotFoundException, nil
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return output, err.Error(), nil
 		}
 
 		if err != nil {
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.ClaimedPhoneNumberSummary.PhoneNumberStatus.Status), nil
+		return output, string(output.ClaimedPhoneNumberSummary.PhoneNumberStatus.Status), nil
 	}
 }
 
-func statusVocabulary(ctx context.Context, conn *connect.Connect, instanceId, vocabularyId string) retry.StateRefreshFunc {
+func statusVocabulary(ctx context.Context, conn *connect.Client, instanceId, vocabularyId string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		input := &connect.DescribeVocabularyInput{
 			InstanceId:   aws.String(instanceId),
 			VocabularyId: aws.String(vocabularyId),
 		}
 
-		output, err := conn.DescribeVocabularyWithContext(ctx, input)
+		output, err := conn.DescribeVocabulary(ctx, input)
 
-		if tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
-			return output, connect.ErrCodeResourceNotFoundException, nil
+		if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+			return output, err.Error(), nil
 		}
 
 		if err != nil {
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.Vocabulary.State), nil
+		return output, string(output.Vocabulary.State), nil
 	}
 }

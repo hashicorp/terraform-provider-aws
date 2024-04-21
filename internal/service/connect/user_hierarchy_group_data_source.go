@@ -7,8 +7,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/connect"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/connect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -88,7 +89,7 @@ func DataSourceUserHierarchyGroup() *schema.Resource {
 func dataSourceUserHierarchyGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	instanceID := d.Get("instance_id").(string)
@@ -114,7 +115,7 @@ func dataSourceUserHierarchyGroupRead(ctx context.Context, d *schema.ResourceDat
 		input.HierarchyGroupId = hierarchyGroupSummary.Id
 	}
 
-	resp, err := conn.DescribeUserHierarchyGroupWithContext(ctx, input)
+	resp, err := conn.DescribeUserHierarchyGroup(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "getting Connect Hierarchy Group: %s", err)
@@ -140,40 +141,33 @@ func dataSourceUserHierarchyGroupRead(ctx context.Context, d *schema.ResourceDat
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(hierarchyGroup.Id)))
+	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.ToString(hierarchyGroup.Id)))
 
 	return diags
 }
 
-func userHierarchyGroupSummaryByName(ctx context.Context, conn *connect.Connect, instanceID, name string) (*connect.HierarchyGroupSummary, error) {
-	var result *connect.HierarchyGroupSummary
+func userHierarchyGroupSummaryByName(ctx context.Context, conn *connect.Client, instanceID, name string) (*awstypes.HierarchyGroupSummary, error) {
+	var result *awstypes.HierarchyGroupSummary
 
 	input := &connect.ListUserHierarchyGroupsInput{
 		InstanceId: aws.String(instanceID),
-		MaxResults: aws.Int64(ListUserHierarchyGroupsMaxResults),
+		MaxResults: aws.Int32(ListUserHierarchyGroupsMaxResults),
 	}
 
-	err := conn.ListUserHierarchyGroupsPagesWithContext(ctx, input, func(page *connect.ListUserHierarchyGroupsOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := connect.NewListUserHierarchyGroupsPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
 		}
 
 		for _, qs := range page.UserHierarchyGroupSummaryList {
-			if qs == nil {
-				continue
-			}
-
-			if aws.StringValue(qs.Name) == name {
-				result = qs
-				return false
+			if aws.ToString(qs.Name) == name {
+				result = &qs
 			}
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		return nil, err
 	}
 
 	return result, nil

@@ -10,14 +10,16 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/connect"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/connect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -51,9 +53,9 @@ func ResourceHoursOfOperation() *schema.Resource {
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
 						"day": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(connect.HoursOfOperationDays_Values(), false),
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.HoursOfOperationDays](),
 						},
 						"end_time": {
 							Type:     schema.TypeList,
@@ -131,7 +133,7 @@ func ResourceHoursOfOperation() *schema.Resource {
 func resourceHoursOfOperationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
 	instanceID := d.Get("instance_id").(string)
 	name := d.Get("name").(string)
@@ -148,8 +150,8 @@ func resourceHoursOfOperationCreate(ctx context.Context, d *schema.ResourceData,
 		input.Description = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating Connect Hours of Operation %s", input)
-	output, err := conn.CreateHoursOfOperationWithContext(ctx, input)
+	log.Printf("[DEBUG] Creating Connect Hours of Operation %+v", input)
+	output, err := conn.CreateHoursOfOperation(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating Connect Hours of Operation (%s): %s", name, err)
@@ -159,7 +161,7 @@ func resourceHoursOfOperationCreate(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "creating Connect Hours of Operation (%s): empty output", name)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(output.HoursOfOperationId)))
+	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.ToString(output.HoursOfOperationId)))
 
 	return append(diags, resourceHoursOfOperationRead(ctx, d, meta)...)
 }
@@ -167,7 +169,7 @@ func resourceHoursOfOperationCreate(ctx context.Context, d *schema.ResourceData,
 func resourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
 	instanceID, hoursOfOperationID, err := HoursOfOperationParseID(d.Id())
 
@@ -175,12 +177,12 @@ func resourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData, m
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	resp, err := conn.DescribeHoursOfOperationWithContext(ctx, &connect.DescribeHoursOfOperationInput{
+	resp, err := conn.DescribeHoursOfOperation(ctx, &connect.DescribeHoursOfOperationInput{
 		HoursOfOperationId: aws.String(hoursOfOperationID),
 		InstanceId:         aws.String(instanceID),
 	})
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && errs.IsA[*awstypes.ResourceNotFoundException](err) {
 		log.Printf("[WARN] Connect Hours of Operation (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
@@ -213,7 +215,7 @@ func resourceHoursOfOperationRead(ctx context.Context, d *schema.ResourceData, m
 func resourceHoursOfOperationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
 	instanceID, hoursOfOperationID, err := HoursOfOperationParseID(d.Id())
 
@@ -222,7 +224,7 @@ func resourceHoursOfOperationUpdate(ctx context.Context, d *schema.ResourceData,
 	}
 
 	if d.HasChanges("config", "description", "name", "time_zone") {
-		_, err = conn.UpdateHoursOfOperationWithContext(ctx, &connect.UpdateHoursOfOperationInput{
+		_, err = conn.UpdateHoursOfOperation(ctx, &connect.UpdateHoursOfOperationInput{
 			Config:             expandConfigs(d.Get("config").(*schema.Set).List()),
 			Description:        aws.String(d.Get("description").(string)),
 			HoursOfOperationId: aws.String(hoursOfOperationID),
@@ -241,7 +243,7 @@ func resourceHoursOfOperationUpdate(ctx context.Context, d *schema.ResourceData,
 func resourceHoursOfOperationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 
 	instanceID, hoursOfOperationID, err := HoursOfOperationParseID(d.Id())
 
@@ -249,7 +251,7 @@ func resourceHoursOfOperationDelete(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	_, err = conn.DeleteHoursOfOperationWithContext(ctx, &connect.DeleteHoursOfOperationInput{
+	_, err = conn.DeleteHoursOfOperation(ctx, &connect.DeleteHoursOfOperationInput{
 		HoursOfOperationId: aws.String(hoursOfOperationID),
 		InstanceId:         aws.String(instanceID),
 	})
@@ -261,31 +263,31 @@ func resourceHoursOfOperationDelete(ctx context.Context, d *schema.ResourceData,
 	return diags
 }
 
-func expandConfigs(configs []interface{}) []*connect.HoursOfOperationConfig {
+func expandConfigs(configs []interface{}) []awstypes.HoursOfOperationConfig {
 	if len(configs) == 0 {
 		return nil
 	}
 
-	hoursOfOperationConfigs := []*connect.HoursOfOperationConfig{}
+	hoursOfOperationConfigs := []awstypes.HoursOfOperationConfig{}
 	for _, config := range configs {
 		data := config.(map[string]interface{})
-		hoursOfOperationConfig := &connect.HoursOfOperationConfig{
-			Day: aws.String(data["day"].(string)),
+		hoursOfOperationConfig := awstypes.HoursOfOperationConfig{
+			Day: awstypes.HoursOfOperationDays(data["day"].(string)),
 		}
 
 		tet := data["end_time"].([]interface{})
 		vet := tet[0].(map[string]interface{})
-		et := connect.HoursOfOperationTimeSlice{
-			Hours:   aws.Int64(int64(vet["hours"].(int))),
-			Minutes: aws.Int64(int64(vet["minutes"].(int))),
+		et := awstypes.HoursOfOperationTimeSlice{
+			Hours:   aws.Int32(int32(vet["hours"].(int))),
+			Minutes: aws.Int32(int32(vet["minutes"].(int))),
 		}
 		hoursOfOperationConfig.EndTime = &et
 
 		tst := data["start_time"].([]interface{})
 		vst := tst[0].(map[string]interface{})
-		st := connect.HoursOfOperationTimeSlice{
-			Hours:   aws.Int64(int64(vst["hours"].(int))),
-			Minutes: aws.Int64(int64(vst["minutes"].(int))),
+		st := awstypes.HoursOfOperationTimeSlice{
+			Hours:   aws.Int32(int32(vst["hours"].(int))),
+			Minutes: aws.Int32(int32(vst["minutes"].(int))),
 		}
 		hoursOfOperationConfig.StartTime = &st
 
@@ -295,21 +297,21 @@ func expandConfigs(configs []interface{}) []*connect.HoursOfOperationConfig {
 	return hoursOfOperationConfigs
 }
 
-func flattenConfigs(configs []*connect.HoursOfOperationConfig) []interface{} {
+func flattenConfigs(configs []awstypes.HoursOfOperationConfig) []interface{} {
 	configsList := []interface{}{}
 	for _, config := range configs {
 		values := map[string]interface{}{}
-		values["day"] = aws.StringValue(config.Day)
+		values["day"] = string(config.Day)
 
 		et := map[string]interface{}{
-			"hours":   aws.Int64Value(config.EndTime.Hours),
-			"minutes": aws.Int64Value(config.EndTime.Minutes),
+			"hours":   aws.ToInt32(config.EndTime.Hours),
+			"minutes": aws.ToInt32(config.EndTime.Minutes),
 		}
 		values["end_time"] = []interface{}{et}
 
 		st := map[string]interface{}{
-			"hours":   aws.Int64Value(config.StartTime.Hours),
-			"minutes": aws.Int64Value(config.StartTime.Minutes),
+			"hours":   aws.ToInt32(config.StartTime.Hours),
+			"minutes": aws.ToInt32(config.StartTime.Minutes),
 		}
 		values["start_time"] = []interface{}{st}
 		configsList = append(configsList, values)

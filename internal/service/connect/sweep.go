@@ -7,12 +7,12 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/connect"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/connect"
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
-	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
 func RegisterSweepers() {
@@ -29,25 +29,25 @@ func sweepInstance(region string) error {
 		return fmt.Errorf("error getting client: %s", err)
 	}
 
-	conn := client.ConnectConn(ctx)
+	conn := client.ConnectClient(ctx)
 
 	var errs *multierror.Error
 	sweepResources := make([]sweep.Sweepable, 0)
 
 	// MaxResults:  Maximum value of 10. https://docs.aws.amazon.com/connect/latest/APIReference/API_ListInstances.html
-	input := &connect.ListInstancesInput{MaxResults: aws.Int64(ListInstancesMaxResults)}
+	input := &connect.ListInstancesInput{MaxResults: aws.Int32(ListInstancesMaxResults)}
 
-	err = conn.ListInstancesPagesWithContext(ctx, input, func(page *connect.ListInstancesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := connect.NewListInstancesPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			errs = multierror.Append(errs, fmt.Errorf("error listing Connect Instances: %w", err))
 		}
 
 		for _, instanceSummary := range page.InstanceSummaryList {
-			if instanceSummary == nil {
-				continue
-			}
-
-			id := aws.StringValue(instanceSummary.Id)
+			id := aws.ToString(instanceSummary.Id)
 
 			log.Printf("[INFO] Deleting Connect Instance (%s)", id)
 			r := ResourceInstance()
@@ -56,19 +56,13 @@ func sweepInstance(region string) error {
 
 			sweepResources = append(sweepResources, sweep.NewSweepResource(r, d, client))
 		}
-
-		return !lastPage
-	})
-
-	if err != nil {
-		errs = multierror.Append(errs, fmt.Errorf("error listing Connect Instances: %w", err))
 	}
 
 	if err = sweep.SweepOrchestrator(ctx, sweepResources); err != nil {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping Connect Instances for %s: %w", region, err))
 	}
 
-	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv2.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Connect Instances sweep for %s: %s", region, errs)
 		return nil
 	}

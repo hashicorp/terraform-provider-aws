@@ -7,8 +7,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/connect"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/connect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -87,7 +88,7 @@ func DataSourceQueue() *schema.Resource {
 func dataSourceQueueRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	instanceID := d.Get("instance_id").(string)
@@ -113,7 +114,7 @@ func dataSourceQueueRead(ctx context.Context, d *schema.ResourceData, meta inter
 		input.QueueId = queueSummary.Id
 	}
 
-	resp, err := conn.DescribeQueueWithContext(ctx, input)
+	resp, err := conn.DescribeQueue(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "getting Connect Queue: %s", err)
@@ -141,40 +142,34 @@ func dataSourceQueueRead(ctx context.Context, d *schema.ResourceData, meta inter
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(queue.QueueId)))
+	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.ToString(queue.QueueId)))
 
 	return diags
 }
 
-func dataSourceGetQueueSummaryByName(ctx context.Context, conn *connect.Connect, instanceID, name string) (*connect.QueueSummary, error) {
-	var result *connect.QueueSummary
+func dataSourceGetQueueSummaryByName(ctx context.Context, conn *connect.Client, instanceID, name string) (*awstypes.QueueSummary, error) {
+	var result *awstypes.QueueSummary
 
 	input := &connect.ListQueuesInput{
 		InstanceId: aws.String(instanceID),
-		MaxResults: aws.Int64(ListQueuesMaxResults),
+		MaxResults: aws.Int32(ListQueuesMaxResults),
 	}
 
-	err := conn.ListQueuesPagesWithContext(ctx, input, func(page *connect.ListQueuesOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := connect.NewListQueuesPaginator(conn, input)
+
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if err != nil {
+			return nil, err
 		}
 
 		for _, qs := range page.QueueSummaryList {
-			if qs == nil {
-				continue
-			}
-
-			if aws.StringValue(qs.Name) == name {
-				result = qs
-				return false
+			if aws.ToString(qs.Name) == name {
+				result = &qs
 			}
 		}
 
-		return !lastPage
-	})
-
-	if err != nil {
-		return nil, err
 	}
 
 	return result, nil

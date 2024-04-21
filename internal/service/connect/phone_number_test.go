@@ -9,14 +9,15 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/connect"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/connect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	tfconnect "github.com/hashicorp/terraform-provider-aws/internal/service/connect"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -41,9 +42,9 @@ func testAccPhoneNumber_basic(t *testing.T) {
 					resource.TestCheckResourceAttr(resourceName, "country_code", "US"),
 					resource.TestCheckResourceAttrSet(resourceName, "phone_number"),
 					resource.TestCheckResourceAttr(resourceName, "status.#", "1"),
-					resource.TestCheckResourceAttr(resourceName, "status.0.status", connect.PhoneNumberWorkflowStatusClaimed),
+					resource.TestCheckResourceAttr(resourceName, "status.0.status", string(awstypes.PhoneNumberWorkflowStatusClaimed)),
 					resource.TestCheckResourceAttrPair(resourceName, "target_arn", "aws_connect_instance.test", "arn"),
-					resource.TestCheckResourceAttr(resourceName, "type", connect.PhoneNumberTypeDid),
+					resource.TestCheckResourceAttr(resourceName, "type", string(awstypes.PhoneNumberTypeDid)),
 				),
 			},
 			{
@@ -233,13 +234,13 @@ func testAccCheckPhoneNumberExists(ctx context.Context, resourceName string, fun
 			return fmt.Errorf("Connect Phone Number ID not set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectClient(ctx)
 
 		params := &connect.DescribePhoneNumberInput{
 			PhoneNumberId: aws.String(rs.Primary.ID),
 		}
 
-		getFunction, err := conn.DescribePhoneNumberWithContext(ctx, params)
+		getFunction, err := conn.DescribePhoneNumber(ctx, params)
 		if err != nil {
 			return err
 		}
@@ -257,15 +258,15 @@ func testAccCheckPhoneNumberDestroy(ctx context.Context) resource.TestCheckFunc 
 				continue
 			}
 
-			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectConn(ctx)
+			conn := acctest.Provider.Meta().(*conns.AWSClient).ConnectClient(ctx)
 
 			params := &connect.DescribePhoneNumberInput{
 				PhoneNumberId: aws.String(rs.Primary.ID),
 			}
 
-			_, err := conn.DescribePhoneNumberWithContext(ctx, params)
+			_, err := conn.DescribePhoneNumber(ctx, params)
 
-			if tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
+			if errs.IsA[*awstypes.ResourceNotFoundException](err) {
 				continue
 			}
 

@@ -8,9 +8,11 @@ import (
 	"errors"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/connect"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/connect"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
@@ -27,10 +29,10 @@ const (
 	vocabularyDeletedTimeout = 100 * time.Minute
 )
 
-func waitPhoneNumberCreated(ctx context.Context, conn *connect.Connect, timeout time.Duration, phoneNumberId string) (*connect.DescribePhoneNumberOutput, error) {
+func waitPhoneNumberCreated(ctx context.Context, conn *connect.Client, timeout time.Duration, phoneNumberId string) (*connect.DescribePhoneNumberOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{connect.PhoneNumberWorkflowStatusInProgress},
-		Target:  []string{connect.PhoneNumberWorkflowStatusClaimed},
+		Pending: enum.Slice(awstypes.PhoneNumberWorkflowStatusInProgress),
+		Target:  enum.Slice(awstypes.PhoneNumberWorkflowStatusClaimed),
 		Refresh: statusPhoneNumber(ctx, conn, phoneNumberId),
 		Timeout: timeout,
 	}
@@ -38,8 +40,8 @@ func waitPhoneNumberCreated(ctx context.Context, conn *connect.Connect, timeout 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*connect.DescribePhoneNumberOutput); ok {
-		if aws.StringValue(output.ClaimedPhoneNumberSummary.PhoneNumberStatus.Status) == connect.PhoneNumberWorkflowStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.StringValue(output.ClaimedPhoneNumberSummary.PhoneNumberStatus.Message)))
+		if output.ClaimedPhoneNumberSummary.PhoneNumberStatus.Status == awstypes.PhoneNumberWorkflowStatusFailed {
+			tfresource.SetLastError(err, errors.New(aws.ToString(output.ClaimedPhoneNumberSummary.PhoneNumberStatus.Message)))
 		}
 		return output, err
 	}
@@ -47,10 +49,10 @@ func waitPhoneNumberCreated(ctx context.Context, conn *connect.Connect, timeout 
 	return nil, err
 }
 
-func waitPhoneNumberUpdated(ctx context.Context, conn *connect.Connect, timeout time.Duration, phoneNumberId string) (*connect.DescribePhoneNumberOutput, error) {
+func waitPhoneNumberUpdated(ctx context.Context, conn *connect.Client, timeout time.Duration, phoneNumberId string) (*connect.DescribePhoneNumberOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{connect.PhoneNumberWorkflowStatusInProgress},
-		Target:  []string{connect.PhoneNumberWorkflowStatusClaimed},
+		Pending: enum.Slice(awstypes.PhoneNumberWorkflowStatusInProgress),
+		Target:  enum.Slice(awstypes.PhoneNumberWorkflowStatusClaimed),
 		Refresh: statusPhoneNumber(ctx, conn, phoneNumberId),
 		Timeout: timeout,
 	}
@@ -58,8 +60,8 @@ func waitPhoneNumberUpdated(ctx context.Context, conn *connect.Connect, timeout 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
 	if output, ok := outputRaw.(*connect.DescribePhoneNumberOutput); ok {
-		if aws.StringValue(output.ClaimedPhoneNumberSummary.PhoneNumberStatus.Status) == connect.PhoneNumberWorkflowStatusFailed {
-			tfresource.SetLastError(err, errors.New(aws.StringValue(output.ClaimedPhoneNumberSummary.PhoneNumberStatus.Message)))
+		if output.ClaimedPhoneNumberSummary.PhoneNumberStatus.Status == awstypes.PhoneNumberWorkflowStatusFailed {
+			tfresource.SetLastError(err, errors.New(aws.ToString(output.ClaimedPhoneNumberSummary.PhoneNumberStatus.Message)))
 		}
 		return output, err
 	}
@@ -67,10 +69,10 @@ func waitPhoneNumberUpdated(ctx context.Context, conn *connect.Connect, timeout 
 	return nil, err
 }
 
-func waitPhoneNumberDeleted(ctx context.Context, conn *connect.Connect, timeout time.Duration, phoneNumberId string) (*connect.DescribePhoneNumberOutput, error) {
+func waitPhoneNumberDeleted(ctx context.Context, conn *connect.Client, timeout time.Duration, phoneNumberId string) (*connect.DescribePhoneNumberOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{connect.PhoneNumberWorkflowStatusInProgress},
-		Target:  []string{connect.ErrCodeResourceNotFoundException},
+		Pending: enum.Slice(awstypes.PhoneNumberWorkflowStatusInProgress),
+		Target:  []string{},
 		Refresh: statusPhoneNumber(ctx, conn, phoneNumberId),
 		Timeout: timeout,
 	}
@@ -84,10 +86,10 @@ func waitPhoneNumberDeleted(ctx context.Context, conn *connect.Connect, timeout 
 	return nil, err
 }
 
-func waitVocabularyCreated(ctx context.Context, conn *connect.Connect, timeout time.Duration, instanceId, vocabularyId string) (*connect.DescribeVocabularyOutput, error) {
+func waitVocabularyCreated(ctx context.Context, conn *connect.Client, timeout time.Duration, instanceId, vocabularyId string) (*connect.DescribeVocabularyOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{connect.VocabularyStateCreationInProgress},
-		Target:  []string{connect.VocabularyStateActive, connect.VocabularyStateCreationFailed},
+		Pending: enum.Slice(awstypes.VocabularyStateCreationInProgress),
+		Target:  []string{},
 		Refresh: statusVocabulary(ctx, conn, instanceId, vocabularyId),
 		Timeout: timeout,
 	}
@@ -101,10 +103,10 @@ func waitVocabularyCreated(ctx context.Context, conn *connect.Connect, timeout t
 	return nil, err
 }
 
-func waitVocabularyDeleted(ctx context.Context, conn *connect.Connect, timeout time.Duration, instanceId, vocabularyId string) (*connect.DescribeVocabularyOutput, error) {
+func waitVocabularyDeleted(ctx context.Context, conn *connect.Client, timeout time.Duration, instanceId, vocabularyId string) (*connect.DescribeVocabularyOutput, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending: []string{connect.VocabularyStateDeleteInProgress},
-		Target:  []string{connect.ErrCodeResourceNotFoundException},
+		Pending: enum.Slice(awstypes.VocabularyStateDeleteInProgress),
+		Target:  []string{},
 		Refresh: statusVocabulary(ctx, conn, instanceId, vocabularyId),
 		Timeout: timeout,
 	}

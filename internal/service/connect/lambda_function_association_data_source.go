@@ -34,7 +34,7 @@ func DataSourceLambdaFunctionAssociation() *schema.Resource {
 func dataSourceLambdaFunctionAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
+	conn := meta.(*conns.AWSClient).ConnectClient(ctx)
 	functionArn := d.Get("function_arn")
 	instanceID := d.Get("instance_id")
 
