@@ -329,6 +329,40 @@ func TestAccECSService_VolumeConfigurations_basic(t *testing.T) {
 	})
 }
 
+func TestAccECSService_VolumeConfigurations_update(t *testing.T) {
+	ctx := acctest.Context(t)
+	var service ecs.Service
+	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
+	resourceName := "aws_ecs_service.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.ECSServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckServiceDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccServiceConfig_volumeConfigurations_update(rName, "gp2", 8),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+				),
+			},
+			{
+				Config: testAccServiceConfig_volumeConfigurations_update(rName, "gp3", 8),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+				),
+			},
+			{
+				Config: testAccServiceConfig_volumeConfigurations_update(rName, "gp3", 16),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckServiceExists(ctx, resourceName, &service),
+				),
+			},
+		},
+	})
+}
+
 func TestAccECSService_familyAndRevision(t *testing.T) {
 	ctx := acctest.Context(t)
 	var service ecs.Service
@@ -2119,20 +2153,20 @@ resource "aws_ecs_cluster" "test" {
 resource "aws_ecs_task_definition" "test" {
   family = %[1]q
 
-  container_definitions = <<DEFINITION
+  container_definitions = <<TASK_DEFINITION
 [
   {
     "cpu": 128,
     "essential": true,
     "image": "mongo:latest",
     "memory": 128,
-    "name": "mongodb"
-  },
-  "mountPoints": [
-    {"sourceVolume": "vol1", "containerPath": "/vol1"}
-  ],
+    "name": "mongodb",
+    "mountPoints": [
+      {"sourceVolume": "vol1", "containerPath": "/vol1"}
+    ]
+  }
 ]
-DEFINITION
+TASK_DEFINITION
 
   volume {
     name      = "vol1"
@@ -2150,6 +2184,79 @@ resource "aws_ecs_service" "test" {
   }
 }
 `, rName)
+}
+
+func testAccServiceConfig_volumeConfigurations_update(rName, volumeType string, size int) string {
+	return fmt.Sprintf(`
+data "aws_partition" "current" {}
+
+resource "aws_iam_role" "test" {
+  name = %[1]q
+
+  assume_role_policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Service": "eks.${data.aws_partition.current.dns_suffix}"
+      },
+      "Action": "sts:AssumeRole"
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_iam_role_policy_attachment" "test-AmazonEKSClusterPolicy" {
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonECSInfrastructureRolePolicyForVolumes"
+  role       = aws_iam_role.test.name
+}
+
+resource "aws_ecs_cluster" "test" {
+  name = %[1]q
+}
+
+resource "aws_ecs_task_definition" "test" {
+  family = %[1]q
+
+  container_definitions = <<TASK_DEFINITION
+[
+  {
+    "cpu": 128,
+    "essential": true,
+    "image": "mongo:latest",
+    "memory": 128,
+    "name": "mongodb",
+    "mountPoints": [
+      {"sourceVolume": "vol1", "containerPath": "/vol1"}
+    ]
+  }
+]
+TASK_DEFINITION
+
+  volume {
+    name      = "vol1"
+    host_path = "/host/vol1"
+  }
+}
+
+resource "aws_ecs_service" "test" {
+  name            = %[1]q
+  cluster         = aws_ecs_cluster.test.id
+  task_definition = aws_ecs_task_definition.test.arn
+  desired_count   = 1
+  volume_configuration {
+    name = "vol1"
+    managed_ebs_volume {
+        role_arn = aws_iam_role.test.arn
+        size_in_gb = %[3]d
+        volume_type = %[2]q
+    }
+  }
+}
+`, rName, volumeType, size)
 }
 
 func testAccServiceConfig_forceNewDeployment(rName string) string {
