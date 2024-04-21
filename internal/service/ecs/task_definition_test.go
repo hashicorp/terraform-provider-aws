@@ -150,7 +150,7 @@ func TestAccECSTaskDefinition_configuredAtLaunch(t *testing.T) {
 		CheckDestroy:             testAccCheckTaskDefinitionDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: TestAccECSTaskDefinition_configuredAtLaunch(rName),
+				Config: testAccTaskDefinitionConfig_configuredAtLaunch(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckTaskDefinitionExists(ctx, resourceName, &def),
 					resource.TestCheckResourceAttr(resourceName, "configure_at_launch", "true"),
@@ -1823,7 +1823,7 @@ TASK_DEFINITION
 `, rName)
 }
 
-func TestAccECSTaskDefinition_configuredAtLaunch(rName string) string {
+func testAccTaskDefinitionConfig_configuredAtLaunch(rName string) string {
 	return fmt.Sprintf(`
 resource "aws_ecs_task_definition" "test" {
   family = %[1]q
