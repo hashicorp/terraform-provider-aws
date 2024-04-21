@@ -152,6 +152,7 @@ The following arguments are optional:
 * `tags` - (Optional) Key-value map of resource tags. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 * `task_definition` - (Optional) Family and revision (`family:revision`) or full ARN of the task definition that you want to run in your service. Required unless using the `EXTERNAL` deployment controller. If a revision is not specified, the latest `ACTIVE` revision is used.
 * `triggers` - (Optional) Map of arbitrary keys and values that, when changed, will trigger an in-place update (redeployment). Useful with `plantimestamp()`. See example above.
+* `volume_configuration` - (Optional) The configuration for a volume specified in the task definition as a volume that is configured at launch time. Currently, the only supported volume type is an Amazon EBS volume. [See below](#volume_configuration).
 * `wait_for_steady_state` - (Optional) If `true`, Terraform will wait for the service to reach a steady state (like [`aws ecs wait services-stable`](https://docs.aws.amazon.com/cli/latest/reference/ecs/wait/services-stable.html)) before continuing. Default `false`.
 
 ### alarms
@@ -161,6 +162,27 @@ The `alarms` configuration block supports the following:
 * `alarm_names` - (Required) One or more CloudWatch alarm names.
 * `enable` - (Required) Determines whether to use the CloudWatch alarm option in the service deployment process.
 * `rollback` - (Required) Determines whether to configure Amazon ECS to roll back the service if a service deployment fails. If rollback is used, when a service deployment fails, the service is rolled back to the last deployment that completed successfully.
+
+### volume_configuration
+
+The `volume_configuration` configuration block supports the following:
+
+* `name` - (Required) Name of the volume.
+* `managed_ebs_volume` - (Required) Configuration for the Amazon EBS volume that Amazon ECS creates and manages on your behalf. [See below](#managed_ebs_volume).
+
+### managed_ebs_volume
+
+The `managed_ebs_volume` configuration block supports the following:
+
+* `role_arn` - (Required) Amazon ECS infrastructure IAM role that is used to manage your Amazon Web Services infrastructure. Recommended using the Amazon ECS-managed `AmazonECSInfrastructureRolePolicyForVolumes` IAM policy with this role.
+* `encrypted` - (Optional) Whether the volume should be encrypted. Default value is `true`.
+* `file_system_type` - (Optional)Linux filesystem type for the volume. For volumes created from a snapshot, same filesystem type must be specified that the volume was using when the snapshot was created. Valid values are `ext3`, `ext4`, `xfs`. Default value is `xfs`.
+* `iops` - (Optional) Number of I/O operations per second (IOPS).
+* `kms_key_id` - (Optional) Amazon Resource Name (ARN) identifier of the Amazon Web Services Key Management Service key to use for Amazon EBS encryption.
+* `size_in_gb` - (Optional) The size of the volume in GiB. You must specify either a `size_in_gb` or a `snapshot_id`. You can optionally specify a volume size greater than or equal to the snapshot size.
+* `snapshot_id` - (Optional) The snapshot that Amazon ECS uses to create the volume. You must specify either a `size_in_gb` or a `snapshot_id`.
+* `throughput` - (Optional) The throughput to provision for a volume, in MiB/s, with a maximum of 1,000 MiB/s.
+* `volume_type` - (Optional) The volume type.
 
 ### capacity_provider_strategy
 

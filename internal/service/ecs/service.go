@@ -542,6 +542,7 @@ func ResourceService() *schema.Resource {
 									"encrypted": {
 										Type:     schema.TypeBool,
 										Optional: true,
+										Default: true,
 									},
 									"file_system_type": {
 										Type:         schema.TypeString,
