@@ -272,6 +272,7 @@ func testAccKnowledgeBase_base(rName, model string) string {
 	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 data "aws_region" "current" {}
+provider "aws" {}
 
 resource "aws_opensearchserverless_security_policy" "test" {
   name = %[1]q
@@ -351,6 +352,7 @@ resource "aws_iam_role_policy" "test" {
 }
 POLICY
 }
+
 `, rName, model)
 }
 
@@ -486,4 +488,152 @@ resource "aws_bedrockagent_knowledge_base" "test" {
   depends_on = [aws_iam_role_policy.test]
 }
 `, rName, model, tag1Key, tag1Value, tag2Key, tag2Value))
+}
+
+func testAccKnowledgeBase_rds_base(rName, model string) string {
+	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 0), fmt.Sprintf(`
+data "aws_partition" "current" {}
+data "aws_region" "current" {}
+provider "aws" {}
+
+# See https://docs.aws.amazon.com/bedrock/latest/userguide/kb-permissions.html.
+resource "aws_iam_role_policy" "test" {
+  name   = %[1]q
+  role   = aws_iam_role.test.name
+  policy = <<POLICY
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "bedrock:ListFoundationModels",
+        "bedrock:ListCustomModels"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "bedrock:InvokeModel"
+      ],
+      "Resource": [
+        "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s"
+      ]
+    }
+  ]
+}
+POLICY
+}
+
+resource "aws_iam_role_policy_attachment" "rds_data_full_access" {
+  role       = aws_iam_role.test.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_partition.current.partition}:policy/AmazonRDSDataFullAccess"
+}
+
+resource "aws_iam_role_policy_attachment" "secrets_manager_read_write" {
+  role       = aws_iam_role.test.name
+  policy_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_partition.current.partition}:policy/SecretsManagerReadWrite"
+}
+
+resource "aws_rds_cluster" "this" {
+  cluster_identifier          = "test"
+  engine                      = "aurora-postgresql"
+  engine_mode                 = "provisioned"
+  engine_version              = "15.4"
+  database_name               = "test"
+  master_username             = "test"
+  manage_master_user_password = true
+  enable_http_endpoint        = true
+  vpc_security_group_ids      = [aws_security_group.db_sg.id]
+
+  serverlessv2_scaling_configuration {
+    max_capacity = 1.0
+    min_capacity = 0.5
+  }
+}
+
+resource "aws_rds_cluster_instance" "this" {
+  cluster_identifier = aws_rds_cluster.this.id
+  instance_class     = "db.serverless"
+  engine             = aws_rds_cluster.this.engine
+  engine_version     = aws_rds_cluster.this.engine_version
+}
+
+resource "aws_security_group" "db_sg" {
+  name        = "test"
+  description = "Allow PostgreSQL traffic"
+  vpc_id      = aws_vpc.test.id
+
+  ingress {
+    from_port   = 5432
+    to_port     = 5432
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+data "aws_secretsmanager_secret_version" "example" {
+  secret_id = tolist(aws_rds_cluster.this.master_user_secret)[0].secret_arn
+}
+
+resource "null_resource" "db_setup" {
+  depends_on = [aws_rds_cluster_instance.this]
+
+  provisioner "local-exec" {
+    command = <<EOT
+		psql -h ${aws_rds_cluster.this.endpoint} -U ${aws_rds_cluster.this.master_username} -d ${aws_rds_cluster.this.database_name} -c "CREATE EXTENSION IF NOT EXISTS vector;"
+		psql -h ${aws_rds_cluster.this.endpoint} -U ${aws_rds_cluster.this.master_username} -d ${aws_rds_cluster.this.database_name} -c "CREATE SCHEMA IF NOT EXISTS  bedrock_integration;"
+		psql -h ${aws_rds_cluster.this.endpoint} -U ${aws_rds_cluster.this.master_username} -d ${aws_rds_cluster.this.database_name} -c "CREATE ROLE  bedrock_user WITH PASSWORD $PGPASSWORD LOGIN;"
+		psql -h ${aws_rds_cluster.this.endpoint} -U ${aws_rds_cluster.this.master_username} -d ${aws_rds_cluster.this.database_name} -c "GRANT ALL ON SCHEMA bedrock_integration TO bedrock_user;"
+		psql -h ${aws_rds_cluster.this.endpoint} -U ${aws_rds_cluster.this.master_username} -d ${aws_rds_cluster.this.database_name} -c "CREATE TABLE bedrock_integration.bedrock_kb (id uuid PRIMARY KEY, embedding vector(1536), chunks text, metadata json);"
+		psql -h ${aws_rds_cluster.this.endpoint} -U ${aws_rds_cluster.this.master_username} -d ${aws_rds_cluster.this.database_name} -c "CREATE INDEX ON bedrock_integration.bedrock_kb USING hnsw (embedding vector_cosine_ops);"
+	  EOT
+    environment = {
+      PGPASSWORD = jsondecode(data.aws_secretsmanager_secret_version.example.secret_string)["password"]
+    }
+  }
+}
+`, rName, model))
+}
+
+func testAccKnowledgeBaseConfig_rds(rName, model string) string {
+	return acctest.ConfigCompose(testAccKnowledgeBase_rds_base(rName, model), fmt.Sprintf(`
+resource "aws_bedrockagent_knowledge_base" "test" {
+  name     = %[1]q
+  role_arn = aws_iam_role.test.arn
+
+  knowledge_base_configuration {
+    vector_knowledge_base_configuration {
+      embedding_model_arn = "arn:${data.aws_partition.current.partition}:bedrock:${data.aws_region.current.name}::foundation-model/%[2]s"
+    }
+    type = "VECTOR"
+  }
+
+  storage_configuration {
+    type = "RDS"
+    rds_configuration {
+      resource_arn           = aws_rds_cluster.this.arn
+      credentials_secret_arn = tolist(aws_rds_cluster.this.master_user_secret)[0].secret_arn
+      database_name          = aws_rds_cluster.this.database_name
+      table_name             = "bedrock_integration.bedrock_kb"
+      field_mapping {
+        vector_field      = "embedding"
+        text_field        = "chunks"
+        metadata_field    = "metadata"
+        primary_key_field = "id"
+      }
+    }
+  }
+
+  depends_on = [aws_iam_role_policy.test, null_resource.db_setup]
+}
+`, rName, model))
 }
