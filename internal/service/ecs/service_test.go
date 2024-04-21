@@ -2147,6 +2147,7 @@ resource "aws_ecs_service" "test" {
 func testAccServiceConfig_volumeConfigurations_basic(rName string) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
 
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
@@ -2184,7 +2185,7 @@ resource "aws_ecs_service" "test" {
   volume_configuration {
     name = "vol1"
     managed_ebs_volume {
-      role_arn   = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-service-role/ecs.amazonaws.com/AWSServiceRoleForECS"
+      role_arn   = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/aws-service-role/ecs.amazonaws.com/AWSServiceRoleForECS"
       size_in_gb = "8"
     }
   }
@@ -2195,6 +2196,7 @@ resource "aws_ecs_service" "test" {
 func testAccServiceConfig_volumeConfigurations_update(rName, volumeType string, size int) string {
 	return fmt.Sprintf(`
 data "aws_caller_identity" "current" {}
+data "aws_partition" "current" {}
 
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
@@ -2232,7 +2234,7 @@ resource "aws_ecs_service" "test" {
   volume_configuration {
     name = "vol1"
     managed_ebs_volume {
-      role_arn    = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-service-role/ecs.amazonaws.com/AWSServiceRoleForECS"
+      role_arn    = "arn:${data.aws_partition.current.partition}:iam::${data.aws_caller_identity.current.account_id}:role/aws-service-role/ecs.amazonaws.com/AWSServiceRoleForECS"
       size_in_gb  = %[3]d
       volume_type = %[2]q
     }
