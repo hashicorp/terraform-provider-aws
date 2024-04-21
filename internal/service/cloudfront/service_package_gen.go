@@ -116,8 +116,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Monitoring Subscription",
 		},
 		{
-			Factory:  ResourceOriginAccessControl,
+			Factory:  resourceOriginAccessControl,
 			TypeName: "aws_cloudfront_origin_access_control",
+			Name:     "Origin Access Control",
 		},
 		{
 			Factory:  ResourceOriginAccessIdentity,

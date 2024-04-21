@@ -158,7 +158,7 @@ func resourceFieldLevelEncryptionConfigCreate(ctx context.Context, d *schema.Res
 	output, err := conn.CreateFieldLevelEncryptionConfig(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating CloudFront Field-level Encryption Config (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "creating CloudFront Field-level Encryption Config: %s", err)
 	}
 
 	d.SetId(aws.ToString(output.FieldLevelEncryption.Id))

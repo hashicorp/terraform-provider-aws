@@ -97,9 +97,10 @@ func resourceFieldLevelEncryptionProfileCreate(ctx context.Context, d *schema.Re
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
+	name := d.Get("name").(string)
 	apiObject := &awstypes.FieldLevelEncryptionProfileConfig{
 		CallerReference: aws.String(id.UniqueId()),
-		Name:            aws.String(d.Get("name").(string)),
+		Name:            aws.String(name),
 	}
 
 	if v, ok := d.GetOk("comment"); ok {
@@ -117,7 +118,7 @@ func resourceFieldLevelEncryptionProfileCreate(ctx context.Context, d *schema.Re
 	output, err := conn.CreateFieldLevelEncryptionProfile(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating CloudFront Field-level Encryption Profile (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "creating CloudFront Field-level Encryption Profile (%s): %s", name, err)
 	}
 
 	d.SetId(aws.ToString(output.FieldLevelEncryptionProfile.Id))
