@@ -1536,22 +1536,27 @@ func expandSecretOptions(sop []interface{}) []*ecs.Secret {
 	return out
 }
 
-func expandVolumeConfigurations(vc []interface{}) *ecs.ServiceVolumeConfiguration {
+func expandVolumeConfigurations(vc []interface{}) []*ecs.ServiceVolumeConfiguration {
 	if len(vc) == 0 {
 		return nil
 	}
-	raw := vc[0].(map[string]interface{})
 
-	config := &ecs.ServiceVolumeConfiguration{}
-	if v, ok := raw["name"].(bool); ok {
-		config.Enabled = aws.Bool(v)
+	vcs := make([]*ecs.ServiceVolumeConfiguration, 0)
+
+	for _, raw := range vc {
+		p := raw.(map[string]interface{})
+
+		config := &ecs.ServiceVolumeConfiguration{
+			Name: aws.String(p["name"].(string)),
+		}
+
+		if v, ok := p["managed_ebs_volume"].([]interface{}); ok && len(v) > 0 {
+			config.ManagedEBSVolume = expandManagedEBSVolume(v)
+		}
+		vcs = append(vcs, config)
 	}
 
-	if v, ok := raw["managed_ebs_volume"].([]interface{}); ok && len(v) > 0 {
-		config.ManagedEBSVolume = expandManagedEBSVolume(v)
-	}
-
-	return config
+	return vcs
 }
 
 func expandManagedEBSVolume(ebs []interface{}) *ecs.ServiceManagedEBSVolumeConfiguration {
@@ -1564,26 +1569,26 @@ func expandManagedEBSVolume(ebs []interface{}) *ecs.ServiceManagedEBSVolumeConfi
 	if v, ok := raw["role_arn"].(string); ok && v != "" {
 		config.RoleArn = aws.String(v)
 	}
-	if v, ok := raw["encrypted"].(bool); ok && v != "" {
+	if v, ok := raw["encrypted"].(bool); ok {
 		config.Encrypted = aws.Bool(v)
 	}
 	if v, ok := raw["file_system_type"].(string); ok && v != "" {
 		config.FilesystemType = aws.String(v)
 	}
-	if v, ok := raw["iops"].(int); ok && v != "" {
-		config.Iops = aws.Int32(int32(v))
+	if v, ok := raw["iops"].(int); ok && v != 0 {
+		config.Iops = aws.Int64(int64(v))
 	}
 	if v, ok := raw["kms_key_id"].(string); ok && v != "" {
 		config.KmsKeyId = aws.String(v)
 	}
-	if v, ok := raw["size_in_gb"].(int); ok && v != "" {
-		config.SizeInGiB = aws.Int32(int32(v))
+	if v, ok := raw["size_in_gb"].(int); ok && v != 0 {
+		config.SizeInGiB = aws.Int64(int64(v))
 	}
 	if v, ok := raw["snapshot_id"].(string); ok && v != "" {
 		config.SnapshotId = aws.String(v)
 	}
-	if v, ok := raw["throughput"].(int); ok && v != "" {
-		config.Throughput = aws.Int32(int32(v))
+	if v, ok := raw["throughput"].(int); ok && v != 0 {
+		config.Throughput = aws.Int64(int64(v))
 	}
 	if v, ok := raw["volume_type"].(string); ok && v != "" {
 		config.VolumeType = aws.String(v)
