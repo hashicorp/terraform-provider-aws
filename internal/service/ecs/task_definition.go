@@ -438,6 +438,7 @@ func ResourceTaskDefinition() *schema.Resource {
 						"configure_at_launch": {
 							Type:     schema.TypeBool,
 							Optional: true,
+							Computed: true,
 							ForceNew: true,
 						},
 					},
