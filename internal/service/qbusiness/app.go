@@ -257,7 +257,6 @@ func (r *resourceApplication) Update(ctx context.Context, req resource.UpdateReq
 		!old.DisplayName.Equal(new.DisplayName) ||
 		!old.RoleArn.Equal(new.RoleArn) ||
 		!old.IdentityCenterInstanceArn.Equal(new.IdentityCenterInstanceArn) {
-
 		conn := r.Meta().QBusinessClient(ctx)
 
 		input := &qbusiness.UpdateApplicationInput{}
