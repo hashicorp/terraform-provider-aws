@@ -435,6 +435,11 @@ func ResourceTaskDefinition() *schema.Resource {
 							Required: true,
 							ForceNew: true,
 						},
+						"configure_at_launch": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Computed: true,
+						},
 					},
 				},
 				Set: resourceTaskDefinitionVolumeHash,
@@ -924,6 +929,10 @@ func expandVolumes(configured []interface{}) []*ecs.Volume {
 			}
 		}
 
+		if v, ok := data["configure_at_launch"].(bool); ok {
+			l.ConfiguredAtLaunch = aws.Bool(v)
+		}
+
 		if v, ok := data["docker_volume_configuration"].([]interface{}); ok && len(v) > 0 {
 			l.DockerVolumeConfiguration = expandVolumesDockerVolume(v)
 		}
@@ -1054,6 +1063,10 @@ func flattenVolumes(list []*ecs.Volume) []map[string]interface{} {
 
 		if volume.Host != nil && volume.Host.SourcePath != nil {
 			l["host_path"] = aws.StringValue(volume.Host.SourcePath)
+		}
+
+		if volume.ConfiguredAtLaunch != nil {
+			l["configure_at_launch"] = aws.BoolValue(volume.ConfiguredAtLaunch)
 		}
 
 		if volume.DockerVolumeConfiguration != nil {

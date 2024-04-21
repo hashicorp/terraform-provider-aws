@@ -2146,73 +2146,7 @@ resource "aws_ecs_service" "test" {
 
 func testAccServiceConfig_volumeConfigurations_basic(rName string) string {
 	return fmt.Sprintf(`
-resource "aws_ecs_cluster" "test" {
-  name = %[1]q
-}
-
-resource "aws_ecs_task_definition" "test" {
-  family = %[1]q
-
-  container_definitions = <<TASK_DEFINITION
-[
-  {
-    "cpu": 128,
-    "essential": true,
-    "image": "mongo:latest",
-    "memory": 128,
-    "name": "mongodb",
-    "mountPoints": [
-      {"sourceVolume": "vol1", "containerPath": "/vol1"}
-    ]
-  }
-]
-TASK_DEFINITION
-
-  volume {
-    name      = "vol1"
-    host_path = "/host/vol1"
-  }
-}
-
-resource "aws_ecs_service" "test" {
-  name            = %[1]q
-  cluster         = aws_ecs_cluster.test.id
-  task_definition = aws_ecs_task_definition.test.arn
-  desired_count   = 1
-  volume_configuration {
-    name = "vol1"
-  }
-}
-`, rName)
-}
-
-func testAccServiceConfig_volumeConfigurations_update(rName, volumeType string, size int) string {
-	return fmt.Sprintf(`
-data "aws_partition" "current" {}
-
-resource "aws_iam_role" "test" {
-  name = %[1]q
-
-  assume_role_policy = <<POLICY
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Effect": "Allow",
-      "Principal": {
-        "Service": "eks.${data.aws_partition.current.dns_suffix}"
-      },
-      "Action": "sts:AssumeRole"
-    }
-  ]
-}
-POLICY
-}
-
-resource "aws_iam_role_policy_attachment" "test-AmazonEKSClusterPolicy" {
-  policy_arn = "arn:${data.aws_partition.current.partition}:iam::aws:policy/AmazonECSInfrastructureRolePolicyForVolumes"
-  role       = aws_iam_role.test.name
-}
+data "aws_caller_identity" "current" {}
 
 resource "aws_ecs_cluster" "test" {
   name = %[1]q
@@ -2237,8 +2171,8 @@ resource "aws_ecs_task_definition" "test" {
 TASK_DEFINITION
 
   volume {
-    name      = "vol1"
-    host_path = "/host/vol1"
+    name                = "vol1"
+    configure_at_launch = true
   }
 }
 
@@ -2250,9 +2184,56 @@ resource "aws_ecs_service" "test" {
   volume_configuration {
     name = "vol1"
     managed_ebs_volume {
-        role_arn    = aws_iam_role.test.arn
-        size_in_gb  = %[3]d
-        volume_type = %[2]q
+      role_arn    = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-service-role/ecs.amazonaws.com/AWSServiceRoleForECS"
+    }
+  }
+}
+`, rName)
+}
+
+func testAccServiceConfig_volumeConfigurations_update(rName, volumeType string, size int) string {
+	return fmt.Sprintf(`
+data "aws_caller_identity" "current" {}
+
+resource "aws_ecs_cluster" "test" {
+  name = %[1]q
+}
+
+resource "aws_ecs_task_definition" "test" {
+  family = %[1]q
+
+  container_definitions = <<TASK_DEFINITION
+[
+  {
+    "cpu": 128,
+    "essential": true,
+    "image": "mongo:latest",
+    "memory": 128,
+    "name": "mongodb",
+    "mountPoints": [
+      {"sourceVolume": "vol1", "containerPath": "/vol1"}
+    ]
+  }
+]
+TASK_DEFINITION
+
+  volume {
+    name                = "vol1"
+    configure_at_launch = true
+  }
+}
+
+resource "aws_ecs_service" "test" {
+  name            = %[1]q
+  cluster         = aws_ecs_cluster.test.id
+  task_definition = aws_ecs_task_definition.test.arn
+  desired_count   = 1
+  volume_configuration {
+    name = "vol1"
+    managed_ebs_volume {
+      role_arn    = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-service-role/ecs.amazonaws.com/AWSServiceRoleForECS"
+      size_in_gb  = %[3]d
+      volume_type = %[2]q
     }
   }
 }
