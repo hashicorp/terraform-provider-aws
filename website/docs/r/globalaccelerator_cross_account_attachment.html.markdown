@@ -75,5 +75,5 @@ import {
 Using `terraform import`, import Global Accelerator Cross Account Attachment using the `example_id_arg`. For example:
 
 ```console
-% terraform import arn:aws:globalaccelerator::012345678910:attachment/01234567-abcd-8910-efgh-123456789012
+% terraform import aws_globalaccelerator_cross_account_attachment.example arn:aws:globalaccelerator::012345678910:attachment/01234567-abcd-8910-efgh-123456789012
 ```
