@@ -20,7 +20,7 @@ resource "aws_globalaccelerator_cross_account_attachment" "example" {
 }
 ```
 
-### Usage with Optional Arguments 
+### Usage with Optional Arguments
 
 ```terraform
 resource "aws_globalaccelerator_cross_account_attachment" "example" {
@@ -42,16 +42,16 @@ The following arguments are required:
 The following arguments are optional:
 
 * `principals` - (Optional) List of AWS account IDs that are allowed to associate resources with the accelerator.
-* `resources` - (Optional) List of resources to be associated with the accelerator. Each resource is specified as a map with keys `endpoint_id` and `region`. The `region` field is optional. 
+* `resources` - (Optional) List of resources to be associated with the accelerator. Each resource is specified as a map with keys `endpoint_id` and `region`. The `region` field is optional.
 
 ## Attribute Reference
 
 This resource exports the following attributes in addition to the arguments above:
 
-* `arn` - ARN of the Cross Account Attachment. 
+* `arn` - ARN of the Cross Account Attachment.
 * `id` - ID of the Cross Account Attachment.
 * `created_time` - Creation Time when the Cross Account Attachment.
-* `last_modified_time` - Last modified time of the Cross Account Attachment. 
+* `last_modified_time` - Last modified time of the Cross Account Attachment.
 
 ## Timeouts
 
