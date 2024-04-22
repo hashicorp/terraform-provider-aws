@@ -38,6 +38,7 @@ const (
 	BatchEndpointID                      = "batch"
 	BedrockAgentEndpointID               = "bedrockagent"
 	BedrockEndpointID                    = "bedrock"
+	BCMDataExportsEndpointID             = "bcm-data-exports"
 	BudgetsEndpointID                    = "budgets"
 	ChimeSDKMediaPipelinesEndpointID     = "media-pipelines-chime"
 	ChimeSDKVoiceEndpointID              = "voice-chime"
