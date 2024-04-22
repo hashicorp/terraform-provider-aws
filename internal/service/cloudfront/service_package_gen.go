@@ -63,8 +63,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Origin Access Identity",
 		},
 		{
-			Factory:  DataSourceOriginRequestPolicy,
+			Factory:  dataSourceOriginRequestPolicy,
 			TypeName: "aws_cloudfront_origin_request_policy",
+			Name:     "Origin Request Policy",
 		},
 		{
 			Factory:  DataSourceRealtimeLogConfig,
