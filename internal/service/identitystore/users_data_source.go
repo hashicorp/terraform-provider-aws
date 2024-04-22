@@ -6,280 +6,103 @@ package identitystore
 import (
 	"context"
 
-	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/identitystore"
-	"github.com/aws/aws-sdk-go-v2/service/identitystore/types"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
-	"github.com/hashicorp/terraform-provider-aws/internal/conns"
-	"github.com/hashicorp/terraform-provider-aws/internal/create"
-	"github.com/hashicorp/terraform-provider-aws/names"
+	"github.com/hashicorp/terraform-plugin-framework/datasource"
+	"github.com/hashicorp/terraform-plugin-framework/datasource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/types"
+	"github.com/hashicorp/terraform-provider-aws/internal/framework"
+	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
+	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
 )
 
-// @SDKDataSource("aws_identitystore_users", name="Users")
-func DataSourceUsers() *schema.Resource {
-	return &schema.Resource{
-		ReadWithoutTimeout: dataSourceUsersRead,
+// @FrameworkDataSource(name="Users")
+func newUsersDataSource(context.Context) (datasource.DataSourceWithConfigure, error) {
+	return &UsersDataSource{}, nil
+}
 
-		Schema: map[string]*schema.Schema{
-			"users": {
-				Type:     schema.TypeList,
-				Computed: true,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"addresses": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"country": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"formatted": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"locality": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"postal_code": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"primary": {
-										Type:     schema.TypeBool,
-										Computed: true,
-									},
-									"region": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"street_address": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"type": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"display_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"emails": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"primary": {
-										Type:     schema.TypeBool,
-										Computed: true,
-									},
-									"type": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"value": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"external_ids": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"id": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"issuer": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"identity_store_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"locale": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"name": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"family_name": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"formatted": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"given_name": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"honorific_prefix": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"honorific_suffix": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"middle_name": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"nickname": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"phone_numbers": {
-							Type:     schema.TypeList,
-							Computed: true,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"primary": {
-										Type:     schema.TypeBool,
-										Computed: true,
-									},
-									"type": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-									"value": {
-										Type:     schema.TypeString,
-										Computed: true,
-									},
-								},
-							},
-						},
-						"preferred_language": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"profile_url": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"timezone": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"title": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"user_id": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"user_name": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"user_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-					},
+type UsersDataSource struct {
+	framework.DataSourceWithConfigure
+}
+
+func (*UsersDataSource) Metadata(_ context.Context, request datasource.MetadataRequest, response *datasource.MetadataResponse) { // nosemgrep:ci.meta-in-func-name
+	response.TypeName = "aws_identitystore_users"
+}
+
+func (d *UsersDataSource) Schema(ctx context.Context, request datasource.SchemaRequest, response *datasource.SchemaResponse) {
+	response.Schema = schema.Schema{
+		Attributes: map[string]schema.Attribute{
+			"users": schema.ListAttribute{
+				CustomType: fwtypes.NewListNestedObjectTypeOf[UserModel](ctx),
+				Computed:   true,
+				ElementType: types.ObjectType{
+					AttrTypes: fwtypes.AttributeTypesMust[UserModel](ctx),
 				},
 			},
-			"identity_store_id": {
-				Type:     schema.TypeString,
+			"identity_store_id": schema.StringAttribute{
 				Required: true,
-				ValidateFunc: validation.All(
-					validation.StringLenBetween(1, 64),
-					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9-]*$`), "must match [a-zA-Z0-9-]"),
-				),
 			},
 		},
 	}
 }
 
-const (
-	DSNameUsers = "Users Data Source"
-)
+func (d *UsersDataSource) Read(ctx context.Context, request datasource.ReadRequest, response *datasource.ReadResponse) {
+	var data UsersDataSourceModel
+	response.Diagnostics.Append(request.Config.Get(ctx, &data)...)
+	if response.Diagnostics.HasError() {
+		return
+	}
 
-func dataSourceUsersRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).IdentityStoreClient(ctx)
-
-	identityStoreID := d.Get("identity_store_id").(string)
+	conn := d.Meta().IdentityStoreClient(ctx)
 
 	input := &identitystore.ListUsersInput{
-		IdentityStoreId: aws.String(identityStoreID),
+		IdentityStoreId: fwflex.StringFromFramework(ctx, data.IdentityStoreID),
 	}
 
-	paginator := identitystore.NewListUsersPaginator(conn, input)
-	users := make([]types.User, 0)
-
-	for paginator.HasMorePages() {
-		page, err := paginator.NextPage(ctx)
-
+	var output *identitystore.ListUsersOutput
+	pages := identitystore.NewListUsersPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
 		if err != nil {
-			return create.DiagError(names.IdentityStore, create.ErrActionReading, DSNameUsers, identityStoreID, err)
+			response.Diagnostics.AddError("listing IdentityStore Users", err.Error())
+
+			return
 		}
 
-		users = append(users, page.Users...)
+		if output == nil {
+			output = page
+		} else {
+			output.Users = append(output.Users, page.Users...)
+		}
 	}
 
-	d.SetId(identityStoreID)
-
-	if err := d.Set("users", flattenUsers(users)); err != nil {
-		return create.DiagError(names.IdentityStore, create.ErrActionSetting, DSNameUsers, d.Id(), err)
+	response.Diagnostics.Append(fwflex.Flatten(ctx, output, &data)...)
+	if response.Diagnostics.HasError() {
+		return
 	}
 
-	return nil
+	response.Diagnostics.Append(response.State.Set(ctx, &data)...)
 }
 
-func flattenUsers(users []types.User) []map[string]interface{} {
-	if len(users) == 0 {
-		return nil
-	}
+type UsersDataSourceModel struct {
+	IdentityStoreID types.String                               `tfsdk:"identity_store_id"`
+	Users           fwtypes.ListNestedObjectValueOf[UserModel] `tfsdk:"users"`
+}
 
-	result := make([]map[string]interface{}, 0)
-	for _, user := range users {
-		u := make(map[string]interface{}, 1)
-
-		u["display_name"] = aws.ToString(user.DisplayName)
-		u["identity_store_id"] = aws.ToString(user.IdentityStoreId)
-		u["locale"] = aws.ToString(user.Locale)
-		u["nickname"] = aws.ToString(user.NickName)
-		u["preferred_language"] = aws.ToString(user.PreferredLanguage)
-		u["profile_url"] = aws.ToString(user.ProfileUrl)
-		u["timezone"] = aws.ToString(user.Timezone)
-		u["title"] = aws.ToString(user.Title)
-		u["user_id"] = aws.ToString(user.UserId)
-		u["user_name"] = aws.ToString(user.UserName)
-		u["user_type"] = aws.ToString(user.UserType)
-
-		u["addresses"] = flattenAddresses(user.Addresses)
-		u["emails"] = flattenEmails(user.Emails)
-		u["external_ids"] = flattenExternalIds(user.ExternalIds)
-		u["name"] = []interface{}{flattenName(user.Name)}
-		u["phone_numbers"] = flattenPhoneNumbers(user.PhoneNumbers)
-
-		result = append(result, u)
-	}
-
-	return result
+type UserModel struct {
+	Addresses         fwtypes.ListNestedObjectValueOf[externalIDModel] `tfsdk:"addresses"`
+	DisplayName       types.String                                     `tfsdk:"display_name"`
+	Emails            fwtypes.ListNestedObjectValueOf[externalIDModel] `tfsdk:"emails"`
+	ExternalIDs       fwtypes.ListNestedObjectValueOf[externalIDModel] `tfsdk:"external_ids"`
+	IdentityStoreID   types.String                                     `tfsdk:"identity_store_id"`
+	Locale            types.String                                     `tfsdk:"locale"`
+	Name              fwtypes.ListNestedObjectValueOf[externalIDModel] `tfsdk:"name"`
+	NickName          types.String                                     `tfsdk:"nickname"`
+	PhoneNumbers      fwtypes.ListNestedObjectValueOf[externalIDModel] `tfsdk:"phone_numbers"`
+	PreferredLanguage types.String                                     `tfsdk:"preferred_language"`
+	ProfileUrl        types.String                                     `tfsdk:"profile_url"`
+	Timezone          types.String                                     `tfsdk:"timezone"`
+	Title             types.String                                     `tfsdk:"title"`
+	UserID            types.String                                     `tfsdk:"user_id"`
+	UserName          types.String                                     `tfsdk:"user_name"`
+	UserType          types.String                                     `tfsdk:"user_type"`
 }

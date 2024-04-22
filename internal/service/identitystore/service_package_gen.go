@@ -20,6 +20,10 @@ func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.Serv
 			Factory: newGroupsDataSource,
 			Name:    "Groups",
 		},
+		{
+			Factory: newUsersDataSource,
+			Name:    "Users",
+		},
 	}
 }
 
@@ -36,11 +40,6 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceUser,
 			TypeName: "aws_identitystore_user",
-		},
-		{
-			Factory:  DataSourceUsers,
-			TypeName: "aws_identitystore_users",
-			Name:     "Users",
 		},
 	}
 }
