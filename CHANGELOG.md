@@ -7,6 +7,7 @@ NOTES:
 FEATURES:
 
 * **New Data Source:** `aws_identitystore_groups` ([#36993](https://github.com/hashicorp/terraform-provider-aws/issues/36993))
+* **New Resource:** `aws_bcmdataexports_export` ([#36847](https://github.com/hashicorp/terraform-provider-aws/issues/36847))
 * **New Resource:** `aws_bedrockagent_agent` ([#36851](https://github.com/hashicorp/terraform-provider-aws/issues/36851))
 * **New Resource:** `aws_bedrockagent_agent_action_group` ([#36935](https://github.com/hashicorp/terraform-provider-aws/issues/36935))
 * **New Resource:** `aws_bedrockagent_agent_alias` ([#36905](https://github.com/hashicorp/terraform-provider-aws/issues/36905))
