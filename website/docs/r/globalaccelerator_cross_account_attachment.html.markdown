@@ -43,6 +43,7 @@ The following arguments are optional:
 
 * `principals` - (Optional) List of AWS account IDs that are allowed to associate resources with the accelerator.
 * `resources` - (Optional) List of resources to be associated with the accelerator. Each resource is specified as a map with keys `endpoint_id` and `region`. The `region` field is optional.
+* `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference
 
@@ -52,6 +53,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `id` - ID of the Cross Account Attachment.
 * `created_time` - Creation Time when the Cross Account Attachment.
 * `last_modified_time` - Last modified time of the Cross Account Attachment.
+* `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 
 ## Timeouts
 

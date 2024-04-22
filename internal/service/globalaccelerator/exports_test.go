@@ -5,9 +5,7 @@ package globalaccelerator
 
 // Exports for use in tests only.
 var (
-	ExpandResources                = expandResources
-	FlattenResources               = flattenResources
-	DiffResources                  = diffResources
-	DiffPrincipals                 = diffPrincipals
-	ResourceCrossAccountAttachment = newResourceCrossAccountAttachment
+	ResourceCrossAccountAttachment = newCrossAccountAttachmentResource
+
+	FindCrossAccountAttachmentByARN = findCrossAccountAttachmentByARN
 )
