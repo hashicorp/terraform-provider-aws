@@ -68,8 +68,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Origin Request Policy",
 		},
 		{
-			Factory:  DataSourceRealtimeLogConfig,
+			Factory:  dataSourceRealtimeLogConfig,
 			TypeName: "aws_cloudfront_realtime_log_config",
+			Name:     "Real-time Log Config",
 		},
 		{
 			Factory:  DataSourceResponseHeadersPolicy,

@@ -211,6 +211,10 @@ func findRealtimeLogConfigByARN(ctx context.Context, conn *cloudfront.Client, ar
 		ARN: aws.String(arn),
 	}
 
+	return findRealtimeLogConfig(ctx, conn, input)
+}
+
+func findRealtimeLogConfig(ctx context.Context, conn *cloudfront.Client, input *cloudfront.GetRealtimeLogConfigInput) (*awstypes.RealtimeLogConfig, error) {
 	output, err := conn.GetRealtimeLogConfig(ctx, input)
 
 	if errs.IsA[*awstypes.NoSuchRealtimeLogConfig](err) {

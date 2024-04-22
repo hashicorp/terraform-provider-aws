@@ -13,31 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindRealtimeLogConfigByName(ctx context.Context, conn *cloudfront.CloudFront, name string) (*cloudfront.RealtimeLogConfig, error) {
-	input := &cloudfront.GetRealtimeLogConfigInput{
-		Name: aws.String(name),
-	}
-
-	output, err := conn.GetRealtimeLogConfigWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchRealtimeLogConfig) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil || output.RealtimeLogConfig == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	return output.RealtimeLogConfig, nil
-}
-
 func FindResponseHeadersPolicyByID(ctx context.Context, conn *cloudfront.CloudFront, id string) (*cloudfront.GetResponseHeadersPolicyOutput, error) {
 	input := &cloudfront.GetResponseHeadersPolicyInput{
 		Id: aws.String(id),
