@@ -134,8 +134,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Origin Request Policy",
 		},
 		{
-			Factory:  ResourcePublicKey,
+			Factory:  resourcePublicKey,
 			TypeName: "aws_cloudfront_public_key",
+			Name:     "Public Key",
 		},
 		{
 			Factory:  ResourceRealtimeLogConfig,

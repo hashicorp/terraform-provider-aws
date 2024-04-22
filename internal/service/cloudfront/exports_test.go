@@ -16,6 +16,7 @@ var (
 	ResourceOriginAccessControl         = resourceOriginAccessControl
 	ResourceOriginAccessIdentity        = resourceOriginAccessIdentity
 	ResourceOriginRequestPolicy         = resourceOriginRequestPolicy
+	ResourcePublicKey                   = resourcePublicKey
 
 	FindCachePolicyByID                        = findCachePolicyByID
 	FindFieldLevelEncryptionConfigByID         = findFieldLevelEncryptionConfigByID
