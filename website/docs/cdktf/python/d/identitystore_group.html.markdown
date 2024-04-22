@@ -53,10 +53,11 @@ The following arguments are required:
 
 The following arguments are optional:
 
-* `alternate_identifier` (Optional) A unique identifier for the group that is not the primary identifier. Conflicts with `group_id`. Detailed below.
+* `alternate_identifier` (Optional) A unique identifier for the group that is not the primary identifier. Conflicts with `group_id` and `filter`. Detailed below.
+* `filter` - (Optional, **Deprecated** use the `alternate_identifier` attribute instead) Configuration block for filtering by a unique attribute of the group. Detailed below.
 * `group_id` - (Optional) The identifier for a group in the Identity Store.
 
--> Exactly one of the above arguments must be provided.
+-> Exactly one of the above arguments must be provided. Passing both `filter` and `group_id` is allowed for backwards compatibility.
 
 ### `alternate_identifier` Configuration Block
 
@@ -73,6 +74,15 @@ The `external_id` configuration block supports the following arguments:
 
 * `id` - (Required) The identifier issued to this resource by an external identity provider.
 * `issuer` - (Required) The issuer for an external identifier.
+
+### `filter` Configuration Block
+
+~> The `filter` configuration block has been deprecated. Use `alternate_identifier` instead.
+
+The following arguments are supported by the `filter` configuration block:
+
+* `attribute_path` - (Required) Attribute path that is used to specify which attribute name to search. Currently, `DisplayName` is the only valid attribute path.
+* `attribute_value` - (Required) Value for an attribute.
 
 ### `unique_attribute` Configuration Block
 
@@ -92,4 +102,4 @@ This data source exports the following attributes in addition to the arguments a
     * `id` - The identifier issued to this resource by an external identity provider.
     * `issuer` - The issuer for an external identifier.
 
-<!-- cache-key: cdktf-0.18.0 input-2fcb556c2eb46db4584d2fe081f0b7d851acf4cb81549c92e7a9b3bac001e703 -->
+<!-- cache-key: cdktf-0.20.1 input-e2ee8a1f184076e4923473e811d8cdcd0bbfa4b31daf2855f308b2e41de9934b -->

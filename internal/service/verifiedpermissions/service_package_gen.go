@@ -15,11 +15,33 @@ import (
 type servicePackage struct{}
 
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
-	return []*types.ServicePackageFrameworkDataSource{}
+	return []*types.ServicePackageFrameworkDataSource{
+		{
+			Factory: newDataSourcePolicyStore,
+			Name:    "Policy Store",
+		},
+	}
 }
 
 func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.ServicePackageFrameworkResource {
-	return []*types.ServicePackageFrameworkResource{}
+	return []*types.ServicePackageFrameworkResource{
+		{
+			Factory: newResourcePolicy,
+			Name:    "Policy",
+		},
+		{
+			Factory: newResourcePolicyStore,
+			Name:    "Policy Store",
+		},
+		{
+			Factory: newResourcePolicyTemplate,
+			Name:    "Policy Template",
+		},
+		{
+			Factory: newResourceSchema,
+			Name:    "Schema",
+		},
+	}
 }
 
 func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePackageSDKDataSource {

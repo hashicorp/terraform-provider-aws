@@ -32,6 +32,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceComponents,
 			TypeName: "aws_imagebuilder_components",
+			Name:     "Components",
 		},
 		{
 			Factory:  DataSourceContainerRecipe,
@@ -40,6 +41,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceContainerRecipes,
 			TypeName: "aws_imagebuilder_container_recipes",
+			Name:     "Container Recipes",
 		},
 		{
 			Factory:  DataSourceDistributionConfiguration,
@@ -68,6 +70,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 		{
 			Factory:  DataSourceImageRecipes,
 			TypeName: "aws_imagebuilder_image_recipes",
+			Name:     "Image Recipes",
 		},
 		{
 			Factory:  DataSourceInfrastructureConfiguration,
@@ -134,6 +137,14 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Factory:  ResourceInfrastructureConfiguration,
 			TypeName: "aws_imagebuilder_infrastructure_configuration",
 			Name:     "Infrastructure Configuration",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
+		},
+		{
+			Factory:  ResourceWorkflow,
+			TypeName: "aws_imagebuilder_workflow",
+			Name:     "Workflow",
 			Tags: &types.ServicePackageResourceTags{
 				IdentifierAttribute: "id",
 			},

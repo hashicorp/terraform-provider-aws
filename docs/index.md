@@ -2,7 +2,8 @@
 
 The Terraform AWS Provider is the work of thousands of contributors, and is maintained by a small team within HashiCorp. This site contains extensive instructions about how to contribute and how the AWS provider works.
 
-_Please Note: This documentation is intended for Terraform AWS Provider code developers. Typical operators writing and applying Terraform configurations do not need to read or understand this material._
+!!! tip
+    This documentation is intended for Terraform AWS Provider code developers. Typical operators writing and applying Terraform configurations do not need to read or understand this material.
 
 ## Contribute
 
@@ -46,7 +47,7 @@ HashiCorp's open-source projects have always maintained a user-friendly, readabl
 
 When your contribution is ready, Create a [Pull Request](raising-a-pull-request.md) in the AWS provider repository.
 
-Pull requests are usually triaged within a few days of creation and are prioritized based on community reactions. Our [Prioritization Guides](prioritization.md) provides more details about the process.
+Pull requests are usually triaged within a few days of creation and are prioritized based on community reactions. Our [Prioritization Guides](prioritization.md) provide more details about the process.
 
 ## Submit an Issue
 

@@ -59,6 +59,7 @@ This data source exports the following attributes in addition to the arguments a
             * `unit` - Unit of time.
         * `cronExpressionForRecurrence` - Cron expression for an Auto-Tune maintenance schedule.
     * `rollbackOnDisable` - Whether the domain is set to roll back to default Auto-Tune settings when disabling Auto-Tune.
+    * `useOffPeakWindow` - Whether to schedule Auto-Tune optimizations that require blue/green deployments during the domain's configured daily off-peak window.
 * `clusterConfig` - Cluster configuration of the domain.
     * `coldStorageOptions` - Configuration block containing cold storage configuration.
         * `enabled` - Indicates  cold storage is enabled.
@@ -67,6 +68,7 @@ This data source exports the following attributes in addition to the arguments a
     * `dedicatedMasterEnabled` - Indicates whether dedicated master nodes are enabled for the cluster.
     * `dedicatedMasterType` - Instance type of the dedicated master nodes in the cluster.
     * `dedicatedMasterCount` - Number of dedicated master nodes in the cluster.
+    * `multiAzWithStandbyEnabled` - Whether a multi-AZ domain is turned on with a standby AZ.
     * `zoneAwarenessEnabled` - Indicates whether zone awareness is enabled.
     * `zoneAwarenessConfig` - Configuration block containing zone awareness settings.
         * `availabilityZoneCount` - Number of availability zones used.
@@ -109,6 +111,8 @@ This data source exports the following attributes in addition to the arguments a
 * `processing` – Status of a configuration change in the domain.
 * `snapshotOptions` – Domain snapshot related options.
     * `automatedSnapshotStartHour` - Hour during which the service takes an automated daily snapshot of the indices in the domain.
+* `softwareUpdateOptions` - Software update options for the domain
+    * `autoSoftwareUpdateEnabled` - Enabled or disabled.
 * `tags` - Tags assigned to the domain.
 * `vpcOptions` - VPC Options for private OpenSearch domains.
     * `availabilityZones` - Availability zones used by the domain.
@@ -116,4 +120,4 @@ This data source exports the following attributes in addition to the arguments a
     * `subnetIds` - Subnets used by the domain.
     * `vpcId` - VPC used by the domain.
 
-<!-- cache-key: cdktf-0.18.0 input-966cae8c8e20f502dc0b60f89ebead2a1a9377d9593bb41596387511857f2361 -->
+<!-- cache-key: cdktf-0.20.1 input-3ece174b178ec49f160e5c18c9b72c0faf4ab9039bc2b4501cc2e402815d2a3e -->

@@ -13,6 +13,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -113,6 +114,10 @@ func DataSourceFirewallPolicy() *schema.Resource {
 								},
 							},
 						},
+						"tls_inspection_configuration_arn": {
+							Type:     schema.TypeString,
+							Computed: true,
+						},
 					},
 				},
 			},
@@ -120,7 +125,7 @@ func DataSourceFirewallPolicy() *schema.Resource {
 				Type:         schema.TypeString,
 				Optional:     true,
 				AtLeastOneOf: []string{"arn", "name"},
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9-]{1,128}$`), "Must have 1-128 valid characters: a-z, A-Z, 0-9 and -(hyphen)"),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]{1,128}$`), "Must have 1-128 valid characters: a-z, A-Z, 0-9 and -(hyphen)"),
 			},
 			"tags": tftags.TagsSchemaComputed(),
 			"update_token": {
@@ -132,6 +137,8 @@ func DataSourceFirewallPolicy() *schema.Resource {
 }
 
 func dataSourceFirewallPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).NetworkFirewallConn(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
@@ -143,14 +150,14 @@ func dataSourceFirewallPolicyRead(ctx context.Context, d *schema.ResourceData, m
 	output, err := FindFirewallPolicyByNameAndARN(ctx, conn, arn, name)
 
 	if err != nil {
-		return diag.Errorf("reading NetworkFirewall Firewall Policy (%s, %s): %s", arn, name, err)
+		return sdkdiag.AppendErrorf(diags, "reading NetworkFirewall Firewall Policy (%s, %s): %s", arn, name, err)
 	}
 
 	if output == nil {
-		return diag.Errorf("reading NetworkFirewall Firewall Policy (%s, %s): empty output", arn, name)
+		return sdkdiag.AppendErrorf(diags, "reading NetworkFirewall Firewall Policy (%s, %s): empty output", arn, name)
 	}
 	if output.FirewallPolicyResponse == nil {
-		return diag.Errorf("reading NetworkFirewall Firewall Policy (%s, %s): empty output.FirewallPolicyResponse", arn, name)
+		return sdkdiag.AppendErrorf(diags, "reading NetworkFirewall Firewall Policy (%s, %s): empty output.FirewallPolicyResponse", arn, name)
 	}
 
 	resp := output.FirewallPolicyResponse
@@ -164,14 +171,14 @@ func dataSourceFirewallPolicyRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("update_token", output.UpdateToken)
 
 	if err := d.Set("firewall_policy", flattenFirewallPolicy(policy)); err != nil {
-		return diag.Errorf("setting firewall_policy: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting firewall_policy: %s", err)
 	}
 
 	tags := KeyValueTags(ctx, resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig)
 
 	if err := d.Set("tags", tags.Map()); err != nil {
-		return diag.Errorf("setting tags: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 
-	return nil
+	return diags
 }

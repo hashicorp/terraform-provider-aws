@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_ecs_service: Correctly set `alarms.rollback` on resource Create and Update
+```

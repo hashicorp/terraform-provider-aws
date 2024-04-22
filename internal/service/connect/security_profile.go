@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -78,6 +79,8 @@ func ResourceSecurityProfile() *schema.Resource {
 }
 
 func resourceSecurityProfileCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID := d.Get("instance_id").(string)
@@ -100,25 +103,27 @@ func resourceSecurityProfileCreate(ctx context.Context, d *schema.ResourceData, 
 	output, err := conn.CreateSecurityProfileWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating Connect Security Profile (%s): %s", securityProfileName, err)
+		return sdkdiag.AppendErrorf(diags, "creating Connect Security Profile (%s): %s", securityProfileName, err)
 	}
 
 	if output == nil {
-		return diag.Errorf("creating Connect Security Profile (%s): empty output", securityProfileName)
+		return sdkdiag.AppendErrorf(diags, "creating Connect Security Profile (%s): empty output", securityProfileName)
 	}
 
 	d.SetId(fmt.Sprintf("%s:%s", instanceID, aws.StringValue(output.SecurityProfileId)))
 
-	return resourceSecurityProfileRead(ctx, d, meta)
+	return append(diags, resourceSecurityProfileRead(ctx, d, meta)...)
 }
 
 func resourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, securityProfileID, err := SecurityProfileParseID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	resp, err := conn.DescribeSecurityProfileWithContext(ctx, &connect.DescribeSecurityProfileInput{
@@ -129,15 +134,15 @@ func resourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, me
 	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, connect.ErrCodeResourceNotFoundException) {
 		log.Printf("[WARN] Connect Security Profile (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("getting Connect Security Profile (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "getting Connect Security Profile (%s): %s", d.Id(), err)
 	}
 
 	if resp == nil || resp.SecurityProfile == nil {
-		return diag.Errorf("getting Connect Security Profile (%s): empty response", d.Id())
+		return sdkdiag.AppendErrorf(diags, "getting Connect Security Profile (%s): empty response", d.Id())
 	}
 
 	d.Set("arn", resp.SecurityProfile.Arn)
@@ -151,7 +156,7 @@ func resourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, me
 	permissions, err := getSecurityProfilePermissions(ctx, conn, instanceID, securityProfileID)
 
 	if err != nil {
-		return diag.Errorf("finding Connect Security Profile Permissions for Security Profile (%s): %s", securityProfileID, err)
+		return sdkdiag.AppendErrorf(diags, "finding Connect Security Profile Permissions for Security Profile (%s): %s", securityProfileID, err)
 	}
 
 	if permissions != nil {
@@ -160,16 +165,18 @@ func resourceSecurityProfileRead(ctx context.Context, d *schema.ResourceData, me
 
 	setTagsOut(ctx, resp.SecurityProfile.Tags)
 
-	return nil
+	return diags
 }
 
 func resourceSecurityProfileUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, securityProfileID, err := SecurityProfileParseID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := &connect.UpdateSecurityProfileInput{
@@ -188,19 +195,21 @@ func resourceSecurityProfileUpdate(ctx context.Context, d *schema.ResourceData, 
 	_, err = conn.UpdateSecurityProfileWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("updating SecurityProfile (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "updating SecurityProfile (%s): %s", d.Id(), err)
 	}
 
-	return resourceSecurityProfileRead(ctx, d, meta)
+	return append(diags, resourceSecurityProfileRead(ctx, d, meta)...)
 }
 
 func resourceSecurityProfileDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ConnectConn(ctx)
 
 	instanceID, securityProfileID, err := SecurityProfileParseID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	_, err = conn.DeleteSecurityProfileWithContext(ctx, &connect.DeleteSecurityProfileInput{
@@ -209,10 +218,10 @@ func resourceSecurityProfileDelete(ctx context.Context, d *schema.ResourceData, 
 	})
 
 	if err != nil {
-		return diag.Errorf("deleting SecurityProfile (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting SecurityProfile (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func SecurityProfileParseID(id string) (string, string, error) {

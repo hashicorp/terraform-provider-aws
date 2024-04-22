@@ -3,8 +3,10 @@
 
 package s3control
 
-// AsyncOperation.RequestStatus values.
+import (
+	"time"
+)
+
 const (
-	RequestStatusFailed    = "FAILED"
-	RequestStatusSucceeded = "SUCCEEDED"
+	propagationTimeout = 2 * time.Minute
 )

@@ -74,7 +74,7 @@ AWS accounts that this AWS account has been given permission to copy or restore,
 The default is `false`.
 * `include_public` - (Optional) Set this value to true to include manual DB snapshots that are public and can be
 copied or restored by any AWS account, otherwise set this value to false. The default is `false`.
-`tags` - (Optional) Mapping of tags, each pair of which must exactly match
+* `tags` - (Optional) Mapping of tags, each pair of which must exactly match
   a pair on the desired DB snapshot.
 
 ## Attribute Reference
@@ -97,6 +97,7 @@ This data source exports the following attributes in addition to the arguments a
 * `status` - Status of this DB snapshot.
 * `storage_type` - Storage type associated with DB snapshot.
 * `vpc_id` - ID of the VPC associated with the DB snapshot.
-* `snapshot_create_time` - Provides the time when the snapshot was taken, in Universal Coordinated Time (UTC).
+* `snapshot_create_time` - Provides the time when the snapshot was taken, in Universal Coordinated Time (UTC). Changes for the copy when the snapshot is copied.
+* `original_snapshot_create_time` - Provides the time when the snapshot was taken, in Universal Coordinated Time (UTC). Doesn't change when the snapshot is copied.
 
-<!-- cache-key: cdktf-0.18.0 input-453c07311432431ff619a675fedc77cdb7b11651f38957e4c10480c9e5d7bb31 -->
+<!-- cache-key: cdktf-0.20.1 input-c839ad8d58fed1752eb8fb0ecf7cb491e814d59ae1af484cefe56dffea031a1c -->

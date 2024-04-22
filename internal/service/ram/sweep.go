@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package ram
 
 import (
@@ -14,9 +11,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/ram"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_ram_resource_share", &resource.Sweeper{
 		Name: "aws_ram_resource_share",
 		F:    sweepResourceShares,
@@ -45,7 +43,7 @@ func sweepResourceShares(region string) error {
 				continue
 			}
 
-			r := ResourceResourceShare()
+			r := resourceResourceShare()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(v.ResourceShareArn))
 
@@ -55,7 +53,7 @@ func sweepResourceShares(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping RAM Resource Share sweep for %s: %s", region, err)
 		return nil
 	}

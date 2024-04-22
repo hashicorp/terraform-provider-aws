@@ -5,21 +5,19 @@ package secretsmanager
 
 import (
 	"context"
-	"log"
+	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/secretsmanager"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKDataSource("aws_secretsmanager_secret")
-func DataSourceSecret() *schema.Resource {
+// @SDKDataSource("aws_secretsmanager_secret", name="Secret")
+func dataSourceSecret() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceSecretRead,
 
@@ -29,6 +27,11 @@ func DataSourceSecret() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: verify.ValidARN,
+				ExactlyOneOf: []string{"arn", "name"},
+			},
+			"created_date": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"description": {
 				Type:     schema.TypeString,
@@ -38,86 +41,68 @@ func DataSourceSecret() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"name": {
+			"last_changed_date": {
 				Type:     schema.TypeString,
-				Optional: true,
 				Computed: true,
+			},
+			"name": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ExactlyOneOf: []string{"arn", "name"},
 			},
 			"policy": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"tags": {
-				Type:     schema.TypeMap,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
+			"tags": tftags.TagsSchemaComputed(),
 		},
 	}
 }
 
 func dataSourceSecretRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SecretsManagerConn(ctx)
+	conn := meta.(*conns.AWSClient).SecretsManagerClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	var secretID string
 	if v, ok := d.GetOk("arn"); ok {
 		secretID = v.(string)
-	}
-	if v, ok := d.GetOk("name"); ok {
-		if secretID != "" {
-			return sdkdiag.AppendErrorf(diags, "specify only arn or name")
-		}
+	} else if v, ok := d.GetOk("name"); ok {
 		secretID = v.(string)
 	}
 
-	if secretID == "" {
-		return sdkdiag.AppendErrorf(diags, "must specify either arn or name")
-	}
+	secret, err := findSecretByID(ctx, conn, secretID)
 
-	input := &secretsmanager.DescribeSecretInput{
-		SecretId: aws.String(secretID),
-	}
-
-	log.Printf("[DEBUG] Reading Secrets Manager Secret: %s", input)
-	output, err := conn.DescribeSecretWithContext(ctx, input)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, secretsmanager.ErrCodeResourceNotFoundException) {
-			return sdkdiag.AppendErrorf(diags, "Secrets Manager Secret %q not found", secretID)
-		}
-		return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret (%s): %s", secretID, err)
 	}
 
-	if output.ARN == nil {
-		return sdkdiag.AppendErrorf(diags, "Secrets Manager Secret %q not found", secretID)
-	}
+	arn := aws.ToString(secret.ARN)
+	d.SetId(arn)
+	d.Set("arn", arn)
+	d.Set("created_date", aws.String(secret.CreatedDate.Format(time.RFC3339)))
+	d.Set("description", secret.Description)
+	d.Set("kms_key_id", secret.KmsKeyId)
+	d.Set("last_changed_date", aws.String(secret.LastChangedDate.Format(time.RFC3339)))
+	d.Set("name", secret.Name)
 
-	d.SetId(aws.StringValue(output.ARN))
-	d.Set("arn", output.ARN)
-	d.Set("description", output.Description)
-	d.Set("kms_key_id", output.KmsKeyId)
-	d.Set("name", output.Name)
-	d.Set("policy", "")
+	policy, err := findSecretPolicyByID(ctx, conn, d.Id())
 
-	pIn := &secretsmanager.GetResourcePolicyInput{
-		SecretId: aws.String(d.Id()),
-	}
-	log.Printf("[DEBUG] Reading Secrets Manager Secret policy: %s", pIn)
-	pOut, err := conn.GetResourcePolicyWithContext(ctx, pIn)
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret policy: %s", err)
-	}
-
-	if pOut != nil && pOut.ResourcePolicy != nil {
-		policy, err := structure.NormalizeJsonString(aws.StringValue(pOut.ResourcePolicy))
+		return sdkdiag.AppendErrorf(diags, "reading Secrets Manager Secret (%s) policy: %s", d.Id(), err)
+	} else if v := policy.ResourcePolicy; v != nil {
+		policyToSet, err := verify.PolicyToSet(d.Get("policy").(string), aws.ToString(v))
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "policy contains an invalid JSON: %s", err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
-		d.Set("policy", policy)
+
+		d.Set("policy", policyToSet)
+	} else {
+		d.Set("policy", "")
 	}
 
-	if err := d.Set("tags", KeyValueTags(ctx, output.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
+	if err := d.Set("tags", KeyValueTags(ctx, secret.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
 	}
 

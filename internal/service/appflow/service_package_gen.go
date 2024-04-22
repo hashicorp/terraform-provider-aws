@@ -5,9 +5,8 @@ package appflow
 import (
 	"context"
 
-	aws_sdkv1 "github.com/aws/aws-sdk-go/aws"
-	session_sdkv1 "github.com/aws/aws-sdk-go/aws/session"
-	appflow_sdkv1 "github.com/aws/aws-sdk-go/service/appflow"
+	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
+	appflow_sdkv2 "github.com/aws/aws-sdk-go-v2/service/appflow"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -30,11 +29,12 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceConnectorProfile,
+			Factory:  resourceConnectorProfile,
 			TypeName: "aws_appflow_connector_profile",
+			Name:     "Connector Profile",
 		},
 		{
-			Factory:  ResourceFlow,
+			Factory:  resourceFlow,
 			TypeName: "aws_appflow_flow",
 			Name:     "Flow",
 			Tags: &types.ServicePackageResourceTags{
@@ -48,11 +48,15 @@ func (p *servicePackage) ServicePackageName() string {
 	return names.AppFlow
 }
 
-// NewConn returns a new AWS SDK for Go v1 client for this service package's AWS API.
-func (p *servicePackage) NewConn(ctx context.Context, config map[string]any) (*appflow_sdkv1.Appflow, error) {
-	sess := config["session"].(*session_sdkv1.Session)
+// NewClient returns a new AWS SDK for Go v2 client for this service package's AWS API.
+func (p *servicePackage) NewClient(ctx context.Context, config map[string]any) (*appflow_sdkv2.Client, error) {
+	cfg := *(config["aws_sdkv2_config"].(*aws_sdkv2.Config))
 
-	return appflow_sdkv1.New(sess.Copy(&aws_sdkv1.Config{Endpoint: aws_sdkv1.String(config["endpoint"].(string))})), nil
+	return appflow_sdkv2.NewFromConfig(cfg, func(o *appflow_sdkv2.Options) {
+		if endpoint := config["endpoint"].(string); endpoint != "" {
+			o.BaseEndpoint = aws_sdkv2.String(endpoint)
+		}
+	}), nil
 }
 
 func ServicePackage(ctx context.Context) conns.ServicePackage {

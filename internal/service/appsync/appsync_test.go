@@ -67,6 +67,9 @@ func TestAccAppSync_serial(t *testing.T) {
 			"AdditionalAuthentication_multiple":                   testAccGraphQLAPI_AdditionalAuthentication_multiple,
 			"xrayEnabled":                                         testAccGraphQLAPI_xrayEnabled,
 			"visibility":                                          testAccGraphQLAPI_visibility,
+			"introspectionConfig":                                 testAccGraphQLAPI_introspectionConfig,
+			"queryDepthLimit":                                     testAccGraphQLAPI_queryDepthLimit,
+			"resolverCountLimit":                                  testAccGraphQLAPI_resolverCountLimit,
 		},
 		"Function": {
 			"basic":                   testAccFunction_basic,

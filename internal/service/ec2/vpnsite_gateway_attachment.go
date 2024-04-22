@@ -17,8 +17,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-// @SDKResource("aws_vpn_gateway_attachment")
-func ResourceVPNGatewayAttachment() *schema.Resource {
+// @SDKResource("aws_vpn_gateway_attachment", name="VPN Gateway Attachment")
+func resourceVPNGatewayAttachment() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPNGatewayAttachmentCreate,
 		ReadWithoutTimeout:   resourceVPNGatewayAttachmentRead,

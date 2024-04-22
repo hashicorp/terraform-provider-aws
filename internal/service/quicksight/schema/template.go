@@ -34,7 +34,7 @@ func TemplateDefinitionSchema() *schema.Schema {
 					Optional: true,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"column":               columnSchema(),              // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+							"column":               columnSchema(true),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 							"format_configuration": formatConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FormatConfiguration.html
 							"role":                 stringSchema(false, validation.StringInSlice(quicksight.ColumnRole_Values(), false)),
 						},
@@ -221,12 +221,13 @@ func idSchema() *schema.Schema {
 	}
 }
 
-func columnSchema() *schema.Schema {
+func columnSchema(required bool) *schema.Schema {
 	return &schema.Schema{ // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 		Type:     schema.TypeList,
 		MinItems: 1,
 		MaxItems: 1,
-		Required: true,
+		Required: required,
+		Optional: !required,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
 				"column_name":         stringSchema(true, validation.StringLenBetween(1, 128)),
@@ -945,7 +946,7 @@ func expandRollingDateConfiguration(tfList []interface{}) *quicksight.RollingDat
 
 	config := &quicksight.RollingDateConfiguration{}
 
-	if v, ok := tfMap["data_set_identifier"].(string); ok {
+	if v, ok := tfMap["data_set_identifier"].(string); ok && v != "" {
 		config.DataSetIdentifier = aws.String(v)
 	}
 	if v, ok := tfMap["expression"].(string); ok {

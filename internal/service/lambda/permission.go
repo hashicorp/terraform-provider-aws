@@ -25,7 +25,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-var functionRegexp = `^(arn:[\w-]+:lambda:)?([a-z]{2}-(?:[a-z]+-){1,2}\d{1}:)?(\d{12}:)?(function:)?([a-zA-Z0-9-_]+)(:(\$LATEST|[a-zA-Z0-9-_]+))?$`
+var functionRegexp = `^(arn:[\w-]+:lambda:)?([a-z]{2}-(?:[a-z]+-){1,2}\d{1}:)?(\d{12}:)?(function:)?([0-9A-Za-z_-]+)(:(\$LATEST|[0-9A-Za-z_-]+))?$`
 
 // @SDKResource("aws_lambda_permission")
 func ResourcePermission() *schema.Resource {
@@ -337,21 +337,6 @@ func FindPolicyStatementByTwoPartKey(ctx context.Context, conn *lambda.Lambda, f
 		LastRequest:  statementID,
 		LastResponse: policy,
 		Message:      fmt.Sprintf("Failed to find statement %q in Lambda policy:\n%s", statementID, policy.Statement),
-	}
-}
-
-func FindPolicyStatementByID(policy *Policy, id string) (*PolicyStatement, error) {
-	log.Printf("[DEBUG] Received %d statements in Lambda policy: %s", len(policy.Statement), policy.Statement)
-	for _, statement := range policy.Statement {
-		if statement.Sid == id {
-			return &statement, nil
-		}
-	}
-
-	return nil, &retry.NotFoundError{
-		LastRequest:  id,
-		LastResponse: policy,
-		Message:      fmt.Sprintf("Failed to find statement %q in Lambda policy:\n%s", id, policy.Statement),
 	}
 }
 

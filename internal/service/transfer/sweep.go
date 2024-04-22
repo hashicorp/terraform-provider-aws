@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package transfer
 
 import (
@@ -14,9 +11,10 @@ import (
 	"github.com/aws/aws-sdk-go/service/transfer"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_transfer_server", &resource.Sweeper{
 		Name: "aws_transfer_server",
 		F:    sweepServers,
@@ -47,7 +45,7 @@ func sweepServers(region string) error {
 		}
 
 		for _, server := range page.Servers {
-			r := ResourceServer()
+			r := resourceServer()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(server.ServerId))
 			d.Set("force_destroy", true) // In lieu of an aws_transfer_user sweeper.
@@ -59,7 +57,7 @@ func sweepServers(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Transfer Server sweep for %s: %s", region, err)
 		return nil
 	}
@@ -103,7 +101,7 @@ func sweepWorkflows(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Transfer Workflow sweep for %s: %s", region, err)
 		return nil
 	}

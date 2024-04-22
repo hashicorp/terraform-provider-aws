@@ -42,9 +42,9 @@ func TestAccLightsailBucketAccessKey_basic(t *testing.T) {
 				Config: testAccBucketAccessKeyConfig_basic(rName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckBucketAccessKeyExists(ctx, resourceName),
-					resource.TestMatchResourceAttr(resourceName, "access_key_id", regexache.MustCompile(`((?:ASIA|AKIA|AROA|AIDA)([A-Z0-7]{16}))`)),
+					resource.TestMatchResourceAttr(resourceName, "access_key_id", regexache.MustCompile(`((?:ASIA|AKIA|AROA|AIDA)([0-7A-Z]{16}))`)),
 					resource.TestCheckResourceAttrSet(resourceName, "created_at"),
-					resource.TestMatchResourceAttr(resourceName, "secret_access_key", regexache.MustCompile(`([a-zA-Z0-9+/]{40})`)),
+					resource.TestMatchResourceAttr(resourceName, "secret_access_key", regexache.MustCompile(`([0-9A-Za-z+/]{40})`)),
 					resource.TestCheckResourceAttrSet(resourceName, "status"),
 				),
 			},

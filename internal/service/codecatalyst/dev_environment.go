@@ -152,17 +152,17 @@ func resourceDevEnvironmentCreate(ctx context.Context, d *schema.ResourceData, m
 	out, err := conn.CreateDevEnvironment(ctx, in)
 
 	if err != nil {
-		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionCreating, ResNameDevEnvironment, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.CodeCatalyst, create.ErrActionCreating, ResNameDevEnvironment, d.Id(), err)
 	}
 
 	if out == nil {
-		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionCreating, ResNameDevEnvironment, d.Id(), errors.New("empty output"))...)
+		return create.AppendDiagError(diags, names.CodeCatalyst, create.ErrActionCreating, ResNameDevEnvironment, d.Id(), errors.New("empty output"))
 	}
 
 	d.SetId(aws.ToString(out.Id))
 
 	if _, err := waitDevEnvironmentCreated(ctx, conn, d.Id(), out.SpaceName, out.ProjectName, d.Timeout(schema.TimeoutCreate)); err != nil {
-		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionWaitingForCreation, ResNameDevEnvironment, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.CodeCatalyst, create.ErrActionWaitingForCreation, ResNameDevEnvironment, d.Id(), err)
 	}
 
 	return append(diags, resourceDevEnvironmentRead(ctx, d, meta)...)
@@ -185,7 +185,7 @@ func resourceDevEnvironmentRead(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	if err != nil {
-		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionReading, ResNameDevEnvironment, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.CodeCatalyst, create.ErrActionReading, ResNameDevEnvironment, d.Id(), err)
 	}
 
 	d.Set("alias", out.Alias)
@@ -196,11 +196,11 @@ func resourceDevEnvironmentRead(ctx context.Context, d *schema.ResourceData, met
 	d.Set("persistent_storage", flattenPersistentStorage(out.PersistentStorage))
 
 	if err := d.Set("ides", flattenIdes(out.Ides)); err != nil {
-		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionSetting, ResNameDevEnvironment, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.CodeCatalyst, create.ErrActionSetting, ResNameDevEnvironment, d.Id(), err)
 	}
 
 	if err := d.Set("repositories", flattenRepositories(out.Repositories)); err != nil {
-		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionSetting, ResNameDevEnvironment, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.CodeCatalyst, create.ErrActionSetting, ResNameDevEnvironment, d.Id(), err)
 	}
 
 	return diags
@@ -233,11 +233,11 @@ func resourceDevEnvironmentUpdate(ctx context.Context, d *schema.ResourceData, m
 	log.Printf("[DEBUG] Updating Codecatalyst DevEnvironment (%s): %#v", d.Id(), in)
 	out, err := conn.UpdateDevEnvironment(ctx, in)
 	if err != nil {
-		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionUpdating, ResNameDevEnvironment, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.CodeCatalyst, create.ErrActionUpdating, ResNameDevEnvironment, d.Id(), err)
 	}
 
 	if _, err := waitDevEnvironmentUpdated(ctx, conn, aws.ToString(out.Id), out.SpaceName, out.ProjectName, d.Timeout(schema.TimeoutUpdate)); err != nil {
-		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionWaitingForUpdate, ResNameDevEnvironment, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.CodeCatalyst, create.ErrActionWaitingForUpdate, ResNameDevEnvironment, d.Id(), err)
 	}
 
 	return append(diags, resourceDevEnvironmentRead(ctx, d, meta)...)
@@ -260,7 +260,7 @@ func resourceDevEnvironmentDelete(ctx context.Context, d *schema.ResourceData, m
 		return diags
 	}
 	if err != nil {
-		return append(diags, create.DiagError(names.CodeCatalyst, create.ErrActionDeleting, ResNameDevEnvironment, d.Id(), err)...)
+		return create.AppendDiagError(diags, names.CodeCatalyst, create.ErrActionDeleting, ResNameDevEnvironment, d.Id(), err)
 	}
 
 	return diags

@@ -131,15 +131,9 @@ func resourceReplicaKeyCreate(ctx context.Context, d *schema.ResourceData, meta 
 	}
 
 	// Replication is initiated in the primary key's region.
-	session, err := conns.NewSessionForRegion(&conn.Config, primaryKeyARN.Region, meta.(*conns.AWSClient).TerraformVersion)
+	replicateConn := meta.(*conns.AWSClient).KMSConnForRegion(ctx, primaryKeyARN.Region)
 
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating AWS session: %s", err)
-	}
-
-	replicateConn := kms.New(session)
-
-	output, err := WaitIAMPropagation(ctx, func() (*kms.ReplicateKeyOutput, error) {
+	output, err := WaitIAMPropagation(ctx, propagationTimeout, func() (*kms.ReplicateKeyOutput, error) {
 		return replicateConn.ReplicateKeyWithContext(ctx, input)
 	})
 

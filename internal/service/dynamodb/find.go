@@ -13,37 +13,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindKinesisDataStreamDestination(ctx context.Context, conn *dynamodb.DynamoDB, streamArn, tableName string) (*dynamodb.KinesisDataStreamDestination, error) {
-	input := &dynamodb.DescribeKinesisStreamingDestinationInput{
-		TableName: aws.String(tableName),
-	}
-
-	output, err := conn.DescribeKinesisStreamingDestinationWithContext(ctx, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if output == nil {
-		return nil, nil
-	}
-
-	var result *dynamodb.KinesisDataStreamDestination
-
-	for _, destination := range output.KinesisDataStreamDestinations {
-		if destination == nil {
-			continue
-		}
-
-		if aws.StringValue(destination.StreamArn) == streamArn {
-			result = destination
-			break
-		}
-	}
-
-	return result, nil
-}
-
 func FindTableByName(ctx context.Context, conn *dynamodb.DynamoDB, name string) (*dynamodb.TableDescription, error) {
 	input := &dynamodb.DescribeTableInput{
 		TableName: aws.String(name),
@@ -163,4 +132,25 @@ func FindContributorInsights(ctx context.Context, conn *dynamodb.DynamoDB, table
 	}
 
 	return output, nil
+}
+
+func FindTableExportByID(ctx context.Context, conn *dynamodb.DynamoDB, id string) (*dynamodb.DescribeExportOutput, error) {
+	input := &dynamodb.DescribeExportInput{
+		ExportArn: aws.String(id),
+	}
+
+	out, err := conn.DescribeExportWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, dynamodb.ErrCodeResourceNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if out == nil || out.ExportDescription == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return out, nil
 }

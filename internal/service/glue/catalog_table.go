@@ -15,11 +15,13 @@ import (
 	"github.com/aws/aws-sdk-go/service/glue"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
@@ -340,6 +342,10 @@ func ResourceCatalogTable() *schema.Resource {
 							Type:     schema.TypeString,
 							Required: true,
 						},
+						"region": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
 					},
 				},
 			},
@@ -422,21 +428,21 @@ func resourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, meta 
 
 	catalogID, dbName, name, err := ReadTableID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading Glue Catalog Table (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	out, err := FindTableByName(ctx, conn, catalogID, dbName, name)
+	table, err := FindTableByName(ctx, conn, catalogID, dbName, name)
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] Glue Catalog Table (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
-			log.Printf("[WARN] Glue Catalog Table (%s) not found, removing from state", d.Id())
-			d.SetId("")
-			return diags
-		}
-
 		return sdkdiag.AppendErrorf(diags, "reading Glue Catalog Table (%s): %s", d.Id(), err)
 	}
 
-	table := out.Table
 	tableArn := arn.ARN{
 		Partition: meta.(*conns.AWSClient).Partition,
 		Service:   "glue",
@@ -445,11 +451,10 @@ func resourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, meta 
 		Resource:  fmt.Sprintf("table/%s/%s", dbName, aws.StringValue(table.Name)),
 	}.String()
 	d.Set("arn", tableArn)
-
-	d.Set("name", table.Name)
 	d.Set("catalog_id", catalogID)
 	d.Set("database_name", dbName)
 	d.Set("description", table.Description)
+	d.Set("name", table.Name)
 	d.Set("owner", table.Owner)
 	d.Set("retention", table.Retention)
 
@@ -477,18 +482,20 @@ func resourceCatalogTableRead(ctx context.Context, d *schema.ResourceData, meta 
 		d.Set("target_table", nil)
 	}
 
-	partIndexInput := &glue.GetPartitionIndexesInput{
-		CatalogId:    out.Table.CatalogId,
-		TableName:    out.Table.Name,
-		DatabaseName: out.Table.DatabaseName,
-	}
-	partOut, err := conn.GetPartitionIndexesWithContext(ctx, partIndexInput)
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "getting Glue Partition Indexes: %s", err)
+	input := &glue.GetPartitionIndexesInput{
+		CatalogId:    aws.String(catalogID),
+		DatabaseName: aws.String(dbName),
+		TableName:    aws.String(name),
 	}
 
-	if partOut != nil && len(partOut.PartitionIndexDescriptorList) > 0 {
-		if err := d.Set("partition_index", flattenPartitionIndexes(partOut.PartitionIndexDescriptorList)); err != nil {
+	output, err := conn.GetPartitionIndexesWithContext(ctx, input)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Glue Catalog Table (%s) partition indexes: %s", d.Id(), err)
+	}
+
+	if output != nil && len(output.PartitionIndexDescriptorList) > 0 {
+		if err := d.Set("partition_index", flattenPartitionIndexes(output.PartitionIndexDescriptorList)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting partition_index: %s", err)
 		}
 	}
@@ -500,18 +507,38 @@ func resourceCatalogTableUpdate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlueConn(ctx)
 
-	catalogID, dbName, _, err := ReadTableID(d.Id())
+	catalogID, dbName, name, err := ReadTableID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "updating Glue Catalog Table (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	updateTableInput := &glue.UpdateTableInput{
+	input := &glue.UpdateTableInput{
 		CatalogId:    aws.String(catalogID),
 		DatabaseName: aws.String(dbName),
 		TableInput:   expandTableInput(d),
 	}
 
-	if _, err := conn.UpdateTableWithContext(ctx, updateTableInput); err != nil {
+	// Add back any managed parameters. See flattenNonManagedParameters.
+	table, err := FindTableByName(ctx, conn, catalogID, dbName, name)
+
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading Glue Catalog Table (%s): %s", d.Id(), err)
+	}
+
+	if allParameters := aws.StringValueMap(table.Parameters); allParameters["table_type"] == "ICEBERG" {
+		for _, k := range []string{"table_type", "metadata_location"} {
+			if v := allParameters[k]; v != "" {
+				if input.TableInput.Parameters == nil {
+					input.TableInput.Parameters = make(map[string]*string)
+				}
+				input.TableInput.Parameters[k] = aws.String(v)
+			}
+		}
+	}
+
+	_, err = conn.UpdateTableWithContext(ctx, input)
+
+	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "updating Glue Catalog Table (%s): %s", d.Id(), err)
 	}
 
@@ -524,22 +551,52 @@ func resourceCatalogTableDelete(ctx context.Context, d *schema.ResourceData, met
 
 	catalogID, dbName, name, err := ReadTableID(d.Id())
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting Glue Catalog Table (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	log.Printf("[DEBUG] Glue Catalog Table: %s:%s:%s", catalogID, dbName, name)
+	log.Printf("[DEBUG] Deleting Glue Catalog Table: %s", d.Id())
 	_, err = conn.DeleteTableWithContext(ctx, &glue.DeleteTableInput{
 		CatalogId:    aws.String(catalogID),
 		Name:         aws.String(name),
 		DatabaseName: aws.String(dbName),
 	})
+
+	if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+		return diags
+	}
+
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
-			return diags
-		}
 		return sdkdiag.AppendErrorf(diags, "deleting Glue Catalog Table (%s): %s", d.Id(), err)
 	}
+
 	return diags
+}
+
+func FindTableByName(ctx context.Context, conn *glue.Glue, catalogID, dbName, name string) (*glue.TableData, error) {
+	input := &glue.GetTableInput{
+		CatalogId:    aws.String(catalogID),
+		DatabaseName: aws.String(dbName),
+		Name:         aws.String(name),
+	}
+
+	output, err := conn.GetTableWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, glue.ErrCodeEntityNotFoundException) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil || output.Table == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.Table, nil
 }
 
 func expandTableInput(d *schema.ResourceData) *glue.TableInput {
@@ -1066,6 +1123,10 @@ func expandTableTargetTable(tfMap map[string]interface{}) *glue.TableIdentifier 
 		apiObject.Name = aws.String(v)
 	}
 
+	if v, ok := tfMap["region"].(string); ok && v != "" {
+		apiObject.Region = aws.String(v)
+	}
+
 	return apiObject
 }
 
@@ -1086,6 +1147,10 @@ func flattenTableTargetTable(apiObject *glue.TableIdentifier) map[string]interfa
 
 	if v := apiObject.Name; v != nil {
 		tfMap["name"] = aws.StringValue(v)
+	}
+
+	if v := apiObject.Region; v != nil {
+		tfMap["region"] = aws.StringValue(v)
 	}
 
 	return tfMap

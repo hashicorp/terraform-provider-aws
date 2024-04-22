@@ -271,22 +271,87 @@ func (r *resourceContinuousDeploymentPolicy) Delete(ctx context.Context, req res
 		return
 	}
 
-	in := &cloudfront.DeleteContinuousDeploymentPolicyInput{
-		Id:      aws.String(state.ID.ValueString()),
-		IfMatch: aws.String(state.ETag.ValueString()),
-	}
+	err := DeleteCDP(ctx, conn, state.ID.ValueString())
 
-	_, err := conn.DeleteContinuousDeploymentPolicyWithContext(ctx, in)
 	if err != nil {
-		if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchContinuousDeploymentPolicy) {
-			return
-		}
 		resp.Diagnostics.AddError(
 			create.ProblemStandardMessage(names.CloudFront, create.ErrActionDeleting, ResNameContinuousDeploymentPolicy, state.ID.String(), err),
 			err.Error(),
 		)
 		return
 	}
+}
+
+func DeleteCDP(ctx context.Context, conn *cloudfront.CloudFront, id string) error {
+	etag, err := cdpETag(ctx, conn, id)
+	if tfresource.NotFound(err) {
+		return nil
+	}
+
+	if err != nil {
+		return err
+	}
+
+	in := &cloudfront.DeleteContinuousDeploymentPolicyInput{
+		Id:      aws.String(id),
+		IfMatch: etag,
+	}
+
+	_, err = conn.DeleteContinuousDeploymentPolicyWithContext(ctx, in)
+	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchContinuousDeploymentPolicy) {
+		return nil
+	}
+
+	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodePreconditionFailed, cloudfront.ErrCodeInvalidIfMatchVersion) {
+		etag, err := cdpETag(ctx, conn, id)
+		if tfresource.NotFound(err) {
+			return nil
+		}
+
+		if err != nil {
+			return err
+		}
+
+		in.SetIfMatch(aws.StringValue(etag))
+
+		_, err = conn.DeleteContinuousDeploymentPolicyWithContext(ctx, in)
+		if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchContinuousDeploymentPolicy) {
+			return nil
+		}
+	}
+
+	return err
+}
+
+func disableContinuousDeploymentPolicy(ctx context.Context, conn *cloudfront.CloudFront, id string) error {
+	out, err := FindContinuousDeploymentPolicyByID(ctx, conn, id)
+	if tfresource.NotFound(err) || out == nil || out.ContinuousDeploymentPolicy == nil || out.ContinuousDeploymentPolicy.ContinuousDeploymentPolicyConfig == nil {
+		return nil
+	}
+
+	if !aws.BoolValue(out.ContinuousDeploymentPolicy.ContinuousDeploymentPolicyConfig.Enabled) {
+		return nil
+	}
+
+	out.ContinuousDeploymentPolicy.ContinuousDeploymentPolicyConfig.SetEnabled(false)
+
+	in := &cloudfront.UpdateContinuousDeploymentPolicyInput{
+		Id:                               out.ContinuousDeploymentPolicy.Id,
+		IfMatch:                          out.ETag,
+		ContinuousDeploymentPolicyConfig: out.ContinuousDeploymentPolicy.ContinuousDeploymentPolicyConfig,
+	}
+
+	_, err = conn.UpdateContinuousDeploymentPolicyWithContext(ctx, in)
+	return err
+}
+
+func cdpETag(ctx context.Context, conn *cloudfront.CloudFront, id string) (*string, error) {
+	output, err := FindContinuousDeploymentPolicyByID(ctx, conn, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return output.ETag, nil
 }
 
 func (r *resourceContinuousDeploymentPolicy) ImportState(ctx context.Context, req resource.ImportStateRequest, resp *resource.ImportStateResponse) {

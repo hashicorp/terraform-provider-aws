@@ -131,7 +131,7 @@ func resourcePipelineDelete(ctx context.Context, d *schema.ResourceData, meta in
 	if err := WaitForDeletion(ctx, conn, d.Id()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Data Pipeline %s: %s", d.Id(), err)
 	}
-	return nil
+	return diags
 }
 
 func PipelineRetrieve(ctx context.Context, id string, conn *datapipeline.DataPipeline) (*datapipeline.PipelineDescription, error) {

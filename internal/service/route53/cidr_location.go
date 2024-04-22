@@ -66,7 +66,7 @@ func (r *resourceCIDRLocation) Schema(ctx context.Context, req resource.SchemaRe
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthAtMost(16),
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-zA-Z0-9_\-]+$`), `can include letters, digits, underscore (_) and the dash (-) character`),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[0-9A-Za-z_-]+$`), `can include letters, digits, underscore (_) and the dash (-) character`),
 				},
 			},
 		},

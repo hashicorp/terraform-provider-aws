@@ -24,7 +24,7 @@ func TestAccSESV2DedicatedIPPoolDataSource_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			testAccPreCheckDedicatedIPPool(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2EndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.SESV2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDedicatedIPPoolDestroy(ctx),
 		Steps: []resource.TestStep{

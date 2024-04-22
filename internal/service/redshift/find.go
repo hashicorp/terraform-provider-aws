@@ -419,3 +419,28 @@ func FindClusterSnapshotByID(ctx context.Context, conn *redshift.Redshift, id st
 
 	return output.Snapshots[0], nil
 }
+
+func FindResourcePolicyByARN(ctx context.Context, conn *redshift.Redshift, arn string) (*redshift.ResourcePolicy, error) {
+	input := &redshift.GetResourcePolicyInput{
+		ResourceArn: aws.String(arn),
+	}
+
+	output, err := conn.GetResourcePolicyWithContext(ctx, input)
+
+	if tfawserr.ErrCodeEquals(err, redshift.ErrCodeResourceNotFoundFault) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if err != nil {
+		return nil, err
+	}
+
+	if output == nil {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.ResourcePolicy, nil
+}

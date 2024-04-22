@@ -42,13 +42,15 @@ const (
 )
 
 func dataSourceStreamKeyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).IVSConn(ctx)
 
 	channelArn := d.Get("channel_arn").(string)
 
 	out, err := FindStreamKeyByChannelID(ctx, conn, channelArn)
 	if err != nil {
-		return create.DiagError(names.IVS, create.ErrActionReading, DSNameStreamKey, channelArn, err)
+		return create.AppendDiagError(diags, names.IVS, create.ErrActionReading, DSNameStreamKey, channelArn, err)
 	}
 
 	d.SetId(aws.StringValue(out.Arn))
@@ -61,8 +63,8 @@ func dataSourceStreamKeyRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	//lintignore:AWSR002
 	if err := d.Set("tags", KeyValueTags(ctx, out.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
-		return create.DiagError(names.IVS, create.ErrActionSetting, DSNameStreamKey, d.Id(), err)
+		return create.AppendDiagError(diags, names.IVS, create.ErrActionSetting, DSNameStreamKey, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }

@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package emr
 
 import (
@@ -15,9 +12,10 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_emr_cluster", &resource.Sweeper{
 		Name: "aws_emr_cluster",
 		F:    sweepClusters,
@@ -58,7 +56,7 @@ func sweepClusters(region string) error {
 				log.Printf("[ERROR] unsetting EMR Cluster (%s) termination protection: %s", id, err)
 			}
 
-			r := ResourceCluster()
+			r := resourceCluster()
 			d := r.Data(nil)
 			d.SetId(id)
 
@@ -68,7 +66,7 @@ func sweepClusters(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EMR Clusters sweep for %s: %s", region, err)
 		return nil
 	}
@@ -105,7 +103,7 @@ func sweepStudios(region string) error {
 		}
 
 		for _, studio := range page.Studios {
-			r := ResourceStudio()
+			r := resourceStudio()
 			d := r.Data(nil)
 			d.SetId(aws.StringValue(studio.StudioId))
 
@@ -115,7 +113,7 @@ func sweepStudios(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping EMR Studios sweep for %s: %s", region, sweeperErrs)
 		return nil
 	}

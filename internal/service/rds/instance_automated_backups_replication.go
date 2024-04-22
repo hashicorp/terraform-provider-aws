@@ -7,6 +7,7 @@ import (
 	"context"
 	"log"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -23,10 +24,11 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
+// AWS flip-flop on the capitalization of status codes. Use uppercase.
 const (
-	InstanceAutomatedBackupStatusPending     = "Pending"
-	InstanceAutomatedBackupStatusReplicating = "Replicating"
-	InstanceAutomatedBackupStatusRetained    = "Retained"
+	InstanceAutomatedBackupStatusPending     = "PENDING"
+	InstanceAutomatedBackupStatusReplicating = "REPLICATING"
+	InstanceAutomatedBackupStatusRetained    = "RETAINED"
 )
 
 // @SDKResource("aws_db_instance_automated_backups_replication")
@@ -167,10 +169,7 @@ func resourceInstanceAutomatedBackupsReplicationDelete(ctx context.Context, d *s
 	}
 
 	// Create a new client to the source region.
-	sourceDatabaseConn := conn
-	if sourceDatabaseARN.Region != meta.(*conns.AWSClient).Region {
-		sourceDatabaseConn = rds.New(meta.(*conns.AWSClient).Session, aws.NewConfig().WithRegion(sourceDatabaseARN.Region))
-	}
+	sourceDatabaseConn := meta.(*conns.AWSClient).RDSConnForRegion(ctx, sourceDatabaseARN.Region)
 
 	if _, err := waitDBInstanceAutomatedBackupDeleted(ctx, sourceDatabaseConn, dbInstanceID, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for DB instance automated backup (%s) delete: %s", d.Id(), err)
@@ -189,7 +188,8 @@ func FindDBInstanceAutomatedBackupByARN(ctx context.Context, conn *rds.RDS, arn 
 		return nil, err
 	}
 
-	if status := aws.StringValue(output.Status); status == InstanceAutomatedBackupStatusRetained {
+	// AWS flip-flop on the capitalization of status codes. Case-insensitive comparison.
+	if status := aws.StringValue(output.Status); strings.EqualFold(status, InstanceAutomatedBackupStatusRetained) {
 		// If the automated backup is retained, the replication is stopped.
 		return nil, &retry.NotFoundError{
 			Message:     status,
@@ -260,7 +260,8 @@ func statusDBInstanceAutomatedBackup(ctx context.Context, conn *rds.RDS, arn str
 			return nil, "", err
 		}
 
-		return output, aws.StringValue(output.Status), nil
+		// AWS flip-flop on the capitalization of status codes. Convert to uppercase.
+		return output, strings.ToUpper(aws.StringValue(output.Status)), nil
 	}
 }
 

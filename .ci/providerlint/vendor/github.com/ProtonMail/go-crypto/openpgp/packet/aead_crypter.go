@@ -18,7 +18,7 @@ type aeadCrypter struct {
 	initialNonce   []byte
 	associatedData []byte       // Chunk-independent associated data
 	chunkIndex     []byte       // Chunk counter
-	packetTag      packetType
+	packetTag      packetType   // SEIP packet (v2) or AEAD Encrypted Data packet
 	bytesProcessed int          // Amount of plaintext bytes encrypted/decrypted
 	buffer         bytes.Buffer // Buffered bytes across chunks
 }
@@ -83,22 +83,25 @@ func (ar *aeadDecrypter) Read(dst []byte) (n int, err error) {
 	// Read a chunk
 	tagLen := ar.aead.Overhead()
 	cipherChunkBuf := new(bytes.Buffer)
-	_, errRead := io.CopyN(cipherChunkBuf, ar.reader, int64(ar.chunkSize + tagLen))
+	_, errRead := io.CopyN(cipherChunkBuf, ar.reader, int64(ar.chunkSize+tagLen))
 	cipherChunk := cipherChunkBuf.Bytes()
 	if errRead != nil && errRead != io.EOF {
 		return 0, errRead
 	}
-	decrypted, errChunk := ar.openChunk(cipherChunk)
-	if errChunk != nil {
-		return 0, errChunk
-	}
 
-	// Return decrypted bytes, buffering if necessary
-	if len(dst) < len(decrypted) {
-		n = copy(dst, decrypted[:len(dst)])
-		ar.buffer.Write(decrypted[len(dst):])
-	} else {
-		n = copy(dst, decrypted)
+	if len(cipherChunk) > 0 {
+		decrypted, errChunk := ar.openChunk(cipherChunk)
+		if errChunk != nil {
+			return 0, errChunk
+		}
+
+		// Return decrypted bytes, buffering if necessary
+		if len(dst) < len(decrypted) {
+			n = copy(dst, decrypted[:len(dst)])
+			ar.buffer.Write(decrypted[len(dst):])
+		} else {
+			n = copy(dst, decrypted)
+		}
 	}
 
 	// Check final authentication tag
@@ -116,6 +119,12 @@ func (ar *aeadDecrypter) Read(dst []byte) (n int, err error) {
 // checked in the last Read call. In the future, this function could be used to
 // wipe the reader and peeked, decrypted bytes, if necessary.
 func (ar *aeadDecrypter) Close() (err error) {
+	if !ar.eof {
+		errChunk := ar.validateFinalTag(ar.peekedBytes)
+		if errChunk != nil {
+			return errChunk
+		}
+	}
 	return nil
 }
 
@@ -176,7 +185,6 @@ type aeadEncrypter struct {
 	aeadCrypter                // Embedded plaintext sealer
 	writer      io.WriteCloser // 'writer' is a partialLengthWriter
 }
-
 
 // Write encrypts and writes bytes. It encrypts when necessary and buffers extra
 // plaintext bytes for next call. When the stream is finished, Close() MUST be

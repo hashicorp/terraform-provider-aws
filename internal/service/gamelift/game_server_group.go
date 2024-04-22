@@ -10,8 +10,9 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"strings"
 	"time"
 
+	"github.com/aws/aws-sdk-go-v2/service/autoscaling"
+	autoscalingtypes "github.com/aws/aws-sdk-go-v2/service/autoscaling/types"
 	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/autoscaling"
 	"github.com/aws/aws-sdk-go/service/gamelift"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
@@ -259,7 +260,7 @@ func resourceGameServerGroupCreate(ctx context.Context, d *schema.ResourceData, 
 func resourceGameServerGroupRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GameLiftConn(ctx)
-	autoscalingConn := meta.(*conns.AWSClient).AutoScalingConn(ctx)
+	autoscalingConn := meta.(*conns.AWSClient).AutoScalingClient(ctx)
 
 	gameServerGroupName := d.Id()
 
@@ -275,8 +276,8 @@ func resourceGameServerGroupRead(ctx context.Context, d *schema.ResourceData, me
 	}
 
 	autoScalingGroupName := strings.Split(aws.StringValue(gameServerGroup.AutoScalingGroupArn), "/")[1]
-	autoScalingGroupOutput, err := autoscalingConn.DescribeAutoScalingGroupsWithContext(ctx, &autoscaling.DescribeAutoScalingGroupsInput{
-		AutoScalingGroupNames: []*string{aws.String(autoScalingGroupName)},
+	autoScalingGroupOutput, err := autoscalingConn.DescribeAutoScalingGroups(ctx, &autoscaling.DescribeAutoScalingGroupsInput{
+		AutoScalingGroupNames: []string{autoScalingGroupName},
 	})
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading GameLift Game Server Group (%s): reading AutoScaling Group: %s", gameServerGroupName, err)
@@ -286,9 +287,9 @@ func resourceGameServerGroupRead(ctx context.Context, d *schema.ResourceData, me
 	}
 	autoScalingGroup := autoScalingGroupOutput.AutoScalingGroups[0]
 
-	describePoliciesOutput, err := autoscalingConn.DescribePoliciesWithContext(ctx, &autoscaling.DescribePoliciesInput{
+	describePoliciesOutput, err := autoscalingConn.DescribePolicies(ctx, &autoscaling.DescribePoliciesInput{
 		AutoScalingGroupName: aws.String(autoScalingGroupName),
-		PolicyNames:          []*string{aws.String(gameServerGroupName)},
+		PolicyNames:          []string{gameServerGroupName},
 	})
 
 	if err != nil {
@@ -482,17 +483,13 @@ func expandTargetTrackingConfiguration(tfMap map[string]interface{}) *gamelift.T
 	return apiObject
 }
 
-func flattenGameServerGroupAutoScalingPolicy(apiObject *autoscaling.ScalingPolicy) map[string]interface{} {
-	if apiObject == nil {
-		return nil
-	}
-
+func flattenGameServerGroupAutoScalingPolicy(apiObject autoscalingtypes.ScalingPolicy) map[string]interface{} {
 	tfMap := map[string]interface{}{
 		"target_tracking_configuration": []interface{}{flattenTargetTrackingConfiguration(apiObject.TargetTrackingConfiguration)},
 	}
 
 	if v := apiObject.EstimatedInstanceWarmup; v != nil {
-		tfMap["estimated_instance_warmup"] = aws.Int64Value(v)
+		tfMap["estimated_instance_warmup"] = aws.Int32Value(v)
 	}
 
 	return tfMap
@@ -514,7 +511,7 @@ func flattenInstanceDefinition(apiObject *gamelift.InstanceDefinition) map[strin
 	return tfMap
 }
 
-func flattenAutoScalingLaunchTemplateSpecification(apiObject *autoscaling.LaunchTemplateSpecification) []map[string]interface{} {
+func flattenAutoScalingLaunchTemplateSpecification(apiObject *autoscalingtypes.LaunchTemplateSpecification) []map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -552,7 +549,7 @@ func flattenInstanceDefinitions(apiObjects []*gamelift.InstanceDefinition) []int
 	return tfList
 }
 
-func flattenTargetTrackingConfiguration(apiObject *autoscaling.TargetTrackingConfiguration) map[string]interface{} {
+func flattenTargetTrackingConfiguration(apiObject *autoscalingtypes.TargetTrackingConfiguration) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}

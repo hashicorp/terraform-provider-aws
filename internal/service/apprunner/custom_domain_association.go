@@ -7,19 +7,26 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
+	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/apprunner"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/apprunner"
+	"github.com/aws/aws-sdk-go-v2/service/apprunner/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_apprunner_custom_domain_association")
-func ResourceCustomDomainAssociation() *schema.Resource {
+// @SDKResource("aws_apprunner_custom_domain_association", name="Custom Domain Association")
+func resourceCustomDomainAssociation() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceCustomDomainAssociationCreate,
 		ReadWithoutTimeout:   resourceCustomDomainAssociationRead,
@@ -85,123 +92,252 @@ func ResourceCustomDomainAssociation() *schema.Resource {
 }
 
 func resourceCustomDomainAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn(ctx)
+	var diags diag.Diagnostics
+
+	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
 	domainName := d.Get("domain_name").(string)
-	serviceArn := d.Get("service_arn").(string)
-
+	serviceARN := d.Get("service_arn").(string)
+	id := customDomainAssociationCreateResourceID(domainName, serviceARN)
 	input := &apprunner.AssociateCustomDomainInput{
 		DomainName:         aws.String(domainName),
 		EnableWWWSubdomain: aws.Bool(d.Get("enable_www_subdomain").(bool)),
-		ServiceArn:         aws.String(serviceArn),
+		ServiceArn:         aws.String(serviceARN),
 	}
 
-	output, err := conn.AssociateCustomDomainWithContext(ctx, input)
+	output, err := conn.AssociateCustomDomain(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("associating App Runner Custom Domain (%s) for Service (%s): %s", domainName, serviceArn, err)
+		return sdkdiag.AppendErrorf(diags, "creating App Runner Custom Domain Association (%s): %s", id, err)
 	}
 
-	if output == nil {
-		return diag.Errorf("associating App Runner Custom Domain (%s) for Service (%s): empty output", domainName, serviceArn)
-	}
-
-	d.SetId(fmt.Sprintf("%s,%s", aws.StringValue(output.CustomDomain.DomainName), aws.StringValue(output.ServiceArn)))
+	d.SetId(id)
 	d.Set("dns_target", output.DNSTarget)
 
-	if err := WaitCustomDomainAssociationCreated(ctx, conn, domainName, serviceArn); err != nil {
-		return diag.Errorf("waiting for App Runner Custom Domain Association (%s) creation: %s", d.Id(), err)
+	if _, err := waitCustomDomainAssociationCreated(ctx, conn, domainName, serviceARN); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for App Runner Custom Domain Association (%s) create: %s", d.Id(), err)
 	}
 
-	return resourceCustomDomainAssociationRead(ctx, d, meta)
+	return append(diags, resourceCustomDomainAssociationRead(ctx, d, meta)...)
 }
 
 func resourceCustomDomainAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn(ctx)
+	var diags diag.Diagnostics
 
-	domainName, serviceArn, err := CustomDomainAssociationParseID(d.Id())
+	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
+
+	domainName, serviceArn, err := customDomainAssociationParseResourceID(d.Id())
+	if err != nil {
+		return sdkdiag.AppendFromErr(diags, err)
+	}
+
+	customDomain, err := findCustomDomainByTwoPartKey(ctx, conn, domainName, serviceArn)
+
+	if !d.IsNewResource() && tfresource.NotFound(err) {
+		log.Printf("[WARN] App Runner Custom Domain Association (%s) not found, removing from state", d.Id())
+		d.SetId("")
+		return diags
+	}
 
 	if err != nil {
-		return diag.FromErr(err)
-	}
-
-	customDomain, err := FindCustomDomain(ctx, conn, domainName, serviceArn)
-
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
-		log.Printf("[WARN] App Runner Custom Domain Association (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
-	}
-
-	if customDomain == nil {
-		if d.IsNewResource() {
-			return diag.Errorf("reading App Runner Custom Domain Association (%s): empty output after creation", d.Id())
-		}
-		log.Printf("[WARN] App Runner Custom Domain Association (%s) not found, removing from state", d.Id())
-		d.SetId("")
-		return nil
+		return sdkdiag.AppendErrorf(diags, "reading App Runner Custom Domain Association (%s): %s", d.Id(), err)
 	}
 
 	if err := d.Set("certificate_validation_records", flattenCustomDomainCertificateValidationRecords(customDomain.CertificateValidationRecords)); err != nil {
-		return diag.Errorf("setting certificate_validation_records: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting certificate_validation_records: %s", err)
 	}
-
 	d.Set("domain_name", customDomain.DomainName)
 	d.Set("enable_www_subdomain", customDomain.EnableWWWSubdomain)
 	d.Set("service_arn", serviceArn)
 	d.Set("status", customDomain.Status)
 
-	return nil
+	return diags
 }
 
 func resourceCustomDomainAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).AppRunnerConn(ctx)
+	var diags diag.Diagnostics
 
-	domainName, serviceArn, err := CustomDomainAssociationParseID(d.Id())
+	conn := meta.(*conns.AWSClient).AppRunnerClient(ctx)
 
+	domainName, serviceARN, err := customDomainAssociationParseResourceID(d.Id())
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
-	input := &apprunner.DisassociateCustomDomainInput{
+	log.Printf("[INFO] Deleting App Runner Custom Domain Association: %s", d.Id())
+	_, err = conn.DisassociateCustomDomain(ctx, &apprunner.DisassociateCustomDomainInput{
 		DomainName: aws.String(domainName),
-		ServiceArn: aws.String(serviceArn),
-	}
+		ServiceArn: aws.String(serviceARN),
+	})
 
-	_, err = conn.DisassociateCustomDomainWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
-		return nil
+	if errs.IsA[*types.ResourceNotFoundException](err) {
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("disassociating App Runner Custom Domain (%s) for Service (%s): %s", domainName, serviceArn, err)
+		return sdkdiag.AppendErrorf(diags, "deleting App Runner Custom Domain Association (%s): %s", d.Id(), err)
 	}
 
-	if err := WaitCustomDomainAssociationDeleted(ctx, conn, domainName, serviceArn); err != nil {
-		if tfawserr.ErrCodeEquals(err, apprunner.ErrCodeResourceNotFoundException) {
-			return nil
+	if _, err := waitCustomDomainAssociationDeleted(ctx, conn, domainName, serviceARN); err != nil {
+		return sdkdiag.AppendErrorf(diags, "waiting for App Runner Custom Domain Association (%s) delete: %s", d.Id(), err)
+	}
+
+	return diags
+}
+
+const customDomainAssociationIDSeparator = ","
+
+func customDomainAssociationCreateResourceID(domainName, serviceARN string) string {
+	parts := []string{domainName, serviceARN}
+	id := strings.Join(parts, customDomainAssociationIDSeparator)
+
+	return id
+}
+
+func customDomainAssociationParseResourceID(id string) (string, string, error) {
+	parts := strings.SplitN(id, customDomainAssociationIDSeparator, 2)
+
+	if len(parts) != 2 || parts[0] == "" || parts[1] == "" {
+		return "", "", fmt.Errorf("unexpected format of ID (%[1]s), expected domain_name%[2]service_arn", id, customDomainAssociationIDSeparator)
+	}
+
+	return parts[0], parts[1], nil
+}
+
+func findCustomDomainByTwoPartKey(ctx context.Context, conn *apprunner.Client, domainName, serviceARN string) (*types.CustomDomain, error) {
+	input := &apprunner.DescribeCustomDomainsInput{
+		ServiceArn: aws.String(serviceARN),
+	}
+
+	return findCustomDomain(ctx, conn, input, func(v *types.CustomDomain) bool {
+		return aws.ToString(v.DomainName) == domainName
+	})
+}
+
+func findCustomDomain(ctx context.Context, conn *apprunner.Client, input *apprunner.DescribeCustomDomainsInput, filter tfslices.Predicate[*types.CustomDomain]) (*types.CustomDomain, error) {
+	output, err := findCustomDomains(ctx, conn, input, filter)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findCustomDomains(ctx context.Context, conn *apprunner.Client, input *apprunner.DescribeCustomDomainsInput, filter tfslices.Predicate[*types.CustomDomain]) ([]*types.CustomDomain, error) {
+	var output []*types.CustomDomain
+
+	err := forEachCustomDomainPage(ctx, conn, input, func(page *apprunner.DescribeCustomDomainsOutput) {
+		for _, v := range page.CustomDomains {
+			v := v
+			if v := &v; filter(v) {
+				output = append(output, v)
+			}
+		}
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return output, nil
+}
+
+func forEachCustomDomainPage(ctx context.Context, conn *apprunner.Client, input *apprunner.DescribeCustomDomainsInput, fn func(page *apprunner.DescribeCustomDomainsOutput)) error {
+	pages := apprunner.NewDescribeCustomDomainsPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+
+		if errs.IsA[*types.ResourceNotFoundException](err) {
+			return &retry.NotFoundError{
+				LastError:   err,
+				LastRequest: input,
+			}
 		}
 
-		return diag.Errorf("waiting for App Runner Custom Domain Association (%s) deletion: %s", d.Id(), err)
+		if err != nil {
+			return err
+		}
+
+		fn(page)
 	}
 
 	return nil
 }
 
-func flattenCustomDomainCertificateValidationRecords(records []*apprunner.CertificateValidationRecord) []interface{} {
+const (
+	customDomainAssociationStatusActive                          = "active"
+	customDomainAssociationStatusBindingCertificate              = "binding_certificate"
+	customDomainAssociationStatusCreating                        = "creating"
+	customDomainAssociationStatusDeleting                        = "deleting"
+	customDomainAssociationStatusPendingCertificateDNSValidation = "pending_certificate_dns_validation"
+)
+
+func statusCustomDomain(ctx context.Context, conn *apprunner.Client, domainName, serviceARN string) retry.StateRefreshFunc {
+	return func() (interface{}, string, error) {
+		output, err := findCustomDomainByTwoPartKey(ctx, conn, domainName, serviceARN)
+
+		if tfresource.NotFound(err) {
+			return nil, "", nil
+		}
+
+		if err != nil {
+			return nil, "", err
+		}
+
+		return output, string(output.Status), nil
+	}
+}
+
+func waitCustomDomainAssociationCreated(ctx context.Context, conn *apprunner.Client, domainName, serviceARN string) (*types.CustomDomain, error) {
+	const (
+		timeout = 5 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{customDomainAssociationStatusCreating},
+		Target:  []string{customDomainAssociationStatusPendingCertificateDNSValidation, customDomainAssociationStatusBindingCertificate},
+		Refresh: statusCustomDomain(ctx, conn, domainName, serviceARN),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.CustomDomain); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitCustomDomainAssociationDeleted(ctx context.Context, conn *apprunner.Client, domainName, serviceARN string) (*types.CustomDomain, error) {
+	const (
+		timeout = 5 * time.Minute
+	)
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{customDomainAssociationStatusActive, customDomainAssociationStatusDeleting},
+		Target:  []string{},
+		Refresh: statusCustomDomain(ctx, conn, domainName, serviceARN),
+		Timeout: timeout,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*types.CustomDomain); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func flattenCustomDomainCertificateValidationRecords(records []types.CertificateValidationRecord) []interface{} {
 	var results []interface{}
 
 	for _, record := range records {
-		if record == nil {
-			continue
-		}
-
 		m := map[string]interface{}{
-			"name":   aws.StringValue(record.Name),
-			"status": aws.StringValue(record.Status),
-			"type":   aws.StringValue(record.Type),
-			"value":  aws.StringValue(record.Value),
+			"name":   aws.ToString(record.Name),
+			"status": record.Status,
+			"type":   aws.ToString(record.Type),
+			"value":  aws.ToString(record.Value),
 		}
 
 		results = append(results, m)

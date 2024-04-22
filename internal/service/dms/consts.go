@@ -3,6 +3,14 @@
 
 package dms
 
+import (
+	"time"
+)
+
+const (
+	propagationTimeout = 2 * time.Minute
+)
+
 const (
 	endpointStatusDeleting = "deleting"
 
@@ -16,6 +24,7 @@ const (
 	replicationTaskStatusDeleting  = "deleting"
 	replicationTaskStatusFailed    = "failed"
 	replicationTaskStatusModifying = "modifying"
+	replicationTaskStatusMoving    = "moving"
 	replicationTaskStatusReady     = "ready"
 	replicationTaskStatusStopped   = "stopped"
 	replicationTaskStatusStopping  = "stopping"
@@ -135,6 +144,27 @@ func encryptionMode_Values() []string {
 }
 
 const (
+	replicationStatusCreated              = "created"
+	replicationStatusReady                = "ready"
+	replicationStatusRunning              = "running"
+	replicationStatusStopping             = "stopping"
+	replicationStatusStopped              = "stopped"
+	replicationStatusFailed               = "failed"
+	replicationStatusInitialising         = "initializing"
+	replicationStatusMetadataResources    = "preparing_metadata_resources"
+	replicationStatusTestingConnection    = "testing_connection"
+	replicationStatusFetchingMetadata     = "fetching_metadata"
+	replicationStatusCalculatingCapacity  = "calculating_capacity"
+	replicationStatusProvisioningCapacity = "provisioning_capacity"
+	replicationStatusReplicationStarting  = "replication_starting"
+)
+
+const (
+	replicationTypeValueStartReplication = "creating"
+	replicationTypeValueResumeProcessing = "resume-processing"
+)
+
+const (
 	networkTypeDual = "DUAL"
 	networkTypeIPv4 = "IPV4"
 )
@@ -145,3 +175,10 @@ func networkType_Values() []string {
 		networkTypeIPv4,
 	}
 }
+
+const (
+	eventSubscriptionStatusActive    = "active"
+	eventSubscriptionStatusCreating  = "creating"
+	eventSubscriptionStatusDeleting  = "deleting"
+	eventSubscriptionStatusModifying = "modifying"
+)

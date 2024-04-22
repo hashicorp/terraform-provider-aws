@@ -15,7 +15,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/hashicorp/go-multierror"
 	"github.com/mitchellh/go-testing-interface"
 
 	"github.com/hashicorp/terraform-plugin-go/tfprotov5"
@@ -836,15 +835,15 @@ func ComposeTestCheckFunc(fs ...TestCheckFunc) TestCheckFunc {
 // TestCheckFuncs and aggregates failures.
 func ComposeAggregateTestCheckFunc(fs ...TestCheckFunc) TestCheckFunc {
 	return func(s *terraform.State) error {
-		var result *multierror.Error
+		var result []error
 
 		for i, f := range fs {
 			if err := f(s); err != nil {
-				result = multierror.Append(result, fmt.Errorf("Check %d/%d error: %s", i+1, len(fs), err))
+				result = append(result, fmt.Errorf("Check %d/%d error: %w", i+1, len(fs), err))
 			}
 		}
 
-		return result.ErrorOrNil()
+		return errors.Join(result...)
 	}
 }
 

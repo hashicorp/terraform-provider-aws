@@ -318,9 +318,9 @@ This argument supports the following arguments:
 * `costTypes` - (Optional) Object containing [CostTypes](#cost-types) The types of cost included in a budget, such as tax and subscriptions.
 * `limitAmount` - (Required) The amount of cost or usage being measured for a budget.
 * `limitUnit` - (Required) The unit of measurement used for the budget forecast, actual spend, or budget threshold, such as dollars or GB. See [Spend](http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/data-type-spend.html) documentation.
-* `timePeriodEnd` - (Optional) The end of the time period covered by the budget. There are no restrictions on the end date. Format: `2017010112:00`.
-* `timePeriodStart` - (Optional) The start of the time period covered by the budget. If you don't specify a start date, AWS defaults to the start of your chosen time period. The start date must come before the end date. Format: `2017010112:00`.
-* `timeUnit` - (Required) The length of time until a budget resets the actual and forecasted spend. Valid values: `monthly`, `quarterly`, `annually`, and `daily`.
+* `timePeriodEnd` - (Optional) The end of the time period covered by the budget. There are no restrictions on the end date. Format: `2017-01-01_12:00`.
+* `timePeriodStart` - (Optional) The start of the time period covered by the budget. If you don't specify a start date, AWS defaults to the start of your chosen time period. The start date must come before the end date. Format: `2017-01-01_12:00`.
+* `timeUnit` - (Required) The length of time until a budget resets the actual and forecasted spend. Valid values: `MONTHLY`, `QUARTERLY`, `ANNUALLY`, and `DAILY`.
 * `notification` - (Optional) Object containing [Budget Notifications](#budget-notification). Can be used multiple times to define more than one budget notification.
 * `plannedLimit` - (Optional) Object containing [Planned Budget Limits](#planned-budget-limits). Can be used multiple times to plan more than one budget limit. See [PlannedBudgetLimits](https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_budgets_Budget.html#awscostmanagement-Type-budgets_Budget-PlannedBudgetLimits) documentation.
 
@@ -335,8 +335,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 The parameters that determine the budget amount for an auto-adjusting budget.
 
-`autoAdjustType` (Required) - The string that defines whether your budget auto-adjusts based on historical or forecasted data. Valid values: `forecast`,`historical`
-`historicalOptions` (Optional) - Configuration block of [Historical Options](#historical-options). Required for `autoAdjustType` of `historical` Configuration block that defines the historical data that your auto-adjusting budget is based on.
+`autoAdjustType` (Required) - The string that defines whether your budget auto-adjusts based on historical or forecasted data. Valid values: `FORECAST`,`HISTORICAL`
+`historicalOptions` (Optional) - Configuration block of [Historical Options](#historical-options). Required for `autoAdjustType` of `HISTORICAL` Configuration block that defines the historical data that your auto-adjusting budget is based on.
 `lastAutoAdjustTime` (Optional) - The last time that your budget was auto-adjusted.
 
 ### Historical Options
@@ -366,20 +366,20 @@ Refer to [AWS CostTypes documentation](https://docs.aws.amazon.com/aws-cost-mana
 
 Based on your choice of budget type, you can choose one or more of the available budget filters.
 
-* `purchaseType`
-* `usageTypeGroup`
-* `service`
-* `operation`
-* `usageType`
-* `billingEntity`
-* `costCategory`
-* `linkedAccount`
-* `tagKeyValue`
-* `legalEntityName`
-* `invoicingEntity`
-* `az`
-* `region`
-* `instanceType`
+* `PurchaseType`
+* `UsageTypeGroup`
+* `Service`
+* `Operation`
+* `UsageType`
+* `BillingEntity`
+* `CostCategory`
+* `LinkedAccount`
+* `TagKeyValue`
+* `LegalEntityName`
+* `InvoicingEntity`
+* `AZ`
+* `Region`
+* `InstanceType`
 
 Refer to [AWS CostFilter documentation](https://docs.aws.amazon.com/cost-management/latest/userguide/budgets-create-filters.html) for further detail.
 
@@ -387,10 +387,10 @@ Refer to [AWS CostFilter documentation](https://docs.aws.amazon.com/cost-managem
 
 Valid keys for `notification` parameter.
 
-* `comparisonOperator` - (Required) Comparison operator to use to evaluate the condition. Can be `lessThan`, `equalTo` or `greaterThan`.
+* `comparisonOperator` - (Required) Comparison operator to use to evaluate the condition. Can be `LESS_THAN`, `EQUAL_TO` or `GREATER_THAN`.
 * `threshold` - (Required) Threshold when the notification should be sent.
-* `thresholdType` - (Required) What kind of threshold is defined. Can be `percentage` OR `absoluteValue`.
-* `notificationType` - (Required) What kind of budget value to notify on. Can be `actual` or `forecasted`
+* `thresholdType` - (Required) What kind of threshold is defined. Can be `PERCENTAGE` OR `ABSOLUTE_VALUE`.
+* `notificationType` - (Required) What kind of budget value to notify on. Can be `ACTUAL` or `FORECASTED`
 * `subscriberEmailAddresses` - (Optional) E-Mail addresses to notify. Either this or `subscriberSnsTopicArns` is required.
 * `subscriberSnsTopicArns` - (Optional) SNS topics to notify. Either this or `subscriberEmailAddresses` is required.
 
@@ -398,30 +398,40 @@ Valid keys for `notification` parameter.
 
 Valid keys for `plannedLimit` parameter.
 
-* `startTime` - (Required) The start time of the budget limit. Format: `2017010112:00`. See [PlannedBudgetLimits](https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_budgets_Budget.html#awscostmanagement-Type-budgets_Budget-PlannedBudgetLimits) documentation.
+* `startTime` - (Required) The start time of the budget limit. Format: `2017-01-01_12:00`. See [PlannedBudgetLimits](https://docs.aws.amazon.com/aws-cost-management/latest/APIReference/API_budgets_Budget.html#awscostmanagement-Type-budgets_Budget-PlannedBudgetLimits) documentation.
 * `amount` - (Required) The amount of cost or usage being measured for a budget.
 * `unit` - (Required) The unit of measurement used for the budget forecast, actual spend, or budget threshold, such as dollars or GB. See [Spend](http://docs.aws.amazon.com/awsaccountbilling/latest/aboutv2/data-type-spend.html) documentation.
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import budgets using `accountId:actionId:budgetName`. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import budgets using `AccountID:BudgetName`. For example:
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { BudgetsBudget } from "./.gen/providers/aws/budgets-budget";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    BudgetsBudget.generateConfigForImport(
+      this,
+      "myBudget",
+      "123456789012:myBudget"
+    );
   }
 }
 
 ```
 
-Using `terraform import`, import budgets using `accountId:actionId:budgetName`. For example:
+Using `terraform import`, import budgets using `AccountID:BudgetName`. For example:
 
 ```console
 % terraform import aws_budgets_budget.myBudget 123456789012:myBudget
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-1e489919affafec652fb181d887cfb745c4899bec31c5aef82fa0e7dc17bde94 -->
+<!-- cache-key: cdktf-0.20.1 input-8102c472becab87792a67957e3d9552c520586c5275020d8dc4c59bed19632ba -->

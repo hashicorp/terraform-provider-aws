@@ -314,7 +314,7 @@ func lineChartMarkerStyleSettingsSchema() *schema.Schema {
 		MaxItems: 1,
 		Elem: &schema.Resource{
 			Schema: map[string]*schema.Schema{
-				"marker_color": stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[A-F0-9]{6}$`), "")),
+				"marker_color": stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
 				"marker_shape": stringSchema(false, validation.StringInSlice(quicksight.LineChartMarkerShape_Values(), false)),
 				"marker_size": {
 					Type:     schema.TypeString,

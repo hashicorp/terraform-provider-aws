@@ -5,6 +5,7 @@ package configservice_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
@@ -13,11 +14,12 @@ func TestAccConfigService_serial(t *testing.T) {
 	t.Parallel()
 
 	testCases := map[string]map[string]func(t *testing.T){
-		"Config": {
+		"ConfigRule": {
 			"basic":            testAccConfigRule_basic,
-			"ownerAws":         testAccConfigRule_ownerAws,
+			"ownerAws":         testAccConfigRule_ownerAWS,
 			"customlambda":     testAccConfigRule_customlambda,
 			"customPolicy":     testAccConfigRule_ownerPolicy,
+			"evaluationMode":   testAccConfigRule_evaluationMode,
 			"scopeTagKey":      testAccConfigRule_Scope_TagKey,
 			"scopeTagKeyEmpty": testAccConfigRule_Scope_TagKey_Empty,
 			"scopeTagValue":    testAccConfigRule_Scope_TagValue,
@@ -27,7 +29,7 @@ func TestAccConfigService_serial(t *testing.T) {
 		"ConfigurationRecorderStatus": {
 			"basic":        testAccConfigurationRecorderStatus_basic,
 			"startEnabled": testAccConfigurationRecorderStatus_startEnabled,
-			"importBasic":  testAccConfigurationRecorderStatus_importBasic,
+			"disappears":   testAccConfigurationRecorderStatus_disappears,
 		},
 		"ConfigurationRecorder": {
 			"basic":          testAccConfigurationRecorder_basic,
@@ -49,9 +51,9 @@ func TestAccConfigService_serial(t *testing.T) {
 			"updateTemplateBody":        testAccConformancePack_updateTemplateBody,
 		},
 		"DeliveryChannel": {
-			"basic":       testAccDeliveryChannel_basic,
-			"allParams":   testAccDeliveryChannel_allParams,
-			"importBasic": testAccDeliveryChannel_importBasic,
+			"basic":      testAccDeliveryChannel_basic,
+			"allParams":  testAccDeliveryChannel_allParams,
+			"disappears": testAccDeliveryChannel_disappears,
 		},
 		"OrganizationConformancePack": {
 			"basic":                 testAccOrganizationConformancePack_basic,
@@ -65,6 +67,11 @@ func TestAccConfigService_serial(t *testing.T) {
 			"updateS3Delivery":      testAccOrganizationConformancePack_updateS3Delivery,
 			"updateS3Template":      testAccOrganizationConformancePack_updateS3Template,
 			"updateTemplateBody":    testAccOrganizationConformancePack_updateTemplateBody,
+		},
+		"OrganizationCustomPolicyRule": {
+			"basic":      testAccOrganizationCustomPolicyRule_basic,
+			"disappears": testAccOrganizationCustomPolicyRule_disappears,
+			"policyText": testAccOrganizationCustomPolicyRule_PolicyText,
 		},
 		"OrganizationCustomRule": {
 			"basic":                     testAccOrganizationCustomRule_basic,
@@ -96,15 +103,17 @@ func TestAccConfigService_serial(t *testing.T) {
 			"TagValueScope":             testAccOrganizationManagedRule_TagValueScope,
 		},
 		"RemediationConfiguration": {
-			"basic":             testAccRemediationConfiguration_basic,
-			"basicBackward":     testAccRemediationConfiguration_basicBackwardCompatible,
-			"disappears":        testAccRemediationConfiguration_disappears,
-			"migrateParameters": testAccRemediationConfiguration_migrateParameters,
-			"recreates":         testAccRemediationConfiguration_recreates,
-			"updates":           testAccRemediationConfiguration_updates,
-			"values":            testAccRemediationConfiguration_values,
+			"basic":         testAccRemediationConfiguration_basic,
+			"basicBackward": testAccRemediationConfiguration_basicBackwardCompatible,
+			"disappears":    testAccRemediationConfiguration_disappears,
+			"updates":       testAccRemediationConfiguration_updates,
+			"values":        testAccRemediationConfiguration_values,
+		},
+		"RetentionConfiguration": {
+			"basic":      testAccRetentionConfiguration_basic,
+			"disappears": testAccRetentionConfiguration_disappears,
 		},
 	}
 
-	acctest.RunSerialTests2Levels(t, testCases, 0)
+	acctest.RunSerialTests2Levels(t, testCases, 15*time.Second)
 }

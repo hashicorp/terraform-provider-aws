@@ -30,6 +30,7 @@ This data source exports the following attributes in addition to the arguments a
 
 * `arn` - Group ARN.
 * `group_id` - Stable and unique string identifying the group.
+* `id` - Stable and unique string identifying the group.
 * `path` - Path to the group.
 * `users` - List of objects containing group member information. See below.
 

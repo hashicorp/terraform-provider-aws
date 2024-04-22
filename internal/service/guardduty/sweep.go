@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package guardduty
 
 import (
@@ -16,9 +13,10 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_guardduty_detector", &resource.Sweeper{
 		Name:         "aws_guardduty_detector",
 		F:            sweepDetectors,
@@ -66,7 +64,7 @@ func sweepDetectors(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping GuardDuty Detector sweep for %s: %s", region, err)
 		return nil
 	}
@@ -125,7 +123,7 @@ func sweepPublishingDestinations(region string) error {
 		sweeperErrs = multierror.Append(sweeperErrs, sweeperErr)
 	}
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping GuardDuty Publishing Destination sweep for %s: %s", region, err)
 		return nil
 	}
