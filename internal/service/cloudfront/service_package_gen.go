@@ -73,8 +73,9 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 			Name:     "Real-time Log Config",
 		},
 		{
-			Factory:  DataSourceResponseHeadersPolicy,
+			Factory:  dataSourceResponseHeadersPolicy,
 			TypeName: "aws_cloudfront_response_headers_policy",
+			Name:     "Response Headers Policy",
 		},
 	}
 }

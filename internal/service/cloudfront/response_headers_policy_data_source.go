@@ -6,16 +6,16 @@ package cloudfront
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudfront"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// @SDKDataSource("aws_cloudfront_response_headers_policy")
-func DataSourceResponseHeadersPolicy() *schema.Resource {
+// @SDKDataSource("aws_cloudfront_response_headers_policy", name="Response Headers Policy")
+func dataSourceResponseHeadersPolicy() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceResponseHeadersPolicyRead,
 
@@ -297,7 +297,7 @@ func DataSourceResponseHeadersPolicy() *schema.Resource {
 
 func dataSourceResponseHeadersPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
+	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	var responseHeadersPolicyID string
 
@@ -313,8 +313,8 @@ func dataSourceResponseHeadersPolicyRead(ctx context.Context, d *schema.Resource
 			}
 
 			for _, policySummary := range page.ResponseHeadersPolicyList.Items {
-				if responseHeadersPolicy := policySummary.ResponseHeadersPolicy; aws.StringValue(responseHeadersPolicy.ResponseHeadersPolicyConfig.Name) == name {
-					responseHeadersPolicyID = aws.StringValue(responseHeadersPolicy.Id)
+				if responseHeadersPolicy := policySummary.ResponseHeadersPolicy; aws.ToString(responseHeadersPolicy.ResponseHeadersPolicyConfig.Name) == name {
+					responseHeadersPolicyID = aws.ToString(responseHeadersPolicy.Id)
 
 					return false
 				}
@@ -332,7 +332,7 @@ func dataSourceResponseHeadersPolicyRead(ctx context.Context, d *schema.Resource
 		}
 	}
 
-	output, err := FindResponseHeadersPolicyByID(ctx, conn, responseHeadersPolicyID)
+	output, err := findResponseHeadersPolicyByID(ctx, conn, responseHeadersPolicyID)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading CloudFront Response Headers Policy (%s): %s", responseHeadersPolicyID, err)
@@ -372,7 +372,6 @@ func dataSourceResponseHeadersPolicyRead(ctx context.Context, d *schema.Resource
 	} else {
 		d.Set("security_headers_config", nil)
 	}
-
 	if apiObject.ServerTimingHeadersConfig != nil {
 		if err := d.Set("server_timing_headers_config", []interface{}{flattenResponseHeadersPolicyServerTimingHeadersConfig(apiObject.ServerTimingHeadersConfig)}); err != nil {
 			return sdkdiag.AppendErrorf(diags, "setting server_timing_headers_config: %s", err)
