@@ -12,7 +12,7 @@ description: |-
 
 Provides a resource to create an organization.
 
-!> **WARNING:** When migrating from a `featureSet` of `consolidatedBilling` to `all`, the Organization account owner will received an email stating the following: "You started the process to enable all features for your AWS organization. As part of that process, all member accounts that joined your organization by invitation must approve the change. You don’t need approval from member accounts that you directly created from within your AWS organization." After all member accounts have accepted the invitation, the Organization account owner must then finalize the changes via the [AWS Console](https://console.aws.amazon.com/organizations/home#/organization/settings/migration-progress). Until these steps are performed, Terraform will perpetually show a difference, and the `describeOrganization` API will continue to show the `featureSet` as `consolidatedBilling`. See the [AWS Organizations documentation](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_org_support-all-features.html) for more information.
+!> **WARNING:** When migrating from a `featureSet` of `CONSOLIDATED_BILLING` to `ALL`, the Organization account owner will received an email stating the following: "You started the process to enable all features for your AWS organization. As part of that process, all member accounts that joined your organization by invitation must approve the change. You don’t need approval from member accounts that you directly created from within your AWS organization." After all member accounts have accepted the invitation, the Organization account owner must then finalize the changes via the [AWS Console](https://console.aws.amazon.com/organizations/home#/organization/settings/migration-progress). Until these steps are performed, Terraform will perpetually show a difference, and the `DescribeOrganization` API will continue to show the `FeatureSet` as `CONSOLIDATED_BILLING`. See the [AWS Organizations documentation](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_manage_org_support-all-features.html) for more information.
 
 !> **WARNING:** [Warning from the AWS Docs](https://docs.aws.amazon.com/organizations/latest/APIReference/API_EnableAWSServiceAccess.html): "We recommend that you enable integration between AWS Organizations and the specified AWS service by using the console or commands that are provided by the specified service. Doing so ensures that the service is aware that it can create the resources that are required for the integration. How the service creates those resources in the organization's accounts depends on that service. For more information, see the documentation for the other AWS service."
 
@@ -46,8 +46,8 @@ class MyConvertedCode extends TerraformStack {
 
 This resource supports the following arguments:
 
-* `awsServiceAccessPrincipals` - (Optional) List of AWS service principal names for which you want to enable integration with your organization. This is typically in the form of a URL, such as service-abbreviation.amazonaws.com. Organization must have `featureSet` set to `all`. Some services do not support enablement via this endpoint, see [warning in aws docs](https://docs.aws.amazon.com/organizations/latest/APIReference/API_EnableAWSServiceAccess.html).
-* `enabledPolicyTypes` - (Optional) List of Organizations policy types to enable in the Organization Root. Organization must have `featureSet` set to `all`. For additional information about valid policy types (e.g., `aiservicesOptOutPolicy`, `backupPolicy`, `serviceControlPolicy`, and `tagPolicy`), see the [AWS Organizations API Reference](https://docs.aws.amazon.com/organizations/latest/APIReference/API_EnablePolicyType.html).
+* `awsServiceAccessPrincipals` - (Optional) List of AWS service principal names for which you want to enable integration with your organization. This is typically in the form of a URL, such as service-abbreviation.amazonaws.com. Organization must have `featureSet` set to `ALL`. Some services do not support enablement via this endpoint, see [warning in aws docs](https://docs.aws.amazon.com/organizations/latest/APIReference/API_EnableAWSServiceAccess.html).
+* `enabledPolicyTypes` - (Optional) List of Organizations policy types to enable in the Organization Root. Organization must have `featureSet` set to `ALL`. For additional information about valid policy types (e.g., `AISERVICES_OPT_OUT_POLICY`, `BACKUP_POLICY`, `SERVICE_CONTROL_POLICY`, and `TAG_POLICY`), see the [AWS Organizations API Reference](https://docs.aws.amazon.com/organizations/latest/APIReference/API_EnablePolicyType.html).
 * `featureSet` - (Optional) Specify "ALL" (default) or "CONSOLIDATED_BILLING".
 
 ## Attribute Reference
@@ -65,6 +65,7 @@ This resource exports the following attributes in addition to the arguments abov
 * `masterAccountArn` - ARN of the master account
 * `masterAccountEmail` - Email address of the master account
 * `masterAccountId` - Identifier of the master account
+* `masterAccountName` - Name of the master account
 * `nonMasterAccounts` - List of organization accounts excluding the master account. For a list including the master account, see the `accounts` attribute. All elements have these attributes:
     * `arn` - ARN of the account
     * `email` - Email of the account
@@ -75,7 +76,7 @@ This resource exports the following attributes in addition to the arguments abov
     * `arn` - ARN of the root
     * `id` - Identifier of the root
     * `name` - Name of the root
-    * `policyTypes` - List of policy types enabled for this root. All elements have these attributes:
+    * `policy_types` - List of policy types enabled for this root. All elements have these attributes:
         * `name` - The name of the policy type
         * `status` - The status of the policy type as it relates to the associated root
 
@@ -87,9 +88,19 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { OrganizationsOrganization } from "./.gen/providers/aws/organizations-organization";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    OrganizationsOrganization.generateConfigForImport(
+      this,
+      "myOrg",
+      "o-1234567"
+    );
   }
 }
 
@@ -101,4 +112,4 @@ Using `terraform import`, import the AWS organization using the `id`. For exampl
 % terraform import aws_organizations_organization.my_org o-1234567
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-94624882d07e9da3b0a6aac6dc0902e40fde096b01acc4c3e884c266bbfd7a56 -->
+<!-- cache-key: cdktf-0.20.1 input-f638eb1d6cd8561baf40168a25f0ca1df3c2ecd70e0aab2ecf69025a3d062087 -->

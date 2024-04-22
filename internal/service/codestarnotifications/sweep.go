@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package codestarnotifications
 
 import (
@@ -14,9 +11,10 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/codestarnotifications"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_codestarnotifications_notification_rule", &resource.Sweeper{
 		Name: "aws_codestarnotifications_notification_rule",
 		F:    sweepNotificationRules,
@@ -37,13 +35,13 @@ func sweepNotificationRules(region string) error {
 	for pages.HasMorePages() {
 		page, err := pages.NextPage(ctx)
 
-		if sweep.SkipSweepError(err) {
+		if awsv2.SkipSweepError(err) {
 			log.Printf("[WARN] Skipping CodeStar Notification Rule sweep for %s: %s", region, err)
 			return nil
 		}
 
 		if err != nil {
-			return fmt.Errorf("error listingCodeStar Notification Rules (%s): %w", region, err)
+			return fmt.Errorf("error listing CodeStar Notification Rules (%s): %w", region, err)
 		}
 
 		for _, v := range page.NotificationRules {

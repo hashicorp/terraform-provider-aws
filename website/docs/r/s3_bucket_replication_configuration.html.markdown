@@ -12,6 +12,8 @@ Provides an independent configuration resource for S3 bucket [replication config
 
 ~> **NOTE:** S3 Buckets only support a single replication configuration. Declaring multiple `aws_s3_bucket_replication_configuration` resources to the same S3 Bucket will cause a perpetual difference in configuration.
 
+-> This resource cannot be used with S3 directory buckets.
+
 ## Example Usage
 
 ### Using replication configuration

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
@@ -37,9 +38,9 @@ func ResourceStackSetInstance() *schema.Resource {
 		},
 
 		Timeouts: &schema.ResourceTimeout{
-			Create: schema.DefaultTimeout(StackSetInstanceCreatedDefaultTimeout),
-			Update: schema.DefaultTimeout(StackSetInstanceUpdatedDefaultTimeout),
-			Delete: schema.DefaultTimeout(StackSetInstanceDeletedDefaultTimeout),
+			Create: schema.DefaultTimeout(30 * time.Minute),
+			Update: schema.DefaultTimeout(30 * time.Minute),
+			Delete: schema.DefaultTimeout(30 * time.Minute),
 		},
 
 		Schema: map[string]*schema.Schema{
@@ -70,7 +71,7 @@ func ResourceStackSetInstance() *schema.Resource {
 							MinItems: 1,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
-								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^(ou-[a-z0-9]{4,32}-[a-z0-9]{8,32}|r-[a-z0-9]{4,32})$`), ""),
+								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^(ou-[0-9a-z]{4,32}-[0-9a-z]{8,32}|r-[0-9a-z]{4,32})$`), ""),
 							},
 						},
 					},
@@ -118,7 +119,7 @@ func ResourceStackSetInstance() *schema.Resource {
 							MinItems: 1,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
-								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9-]{1,128}$`), ""),
+								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]{1,128}$`), ""),
 							},
 						},
 					},
@@ -436,7 +437,9 @@ func resourceStackSetInstanceDelete(ctx context.Context, d *schema.ResourceData,
 	}
 
 	log.Printf("[DEBUG] Deleting CloudFormation StackSet Instance: %s", d.Id())
-	output, err := conn.DeleteStackInstancesWithContext(ctx, input)
+	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, d.Timeout(schema.TimeoutDelete), func() (interface{}, error) {
+		return conn.DeleteStackInstancesWithContext(ctx, input)
+	}, cloudformation.ErrCodeOperationInProgressException)
 
 	if tfawserr.ErrCodeEquals(err, cloudformation.ErrCodeStackInstanceNotFoundException, cloudformation.ErrCodeStackSetNotFoundException) {
 		return diags
@@ -446,7 +449,7 @@ func resourceStackSetInstanceDelete(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendErrorf(diags, "deleting CloudFormation StackSet Instance (%s): %s", d.Id(), err)
 	}
 
-	if _, err := WaitStackSetOperationSucceeded(ctx, conn, stackSetName, aws.StringValue(output.OperationId), callAs, d.Timeout(schema.TimeoutDelete)); err != nil {
+	if _, err := WaitStackSetOperationSucceeded(ctx, conn, stackSetName, aws.StringValue(outputRaw.(*cloudformation.DeleteStackInstancesOutput).OperationId), callAs, d.Timeout(schema.TimeoutDelete)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for CloudFormation StackSet Instance (%s) delete: %s", d.Id(), err)
 	}
 

@@ -9,8 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/s3control"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -18,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfs3control "github.com/hashicorp/terraform-provider-aws/internal/service/s3control"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccS3ControlBucketPolicy_basic(t *testing.T) {
@@ -27,7 +27,7 @@ func TestAccS3ControlBucketPolicy_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -55,7 +55,7 @@ func TestAccS3ControlBucketPolicy_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -78,7 +78,7 @@ func TestAccS3ControlBucketPolicy_policy(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckBucketPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -107,7 +107,7 @@ func TestAccS3ControlBucketPolicy_policy(t *testing.T) {
 
 func testAccCheckBucketPolicyDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_s3control_bucket_policy" {
@@ -115,7 +115,6 @@ func testAccCheckBucketPolicyDestroy(ctx context.Context) resource.TestCheckFunc
 			}
 
 			parsedArn, err := arn.Parse(rs.Primary.ID)
-
 			if err != nil {
 				return err
 			}
@@ -144,14 +143,9 @@ func testAccCheckBucketPolicyExists(ctx context.Context, n string) resource.Test
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No S3 Control Bucket Policy ID is set")
-		}
-
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlClient(ctx)
 
 		parsedArn, err := arn.Parse(rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}

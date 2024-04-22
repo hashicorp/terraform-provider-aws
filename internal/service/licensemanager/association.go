@@ -15,6 +15,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
@@ -48,6 +49,8 @@ func ResourceAssociation() *schema.Resource {
 }
 
 func resourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LicenseManagerConn(ctx)
 
 	licenseConfigurationARN := d.Get("license_configuration_arn").(string)
@@ -64,21 +67,23 @@ func resourceAssociationCreate(ctx context.Context, d *schema.ResourceData, meta
 	_, err := conn.UpdateLicenseSpecificationsForResourceWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("creating License Manager Association: %s", err)
+		return sdkdiag.AppendErrorf(diags, "creating License Manager Association: %s", err)
 	}
 
 	d.SetId(AssociationCreateResourceID(resourceARN, licenseConfigurationARN))
 
-	return resourceAssociationRead(ctx, d, meta)
+	return append(diags, resourceAssociationRead(ctx, d, meta)...)
 }
 
 func resourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LicenseManagerConn(ctx)
 
 	resourceARN, licenseConfigurationARN, err := AssociationParseResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	err = FindAssociation(ctx, conn, resourceARN, licenseConfigurationARN)
@@ -86,26 +91,28 @@ func resourceAssociationRead(ctx context.Context, d *schema.ResourceData, meta i
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] License Manager Association %s not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading License Manager Association (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading License Manager Association (%s): %s", d.Id(), err)
 	}
 
 	d.Set("license_configuration_arn", licenseConfigurationARN)
 	d.Set("resource_arn", resourceARN)
 
-	return nil
+	return diags
 }
 
 func resourceAssociationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LicenseManagerConn(ctx)
 
 	resourceARN, licenseConfigurationARN, err := AssociationParseResourceID(d.Id())
 
 	if err != nil {
-		return diag.FromErr(err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	input := &licensemanager.UpdateLicenseSpecificationsForResourceInput{
@@ -118,10 +125,10 @@ func resourceAssociationDelete(ctx context.Context, d *schema.ResourceData, meta
 	_, err = conn.UpdateLicenseSpecificationsForResourceWithContext(ctx, input)
 
 	if err != nil {
-		return diag.Errorf("deleting License Manager Association (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting License Manager Association (%s): %s", d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func FindAssociation(ctx context.Context, conn *licensemanager.LicenseManager, resourceARN, licenseConfigurationARN string) error {

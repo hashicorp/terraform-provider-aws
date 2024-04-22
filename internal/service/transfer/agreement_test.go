@@ -16,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tftransfer "github.com/hashicorp/terraform-provider-aws/internal/service/transfer"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccAgreement_basic(t *testing.T) {
@@ -32,7 +33,7 @@ func testAccAgreement_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, transfer.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAgreementDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -78,7 +79,7 @@ func testAccAgreement_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, transfer.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAgreementDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -107,7 +108,7 @@ func testAccAgreement_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, transfer.EndpointsID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, transfer.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.TransferServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAgreementDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -214,16 +215,16 @@ func testAccAgreementConfig_base(rName string) string {
 resource "aws_iam_role" "test" {
   name               = %[1]q
   assume_role_policy = <<EOF
-  {
-	"Version": "2012-10-17",
-	"Statement": [{
-	  "Effect": "Allow",
-	  "Principal": {
-		"Service": "transfer.amazonaws.com"
-	  },
-	  "Action": "sts:AssumeRole"
-	}]
-  }
+{
+  "Version": "2012-10-17",
+  "Statement": [{
+    "Effect": "Allow",
+    "Principal": {
+      "Service": "transfer.amazonaws.com"
+    },
+    "Action": "sts:AssumeRole"
+  }]
+ }
 EOF
 }
 
@@ -233,17 +234,15 @@ resource "aws_iam_role_policy" "test" {
 
   policy = <<POLICY
 {
-	 "Version":"2012-10-17",
-	 "Statement":[
-		{
-		   "Sid":"AllowFullAccesstoS3",
-		   "Effect":"Allow",
-		   "Action":[
-			  "s3:*"
-		   ],
-		   "Resource":"*"
-		}
-	 ]
+  "Version":"2012-10-17",
+  "Statement":[{
+    "Sid":"AllowFullAccesstoS3",
+    "Effect":"Allow",
+    "Action":[
+      "s3:*"
+    ],
+    "Resource":"*"
+  }]
 }
 POLICY
 }

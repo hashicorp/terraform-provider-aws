@@ -115,6 +115,42 @@ func ResourceModel() *schema.Resource {
 							ForceNew:     true,
 							ValidateFunc: verify.ValidARN,
 						},
+						"model_data_source": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"s3_data_source": {
+										Type:     schema.TypeList,
+										Required: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"s3_uri": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ForceNew:     true,
+													ValidateFunc: validModelDataURL,
+												},
+												"s3_data_type": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ForceNew:     true,
+													ValidateFunc: validation.StringInSlice(sagemaker.S3ModelDataType_Values(), false),
+												},
+												"compression_type": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ForceNew:     true,
+													ValidateFunc: validation.StringInSlice(sagemaker.ModelCompressionType_Values(), false),
+												},
+											},
+										},
+									},
+								},
+							},
+						},
 					},
 				},
 			},
@@ -225,6 +261,42 @@ func ResourceModel() *schema.Resource {
 							Optional:     true,
 							ForceNew:     true,
 							ValidateFunc: verify.ValidARN,
+						},
+						"model_data_source": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"s3_data_source": {
+										Type:     schema.TypeList,
+										Required: true,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"s3_uri": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ForceNew:     true,
+													ValidateFunc: validModelDataURL,
+												},
+												"s3_data_type": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ForceNew:     true,
+													ValidateFunc: validation.StringInSlice(sagemaker.S3ModelDataType_Values(), false),
+												},
+												"compression_type": {
+													Type:         schema.TypeString,
+													Required:     true,
+													ForceNew:     true,
+													ValidateFunc: validation.StringInSlice(sagemaker.ModelCompressionType_Values(), false),
+												},
+											},
+										},
+									},
+								},
+							},
 						},
 					},
 				},
@@ -438,6 +510,9 @@ func expandContainer(m map[string]interface{}) *sagemaker.ContainerDefinition {
 	if v, ok := m["model_package_name"]; ok && v.(string) != "" {
 		container.ModelPackageName = aws.String(v.(string))
 	}
+	if v, ok := m["model_data_source"]; ok {
+		container.ModelDataSource = expandModelDataSource(v.([]interface{}))
+	}
 	if v, ok := m["environment"].(map[string]interface{}); ok && len(v) > 0 {
 		container.Environment = flex.ExpandStringMap(v)
 	}
@@ -447,6 +522,44 @@ func expandContainer(m map[string]interface{}) *sagemaker.ContainerDefinition {
 	}
 
 	return &container
+}
+
+func expandModelDataSource(l []interface{}) *sagemaker.ModelDataSource {
+	if len(l) == 0 {
+		return nil
+	}
+
+	modelDataSource := sagemaker.ModelDataSource{}
+
+	m := l[0].(map[string]interface{})
+
+	if v, ok := m["s3_data_source"]; ok {
+		modelDataSource.S3DataSource = expandS3ModelDataSource(v.([]interface{}))
+	}
+
+	return &modelDataSource
+}
+
+func expandS3ModelDataSource(l []interface{}) *sagemaker.S3ModelDataSource {
+	if len(l) == 0 {
+		return nil
+	}
+
+	s3ModelDataSource := sagemaker.S3ModelDataSource{}
+
+	m := l[0].(map[string]interface{})
+
+	if v, ok := m["s3_uri"]; ok && v.(string) != "" {
+		s3ModelDataSource.S3Uri = aws.String(v.(string))
+	}
+	if v, ok := m["s3_data_type"]; ok && v.(string) != "" {
+		s3ModelDataSource.S3DataType = aws.String(v.(string))
+	}
+	if v, ok := m["compression_type"]; ok && v.(string) != "" {
+		s3ModelDataSource.CompressionType = aws.String(v.(string))
+	}
+
+	return &s3ModelDataSource
 }
 
 func expandModelImageConfig(l []interface{}) *sagemaker.ImageConfig {
@@ -512,6 +625,9 @@ func flattenContainer(container *sagemaker.ContainerDefinition) []interface{} {
 	if container.ModelDataUrl != nil {
 		cfg["model_data_url"] = aws.StringValue(container.ModelDataUrl)
 	}
+	if container.ModelDataSource != nil {
+		cfg["model_data_source"] = flattenModelDataSource(container.ModelDataSource)
+	}
 	if container.ModelPackageName != nil {
 		cfg["model_package_name"] = aws.StringValue(container.ModelPackageName)
 	}
@@ -521,6 +637,40 @@ func flattenContainer(container *sagemaker.ContainerDefinition) []interface{} {
 
 	if container.ImageConfig != nil {
 		cfg["image_config"] = flattenImageConfig(container.ImageConfig)
+	}
+
+	return []interface{}{cfg}
+}
+
+func flattenModelDataSource(modelDataSource *sagemaker.ModelDataSource) []interface{} {
+	if modelDataSource == nil {
+		return []interface{}{}
+	}
+
+	cfg := make(map[string]interface{})
+
+	if modelDataSource.S3DataSource != nil {
+		cfg["s3_data_source"] = flattenS3ModelDataSource(modelDataSource.S3DataSource)
+	}
+
+	return []interface{}{cfg}
+}
+
+func flattenS3ModelDataSource(s3ModelDataSource *sagemaker.S3ModelDataSource) []interface{} {
+	if s3ModelDataSource == nil {
+		return []interface{}{}
+	}
+
+	cfg := make(map[string]interface{})
+
+	if s3ModelDataSource.S3Uri != nil {
+		cfg["s3_uri"] = aws.StringValue(s3ModelDataSource.S3Uri)
+	}
+	if s3ModelDataSource.S3DataType != nil {
+		cfg["s3_data_type"] = aws.StringValue(s3ModelDataSource.S3DataType)
+	}
+	if s3ModelDataSource.CompressionType != nil {
+		cfg["compression_type"] = aws.StringValue(s3ModelDataSource.CompressionType)
 	}
 
 	return []interface{}{cfg}

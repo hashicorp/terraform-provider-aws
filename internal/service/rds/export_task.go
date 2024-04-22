@@ -372,7 +372,7 @@ func (rd *resourceExportTaskData) refreshFromOutput(ctx context.Context, out *aw
 	rd.FailureCause = flex.StringToFramework(ctx, out.FailureCause)
 	rd.IAMRoleArn = flex.StringToFramework(ctx, out.IamRoleArn)
 	rd.KMSKeyID = flex.StringToFramework(ctx, out.KmsKeyId)
-	rd.PercentProgress = types.Int64Value(int64(out.PercentProgress))
+	rd.PercentProgress = types.Int64Value(int64(aws.ToInt32(out.PercentProgress)))
 	rd.S3BucketName = flex.StringToFramework(ctx, out.S3Bucket)
 	rd.S3Prefix = flex.StringToFramework(ctx, out.S3Prefix)
 	rd.SnapshotTime = timeToFramework(ctx, out.SnapshotTime)

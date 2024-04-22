@@ -57,6 +57,10 @@ class MyConvertedCode extends TerraformStack {
           roleArn: "arn:aws:iam::123456789012:role/S3Access",
         },
       ],
+      instanceMaintenancePolicy: {
+        maxHealthyPercentage: 120,
+        minHealthyPercentage: 90,
+      },
       launchConfiguration: foobar.name,
       maxSize: 5,
       minSize: 2,
@@ -565,15 +569,16 @@ This resource supports the following arguments:
   [Lifecycle Hooks](http://docs.aws.amazon.com/autoscaling/latest/userguide/lifecycle-hooks.html)
   to attach to the Auto Scaling Group **before** instances are launched. The
   syntax is exactly the same as the separate
-  [`awsAutoscalingLifecycleHook`](/docs/providers/aws/r/autoscaling_lifecycle_hook.html)
+  [`aws_autoscaling_lifecycle_hook`](/docs/providers/aws/r/autoscaling_lifecycle_hook.html)
   resource, without the `autoscalingGroupName` attribute. Please note that this will only work when creating
-  a new Auto Scaling Group. For all other use-cases, please use `awsAutoscalingLifecycleHook` resource.
+  a new Auto Scaling Group. For all other use-cases, please use `aws_autoscaling_lifecycle_hook` resource.
 - `healthCheckGracePeriod` - (Optional, Default: 300) Time (in seconds) after instance comes into service before checking health.
 - `healthCheckType` - (Optional) "EC2" or "ELB". Controls how health checking is done.
+- `instanceMaintenancePolicy` - (Optional) If this block is configured, add a instance maintenance policy to the specified Auto Scaling group. Defined [below](#instance_maintenance_policy).
 - `desiredCapacity` - (Optional) Number of Amazon EC2 instances that
   should be running in the group. (See also [Waiting for
   Capacity](#waiting-for-capacity) below.)
-- `desiredCapacityType` - (Optional) The unit of measurement for the value specified for `desiredCapacity`. Supported for attribute-based instance type selection only. Valid values: `"units"`, `"vcpu"`, `"memoryMib"`.
+- `desiredCapacityType` - (Optional) The unit of measurement for the value specified for `desiredCapacity`. Supported for attribute-based instance type selection only. Valid values: `"units"`, `"vcpu"`, `"memory-mib"`.
 - `forceDelete` - (Optional) Allows deleting the Auto Scaling Group without waiting
   for all instances in the pool to terminate. You can force an Auto Scaling Group to delete
   even if it's in the process of scaling a resource. Normally, Terraform
@@ -583,10 +588,10 @@ This resource supports the following arguments:
   group names. Only valid for classic load balancers. For ALBs, use `targetGroupArns` instead. To remove all load balancer attachments an empty list should be specified.
 - `trafficSource` - (Optional) Attaches one or more traffic sources to the specified Auto Scaling group.
 - `vpcZoneIdentifier` - (Optional) List of subnet IDs to launch resources in. Subnets automatically determine which availability zones the group will reside. Conflicts with `availabilityZones`.
-- `targetGroupArns` - (Optional) Set of `awsAlbTargetGroup` ARNs, for use with Application or Network Load Balancing. To remove all target group attachments an empty list should be specified.
-- `terminationPolicies` - (Optional) List of policies to decide how the instances in the Auto Scaling Group should be terminated. The allowed values are `oldestInstance`, `newestInstance`, `oldestLaunchConfiguration`, `closestToNextInstanceHour`, `oldestLaunchTemplate`, `allocationStrategy`, `default`. Additionally, the ARN of a Lambda function can be specified for custom termination policies.
-- `suspendedProcesses` - (Optional) List of processes to suspend for the Auto Scaling Group. The allowed values are `launch`, `terminate`, `healthCheck`, `replaceUnhealthy`, `azRebalance`, `alarmNotification`, `scheduledActions`, `addToLoadBalancer`, `instanceRefresh`.
-  Note that if you suspend either the `launch` or `terminate` process types, it can prevent your Auto Scaling Group from functioning properly.
+- `targetGroupArns` - (Optional) Set of `aws_alb_target_group` ARNs, for use with Application or Network Load Balancing. To remove all target group attachments an empty list should be specified.
+- `terminationPolicies` - (Optional) List of policies to decide how the instances in the Auto Scaling Group should be terminated. The allowed values are `OldestInstance`, `NewestInstance`, `OldestLaunchConfiguration`, `ClosestToNextInstanceHour`, `OldestLaunchTemplate`, `AllocationStrategy`, `Default`. Additionally, the ARN of a Lambda function can be specified for custom termination policies.
+- `suspendedProcesses` - (Optional) List of processes to suspend for the Auto Scaling Group. The allowed values are `Launch`, `Terminate`, `HealthCheck`, `ReplaceUnhealthy`, `AZRebalance`, `AlarmNotification`, `ScheduledActions`, `AddToLoadBalancer`, `InstanceRefresh`.
+  Note that if you suspend either the `Launch` or `Terminate` process types, it can prevent your Auto Scaling Group from functioning properly.
 - `tag` - (Optional) Configuration block(s) containing resource tags. See [Tag](#tag) below for more details.
 - `placementGroup` - (Optional) Name of the placement group into which you'll launch your instances, if any.
 - `metricsGranularity` - (Optional) Granularity to associate with the metrics to collect. The only valid value is `1Minute`. Default is `1Minute`.
@@ -617,6 +622,7 @@ This resource supports the following arguments:
   when this Auto Scaling Group is updated. Defined [below](#instance_refresh).
 - `warmPool` - (Optional) If this block is configured, add a [Warm Pool](https://docs.aws.amazon.com/autoscaling/ec2/userguide/ec2-auto-scaling-warm-pools.html)
   to the specified Auto Scaling group. Defined [below](#warm_pool)
+- `forceDeleteWarmPool` - (Optional) Allows deleting the Auto Scaling Group without waiting for all instances in the warm pool to terminate.
 
 ### launch_template
 
@@ -626,7 +632,7 @@ The top-level `launchTemplate` block supports the following:
 
 - `id` - (Optional) ID of the launch template. Conflicts with `name`.
 - `name` - (Optional) Name of the launch template. Conflicts with `id`.
-- `version` - (Optional) Template version. Can be version number, `$latest`, or `$default`. (Default: `$default`).
+- `version` - (Optional) Template version. Can be version number, `$Latest`, or `$Default`. (Default: `$Default`).
 
 ### mixed_instances_policy
 
@@ -637,11 +643,11 @@ The top-level `launchTemplate` block supports the following:
 
 This configuration block supports the following:
 
-- `onDemandAllocationStrategy` - (Optional) Strategy to use when launching on-demand instances. Valid values: `prioritized`, `lowestPrice`. Default: `prioritized`.
+- `onDemandAllocationStrategy` - (Optional) Strategy to use when launching on-demand instances. Valid values: `prioritized`, `lowest-price`. Default: `prioritized`.
 - `onDemandBaseCapacity` - (Optional) Absolute minimum amount of desired capacity that must be fulfilled by on-demand instances. Default: `0`.
 - `onDemandPercentageAboveBaseCapacity` - (Optional) Percentage split between on-demand and Spot instances above the base on-demand capacity. Default: `100`.
-- `spotAllocationStrategy` - (Optional) How to allocate capacity across the Spot pools. Valid values: `lowestPrice`, `capacityOptimized`, `capacityOptimizedPrioritized`, and `priceCapacityOptimized`. Default: `lowestPrice`.
-- `spotInstancePools` - (Optional) Number of Spot pools per availability zone to allocate capacity. EC2 Auto Scaling selects the cheapest Spot pools and evenly allocates Spot capacity across the number of Spot pools that you specify. Only available with `spotAllocationStrategy` set to `lowestPrice`. Otherwise it must be set to `0`, if it has been defined before. Default: `2`.
+- `spotAllocationStrategy` - (Optional) How to allocate capacity across the Spot pools. Valid values: `lowest-price`, `capacity-optimized`, `capacity-optimized-prioritized`, and `price-capacity-optimized`. Default: `lowest-price`.
+- `spotInstancePools` - (Optional) Number of Spot pools per availability zone to allocate capacity. EC2 Auto Scaling selects the cheapest Spot pools and evenly allocates Spot capacity across the number of Spot pools that you specify. Only available with `spotAllocationStrategy` set to `lowest-price`. Otherwise it must be set to `0`, if it has been defined before. Default: `2`.
 - `spotMaxPrice` - (Optional) Maximum price per unit hour that the user is willing to pay for the Spot instances. Default: an empty string which means the on-demand price.
 
 #### mixed_instances_policy launch_template
@@ -659,7 +665,7 @@ This configuration block supports the following:
 
 - `launchTemplateId` - (Optional) ID of the launch template. Conflicts with `launchTemplateName`.
 - `launchTemplateName` - (Optional) Name of the launch template. Conflicts with `launchTemplateId`.
-- `version` - (Optional) Template version. Can be version number, `$latest`, or `$default`. (Default: `$default`).
+- `version` - (Optional) Template version. Can be version number, `$Latest`, or `$Default`. (Default: `$Default`).
 
 ##### mixed_instances_policy launch_template override
 
@@ -674,7 +680,7 @@ This configuration block supports the following:
 
 This configuration block supports the following:
 
-~> **NOTE:** Both `memoryMibMin` and `vcpuCountMin` must be specified.
+~> **NOTE:** Both `memory_mib.min` and `vcpu_count.min` must be specified.
 
 - `acceleratorCount` - (Optional) Block describing the minimum and maximum number of accelerators (GPUs, FPGAs, or AWS Inferentia chips). Default is no minimum or maximum.
     - `min` - (Optional) Minimum.
@@ -716,7 +722,7 @@ This configuration block supports the following:
     * inference
   ```
 
-- `allowedInstanceTypes` - (Optional) List of instance types to apply your specified attributes against. All other instance types are ignored, even if they match your specified attributes. You can use strings with one or more wild cards, represented by an asterisk (\*), to allow an instance type, size, or generation. The following are examples: `m58Xlarge`, `c5*.*`, `m5A.*`, `r*`, `*3*`. For example, if you specify `c5*`, you are allowing the entire C5 instance family, which includes all C5a and C5n instance types. If you specify `m5A.*`, you are allowing all the M5a instance types, but not the M5n instance types. Maximum of 400 entries in the list; each entry is limited to 30 characters. Default is all instance types.
+- `allowedInstanceTypes` - (Optional) List of instance types to apply your specified attributes against. All other instance types are ignored, even if they match your specified attributes. You can use strings with one or more wild cards, represented by an asterisk (\*), to allow an instance type, size, or generation. The following are examples: `m5.8xlarge`, `c5*.*`, `m5a.*`, `r*`, `*3*`. For example, if you specify `c5*`, you are allowing the entire C5 instance family, which includes all C5a and C5n instance types. If you specify `m5a.*`, you are allowing all the M5a instance types, but not the M5n instance types. Maximum of 400 entries in the list; each entry is limited to 30 characters. Default is all instance types.
 
   ~> **NOTE:** If you specify `allowedInstanceTypes`, you can't specify `excludedInstanceTypes`.
 
@@ -736,7 +742,7 @@ This configuration block supports the following:
     * intel
   ```
 
-- `excludedInstanceTypes` - (Optional) List of instance types to exclude. You can use strings with one or more wild cards, represented by an asterisk (\*), to exclude an instance type, size, or generation. The following are examples: `m58Xlarge`, `c5*.*`, `m5A.*`, `r*`, `*3*`. For example, if you specify `c5*`, you are excluding the entire C5 instance family, which includes all C5a and C5n instance types. If you specify `m5A.*`, you are excluding all the M5a instance types, but not the M5n instance types. Maximum of 400 entries in the list; each entry is limited to 30 characters. Default is no excluded instance types.
+- `excludedInstanceTypes` - (Optional) List of instance types to exclude. You can use strings with one or more wild cards, represented by an asterisk (\*), to exclude an instance type, size, or generation. The following are examples: `m5.8xlarge`, `c5*.*`, `m5a.*`, `r*`, `*3*`. For example, if you specify `c5*`, you are excluding the entire C5 instance family, which includes all C5a and C5n instance types. If you specify `m5a.*`, you are excluding all the M5a instance types, but not the M5n instance types. Maximum of 400 entries in the list; each entry is limited to 30 characters. Default is no excluded instance types.
 
   ~> **NOTE:** If you specify `excludedInstanceTypes`, you can't specify `allowedInstanceTypes`.
 
@@ -758,8 +764,8 @@ This configuration block supports the following:
   ```
 
 - `memoryGibPerVcpu` - (Optional) Block describing the minimum and maximum amount of memory (GiB) per vCPU. Default is no minimum or maximum.
-    - `min` - (Optional) Minimum. May be a decimal number, e.g. `05`.
-    - `max` - (Optional) Maximum. May be a decimal number, e.g. `05`.
+    - `min` - (Optional) Minimum. May be a decimal number, e.g. `0.5`.
+    - `max` - (Optional) Maximum. May be a decimal number, e.g. `0.5`.
 - `memoryMib` - (Required) Block describing the minimum and maximum amount of memory (MiB). Default is no maximum.
     - `min` - (Required) Minimum.
     - `max` - (Optional) Maximum.
@@ -779,8 +785,8 @@ This configuration block supports the following:
   If you set DesiredCapacityType to vcpu or memory-mib, the price protection threshold is applied based on the per vCPU or per memory price instead of the per instance price.
 
 - `totalLocalStorageGb` - (Optional) Block describing the minimum and maximum total local storage (GB). Default is no minimum or maximum.
-    - `min` - (Optional) Minimum. May be a decimal number, e.g. `05`.
-    - `max` - (Optional) Maximum. May be a decimal number, e.g. `05`.
+    - `min` - (Optional) Minimum. May be a decimal number, e.g. `0.5`.
+    - `max` - (Optional) Maximum. May be a decimal number, e.g. `0.5`.
 - `vcpuCount` - (Required) Block describing the minimum and maximum number of vCPUs. Default is no maximum.
     - `min` - (Required) Minimum.
     - `max` - (Optional) Maximum.
@@ -796,25 +802,30 @@ The `tag` attribute accepts exactly one tag declaration with the following field
 
 To declare multiple tags, additional `tag` blocks can be specified.
 
-~> **NOTE:** Other AWS APIs may automatically add special tags to their associated Auto Scaling Group for management purposes, such as ECS Capacity Providers adding the `amazonEcsManaged` tag. These generally should be included in the configuration so Terraform does not attempt to remove them and so if the `minSize` was greater than zero on creation, that these tag(s) are applied to any initial EC2 Instances in the Auto Scaling Group. If these tag(s) were missing in the Auto Scaling Group configuration on creation, affected EC2 Instances missing the tags may require manual intervention of adding the tags to ensure they work properly with the other AWS service.
+~> **NOTE:** Other AWS APIs may automatically add special tags to their associated Auto Scaling Group for management purposes, such as ECS Capacity Providers adding the `AmazonECSManaged` tag. These generally should be included in the configuration so Terraform does not attempt to remove them and so if the `minSize` was greater than zero on creation, that these tag(s) are applied to any initial EC2 Instances in the Auto Scaling Group. If these tag(s) were missing in the Auto Scaling Group configuration on creation, affected EC2 Instances missing the tags may require manual intervention of adding the tags to ensure they work properly with the other AWS service.
 
 ### instance_refresh
 
 This configuration block supports the following:
 
-- `strategy` - (Required) Strategy to use for instance refresh. The only allowed value is `rolling`. See [StartInstanceRefresh Action](https://docs.aws.amazon.com/autoscaling/ec2/APIReference/API_StartInstanceRefresh.html#API_StartInstanceRefresh_RequestParameters) for more information.
+- `strategy` - (Required) Strategy to use for instance refresh. The only allowed value is `Rolling`. See [StartInstanceRefresh Action](https://docs.aws.amazon.com/autoscaling/ec2/APIReference/API_StartInstanceRefresh.html#API_StartInstanceRefresh_RequestParameters) for more information.
 - `preferences` - (Optional) Override default parameters for Instance Refresh.
     - `checkpointDelay` - (Optional) Number of seconds to wait after a checkpoint. Defaults to `3600`.
     - `checkpointPercentages` - (Optional) List of percentages for each checkpoint. Values must be unique and in ascending order. To replace all instances, the final number must be `100`.
     - `instanceWarmup` - (Optional) Number of seconds until a newly launched instance is configured and ready to use. Default behavior is to use the Auto Scaling Group's health check grace period.
+    - `maxHealthyPercentage` - (Optional) Amount of capacity in the Auto Scaling group that can be in service and healthy, or pending, to support your workload when an instance refresh is in place, as a percentage of the desired capacity of the Auto Scaling group. Values must be between `100` and `200`, defaults to `100`.
     - `minHealthyPercentage` - (Optional) Amount of capacity in the Auto Scaling group that must remain healthy during an instance refresh to allow the operation to continue, as a percentage of the desired capacity of the Auto Scaling group. Defaults to `90`.
     - `skipMatching` - (Optional) Replace instances that already have your desired configuration. Defaults to `false`.
     - `autoRollback` - (Optional) Automatically rollback if instance refresh fails. Defaults to `false`. This option may only be set to `true` when specifying a `launchTemplate` or `mixedInstancesPolicy`.
+    - `alarmSpecification` - (Optional) Alarm Specification for Instance Refresh.
+        - `alarms` - (Required) List of Cloudwatch alarms. If any of these alarms goes into ALARM state, Instance Refresh is failed.
+    - `scaleInProtectedInstances` - (Optional) Behavior when encountering instances protected from scale in are found. Available behaviors are `Refresh`, `Ignore`, and `Wait`. Default is `Ignore`.
+    - `standbyInstances` - (Optional) Behavior when encountering instances in the `Standby` state in are found. Available behaviors are `Terminate`, `Ignore`, and `Wait`. Default is `Ignore`.
 - `triggers` - (Optional) Set of additional property names that will trigger an Instance Refresh. A refresh will always be triggered by a change in any of `launchConfiguration`, `launchTemplate`, or `mixedInstancesPolicy`.
 
 ~> **NOTE:** A refresh is started when any of the following Auto Scaling Group properties change: `launchConfiguration`, `launchTemplate`, `mixedInstancesPolicy`. Additional properties can be specified in the `triggers` property of `instanceRefresh`.
 
-~> **NOTE:** A refresh will not start when `version = "$Latest"` is configured in the `launchTemplate` block. To trigger the instance refresh when a launch template is changed, configure `version` to use the `latestVersion` attribute of the `awsLaunchTemplate` resource.
+~> **NOTE:** A refresh will not start when `version = "$Latest"` is configured in the `launchTemplate` block. To trigger the instance refresh when a launch template is changed, configure `version` to use the `latestVersion` attribute of the `aws_launch_template` resource.
 
 ~> **NOTE:** Auto Scaling Groups support up to one active instance refresh at a time. When this resource is updated, any existing refresh is cancelled.
 
@@ -829,6 +840,13 @@ This configuration block supports the following:
 - `minSize` - (Optional) Minimum number of instances to maintain in the warm pool. This helps you to ensure that there is always a certain number of warmed instances available to handle traffic spikes. Defaults to 0 if not specified.
 - `poolState` - (Optional) Sets the instance state to transition to after the lifecycle hooks finish. Valid values are: Stopped (default), Running or Hibernated.
 
+### instance_maintenance_policy
+
+This configuration block supports the following:
+
+- `minHealthyPercentage` - (Required) Specifies the lower limit on the number of instances that must be in the InService state with a healthy status during an instance replacement activity.
+- `maxHealthyPercentage` - (Required) Specifies the upper limit on the number of instances that are in the InService or Pending state with a healthy status during an instance replacement activity.
+
 ### traffic_source
 
 - `identifier` - Identifies the traffic source. For Application Load Balancers, Gateway Load Balancers, Network Load Balancers, and VPC Lattice, this will be the Amazon Resource Name (ARN) for a target group in this account and Region. For Classic Load Balancers, this will be the name of the Classic Load Balancer in this account and Region.
@@ -836,7 +854,7 @@ This configuration block supports the following:
   The following lists the valid values:
   `elb` if `identifier` is the name of a Classic Load Balancer.
   `elbv2` if `identifier` is the ARN of an Application Load Balancer, Gateway Load Balancer, or Network Load Balancer target group.
-  `vpcLattice` if `identifier` is the ARN of a VPC Lattice target group.
+  `vpc-lattice` if `identifier` is the ARN of a VPC Lattice target group.
 
 ##### instance_reuse_policy
 
@@ -864,24 +882,24 @@ This resource exports the following attributes in addition to the arguments abov
 - `vpcZoneIdentifier` (Optional) - The VPC zone identifier
 - `warmPoolSize` - Current size of the warm pool.
 
-~> **NOTE:** When using `elb` as the `healthCheckType`, `healthCheckGracePeriod` is required.
+~> **NOTE:** When using `ELB` as the `healthCheckType`, `healthCheckGracePeriod` is required.
 
 ~> **NOTE:** Terraform has two types of ways you can add lifecycle hooks - via
 the `initialLifecycleHook` attribute from this resource, or via the separate
-[`awsAutoscalingLifecycleHook`](/docs/providers/aws/r/autoscaling_lifecycle_hook.html)
+[`aws_autoscaling_lifecycle_hook`](/docs/providers/aws/r/autoscaling_lifecycle_hook.html)
 resource. `initialLifecycleHook` exists here because any lifecycle hooks
-added with `awsAutoscalingLifecycleHook` will not be added until the
+added with `aws_autoscaling_lifecycle_hook` will not be added until the
 Auto Scaling Group has been created, and depending on your
 [capacity](#waiting-for-capacity) settings, after the initial instances have
 been launched, creating unintended behavior. If you need hooks to run on all
 instances, add them with `initialLifecycleHook` here, but take
-care to not duplicate these hooks in `awsAutoscalingLifecycleHook`.
+care to not duplicate these hooks in `aws_autoscaling_lifecycle_hook`.
 
 ## Timeouts
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `delete` - (Default `10M`)
+- `delete` - (Default `10m`)
 
 ## Waiting for Capacity
 
@@ -905,8 +923,8 @@ If `minSize` or `desiredCapacity` are changed in a subsequent update,
 Terraform will also wait for the correct number of healthy instances before
 continuing.
 
-Terraform considers an instance "healthy" when the ASG reports `healthStatus:
-"healthy"` and `LifecycleState: "InService"`. See the [AWS AutoScaling
+Terraform considers an instance "healthy" when the ASG reports `HealthStatus:
+"Healthy"` and `LifecycleState: "InService"`. See the [AWS AutoScaling
 Docs](https://docs.aws.amazon.com/AutoScaling/latest/DeveloperGuide/AutoScalingGroupLifecycle.html)
 for more information on an ASG's lifecycle.
 
@@ -923,11 +941,11 @@ The second mechanism is optional, and affects ASGs with attached ELBs specified
 via the `loadBalancers` attribute or with ALBs specified with `targetGroupArns`.
 
 The `minElbCapacity` parameter causes Terraform to wait for at least the
-requested number of instances to show up `"inService"` in all attached ELBs
+requested number of instances to show up `"InService"` in all attached ELBs
 during ASG creation. It has no effect on ASG updates.
 
 If `waitForElbCapacity` is set, Terraform will wait for exactly that number
-of Instances to be `"inService"` in all attached ELBs on both creation and
+of Instances to be `"InService"` in all attached ELBs on both creation and
 updates.
 
 These parameters can be used to ensure that service is being provided before
@@ -953,9 +971,15 @@ In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashico
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { AutoscalingGroup } from "./.gen/providers/aws/autoscaling-group";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    AutoscalingGroup.generateConfigForImport(this, "web", "web-asg");
   }
 }
 
@@ -967,4 +991,4 @@ Using `terraform import`, import Auto Scaling Groups using the `name`. For examp
 % terraform import aws_autoscaling_group.web web-asg
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-495793f2fcbf80769a734fa05d61e81a075cfd40dcdb8130cfa9344cfff80074 -->
+<!-- cache-key: cdktf-0.20.1 input-d8221eb8800cc9d4da77a73ffbf6e1b69ce95525c4e2a7a980891635e0256cc8 -->

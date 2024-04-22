@@ -154,7 +154,7 @@ func ResourceApplication() *schema.Resource {
 													Required: true,
 													ValidateFunc: validation.All(
 														validation.StringLenBetween(1, 50),
-														validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9_.-]+$`), "must only include alphanumeric, underscore, period, or hyphen characters"),
+														validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), "must only include alphanumeric, underscore, period, or hyphen characters"),
 													),
 												},
 
@@ -896,7 +896,7 @@ func ResourceApplication() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 128),
-					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9_.-]+$`), "must only include alphanumeric, underscore, period, or hyphen characters"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`), "must only include alphanumeric, underscore, period, or hyphen characters"),
 				),
 			},
 
@@ -2570,7 +2570,7 @@ func flattenApplicationConfigurationDescription(applicationConfigurationDescript
 			if propertyGroup != nil {
 				mPropertyGroup := map[string]interface{}{
 					"property_group_id": aws.StringValue(propertyGroup.PropertyGroupId),
-					"property_map":      flex.PointersMapToStringList(propertyGroup.PropertyMap),
+					"property_map":      flex.FlattenStringMap(propertyGroup.PropertyMap),
 				}
 
 				vPropertyGroups = append(vPropertyGroups, mPropertyGroup)

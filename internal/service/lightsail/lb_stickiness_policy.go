@@ -49,8 +49,8 @@ func ResourceLoadBalancerStickinessPolicy() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(2, 255),
-					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z]`), "must begin with an alphabetic character"),
-					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9_\-.]+[^._\-]$`), "must contain only alphanumeric characters, underscores, hyphens, and dots"),
+					validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with an alphabetic character"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+[^_.-]$`), "must contain only alphanumeric characters, underscores, hyphens, and dots"),
 				),
 			},
 		},
@@ -58,6 +58,8 @@ func ResourceLoadBalancerStickinessPolicy() *schema.Resource {
 }
 
 func resourceLoadBalancerStickinessPolicyCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 	lbName := d.Get("lb_name").(string)
 	for _, v := range []string{"enabled", "cookie_duration"} {
@@ -78,7 +80,7 @@ func resourceLoadBalancerStickinessPolicyCreate(ctx context.Context, d *schema.R
 		out, err := conn.UpdateLoadBalancerAttribute(ctx, &in)
 
 		if err != nil {
-			return create.DiagError(names.Lightsail, string(types.OperationTypeUpdateLoadBalancerAttribute), ResLoadBalancerStickinessPolicy, lbName, err)
+			return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeUpdateLoadBalancerAttribute), ResLoadBalancerStickinessPolicy, lbName, err)
 		}
 
 		diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancerStickinessPolicy, lbName)
@@ -90,10 +92,12 @@ func resourceLoadBalancerStickinessPolicyCreate(ctx context.Context, d *schema.R
 
 	d.SetId(lbName)
 
-	return resourceLoadBalancerStickinessPolicyRead(ctx, d, meta)
+	return append(diags, resourceLoadBalancerStickinessPolicyRead(ctx, d, meta)...)
 }
 
 func resourceLoadBalancerStickinessPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 
 	out, err := FindLoadBalancerStickinessPolicyById(ctx, conn, d.Id())
@@ -101,31 +105,33 @@ func resourceLoadBalancerStickinessPolicyRead(ctx context.Context, d *schema.Res
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		create.LogNotFoundRemoveState(names.Lightsail, create.ErrActionReading, ResLoadBalancerStickinessPolicy, d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionReading, ResLoadBalancerStickinessPolicy, d.Id(), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionReading, ResLoadBalancerStickinessPolicy, d.Id(), err)
 	}
 
 	boolValue, err := strconv.ParseBool(out[string(types.LoadBalancerAttributeNameSessionStickinessEnabled)])
 	if err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionReading, ResLoadBalancerStickinessPolicy, d.Id(), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionReading, ResLoadBalancerStickinessPolicy, d.Id(), err)
 	}
 
 	intValue, err := strconv.Atoi(out[string(types.LoadBalancerAttributeNameSessionStickinessLbCookieDurationSeconds)])
 	if err != nil {
-		return create.DiagError(names.Lightsail, create.ErrActionReading, ResLoadBalancerStickinessPolicy, d.Id(), err)
+		return create.AppendDiagError(diags, names.Lightsail, create.ErrActionReading, ResLoadBalancerStickinessPolicy, d.Id(), err)
 	}
 
 	d.Set("cookie_duration", intValue)
 	d.Set("enabled", boolValue)
 	d.Set("lb_name", d.Id())
 
-	return nil
+	return diags
 }
 
 func resourceLoadBalancerStickinessPolicyUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 	lbName := d.Get("lb_name").(string)
 	if d.HasChange("enabled") {
@@ -138,7 +144,7 @@ func resourceLoadBalancerStickinessPolicyUpdate(ctx context.Context, d *schema.R
 		out, err := conn.UpdateLoadBalancerAttribute(ctx, &in)
 
 		if err != nil {
-			return create.DiagError(names.Lightsail, string(types.OperationTypeUpdateLoadBalancerAttribute), ResLoadBalancerStickinessPolicy, lbName, err)
+			return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeUpdateLoadBalancerAttribute), ResLoadBalancerStickinessPolicy, lbName, err)
 		}
 
 		diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancerStickinessPolicy, lbName)
@@ -158,7 +164,7 @@ func resourceLoadBalancerStickinessPolicyUpdate(ctx context.Context, d *schema.R
 		out, err := conn.UpdateLoadBalancerAttribute(ctx, &in)
 
 		if err != nil {
-			return create.DiagError(names.Lightsail, string(types.OperationTypeUpdateLoadBalancerAttribute), ResLoadBalancerStickinessPolicy, lbName, err)
+			return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeUpdateLoadBalancerAttribute), ResLoadBalancerStickinessPolicy, lbName, err)
 		}
 
 		diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancerStickinessPolicy, lbName)
@@ -168,10 +174,12 @@ func resourceLoadBalancerStickinessPolicyUpdate(ctx context.Context, d *schema.R
 		}
 	}
 
-	return resourceLoadBalancerStickinessPolicyRead(ctx, d, meta)
+	return append(diags, resourceLoadBalancerStickinessPolicyRead(ctx, d, meta)...)
 }
 
 func resourceLoadBalancerStickinessPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).LightsailClient(ctx)
 	lbName := d.Get("lb_name").(string)
 	in := lightsail.UpdateLoadBalancerAttributeInput{
@@ -183,7 +191,7 @@ func resourceLoadBalancerStickinessPolicyDelete(ctx context.Context, d *schema.R
 	out, err := conn.UpdateLoadBalancerAttribute(ctx, &in)
 
 	if err != nil {
-		return create.DiagError(names.Lightsail, string(types.OperationTypeUpdateLoadBalancerAttribute), ResLoadBalancerStickinessPolicy, lbName, err)
+		return create.AppendDiagError(diags, names.Lightsail, string(types.OperationTypeUpdateLoadBalancerAttribute), ResLoadBalancerStickinessPolicy, lbName, err)
 	}
 
 	diag := expandOperations(ctx, conn, out.Operations, types.OperationTypeUpdateLoadBalancerAttribute, ResLoadBalancerStickinessPolicy, lbName)
@@ -192,7 +200,7 @@ func resourceLoadBalancerStickinessPolicyDelete(ctx context.Context, d *schema.R
 		return diag
 	}
 
-	return nil
+	return diags
 }
 
 func FindLoadBalancerStickinessPolicyById(ctx context.Context, conn *lightsail.Client, id string) (map[string]string, error) {

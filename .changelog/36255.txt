@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_iot_role_alias: Add tagging support
+```

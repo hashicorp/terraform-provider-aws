@@ -43,7 +43,7 @@ This data source supports the following arguments:
 
 ## Attribute Reference
 
-~> **NOTE:** The `port` field may be empty while an Aurora cluster is still in the process of being created. This can occur if the cluster was initiated with the [AWS CLI `createDbCluster`](https://docs.aws.amazon.com/cli/latest/reference/rds/create-db-cluster.html) command, but no DB instance has yet been added to it.
+~> **NOTE:** The `port` field may be empty while an Aurora cluster is still in the process of being created. This can occur if the cluster was initiated with the [AWS CLI `create-db-cluster`](https://docs.aws.amazon.com/cli/latest/reference/rds/create-db-cluster.html) command, but no DB instance has yet been added to it.
 
 This data source exports the following attributes in addition to the arguments above:
 
@@ -94,6 +94,6 @@ The `masterUserSecret` configuration block supports the following attributes:
 
 * `kmsKeyId` - The Amazon Web Services KMS key identifier that is used to encrypt the secret.
 * `secretArn` - The Amazon Resource Name (ARN) of the secret.
-* `secretStatus` - The status of the secret. Valid Values: `creating` | `active` | `rotating` | `impaired`.
+* `secret_status` - The status of the secret. Valid Values: `creating` | `active` | `rotating` | `impaired`.
 
-<!-- cache-key: cdktf-0.18.0 input-156ff5865fbb8f8d95843d45c98755bb49f6b9ca52d29fab4979c7c7d124577a -->
+<!-- cache-key: cdktf-0.20.1 input-156ff5865fbb8f8d95843d45c98755bb49f6b9ca52d29fab4979c7c7d124577a -->

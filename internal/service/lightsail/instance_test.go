@@ -55,7 +55,7 @@ func TestAccLightsailInstance_basic(t *testing.T) {
 					resource.TestCheckResourceAttrSet(resourceName, "blueprint_id"),
 					resource.TestCheckResourceAttrSet(resourceName, "bundle_id"),
 					resource.TestCheckResourceAttr(resourceName, "ipv6_addresses.#", "1"),
-					resource.TestMatchResourceAttr(resourceName, "ipv6_addresses.0", regexache.MustCompile(`([a-f0-9]{1,4}:){7}[a-f0-9]{1,4}`)),
+					resource.TestMatchResourceAttr(resourceName, "ipv6_addresses.0", regexache.MustCompile(`([0-9a-f]{1,4}:){7}[0-9a-f]{1,4}`)),
 					resource.TestCheckResourceAttrSet(resourceName, "key_pair_name"),
 					resource.TestCheckResourceAttr(resourceName, "tags.%", "0"),
 					resource.TestMatchResourceAttr(resourceName, "ram_size", regexache.MustCompile(`\d+(.\d+)?`)),
@@ -415,7 +415,7 @@ resource "aws_lightsail_instance" "test" {
   name              = "%s"
   availability_zone = data.aws_availability_zones.available.names[0]
   blueprint_id      = "amazon_linux_2"
-  bundle_id         = "nano_1_0"
+  bundle_id         = "nano_3_0"
 }
 `, rName))
 }
@@ -428,7 +428,7 @@ resource "aws_lightsail_instance" "test" {
   name              = %[1]q
   availability_zone = %[2]q
   blueprint_id      = "amazon_linux_2"
-  bundle_id         = "nano_1_0"
+  bundle_id         = "nano_3_0"
 }
 `, rName, availabilityZone))
 }
@@ -441,7 +441,7 @@ resource "aws_lightsail_instance" "test" {
   name              = "%s"
   availability_zone = data.aws_availability_zones.available.names[0]
   blueprint_id      = "amazon_linux_2"
-  bundle_id         = "nano_1_0"
+  bundle_id         = "nano_3_0"
 
   tags = {
     Name = "tf-test"
@@ -458,7 +458,7 @@ resource "aws_lightsail_instance" "test" {
   name              = "%s"
   availability_zone = data.aws_availability_zones.available.names[0]
   blueprint_id      = "amazon_linux_2"
-  bundle_id         = "nano_1_0"
+  bundle_id         = "nano_3_0"
 
   tags = {
     Name      = "tf-test",
@@ -476,7 +476,7 @@ resource "aws_lightsail_instance" "test" {
   name              = %[1]q
   availability_zone = data.aws_availability_zones.available.names[0]
   blueprint_id      = "amazon_linux_2"
-  bundle_id         = "nano_1_0"
+  bundle_id         = "nano_3_0"
   ip_address_type   = %[2]q
 }
 `, rName, rIPAddressType))
@@ -490,7 +490,7 @@ resource "aws_lightsail_instance" "test" {
   name              = %[1]q
   availability_zone = data.aws_availability_zones.available.names[0]
   blueprint_id      = "amazon_linux_2"
-  bundle_id         = "nano_1_0"
+  bundle_id         = "nano_3_0"
   add_on {
     type          = "AutoSnapshot"
     snapshot_time = %[2]q

@@ -48,7 +48,7 @@ func ResourceApp() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 63),
-					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9](-*[a-zA-Z0-9]){0,62}`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z](-*[0-9A-Za-z]){0,62}`), "Valid characters are a-z, A-Z, 0-9, and - (hyphen)."),
 				),
 			},
 			"app_type": {
@@ -85,6 +85,10 @@ func ResourceApp() *schema.Resource {
 							Optional:     true,
 							Computed:     true,
 							ValidateFunc: verify.ValidARN,
+						},
+						"sagemaker_image_version_alias": {
+							Type:     schema.TypeString,
+							Optional: true,
 						},
 						"sagemaker_image_version_arn": {
 							Type:         schema.TypeString,
@@ -134,7 +138,7 @@ func resourceAppCreate(ctx context.Context, d *schema.ResourceData, meta interfa
 	}
 
 	if v, ok := d.GetOk("resource_spec"); ok {
-		input.ResourceSpec = expandDomainDefaultResourceSpec(v.([]interface{}))
+		input.ResourceSpec = expandResourceSpec(v.([]interface{}))
 	}
 
 	log.Printf("[DEBUG] SageMaker App create config: %#v", *input)
@@ -182,10 +186,10 @@ func resourceAppRead(ctx context.Context, d *schema.ResourceData, meta interface
 	d.Set("app_type", app.AppType)
 	d.Set("arn", arn)
 	d.Set("domain_id", app.DomainId)
-	d.Set("user_profile_name", app.UserProfileName)
 	d.Set("space_name", app.SpaceName)
+	d.Set("user_profile_name", app.UserProfileName)
 
-	if err := d.Set("resource_spec", flattenDomainDefaultResourceSpec(app.ResourceSpec)); err != nil {
+	if err := d.Set("resource_spec", flattenResourceSpec(app.ResourceSpec)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting resource_spec for SageMaker App (%s): %s", d.Id(), err)
 	}
 

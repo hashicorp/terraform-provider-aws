@@ -210,7 +210,7 @@ func chartAxisLabelOptionsSchema() *schema.Schema {
 								Optional: true,
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
-										"column":   columnSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+										"column":   columnSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 										"field_id": stringSchema(true, validation.StringLenBetween(1, 512)),
 									},
 								},
@@ -298,7 +298,7 @@ func referenceLineSchema(maxItems int) *schema.Schema {
 								Elem: &schema.Resource{
 									Schema: map[string]*schema.Schema{
 										"calculation":                  numericalAggregationFunctionSchema(true), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_NumericalAggregationFunction.html
-										"column":                       columnSchema(),                           // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
+										"column":                       columnSchema(true),                       // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ColumnIdentifier.html
 										"measure_aggregation_function": aggregationFunctionSchema(true),          // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_AggregationFunction.html
 									},
 								},
@@ -338,7 +338,7 @@ func referenceLineSchema(maxItems int) *schema.Schema {
 									},
 								},
 							},
-							"font_color":          stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[A-F0-9]{6}$`), "")),
+							"font_color":          stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
 							"font_configuration":  fontConfigurationSchema(), // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_FontConfiguration.html
 							"horizontal_position": stringSchema(false, validation.StringInSlice(quicksight.ReferenceLineLabelHorizontalPosition_Values(), false)),
 							"value_label_configuration": { // https://docs.aws.amazon.com/quicksight/latest/APIReference/API_ReferenceLineValueLabelConfiguration.html
@@ -365,7 +365,7 @@ func referenceLineSchema(maxItems int) *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color":   stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[A-F0-9]{6}$`), "")),
+							"color":   stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}$`), "")),
 							"pattern": stringSchema(false, validation.StringInSlice(quicksight.ReferenceLinePatternType_Values(), false)),
 						},
 					},
@@ -400,9 +400,9 @@ func smallMultiplesOptionsSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"background_color":      stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[A-F0-9]{6}(?:[A-F0-9]{2})?$`), "")),
+							"background_color":      stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`), "")),
 							"background_visibility": stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
-							"border_color":          stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[A-F0-9]{6}(?:[A-F0-9]{2})?$`), "")),
+							"border_color":          stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`), "")),
 							"border_style":          stringSchema(false, validation.StringInSlice(quicksight.PanelBorderStyle_Values(), false)),
 							"border_thickness": {
 								Type:     schema.TypeString,

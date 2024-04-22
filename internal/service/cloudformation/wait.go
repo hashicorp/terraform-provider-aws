@@ -40,16 +40,29 @@ func WaitChangeSetCreated(ctx context.Context, conn *cloudformation.CloudFormati
 	return nil, err
 }
 
+func WaitStackSetCreated(ctx context.Context, conn *cloudformation.CloudFormation, name, callAs string, timeout time.Duration) (*cloudformation.StackSet, error) {
+	stateConf := retry.StateChangeConf{
+		Pending: []string{},
+		Target:  []string{cloudformation.StackSetStatusActive},
+		Timeout: ChangeSetCreatedTimeout,
+		Refresh: StatusStackSet(ctx, conn, name, callAs),
+		Delay:   15 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*cloudformation.StackSet); ok {
+		if status := aws.StringValue(output.Status); status == cloudformation.ChangeSetStatusFailed {
+			tfresource.SetLastError(err, fmt.Errorf("describing CloudFormation Stack Set (%s) results: %w", name, err))
+		}
+
+		return output, err
+	}
+
+	return nil, err
+}
+
 const (
-	// Default maximum amount of time to wait for a StackSetInstance to be Created
-	StackSetInstanceCreatedDefaultTimeout = 30 * time.Minute
-
-	// Default maximum amount of time to wait for a StackSetInstance to be Updated
-	StackSetInstanceUpdatedDefaultTimeout = 30 * time.Minute
-
-	// Default maximum amount of time to wait for a StackSetInstance to be Deleted
-	StackSetInstanceDeletedDefaultTimeout = 30 * time.Minute
-
 	stackSetOperationDelay = 5 * time.Second
 )
 
@@ -84,7 +97,7 @@ func WaitStackSetOperationSucceeded(ctx context.Context, conn *cloudformation.Cl
 			})
 
 			if listErr == nil {
-				tfresource.SetLastError(waitErr, fmt.Errorf("Operation (%s) Results: %w", operationID, StackSetOperationError(summaries)))
+				tfresource.SetLastError(waitErr, fmt.Errorf("Operation (%s) Results: %w", operationID, stackSetOperationError(summaries)))
 			} else {
 				tfresource.SetLastError(waitErr, fmt.Errorf("listing CloudFormation Stack Set (%s) Operation (%s) results: %w", stackSetName, operationID, listErr))
 			}

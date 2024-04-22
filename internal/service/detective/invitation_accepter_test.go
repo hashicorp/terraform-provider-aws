@@ -8,14 +8,13 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/detective"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfdetective "github.com/hashicorp/terraform-provider-aws/internal/service/detective"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func testAccInvitationAccepter_basic(t *testing.T) {
@@ -30,7 +29,7 @@ func testAccInvitationAccepter_basic(t *testing.T) {
 		},
 		ProtoV5ProviderFactories: acctest.ProtoV5FactoriesAlternate(ctx, t),
 		CheckDestroy:             testAccCheckInvitationAccepterDestroy(ctx),
-		ErrorCheck:               acctest.ErrorCheck(t, detective.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.DetectiveServiceID),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccInvitationAccepterConfig_basic(email),
@@ -39,7 +38,6 @@ func testAccInvitationAccepter_basic(t *testing.T) {
 				),
 			},
 			{
-				Config:            testAccInvitationAccepterConfig_basic(email),
 				ResourceName:      resourceName,
 				ImportState:       true,
 				ImportStateVerify: true,
@@ -48,30 +46,18 @@ func testAccInvitationAccepter_basic(t *testing.T) {
 	})
 }
 
-func testAccCheckInvitationAccepterExists(ctx context.Context, resourceName string) resource.TestCheckFunc {
+func testAccCheckInvitationAccepterExists(ctx context.Context, n string) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		rs, ok := s.RootModule().Resources[resourceName]
+		rs, ok := s.RootModule().Resources[n]
 		if !ok {
-			return fmt.Errorf("not found: %s", resourceName)
-		}
-
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("resource (%s) has empty ID", resourceName)
+			return fmt.Errorf("Not found: %s", n)
 		}
 
 		conn := acctest.Provider.Meta().(*conns.AWSClient).DetectiveConn(ctx)
 
-		result, err := tfdetective.FindInvitationByGraphARN(ctx, conn, rs.Primary.ID)
+		_, err := tfdetective.FindInvitationByGraphARN(ctx, conn, rs.Primary.ID)
 
-		if err != nil {
-			return err
-		}
-
-		if result == nil {
-			return fmt.Errorf("no detective invitation found for (%s): %s", resourceName, rs.Primary.ID)
-		}
-
-		return nil
+		return err
 	}
 }
 
@@ -84,16 +70,17 @@ func testAccCheckInvitationAccepterDestroy(ctx context.Context) resource.TestChe
 				continue
 			}
 
-			result, err := tfdetective.FindInvitationByGraphARN(ctx, conn, rs.Primary.ID)
+			_, err := tfdetective.FindInvitationByGraphARN(ctx, conn, rs.Primary.ID)
 
-			if tfawserr.ErrCodeEquals(err, detective.ErrCodeResourceNotFoundException) ||
-				tfresource.NotFound(err) {
+			if tfresource.NotFound(err) {
 				continue
 			}
 
-			if result != nil {
-				return fmt.Errorf("detective InvitationAccepter %q still exists", rs.Primary.ID)
+			if err != nil {
+				return err
 			}
+
+			return fmt.Errorf("Detective Invitation Accepter %s still exists", rs.Primary.ID)
 		}
 
 		return nil

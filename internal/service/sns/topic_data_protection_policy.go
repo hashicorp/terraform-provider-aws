@@ -7,20 +7,23 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/sns"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/sns"
+	"github.com/aws/aws-sdk-go-v2/service/sns/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/structure"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
 // @SDKResource("aws_sns_topic_data_protection_policy")
-func ResourceTopicDataProtectionPolicy() *schema.Resource {
+func resourceTopicDataProtectionPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceTopicDataProtectionPolicyUpsert,
 		ReadWithoutTimeout:   resourceTopicDataProtectionPolicyRead,
@@ -55,68 +58,59 @@ func ResourceTopicDataProtectionPolicy() *schema.Resource {
 
 func resourceTopicDataProtectionPolicyUpsert(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SNSConn(ctx)
+	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
-	topicArn := d.Get("arn").(string)
+	topicARN := d.Get("arn").(string)
 	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
-
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", d.Get("policy").(string), err)
 	}
 
 	input := &sns.PutDataProtectionPolicyInput{
 		DataProtectionPolicy: aws.String(policy),
-		ResourceArn:          aws.String(topicArn),
+		ResourceArn:          aws.String(topicARN),
 	}
 
-	_, err = conn.PutDataProtectionPolicyWithContext(ctx, input)
+	_, err = conn.PutDataProtectionPolicy(ctx, input)
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "creating SNS Data Protection Policy (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "creating SNS Data Protection Policy (%s): %s", topicARN, err)
 	}
 
 	if d.IsNewResource() {
-		d.SetId(topicArn)
+		d.SetId(topicARN)
 	}
 
-	return resourceTopicDataProtectionPolicyRead(ctx, d, meta)
+	return append(diags, resourceTopicDataProtectionPolicyRead(ctx, d, meta)...)
 }
 
 func resourceTopicDataProtectionPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SNSConn(ctx)
+	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
-	output, err := conn.GetDataProtectionPolicyWithContext(ctx, &sns.GetDataProtectionPolicyInput{
-		ResourceArn: aws.String(d.Id()),
-	})
+	output, err := findDataProtectionPolicyByARN(ctx, conn, d.Id())
 
-	if !d.IsNewResource() && tfawserr.ErrCodeEquals(err, sns.ErrCodeResourceNotFoundException) {
+	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] SNS Data Protection Policy (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "reading SNS Data Protection Policy: %s", err)
+		return sdkdiag.AppendErrorf(diags, "reading SNS Data Protection Policy (%s): %s", d.Id(), err)
 	}
-
-	if output == nil || output.DataProtectionPolicy == nil {
-		return sdkdiag.AppendErrorf(diags, "reading SNS Data Protection Policy (%s): empty output", d.Id())
-	}
-
-	dataProtectionPolicy := output.DataProtectionPolicy
 
 	d.Set("arn", d.Id())
-	d.Set("policy", dataProtectionPolicy)
+	d.Set("policy", output)
 
 	return diags
 }
 
 func resourceTopicDataProtectionPolicyDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).SNSConn(ctx)
+	conn := meta.(*conns.AWSClient).SNSClient(ctx)
 
-	_, err := conn.PutDataProtectionPolicyWithContext(ctx, &sns.PutDataProtectionPolicyInput{
+	_, err := conn.PutDataProtectionPolicy(ctx, &sns.PutDataProtectionPolicyInput{
 		DataProtectionPolicy: aws.String(""),
 		ResourceArn:          aws.String(d.Get("arn").(string)),
 	})
@@ -126,4 +120,25 @@ func resourceTopicDataProtectionPolicyDelete(ctx context.Context, d *schema.Reso
 	}
 
 	return diags
+}
+
+func findDataProtectionPolicyByARN(ctx context.Context, conn *sns.Client, arn string) (*string, error) {
+	input := &sns.GetDataProtectionPolicyInput{
+		ResourceArn: aws.String(arn),
+	}
+
+	output, err := conn.GetDataProtectionPolicy(ctx, input)
+
+	if errs.IsA[*types.NotFoundException](err) {
+		return nil, &retry.NotFoundError{
+			LastError:   err,
+			LastRequest: input,
+		}
+	}
+
+	if output == nil || aws.ToString(output.DataProtectionPolicy) == "" {
+		return nil, tfresource.NewEmptyResultError(input)
+	}
+
+	return output.DataProtectionPolicy, nil
 }

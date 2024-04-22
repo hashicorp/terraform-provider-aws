@@ -2,7 +2,7 @@
 
 ## Service Identifier
 
-In the AWS Provider, a service identifier should consistently identify an AWS service from code to documentation to provider use by a practitioner. Prominent places you will see service identifiers:
+In the AWS Provider, a service identifier should consistently identify an AWS service from code to documentation to provider used by a practitioner. Prominent places you will see service identifiers:
 
 * The package name (e.g., `internal/service/<serviceidentifier>`)
 * In resource and data source names (e.g., `aws_<serviceidentifier>_thing`)
@@ -51,8 +51,8 @@ When creating a new resource or data source, it is important to get names right.
 1. Follow the [AWS SDK for Go v2](https://pkg.go.dev/github.com/aws/aws-sdk-go-v2). Almost always, the API operations make determining the name simple. For example, the [Amazon CloudWatch Evidently](https://pkg.go.dev/github.com/aws/aws-sdk-go-v2/service/evidently) service includes `CreateExperiment`, `GetExperiment`, `UpdateExperiment`, and `DeleteExperiment`. Thus, the resource (or data source) name is "Experiment."
 2. Give a resource its Terraform configuration (i.e., HCL) name (e.g., `aws_imagebuilder_image_pipeline`) by joining these three parts with underscores:
     * `aws` prefix
-    * [Service identifier](#service-identifier) (service identifiers do not include underscores), all lower case (e.g., `imagebuilder`)
-    * Resource (or data source) name in snake case (spaces replaced with underscores, if any), all lower case (e.g., `image_pipeline`)
+    * [Service identifier](#service-identifier) (service identifiers do not include underscores), all lowercase (e.g., `imagebuilder`)
+    * Resource (or data source) name in snake case (spaces replaced with underscores, if any), all lowercase (e.g., `image_pipeline`)
 3. Name the main resource function `Resource<ResourceName>()`, with the resource name in [MixedCaps](#mixedcaps). Do not include the service name or identifier. For example, define `ResourceImagePipeline()` in a file called `internal/service/imagebuilder/image_pipeline.go`.
 4. Similarly, name the main data source function `DataSource<ResourceName>()`, with the data source name in [MixedCaps](#mixedcaps). Do not include the service name or identifier. For example, define `DataSourceImagePipeline()` in a file called `internal/service/imagebuilder/image_pipeline_data_source.go`.
 
@@ -88,7 +88,7 @@ For more details on capitalizations we enforce with CI Semgrep tests, see the [C
 
 Initialisms and other abbreviations are a key difference between many camel/Pascal case interpretations and mixedCaps. **Abbreviations in mixedCaps should be the correct, human-readable case.** After all, names in code _are for humans_. (The mixedCaps convention aligns with HashiCorp's emphasis on pragmatism and beauty.)
 
-For example, an initialism such as "VPC" should either be all capitalized ("VPC") or all lower case ("vpc"), never "Vpc" or "vPC." Similarly, in mixedCaps, "DynamoDB" should either be "DynamoDB" or "dynamoDB", depending on whether an initial cap is needed or not, and never "dynamoDb" or "DynamoDb."
+For example, an initialism such as "VPC" should either be all capitalized ("VPC") or all lowercase ("vpc"), never "Vpc" or "vPC." Similarly, in mixedCaps, "DynamoDB" should either be "DynamoDB" or "dynamoDB", depending on whether an initial cap is needed or not, and never "dynamoDb" or "DynamoDb."
 
 ### Rule
 
@@ -120,7 +120,8 @@ In general, follow Go best practices for good variable and constant naming.
 4. To improve readability, consider including the resource name in variable and constant names that pertain only to that resource. For example, for a string constant for a "Role" resource and a "not found" status, use `roleStatusNotFound` or `RoleStatusNotFound`, if used outside the service's package.
 5. Do not include "AWS" or "Aws" in the name.
 
-**NOTE:** Give priority to using constants from the AWS SDK for Go rather than defining new constants for the same values.
+!!! note
+    Give priority to constants from the AWS SDK for Go rather than defining new constants for the same values.
 
 ## Acceptance and Unit Tests
 
@@ -138,14 +139,14 @@ Acceptance test names have a minimum of two (e.g., `TestAccBackupPlan_tags`) or 
 
 ### Serialized Acceptance Test Rule
 
-The names of serialized acceptance tests follow the regular [acceptance test name rule](#acceptance-test-rule) **_except_** serialized acceptance test names:
+The names of serialized acceptance tests follow the regular [acceptance test name rule](#acceptance-test-rule) **_except_** for serialized acceptance test names:
 
 1. Start with `testAcc` instead of `TestAcc`
 2. Do not include the name of the service (e.g., a serialized acceptance test would be called `testAccApp_basic` not `testAccAmplifyApp_basic`).
 
 ### Unit Test Rule
 
-Unit test names follow the same [rule](#acceptance-test-rule) as acceptance test names except unit test names:
+Unit test names follow the same [rule](#acceptance-test-rule) as acceptance test names except for unit test names:
 
 1. Start with `Test`, not `TestAcc`
 2. Do not include the name of the service
@@ -174,7 +175,8 @@ This rule is for functions defined in the _test_ context (i.e., in a file ending
 
 This rule is for functions defined in the _test_ context (i.e., in a file ending with `_test.go`) that return a string with Terraform configuration. For test support functions, see [Test Support Functions](#test-support-functions) above. Or, for non-test functions, see [Functions](#functions) above.
 
-**NOTE:** This rule is not widely used currently. However, new functions and functions you change should follow it.
+!!! note
+    This rule is not widely used currently. However, new functions and functions you change should follow it.
 
 ### Rule
 

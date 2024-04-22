@@ -1,3 +1,6 @@
+// Copyright (c) HashiCorp, Inc.
+// SPDX-License-Identifier: MPL-2.0
+
 package tfexec
 
 import (
@@ -17,6 +20,7 @@ type planConfig struct {
 	parallelism  int
 	reattachInfo ReattachInfo
 	refresh      bool
+	refreshOnly  bool
 	replaceAddrs []string
 	state        string
 	targets      []string
@@ -63,6 +67,10 @@ func (opt *ReattachOption) configurePlan(conf *planConfig) {
 
 func (opt *RefreshOption) configurePlan(conf *planConfig) {
 	conf.refresh = opt.refresh
+}
+
+func (opt *RefreshOnlyOption) configurePlan(conf *planConfig) {
+	conf.refreshOnly = opt.refreshOnly
 }
 
 func (opt *ReplaceOption) configurePlan(conf *planConfig) {
@@ -198,6 +206,17 @@ func (tf *Terraform) buildPlanArgs(ctx context.Context, c planConfig) ([]string,
 	args = append(args, "-lock="+strconv.FormatBool(c.lock))
 	args = append(args, "-parallelism="+fmt.Sprint(c.parallelism))
 	args = append(args, "-refresh="+strconv.FormatBool(c.refresh))
+
+	if c.refreshOnly {
+		err := tf.compatible(ctx, tf0_15_4, nil)
+		if err != nil {
+			return nil, fmt.Errorf("refresh-only option was introduced in Terraform 0.15.4: %w", err)
+		}
+		if !c.refresh {
+			return nil, fmt.Errorf("you cannot use refresh=false in refresh-only planning mode")
+		}
+		args = append(args, "-refresh-only")
+	}
 
 	// unary flags: pass if true
 	if c.replaceAddrs != nil {

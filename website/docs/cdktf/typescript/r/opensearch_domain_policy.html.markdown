@@ -33,22 +33,26 @@ class MyConvertedCode extends TerraformStack {
       engineVersion: "OpenSearch_1.1",
     });
     const main = new DataAwsIamPolicyDocument(this, "main", {
-      actions: ["es:*"],
-      condition: [
+      statement: [
         {
-          test: "IpAddress",
-          values: "127.0.0.1/32",
-          variable: "aws:SourceIp",
+          actions: ["es:*"],
+          condition: [
+            {
+              test: "IpAddress",
+              values: ["127.0.0.1/32"],
+              variable: "aws:SourceIp",
+            },
+          ],
+          effect: "Allow",
+          principals: [
+            {
+              identifiers: ["*"],
+              type: "*",
+            },
+          ],
+          resources: ["${" + example.arn + "}/*"],
         },
       ],
-      effect: "Allow",
-      principals: [
-        {
-          identifiers: ["*"],
-          type: "*",
-        },
-      ],
-      resources: ["${" + example.arn + "}/*"],
     });
     const awsOpensearchDomainPolicyMain = new OpensearchDomainPolicy(
       this,
@@ -80,7 +84,7 @@ This resource exports no additional attributes.
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `update` - (Default `180M`)
-* `delete` - (Default `90M`)
+* `update` - (Default `180m`)
+* `delete` - (Default `90m`)
 
-<!-- cache-key: cdktf-0.18.0 input-a328eddc117438efb16775e086884fddbd2aac0ed901d693d862f7b23e059951 -->
+<!-- cache-key: cdktf-0.20.1 input-cbfe389ed128278e78c309bf8bace7ca0adbb492e5276f6865e240b0cf869bef -->

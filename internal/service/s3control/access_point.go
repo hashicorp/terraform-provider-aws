@@ -9,10 +9,11 @@ import (
 	"log"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/s3control"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/service/s3control"
+	"github.com/aws/aws-sdk-go-v2/service/s3control/types"
+	"github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
@@ -156,14 +157,13 @@ func resourceAccessPoint() *schema.Resource {
 }
 
 func resourceAccessPointCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlConn(ctx)
+	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	accountID := meta.(*conns.AWSClient).AccountID
 	if v, ok := d.GetOk("account_id"); ok {
 		accountID = v.(string)
 	}
 	name := d.Get("name").(string)
-
 	input := &s3control.CreateAccessPointInput{
 		AccountId: aws.String(accountID),
 		Bucket:    aws.String(d.Get("bucket").(string)),
@@ -182,20 +182,18 @@ func resourceAccessPointCreate(ctx context.Context, d *schema.ResourceData, meta
 		input.VpcConfiguration = expandVPCConfiguration(v.([]interface{})[0].(map[string]interface{}))
 	}
 
-	output, err := conn.CreateAccessPointWithContext(ctx, input)
+	output, err := conn.CreateAccessPoint(ctx, input)
 
 	if err != nil {
 		return diag.Errorf("creating S3 Access Point (%s): %s", name, err)
 	}
 
-	resourceID, err := AccessPointCreateResourceID(aws.StringValue(output.AccessPointArn))
-
+	resourceID, err := AccessPointCreateResourceID(aws.ToString(output.AccessPointArn))
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
 	accountID, name, err = AccessPointParseResourceID(resourceID)
-
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -205,7 +203,7 @@ func resourceAccessPointCreate(ctx context.Context, d *schema.ResourceData, meta
 	if v, ok := d.GetOk("policy"); ok && v.(string) != "" && v.(string) != "{}" {
 		policy, err := structure.NormalizeJsonString(v.(string))
 		if err != nil {
-			return diag.Errorf("policy (%s) is invalid JSON: %s", v.(string), err)
+			return diag.FromErr(err)
 		}
 
 		input := &s3control.PutAccessPointPolicyInput{
@@ -214,7 +212,7 @@ func resourceAccessPointCreate(ctx context.Context, d *schema.ResourceData, meta
 			Policy:    aws.String(policy),
 		}
 
-		_, err = conn.PutAccessPointPolicyWithContext(ctx, input)
+		_, err = conn.PutAccessPointPolicy(ctx, input)
 
 		if err != nil {
 			return diag.Errorf("creating S3 Access Point (%s) policy: %s", d.Id(), err)
@@ -225,17 +223,14 @@ func resourceAccessPointCreate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlConn(ctx)
+	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	accountID, name, err := AccessPointParseResourceID(d.Id())
-
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	s3OnOutposts := arn.IsARN(name)
-
-	output, err := FindAccessPointByTwoPartKey(ctx, conn, accountID, name)
+	output, err := findAccessPointByTwoPartKey(ctx, conn, accountID, name)
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] S3 Access Point (%s) not found, removing from state", d.Id())
@@ -247,9 +242,10 @@ func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta i
 		return diag.Errorf("reading S3 Access Point (%s): %s", d.Id(), err)
 	}
 
+	s3OnOutposts := arn.IsARN(name)
+
 	if s3OnOutposts {
 		accessPointARN, err := arn.Parse(name)
-
 		if err != nil {
 			return diag.FromErr(err)
 		}
@@ -262,8 +258,8 @@ func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta i
 			AccountID: accessPointARN.AccountID,
 			Resource: strings.Replace(
 				accessPointARN.Resource,
-				fmt.Sprintf("accesspoint/%s", aws.StringValue(output.Name)),
-				fmt.Sprintf("bucket/%s", aws.StringValue(output.Bucket)),
+				fmt.Sprintf("accesspoint/%s", aws.ToString(output.Name)),
+				fmt.Sprintf("bucket/%s", aws.ToString(output.Bucket)),
 				1,
 			),
 		}
@@ -277,7 +273,7 @@ func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta i
 			Service:   "s3",
 			Region:    meta.(*conns.AWSClient).Region,
 			AccountID: accountID,
-			Resource:  fmt.Sprintf("accesspoint/%s", aws.StringValue(output.Name)),
+			Resource:  fmt.Sprintf("accesspoint/%s", aws.ToString(output.Name)),
 		}
 
 		d.Set("arn", accessPointARN.String())
@@ -287,8 +283,8 @@ func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta i
 	d.Set("account_id", accountID)
 	d.Set("alias", output.Alias)
 	d.Set("bucket_account_id", output.BucketAccountId)
-	d.Set("domain_name", meta.(*conns.AWSClient).RegionalHostname(fmt.Sprintf("%s-%s.s3-accesspoint", aws.StringValue(output.Name), accountID)))
-	d.Set("endpoints", aws.StringValueMap(output.Endpoints))
+	d.Set("domain_name", meta.(*conns.AWSClient).RegionalHostname(ctx, fmt.Sprintf("%s-%s.s3-accesspoint", aws.ToString(output.Name), accountID)))
+	d.Set("endpoints", output.Endpoints)
 	d.Set("name", output.Name)
 	d.Set("network_origin", output.NetworkOrigin)
 	if output.PublicAccessBlockConfiguration != nil {
@@ -306,7 +302,7 @@ func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta i
 		d.Set("vpc_configuration", nil)
 	}
 
-	policy, status, err := FindAccessPointPolicyAndStatusByTwoPartKey(ctx, conn, accountID, name)
+	policy, status, err := findAccessPointPolicyAndStatusByTwoPartKey(ctx, conn, accountID, name)
 
 	if err == nil && policy != "" {
 		if s3OnOutposts {
@@ -332,10 +328,9 @@ func resourceAccessPointRead(ctx context.Context, d *schema.ResourceData, meta i
 }
 
 func resourceAccessPointUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlConn(ctx)
+	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	accountID, name, err := AccessPointParseResourceID(d.Id())
-
 	if err != nil {
 		return diag.FromErr(err)
 	}
@@ -344,7 +339,7 @@ func resourceAccessPointUpdate(ctx context.Context, d *schema.ResourceData, meta
 		if v, ok := d.GetOk("policy"); ok && v.(string) != "" && v.(string) != "{}" {
 			policy, err := structure.NormalizeJsonString(v.(string))
 			if err != nil {
-				return diag.Errorf("policy (%s) is invalid JSON: %s", v.(string), err)
+				return diag.FromErr(err)
 			}
 
 			input := &s3control.PutAccessPointPolicyInput{
@@ -353,16 +348,18 @@ func resourceAccessPointUpdate(ctx context.Context, d *schema.ResourceData, meta
 				Policy:    aws.String(policy),
 			}
 
-			_, err = conn.PutAccessPointPolicyWithContext(ctx, input)
+			_, err = conn.PutAccessPointPolicy(ctx, input)
 
 			if err != nil {
 				return diag.Errorf("updating S3 Access Point (%s) policy: %s", d.Id(), err)
 			}
 		} else {
-			_, err := conn.DeleteAccessPointPolicyWithContext(ctx, &s3control.DeleteAccessPointPolicyInput{
+			input := &s3control.DeleteAccessPointPolicyInput{
 				AccountId: aws.String(accountID),
 				Name:      aws.String(name),
-			})
+			}
+
+			_, err := conn.DeleteAccessPointPolicy(ctx, input)
 
 			if err != nil {
 				return diag.Errorf("deleting S3 Access Point (%s) policy: %s", d.Id(), err)
@@ -374,16 +371,15 @@ func resourceAccessPointUpdate(ctx context.Context, d *schema.ResourceData, meta
 }
 
 func resourceAccessPointDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
-	conn := meta.(*conns.AWSClient).S3ControlConn(ctx)
+	conn := meta.(*conns.AWSClient).S3ControlClient(ctx)
 
 	accountID, name, err := AccessPointParseResourceID(d.Id())
-
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
 	log.Printf("[DEBUG] Deleting S3 Access Point: %s", d.Id())
-	_, err = conn.DeleteAccessPointWithContext(ctx, &s3control.DeleteAccessPointInput{
+	_, err = conn.DeleteAccessPoint(ctx, &s3control.DeleteAccessPointInput{
 		AccountId: aws.String(accountID),
 		Name:      aws.String(name),
 	})
@@ -399,13 +395,13 @@ func resourceAccessPointDelete(ctx context.Context, d *schema.ResourceData, meta
 	return nil
 }
 
-func FindAccessPointByTwoPartKey(ctx context.Context, conn *s3control.S3Control, accountID string, name string) (*s3control.GetAccessPointOutput, error) {
+func findAccessPointByTwoPartKey(ctx context.Context, conn *s3control.Client, accountID, name string) (*s3control.GetAccessPointOutput, error) {
 	input := &s3control.GetAccessPointInput{
 		AccountId: aws.String(accountID),
 		Name:      aws.String(name),
 	}
 
-	output, err := conn.GetAccessPointWithContext(ctx, input)
+	output, err := conn.GetAccessPoint(ctx, input)
 
 	if tfawserr.ErrCodeEquals(err, errCodeNoSuchAccessPoint) {
 		return nil, &retry.NotFoundError{
@@ -468,12 +464,12 @@ func AccessPointParseResourceID(id string) (string, string, error) {
 	return "", "", fmt.Errorf("unexpected format for ID (%[1]s), expected account-id%[2]saccess-point-name", id, accessPointResourceIDSeparator)
 }
 
-func expandVPCConfiguration(tfMap map[string]interface{}) *s3control.VpcConfiguration {
+func expandVPCConfiguration(tfMap map[string]interface{}) *types.VpcConfiguration {
 	if tfMap == nil {
 		return nil
 	}
 
-	apiObject := &s3control.VpcConfiguration{}
+	apiObject := &types.VpcConfiguration{}
 
 	if v, ok := tfMap["vpc_id"].(string); ok {
 		apiObject.VpcId = aws.String(v)
@@ -482,7 +478,7 @@ func expandVPCConfiguration(tfMap map[string]interface{}) *s3control.VpcConfigur
 	return apiObject
 }
 
-func flattenVPCConfiguration(apiObject *s3control.VpcConfiguration) map[string]interface{} {
+func flattenVPCConfiguration(apiObject *types.VpcConfiguration) map[string]interface{} {
 	if apiObject == nil {
 		return nil
 	}
@@ -490,7 +486,7 @@ func flattenVPCConfiguration(apiObject *s3control.VpcConfiguration) map[string]i
 	tfMap := map[string]interface{}{}
 
 	if v := apiObject.VpcId; v != nil {
-		tfMap["vpc_id"] = aws.StringValue(v)
+		tfMap["vpc_id"] = aws.ToString(v)
 	}
 
 	return tfMap

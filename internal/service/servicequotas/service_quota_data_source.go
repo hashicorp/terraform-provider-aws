@@ -6,8 +6,8 @@ package servicequotas
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/servicequotas"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/servicequotas/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -109,7 +109,7 @@ func DataSourceServiceQuota() *schema.Resource {
 	}
 }
 
-func flattenUsageMetric(usageMetric *servicequotas.MetricInfo) []interface{} {
+func flattenUsageMetric(usageMetric *types.MetricInfo) []interface{} {
 	if usageMetric == nil {
 		return []interface{}{}
 	}
@@ -117,7 +117,7 @@ func flattenUsageMetric(usageMetric *servicequotas.MetricInfo) []interface{} {
 	var usageMetrics []interface{}
 	var metricDimensions []interface{}
 
-	if usageMetric.MetricDimensions != nil && usageMetric.MetricDimensions["Service"] != nil {
+	if usageMetric.MetricDimensions != nil && usageMetric.MetricDimensions["Service"] != "" {
 		metricDimensions = append(metricDimensions, map[string]interface{}{
 			"service":  usageMetric.MetricDimensions["Service"],
 			"class":    usageMetric.MetricDimensions["Class"],
@@ -140,14 +140,14 @@ func flattenUsageMetric(usageMetric *servicequotas.MetricInfo) []interface{} {
 
 func dataSourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).ServiceQuotasConn(ctx)
+	conn := meta.(*conns.AWSClient).ServiceQuotasClient(ctx)
 
 	quotaCode := d.Get("quota_code").(string)
 	quotaName := d.Get("quota_name").(string)
 	serviceCode := d.Get("service_code").(string)
 
 	var err error
-	var defaultQuota *servicequotas.ServiceQuota
+	var defaultQuota *types.ServiceQuota
 
 	// A Service Quota will always have a default value, but will only have a current value if it has been set.
 	// If it is not set, `GetServiceQuota` will return "NoSuchResourceException"
@@ -157,7 +157,7 @@ func dataSourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, met
 			return sdkdiag.AppendErrorf(diags, "getting Default Service Quota for (%s/%s): %s", serviceCode, quotaName, err)
 		}
 
-		quotaCode = aws.StringValue(defaultQuota.QuotaCode)
+		quotaCode = aws.ToString(defaultQuota.QuotaCode)
 	} else {
 		defaultQuota, err = findServiceQuotaDefaultByID(ctx, conn, serviceCode, quotaCode)
 		if err != nil {
@@ -165,7 +165,7 @@ func dataSourceServiceQuotaRead(ctx context.Context, d *schema.ResourceData, met
 		}
 	}
 
-	d.SetId(aws.StringValue(defaultQuota.QuotaArn))
+	d.SetId(aws.ToString(defaultQuota.QuotaArn))
 	d.Set("adjustable", defaultQuota.Adjustable)
 	d.Set("arn", defaultQuota.QuotaArn)
 	d.Set("default_value", defaultQuota.Value)

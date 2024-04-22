@@ -4,11 +4,14 @@
 package schema
 
 import (
+	"strconv"
+
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/quicksight"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
+	"github.com/hashicorp/terraform-provider-aws/internal/types/nullable"
 )
 
 func analysisDefaultSchema() *schema.Schema {
@@ -349,14 +352,14 @@ func gridLayoutConfigurationSchema() *schema.Schema {
 								ValidateFunc: validation.IntBetween(1, 21),
 							},
 							"column_index": {
-								Type:         schema.TypeInt,
+								Type:         nullable.TypeNullableInt,
 								Optional:     true,
-								ValidateFunc: validation.IntBetween(0, 35),
+								ValidateFunc: nullable.ValidateTypeStringNullableIntBetween(0, 35),
 							},
 							"row_index": {
-								Type:         schema.TypeInt,
+								Type:         nullable.TypeNullableInt,
 								Optional:     true,
-								ValidateFunc: validation.IntBetween(0, 9009),
+								ValidateFunc: nullable.ValidateTypeStringNullableIntBetween(0, 9009),
 							},
 						},
 					},
@@ -458,7 +461,7 @@ func freeFormLayoutElementsSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color":      stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[A-F0-9]{6}(?:[A-F0-9]{2})?$`), "")),
+							"color":      stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`), "")),
 							"visibility": stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
 						},
 					},
@@ -470,7 +473,7 @@ func freeFormLayoutElementsSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color":      stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[A-F0-9]{6}(?:[A-F0-9]{2})?$`), "")),
+							"color":      stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`), "")),
 							"visibility": stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
 						},
 					},
@@ -515,7 +518,7 @@ func freeFormLayoutElementsSchema() *schema.Schema {
 					MaxItems: 1,
 					Elem: &schema.Resource{
 						Schema: map[string]*schema.Schema{
-							"color":      stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[A-F0-9]{6}(?:[A-F0-9]{2})?$`), "")),
+							"color":      stringSchema(false, validation.StringMatch(regexache.MustCompile(`^#[0-9A-F]{6}(?:[0-9A-F]{2})?$`), "")),
 							"visibility": stringSchema(false, validation.StringInSlice(quicksight.Visibility_Values(), false)),
 						},
 					},
@@ -1281,11 +1284,15 @@ func expandGridLayoutElement(tfMap map[string]interface{}) *quicksight.GridLayou
 	if v, ok := tfMap["row_span"].(int); ok && v != 0 {
 		layout.RowSpan = aws.Int64(int64(v))
 	}
-	if v, ok := tfMap["column_index"].(int); ok && v != 0 {
-		layout.ColumnIndex = aws.Int64(int64(v))
+	if v, ok := tfMap["column_index"].(string); ok && v != "" {
+		if i, null, _ := nullable.Int(v).Value(); !null {
+			layout.ColumnIndex = aws.Int64(i)
+		}
 	}
-	if v, ok := tfMap["row_index"].(int); ok && v != 0 {
-		layout.RowIndex = aws.Int64(int64(v))
+	if v, ok := tfMap["row_index"].(string); ok && v != "" {
+		if i, null, _ := nullable.Int(v).Value(); !null {
+			layout.RowIndex = aws.Int64(i)
+		}
 	}
 
 	return layout
@@ -1736,7 +1743,7 @@ func flattenFreeFormLayoutCanvasSizeOptions(apiObject *quicksight.FreeFormLayout
 
 	tfMap := map[string]interface{}{}
 	if apiObject.ScreenCanvasSizeOptions != nil {
-		tfMap["canvas_size_options"] = flattenFreeFormLayoutScreenCanvasSizeOptions(apiObject.ScreenCanvasSizeOptions)
+		tfMap["screen_canvas_size_options"] = flattenFreeFormLayoutScreenCanvasSizeOptions(apiObject.ScreenCanvasSizeOptions)
 	}
 
 	return []interface{}{tfMap}
@@ -2093,10 +2100,10 @@ func flattenGridLayoutElement(apiObject []*quicksight.GridLayoutElement) []inter
 			"row_span":     aws.Int64Value(config.RowSpan),
 		}
 		if config.ColumnIndex != nil {
-			tfMap["column_index"] = aws.Int64Value(config.ColumnIndex)
+			tfMap["column_index"] = strconv.FormatInt(aws.Int64Value(config.ColumnIndex), 10)
 		}
 		if config.RowIndex != nil {
-			tfMap["row_index"] = aws.Int64Value(config.RowIndex)
+			tfMap["row_index"] = strconv.FormatInt(aws.Int64Value(config.RowIndex), 10)
 		}
 
 		tfList = append(tfList, tfMap)

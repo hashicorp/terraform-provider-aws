@@ -8,10 +8,10 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/cloudformation"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccCloudFormationStackDataSource_DataSource_basic(t *testing.T) {
@@ -21,14 +21,14 @@ func TestAccCloudFormationStackDataSource_DataSource_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudformation.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackDataSourceConfig_basic(stackName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "outputs.%", "1"),
-					resource.TestMatchResourceAttr(resourceName, "outputs.VPCId", regexache.MustCompile("^vpc-[a-z0-9]+")),
+					resource.TestMatchResourceAttr(resourceName, "outputs.VPCId", regexache.MustCompile("^vpc-[0-9a-z]+")),
 					resource.TestCheckResourceAttr(resourceName, "capabilities.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "disable_rollback", "false"),
 					resource.TestCheckResourceAttr(resourceName, "notification_arns.#", "0"),
@@ -108,14 +108,14 @@ func TestAccCloudFormationStackDataSource_DataSource_yaml(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, cloudformation.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudFormationServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccStackDataSourceConfig_yaml(stackName),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(resourceName, "outputs.%", "1"),
-					resource.TestMatchResourceAttr(resourceName, "outputs.VPCId", regexache.MustCompile("^vpc-[a-z0-9]+")),
+					resource.TestMatchResourceAttr(resourceName, "outputs.VPCId", regexache.MustCompile("^vpc-[0-9a-z]+")),
 					resource.TestCheckResourceAttr(resourceName, "capabilities.#", "0"),
 					resource.TestCheckResourceAttr(resourceName, "disable_rollback", "false"),
 					resource.TestCheckResourceAttr(resourceName, "notification_arns.#", "0"),

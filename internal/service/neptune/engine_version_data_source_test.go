@@ -14,18 +14,18 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccNeptuneEngineVersionDataSource_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	dataSourceName := "data.aws_neptune_engine_version.test"
-	version := "1.0.2.1"
+	version := "1.1.0.0"
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEngineVersionDataSourceConfig_basic(version),
@@ -52,15 +52,14 @@ func TestAccNeptuneEngineVersionDataSource_preferred(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEngineVersionDataSourceConfig_preferred(),
 				Check: resource.ComposeTestCheckFunc(
 					resource.TestCheckResourceAttr(dataSourceName, "engine", "neptune"),
-					resource.TestCheckResourceAttr(dataSourceName, "version", "1.0.3.0"),
+					resource.TestCheckResourceAttr(dataSourceName, "version", "1.2.0.2"),
 				),
 			},
 		},
@@ -73,9 +72,8 @@ func TestAccNeptuneEngineVersionDataSource_defaultOnly(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccEngineVersionPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, neptune.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.NeptuneServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
 			{
 				Config: testAccEngineVersionDataSourceConfig_defaultOnly(),
@@ -111,7 +109,7 @@ func testAccEngineVersionDataSourceConfig_basic(version string) string {
 	return fmt.Sprintf(`
 data "aws_neptune_engine_version" "test" {
   engine  = "neptune"
-  version = %q
+  version = %[1]q
 }
 `, version)
 }
@@ -119,7 +117,7 @@ data "aws_neptune_engine_version" "test" {
 func testAccEngineVersionDataSourceConfig_preferred() string {
 	return `
 data "aws_neptune_engine_version" "test" {
-  preferred_versions = ["85.9.12", "1.0.3.0", "1.0.2.2"]
+  preferred_versions = ["85.9.12", "1.2.0.2", "1.1.0.0"]
 }
 `
 }

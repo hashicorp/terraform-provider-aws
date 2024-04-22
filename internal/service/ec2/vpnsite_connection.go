@@ -32,12 +32,13 @@ import (
 
 // @SDKResource("aws_vpn_connection", name="VPN Connection")
 // @Tags(identifierAttribute="id")
-func ResourceVPNConnection() *schema.Resource {
+func resourceVPNConnection() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceVPNConnectionCreate,
 		ReadWithoutTimeout:   resourceVPNConnectionRead,
 		UpdateWithoutTimeout: resourceVPNConnectionUpdate,
 		DeleteWithoutTimeout: resourceVPNConnectionDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: schema.ImportStatePassthroughContext,
 		},
@@ -47,11 +48,11 @@ func ResourceVPNConnection() *schema.Resource {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"core_network_arn": {
+			"core_network_attachment_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
-			"core_network_attachment_arn": {
+			"core_network_arn": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
@@ -82,7 +83,6 @@ func ResourceVPNConnection() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.IsCIDRNetwork(0, 128),
-				RequiredWith: []string{"transit_gateway_id"},
 			},
 			"outside_ip_address_type": {
 				Type:         schema.TypeString,
@@ -101,7 +101,6 @@ func ResourceVPNConnection() *schema.Resource {
 				Optional:     true,
 				Computed:     true,
 				ValidateFunc: validation.IsCIDRNetwork(0, 128),
-				RequiredWith: []string{"transit_gateway_id"},
 			},
 			"routes": {
 				Type:     schema.TypeSet,
@@ -214,7 +213,6 @@ func ResourceVPNConnection() *schema.Resource {
 				Computed:     true,
 				ForceNew:     true,
 				ValidateFunc: validVPNConnectionTunnelInsideIPv6CIDR(),
-				RequiredWith: []string{"transit_gateway_id"},
 			},
 			"tunnel1_log_options": {
 				Type:     schema.TypeList,
@@ -431,7 +429,6 @@ func ResourceVPNConnection() *schema.Resource {
 				Computed:     true,
 				ForceNew:     true,
 				ValidateFunc: validVPNConnectionTunnelInsideIPv6CIDR(),
-				RequiredWith: []string{"transit_gateway_id"},
 			},
 			"tunnel2_log_options": {
 				Type:     schema.TypeList,
@@ -696,7 +693,6 @@ func resourceVPNConnectionCreate(ctx context.Context, d *schema.ResourceData, me
 		input.VpnGatewayId = aws.String(v.(string))
 	}
 
-	log.Printf("[DEBUG] Creating EC2 VPN Connection: %s", input)
 	output, err := conn.CreateVpnConnectionWithContext(ctx, input)
 
 	if err != nil {
@@ -745,7 +741,7 @@ func resourceVPNConnectionRead(ctx context.Context, d *schema.ResourceData, meta
 
 	if v := vpnConnection.TransitGatewayId; v != nil {
 		input := &ec2.DescribeTransitGatewayAttachmentsInput{
-			Filters: BuildAttributeFilterList(map[string]string{
+			Filters: newAttributeFilterList(map[string]string{
 				"resource-id":        d.Id(),
 				"resource-type":      ec2.TransitGatewayAttachmentResourceTypeVpn,
 				"transit-gateway-id": aws.StringValue(v),
@@ -922,7 +918,6 @@ func resourceVPNConnectionUpdate(ctx context.Context, d *schema.ResourceData, me
 				VpnTunnelOutsideIpAddress: aws.String(address),
 			}
 
-			log.Printf("[DEBUG] Modifying EC2 VPN Connection tunnel (%d) options: %s", i+1, input)
 			_, err := conn.ModifyVpnTunnelOptionsWithContext(ctx, input)
 
 			if err != nil {
@@ -991,8 +986,6 @@ func expandVPNConnectionOptionsSpecification(d *schema.ResourceData) *ec2.VpnCon
 		if v, ok := d.GetOk("remote_ipv4_network_cidr"); ok {
 			apiObject.RemoteIpv4NetworkCidr = aws.String(v.(string))
 		}
-
-		apiObject.TunnelInsideIpVersion = aws.String(ec2.TunnelInsideIpVersionIpv4)
 	}
 
 	if v, ok := d.GetOk("static_routes_only"); ok {
@@ -1672,7 +1665,7 @@ func validVPNConnectionTunnelPreSharedKey() schema.SchemaValidateFunc {
 	return validation.All(
 		validation.StringLenBetween(8, 64),
 		validation.StringDoesNotMatch(regexache.MustCompile(`^0`), "cannot start with zero character"),
-		validation.StringMatch(regexache.MustCompile(`^[0-9a-zA-Z_.]+$`), "can only contain alphanumeric, period and underscore characters"),
+		validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.]+$`), "can only contain alphanumeric, period and underscore characters"),
 	)
 }
 
@@ -1699,7 +1692,7 @@ func validVPNConnectionTunnelInsideCIDR() schema.SchemaValidateFunc {
 func validVPNConnectionTunnelInsideIPv6CIDR() schema.SchemaValidateFunc {
 	return validation.All(
 		validation.IsCIDRNetwork(126, 126),
-		validation.StringMatch(regexache.MustCompile(`^fd00:`), "must be within fd00::/8"),
+		validation.StringMatch(regexache.MustCompile(`^fd`), "must be within fd00::/8"),
 	)
 }
 

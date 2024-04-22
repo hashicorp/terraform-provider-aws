@@ -1,0 +1,6 @@
+```release-note:bug
+resource/aws_elasticsearch_domain_policy: Handle delayed domain status propagation, preventing a `ValidationException`.
+```
+```release-note:bug
+resource/aws_opensearch_domain_policy: Handle delayed domain status propagation, preventing a `ValidationException`.
+```

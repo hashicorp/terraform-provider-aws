@@ -17,7 +17,7 @@ func validDashboardName(v interface{}, k string) (ws []string, errors []error) {
 	}
 
 	// http://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/API_PutDashboard.html
-	pattern := `^[\-_A-Za-z0-9]+$`
+	pattern := `^[0-9A-Za-z_-]+$`
 	if !regexache.MustCompile(pattern).MatchString(value) {
 		errors = append(errors, fmt.Errorf(
 			"%q doesn't comply with restrictions (%q): %q",

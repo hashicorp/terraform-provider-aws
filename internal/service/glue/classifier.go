@@ -121,6 +121,12 @@ func ResourceClassifier() *schema.Resource {
 							Type:     schema.TypeString,
 							Optional: true,
 						},
+						"serde": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							Computed:     true,
+							ValidateFunc: validation.StringInSlice(glue.CsvSerdeOption_Values(), false),
+						},
 					},
 				},
 			},
@@ -352,6 +358,10 @@ func expandCSVClassifierCreate(name string, m map[string]interface{}) *glue.Crea
 		csvClassifier.CustomDatatypes = flex.ExpandStringList(v)
 	}
 
+	if v, ok := m["serde"].(string); ok && v != "" {
+		csvClassifier.Serde = aws.String(v)
+	}
+
 	return csvClassifier
 }
 
@@ -377,6 +387,10 @@ func expandCSVClassifierUpdate(name string, m map[string]interface{}) *glue.Upda
 			csvClassifier.CustomDatatypeConfigured = aws.Bool(confV)
 		}
 		csvClassifier.CustomDatatypes = flex.ExpandStringList(v)
+	}
+
+	if v, ok := m["serde"].(string); ok && v != "" {
+		csvClassifier.Serde = aws.String(v)
 	}
 
 	return csvClassifier
@@ -466,6 +480,7 @@ func flattenCSVClassifier(csvClassifier *glue.CsvClassifier) []map[string]interf
 		"quote_symbol":               aws.StringValue(csvClassifier.QuoteSymbol),
 		"custom_datatype_configured": aws.BoolValue(csvClassifier.CustomDatatypeConfigured),
 		"custom_datatypes":           aws.StringValueSlice(csvClassifier.CustomDatatypes),
+		"serde":                      aws.StringValue(csvClassifier.Serde),
 	}
 
 	return []map[string]interface{}{m}

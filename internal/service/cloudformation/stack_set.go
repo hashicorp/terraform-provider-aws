@@ -124,8 +124,8 @@ func ResourceStackSet() *schema.Resource {
 				ForceNew: true,
 				ValidateFunc: validation.All(
 					validation.StringLenBetween(1, 128),
-					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z]`), "must begin with alphabetic character"),
-					validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9-]+$`), "must contain only alphanumeric and hyphen characters"),
+					validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with alphabetic character"),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "must contain only alphanumeric and hyphen characters"),
 				),
 			},
 			"operation_preferences": {
@@ -169,7 +169,7 @@ func ResourceStackSet() *schema.Resource {
 							MinItems: 1,
 							Elem: &schema.Schema{
 								Type:         schema.TypeString,
-								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9-]{1,128}$`), ""),
+								ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]{1,128}$`), ""),
 							},
 						},
 					},
@@ -266,7 +266,57 @@ func resourceStackSetCreate(ctx context.Context, d *schema.ResourceData, meta in
 		input.TemplateURL = aws.String(v.(string))
 	}
 
-	_, err := conn.CreateStackSetWithContext(ctx, input)
+	_, err := tfresource.RetryWhen(ctx, propagationTimeout,
+		func() (interface{}, error) {
+			output, err := conn.CreateStackSetWithContext(ctx, input)
+			if err != nil {
+				return nil, err
+			}
+
+			operation, err := WaitStackSetCreated(ctx, conn, name, d.Get("call_as").(string), d.Timeout(schema.TimeoutCreate))
+			if err != nil {
+				return nil, fmt.Errorf("waiting for completion (%s): %w", aws.StringValue(output.StackSetId), err)
+			}
+			return operation, nil
+		},
+		func(err error) (bool, error) {
+			if err == nil {
+				return false, nil
+			}
+
+			message := err.Error()
+
+			// IAM eventual consistency
+			if strings.Contains(message, "AccountGate check failed") {
+				return true, err
+			}
+
+			// IAM eventual consistency
+			// User: XXX is not authorized to perform: cloudformation:CreateStack on resource: YYY
+			if strings.Contains(message, "is not authorized") {
+				return true, err
+			}
+
+			// IAM eventual consistency
+			// XXX role has insufficient YYY permissions
+			if strings.Contains(message, "role has insufficient") {
+				return true, err
+			}
+
+			// IAM eventual consistency
+			// Account XXX should have YYY role with trust relationship to Role ZZZ
+			if strings.Contains(message, "role with trust relationship") {
+				return true, err
+			}
+
+			// IAM eventual consistency
+			if strings.Contains(message, "The security token included in the request is invalid") {
+				return true, err
+			}
+
+			return false, err
+		},
+	)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating CloudFormation StackSet (%s): %s", name, err)

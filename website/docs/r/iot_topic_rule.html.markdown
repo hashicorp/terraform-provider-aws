@@ -8,6 +8,8 @@ description: |-
 
 # Resource: aws_iot_topic_rule
 
+Creates and manages an AWS IoT topic rule.
+
 ## Example Usage
 
 ```terraform
@@ -54,12 +56,12 @@ data "aws_iam_policy_document" "assume_role" {
   }
 }
 
-resource "aws_iam_role" "role" {
+resource "aws_iam_role" "myrole" {
   name               = "myrole"
   assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 
-data "aws_iam_policy_document" "iam_policy_for_lambda" {
+data "aws_iam_policy_document" "mypolicy" {
   statement {
     effect    = "Allow"
     actions   = ["sns:Publish"]
@@ -67,10 +69,10 @@ data "aws_iam_policy_document" "iam_policy_for_lambda" {
   }
 }
 
-resource "aws_iam_role_policy" "iam_policy_for_lambda" {
+resource "aws_iam_role_policy" "mypolicy" {
   name   = "mypolicy"
-  role   = aws_iam_role.role.id
-  policy = data.aws_iam_policy_document.iam_policy_for_lambda.json
+  role   = aws_iam_role.myrole.id
+  policy = data.aws_iam_policy_document.mypolicy.json
 }
 ```
 
@@ -166,7 +168,10 @@ The `iot_events` object takes the following arguments:
 The `kafka` object takes the following arguments:
 
 * `client_properties` - (Required) Properties of the Apache Kafka producer client. For more info, see the [AWS documentation](https://docs.aws.amazon.com/iot/latest/developerguide/apache-kafka-rule-action.html).
-* `destination_arn` - (Required) The ARN of Kafka action's VPC [`aws_iot_topic_rule_destination`](iot_topic_rule_destination.html) .
+* `destination_arn` - (Required) The ARN of Kafka action's VPC [`aws_iot_topic_rule_destination`](iot_topic_rule_destination.html).
+* `header` - (Optional) The list of Kafka headers that you specify. Nested arguments below.
+    * `key` - (Required) The key of the Kafka header.
+    * `value` - (Required) The value of the Kafka header.
 * `key` - (Optional) The Kafka message key.
 * `partition` - (Optional) The Kafka message partition.
 * `topic` - (Optional) The Kafka topic for messages to be sent to the Kafka broker.

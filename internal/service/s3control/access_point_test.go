@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/service/s3control"
+	"github.com/aws/aws-sdk-go-v2/service/s3control"
 	awspolicy "github.com/hashicorp/awspolicyequivalence"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfs3control "github.com/hashicorp/terraform-provider-aws/internal/service/s3control"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccS3ControlAccessPoint_basic(t *testing.T) {
@@ -29,7 +30,7 @@ func TestAccS3ControlAccessPoint_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccessPointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -75,7 +76,7 @@ func TestAccS3ControlAccessPoint_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccessPointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -99,7 +100,7 @@ func TestAccS3ControlAccessPoint_Bucket_arn(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckOutpostsOutposts(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccessPointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -181,7 +182,7 @@ func TestAccS3ControlAccessPoint_policy(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccessPointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -235,7 +236,7 @@ func TestAccS3ControlAccessPoint_publicAccessBlock(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccessPointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -276,7 +277,7 @@ func TestAccS3ControlAccessPoint_vpc(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, s3control.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.S3ControlServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckAccessPointDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -311,7 +312,7 @@ func TestAccS3ControlAccessPoint_vpc(t *testing.T) {
 
 func testAccCheckAccessPointDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_s3_access_point" {
@@ -319,7 +320,6 @@ func testAccCheckAccessPointDestroy(ctx context.Context) resource.TestCheckFunc 
 			}
 
 			accountID, name, err := tfs3control.AccessPointParseResourceID(rs.Primary.ID)
-
 			if err != nil {
 				return err
 			}
@@ -348,17 +348,12 @@ func testAccCheckAccessPointExists(ctx context.Context, n string, v *s3control.G
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No S3 Access Point ID is set")
-		}
-
 		accountID, name, err := tfs3control.AccessPointParseResourceID(rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlClient(ctx)
 
 		output, err := tfs3control.FindAccessPointByTwoPartKey(ctx, conn, accountID, name)
 
@@ -379,17 +374,12 @@ func testAccCheckAccessPointHasPolicy(ctx context.Context, n string, fn func() s
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		if rs.Primary.ID == "" {
-			return fmt.Errorf("No S3 Access Point ID is set")
-		}
-
 		accountID, name, err := tfs3control.AccessPointParseResourceID(rs.Primary.ID)
-
 		if err != nil {
 			return err
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).S3ControlClient(ctx)
 
 		actualPolicyText, _, err := tfs3control.FindAccessPointPolicyAndStatusByTwoPartKey(ctx, conn, accountID, name)
 

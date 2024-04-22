@@ -6,7 +6,6 @@ package types_test
 import (
 	"context"
 	"testing"
-	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/hashicorp/terraform-plugin-framework/attr"
@@ -33,7 +32,7 @@ func TestDurationTypeValueFromTerraform(t *testing.T) {
 		},
 		"valid duration": {
 			val:      tftypes.NewValue(tftypes.String, "2h"),
-			expected: fwtypes.DurationValue(2 * time.Hour),
+			expected: fwtypes.DurationValueMust("2h"),
 		},
 		"invalid duration": {
 			val:      tftypes.NewValue(tftypes.String, "not ok"),
@@ -115,9 +114,8 @@ func TestDurationToStringValue(t *testing.T) {
 		expected types.String
 	}{
 		"value": {
-			// TODO: StringValue does not round-trip
-			duration: durationFromString(t, "2h"),
-			expected: types.StringValue("2h0m0s"),
+			duration: fwtypes.DurationValueMust("2h"),
+			expected: types.StringValue("2h"),
 		},
 		"null": {
 			duration: fwtypes.DurationNull(),
@@ -143,17 +141,4 @@ func TestDurationToStringValue(t *testing.T) {
 			}
 		})
 	}
-}
-
-func durationFromString(t *testing.T, s string) fwtypes.Duration {
-	ctx := context.Background()
-
-	val := tftypes.NewValue(tftypes.String, s)
-
-	attr, err := fwtypes.DurationType.ValueFromTerraform(ctx, val)
-	if err != nil {
-		t.Fatalf("setting Duration: %s", err)
-	}
-
-	return attr.(fwtypes.Duration)
 }

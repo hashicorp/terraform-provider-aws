@@ -174,8 +174,48 @@ func FindSubnetGroupByName(ctx context.Context, conn *neptune.Neptune, name stri
 	input := &neptune.DescribeDBSubnetGroupsInput{
 		DBSubnetGroupName: aws.String(name),
 	}
+	output, err := findDBSubnetGroup(ctx, conn, input)
 
-	output, err := conn.DescribeDBSubnetGroupsWithContext(ctx, input)
+	if err != nil {
+		return nil, err
+	}
+
+	// Eventual consistency check.
+	if aws.StringValue(output.DBSubnetGroupName) != name {
+		return nil, &retry.NotFoundError{
+			LastRequest: input,
+		}
+	}
+
+	return output, nil
+}
+
+func findDBSubnetGroup(ctx context.Context, conn *neptune.Neptune, input *neptune.DescribeDBSubnetGroupsInput) (*neptune.DBSubnetGroup, error) {
+	output, err := findDBSubnetGroups(ctx, conn, input)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return tfresource.AssertSinglePtrResult(output)
+}
+
+func findDBSubnetGroups(ctx context.Context, conn *neptune.Neptune, input *neptune.DescribeDBSubnetGroupsInput) ([]*neptune.DBSubnetGroup, error) {
+	var output []*neptune.DBSubnetGroup
+
+	err := conn.DescribeDBSubnetGroupsPagesWithContext(ctx, input, func(page *neptune.DescribeDBSubnetGroupsOutput, lastPage bool) bool {
+		if page == nil {
+			return !lastPage
+		}
+
+		for _, v := range page.DBSubnetGroups {
+			if v != nil {
+				output = append(output, v)
+			}
+		}
+
+		return !lastPage
+	})
 
 	if tfawserr.ErrCodeEquals(err, neptune.ErrCodeDBSubnetGroupNotFoundFault) {
 		return nil, &retry.NotFoundError{
@@ -188,18 +228,5 @@ func FindSubnetGroupByName(ctx context.Context, conn *neptune.Neptune, name stri
 		return nil, err
 	}
 
-	if output == nil || len(output.DBSubnetGroups) == 0 || output.DBSubnetGroups[0] == nil {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	dbSubnetGroup := output.DBSubnetGroups[0]
-
-	// Eventual consistency check.
-	if aws.StringValue(dbSubnetGroup.DBSubnetGroupName) != name {
-		return nil, &retry.NotFoundError{
-			LastRequest: input,
-		}
-	}
-
-	return dbSubnetGroup, nil
+	return output, nil
 }

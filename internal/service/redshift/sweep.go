@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package redshift
 
 import (
@@ -16,9 +13,10 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_redshift_cluster_snapshot", &resource.Sweeper{
 		Name: "aws_redshift_cluster_snapshot",
 		F:    sweepClusterSnapshots,
@@ -107,7 +105,7 @@ func sweepClusterSnapshots(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping Redshift Snapshots for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Redshift Snapshots sweep for %s: %s", region, err)
 		return nil
 	}
@@ -154,7 +152,7 @@ func sweepClusters(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping Redshift Clusters for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Redshift Cluster sweep for %s: %s", region, err)
 		return nil
 	}
@@ -198,7 +196,7 @@ func sweepEventSubscriptions(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping Redshift Event Subscriptions for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Redshift Event Subscriptions sweep for %s: %s", region, err)
 		return nil
 	}
@@ -232,7 +230,7 @@ func sweepScheduledActions(region string) error {
 		return !lastPage
 	})
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping Redshift Scheduled Action sweep for %s: %s", region, err)
 		return nil
 	}
@@ -297,7 +295,7 @@ func sweepSnapshotSchedules(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping Redshift Snapshot Schedules for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Redshift Snapshot Schedules sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -353,7 +351,7 @@ func sweepSubnetGroups(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping Redshift Subnet Groups for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Redshift Subnet Group sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -399,7 +397,7 @@ func sweepHSMClientCertificates(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping Redshift Hsm Client Certificates for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Redshift Hsm Client Certificate sweep for %s: %s", region, err)
 		return nil
 	}
@@ -445,7 +443,7 @@ func sweepHSMConfigurations(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping Redshift Hsm Configurations for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Redshift Hsm Configuration sweep for %s: %s", region, err)
 		return nil
 	}
@@ -489,7 +487,7 @@ func sweepAuthenticationProfiles(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("sweeping Redshift Authentication Profiles for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(errs.ErrorOrNil()) {
+	if awsv1.SkipSweepError(errs.ErrorOrNil()) {
 		log.Printf("[WARN] Skipping Redshift Authentication Profile sweep for %s: %s", region, err)
 		return nil
 	}

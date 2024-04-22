@@ -50,7 +50,7 @@ class MyConvertedCode extends TerraformStack {
 This resource supports the following arguments:
 
 * `context` - (Optional) Reserved.
-* `excessCapacityTerminationPolicy` - (Optional) Whether running instances should be terminated if the total target capacity of the EC2 Fleet is decreased below the current size of the EC2. Valid values: `noTermination`, `termination`. Defaults to `termination`. Supported only for fleets of type `maintain`.
+* `excessCapacityTerminationPolicy` - (Optional) Whether running instances should be terminated if the total target capacity of the EC2 Fleet is decreased below the current size of the EC2. Valid values: `no-termination`, `termination`. Defaults to `termination`. Supported only for fleets of type `maintain`.
 * `launchTemplateConfig` - (Required) Nested argument containing EC2 Launch Template configurations. Defined below.
 * `onDemandOptions` - (Optional) Nested argument containing On-Demand configurations. Defined below.
 * `replaceUnhealthyInstances` - (Optional) Whether EC2 Fleet should replace unhealthy instances. Defaults to `false`. Supported only for fleets of type `maintain`.
@@ -76,7 +76,7 @@ The launch template to use. You must specify either the launch template ID or la
 
 * `launchTemplateId` - (Optional) The ID of the launch template.
 * `launchTemplateName` - (Optional) The name of the launch template.
-* `version` - (Required) The launch template version number, `$latest`, or `$default`
+* `version` - (Required) The launch template version number, `$Latest`, or `$Default.`
 
 #### override
 
@@ -135,7 +135,7 @@ The attributes for the instance types. For a list of currently supported values,
 
 This configuration block supports the following:
 
-~> **NOTE:** Both `memoryMibMin` and `vcpuCountMin` must be specified.
+~> **NOTE:** Both `memory_mib.min` and `vcpu_count.min` must be specified.
 
 * `acceleratorCount` - (Optional) Block describing the minimum and maximum number of accelerators (GPUs, FPGAs, or AWS Inferentia chips). Default is no minimum or maximum limits.
     * `min` - (Optional) Minimum.
@@ -146,9 +146,9 @@ This configuration block supports the following:
     * `min` - (Optional) The minimum amount of accelerator memory, in MiB. To specify no minimum limit, omit this parameter.
     * `max` - (Optional) The maximum amount of accelerator memory, in MiB. To specify no maximum limit, omit this parameter.
 * `acceleratorTypes` - (Optional) The accelerator types that must be on the instance type. Default is any accelerator type.
-* `allowedInstanceTypes` - (Optional) The instance types to apply your specified attributes against. All other instance types are ignored, even if they match your specified attributes. You can use strings with one or more wild cards,represented by an asterisk (\*). The following are examples: `c5*`, `m5A.*`, `r*`, `*3*`. For example, if you specify `c5*`, you are excluding the entire C5 instance family, which includes all C5a and C5n instance types. If you specify `m5A.*`, you are excluding all the M5a instance types, but not the M5n instance types. Maximum of 400 entries in the list; each entry is limited to 30 characters. Default is no excluded instance types. Default is any instance type.
+* `allowedInstanceTypes` - (Optional) The instance types to apply your specified attributes against. All other instance types are ignored, even if they match your specified attributes. You can use strings with one or more wild cards,represented by an asterisk (\*). The following are examples: `c5*`, `m5a.*`, `r*`, `*3*`. For example, if you specify `c5*`, you are excluding the entire C5 instance family, which includes all C5a and C5n instance types. If you specify `m5a.*`, you are excluding all the M5a instance types, but not the M5n instance types. Maximum of 400 entries in the list; each entry is limited to 30 characters. Default is no excluded instance types. Default is any instance type.
 
-    If you specify `allowedInstanceTypes`, you can't specify `excludedInstanceTypes`.
+    If you specify `AllowedInstanceTypes`, you can't specify `ExcludedInstanceTypes`.
 
 * `bareMetal` - (Optional) Indicate whether bare metal instace types should be `included`, `excluded`, or `required`. Default is `excluded`.
 * `baselineEbsBandwidthMbps` - (Optional) Block describing the minimum and maximum baseline EBS bandwidth, in Mbps. Default is no minimum or maximum.
@@ -157,9 +157,9 @@ This configuration block supports the following:
 * `burstablePerformance` - (Optional) Indicates whether burstable performance T instance types are `included`, `excluded`, or `required`. Default is `excluded`.
 * `cpuManufacturers` (Optional) The CPU manufacturers to include. Default is any manufacturer.
     ~> **NOTE:** Don't confuse the CPU hardware manufacturer with the CPU hardware architecture. Instances will be launched with a compatible CPU architecture based on the Amazon Machine Image (AMI) that you specify in your launch template.
-* `excludedInstanceTypes` - (Optional) The instance types to exclude. You can use strings with one or more wild cards, represented by an asterisk (\*). The following are examples: `c5*`, `m5A.*`, `r*`, `*3*`. For example, if you specify `c5*`, you are excluding the entire C5 instance family, which includes all C5a and C5n instance types. If you specify `m5A.*`, you are excluding all the M5a instance types, but not the M5n instance types. Maximum of 400 entries in the list; each entry is limited to 30 characters. Default is no excluded instance types.
+* `excludedInstanceTypes` - (Optional) The instance types to exclude. You can use strings with one or more wild cards, represented by an asterisk (\*). The following are examples: `c5*`, `m5a.*`, `r*`, `*3*`. For example, if you specify `c5*`, you are excluding the entire C5 instance family, which includes all C5a and C5n instance types. If you specify `m5a.*`, you are excluding all the M5a instance types, but not the M5n instance types. Maximum of 400 entries in the list; each entry is limited to 30 characters. Default is no excluded instance types.
 
-    If you specify `allowedInstanceTypes`, you can't specify `excludedInstanceTypes`.
+    If you specify `AllowedInstanceTypes`, you can't specify `ExcludedInstanceTypes`.
 
 * `instanceGenerations` - (Optional) Indicates whether current or previous generation instance types are included. The current generation instance types are recommended for use. Valid values are `current` and `previous`. Default is `current` and `previous` generation instance types.
 * `localStorage` - (Optional) Indicate whether instance types with local storage volumes are `included`, `excluded`, or `required`. Default is `included`.
@@ -178,7 +178,7 @@ This configuration block supports the following:
     * `max` - (Optional) The maximum number of network interfaces. To specify no maximum limit, omit this parameter.
 * `onDemandMaxPricePercentageOverLowestPrice` - (Optional) The price protection threshold for On-Demand Instances. This is the maximum you’ll pay for an On-Demand Instance, expressed as a percentage higher than the cheapest M, C, or R instance type with your specified attributes. When Amazon EC2 Auto Scaling selects instance types with your attributes, we will exclude instance types whose price is higher than your threshold. The parameter accepts an integer, which Amazon EC2 Auto Scaling interprets as a percentage. To turn off price protection, specify a high value, such as 999999. Default is 20.
 
-    If you set `targetCapacityUnitType` to `vcpu` or `memoryMib`, the price protection threshold is applied based on the per-vCPU or per-memory price instead of the per-instance price.
+    If you set `targetCapacityUnitType` to `vcpu` or `memory-mib`, the price protection threshold is applied based on the per-vCPU or per-memory price instead of the per-instance price.
 
 * `requireHibernateSupport` - (Optional) Indicate whether instance types must support On-Demand Instance Hibernation, either `true` or `false`. Default is `false`.
 * `spotMaxPricePercentageOverLowestPrice` - (Optional) The price protection threshold for Spot Instances. This is the maximum you’ll pay for a Spot Instance, expressed as a percentage higher than the cheapest M, C, or R instance type with your specified attributes. When Amazon EC2 Auto Scaling selects instance types with your attributes, we will exclude instance types whose price is higher than your threshold. The parameter accepts an integer, which Amazon EC2 Auto Scaling interprets as a percentage. To turn off price protection, specify a high value, such as 999999. Default is 100.
@@ -195,8 +195,8 @@ This configuration block supports the following:
 ### on_demand_options
 
 * `allocationStrategy` - (Optional) The order of the launch template overrides to use in fulfilling On-Demand capacity. Valid values: `lowestPrice`, `prioritized`. Default: `lowestPrice`.
-* `capacityReservationOptions` (Optional) The strategy for using unused Capacity Reservations for fulfilling On-Demand capacity. Supported only for fleets of type `instant`.
-    * `usageStrategy` - (Optional) Indicates whether to use unused Capacity Reservations for fulfilling On-Demand capacity. Valid values: `useCapacityReservationsFirst`.
+* `capacity_reservation_options` (Optional) The strategy for using unused Capacity Reservations for fulfilling On-Demand capacity. Supported only for fleets of type `instant`.
+    * `usage_strategy` - (Optional) Indicates whether to use unused Capacity Reservations for fulfilling On-Demand capacity. Valid values: `use-capacity-reservations-first`.
 * `maxTotalPrice` - (Optional) The maximum amount per hour for On-Demand Instances that you're willing to pay.
 * `minTargetCapacity` - (Optional) The minimum target capacity for On-Demand Instances in the fleet. If the minimum target capacity is not reached, the fleet launches no instances. Supported only for fleets of type `instant`.
     If you specify `minTargetCapacity`, at least one of the following must be specified: `singleAvailabilityZone` or `singleInstanceType`.
@@ -206,7 +206,7 @@ This configuration block supports the following:
 
 ### spot_options
 
-* `allocationStrategy` - (Optional) How to allocate the target capacity across the Spot pools. Valid values: `diversified`, `lowestPrice`, `capacityOptimized`, `capacityOptimizedPrioritized` and `priceCapacityOptimized`. Default: `lowestPrice`.
+* `allocationStrategy` - (Optional) How to allocate the target capacity across the Spot pools. Valid values: `diversified`, `lowestPrice`, `capacity-optimized`, `capacity-optimized-prioritized` and `price-capacity-optimized`. Default: `lowestPrice`.
 * `instanceInterruptionBehavior` - (Optional) Behavior when a Spot Instance is interrupted. Valid values: `hibernate`, `stop`, `terminate`. Default: `terminate`.
 * `instancePoolsToUseCount` - (Optional) Number of Spot pools across which to allocate your target Spot capacity. Valid only when Spot `allocationStrategy` is set to `lowestPrice`. Default: `1`.
 * `maintenanceStrategies` - (Optional) Nested argument containing maintenance strategies for managing your Spot Instances that are at an elevated risk of being interrupted. Defined below.
@@ -225,7 +225,7 @@ This configuration block supports the following:
 
 ### target_capacity_specification
 
-* `defaultTargetCapacityType` - (Required) Default target capacity type. Valid values: `onDemand`, `spot`.
+* `defaultTargetCapacityType` - (Required) Default target capacity type. Valid values: `on-demand`, `spot`.
 * `onDemandTargetCapacity` - (Optional) The number of On-Demand units to request.
 * `spotTargetCapacity` - (Optional) The number of Spot units to request.
 * `targetCapacityUnitType` - (Optional) The unit for the target capacity.
@@ -243,7 +243,7 @@ This resource exports the following attributes in addition to the arguments abov
     * `instanceIds` - The IDs of the instances.
     * `instanceType` - The instance type.
     * `lifecycle` - Indicates if the instance that was launched is a Spot Instance or On-Demand Instance.
-    * `platform` - The value is `windows` for Windows instances. Otherwise, the value is blank.
+    * `platform` - The value is `Windows` for Windows instances. Otherwise, the value is blank.
 * `fleetState` - The state of the EC2 Fleet.
 * `fulfilledCapacity` - The number of units fulfilled by this request compared to the set target capacity.
 * `fulfilledOnDemandCapacity` - The number of units fulfilled by this request compared to the set target On-Demand capacity.
@@ -253,30 +253,40 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `10M`)
-* `update` - (Default `10M`)
-* `delete` - (Default `10M`)
+* `create` - (Default `10m`)
+* `update` - (Default `10m`)
+* `delete` - (Default `10m`)
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `awsEc2Fleet` using the Fleet identifier. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_ec2_fleet` using the Fleet identifier. For example:
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { Ec2Fleet } from "./.gen/providers/aws/ec2-fleet";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    Ec2Fleet.generateConfigForImport(
+      this,
+      "example",
+      "fleet-b9b55d27-c5fc-41ac-a6f3-48fcc91f080c"
+    );
   }
 }
 
 ```
 
-Using `terraform import`, import `awsEc2Fleet` using the Fleet identifier. For example:
+Using `terraform import`, import `aws_ec2_fleet` using the Fleet identifier. For example:
 
 ```console
 % terraform import aws_ec2_fleet.example fleet-b9b55d27-c5fc-41ac-a6f3-48fcc91f080c
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-c7054e3c8757a06c71fb64005ddb5aa34c48f993fd6eadf199635a28b3f099e7 -->
+<!-- cache-key: cdktf-0.20.1 input-c7054e3c8757a06c71fb64005ddb5aa34c48f993fd6eadf199635a28b3f099e7 -->

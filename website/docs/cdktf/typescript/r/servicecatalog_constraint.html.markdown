@@ -12,7 +12,7 @@ description: |-
 
 Manages a Service Catalog Constraint.
 
-~> **NOTE:** This resource does not associate a Service Catalog product and portfolio. However, the product and portfolio must be associated (see the `awsServicecatalogProductPortfolioAssociation` resource) prior to creating a constraint or you will receive an error.
+~> **NOTE:** This resource does not associate a Service Catalog product and portfolio. However, the product and portfolio must be associated (see the `aws_servicecatalog_product_portfolio_association` resource) prior to creating a constraint or you will receive an error.
 
 ## Example Usage
 
@@ -53,7 +53,7 @@ The following arguments are required:
 * `parameters` - (Required) Constraint parameters in JSON format. The syntax depends on the constraint type. See details below.
 * `portfolioId` - (Required) Portfolio identifier.
 * `productId` - (Required) Product identifier.
-* `type` - (Required) Type of constraint. Valid values are `launch`, `notification`, `resourceUpdate`, `stackset`, and `template`.
+* `type` - (Required) Type of constraint. Valid values are `LAUNCH`, `NOTIFICATION`, `RESOURCE_UPDATE`, `STACKSET`, and `TEMPLATE`.
 
 The following arguments are optional:
 
@@ -64,7 +64,7 @@ The following arguments are optional:
 
 The `type` you specify determines what must be included in the `parameters` JSON:
 
-* `launch`: You are required to specify either the RoleArn or the LocalRoleName but can't use both. If you specify the `localRoleName` property, when an account uses the launch constraint, the IAM role with that name in the account will be used. This allows launch-role constraints to be account-agnostic so the administrator can create fewer resources per shared account. The given role name must exist in the account used to create the launch constraint and the account of the user who launches a product with this launch constraint. You cannot have both a `launch` and a `stackset` constraint. You also cannot have more than one `launch` constraint on an `awsServicecatalogProduct` and `awsServicecatalogPortfolio`. Specify the `roleArn` and `localRoleName` properties as follows:
+* `LAUNCH`: You are required to specify either the RoleArn or the LocalRoleName but can't use both. If you specify the `LocalRoleName` property, when an account uses the launch constraint, the IAM role with that name in the account will be used. This allows launch-role constraints to be account-agnostic so the administrator can create fewer resources per shared account. The given role name must exist in the account used to create the launch constraint and the account of the user who launches a product with this launch constraint. You cannot have both a `LAUNCH` and a `STACKSET` constraint. You also cannot have more than one `LAUNCH` constraint on an `aws_servicecatalog_product` and `aws_servicecatalog_portfolio`. Specify the `RoleArn` and `LocalRoleName` properties as follows:
 
 ```json
 { "RoleArn" : "arn:aws:iam::123456789012:role/LaunchRole" }
@@ -74,25 +74,25 @@ The `type` you specify determines what must be included in the `parameters` JSON
 { "LocalRoleName" : "SCBasicLaunchRole" }
 ```
 
-* `notification`: Specify the `notificationArns` property as follows:
+* `NOTIFICATION`: Specify the `NotificationArns` property as follows:
 
 ```json
 { "NotificationArns" : ["arn:aws:sns:us-east-1:123456789012:Topic"] }
 ```
 
-* `resourceUpdate`: Specify the `tagUpdatesOnProvisionedProduct` property as follows. The `tagUpdatesOnProvisionedProduct` property accepts a string value of `allowed` or `notAllowed`.
+* `RESOURCE_UPDATE`: Specify the `TagUpdatesOnProvisionedProduct` property as follows. The `TagUpdatesOnProvisionedProduct` property accepts a string value of `ALLOWED` or `NOT_ALLOWED`.
 
 ```json
 { "Version" : "2.0","Properties" :{ "TagUpdateOnProvisionedProduct" : "String" }}
 ```
 
-* `stackset`: Specify the Parameters property as follows. You cannot have both a `launch` and a `stackset` constraint. You also cannot have more than one `stackset` constraint on on an `awsServicecatalogProduct` and `awsServicecatalogPortfolio`. Products with a `stackset` constraint will launch an AWS CloudFormation stack set.
+* `STACKSET`: Specify the Parameters property as follows. You cannot have both a `LAUNCH` and a `STACKSET` constraint. You also cannot have more than one `STACKSET` constraint on on an `aws_servicecatalog_product` and `aws_servicecatalog_portfolio`. Products with a `STACKSET` constraint will launch an AWS CloudFormation stack set.
 
 ```json
 { "Version" : "String", "Properties" : { "AccountList" : [ "String" ], "RegionList" : [ "String" ], "AdminRole" : "String", "ExecutionRole" : "String" }}
 ```
 
-* `template`: Specify the Rules property. For more information, see [Template Constraint Rules](http://docs.aws.amazon.com/servicecatalog/latest/adminguide/reference-template_constraint_rules.html).
+* `TEMPLATE`: Specify the Rules property. For more information, see [Template Constraint Rules](http://docs.aws.amazon.com/servicecatalog/latest/adminguide/reference-template_constraint_rules.html).
 
 ## Attribute Reference
 
@@ -105,31 +105,41 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-- `create` - (Default `3M`)
-- `read` - (Default `10M`)
-- `update` - (Default `3M`)
-- `delete` - (Default `3M`)
+- `create` - (Default `3m`)
+- `read` - (Default `10m`)
+- `update` - (Default `3m`)
+- `delete` - (Default `3m`)
 
 ## Import
 
-In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `awsServicecatalogConstraint` using the constraint ID. For example:
+In Terraform v1.5.0 and later, use an [`import` block](https://developer.hashicorp.com/terraform/language/import) to import `aws_servicecatalog_constraint` using the constraint ID. For example:
 
 ```typescript
 // DO NOT EDIT. Code generated by 'cdktf convert' - Please report bugs at https://cdk.tf/bug
 import { Construct } from "constructs";
 import { TerraformStack } from "cdktf";
+/*
+ * Provider bindings are generated by running `cdktf get`.
+ * See https://cdk.tf/provider-generation for more details.
+ */
+import { ServicecatalogConstraint } from "./.gen/providers/aws/servicecatalog-constraint";
 class MyConvertedCode extends TerraformStack {
   constructor(scope: Construct, name: string) {
     super(scope, name);
+    ServicecatalogConstraint.generateConfigForImport(
+      this,
+      "example",
+      "cons-nmdkb6cgxfcrs"
+    );
   }
 }
 
 ```
 
-Using `terraform import`, import `awsServicecatalogConstraint` using the constraint ID. For example:
+Using `terraform import`, import `aws_servicecatalog_constraint` using the constraint ID. For example:
 
 ```console
 % terraform import aws_servicecatalog_constraint.example cons-nmdkb6cgxfcrs
 ```
 
-<!-- cache-key: cdktf-0.18.0 input-f391e00f1f29453b1e81c01e36db6ce37af9e3b44513a1ffefd379e9b7d4ba13 -->
+<!-- cache-key: cdktf-0.20.1 input-f391e00f1f29453b1e81c01e36db6ce37af9e3b44513a1ffefd379e9b7d4ba13 -->

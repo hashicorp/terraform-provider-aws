@@ -103,7 +103,7 @@ func customActionSchema() *schema.Schema {
 					Type:         schema.TypeString,
 					Required:     true,
 					ForceNew:     true,
-					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-zA-Z0-9]+$`), "must contain only alphanumeric characters"),
+					ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]+$`), "must contain only alphanumeric characters"),
 				},
 			},
 		},

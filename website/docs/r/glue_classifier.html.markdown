@@ -83,7 +83,7 @@ This resource supports the following arguments:
 
 * `allow_single_column` - (Optional) Enables the processing of files that contain only one column.
 * `contains_header` - (Optional) Indicates whether the CSV file contains a header. This can be one of "ABSENT", "PRESENT", or "UNKNOWN".
-* `custom_datatype_configured` - (Optional) A custom symbol to denote what combines content into a single column value. It must be different from the column delimiter.
+* `custom_datatype_configured` - (Optional) Enables the custom datatype to be configured.
 * `custom_datatypes` - (Optional) A list of supported custom datatypes. Valid values are `BINARY`, `BOOLEAN`, `DATE`, `DECIMAL`, `DOUBLE`, `FLOAT`, `INT`, `LONG`, `SHORT`, `STRING`, `TIMESTAMP`.
 * `delimiter` - (Optional) The delimiter used in the Csv to separate columns.
 * `disable_value_trimming` - (Optional) Specifies whether to trim column values.

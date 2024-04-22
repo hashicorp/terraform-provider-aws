@@ -55,7 +55,7 @@ func ResourceScheduledAction() *schema.Resource {
 				Type:         schema.TypeString,
 				Required:     true,
 				ForceNew:     true,
-				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[a-z0-9-]{1,63}$`), ""),
+				ValidateFunc: validation.StringMatch(regexache.MustCompile(`^[0-9a-z-]{1,63}$`), ""),
 			},
 			"schedule": {
 				Type:     schema.TypeString,

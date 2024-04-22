@@ -68,6 +68,12 @@ func ResourceReplicationGroup() *schema.Resource {
 				ValidateFunc:  validReplicationGroupAuthToken,
 				ConflictsWith: []string{"user_group_ids"},
 			},
+			"auth_token_update_strategy": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringInSlice(elasticache.AuthTokenUpdateStrategyType_Values(), true),
+				Default:      elasticache.AuthTokenUpdateStrategyTypeRotate,
+			},
 			"auto_minor_version_upgrade": {
 				Type:         nullable.TypeNullableBool,
 				Optional:     true,
@@ -129,10 +135,17 @@ func ResourceReplicationGroup() *schema.Resource {
 					"node_type",
 					"security_group_names",
 					"transit_encryption_enabled",
+					"transit_encryption_mode",
 					"at_rest_encryption_enabled",
 					"snapshot_arns",
 					"snapshot_name",
 				},
+			},
+			"ip_discovery": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(elasticache.IpDiscovery_Values(), false),
 			},
 			"log_delivery_configuration": {
 				Type:     schema.TypeSet,
@@ -182,6 +195,13 @@ func ResourceReplicationGroup() *schema.Resource {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  false,
+			},
+			"network_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.StringInSlice(elasticache.NetworkType_Values(), false),
 			},
 			"node_type": {
 				Type:     schema.TypeString,
@@ -308,8 +328,13 @@ func ResourceReplicationGroup() *schema.Resource {
 			"transit_encryption_enabled": {
 				Type:     schema.TypeBool,
 				Optional: true,
-				ForceNew: true,
 				Computed: true,
+			},
+			"transit_encryption_mode": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice(elasticache.TransitEncryptionMode_Values(), false),
 			},
 			"user_group_ids": {
 				Type:          schema.TypeSet,
@@ -329,12 +354,24 @@ func ResourceReplicationGroup() *schema.Resource {
 			},
 		},
 
-		SchemaVersion: 1,
+		SchemaVersion: 2,
 		// SchemaVersion: 1 did not include any state changes via MigrateState.
 		// Perform a no-operation state upgrade for Terraform 0.12 compatibility.
 		// Future state migrations should be performed with StateUpgraders.
 		MigrateState: func(v int, inst *terraform.InstanceState, meta interface{}) (*terraform.InstanceState, error) {
 			return inst, nil
+		},
+
+		StateUpgraders: []schema.StateUpgrader{
+			// v5.27.0 introduced the auth_token_update_strategy argument with a default
+			// value required to preserve backward compatibility. In order to prevent
+			// differences and attempted modifications on upgrade, the default value
+			// must be written to state via a state upgrader.
+			{
+				Type:    resourceReplicationGroupConfigV1().CoreConfigSchema().ImpliedType(),
+				Upgrade: replicationGroupStateUpgradeV1,
+				Version: 1,
+			},
 		},
 
 		Timeouts: &schema.ResourceTimeout{
@@ -350,6 +387,11 @@ func ResourceReplicationGroup() *schema.Resource {
 				return diff.HasChange("num_cache_clusters") ||
 					diff.HasChange("num_node_groups") ||
 					diff.HasChange("replicas_per_node_group")
+			}),
+			customdiff.ForceNewIf("transit_encryption_enabled", func(_ context.Context, d *schema.ResourceDiff, meta interface{}) bool {
+				// For Redis engine versions < 7.0.5, transit_encryption_enabled can only
+				// be configured during creation of the cluster.
+				return verify.SemVerLessThan(d.Get("engine_version_actual").(string), "7.0.5")
 			}),
 			verify.SetTagsDiff,
 		),
@@ -403,6 +445,14 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 
 	if v, ok := d.GetOk("parameter_group_name"); ok {
 		input.CacheParameterGroupName = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("ip_discovery"); ok {
+		input.IpDiscovery = aws.String(v.(string))
+	}
+
+	if v, ok := d.GetOk("network_type"); ok {
+		input.NetworkType = aws.String(v.(string))
 	}
 
 	if v, ok := d.GetOk("port"); ok {
@@ -466,6 +516,10 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 		input.TransitEncryptionEnabled = aws.Bool(d.Get("transit_encryption_enabled").(bool))
 	}
 
+	if v, ok := d.GetOk("transit_encryption_mode"); ok {
+		input.TransitEncryptionMode = aws.String(v.(string))
+	}
+
 	if _, ok := d.GetOk("at_rest_encryption_enabled"); ok {
 		input.AtRestEncryptionEnabled = aws.Bool(d.Get("at_rest_encryption_enabled").(bool))
 	}
@@ -505,7 +559,7 @@ func resourceReplicationGroupCreate(ctx context.Context, d *schema.ResourceData,
 
 	d.SetId(aws.StringValue(output.ReplicationGroup.ReplicationGroupId))
 
-	if _, err := WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate)); err != nil {
+	if _, err := WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutCreate), replicationGroupAvailableCreateDelay); err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Replication Group (%s) create: %s", d.Id(), err)
 	}
 
@@ -597,6 +651,9 @@ func resourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, m
 	d.Set("arn", rgp.ARN)
 	d.Set("data_tiering_enabled", aws.StringValue(rgp.DataTiering) == elasticache.DataTieringStatusEnabled)
 
+	d.Set("ip_discovery", rgp.IpDiscovery)
+	d.Set("network_type", rgp.NetworkType)
+
 	d.Set("log_delivery_configuration", flattenLogDeliveryConfigurations(rgp.LogDeliveryConfigurations))
 	d.Set("snapshot_window", rgp.SnapshotWindow)
 	d.Set("snapshot_retention_limit", rgp.SnapshotRetentionLimit)
@@ -623,7 +680,7 @@ func resourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, m
 	// Tags cannot be read when the replication group is not Available
 	log.Printf("[DEBUG] Waiting for ElastiCache Replication Group (%s) to become available", d.Id())
 
-	_, err = WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+	_, err = WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate), replicationGroupAvailableReadDelay)
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Replication Group to be available (%s): %s", aws.StringValue(rgp.ARN), err)
 	}
@@ -654,6 +711,7 @@ func resourceReplicationGroupRead(ctx context.Context, d *schema.ResourceData, m
 
 		d.Set("at_rest_encryption_enabled", c.AtRestEncryptionEnabled)
 		d.Set("transit_encryption_enabled", c.TransitEncryptionEnabled)
+		d.Set("transit_encryption_mode", c.TransitEncryptionMode)
 
 		if c.AuthTokenEnabled != nil && !aws.BoolValue(c.AuthTokenEnabled) {
 			d.Set("auth_token", nil)
@@ -691,6 +749,16 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 
 		if d.HasChange("description") {
 			input.ReplicationGroupDescription = aws.String(d.Get("description").(string))
+			requestUpdate = true
+		}
+
+		if d.HasChange("ip_discovery") {
+			input.IpDiscovery = aws.String(d.Get("ip_discovery").(string))
+			requestUpdate = true
+		}
+
+		if d.HasChange("network_type") {
+			input.IpDiscovery = aws.String(d.Get("network_type").(string))
 			requestUpdate = true
 		}
 
@@ -809,32 +877,54 @@ func resourceReplicationGroupUpdate(ctx context.Context, d *schema.ResourceData,
 			}
 		}
 
+		if d.HasChange("transit_encryption_enabled") {
+			input.TransitEncryptionEnabled = aws.Bool(d.Get("transit_encryption_enabled").(bool))
+			requestUpdate = true
+		}
+
+		if d.HasChange("transit_encryption_mode") {
+			input.TransitEncryptionMode = aws.String(d.Get("transit_encryption_mode").(string))
+			requestUpdate = true
+		}
+
 		if requestUpdate {
-			_, err := conn.ModifyReplicationGroupWithContext(ctx, input)
+			// tagging may cause this resource to not yet be available, so wait for it to be available
+			_, err := WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate), replicationGroupAvailableReadDelay)
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Replication Group (%s) to update: %s", d.Id(), err)
+			}
+
+			_, err = conn.ModifyReplicationGroupWithContext(ctx, input)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "updating ElastiCache Replication Group (%s): %s", d.Id(), err)
 			}
 
-			_, err = WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+			_, err = WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate), replicationGroupAvailableModifyDelay)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Replication Group (%s) to update: %s", d.Id(), err)
 			}
 		}
 
-		if d.HasChange("auth_token") {
+		if d.HasChanges("auth_token", "auth_token_update_strategy") {
 			params := &elasticache.ModifyReplicationGroupInput{
 				ApplyImmediately:        aws.Bool(true),
 				ReplicationGroupId:      aws.String(d.Id()),
-				AuthTokenUpdateStrategy: aws.String("ROTATE"),
+				AuthTokenUpdateStrategy: aws.String(d.Get("auth_token_update_strategy").(string)),
 				AuthToken:               aws.String(d.Get("auth_token").(string)),
 			}
 
-			_, err := conn.ModifyReplicationGroupWithContext(ctx, params)
+			// tagging may cause this resource to not yet be available, so wait for it to be available
+			_, err := WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate), replicationGroupAvailableReadDelay)
+			if err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Replication Group (%s) to update: %s", d.Id(), err)
+			}
+
+			_, err = conn.ModifyReplicationGroupWithContext(ctx, params)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "changing auth_token for ElastiCache Replication Group (%s): %s", d.Id(), err)
 			}
 
-			_, err = WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+			_, err = WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate), replicationGroupAvailableModifyDelay)
 			if err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for ElastiCache Replication Group (%s) auth_token change: %s", d.Id(), err)
 			}
@@ -1007,7 +1097,7 @@ func modifyReplicationGroupShardConfigurationNumNodeGroups(ctx context.Context, 
 		return fmt.Errorf("modifying ElastiCache Replication Group shard configuration: %w", err)
 	}
 
-	_, err = WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+	_, err = WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate), replicationGroupAvailableModifyDelay)
 	if err != nil {
 		return fmt.Errorf("waiting for ElastiCache Replication Group (%s) shard reconfiguration completion: %w", d.Id(), err)
 	}
@@ -1030,7 +1120,7 @@ func modifyReplicationGroupShardConfigurationReplicasPerNodeGroup(ctx context.Co
 		if err != nil {
 			return fmt.Errorf("adding ElastiCache Replication Group (%s) replicas: %w", d.Id(), err)
 		}
-		_, err = WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+		_, err = WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate), replicationGroupAvailableModifyDelay)
 		if err != nil {
 			return fmt.Errorf("waiting for ElastiCache Replication Group (%s) replica addition: %w", d.Id(), err)
 		}
@@ -1044,7 +1134,7 @@ func modifyReplicationGroupShardConfigurationReplicasPerNodeGroup(ctx context.Co
 		if err != nil {
 			return fmt.Errorf("removing ElastiCache Replication Group (%s) replicas: %w", d.Id(), err)
 		}
-		_, err = WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate))
+		_, err = WaitReplicationGroupAvailable(ctx, conn, d.Id(), d.Timeout(schema.TimeoutUpdate), replicationGroupAvailableModifyDelay)
 		if err != nil {
 			return fmt.Errorf("waiting for ElastiCache Replication Group (%s) replica removal: %w", d.Id(), err)
 		}
@@ -1107,8 +1197,8 @@ func decreaseReplicationGroupNumCacheClusters(ctx context.Context, conn *elastic
 
 var validateReplicationGroupID schema.SchemaValidateFunc = validation.All(
 	validation.StringLenBetween(1, 40),
-	validation.StringMatch(regexache.MustCompile(`^[0-9a-zA-Z-]+$`), "must contain only alphanumeric characters and hyphens"),
-	validation.StringMatch(regexache.MustCompile(`^[a-zA-Z]`), "must begin with a letter"),
+	validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z-]+$`), "must contain only alphanumeric characters and hyphens"),
+	validation.StringMatch(regexache.MustCompile(`^[A-Za-z]`), "must begin with a letter"),
 	validation.StringDoesNotMatch(regexache.MustCompile(`--`), "cannot contain two consecutive hyphens"),
 	validation.StringDoesNotMatch(regexache.MustCompile(`-$`), "cannot end with a hyphen"),
 )

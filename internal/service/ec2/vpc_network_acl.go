@@ -16,6 +16,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -29,16 +30,7 @@ import (
 
 // @SDKResource("aws_network_acl", name="Network ACL")
 // @Tags(identifierAttribute="id")
-func ResourceNetworkACL() *schema.Resource {
-	networkACLRuleSetNestedBlock := &schema.Schema{
-		Type:       schema.TypeSet,
-		Optional:   true,
-		Computed:   true,
-		ConfigMode: schema.SchemaConfigModeAttr,
-		Elem:       networkACLRuleNestedBlock,
-		Set:        networkACLRuleHash,
-	}
-
+func resourceNetworkACL() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceNetworkACLCreate,
 		ReadWithoutTimeout:   resourceNetworkACLRead,
@@ -65,30 +57,43 @@ func ResourceNetworkACL() *schema.Resource {
 
 		// Keep in sync with aws_default_network_acl's schema.
 		// See notes in default_network_acl.go.
-		Schema: map[string]*schema.Schema{
-			"arn": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"egress":  networkACLRuleSetNestedBlock,
-			"ingress": networkACLRuleSetNestedBlock,
-			"owner_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"subnet_ids": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Computed: true,
-				Elem:     &schema.Schema{Type: schema.TypeString},
-			},
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
-			"vpc_id": {
-				Type:     schema.TypeString,
-				Required: true,
-				ForceNew: true,
-			},
+		SchemaFunc: func() map[string]*schema.Schema {
+			networkACLRuleSetNestedBlock := func() *schema.Schema {
+				return &schema.Schema{
+					Type:       schema.TypeSet,
+					Optional:   true,
+					Computed:   true,
+					ConfigMode: schema.SchemaConfigModeAttr,
+					Elem:       networkACLRuleNestedBlock(),
+					Set:        networkACLRuleHash,
+				}
+			}
+
+			return map[string]*schema.Schema{
+				"arn": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"egress":  networkACLRuleSetNestedBlock(),
+				"ingress": networkACLRuleSetNestedBlock(),
+				"owner_id": {
+					Type:     schema.TypeString,
+					Computed: true,
+				},
+				"subnet_ids": {
+					Type:     schema.TypeSet,
+					Optional: true,
+					Computed: true,
+					Elem:     &schema.Schema{Type: schema.TypeString},
+				},
+				names.AttrTags:    tftags.TagsSchema(),
+				names.AttrTagsAll: tftags.TagsSchemaComputed(),
+				"vpc_id": {
+					Type:     schema.TypeString,
+					Required: true,
+					ForceNew: true,
+				},
+			}
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -97,63 +102,65 @@ func ResourceNetworkACL() *schema.Resource {
 
 // NACL rule nested block definition.
 // Used in aws_network_acl and aws_default_network_acl ingress and egress rule sets.
-var networkACLRuleNestedBlock = &schema.Resource{
-	Schema: map[string]*schema.Schema{
-		"action": {
-			Type:     schema.TypeString,
-			Required: true,
-			DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
-				return strings.EqualFold(old, new)
+func networkACLRuleNestedBlock() *schema.Resource {
+	return &schema.Resource{
+		Schema: map[string]*schema.Schema{
+			"action": {
+				Type:     schema.TypeString,
+				Required: true,
+				DiffSuppressFunc: func(k, old, new string, d *schema.ResourceData) bool {
+					return strings.EqualFold(old, new)
+				},
+				ValidateFunc: validation.StringInSlice(ec2.RuleAction_Values(), true),
 			},
-			ValidateFunc: validation.StringInSlice(ec2.RuleAction_Values(), true),
-		},
-		"cidr_block": {
-			Type:         schema.TypeString,
-			Optional:     true,
-			ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
-		},
-		"from_port": {
-			Type:         schema.TypeInt,
-			Required:     true,
-			ValidateFunc: validation.IsPortNumberOrZero,
-		},
-		"icmp_code": {
-			Type:     schema.TypeInt,
-			Optional: true,
-		},
-		"icmp_type": {
-			Type:     schema.TypeInt,
-			Optional: true,
-		},
-		"ipv6_cidr_block": {
-			Type:         schema.TypeString,
-			Optional:     true,
-			ValidateFunc: verify.ValidIPv6CIDRNetworkAddress,
-		},
-		"protocol": {
-			Type:     schema.TypeString,
-			Required: true,
-			ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-				_, err := networkACLProtocolNumber(v.(string))
+			"cidr_block": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: verify.ValidIPv4CIDRNetworkAddress,
+			},
+			"from_port": {
+				Type:         schema.TypeInt,
+				Required:     true,
+				ValidateFunc: validation.IsPortNumberOrZero,
+			},
+			"icmp_code": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
+			"icmp_type": {
+				Type:     schema.TypeInt,
+				Optional: true,
+			},
+			"ipv6_cidr_block": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: verify.ValidIPv6CIDRNetworkAddress,
+			},
+			"protocol": {
+				Type:     schema.TypeString,
+				Required: true,
+				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
+					_, err := networkACLProtocolNumber(v.(string))
 
-				if err != nil {
-					errors = append(errors, fmt.Errorf("%q : %w", k, err))
-				}
+					if err != nil {
+						errors = append(errors, fmt.Errorf("%q : %w", k, err))
+					}
 
-				return
+					return
+				},
+			},
+			"rule_no": {
+				Type:         schema.TypeInt,
+				Required:     true,
+				ValidateFunc: validation.IntBetween(1, 32766),
+			},
+			"to_port": {
+				Type:         schema.TypeInt,
+				Required:     true,
+				ValidateFunc: validation.IsPortNumberOrZero,
 			},
 		},
-		"rule_no": {
-			Type:         schema.TypeInt,
-			Required:     true,
-			ValidateFunc: validation.IntBetween(1, 32766),
-		},
-		"to_port": {
-			Type:         schema.TypeInt,
-			Required:     true,
-			ValidateFunc: validation.IsPortNumberOrZero,
-		},
-	},
+	}
 }
 
 func resourceNetworkACLCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -161,11 +168,11 @@ func resourceNetworkACLCreate(ctx context.Context, d *schema.ResourceData, meta 
 	conn := meta.(*conns.AWSClient).EC2Conn(ctx)
 
 	input := &ec2.CreateNetworkAclInput{
+		ClientToken:       aws.String(id.UniqueId()),
 		TagSpecifications: getTagSpecificationsIn(ctx, ec2.ResourceTypeNetworkAcl),
 		VpcId:             aws.String(d.Get("vpc_id").(string)),
 	}
 
-	log.Printf("[DEBUG] Creating EC2 Network ACL: %s", input)
 	output, err := conn.CreateNetworkAclWithContext(ctx, input)
 
 	if err != nil {
@@ -264,6 +271,10 @@ func resourceNetworkACLDelete(ctx context.Context, d *schema.ResourceData, meta 
 
 	// Delete all NACL/Subnet associations, even if they are managed via aws_network_acl_association resources.
 	nacl, err := FindNetworkACLByID(ctx, conn, d.Id())
+
+	if tfresource.NotFound(err) {
+		return diags
+	}
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading EC2 Network ACL (%s): %s", d.Id(), err)

@@ -25,7 +25,7 @@ func validResourceName(max int) schema.SchemaValidateFunc {
 
 var validAccountAlias = validation.All(
 	validation.StringLenBetween(3, 63),
-	validation.StringMatch(regexache.MustCompile(`^[a-z0-9][a-z0-9-]+$`), "must start with an alphanumeric character and only contain lowercase alphanumeric characters and hyphens"),
+	validation.StringMatch(regexache.MustCompile(`^[0-9a-z][0-9a-z-]+$`), "must start with an alphanumeric character and only contain lowercase alphanumeric characters and hyphens"),
 	func(v interface{}, k string) (ws []string, es []error) {
 		val := v.(string)
 		if strings.Contains(val, "--") {

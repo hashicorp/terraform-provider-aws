@@ -23,31 +23,10 @@ resource "aws_ce_anomaly_monitor" "test" {
 
 resource "aws_ce_anomaly_subscription" "test" {
   name      = "DAILYSUBSCRIPTION"
-  threshold = 100
   frequency = "DAILY"
 
   monitor_arn_list = [
-    aws_ce_anomaly_monitor.test.arn,
-  ]
-
-  subscriber {
-    type    = "EMAIL"
-    address = "abc@example.com"
-  }
-}
-```
-
-### Threshold Expression Example
-
-#### For a Specific Dimension
-
-```terraform
-resource "aws_ce_anomaly_subscription" "test" {
-  name      = "AWSServiceMonitor"
-  frequency = "DAILY"
-
-  monitor_arn_list = [
-    aws_ce_anomaly_monitor.test.arn,
+    aws_ce_anomaly_monitor.test.arn
   ]
 
   subscriber {
@@ -58,8 +37,36 @@ resource "aws_ce_anomaly_subscription" "test" {
   threshold_expression {
     dimension {
       key           = "ANOMALY_TOTAL_IMPACT_ABSOLUTE"
-      values        = ["100.0"]
       match_options = ["GREATER_THAN_OR_EQUAL"]
+      values        = ["100"]
+    }
+  }
+}
+```
+
+### Threshold Expression Example
+
+#### Using a Percentage Threshold
+
+```terraform
+resource "aws_ce_anomaly_subscription" "test" {
+  name      = "AWSServiceMonitor"
+  frequency = "DAILY"
+
+  monitor_arn_list = [
+    aws_ce_anomaly_monitor.test.arn
+  ]
+
+  subscriber {
+    type    = "EMAIL"
+    address = "abc@example.com"
+  }
+
+  threshold_expression {
+    dimension {
+      key           = "ANOMALY_TOTAL_IMPACT_PERCENTAGE"
+      match_options = ["GREATER_THAN_OR_EQUAL"]
+      values        = ["100"]
     }
   }
 }
@@ -73,7 +80,7 @@ resource "aws_ce_anomaly_subscription" "test" {
   frequency = "DAILY"
 
   monitor_arn_list = [
-    aws_ce_anomaly_monitor.test.arn,
+    aws_ce_anomaly_monitor.test.arn
   ]
 
   subscriber {
@@ -114,7 +121,7 @@ data "aws_iam_policy_document" "sns_topic_policy" {
     sid = "AWSAnomalyDetectionSNSPublishingPermissions"
 
     actions = [
-      "SNS:Publish",
+      "SNS:Publish"
     ]
 
     effect = "Allow"
@@ -125,7 +132,7 @@ data "aws_iam_policy_document" "sns_topic_policy" {
     }
 
     resources = [
-      aws_sns_topic.cost_anomaly_updates.arn,
+      aws_sns_topic.cost_anomaly_updates.arn
     ]
   }
 
@@ -141,7 +148,7 @@ data "aws_iam_policy_document" "sns_topic_policy" {
       "SNS:ListSubscriptionsByTopic",
       "SNS:GetTopicAttributes",
       "SNS:DeleteTopic",
-      "SNS:AddPermission",
+      "SNS:AddPermission"
     ]
 
     condition {
@@ -149,7 +156,7 @@ data "aws_iam_policy_document" "sns_topic_policy" {
       variable = "AWS:SourceOwner"
 
       values = [
-        var.account-id,
+        var.account_id
       ]
     }
 
@@ -161,7 +168,7 @@ data "aws_iam_policy_document" "sns_topic_policy" {
     }
 
     resources = [
-      aws_sns_topic.cost_anomaly_updates.arn,
+      aws_sns_topic.cost_anomaly_updates.arn
     ]
   }
 }
@@ -180,11 +187,10 @@ resource "aws_ce_anomaly_monitor" "anomaly_monitor" {
 
 resource "aws_ce_anomaly_subscription" "realtime_subscription" {
   name      = "RealtimeAnomalySubscription"
-  threshold = 0
   frequency = "IMMEDIATE"
 
   monitor_arn_list = [
-    aws_ce_anomaly_monitor.anomaly_monitor.arn,
+    aws_ce_anomaly_monitor.anomaly_monitor.arn
   ]
 
   subscriber {
@@ -193,7 +199,7 @@ resource "aws_ce_anomaly_subscription" "realtime_subscription" {
   }
 
   depends_on = [
-    aws_sns_topic_policy.default,
+    aws_sns_topic_policy.default
   ]
 }
 ```
@@ -209,7 +215,6 @@ The following arguments are required:
 * `subscriber` - (Required) A subscriber configuration. Multiple subscribers can be defined.
     * `type` - (Required) The type of subscription. Valid Values: `SNS` | `EMAIL`.
     * `address` - (Required) The address of the subscriber. If type is `SNS`, this will be the arn of the sns topic. If type is `EMAIL`, this will be the destination email address.
-* `threshold` - (Optional) The dollar value that triggers a notification if the threshold is exceeded. Depracated, use `threshold_expression` instead.
 * `threshold_expression` - (Optional) An Expression object used to specify the anomalies that you want to generate alerts for. See [Threshold Expression](#threshold-expression).
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 

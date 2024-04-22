@@ -7,6 +7,8 @@ import (
 	"context"
 	"time"
 
+	elasticache_v2 "github.com/aws/aws-sdk-go-v2/service/elasticache"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/elasticache/types"
 	"github.com/aws/aws-sdk-go/service/elasticache"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 )
@@ -16,15 +18,17 @@ const (
 	ReplicationGroupDefaultUpdatedTimeout = 40 * time.Minute
 	ReplicationGroupDefaultDeletedTimeout = 40 * time.Minute
 
-	replicationGroupAvailableMinTimeout = 10 * time.Second
-	replicationGroupAvailableDelay      = 30 * time.Second
+	replicationGroupAvailableMinTimeout  = 10 * time.Second
+	replicationGroupAvailableCreateDelay = 30 * time.Second
+	replicationGroupAvailableModifyDelay = 30 * time.Second
+	replicationGroupAvailableReadDelay   = 0 * time.Second
 
 	replicationGroupDeletedMinTimeout = 10 * time.Second
 	replicationGroupDeletedDelay      = 30 * time.Second
 )
 
 // WaitReplicationGroupAvailable waits for a ReplicationGroup to return Available
-func WaitReplicationGroupAvailable(ctx context.Context, conn *elasticache.ElastiCache, replicationGroupID string, timeout time.Duration) (*elasticache.ReplicationGroup, error) {
+func WaitReplicationGroupAvailable(ctx context.Context, conn *elasticache.ElastiCache, replicationGroupID string, timeout time.Duration, delay time.Duration) (*elasticache.ReplicationGroup, error) {
 	stateConf := &retry.StateChangeConf{
 		Pending: []string{
 			ReplicationGroupStatusCreating,
@@ -35,7 +39,7 @@ func WaitReplicationGroupAvailable(ctx context.Context, conn *elasticache.Elasti
 		Refresh:    StatusReplicationGroup(ctx, conn, replicationGroupID),
 		Timeout:    timeout,
 		MinTimeout: replicationGroupAvailableMinTimeout,
-		Delay:      replicationGroupAvailableDelay,
+		Delay:      delay,
 	}
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
@@ -122,6 +126,58 @@ func waitCacheClusterAvailable(ctx context.Context, conn *elasticache.ElastiCach
 		return v, err
 	}
 	return nil, err
+}
+
+const (
+	ServerlessCacheAvailableMinTimeout = 10 * time.Second
+	ServerlessCacheAvailableDelay      = 30 * time.Second
+
+	ServerlessCacheDeletedMinTimeout = 10 * time.Second
+	ServerlessCacheDeletedDelay      = 30 * time.Second
+)
+
+// waitServerlessCacheAvailable waits for a cache cluster to return available
+func waitServerlessCacheAvailable(ctx context.Context, conn *elasticache_v2.Client, cacheClusterID string, timeout time.Duration) (awstypes.ServerlessCache, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{
+			ServerlessCacheCreating,
+			ServerlessCacheDeleting,
+			ServerlessCacheModifying,
+		},
+		Target:     []string{ServerlessCacheAvailable},
+		Refresh:    statusServerlessCache(ctx, conn, cacheClusterID),
+		Timeout:    timeout,
+		MinTimeout: ServerlessCacheAvailableMinTimeout,
+		Delay:      ServerlessCacheAvailableDelay,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if v, ok := outputRaw.(awstypes.ServerlessCache); ok {
+		return v, err
+	}
+	return awstypes.ServerlessCache{}, err
+}
+
+// waitServerlessCacheDeleted waits for a cache cluster to be deleted
+func waitServerlessCacheDeleted(ctx context.Context, conn *elasticache_v2.Client, cacheClusterID string, timeout time.Duration) (awstypes.ServerlessCache, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending: []string{
+			ServerlessCacheCreating,
+			ServerlessCacheDeleting,
+			ServerlessCacheModifying,
+		},
+		Target:     []string{},
+		Refresh:    statusServerlessCache(ctx, conn, cacheClusterID),
+		Timeout:    timeout,
+		MinTimeout: ServerlessCacheDeletedMinTimeout,
+		Delay:      ServerlessCacheDeletedDelay,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+	if v, ok := outputRaw.(awstypes.ServerlessCache); ok {
+		return v, err
+	}
+	return awstypes.ServerlessCache{}, err
 }
 
 // WaitCacheClusterDeleted waits for a Cache Cluster to be deleted

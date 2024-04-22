@@ -19,6 +19,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -156,6 +157,8 @@ const (
 )
 
 func resourceCollaborationCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).CleanRoomsClient(ctx)
 
 	creatorAbilities := d.Get("creator_member_abilities").([]interface{})
@@ -170,7 +173,7 @@ func resourceCollaborationCreate(ctx context.Context, d *schema.ResourceData, me
 
 	queryLogStatus, err := expandQueryLogStatus(d.Get("query_log_status").(string))
 	if err != nil {
-		return create.DiagError(names.CleanRooms, create.ErrActionCreating, ResNameCollaboration, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionCreating, ResNameCollaboration, d.Get("name").(string), err)
 	}
 	input.QueryLogStatus = queryLogStatus
 
@@ -184,18 +187,20 @@ func resourceCollaborationCreate(ctx context.Context, d *schema.ResourceData, me
 
 	out, err := conn.CreateCollaboration(ctx, input)
 	if err != nil {
-		return create.DiagError(names.CleanRooms, create.ErrActionCreating, ResNameCollaboration, d.Get("name").(string), err)
+		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionCreating, ResNameCollaboration, d.Get("name").(string), err)
 	}
 
 	if out == nil || out.Collaboration == nil {
-		return create.DiagError(names.CleanRooms, create.ErrActionCreating, ResNameCollaboration, d.Get("name").(string), errors.New("empty output"))
+		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionCreating, ResNameCollaboration, d.Get("name").(string), errors.New("empty output"))
 	}
 	d.SetId(aws.ToString(out.Collaboration.Id))
 
-	return resourceCollaborationRead(ctx, d, meta)
+	return append(diags, resourceCollaborationRead(ctx, d, meta)...)
 }
 
 func resourceCollaborationRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).CleanRoomsClient(ctx)
 
 	out, err := findCollaborationByID(ctx, conn, d.Id())
@@ -203,11 +208,11 @@ func resourceCollaborationRead(ctx context.Context, d *schema.ResourceData, meta
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] CleanRooms Collaboration (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.CleanRooms, create.ErrActionReading, ResNameCollaboration, d.Id(), err)
+		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionReading, ResNameCollaboration, d.Id(), err)
 	}
 
 	collaboration := out.Collaboration
@@ -219,22 +224,22 @@ func resourceCollaborationRead(ctx context.Context, d *schema.ResourceData, meta
 	d.Set("update_time", collaboration.UpdateTime.String())
 	d.Set("query_log_status", collaboration.QueryLogStatus)
 	if err := d.Set("data_encryption_metadata", flattenDataEncryptionMetadata(collaboration.DataEncryptionMetadata)); err != nil {
-		return diag.Errorf("setting data_encryption_metadata: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting data_encryption_metadata: %s", err)
 	}
 
 	membersOut, err := findMembersByCollaborationId(ctx, conn, d.Id())
 	if err != nil {
-		return create.DiagError(names.CleanRooms, create.ErrActionSetting, ResNameCollaboration, d.Id(), err)
+		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionSetting, ResNameCollaboration, d.Id(), err)
 	}
 
 	if err := d.Set("member", flattenMembers(membersOut.MemberSummaries, collaboration.CreatorAccountId)); err != nil {
-		return diag.Errorf("setting member: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting member: %s", err)
 	}
 	if err := d.Set("creator_member_abilities", flattenCreatorAbilities(membersOut.MemberSummaries, collaboration.CreatorAccountId)); err != nil {
-		return diag.Errorf("setting creator_member_abilities: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting creator_member_abilities: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceCollaborationUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -256,7 +261,7 @@ func resourceCollaborationUpdate(ctx context.Context, d *schema.ResourceData, me
 
 		_, err := conn.UpdateCollaboration(ctx, input)
 		if err != nil {
-			return create.DiagError(names.CleanRooms, create.ErrActionUpdating, ResNameCollaboration, d.Id(), err)
+			return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionUpdating, ResNameCollaboration, d.Id(), err)
 		}
 	}
 
@@ -264,6 +269,8 @@ func resourceCollaborationUpdate(ctx context.Context, d *schema.ResourceData, me
 }
 
 func resourceCollaborationDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).CleanRoomsClient(ctx)
 
 	log.Printf("[INFO] Deleting CleanRooms Collaboration %s", d.Id())
@@ -272,14 +279,14 @@ func resourceCollaborationDelete(ctx context.Context, d *schema.ResourceData, me
 	})
 
 	if errs.IsA[*types.AccessDeniedException](err) {
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return create.DiagError(names.CleanRooms, create.ErrActionDeleting, ResNameCollaboration, d.Id(), err)
+		return create.AppendDiagError(diags, names.CleanRooms, create.ErrActionDeleting, ResNameCollaboration, d.Id(), err)
 	}
 
-	return nil
+	return diags
 }
 
 func findCollaborationByID(ctx context.Context, conn *cleanrooms.Client, id string) (*cleanrooms.GetCollaborationOutput, error) {

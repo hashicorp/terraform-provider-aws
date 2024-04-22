@@ -17,6 +17,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfrds "github.com/hashicorp/terraform-provider-aws/internal/service/rds"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccRDSClusterSnapshot_basic(t *testing.T) {
@@ -27,7 +28,7 @@ func TestAccRDSClusterSnapshot_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterSnapshotDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -68,7 +69,7 @@ func TestAccRDSClusterSnapshot_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, rds.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.RDSServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckClusterSnapshotDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -165,27 +166,30 @@ func testAccCheckClusterSnapshotExists(ctx context.Context, n string, v *rds.DBC
 }
 
 func testAccClusterSnapshotConfig_base(rName string) string {
-	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		acctest.ConfigVPCWithSubnets(rName, 2),
+		fmt.Sprintf(`
 resource "aws_db_subnet_group" "test" {
   name       = %[1]q
   subnet_ids = aws_subnet.test[*].id
 }
 
 resource "aws_rds_cluster" "test" {
-  cluster_identifier              = %[1]q
-  db_subnet_group_name            = aws_db_subnet_group.test.name
-  database_name                   = "test"
-  engine                          = "aurora-mysql"
-  master_username                 = "tfacctest"
-  master_password                 = "avoid-plaintext-passwords"
-  db_cluster_parameter_group_name = "default.aurora-mysql5.7"
-  skip_final_snapshot             = true
+  cluster_identifier   = %[1]q
+  db_subnet_group_name = aws_db_subnet_group.test.name
+  database_name        = "test"
+  engine               = "aurora-mysql"
+  master_username      = "tfacctest"
+  master_password      = "avoid-plaintext-passwords"
+  skip_final_snapshot  = true
 }
 `, rName))
 }
 
 func testAccClusterSnapshotConfig_basic(rName string) string {
-	return acctest.ConfigCompose(testAccClusterSnapshotConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccClusterSnapshotConfig_base(rName),
+		fmt.Sprintf(`
 resource "aws_db_cluster_snapshot" "test" {
   db_cluster_identifier          = aws_rds_cluster.test.id
   db_cluster_snapshot_identifier = %[1]q
@@ -194,7 +198,9 @@ resource "aws_db_cluster_snapshot" "test" {
 }
 
 func testAccClusterSnapshotConfig_tags1(rName, tagKey1, tagValue1 string) string {
-	return acctest.ConfigCompose(testAccClusterSnapshotConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccClusterSnapshotConfig_base(rName),
+		fmt.Sprintf(`
 resource "aws_db_cluster_snapshot" "test" {
   db_cluster_identifier          = aws_rds_cluster.test.id
   db_cluster_snapshot_identifier = %[1]q
@@ -207,7 +213,9 @@ resource "aws_db_cluster_snapshot" "test" {
 }
 
 func testAccClusterSnapshotConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 string) string {
-	return acctest.ConfigCompose(testAccClusterSnapshotConfig_base(rName), fmt.Sprintf(`
+	return acctest.ConfigCompose(
+		testAccClusterSnapshotConfig_base(rName),
+		fmt.Sprintf(`
 resource "aws_db_cluster_snapshot" "test" {
   db_cluster_identifier          = aws_rds_cluster.test.id
   db_cluster_snapshot_identifier = %[1]q

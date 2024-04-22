@@ -1,0 +1,3 @@
+```release-note:bug
+resource/aws_quicksight_data_source: Set all parameters to update aws_quicksight_data_source
+```

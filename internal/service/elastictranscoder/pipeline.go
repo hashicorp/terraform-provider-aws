@@ -117,7 +117,7 @@ func ResourcePipeline() *schema.Resource {
 				Computed: true,
 				ForceNew: true,
 				ValidateFunc: validation.All(
-					validation.StringMatch(regexache.MustCompile(`^[.0-9A-Za-z-_]+$`),
+					validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_.-]+$`),
 						"only alphanumeric characters, hyphens, underscores, and periods allowed"),
 					validation.StringLenBetween(1, 40),
 				),

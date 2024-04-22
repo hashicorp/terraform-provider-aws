@@ -22,7 +22,7 @@ func DataSourceIPAMPools() *schema.Resource {
 		ReadWithoutTimeout: dataSourceIPAMPoolsRead,
 
 		Schema: map[string]*schema.Schema{
-			"filter": CustomFiltersSchema(),
+			"filter": customFiltersSchema(),
 			"ipam_pools": {
 				Type:     schema.TypeSet,
 				Computed: true,
@@ -63,17 +63,13 @@ func DataSourceIPAMPools() *schema.Resource {
 						},
 						"id": {
 							Type:     schema.TypeString,
-							Optional: true,
+							Computed: true,
 						},
 						"ipam_scope_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
 						"ipam_scope_type": {
-							Type:     schema.TypeString,
-							Computed: true,
-						},
-						"ipam_pool_id": {
 							Type:     schema.TypeString,
 							Computed: true,
 						},
@@ -112,7 +108,7 @@ func dataSourceIPAMPoolsRead(ctx context.Context, d *schema.ResourceData, meta i
 
 	input := &ec2.DescribeIpamPoolsInput{}
 
-	input.Filters = append(input.Filters, BuildCustomFilterList(
+	input.Filters = append(input.Filters, newCustomFilterList(
 		d.Get("filter").(*schema.Set),
 	)...)
 
@@ -152,6 +148,7 @@ func flattenIPAMPool(ctx context.Context, p *ec2.IpamPool, ignoreTagsConfig *tft
 	pool["auto_import"] = aws.BoolValue(p.AutoImport)
 	pool["aws_service"] = aws.StringValue(p.AwsService)
 	pool["description"] = aws.StringValue(p.Description)
+	pool["id"] = aws.StringValue(p.IpamPoolId)
 	pool["ipam_scope_id"] = strings.Split(aws.StringValue(p.IpamScopeArn), "/")[1]
 	pool["ipam_scope_type"] = aws.StringValue(p.IpamScopeType)
 	pool["locale"] = aws.StringValue(p.Locale)
@@ -159,7 +156,6 @@ func flattenIPAMPool(ctx context.Context, p *ec2.IpamPool, ignoreTagsConfig *tft
 	pool["publicly_advertisable"] = aws.BoolValue(p.PubliclyAdvertisable)
 	pool["source_ipam_pool_id"] = aws.StringValue(p.SourceIpamPoolId)
 	pool["state"] = aws.StringValue(p.State)
-
 	if v := p.Tags; v != nil {
 		pool["tags"] = KeyValueTags(ctx, v).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()
 	}

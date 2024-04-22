@@ -17,6 +17,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws/ratelimit"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend"
 	"github.com/aws/aws-sdk-go-v2/service/comprehend/types"
+	ec2_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ec2"
+	ec2types "github.com/aws/aws-sdk-go-v2/service/ec2/types"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/go-multierror"
@@ -291,6 +293,8 @@ func resourceDocumentClassifierCreate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceDocumentClassifierRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ComprehendClient(ctx)
 
 	out, err := FindDocumentClassifierByID(ctx, conn, d.Id())
@@ -298,11 +302,11 @@ func resourceDocumentClassifierRead(ctx context.Context, d *schema.ResourceData,
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Comprehend Document Classifier (%s) not found, removing from state", d.Id())
 		d.SetId("")
-		return nil
+		return diags
 	}
 
 	if err != nil {
-		return diag.Errorf("reading Comprehend Document Classifier (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Comprehend Document Classifier (%s): %s", d.Id(), err)
 	}
 
 	d.Set("arn", out.DocumentClassifierArn)
@@ -317,23 +321,23 @@ func resourceDocumentClassifierRead(ctx context.Context, d *schema.ResourceData,
 	// DescribeDocumentClassifier() doesn't return the model name
 	name, err := DocumentClassifierParseARN(aws.ToString(out.DocumentClassifierArn))
 	if err != nil {
-		return diag.Errorf("reading Comprehend Document Classifier (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading Comprehend Document Classifier (%s): %s", d.Id(), err)
 	}
 	d.Set("name", name)
 
 	if err := d.Set("input_data_config", flattenDocumentClassifierInputDataConfig(out.InputDataConfig)); err != nil {
-		return diag.Errorf("setting input_data_config: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting input_data_config: %s", err)
 	}
 
 	if err := d.Set("output_data_config", flattenDocumentClassifierOutputDataConfig(out.OutputDataConfig)); err != nil {
-		return diag.Errorf("setting output_data_config: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting output_data_config: %s", err)
 	}
 
 	if err := d.Set("vpc_config", flattenVPCConfig(out.VpcConfig)); err != nil {
-		return diag.Errorf("setting vpc_config: %s", err)
+		return sdkdiag.AppendErrorf(diags, "setting vpc_config: %s", err)
 	}
 
-	return nil
+	return diags
 }
 
 func resourceDocumentClassifierUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
@@ -360,6 +364,8 @@ func resourceDocumentClassifierUpdate(ctx context.Context, d *schema.ResourceDat
 }
 
 func resourceDocumentClassifierDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	conn := meta.(*conns.AWSClient).ComprehendClient(ctx)
 
 	log.Printf("[INFO] Stopping Comprehend Document Classifier (%s)", d.Id())
@@ -370,31 +376,31 @@ func resourceDocumentClassifierDelete(ctx context.Context, d *schema.ResourceDat
 	if err != nil {
 		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {
-			return nil
+			return diags
 		}
 
-		return diag.Errorf("stopping Comprehend Document Classifier (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "stopping Comprehend Document Classifier (%s): %s", d.Id(), err)
 	}
 
 	if _, err := waitDocumentClassifierStopped(ctx, conn, d.Id(), d.Timeout(schema.TimeoutDelete)); err != nil {
 		var nfe *types.ResourceNotFoundException
 		if errors.As(err, &nfe) {
-			return nil
+			return diags
 		}
 
-		return diag.Errorf("waiting for Comprehend Document Classifier (%s) to be stopped: %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "waiting for Comprehend Document Classifier (%s) to be stopped: %s", d.Id(), err)
 	}
 
 	name, err := DocumentClassifierParseARN(d.Id())
 	if err != nil {
-		return diag.Errorf("deleting Comprehend Document Classifier (%s): %s", d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "deleting Comprehend Document Classifier (%s): %s", d.Id(), err)
 	}
 
 	log.Printf("[INFO] Deleting Comprehend Document Classifier (%s)", name)
 
 	versions, err := ListDocumentClassifierVersionsByName(ctx, conn, name)
 	if err != nil {
-		return diag.Errorf("deleting Comprehend Document Classifier (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "deleting Comprehend Document Classifier (%s): %s", name, err)
 	}
 
 	var g multierror.Group
@@ -415,10 +421,10 @@ func resourceDocumentClassifierDelete(ctx context.Context, d *schema.ResourceDat
 				return fmt.Errorf("waiting for version (%s) to be deleted: %s", aws.ToString(v.VersionName), err)
 			}
 
-			ec2Conn := meta.(*conns.AWSClient).EC2Conn(ctx)
-			networkInterfaces, err := tfec2.FindNetworkInterfaces(ctx, ec2Conn, &ec2.DescribeNetworkInterfacesInput{
-				Filters: []*ec2.Filter{
-					tfec2.NewFilter(fmt.Sprintf("tag:%s", documentClassifierTagKey), []string{aws.ToString(v.DocumentClassifierArn)}),
+			ec2Conn := meta.(*conns.AWSClient).EC2Client(ctx)
+			networkInterfaces, err := tfec2.FindNetworkInterfacesV2(ctx, ec2Conn, &ec2_sdkv2.DescribeNetworkInterfacesInput{
+				Filters: []ec2types.Filter{
+					tfec2.NewFilterV2("tag:"+documentClassifierTagKey, []string{aws.ToString(v.DocumentClassifierArn)}),
 				},
 			})
 			if err != nil {
@@ -452,13 +458,15 @@ func resourceDocumentClassifierDelete(ctx context.Context, d *schema.ResourceDat
 	}
 
 	if err := g.Wait(); err != nil {
-		return diag.Errorf("deleting Comprehend Document Classifier (%s): %s", name, err)
+		return sdkdiag.AppendErrorf(diags, "deleting Comprehend Document Classifier (%s): %s", name, err)
 	}
 
-	return nil
+	return diags
 }
 
 func documentClassifierPublishVersion(ctx context.Context, conn *comprehend.Client, d *schema.ResourceData, versionName *string, action string, timeout time.Duration, awsClient *conns.AWSClient) diag.Diagnostics {
+	var diags diag.Diagnostics
+
 	in := &comprehend.CreateDocumentClassifierInput{
 		DataAccessRoleArn:      aws.String(d.Get("data_access_role_arn").(string)),
 		InputDataConfig:        expandDocumentClassifierInputDataConfig(d),
@@ -512,11 +520,11 @@ func documentClassifierPublishVersion(ctx context.Context, conn *comprehend.Clie
 		out, err = conn.CreateDocumentClassifier(ctx, in)
 	}
 	if err != nil {
-		return diag.Errorf("%s Amazon Comprehend Document Classifier (%s): %s", action, d.Get("name").(string), err)
+		return sdkdiag.AppendErrorf(diags, "%s Amazon Comprehend Document Classifier (%s): %s", action, d.Get("name").(string), err)
 	}
 
 	if out == nil || out.DocumentClassifierArn == nil {
-		return diag.Errorf("%s Amazon Comprehend Document Classifier (%s): empty output", action, d.Get("name").(string))
+		return sdkdiag.AppendErrorf(diags, "%s Amazon Comprehend Document Classifier (%s): empty output", action, d.Get("name").(string))
 	}
 
 	d.SetId(aws.ToString(out.DocumentClassifierArn))
@@ -530,7 +538,6 @@ func documentClassifierPublishVersion(ctx context.Context, conn *comprehend.Clie
 		return err
 	})
 
-	var diags diag.Diagnostics
 	var tobe string
 	if action == create.ErrActionCreating {
 		tobe = "to be created"
@@ -742,7 +749,7 @@ func flattenDocumentClassifierOutputDataConfig(apiObject *types.DocumentClassifi
 		"output_s3_uri": s3Uri,
 	}
 
-	re := regexache.MustCompile(`^(s3://[-a-z0-9.]{3,63}(/.+)?/)[-a-zA-Z0-9]+/output/output\.tar\.gz`)
+	re := regexache.MustCompile(`^(s3://[0-9a-z.-]{3,63}(/.+)?/)[0-9A-Za-z-]+/output/output\.tar\.gz`)
 	match := re.FindStringSubmatch(s3Uri)
 	if match != nil && match[1] != "" {
 		m["s3_uri"] = match[1]

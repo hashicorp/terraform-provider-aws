@@ -1,9 +1,6 @@
 // Copyright (c) HashiCorp, Inc.
 // SPDX-License-Identifier: MPL-2.0
 
-//go:build sweep
-// +build sweep
-
 package devicefarm
 
 import (
@@ -15,9 +12,10 @@ import (
 	"github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
+	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv1"
 )
 
-func init() {
+func RegisterSweepers() {
 	resource.AddTestSweepers("aws_devicefarm_project", &resource.Sweeper{
 		Name: "aws_devicefarm_project",
 		F:    sweepProjects,
@@ -76,7 +74,7 @@ func sweepProjects(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping DeviceFarm Project for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping DeviceFarm Project sweep for %s: %s", region, errs)
 		return nil
 	}
@@ -131,7 +129,7 @@ func sweepTestGridProjects(region string) error {
 		errs = multierror.Append(errs, fmt.Errorf("error sweeping DeviceFarm Test Grid Project for %s: %w", region, err))
 	}
 
-	if sweep.SkipSweepError(err) {
+	if awsv1.SkipSweepError(err) {
 		log.Printf("[WARN] Skipping DeviceFarm Test Grid Project sweep for %s: %s", region, errs)
 		return nil
 	}

@@ -66,7 +66,7 @@ func ResourceWindowsFileSystem() *schema.Resource {
 					Type: schema.TypeString,
 					ValidateFunc: validation.All(
 						validation.StringLenBetween(4, 253),
-						// validation.StringMatch(regexache.MustCompile(`^[A-Za-z0-9]([.][A-Za-z0-9][A-Za-z0-9-]*[A-Za-z0-9])+$`), "must be in the fqdn format hostname.domain"),
+						// validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z]([.][0-9A-Za-z][0-9A-Za-z-]*[0-9A-Za-z])+$`), "must be in the fqdn format hostname.domain"),
 					),
 				},
 			},
@@ -488,7 +488,7 @@ func resourceWindowsFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 				return sdkdiag.AppendErrorf(diags, "associating FSx for Windows File Server File System (%s) aliases: %s", d.Id(), err)
 			}
 
-			if _, err := waitAdministrativeActionCompleted(ctx, conn, d.Id(), fsx.AdministrativeActionTypeFileSystemAliasAssociation, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			if _, err := waitFileSystemAdministrativeActionCompleted(ctx, conn, d.Id(), fsx.AdministrativeActionTypeFileSystemAliasAssociation, d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for FSx for Windows File Server File System (%s) administrative action (%s) complete: %s", d.Id(), fsx.AdministrativeActionTypeFileSystemAliasAssociation, err)
 			}
 		}
@@ -505,7 +505,7 @@ func resourceWindowsFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 				return sdkdiag.AppendErrorf(diags, "disassociating FSx for Windows File Server File System (%s) aliases: %s", d.Id(), err)
 			}
 
-			if _, err := waitAdministrativeActionCompleted(ctx, conn, d.Id(), fsx.AdministrativeActionTypeFileSystemAliasDisassociation, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			if _, err := waitFileSystemAdministrativeActionCompleted(ctx, conn, d.Id(), fsx.AdministrativeActionTypeFileSystemAliasDisassociation, d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for FSx for Windows File Server File System (%s) administrative action (%s) complete: %s", d.Id(), fsx.AdministrativeActionTypeFileSystemAliasDisassociation, err)
 			}
 		}
@@ -533,6 +533,10 @@ func resourceWindowsFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 
 			if _, err := waitFileSystemUpdated(ctx, conn, d.Id(), startTime, d.Timeout(schema.TimeoutUpdate)); err != nil {
 				return sdkdiag.AppendErrorf(diags, "waiting for FSx Windows File Server File System (%s) update: %s", d.Id(), err)
+			}
+
+			if _, err := waitFileSystemAdministrativeActionCompleted(ctx, conn, d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, d.Timeout(schema.TimeoutUpdate)); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for FSx Windows File Server File System (%s) administrative action (%s) complete: %s", d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, err)
 			}
 		}
 	}
@@ -585,6 +589,10 @@ func resourceWindowsFileSystemUpdate(ctx context.Context, d *schema.ResourceData
 
 		if _, err := waitFileSystemUpdated(ctx, conn, d.Id(), startTime, d.Timeout(schema.TimeoutUpdate)); err != nil {
 			return sdkdiag.AppendErrorf(diags, "waiting for FSx Windows File Server File System (%s) update: %s", d.Id(), err)
+		}
+
+		if _, err := waitFileSystemAdministrativeActionCompleted(ctx, conn, d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, d.Timeout(schema.TimeoutUpdate)); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for FSx Windows File Server File System (%s) administrative action (%s) complete: %s", d.Id(), fsx.AdministrativeActionTypeFileSystemUpdate, err)
 		}
 	}
 
@@ -708,9 +716,21 @@ func expandWindowsAuditLogCreateConfiguration(l []interface{}) *fsx.WindowsAudit
 	}
 
 	data := l[0].(map[string]interface{})
+	fileAccessAuditLogLevel, ok1 := data["file_access_audit_log_level"].(string)
+	fileShareAccessAuditLogLevel, ok2 := data["file_share_access_audit_log_level"].(string)
+
+	if !ok1 || !ok2 {
+		return nil
+	}
+
 	req := &fsx.WindowsAuditLogCreateConfiguration{
-		FileAccessAuditLogLevel:      aws.String(data["file_access_audit_log_level"].(string)),
-		FileShareAccessAuditLogLevel: aws.String(data["file_share_access_audit_log_level"].(string)),
+		FileAccessAuditLogLevel:      aws.String(fileAccessAuditLogLevel),
+		FileShareAccessAuditLogLevel: aws.String(fileShareAccessAuditLogLevel),
+	}
+
+	// audit_log_destination cannot be included in the request if the log levels are disabled
+	if fileAccessAuditLogLevel == fsx.WindowsAccessAuditLogLevelDisabled && fileShareAccessAuditLogLevel == fsx.WindowsAccessAuditLogLevelDisabled {
+		return req
 	}
 
 	if v, ok := data["audit_log_destination"].(string); ok && v != "" {

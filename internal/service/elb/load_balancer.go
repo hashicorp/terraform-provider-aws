@@ -6,6 +6,7 @@ package elb
 import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
 	"log"
 	"strconv"
@@ -13,15 +14,13 @@ import ( // nosemgrep:ci.semgrep.aws.multiple-service-imports
 	"time"
 
 	"github.com/YakDriver/regexache"
+	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/aws/arn"
-	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/aws/aws-sdk-go/service/elb"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
-	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
-	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
@@ -233,6 +232,7 @@ func ResourceLoadBalancer() *schema.Resource {
 			"name_prefix": {
 				Type:          schema.TypeString,
 				Optional:      true,
+				Computed:      true,
 				ForceNew:      true,
 				ConflictsWith: []string{"name"},
 				ValidateFunc:  validNamePrefix,
@@ -272,26 +272,19 @@ func resourceLoadBalancerCreate(ctx context.Context, d *schema.ResourceData, met
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).ELBConn(ctx)
 
-	var elbName string
-	if v, ok := d.GetOk("name"); ok {
-		elbName = v.(string)
-	} else {
-		if v, ok := d.GetOk("name_prefix"); ok {
-			elbName = id.PrefixedUniqueId(v.(string))
-		} else {
-			elbName = id.PrefixedUniqueId("tf-lb-")
-		}
-	}
-
 	listeners, err := ExpandListeners(d.Get("listener").(*schema.Set).List())
-
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
 	}
 
+	elbName := create.NewNameGenerator(
+		create.WithConfiguredName(d.Get("name").(string)),
+		create.WithConfiguredPrefix(d.Get("name_prefix").(string)),
+		create.WithDefaultPrefix("tf-lb-"),
+	).Generate()
 	input := &elb.CreateLoadBalancerInput{
-		LoadBalancerName: aws.String(elbName),
 		Listeners:        listeners,
+		LoadBalancerName: aws.String(elbName),
 		Tags:             getTagsIn(ctx),
 	}
 
@@ -370,6 +363,7 @@ func resourceLoadBalancerRead(ctx context.Context, d *schema.ResourceData, meta 
 	d.Set("internal", scheme)
 	d.Set("listener", flattenListeners(lb.ListenerDescriptions))
 	d.Set("name", lb.LoadBalancerName)
+	d.Set("name_prefix", create.NamePrefixFromName(aws.StringValue(lb.LoadBalancerName)))
 	d.Set("security_groups", flex.FlattenStringList(lb.SecurityGroups))
 	d.Set("subnets", flex.FlattenStringList(lb.Subnets))
 	d.Set("zone_id", lb.CanonicalHostedZoneNameID)
@@ -742,7 +736,7 @@ func resourceLoadBalancerDelete(ctx context.Context, d *schema.ResourceData, met
 		return sdkdiag.AppendErrorf(diags, "deleting ELB Classic Load Balancer (%s): %s", d.Id(), err)
 	}
 
-	err = deleteNetworkInterfaces(ctx, meta.(*conns.AWSClient).EC2Conn(ctx), d.Id())
+	err = deleteNetworkInterfaces(ctx, meta.(*conns.AWSClient).EC2Client(ctx), d.Id())
 
 	if err != nil {
 		diags = sdkdiag.AppendWarningf(diags, "cleaning up ELB Classic Load Balancer (%s) ENIs: %s", d.Id(), err)
@@ -936,15 +930,15 @@ func validateListenerProtocol() schema.SchemaValidateFunc {
 // but the cleanup is asynchronous and may take time
 // which then blocks IGW, SG or VPC on deletion
 // So we make the cleanup "synchronous" here
-func deleteNetworkInterfaces(ctx context.Context, conn *ec2.EC2, name string) error {
+func deleteNetworkInterfaces(ctx context.Context, conn *ec2.Client, name string) error {
 	// https://aws.amazon.com/premiumsupport/knowledge-center/elb-find-load-balancer-IP/.
-	networkInterfaces, err := tfec2.FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescription(ctx, conn, "amazon-elb", "ELB "+name)
+	networkInterfaces, err := tfec2.FindNetworkInterfacesByAttachmentInstanceOwnerIDAndDescriptionV2(ctx, conn, "amazon-elb", "ELB "+name)
 
 	if err != nil {
 		return err
 	}
 
-	var errs *multierror.Error
+	var errs []error
 
 	for _, networkInterface := range networkInterfaces {
 		if networkInterface.Attachment == nil {
@@ -954,22 +948,18 @@ func deleteNetworkInterfaces(ctx context.Context, conn *ec2.EC2, name string) er
 		attachmentID := aws.StringValue(networkInterface.Attachment.AttachmentId)
 		networkInterfaceID := aws.StringValue(networkInterface.NetworkInterfaceId)
 
-		err = tfec2.DetachNetworkInterface(ctx, conn, networkInterfaceID, attachmentID, tfec2.NetworkInterfaceDetachedTimeout)
-
-		if err != nil {
-			errs = multierror.Append(errs, err)
+		if err := tfec2.DetachNetworkInterface(ctx, conn, networkInterfaceID, attachmentID, tfec2.NetworkInterfaceDetachedTimeout); err != nil {
+			errs = append(errs, err)
 
 			continue
 		}
 
-		err = tfec2.DeleteNetworkInterface(ctx, conn, networkInterfaceID)
-
-		if err != nil {
-			errs = multierror.Append(errs, err)
+		if err := tfec2.DeleteNetworkInterface(ctx, conn, networkInterfaceID); err != nil {
+			errs = append(errs, err)
 
 			continue
 		}
 	}
 
-	return errs.ErrorOrNil()
+	return errors.Join(errs...)
 }

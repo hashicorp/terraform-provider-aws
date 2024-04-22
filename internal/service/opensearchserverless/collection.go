@@ -51,6 +51,7 @@ type resourceCollectionData struct {
 	ID                 types.String   `tfsdk:"id"`
 	KmsKeyARN          types.String   `tfsdk:"kms_key_arn"`
 	Name               types.String   `tfsdk:"name"`
+	StandbyReplicas    types.String   `tfsdk:"standby_replicas"`
 	Tags               types.Map      `tfsdk:"tags"`
 	TagsAll            types.Map      `tfsdk:"tags_all"`
 	Timeouts           timeouts.Value `tfsdk:"timeouts"`
@@ -106,8 +107,19 @@ func (r *resourceCollection) Schema(ctx context.Context, req resource.SchemaRequ
 				},
 				Validators: []validator.String{
 					stringvalidator.LengthBetween(3, 32),
-					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-z][a-z0-9-]+$`),
+					stringvalidator.RegexMatches(regexache.MustCompile(`^[a-z][0-9a-z-]+$`),
 						`must start with any lower case letter and can can include any lower case letter, number, or "-"`),
+				},
+			},
+			"standby_replicas": schema.StringAttribute{
+				Optional: true,
+				Computed: true,
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+					stringplanmodifier.UseStateForUnknown(),
+				},
+				Validators: []validator.String{
+					enum.FrameworkValidate[awstypes.StandbyReplicas](),
 				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
@@ -158,6 +170,10 @@ func (r *resourceCollection) Create(ctx context.Context, req resource.CreateRequ
 		in.Type = awstypes.CollectionType(plan.Type.ValueString())
 	}
 
+	if !plan.StandbyReplicas.IsNull() {
+		in.StandbyReplicas = awstypes.StandbyReplicas(plan.StandbyReplicas.ValueString())
+	}
+
 	out, err := conn.CreateCollection(ctx, in)
 	if err != nil {
 		resp.Diagnostics.AddError(
@@ -187,6 +203,7 @@ func (r *resourceCollection) Create(ctx context.Context, req resource.CreateRequ
 	state.Description = flex.StringToFramework(ctx, waitOut.Description)
 	state.KmsKeyARN = flex.StringToFramework(ctx, waitOut.KmsKeyArn)
 	state.Name = flex.StringToFramework(ctx, waitOut.Name)
+	state.StandbyReplicas = flex.StringValueToFramework(ctx, waitOut.StandbyReplicas)
 	state.Type = flex.StringValueToFramework(ctx, waitOut.Type)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
@@ -208,6 +225,14 @@ func (r *resourceCollection) Read(ctx context.Context, req resource.ReadRequest,
 		return
 	}
 
+	if err != nil {
+		resp.Diagnostics.AddError(
+			create.ProblemStandardMessage(names.OpenSearchServerless, create.ErrActionReading, ResNameCollection, state.ID.ValueString(), nil),
+			err.Error(),
+		)
+		return
+	}
+
 	state.ARN = flex.StringToFramework(ctx, out.Arn)
 	state.CollectionEndpoint = flex.StringToFramework(ctx, out.CollectionEndpoint)
 	state.DashboardEndpoint = flex.StringToFramework(ctx, out.DashboardEndpoint)
@@ -215,6 +240,7 @@ func (r *resourceCollection) Read(ctx context.Context, req resource.ReadRequest,
 	state.ID = flex.StringToFramework(ctx, out.Id)
 	state.KmsKeyARN = flex.StringToFramework(ctx, out.KmsKeyArn)
 	state.Name = flex.StringToFramework(ctx, out.Name)
+	state.StandbyReplicas = flex.StringValueToFramework(ctx, out.StandbyReplicas)
 	state.Type = flex.StringValueToFramework(ctx, out.Type)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)

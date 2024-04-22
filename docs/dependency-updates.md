@@ -1,6 +1,6 @@
 # Dependency Updates
 
-Generally dependency updates are handled by maintainers.
+Generally, dependency updates are handled by maintainers.
 
 ## Go Default Version Update
 
@@ -22,13 +22,13 @@ See [#9992](https://github.com/hashicorp/terraform-provider-aws/issues/9992) / [
 
 ## AWS Go SDK Updates
 
-Almost exclusively, `github.com/aws/aws-sdk-go` updates are additive in nature. It is generally safe to only scan through them before approving and merging. If you have any concerns about any of the service client updates such as suspicious code removals in the update, or deprecations introduced, run the acceptance testing for potentially affected resources before merging.
+Almost exclusively, `github.com/aws/aws-sdk-go` and `github.com/aws/aws-sdk-go-v2` updates are additive in nature. It is generally safe to only scan through them before approving and merging. If you have any concerns about any of the service client updates such as suspicious code removals in the update, or deprecations introduced, run the acceptance testing for potentially affected resources before merging.
 
 ### Authentication changes
 
 Occasionally, there will be changes listed in the authentication pieces of the AWS Go SDK codebase, e.g., changes to `aws/session`. The AWS Go SDK `CHANGELOG` should include a relevant description of these changes under a heading such as `SDK Enhancements` or `SDK Bug Fixes`. If they seem worthy of a callout in the Terraform AWS Provider `CHANGELOG`, then upon merging we should include a similar message prefixed with the `provider` subsystem, e.g., `* provider: ...`.
 
-Additionally, if a `CHANGELOG` addition seemed appropriate, this dependency and version should also be updated in the Terraform S3 Backend, which currently lives in Terraform Core. An example of this can be found with https://github.com/hashicorp/terraform-provider-aws/pull/9305 and https://github.com/hashicorp/terraform/pull/22055.
+Additionally, if a `CHANGELOG` addition seemed appropriate, this dependency and version should also be updated in the Terraform S3 Backend, which currently lives in Terraform Core. An example of this can be found at https://github.com/hashicorp/terraform-provider-aws/pull/9305 and https://github.com/hashicorp/terraform/pull/22055.
 
 ### CloudFront changes
 
@@ -38,7 +38,7 @@ CloudFront service client updates have previously caused an issue when a new fie
 
 Merge if CI passes.
 
-## Terraform Plugin SDK Updates
+## Terraform Plugin Development Package Updates (SDK V2 or Framework)
 
 Except for trivial changes, run the full acceptance testing suite against the pull request and verify there are no new or unexpected failures.
 
