@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"testing"
 
+	"github.com/aws/aws-sdk-go/aws"
 	"github.com/aws/aws-sdk-go/service/ec2"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -15,6 +16,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	tfec2 "github.com/hashicorp/terraform-provider-aws/internal/service/ec2"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 func TestAccIPAMPool_basic(t *testing.T) {
@@ -24,7 +26,7 @@ func TestAccIPAMPool_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIPAMPoolDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -85,7 +87,7 @@ func TestAccIPAMPool_disappears(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIPAMPoolDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -108,7 +110,7 @@ func TestAccIPAMPool_ipv6Basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIPAMPoolDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -136,7 +138,7 @@ func TestAccIPAMPool_ipv6Contiguous(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIPAMPoolDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -158,6 +160,34 @@ func TestAccIPAMPool_ipv6Contiguous(t *testing.T) {
 	})
 }
 
+func TestAccIPAMPool_cascade(t *testing.T) {
+	ctx := acctest.Context(t)
+	var pool ec2.IpamPool
+	resourceName := "aws_vpc_ipam_pool.test"
+
+	resource.ParallelTest(t, resource.TestCase{
+		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		CheckDestroy:             testAccCheckIPAMPoolDestroy(ctx),
+		Steps: []resource.TestStep{
+			{
+				Config: testAccIPAMPoolConfig_cascade,
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckIPAMPoolExists(ctx, resourceName, &pool),
+					testAccCheckIPAMPoolCIDRCreate(ctx, &pool),
+				),
+			},
+			{
+				ResourceName:            resourceName,
+				ImportState:             true,
+				ImportStateVerify:       true,
+				ImportStateVerifyIgnore: []string{"cascade"},
+			},
+		},
+	})
+}
+
 func TestAccIPAMPool_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	var pool ec2.IpamPool
@@ -165,7 +195,7 @@ func TestAccIPAMPool_tags(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, ec2.EndpointsID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.EC2ServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckIPAMPoolDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -271,6 +301,14 @@ resource "aws_vpc_ipam_pool" "test" {
 }
 `)
 
+var testAccIPAMPoolConfig_cascade = acctest.ConfigCompose(testAccIPAMPoolConfig_base, `
+resource "aws_vpc_ipam_pool" "test" {
+  address_family = "ipv4"
+  ipam_scope_id  = aws_vpc_ipam.test.private_default_scope_id
+  cascade        = true
+}
+`)
+
 var testAccIPAMPoolConfig_updated = acctest.ConfigCompose(testAccIPAMPoolConfig_base, `
 resource "aws_vpc_ipam_pool" "test" {
   address_family                    = "ipv4"
@@ -305,6 +343,19 @@ resource "aws_vpc_ipam_pool" "test" {
   publicly_advertisable = false
 }
 `)
+
+func testAccCheckIPAMPoolCIDRCreate(ctx context.Context, ipampool *ec2.IpamPool) resource.TestCheckFunc {
+	return func(s *terraform.State) error {
+		conn := acctest.Provider.Meta().(*conns.AWSClient).EC2Conn(ctx)
+
+		_, err := conn.ProvisionIpamPoolCidrWithContext(ctx, &ec2.ProvisionIpamPoolCidrInput{
+			IpamPoolId: aws.String(*ipampool.IpamPoolId),
+			Cidr:       aws.String("10.0.0.0/16"),
+		})
+
+		return err
+	}
+}
 
 func testAccIPAMPoolConfig_tags(tagKey1, tagValue1 string) string {
 	return acctest.ConfigCompose(testAccIPAMPoolConfig_base, fmt.Sprintf(`

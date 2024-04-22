@@ -11,7 +11,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch/types"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep"
 	"github.com/hashicorp/terraform-provider-aws/internal/sweep/awsv2"
 )
@@ -23,7 +22,7 @@ func RegisterSweepers() {
 	})
 
 	resource.AddTestSweepers("aws_cloudwatch_dashboard", &resource.Sweeper{
-		Name: "aws_cloudwatch_metric_stream",
+		Name: "aws_cloudwatch_dashboard",
 		F:    sweepDashboards,
 	})
 
@@ -46,7 +45,7 @@ func sweepCompositeAlarms(region string) error {
 	}
 	conn := client.CloudWatchClient(ctx)
 	input := &cloudwatch.DescribeAlarmsInput{
-		AlarmTypes: tfslices.Of(types.AlarmTypeCompositeAlarm),
+		AlarmTypes: []types.AlarmType{types.AlarmTypeCompositeAlarm},
 	}
 	sweepResources := make([]sweep.Sweepable, 0)
 
@@ -130,7 +129,7 @@ func sweepMetricAlarms(region string) error {
 	}
 	conn := client.CloudWatchClient(ctx)
 	input := &cloudwatch.DescribeAlarmsInput{
-		AlarmTypes: tfslices.Of(types.AlarmTypeMetricAlarm),
+		AlarmTypes: []types.AlarmType{types.AlarmTypeMetricAlarm},
 	}
 	sweepResources := make([]sweep.Sweepable, 0)
 

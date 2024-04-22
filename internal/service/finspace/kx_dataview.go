@@ -118,6 +118,12 @@ func ResourceKxDataview() *schema.Resource {
 							},
 							Required: true,
 						},
+						"on_demand": {
+							Type:     schema.TypeBool,
+							Default:  false,
+							ForceNew: true,
+							Optional: true,
+						},
 					},
 				},
 				Optional: true,
@@ -125,6 +131,12 @@ func ResourceKxDataview() *schema.Resource {
 			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
+			},
+			"read_write": {
+				Type:     schema.TypeBool,
+				Default:  false,
+				ForceNew: true,
+				Optional: true,
 			},
 			names.AttrTags:    tftags.TagsSchema(),
 			names.AttrTagsAll: tftags.TagsSchemaComputed(),
@@ -183,6 +195,10 @@ func resourceKxDataviewCreate(ctx context.Context, d *schema.ResourceData, meta 
 		in.SegmentConfigurations = expandSegmentConfigurations(v.([]interface{}))
 	}
 
+	if v, ok := d.GetOk("read_write"); ok {
+		in.ReadWrite = v.(bool)
+	}
+
 	out, err := conn.CreateKxDataview(ctx, in)
 	if err != nil {
 		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionCreating, ResNameKxDataview, d.Get("name").(string), err)
@@ -223,6 +239,7 @@ func resourceKxDataviewRead(ctx context.Context, d *schema.ResourceData, meta in
 	d.Set("database_name", out.DatabaseName)
 	d.Set("environment_id", out.EnvironmentId)
 	d.Set("az_mode", out.AzMode)
+	d.Set("read_write", out.ReadWrite)
 	if err := d.Set("segment_configurations", flattenSegmentConfigurations(out.SegmentConfigurations)); err != nil {
 		return create.AppendDiagError(diags, names.FinSpace, create.ErrActionReading, ResNameKxDataview, d.Id(), err)
 	}
@@ -414,6 +431,7 @@ func expandSegmentConfigurations(tfList []interface{}) []types.KxDataviewSegment
 		s = append(s, types.KxDataviewSegmentConfiguration{
 			VolumeName: aws.String(m["volume_name"].(string)),
 			DbPaths:    expandDBPath(m["db_paths"].([]interface{})),
+			OnDemand:   (m["on_demand"]).(bool),
 		})
 	}
 
@@ -429,6 +447,9 @@ func flattenSegmentConfiguration(apiObject *types.KxDataviewSegmentConfiguration
 	}
 	if v := apiObject.DbPaths; v != nil {
 		m["db_paths"] = v
+	}
+	if v := apiObject.OnDemand; v {
+		m["on_demand"] = v
 	}
 	return m
 }

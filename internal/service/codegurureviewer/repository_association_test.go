@@ -35,7 +35,7 @@ func TestAccCodeGuruReviewerRepositoryAssociation_basic(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.CodeGuruReviewerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeGuruReviewerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeGuruReviewerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRepositoryAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -70,7 +70,7 @@ func TestAccCodeGuruReviewerRepositoryAssociation_KMSKey(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.CodeGuruReviewerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeGuruReviewerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeGuruReviewerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRepositoryAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -105,7 +105,7 @@ func TestAccCodeGuruReviewerRepositoryAssociation_S3Repository(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.CodeGuruReviewerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeGuruReviewerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeGuruReviewerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRepositoryAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -141,7 +141,7 @@ func TestAccCodeGuruReviewerRepositoryAssociation_tags(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.CodeGuruReviewerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeGuruReviewerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeGuruReviewerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRepositoryAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -185,7 +185,7 @@ func TestAccCodeGuruReviewerRepositoryAssociation_disappears(t *testing.T) {
 			acctest.PreCheckPartitionHasService(t, names.CodeGuruReviewerEndpointID)
 			testAccPreCheck(ctx, t)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.CodeGuruReviewerEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CodeGuruReviewerServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckRepositoryAssociationDestroy(ctx),
 		Steps: []resource.TestStep{

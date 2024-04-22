@@ -639,16 +639,25 @@ func resourceKxClusterUpdate(ctx context.Context, d *schema.ResourceData, meta i
 		updateCode = true
 	}
 
-	if v, ok := d.GetOk("initialization_script"); ok && d.HasChanges("initialization_script") {
+	if v, ok := d.GetOk("initialization_script"); ok {
 		CodeConfigIn.Code = expandCode(d.Get("code").([]interface{}))
-		CodeConfigIn.InitializationScript = aws.String(v.(string))
-		updateCode = true
+		if d.HasChanges("initialization_script") {
+			CodeConfigIn.InitializationScript = aws.String(v.(string))
+			updateCode = true
+		} else {
+			CodeConfigIn.InitializationScript = aws.String(d.Get("initialization_script").(string))
+		}
 	}
 
-	if v, ok := d.GetOk("command_line_arguments"); ok && len(v.(map[string]interface{})) > 0 && d.HasChanges("command_line_arguments") {
+	if v, ok := d.GetOk("command_line_arguments"); ok && len(v.(map[string]interface{})) > 0 {
 		CodeConfigIn.Code = expandCode(d.Get("code").([]interface{}))
-		CodeConfigIn.CommandLineArguments = expandCommandLineArguments(v.(map[string]interface{}))
-		updateCode = true
+		if d.HasChanges("command_line_arguments") {
+			CodeConfigIn.CommandLineArguments = expandCommandLineArguments(v.(map[string]interface{}))
+			updateCode = true
+		} else {
+			CodeConfigIn.CommandLineArguments = expandCommandLineArguments(
+				d.Get("command_line_arguments").(map[string]interface{}))
+		}
 	}
 
 	if updateDb {

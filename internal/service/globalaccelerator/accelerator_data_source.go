@@ -21,7 +21,6 @@ import (
 // @FrameworkDataSource
 func newDataSourceAccelerator(context.Context) (datasource.DataSourceWithConfigure, error) {
 	d := &dataSourceAccelerator{}
-	d.SetMigratedFromPluginSDK(true)
 
 	return d, nil
 }
@@ -153,7 +152,7 @@ func (d *dataSourceAccelerator) Read(ctx context.Context, request datasource.Rea
 	data.DnsName = flex.StringToFrameworkLegacy(ctx, accelerator.DnsName)
 	data.DualStackDNSName = flex.StringToFrameworkLegacy(ctx, accelerator.DualStackDnsName)
 	data.Enabled = flex.BoolToFrameworkLegacy(ctx, accelerator.Enabled)
-	data.HostedZoneID = types.StringValue(d.Meta().GlobalAcceleratorHostedZoneID())
+	data.HostedZoneID = types.StringValue(d.Meta().GlobalAcceleratorHostedZoneID(ctx))
 	data.ID = types.StringValue(acceleratorARN)
 	data.IpAddressType = flex.StringToFrameworkLegacy(ctx, accelerator.IpAddressType)
 	data.IpSets = d.flattenIPSetsFramework(ctx, accelerator.IpSets)

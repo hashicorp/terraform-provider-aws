@@ -5,56 +5,54 @@ package iam
 
 import (
 	"context"
+	"reflect"
 
 	"github.com/YakDriver/regexache"
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iam"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindUsers(ctx context.Context, conn *iam.IAM, nameRegex, pathPrefix string) ([]*iam.User, error) {
+func FindUsers(ctx context.Context, conn *iam.Client, nameRegex, pathPrefix string) ([]awstypes.User, error) {
 	input := &iam.ListUsersInput{}
 
 	if pathPrefix != "" {
 		input.PathPrefix = aws.String(pathPrefix)
 	}
 
-	var results []*iam.User
+	var results []awstypes.User
 
-	err := conn.ListUsersPagesWithContext(ctx, input, func(page *iam.ListUsersOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
+	pages := iam.NewListUsersPaginator(conn, input)
+	for pages.HasMorePages() {
+		page, err := pages.NextPage(ctx)
+		if err != nil {
+			return nil, err
 		}
 
 		for _, user := range page.Users {
-			if user == nil {
-				continue
-			}
-
-			if nameRegex != "" && !regexache.MustCompile(nameRegex).MatchString(aws.StringValue(user.UserName)) {
+			if nameRegex != "" && !regexache.MustCompile(nameRegex).MatchString(aws.ToString(user.UserName)) {
 				continue
 			}
 
 			results = append(results, user)
 		}
+	}
 
-		return !lastPage
-	})
-
-	return results, err
+	return results, nil
 }
 
-func FindServiceSpecificCredential(ctx context.Context, conn *iam.IAM, serviceName, userName, credID string) (*iam.ServiceSpecificCredentialMetadata, error) {
+func FindServiceSpecificCredential(ctx context.Context, conn *iam.Client, serviceName, userName, credID string) (*awstypes.ServiceSpecificCredentialMetadata, error) {
 	input := &iam.ListServiceSpecificCredentialsInput{
 		ServiceName: aws.String(serviceName),
 		UserName:    aws.String(userName),
 	}
 
-	output, err := conn.ListServiceSpecificCredentialsWithContext(ctx, input)
+	output, err := conn.ListServiceSpecificCredentials(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+	if errs.IsA[*awstypes.NoSuchEntityException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -65,36 +63,36 @@ func FindServiceSpecificCredential(ctx context.Context, conn *iam.IAM, serviceNa
 		return nil, err
 	}
 
-	if len(output.ServiceSpecificCredentials) == 0 || output.ServiceSpecificCredentials[0] == nil {
+	if len(output.ServiceSpecificCredentials) == 0 {
 		return nil, tfresource.NewEmptyResultError(output)
 	}
 
-	var cred *iam.ServiceSpecificCredentialMetadata
+	var cred awstypes.ServiceSpecificCredentialMetadata
 
 	for _, crd := range output.ServiceSpecificCredentials {
-		if aws.StringValue(crd.ServiceName) == serviceName &&
-			aws.StringValue(crd.UserName) == userName &&
-			aws.StringValue(crd.ServiceSpecificCredentialId) == credID {
+		if aws.ToString(crd.ServiceName) == serviceName &&
+			aws.ToString(crd.UserName) == userName &&
+			aws.ToString(crd.ServiceSpecificCredentialId) == credID {
 			cred = crd
 			break
 		}
 	}
 
-	if cred == nil {
+	if reflect.ValueOf(cred).IsZero() {
 		return nil, tfresource.NewEmptyResultError(cred)
 	}
 
-	return cred, nil
+	return &cred, nil
 }
 
-func FindSigningCertificate(ctx context.Context, conn *iam.IAM, userName, certId string) (*iam.SigningCertificate, error) {
+func FindSigningCertificate(ctx context.Context, conn *iam.Client, userName, certId string) (*awstypes.SigningCertificate, error) {
 	input := &iam.ListSigningCertificatesInput{
 		UserName: aws.String(userName),
 	}
 
-	output, err := conn.ListSigningCertificatesWithContext(ctx, input)
+	output, err := conn.ListSigningCertificates(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
+	if errs.IsA[*awstypes.NoSuchEntityException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -105,64 +103,23 @@ func FindSigningCertificate(ctx context.Context, conn *iam.IAM, userName, certId
 		return nil, err
 	}
 
-	if len(output.Certificates) == 0 || output.Certificates[0] == nil {
+	if len(output.Certificates) == 0 {
 		return nil, tfresource.NewEmptyResultError(output)
 	}
 
-	var cert *iam.SigningCertificate
+	var cert awstypes.SigningCertificate
 
 	for _, crt := range output.Certificates {
-		if aws.StringValue(crt.UserName) == userName &&
-			aws.StringValue(crt.CertificateId) == certId {
+		if aws.ToString(crt.UserName) == userName &&
+			aws.ToString(crt.CertificateId) == certId {
 			cert = crt
 			break
 		}
 	}
 
-	if cert == nil {
+	if reflect.ValueOf(cert).IsZero() {
 		return nil, tfresource.NewEmptyResultError(cert)
 	}
 
-	return cert, nil
-}
-
-func FindAccessKey(ctx context.Context, conn *iam.IAM, username, id string) (*iam.AccessKeyMetadata, error) {
-	accessKeys, err := FindAccessKeys(ctx, conn, username)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, accessKey := range accessKeys {
-		if aws.StringValue(accessKey.AccessKeyId) == id {
-			return accessKey, nil
-		}
-	}
-
-	return nil, &retry.NotFoundError{}
-}
-
-func FindAccessKeys(ctx context.Context, conn *iam.IAM, username string) ([]*iam.AccessKeyMetadata, error) {
-	input := &iam.ListAccessKeysInput{
-		UserName: aws.String(username),
-	}
-	var output []*iam.AccessKeyMetadata
-
-	err := conn.ListAccessKeysPagesWithContext(ctx, input, func(page *iam.ListAccessKeysOutput, lastPage bool) bool {
-		if page == nil {
-			return !lastPage
-		}
-
-		output = append(output, page.AccessKeyMetadata...)
-
-		return !lastPage
-	})
-
-	if tfawserr.ErrCodeEquals(err, iam.ErrCodeNoSuchEntityException) {
-		return nil, &retry.NotFoundError{
-			LastError:   err,
-			LastRequest: input,
-		}
-	}
-
-	return output, err
+	return &cert, nil
 }

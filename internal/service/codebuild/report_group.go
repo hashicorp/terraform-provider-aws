@@ -18,7 +18,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
-	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
@@ -218,7 +217,7 @@ func resourceReportGroupDelete(ctx context.Context, d *schema.ResourceData, meta
 
 func findReportGroupByARN(ctx context.Context, conn *codebuild.Client, arn string) (*types.ReportGroup, error) {
 	input := &codebuild.BatchGetReportGroupsInput{
-		ReportGroupArns: tfslices.Of(arn),
+		ReportGroupArns: []string{arn},
 	}
 
 	return findReportGroup(ctx, conn, input)

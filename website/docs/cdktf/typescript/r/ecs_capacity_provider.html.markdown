@@ -75,6 +75,7 @@ This resource supports the following arguments:
 ### `autoScalingGroupProvider`
 
 * `autoScalingGroupArn` - (Required) - ARN of the associated auto scaling group.
+* `managedDraining` - (Optional) - Enables or disables a graceful shutdown of instances without disturbing workloads. Valid values are `ENABLED` and `DISABLED`. The default value is `ENABLED` when a capacity provider is created.
 * `managedScaling` - (Optional) - Configuration block defining the parameters of the auto scaling. Detailed below.
 * `managedTerminationProtection` - (Optional) - Enables or disables container-aware termination of instances in the auto scaling group when scale-in happens. Valid values are `ENABLED` and `DISABLED`.
 
@@ -122,4 +123,4 @@ Using `terraform import`, import ECS Capacity Providers using the `name`. For ex
 % terraform import aws_ecs_capacity_provider.example example
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-085876568cc2c4593afd22394b677657c0db3a438e0613974a494910237cb352 -->
+<!-- cache-key: cdktf-0.20.1 input-b5d6c2dfdd1ced0f5b638526b416491f5fbd7f35c97b21c7e2ce669b61c189b4 -->

@@ -6,7 +6,6 @@ package s3
 import (
 	"bytes"
 	"context"
-	"encoding/base64"
 	"fmt"
 	"io"
 	"log"
@@ -34,13 +33,14 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/service/kms"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 	"github.com/mitchellh/go-homedir"
 )
 
 // @SDKResource("aws_s3_object", name="Object")
-// @Tags
+// @Tags(identifierAttribute="arn", resourceType="Object")
 func resourceObject() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceObjectCreate,
@@ -68,6 +68,10 @@ func resourceObject() *schema.Resource {
 				Optional:         true,
 				Computed:         true,
 				ValidateDiagFunc: enum.Validate[types.ObjectCannedACL](),
+			},
+			"arn": {
+				Type:     schema.TypeString,
+				Computed: true,
 			},
 			"bucket": {
 				Type:         schema.TypeString,
@@ -202,7 +206,7 @@ func resourceObject() *schema.Resource {
 										Type:             schema.TypeMap,
 										Optional:         true,
 										Elem:             &schema.Schema{Type: schema.TypeString},
-										ValidateDiagFunc: verify.MapLenBetween(0, 0),
+										ValidateDiagFunc: verify.MapSizeBetween(0, 0),
 									},
 								},
 							},
@@ -276,6 +280,12 @@ func resourceObjectRead(ctx context.Context, d *schema.ResourceData, meta interf
 		return sdkdiag.AppendErrorf(diags, "reading S3 Object (%s): %s", d.Id(), err)
 	}
 
+	arn, err := newObjectARN(meta.(*conns.AWSClient).Partition, bucket, key)
+	if err != nil {
+		return sdkdiag.AppendErrorf(diags, "reading S3 Object (%s): %s", d.Id(), err)
+	}
+	d.Set("arn", arn.String())
+
 	d.Set("bucket_key_enabled", output.BucketKeyEnabled)
 	d.Set("cache_control", output.CacheControl)
 	d.Set("checksum_crc32", output.ChecksumCRC32)
@@ -304,12 +314,6 @@ func resourceObjectRead(ctx context.Context, d *schema.ResourceData, meta interf
 
 	if err := setObjectKMSKeyID(ctx, meta, d, aws.ToString(output.SSEKMSKeyId)); err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
-	}
-
-	if tags, err := objectListTags(ctx, conn, bucket, key, optFns...); err == nil {
-		setTagsOut(ctx, Tags(tags))
-	} else if !tfawserr.ErrHTTPStatusCodeEquals(err, http.StatusNotImplemented) { // Directory buckets return HTTP status code 501, NotImplemented.
-		return sdkdiag.AppendErrorf(diags, "listing tags for S3 Bucket (%s) Object (%s): %s", bucket, key, err)
 	}
 
 	return diags
@@ -391,14 +395,6 @@ func resourceObjectUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 		}
 	}
 
-	if d.HasChange("tags_all") {
-		o, n := d.GetChange("tags_all")
-
-		if err := objectUpdateTags(ctx, conn, bucket, key, o, n, optFns...); err != nil {
-			return sdkdiag.AppendErrorf(diags, "updating tags: %s", err)
-		}
-	}
-
 	return append(diags, resourceObjectRead(ctx, d, meta)...)
 }
 
@@ -454,7 +450,6 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).S3Client(ctx)
 	var optFns []func(*s3.Options)
-	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
 
 	bucket := d.Get("bucket").(string)
 	if isDirectoryBucket(bucket) {
@@ -463,13 +458,6 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta inte
 	// Via S3 access point: "Invalid configuration: region from ARN `us-east-1` does not match client region `aws-global` and UseArnRegion is `false`".
 	if arn.IsARN(bucket) && conn.Options().Region == names.GlobalRegionID {
 		optFns = append(optFns, func(o *s3.Options) { o.UseARNRegion = true })
-	}
-
-	tags := tftags.New(ctx, d.Get("tags").(map[string]interface{}))
-	if ignoreProviderDefaultTags(ctx, d) {
-		tags = tags.RemoveDefaultConfig(defaultTagsConfig)
-	} else {
-		tags = defaultTagsConfig.MergeTags(tftags.New(ctx, tags))
 	}
 
 	var body io.ReadSeeker
@@ -493,17 +481,15 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta inte
 			}
 		}()
 	} else if v, ok := d.GetOk("content"); ok {
-		content := v.(string)
-		body = bytes.NewReader([]byte(content))
+		body = strings.NewReader(v.(string))
 	} else if v, ok := d.GetOk("content_base64"); ok {
-		content := v.(string)
 		// We can't do streaming decoding here (with base64.NewDecoder) because
 		// the AWS SDK requires an io.ReadSeeker but a base64 decoder can't seek.
-		contentRaw, err := base64.StdEncoding.DecodeString(content)
+		v, err := itypes.Base64Decode(v.(string))
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "decoding content_base64: %s", err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
-		body = bytes.NewReader(contentRaw)
+		body = bytes.NewReader(v)
 	} else {
 		body = bytes.NewReader([]byte{})
 	}
@@ -573,6 +559,14 @@ func resourceObjectUpload(ctx context.Context, d *schema.ResourceData, meta inte
 
 	if v, ok := d.GetOk("storage_class"); ok {
 		input.StorageClass = types.StorageClass(v.(string))
+	}
+
+	defaultTagsConfig := meta.(*conns.AWSClient).DefaultTagsConfig
+	tags := tftags.New(ctx, getContextTags(ctx))
+	if ignoreProviderDefaultTags(ctx, d) {
+		tags = tags.RemoveDefaultConfig(defaultTagsConfig)
+	} else {
+		tags = defaultTagsConfig.MergeTags(tftags.New(ctx, tags))
 	}
 
 	if len(tags) > 0 {

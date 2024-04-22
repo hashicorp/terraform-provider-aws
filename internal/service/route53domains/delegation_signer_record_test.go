@@ -25,7 +25,7 @@ func testAccDelegationSignerRecord_basic(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.Route53DomainsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53DomainsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDelegationSignerAssociationDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -54,7 +54,7 @@ func testAccDelegationSignerRecord_disappears(t *testing.T) {
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.Route53DomainsEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.Route53DomainsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDelegationSignerAssociationDestroy(ctx),
 		Steps: []resource.TestStep{

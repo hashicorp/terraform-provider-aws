@@ -60,6 +60,7 @@ type containerDefinitions []*ecs.ContainerDefinition
 
 func (cd containerDefinitions) Reduce(isAWSVPC bool) error {
 	// Deal with fields which may be re-ordered in the API
+	cd.OrderContainers()
 	cd.OrderEnvironmentVariables()
 	cd.OrderSecrets()
 
@@ -120,4 +121,10 @@ func (cd containerDefinitions) OrderSecrets() {
 			return aws.StringValue(def.Secrets[i].Name) < aws.StringValue(def.Secrets[j].Name)
 		})
 	}
+}
+
+func (cd containerDefinitions) OrderContainers() {
+	sort.Slice(cd, func(i, j int) bool {
+		return aws.StringValue(cd[i].Name) < aws.StringValue(cd[j].Name)
+	})
 }

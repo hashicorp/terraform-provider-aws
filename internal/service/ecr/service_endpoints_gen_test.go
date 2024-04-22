@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"maps"
 	"os"
 	"path/filepath"
 	"reflect"
@@ -14,7 +15,6 @@ import (
 
 	aws_sdkv2 "github.com/aws/aws-sdk-go-v2/aws"
 	ecr_sdkv2 "github.com/aws/aws-sdk-go-v2/service/ecr"
-	ecr_sdkv1 "github.com/aws/aws-sdk-go/service/ecr"
 	"github.com/aws/smithy-go/middleware"
 	smithyhttp "github.com/aws/smithy-go/transport/http"
 	"github.com/google/go-cmp/cmp"
@@ -25,7 +25,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/provider"
-	"golang.org/x/exp/maps"
 )
 
 type endpointTestCase struct {
@@ -203,25 +202,13 @@ func TestEndpointConfiguration(t *testing.T) { //nolint:paralleltest // uses t.S
 		},
 	}
 
-	t.Run("v1", func(t *testing.T) {
-		for name, testcase := range testcases { //nolint:paralleltest // uses t.Setenv
-			testcase := testcase
+	for name, testcase := range testcases { //nolint:paralleltest // uses t.Setenv
+		testcase := testcase
 
-			t.Run(name, func(t *testing.T) {
-				testEndpointCase(t, region, testcase, callServiceV1)
-			})
-		}
-	})
-
-	t.Run("v2", func(t *testing.T) {
-		for name, testcase := range testcases { //nolint:paralleltest // uses t.Setenv
-			testcase := testcase
-
-			t.Run(name, func(t *testing.T) {
-				testEndpointCase(t, region, testcase, callServiceV2)
-			})
-		}
-	})
+		t.Run(name, func(t *testing.T) {
+			testEndpointCase(t, region, testcase, callService)
+		})
+	}
 }
 
 func defaultEndpoint(region string) string {
@@ -241,7 +228,7 @@ func defaultEndpoint(region string) string {
 	return ep.URI.String()
 }
 
-func callServiceV2(ctx context.Context, t *testing.T, meta *conns.AWSClient) string {
+func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) string {
 	t.Helper()
 
 	var endpoint string
@@ -261,20 +248,6 @@ func callServiceV2(ctx context.Context, t *testing.T, meta *conns.AWSClient) str
 	} else if !errors.Is(err, errCancelOperation) {
 		t.Fatalf("Unexpected error: %s", err)
 	}
-
-	return endpoint
-}
-
-func callServiceV1(ctx context.Context, t *testing.T, meta *conns.AWSClient) string {
-	t.Helper()
-
-	client := meta.ECRConn(ctx)
-
-	req, _ := client.DescribeRepositoriesRequest(&ecr_sdkv1.DescribeRepositoriesInput{})
-
-	req.HTTPRequest.URL.Path = "/"
-
-	endpoint := req.HTTPRequest.URL.String()
 
 	return endpoint
 }

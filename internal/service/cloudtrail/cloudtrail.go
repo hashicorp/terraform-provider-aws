@@ -553,7 +553,7 @@ func resourceTrailDelete(ctx context.Context, d *schema.ResourceData, meta inter
 
 func findTrailByARN(ctx context.Context, conn *cloudtrail.Client, arn string) (*types.Trail, error) {
 	input := &cloudtrail.DescribeTrailsInput{
-		TrailNameList: tfslices.Of(arn),
+		TrailNameList: []string{arn},
 	}
 
 	return findTrail(ctx, conn, input)

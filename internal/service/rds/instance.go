@@ -8,6 +8,7 @@ import (
 	"errors"
 	"fmt"
 	"log"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -20,6 +21,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/rds"
 	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	tfawserr_sdkv2 "github.com/hashicorp/aws-sdk-go-base/v2/tfawserr"
+	"github.com/hashicorp/go-cty/cty"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/customdiff"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -35,7 +37,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
-	"golang.org/x/exp/slices"
 )
 
 // NOTE ON "ID", "IDENTIFIER":
@@ -152,6 +153,9 @@ func ResourceInstance() *schema.Resource {
 				Computed:     true,
 				ForceNew:     true,
 				ValidateFunc: validation.StringInSlice(backupTarget_Values(), false),
+				ConflictsWith: []string{
+					"s3_import",
+				},
 			},
 			"backup_window": {
 				Type:         schema.TypeString,
@@ -182,6 +186,22 @@ func ResourceInstance() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
+				ConflictsWith: []string{
+					"s3_import",
+				},
+				DiffSuppressFunc: func(k, oldValue, newValue string, d *schema.ResourceData) bool {
+					for _, conflictAttr := range []string{
+						"replicate_source_db",
+						// s3_import is handled by the schema ConflictsWith
+						"snapshot_identifier",
+						"restore_to_point_in_time",
+					} {
+						if _, ok := d.GetOk(conflictAttr); ok {
+							return true
+						}
+					}
+					return false
+				},
 			},
 			"copy_tags_to_snapshot": {
 				Type:     schema.TypeBool,
@@ -481,6 +501,10 @@ func ResourceInstance() *schema.Resource {
 				Type:     schema.TypeInt,
 				Optional: true,
 				Computed: true,
+				ValidateFunc: validation.Any(
+					validation.IntInSlice([]int{7, 731}),
+					validation.IntDivisibleBy(31),
+				),
 			},
 			"port": {
 				Type:     schema.TypeInt,
@@ -624,6 +648,9 @@ func ResourceInstance() *schema.Resource {
 				Optional: true,
 				Computed: true,
 				ForceNew: true,
+				ConflictsWith: []string{
+					"s3_import",
+				},
 			},
 			"username": {
 				Type:          schema.TypeString,
@@ -692,6 +719,23 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 	identifier := create.Name(d.Get("identifier").(string), d.Get("identifier_prefix").(string))
 
 	var resourceID string // will be assigned depending on how it is created
+
+	if _, ok := d.GetOk("character_set_name"); ok {
+		charSetPath := cty.GetAttrPath("character_set_name")
+		for _, conflictAttr := range []string{
+			"replicate_source_db",
+			// s3_import is handled by the schema ConflictsWith
+			"snapshot_identifier",
+			"restore_to_point_in_time",
+		} {
+			if _, ok := d.GetOk(conflictAttr); ok {
+				diags = append(diags, errs.NewAttributeConflictsWillBeError(
+					charSetPath,
+					cty.GetAttrPath(conflictAttr),
+				))
+			}
+		}
+	}
 
 	if v, ok := d.GetOk("replicate_source_db"); ok {
 		sourceDBInstanceID := v.(string)
@@ -762,6 +806,20 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 
 		if v, ok := d.GetOk("option_group_name"); ok {
 			input.OptionGroupName = aws.String(v.(string))
+		}
+
+		if v, ok := d.GetOk("parameter_group_name"); ok {
+			crossRegion := false
+			if arn.IsARN(sourceDBInstanceID) {
+				sourceARN, err := arn.Parse(sourceDBInstanceID)
+				if err != nil {
+					return sdkdiag.AppendErrorf(diags, "creating RDS DB Instance (read replica) (%s): %s", identifier, err)
+				}
+				crossRegion = sourceARN.Region != meta.(*conns.AWSClient).Region
+			}
+			if crossRegion {
+				input.DBParameterGroupName = aws.String(v.(string))
+			}
 		}
 
 		if v, ok := d.GetOk("performance_insights_enabled"); ok {
@@ -883,15 +941,6 @@ func resourceInstanceCreate(ctx context.Context, d *schema.ResourceData, meta in
 		}
 		if _, ok := d.GetOk("username"); !ok {
 			diags = sdkdiag.AppendErrorf(diags, `"username": required field is not set`)
-		}
-		if _, ok := d.GetOk("character_set_name"); ok {
-			diags = sdkdiag.AppendErrorf(diags, `"character_set_name" doesn't work with restores"`)
-		}
-		if _, ok := d.GetOk("timezone"); ok {
-			diags = sdkdiag.AppendErrorf(diags, `"timezone" doesn't work with restores"`)
-		}
-		if _, ok := d.GetOk("backup_target"); ok {
-			diags = sdkdiag.AppendErrorf(diags, `"backup_target" doesn't work with restores"`)
 		}
 		if diags.HasError() {
 			return diags
@@ -2327,7 +2376,7 @@ func dbInstancePopulateModify(input *rds_sdkv2.ModifyDBInstanceInput, d *schema.
 		needsModify = true
 		input.StorageType = aws.String(d.Get("storage_type").(string))
 
-		if aws.StringValue(input.StorageType) == storageTypeIO1 {
+		if slices.Contains([]string{storageTypeIO1, storageTypeIO2}, aws.StringValue(input.StorageType)) {
 			input.Iops = aws.Int32(int32(d.Get("iops").(int)))
 		}
 	}

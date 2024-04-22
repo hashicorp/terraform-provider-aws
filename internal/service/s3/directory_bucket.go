@@ -212,7 +212,7 @@ func (r *directoryBucketResource) Read(ctx context.Context, request resource.Rea
 	// No API to return bucket type, location etc.
 	data.DataRedundancy = fwtypes.StringEnumValue(awstypes.DataRedundancySingleAvailabilityZone)
 	if matches := directoryBucketNameRegex.FindStringSubmatch(data.ID.ValueString()); len(matches) == 3 {
-		data.Location = fwtypes.NewListNestedObjectValueOfPtr(ctx, &locationInfoModel{
+		data.Location = fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &locationInfoModel{
 			Name: flex.StringValueToFramework(ctx, matches[2]),
 			Type: fwtypes.StringEnumValue(awstypes.LocationTypeAvailabilityZone),
 		})

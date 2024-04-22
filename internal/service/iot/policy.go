@@ -7,6 +7,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"slices"
 	"strconv"
 	"time"
 
@@ -20,12 +21,14 @@ import (
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
+	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
-	"golang.org/x/exp/slices"
+	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
 // @SDKResource("aws_iot_policy")
+// @Tags(identifierAttribute="arn")
 func ResourcePolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourcePolicyCreate,
@@ -67,7 +70,11 @@ func ResourcePolicy() *schema.Resource {
 					return json
 				},
 			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
+
+		CustomizeDiff: verify.SetTagsDiff,
 	}
 }
 
@@ -84,6 +91,7 @@ func resourcePolicyCreate(ctx context.Context, d *schema.ResourceData, meta inte
 	input := &iot.CreatePolicyInput{
 		PolicyDocument: aws.String(policy),
 		PolicyName:     aws.String(name),
+		Tags:           getTagsIn(ctx),
 	}
 
 	output, err := conn.CreatePolicyWithContext(ctx, input)
@@ -131,65 +139,66 @@ func resourcePolicyUpdate(ctx context.Context, d *schema.ResourceData, meta inte
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).IoTConn(ctx)
 
-	policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
-	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policy, err)
-	}
-
-	input := &iot.CreatePolicyVersionInput{
-		PolicyDocument: aws.String(policy),
-		PolicyName:     aws.String(d.Id()),
-		SetAsDefault:   aws.Bool(true),
-	}
-
-	_, errCreate := conn.CreatePolicyVersionWithContext(ctx, input)
-
-	// "VersionsLimitExceededException: The policy ... already has the maximum number of versions (5)"
-	if tfawserr.ErrCodeEquals(errCreate, iot.ErrCodeVersionsLimitExceededException) {
-		// Prune the lowest version and retry.
-		policyVersions, err := FindPolicyVersionsByName(ctx, conn, d.Id())
-
+	if d.HasChangesExcept("tags", "tags_all") {
+		policy, err := structure.NormalizeJsonString(d.Get("policy").(string))
 		if err != nil {
-			return sdkdiag.AppendErrorf(diags, "reading IoT Policy (%s) versions: %s", d.Id(), err)
+			return sdkdiag.AppendErrorf(diags, "policy (%s) is invalid JSON: %s", policy, err)
 		}
 
-		var versionIDs []int
+		input := &iot.CreatePolicyVersionInput{
+			PolicyDocument: aws.String(policy),
+			PolicyName:     aws.String(d.Id()),
+			SetAsDefault:   aws.Bool(true),
+		}
 
-		for _, v := range policyVersions {
-			if aws.BoolValue(v.IsDefaultVersion) {
-				continue
-			}
+		_, errCreate := conn.CreatePolicyVersionWithContext(ctx, input)
 
-			v, err := strconv.Atoi(aws.StringValue(v.VersionId))
+		// "VersionsLimitExceededException: The policy ... already has the maximum number of versions (5)"
+		if tfawserr.ErrCodeEquals(errCreate, iot.ErrCodeVersionsLimitExceededException) {
+			// Prune the lowest version and retry.
+			policyVersions, err := FindPolicyVersionsByName(ctx, conn, d.Id())
 
 			if err != nil {
-				continue
+				return sdkdiag.AppendErrorf(diags, "reading IoT Policy (%s) versions: %s", d.Id(), err)
 			}
 
-			versionIDs = append(versionIDs, v)
+			var versionIDs []int
+
+			for _, v := range policyVersions {
+				if aws.BoolValue(v.IsDefaultVersion) {
+					continue
+				}
+
+				v, err := strconv.Atoi(aws.StringValue(v.VersionId))
+
+				if err != nil {
+					continue
+				}
+
+				versionIDs = append(versionIDs, v)
+			}
+
+			if len(versionIDs) > 0 {
+				// Sort ascending.
+				slices.Sort(versionIDs)
+				versionID := strconv.Itoa(versionIDs[0])
+
+				if err := deletePolicyVersion(ctx, conn, d.Id(), versionID, d.Timeout(schema.TimeoutUpdate)); err != nil {
+					return sdkdiag.AppendFromErr(diags, err)
+				}
+
+				if err != nil {
+					return sdkdiag.AppendErrorf(diags, "waiting for IoT Policy (%s) version (%s) delete: %s", d.Id(), versionID, err)
+				}
+
+				_, errCreate = conn.CreatePolicyVersionWithContext(ctx, input)
+			}
 		}
 
-		if len(versionIDs) > 0 {
-			// Sort ascending.
-			slices.Sort(versionIDs)
-			versionID := strconv.Itoa(versionIDs[0])
-
-			if err := deletePolicyVersion(ctx, conn, d.Id(), versionID, d.Timeout(schema.TimeoutUpdate)); err != nil {
-				return sdkdiag.AppendFromErr(diags, err)
-			}
-
-			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "waiting for IoT Policy (%s) version (%s) delete: %s", d.Id(), versionID, err)
-			}
-
-			_, errCreate = conn.CreatePolicyVersionWithContext(ctx, input)
+		if errCreate != nil {
+			return sdkdiag.AppendErrorf(diags, "updating IoT Policy (%s): %s", d.Id(), errCreate)
 		}
 	}
-
-	if errCreate != nil {
-		return sdkdiag.AppendErrorf(diags, "updating IoT Policy (%s): %s", d.Id(), errCreate)
-	}
-
 	return append(diags, resourcePolicyRead(ctx, d, meta)...)
 }
 

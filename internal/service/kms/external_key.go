@@ -9,7 +9,6 @@ import (
 	"crypto/rsa"
 	"crypto/sha256"
 	"crypto/x509"
-	"encoding/base64"
 	"fmt"
 	"log"
 	"time"
@@ -27,6 +26,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/logging"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
+	itypes "github.com/hashicorp/terraform-provider-aws/internal/types"
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
@@ -365,24 +365,21 @@ func importExternalKeyMaterial(ctx context.Context, conn *kms.KMS, keyID, keyMat
 		return fmt.Errorf("getting parameters for import: %w", err)
 	}
 
-	output := outputRaw.(*kms.GetParametersForImportOutput)
-
-	keyMaterial, err := base64.StdEncoding.DecodeString(keyMaterialBase64)
-
+	keyMaterial, err := itypes.Base64Decode(keyMaterialBase64)
 	if err != nil {
-		return fmt.Errorf("Base64 decoding key material: %w", err)
+		return err
 	}
 
-	publicKey, err := x509.ParsePKIXPublicKey(output.PublicKey)
+	output := outputRaw.(*kms.GetParametersForImportOutput)
 
+	publicKey, err := x509.ParsePKIXPublicKey(output.PublicKey)
 	if err != nil {
-		return fmt.Errorf("parsing public key: %w", err)
+		return fmt.Errorf("parsing public key (PKIX): %w", err)
 	}
 
 	encryptedKeyMaterial, err := rsa.EncryptOAEP(sha256.New(), rand.Reader, publicKey.(*rsa.PublicKey), keyMaterial, []byte{})
-
 	if err != nil {
-		return fmt.Errorf("encrypting key material: %w", err)
+		return fmt.Errorf("encrypting key material (RSA-OAEP): %w", err)
 	}
 
 	input := &kms.ImportKeyMaterialInput{
@@ -394,9 +391,8 @@ func importExternalKeyMaterial(ctx context.Context, conn *kms.KMS, keyID, keyMat
 
 	if validTo != "" {
 		t, err := time.Parse(time.RFC3339, validTo)
-
 		if err != nil {
-			return fmt.Errorf("parsing valid_to timestamp: %w", err)
+			return err
 		}
 
 		input.ExpirationModel = aws.String(kms.ExpirationModelTypeKeyMaterialExpires)

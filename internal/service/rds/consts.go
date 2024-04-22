@@ -40,6 +40,7 @@ const (
 	storageTypeGP2         = "gp2"
 	storageTypeGP3         = "gp3"
 	storageTypeIO1         = "io1"
+	storageTypeIO2         = "io2"
 	storageTypeAuroraIOPT1 = "aurora-iopt1"
 )
 
@@ -49,6 +50,7 @@ func StorageType_Values() []string {
 		storageTypeGP2,
 		storageTypeGP3,
 		storageTypeIO1,
+		storageTypeIO2,
 		storageTypeAuroraIOPT1,
 	}
 }
@@ -116,10 +118,10 @@ const (
 )
 
 const (
-	EventSubscriptionStatusActive    = "active"
-	EventSubscriptionStatusCreating  = "creating"
-	EventSubscriptionStatusDeleting  = "deleting"
-	EventSubscriptionStatusModifying = "modifying"
+	eventSubscriptionStatusActive    = "active"
+	eventSubscriptionStatusCreating  = "creating"
+	eventSubscriptionStatusDeleting  = "deleting"
+	eventSubscriptionStatusModifying = "modifying"
 )
 
 const (
@@ -148,6 +150,8 @@ func ClusterInstanceEngine_Values() []string {
 	return []string{
 		ClusterEngineAuroraMySQL,
 		ClusterEngineAuroraPostgreSQL,
+		ClusterEngineMySQL,
+		ClusterEnginePostgres,
 	}
 }
 

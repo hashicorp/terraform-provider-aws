@@ -6,10 +6,12 @@ package iam
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/iam"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/iam"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -19,8 +21,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKDataSource("aws_iam_openid_connect_provider")
-func DataSourceOpenIDConnectProvider() *schema.Resource {
+// @SDKDataSource("aws_iam_openid_connect_provider", name="OIDC Provider")
+func dataSourceOpenIDConnectProvider() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceOpenIDConnectProviderRead,
 
@@ -58,7 +60,7 @@ func DataSourceOpenIDConnectProvider() *schema.Resource {
 func dataSourceOpenIDConnectProviderRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
 
-	conn := meta.(*conns.AWSClient).IAMConn(ctx)
+	conn := meta.(*conns.AWSClient).IAMClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	input := &iam.GetOpenIDConnectProviderInput{}
@@ -79,17 +81,17 @@ func dataSourceOpenIDConnectProviderRead(ctx context.Context, d *schema.Resource
 		input.OpenIDConnectProviderArn = oidcpEntry.Arn
 	}
 
-	resp, err := conn.GetOpenIDConnectProviderWithContext(ctx, input)
+	resp, err := conn.GetOpenIDConnectProvider(ctx, input)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading IAM OIDC Provider: %s", err)
 	}
 
-	d.SetId(aws.StringValue(input.OpenIDConnectProviderArn))
+	d.SetId(aws.ToString(input.OpenIDConnectProviderArn))
 	d.Set("arn", input.OpenIDConnectProviderArn)
 	d.Set("url", resp.Url)
-	d.Set("client_id_list", flex.FlattenStringList(resp.ClientIDList))
-	d.Set("thumbprint_list", flex.FlattenStringList(resp.ThumbprintList))
+	d.Set("client_id_list", flex.FlattenStringValueList(resp.ClientIDList))
+	d.Set("thumbprint_list", flex.FlattenStringValueList(resp.ThumbprintList))
 
 	if err := d.Set("tags", KeyValueTags(ctx, resp.Tags).IgnoreAWS().IgnoreConfig(ignoreTagsConfig).Map()); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting tags: %s", err)
@@ -98,29 +100,29 @@ func dataSourceOpenIDConnectProviderRead(ctx context.Context, d *schema.Resource
 	return diags
 }
 
-func dataSourceGetOpenIDConnectProviderByURL(ctx context.Context, conn *iam.IAM, url string) (*iam.OpenIDConnectProviderListEntry, error) {
-	var result *iam.OpenIDConnectProviderListEntry
+func dataSourceGetOpenIDConnectProviderByURL(ctx context.Context, conn *iam.Client, url string) (*awstypes.OpenIDConnectProviderListEntry, error) {
+	var result *awstypes.OpenIDConnectProviderListEntry
 
 	input := &iam.ListOpenIDConnectProvidersInput{}
 
-	output, err := conn.ListOpenIDConnectProvidersWithContext(ctx, input)
+	output, err := conn.ListOpenIDConnectProviders(ctx, input)
 
 	if err != nil {
 		return nil, err
 	}
 
 	for _, oidcp := range output.OpenIDConnectProviderList {
-		if oidcp == nil {
+		if reflect.ValueOf(oidcp).IsZero() {
 			continue
 		}
 
-		arnUrl, err := urlFromOpenIDConnectProviderARN(aws.StringValue(oidcp.Arn))
+		arnUrl, err := urlFromOpenIDConnectProviderARN(aws.ToString(oidcp.Arn))
 		if err != nil {
 			return nil, err
 		}
 
 		if arnUrl == strings.TrimPrefix(url, "https://") {
-			return oidcp, nil
+			return &oidcp, nil
 		}
 	}
 

@@ -70,7 +70,7 @@ func sweepObjects(region string) error {
 		return fmt.Errorf("error listing S3 Buckets: %w", err)
 	}
 
-	buckets := tfslices.Filter(output.Buckets, bucketRegionFilter(ctx, conn, region, client.S3UsePathStyle()))
+	buckets := tfslices.Filter(output.Buckets, bucketRegionFilter(ctx, conn, region, client.S3UsePathStyle(ctx)))
 	buckets = tfslices.Filter(buckets, bucketNameFilter)
 	sweepables := make([]sweep.Sweepable, 0)
 
@@ -188,7 +188,7 @@ func sweepBuckets(region string) error {
 		return nil
 	}
 
-	buckets := tfslices.Filter(output.Buckets, bucketRegionFilter(ctx, conn, region, client.S3UsePathStyle()))
+	buckets := tfslices.Filter(output.Buckets, bucketRegionFilter(ctx, conn, region, client.S3UsePathStyle(ctx)))
 	buckets = tfslices.Filter(buckets, bucketNameFilter)
 	sweepables := make([]sweep.Sweepable, 0)
 

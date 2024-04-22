@@ -8,7 +8,6 @@ import (
 	_ "embed"
 	"encoding/csv"
 	"errors"
-	"fmt"
 	"io"
 	"strings"
 )
@@ -157,7 +156,7 @@ func (sr ServiceRecord) SdkId() string {
 }
 
 func (sr ServiceRecord) AwsServiceEnvVar() string {
-	return fmt.Sprintf("AWS_ENDPOINT_URL_%s", strings.ReplaceAll(strings.ToUpper(sr.SdkId()), " ", "_"))
+	return "AWS_ENDPOINT_URL_" + strings.ReplaceAll(strings.ToUpper(sr.SdkId()), " ", "_")
 }
 
 func (sr ServiceRecord) AwsConfigParameter() string {

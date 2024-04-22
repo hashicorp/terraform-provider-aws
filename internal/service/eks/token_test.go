@@ -200,7 +200,7 @@ func TestVerifyBodyReadError(t *testing.T) {
 			Transport: &roundTripper{
 				err: nil,
 				resp: &http.Response{
-					StatusCode: 200,
+					StatusCode: http.StatusOK,
 					Body:       errorReadCloser{},
 				},
 			},

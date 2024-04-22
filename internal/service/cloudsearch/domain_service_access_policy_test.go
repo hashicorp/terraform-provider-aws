@@ -25,7 +25,7 @@ func TestAccCloudSearchDomainServiceAccessPolicy_basic(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudSearchEndpointID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CloudSearchEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainServiceAccessPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
@@ -52,7 +52,7 @@ func TestAccCloudSearchDomainServiceAccessPolicy_update(t *testing.T) {
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); acctest.PreCheckPartitionHasService(t, names.CloudSearchEndpointID) },
-		ErrorCheck:               acctest.ErrorCheck(t, names.CloudSearchEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.CloudSearchServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             testAccCheckDomainServiceAccessPolicyDestroy(ctx),
 		Steps: []resource.TestStep{
