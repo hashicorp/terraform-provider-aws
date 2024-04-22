@@ -11,7 +11,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/attr"
 	"github.com/hashicorp/terraform-plugin-framework/attr/xattr"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
-	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
@@ -19,9 +18,7 @@ import (
 )
 
 var (
-	_ xattr.TypeWithValidate   = (*arnType)(nil)
-	_ basetypes.StringTypable  = (*arnType)(nil)
-	_ basetypes.StringValuable = (*ARN)(nil)
+	_ basetypes.StringTypable = (*arnType)(nil)
 )
 
 type arnType struct {
@@ -90,35 +87,10 @@ func (arnType) ValueType(context.Context) attr.Value {
 	return ARN{}
 }
 
-func (t arnType) Validate(ctx context.Context, in tftypes.Value, path path.Path) diag.Diagnostics {
-	var diags diag.Diagnostics
-
-	if !in.IsKnown() || in.IsNull() {
-		return diags
-	}
-
-	var value string
-	err := in.As(&value)
-	if err != nil {
-		diags.AddAttributeError(
-			path,
-			"ARN Type Validation Error",
-			ProviderErrorDetailPrefix+fmt.Sprintf("Cannot convert value to string: %s", err),
-		)
-		return diags
-	}
-
-	if !arn.IsARN(value) {
-		diags.AddAttributeError(
-			path,
-			"ARN Type Validation Error",
-			fmt.Sprintf("Value %q cannot be parsed as an ARN.", value),
-		)
-		return diags
-	}
-
-	return diags
-}
+var (
+	_ basetypes.StringValuable    = (*ARN)(nil)
+	_ xattr.ValidateableAttribute = (*ARN)(nil)
+)
 
 func ARNNull() ARN {
 	return ARN{StringValue: basetypes.NewStringNull()}
@@ -169,4 +141,20 @@ func (ARN) Type(context.Context) attr.Type {
 // ValueARN returns the known arn.ARN value. If ARN is null or unknown, returns {}.
 func (v ARN) ValueARN() arn.ARN {
 	return v.value
+}
+
+func (v ARN) ValidateAttribute(ctx context.Context, req xattr.ValidateAttributeRequest, resp *xattr.ValidateAttributeResponse) {
+	if v.IsNull() || v.IsUnknown() {
+		return
+	}
+
+	if !arn.IsARN(v.ValueString()) {
+		resp.Diagnostics.AddAttributeError(
+			req.Path,
+			"Invalid ARN Value",
+			"The provided value cannot be parsed as an ARN.\n\n"+
+				"Path: "+req.Path.String()+"\n"+
+				"Value: "+v.ValueString(),
+		)
+	}
 }
