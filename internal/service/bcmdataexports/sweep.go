@@ -16,7 +16,7 @@ import (
 )
 
 func RegisterSweepers() {
-	resource.AddTestSweepers("aws_bcmdataexports", &resource.Sweeper{
+	resource.AddTestSweepers("aws_bcmdataexports_export", &resource.Sweeper{
 		Name: "aws_bcmdataexports_export",
 		F:    sweepExports,
 	})
