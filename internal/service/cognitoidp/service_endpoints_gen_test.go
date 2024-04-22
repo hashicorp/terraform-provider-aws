@@ -289,7 +289,9 @@ func callService(ctx context.Context, t *testing.T, meta *conns.AWSClient) strin
 
 	client := meta.CognitoIDPClient(ctx)
 
-	_, err := client.ListUserPools(ctx, &cognitoidentityprovider_sdkv2.ListUserPoolsInput{},
+	_, err := client.ListUserPools(ctx, &cognitoidentityprovider_sdkv2.ListUserPoolsInput{
+		MaxResults: aws_sdkv2.Int32(1),
+	},
 		func(opts *cognitoidentityprovider_sdkv2.Options) {
 			opts.APIOptions = append(opts.APIOptions,
 				addRetrieveEndpointURLMiddleware(t, &endpoint),

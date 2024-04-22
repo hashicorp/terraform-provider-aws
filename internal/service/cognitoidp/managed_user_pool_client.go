@@ -38,6 +38,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/names"
 )
 
+const updateUserPoolClientTimeout = 2 * time.Minute
+
 // @FrameworkResource(name="Managed User Pool Client")
 func newManagedUserPoolClientResource(context.Context) (resource.ResourceWithConfigure, error) {
 	return &managedUserPoolClientResource{}, nil
@@ -491,7 +493,7 @@ func (r *managedUserPoolClientResource) Create(ctx context.Context, request reso
 			return
 		}
 
-		output, err := tfresource.RetryWhenIsA[*awstypes.ConcurrentModificationException](ctx, 2*time.Minute, func() (interface{}, error) {
+		output, err := tfresource.RetryWhenIsA[*awstypes.ConcurrentModificationException](ctx, updateUserPoolClientTimeout, func() (interface{}, error) {
 			return conn.UpdateUserPoolClient(ctx, params)
 		})
 		if err != nil {
@@ -624,7 +626,7 @@ func (r *managedUserPoolClientResource) Update(ctx context.Context, request reso
 		params.TokenValidityUnits.RefreshToken = awstypes.TimeUnitsTypeDays
 	}
 
-	output, err := tfresource.RetryWhenIsA[*awstypes.ConcurrentModificationException](ctx, 2*time.Minute, func() (interface{}, error) {
+	output, err := tfresource.RetryWhenIsA[*awstypes.ConcurrentModificationException](ctx, updateUserPoolClientTimeout, func() (interface{}, error) {
 		return conn.UpdateUserPoolClient(ctx, params)
 	})
 	if err != nil {

@@ -113,7 +113,6 @@ func listCognitoUserPoolClientDescriptions(ctx context.Context, conn *cognitoide
 				descs = append(descs, client)
 			}
 		}
-
 	}
 
 	return descs, nil
