@@ -166,7 +166,6 @@ func TestAccBCMDataExportsExport_updateTable(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExportExists(ctx, resourceName, &export),
 					resource.TestCheckResourceAttr(resourceName, "export.0.name", rName),
-					// resource.TestCheckResourceAttr(resourceName, "export.0.data_query.0.table_configurations.COST_AND_USAGE_REPORT.TIME_GRANULARITY", "HOURLY"),
 					resource.TestCheckResourceAttr(resourceName, "export.0.data_query.0.query_statement", "SELECT identity_line_item_id, identity_time_interval, line_item_usage_amount, line_item_unblended_cost FROM COST_AND_USAGE_REPORT"),
 				),
 			},
@@ -180,7 +179,6 @@ func TestAccBCMDataExportsExport_updateTable(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckExportExists(ctx, resourceName, &export),
 					resource.TestCheckResourceAttr(resourceName, "export.0.name", rName),
-					// resource.TestCheckResourceAttr(resourceName, "export.0.data_query.0.table_configurations.COST_AND_USAGE_REPORT.TIME_GRANULARITY", "DAILY"),
 					resource.TestCheckResourceAttr(resourceName, "export.0.data_query.0.query_statement", "SELECT identity_line_item_id, identity_time_interval, line_item_usage_amount, line_item_unblended_cost, cost_category FROM COST_AND_USAGE_REPORT"),
 				),
 			},

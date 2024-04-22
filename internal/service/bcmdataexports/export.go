@@ -71,7 +71,6 @@ func (r *resourceExport) Schema(ctx context.Context, req resource.SchemaRequest,
 					CustomType: fwtypes.NewMapTypeOf[fwtypes.MapValueOf[types.String]](ctx),
 					Optional:   true,
 					PlanModifiers: []planmodifier.Map{
-						// mapplanmodifier.RequiresReplaceIfConfigured(),
 						mapplanmodifier.UseStateForUnknown(),
 					},
 				},
