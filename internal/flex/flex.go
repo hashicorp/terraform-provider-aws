@@ -413,24 +413,6 @@ func ResourceIdPartCount(id string) int {
 	return len(idParts)
 }
 
-type Set[T comparable] []T
-
-// Difference find the elements in two sets that are not similar.
-func (s Set[T]) Difference(ns Set[T]) Set[T] {
-	m := make(map[T]struct{})
-	for _, v := range ns {
-		m[v] = struct{}{}
-	}
-
-	var result []T
-	for _, v := range s {
-		if _, ok := m[v]; !ok {
-			result = append(result, v)
-		}
-	}
-	return result
-}
-
 // DiffStringMaps returns the set of keys and values that must be created, the set of keys
 // and values that must be destroyed, and the set of keys and values that are unchanged.
 func DiffStringMaps(oldMap, newMap map[string]interface{}) (map[string]*string, map[string]*string, map[string]*string) {
