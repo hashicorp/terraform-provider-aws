@@ -44,15 +44,15 @@ data "aws_ssoadmin_instances" "test" {}
 resource "aws_identitystore_user" "test" {
   identity_store_id = data.aws_ssoadmin_instances.test.identity_store_ids[0]
   display_name      = "Acceptance Test"
-	user_name         = %[1]q
+  user_name         = %[1]q
 
-	name {
-	  family_name = "Acceptance"
-		given_name  = "Test"
+  name {
+    family_name = "Acceptance"
+    given_name  = "Test"
   }
 
-	emails {
-	  value = %[2]q
+  emails {
+    value = %[2]q
   }
 }
 
