@@ -11,28 +11,6 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 )
 
-func FindJobDefinitionV2ByARN(ctx context.Context, conn *batch.Client, arn string) (*types.JobDefinition, error) {
-	input := &batch.DescribeJobDefinitionsInput{
-		JobDefinitions: []string{arn},
-	}
-
-	out, err := conn.DescribeJobDefinitions(ctx, input)
-
-	if err != nil {
-		return nil, err
-	}
-
-	if out == nil || len(out.JobDefinitions) == 0 {
-		return nil, tfresource.NewEmptyResultError(input)
-	}
-
-	if count := len(out.JobDefinitions); count > 1 {
-		return nil, tfresource.NewTooManyResultsError(count, input)
-	}
-
-	return &out.JobDefinitions[0], nil
-}
-
 func ListJobDefinitionsV2ByNameWithStatus(ctx context.Context, conn *batch.Client, input *batch.DescribeJobDefinitionsInput) ([]types.JobDefinition, error) {
 	var out []types.JobDefinition
 

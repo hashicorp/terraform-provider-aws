@@ -9,18 +9,18 @@ import (
 	"log"
 	"sort"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
 	"github.com/aws/aws-sdk-go/private/protocol/json/jsonutil"
-	"github.com/aws/aws-sdk-go/service/batch"
 	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 )
 
-type containerProperties batch.ContainerProperties
+type containerProperties awstypes.ContainerProperties
 
 func (cp *containerProperties) Reduce() error {
 	// Deal with Environment objects which may be re-ordered in the API
 	sort.Slice(cp.Environment, func(i, j int) bool {
-		return aws.StringValue(cp.Environment[i].Name) < aws.StringValue(cp.Environment[j].Name)
+		return aws.ToString(cp.Environment[i].Name) < aws.ToString(cp.Environment[j].Name)
 	})
 
 	// Prevent difference of API response that adds an empty array when not configured during the request
@@ -29,11 +29,8 @@ func (cp *containerProperties) Reduce() error {
 	}
 
 	// Remove environment variables with empty values
-	cp.Environment = tfslices.Filter(cp.Environment, func(kvp *batch.KeyValuePair) bool {
-		if kvp == nil {
-			return false
-		}
-		return aws.StringValue(kvp.Value) != ""
+	cp.Environment = tfslices.Filter(cp.Environment, func(kvp awstypes.KeyValuePair) bool {
+		return aws.ToString(kvp.Value) != ""
 	})
 
 	// Prevent difference of API response that adds an empty array when not configured during the request
@@ -43,7 +40,7 @@ func (cp *containerProperties) Reduce() error {
 
 	// Prevent difference of API response that contains the default Fargate platform configuration
 	if cp.FargatePlatformConfiguration != nil {
-		if aws.StringValue(cp.FargatePlatformConfiguration.PlatformVersion) == "LATEST" {
+		if aws.ToString(cp.FargatePlatformConfiguration.PlatformVersion) == "LATEST" {
 			cp.FargatePlatformConfiguration = nil
 		}
 	}

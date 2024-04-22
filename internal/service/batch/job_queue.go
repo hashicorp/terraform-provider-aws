@@ -13,7 +13,8 @@ import (
 
 	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
-	"github.com/aws/aws-sdk-go/service/batch"
+	"github.com/aws/aws-sdk-go-v2/service/batch"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/batch/types"
 	"github.com/hashicorp/terraform-plugin-framework-timeouts/resource/timeouts"
 	"github.com/hashicorp/terraform-plugin-framework-validators/resourcevalidator"
 	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
@@ -27,6 +28,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
@@ -105,7 +107,7 @@ func (r *resourceJobQueue) Schema(ctx context.Context, request resource.SchemaRe
 			"state": schema.StringAttribute{
 				Required: true,
 				Validators: []validator.String{
-					stringvalidator.OneOfCaseInsensitive(batch.JQState_Values()...),
+					stringvalidator.OneOfCaseInsensitive(enum.Slice[awstypes.JQState]()...),
 				},
 			},
 			names.AttrTags:    tftags.TagsAttribute(),
@@ -139,7 +141,7 @@ func (r *resourceJobQueue) Schema(ctx context.Context, request resource.SchemaRe
 }
 
 func (r *resourceJobQueue) Create(ctx context.Context, request resource.CreateRequest, response *resource.CreateResponse) {
-	conn := r.Meta().BatchConn(ctx)
+	conn := r.Meta().BatchClient(ctx)
 	var data resourceJobQueueData
 
 	response.Diagnostics.Append(request.Plan.Get(ctx, &data)...)
@@ -150,8 +152,8 @@ func (r *resourceJobQueue) Create(ctx context.Context, request resource.CreateRe
 
 	input := batch.CreateJobQueueInput{
 		JobQueueName: flex.StringFromFramework(ctx, data.JobQueueName),
-		Priority:     flex.Int64FromFramework(ctx, data.Priority),
-		State:        flex.StringFromFramework(ctx, data.State),
+		Priority:     flex.Int32FromFramework(ctx, data.Priority),
+		State:        awstypes.JQState(*flex.StringFromFramework(ctx, data.State)),
 		Tags:         getTagsIn(ctx),
 	}
 
@@ -164,7 +166,7 @@ func (r *resourceJobQueue) Create(ctx context.Context, request resource.CreateRe
 		input.SchedulingPolicyArn = flex.StringFromFramework(ctx, data.SchedulingPolicyARN)
 	}
 
-	output, err := conn.CreateJobQueueWithContext(ctx, &input)
+	output, err := conn.CreateJobQueue(ctx, &input)
 
 	if err != nil {
 		response.Diagnostics.AddError(
@@ -198,7 +200,7 @@ func (r *resourceJobQueue) Create(ctx context.Context, request resource.CreateRe
 }
 
 func (r *resourceJobQueue) Read(ctx context.Context, request resource.ReadRequest, response *resource.ReadResponse) {
-	conn := r.Meta().BatchConn(ctx)
+	conn := r.Meta().BatchClient(ctx)
 	var data resourceJobQueueData
 
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
@@ -233,7 +235,7 @@ func (r *resourceJobQueue) Read(ctx context.Context, request resource.ReadReques
 }
 
 func (r *resourceJobQueue) Update(ctx context.Context, request resource.UpdateRequest, response *resource.UpdateResponse) {
-	conn := r.Meta().BatchConn(ctx)
+	conn := r.Meta().BatchClient(ctx)
 	var plan, state resourceJobQueueData
 
 	response.Diagnostics.Append(request.State.Get(ctx, &state)...)
@@ -260,13 +262,13 @@ func (r *resourceJobQueue) Update(ctx context.Context, request resource.UpdateRe
 	}
 
 	if !plan.Priority.Equal(state.Priority) {
-		input.Priority = flex.Int64FromFramework(ctx, plan.Priority)
+		input.Priority = flex.Int32FromFramework(ctx, plan.Priority)
 
 		update = true
 	}
 
 	if !plan.State.Equal(state.State) {
-		input.State = flex.StringFromFramework(ctx, plan.State)
+		input.State = awstypes.JQState(*flex.StringFromFramework(ctx, plan.State))
 
 		update = true
 	}
@@ -291,7 +293,7 @@ func (r *resourceJobQueue) Update(ctx context.Context, request resource.UpdateRe
 	}
 
 	if update {
-		_, err := conn.UpdateJobQueueWithContext(ctx, input)
+		_, err := conn.UpdateJobQueue(ctx, input)
 
 		if err != nil {
 			response.Diagnostics.AddError(
@@ -319,7 +321,7 @@ func (r *resourceJobQueue) Update(ctx context.Context, request resource.UpdateRe
 }
 
 func (r *resourceJobQueue) Delete(ctx context.Context, request resource.DeleteRequest, response *resource.DeleteResponse) {
-	conn := r.Meta().BatchConn(ctx)
+	conn := r.Meta().BatchClient(ctx)
 	var data resourceJobQueueData
 
 	response.Diagnostics.Append(request.State.Get(ctx, &data)...)
@@ -343,7 +345,7 @@ func (r *resourceJobQueue) Delete(ctx context.Context, request resource.DeleteRe
 		return
 	}
 
-	_, err = conn.DeleteJobQueueWithContext(ctx, &batch.DeleteJobQueueInput{
+	_, err = conn.DeleteJobQueue(ctx, &batch.DeleteJobQueueInput{
 		JobQueue: flex.StringFromFramework(ctx, data.ID),
 	})
 
@@ -404,33 +406,33 @@ type computeEnvironmentOrder struct {
 	Order              types.Int64 `tfsdk:"order"`
 }
 
-func (r *resourceJobQueueData) refreshFromOutput(ctx context.Context, out *batch.JobQueueDetail) diag.Diagnostics { //nolint:unparam
+func (r *resourceJobQueueData) refreshFromOutput(ctx context.Context, out *awstypes.JobQueueDetail) diag.Diagnostics { //nolint:unparam
 	var diags diag.Diagnostics
 
 	r.ARN = flex.StringToFrameworkLegacy(ctx, out.JobQueueArn)
 	r.JobQueueName = flex.StringToFramework(ctx, out.JobQueueName)
-	r.Priority = flex.Int64ToFrameworkLegacy(ctx, out.Priority)
+	r.Priority = flex.Int32ToFrameworkLegacy(ctx, out.Priority)
 	r.SchedulingPolicyARN = flex.StringToFrameworkARN(ctx, out.SchedulingPolicyArn)
-	r.State = flex.StringToFrameworkLegacy(ctx, out.State)
+	r.State = flex.StringValueToFrameworkLegacy(ctx, out.State)
 
 	setTagsOut(ctx, out.Tags)
 
 	return diags
 }
 
-func expandComputeEnvironments(order []string) (envs []*batch.ComputeEnvironmentOrder) {
+func expandComputeEnvironments(order []string) (envs []awstypes.ComputeEnvironmentOrder) {
 	for i, env := range order {
-		envs = append(envs, &batch.ComputeEnvironmentOrder{
-			Order:              aws.Int64(int64(i)),
+		envs = append(envs, awstypes.ComputeEnvironmentOrder{
+			Order:              aws.Int32(int32(i)),
 			ComputeEnvironment: aws.String(env),
 		})
 	}
 	return
 }
 
-func flattenComputeEnvironments(apiObject []*batch.ComputeEnvironmentOrder) []string {
+func flattenComputeEnvironments(apiObject []awstypes.ComputeEnvironmentOrder) []string {
 	sort.Slice(apiObject, func(i, j int) bool {
-		return aws.ToInt64(apiObject[i].Order) < aws.ToInt64(apiObject[j].Order)
+		return aws.ToInt32(apiObject[i].Order) < aws.ToInt32(apiObject[j].Order)
 	})
 
 	computeEnvironments := make([]string, 0, len(apiObject))
@@ -441,11 +443,11 @@ func flattenComputeEnvironments(apiObject []*batch.ComputeEnvironmentOrder) []st
 	return computeEnvironments
 }
 
-func findJobQueueByName(ctx context.Context, conn *batch.Batch, sn string) (*batch.JobQueueDetail, error) {
+func findJobQueueByName(ctx context.Context, conn *batch.Client, sn string) (*awstypes.JobQueueDetail, error) {
 	describeOpts := &batch.DescribeJobQueuesInput{
-		JobQueues: []*string{aws.String(sn)},
+		JobQueues: []string{sn},
 	}
-	resp, err := conn.DescribeJobQueuesWithContext(ctx, describeOpts)
+	resp, err := conn.DescribeJobQueues(ctx, describeOpts)
 	if err != nil {
 		return nil, err
 	}
@@ -455,17 +457,17 @@ func findJobQueueByName(ctx context.Context, conn *batch.Batch, sn string) (*bat
 	case numJobQueues == 0:
 		return nil, nil
 	case numJobQueues == 1:
-		return resp.JobQueues[0], nil
+		return &resp.JobQueues[0], nil
 	case numJobQueues > 1:
 		return nil, fmt.Errorf("Multiple Job Queues with name %s", sn)
 	}
 	return nil, nil
 }
 
-func disableJobQueue(ctx context.Context, conn *batch.Batch, id string, timeout time.Duration) (bool, error) {
-	_, err := conn.UpdateJobQueueWithContext(ctx, &batch.UpdateJobQueueInput{
+func disableJobQueue(ctx context.Context, conn *batch.Client, id string, timeout time.Duration) (bool, error) {
+	_, err := conn.UpdateJobQueue(ctx, &batch.UpdateJobQueueInput{
 		JobQueue: aws.String(id),
-		State:    aws.String(batch.JQStateDisabled),
+		State:    awstypes.JQStateDisabled,
 	})
 
 	if err != nil {
@@ -476,8 +478,8 @@ func disableJobQueue(ctx context.Context, conn *batch.Batch, id string, timeout 
 	}
 
 	stateChangeConf := &retry.StateChangeConf{
-		Pending:    []string{batch.JQStatusUpdating},
-		Target:     []string{batch.JQStatusValid},
+		Pending:    enum.Slice(awstypes.JQStatusUpdating),
+		Target:     enum.Slice(awstypes.JQStatusValid),
 		Refresh:    jobQueueRefreshStatusFunc(ctx, conn, id),
 		Timeout:    timeout,
 		Delay:      10 * time.Second,
@@ -487,10 +489,10 @@ func disableJobQueue(ctx context.Context, conn *batch.Batch, id string, timeout 
 	return true, err
 }
 
-func waitJobQueueCreated(ctx context.Context, conn *batch.Batch, id string, timeout time.Duration) (*batch.JobQueueDetail, error) {
+func waitJobQueueCreated(ctx context.Context, conn *batch.Client, id string, timeout time.Duration) (*awstypes.JobQueueDetail, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{batch.JQStatusCreating, batch.JQStatusUpdating},
-		Target:     []string{batch.JQStatusValid},
+		Pending:    enum.Slice(awstypes.JQStatusCreating, awstypes.JQStatusUpdating),
+		Target:     enum.Slice(awstypes.JQStatusValid),
 		Refresh:    jobQueueRefreshStatusFunc(ctx, conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
@@ -499,17 +501,17 @@ func waitJobQueueCreated(ctx context.Context, conn *batch.Batch, id string, time
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*batch.JobQueueDetail); ok {
+	if output, ok := outputRaw.(*awstypes.JobQueueDetail); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitJobQueueUpdated(ctx context.Context, conn *batch.Batch, id string, timeout time.Duration) (*batch.JobQueueDetail, error) {
+func waitJobQueueUpdated(ctx context.Context, conn *batch.Client, id string, timeout time.Duration) (*awstypes.JobQueueDetail, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{batch.JQStatusUpdating},
-		Target:     []string{batch.JQStatusValid},
+		Pending:    enum.Slice(awstypes.JQStatusUpdating),
+		Target:     enum.Slice(awstypes.JQStatusValid),
 		Refresh:    jobQueueRefreshStatusFunc(ctx, conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
@@ -518,17 +520,17 @@ func waitJobQueueUpdated(ctx context.Context, conn *batch.Batch, id string, time
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*batch.JobQueueDetail); ok {
+	if output, ok := outputRaw.(*awstypes.JobQueueDetail); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func waitJobQueueDeleted(ctx context.Context, conn *batch.Batch, id string, timeout time.Duration) (*batch.JobQueueDetail, error) {
+func waitJobQueueDeleted(ctx context.Context, conn *batch.Client, id string, timeout time.Duration) (*awstypes.JobQueueDetail, error) {
 	stateConf := &retry.StateChangeConf{
-		Pending:    []string{batch.JQStateDisabled, batch.JQStatusDeleting},
-		Target:     []string{batch.JQStatusDeleted},
+		Pending:    []string{string(awstypes.JQStateDisabled), string(awstypes.JQStatusDeleting)},
+		Target:     enum.Slice(awstypes.JQStatusDeleted),
 		Refresh:    jobQueueRefreshStatusFunc(ctx, conn, id),
 		Timeout:    timeout,
 		MinTimeout: 10 * time.Second,
@@ -537,14 +539,14 @@ func waitJobQueueDeleted(ctx context.Context, conn *batch.Batch, id string, time
 
 	outputRaw, err := stateConf.WaitForStateContext(ctx)
 
-	if output, ok := outputRaw.(*batch.JobQueueDetail); ok {
+	if output, ok := outputRaw.(*awstypes.JobQueueDetail); ok {
 		return output, err
 	}
 
 	return nil, err
 }
 
-func jobQueueRefreshStatusFunc(ctx context.Context, conn *batch.Batch, sn string) retry.StateRefreshFunc {
+func jobQueueRefreshStatusFunc(ctx context.Context, conn *batch.Client, sn string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
 		ce, err := findJobQueueByName(ctx, conn, sn)
 		if err != nil {
@@ -552,9 +554,9 @@ func jobQueueRefreshStatusFunc(ctx context.Context, conn *batch.Batch, sn string
 		}
 
 		if ce == nil {
-			return 42, batch.JQStatusDeleted, nil
+			return 42, string(awstypes.JQStatusDeleted), nil
 		}
 
-		return ce, *ce.Status, nil
+		return ce, string(ce.Status), nil
 	}
 }

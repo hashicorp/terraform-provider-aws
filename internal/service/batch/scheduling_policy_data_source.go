@@ -8,7 +8,7 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
+	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -79,7 +79,7 @@ func DataSourceSchedulingPolicy() *schema.Resource {
 
 func dataSourceSchedulingPolicyRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BatchConn(ctx)
+	conn := meta.(*conns.AWSClient).BatchClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	schedulingPolicy, err := FindSchedulingPolicyByARN(ctx, conn, d.Get("arn").(string))
@@ -88,7 +88,7 @@ func dataSourceSchedulingPolicyRead(ctx context.Context, d *schema.ResourceData,
 		return sdkdiag.AppendFromErr(diags, tfresource.SingularDataSourceFindError("Batch Scheduling Policy", err))
 	}
 
-	d.SetId(aws.StringValue(schedulingPolicy.Arn))
+	d.SetId(aws.ToString(schedulingPolicy.Arn))
 	if err := d.Set("fair_share_policy", flattenFairsharePolicy(schedulingPolicy.FairsharePolicy)); err != nil {
 		return sdkdiag.AppendErrorf(diags, "setting fair_share_policy: %s", err)
 	}

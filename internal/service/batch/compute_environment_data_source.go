@@ -6,8 +6,8 @@ package batch
 import (
 	"context"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/batch"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/batch"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -84,13 +84,13 @@ func DataSourceComputeEnvironment() *schema.Resource {
 
 func dataSourceComputeEnvironmentRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BatchConn(ctx)
+	conn := meta.(*conns.AWSClient).BatchClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	params := &batch.DescribeComputeEnvironmentsInput{
-		ComputeEnvironments: []*string{aws.String(d.Get("compute_environment_name").(string))},
+		ComputeEnvironments: []string{d.Get("compute_environment_name").(string)},
 	}
-	desc, err := conn.DescribeComputeEnvironmentsWithContext(ctx, params)
+	desc, err := conn.DescribeComputeEnvironments(ctx, params)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Batch Compute Environment (%s): %s", d.Get("compute_environment_name").(string), err)
@@ -103,7 +103,7 @@ func dataSourceComputeEnvironmentRead(ctx context.Context, d *schema.ResourceDat
 	}
 
 	computeEnvironment := desc.ComputeEnvironments[0]
-	d.SetId(aws.StringValue(computeEnvironment.ComputeEnvironmentArn))
+	d.SetId(aws.ToString(computeEnvironment.ComputeEnvironmentArn))
 	d.Set("arn", computeEnvironment.ComputeEnvironmentArn)
 	d.Set("compute_environment_name", computeEnvironment.ComputeEnvironmentName)
 	d.Set("ecs_cluster_arn", computeEnvironment.EcsClusterArn)

@@ -7,8 +7,8 @@ import (
 	"context"
 	"log"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/batch"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/batch"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
@@ -81,14 +81,14 @@ func DataSourceJobQueue() *schema.Resource {
 
 func dataSourceJobQueueRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).BatchConn(ctx)
+	conn := meta.(*conns.AWSClient).BatchClient(ctx)
 	ignoreTagsConfig := meta.(*conns.AWSClient).IgnoreTagsConfig
 
 	params := &batch.DescribeJobQueuesInput{
-		JobQueues: []*string{aws.String(d.Get("name").(string))},
+		JobQueues: []string{d.Get("name").(string)},
 	}
-	log.Printf("[DEBUG] Reading Batch Job Queue: %s", params)
-	desc, err := conn.DescribeJobQueuesWithContext(ctx, params)
+	log.Printf("[DEBUG] Reading Batch Job Queue: %+v", params)
+	desc, err := conn.DescribeJobQueues(ctx, params)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Batch Job Queue (%s): %s", d.Get("name").(string), err)
@@ -101,7 +101,7 @@ func dataSourceJobQueueRead(ctx context.Context, d *schema.ResourceData, meta in
 	}
 
 	jobQueue := desc.JobQueues[0]
-	d.SetId(aws.StringValue(jobQueue.JobQueueArn))
+	d.SetId(aws.ToString(jobQueue.JobQueueArn))
 	d.Set("arn", jobQueue.JobQueueArn)
 	d.Set("name", jobQueue.JobQueueName)
 	d.Set("scheduling_policy_arn", jobQueue.SchedulingPolicyArn)
@@ -113,8 +113,8 @@ func dataSourceJobQueueRead(ctx context.Context, d *schema.ResourceData, meta in
 	ceos := make([]map[string]interface{}, 0)
 	for _, v := range jobQueue.ComputeEnvironmentOrder {
 		ceo := map[string]interface{}{}
-		ceo["compute_environment"] = aws.StringValue(v.ComputeEnvironment)
-		ceo["order"] = int(aws.Int64Value(v.Order))
+		ceo["compute_environment"] = aws.ToString(v.ComputeEnvironment)
+		ceo["order"] = int(aws.ToInt32(v.Order))
 		ceos = append(ceos, ceo)
 	}
 	if err := d.Set("compute_environment_order", ceos); err != nil {
