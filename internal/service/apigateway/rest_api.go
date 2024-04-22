@@ -310,7 +310,23 @@ func resourceRestAPIRead(ctx context.Context, d *schema.ResourceData, meta inter
 		d.Set("minimum_compression_size", strconv.FormatInt(int64(aws.ToInt32(api.MinimumCompressionSize)), 10))
 	}
 	d.Set("name", api.Name)
-	d.Set("root_resource_id", api.RootResourceId)
+
+	input := &apigateway.GetResourcesInput{
+		RestApiId: aws.String(d.Id()),
+	}
+
+	rootResource, err := findResource(ctx, conn, input, func(v *types.Resource) bool {
+		return aws.ToString(v.Path) == "/"
+	})
+
+	switch {
+	case err == nil:
+		d.Set("root_resource_id", rootResource.Id)
+	case tfresource.NotFound(err):
+		d.Set("root_resource_id", nil)
+	default:
+		return sdkdiag.AppendErrorf(diags, "reading API Gateway REST API (%s) root resource: %s", d.Id(), err)
+	}
 
 	policy, err := flattenAPIPolicy(api.Policy)
 	if err != nil {
