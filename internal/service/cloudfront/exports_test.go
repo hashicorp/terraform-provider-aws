@@ -22,6 +22,7 @@ var (
 	ResourceResponseHeadersPolicy       = resourceResponseHeadersPolicy
 
 	FindCachePolicyByID                        = findCachePolicyByID
+	FindContinuousDeploymentPolicyByID         = findContinuousDeploymentPolicyByID
 	FindDistributionByID                       = findDistributionByID
 	FindFieldLevelEncryptionConfigByID         = findFieldLevelEncryptionConfigByID
 	FindFieldLevelEncryptionProfileByID        = findFieldLevelEncryptionProfileByID
