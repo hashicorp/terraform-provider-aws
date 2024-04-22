@@ -88,7 +88,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Cache Policy",
 		},
 		{
-			Factory:  ResourceDistribution,
+			Factory:  resourceDistribution,
 			TypeName: "aws_cloudfront_distribution",
 			Name:     "Distribution",
 			Tags: &types.ServicePackageResourceTags{

@@ -5,18 +5,21 @@ package cloudfront
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/cloudfront"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 	"github.com/hashicorp/terraform-provider-aws/internal/conns"
 	"github.com/hashicorp/terraform-provider-aws/internal/create"
+	"github.com/hashicorp/terraform-provider-aws/internal/enum"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
@@ -26,13 +29,14 @@ import (
 
 // @SDKResource("aws_cloudfront_distribution", name="Distribution")
 // @Tags(identifierAttribute="arn")
-func ResourceDistribution() *schema.Resource {
+func resourceDistribution() *schema.Resource {
 	//lintignore:R011
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceDistributionCreate,
 		ReadWithoutTimeout:   resourceDistributionRead,
 		UpdateWithoutTimeout: resourceDistributionUpdate,
 		DeleteWithoutTimeout: resourceDistributionDelete,
+
 		Importer: &schema.ResourceImporter{
 			StateContext: func(ctx context.Context, d *schema.ResourceData, meta interface{}) ([]*schema.ResourceData, error) {
 				// Set non API attributes to their Default settings in the schema
@@ -41,6 +45,7 @@ func ResourceDistribution() *schema.Resource {
 				return []*schema.ResourceData{d}, nil
 			},
 		},
+
 		MigrateState:  resourceDistributionMigrateState,
 		SchemaVersion: 1,
 
@@ -54,6 +59,281 @@ func ResourceDistribution() *schema.Resource {
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
 				Set:      AliasesHash,
+			},
+			"caller_reference": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"comment": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				ValidateFunc: validation.StringLenBetween(0, 128),
+			},
+			"continuous_deployment_policy_id": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Computed: true,
+			},
+			"custom_error_response": {
+				Type:     schema.TypeSet,
+				Optional: true,
+				Set:      CustomErrorResponseHash,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"error_caching_min_ttl": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"error_code": {
+							Type:     schema.TypeInt,
+							Required: true,
+						},
+						"response_code": {
+							Type:     schema.TypeInt,
+							Optional: true,
+						},
+						"response_page_path": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+					},
+				},
+			},
+			"default_cache_behavior": {
+				Type:     schema.TypeList,
+				Required: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"allowed_methods": {
+							Type:     schema.TypeSet,
+							Required: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"cache_policy_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"cached_methods": {
+							Type:     schema.TypeSet,
+							Required: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"compress": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"default_ttl": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
+						},
+						"field_level_encryption_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"forwarded_values": {
+							Type:     schema.TypeList,
+							Optional: true,
+							MaxItems: 1,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"cookies": {
+										Type:     schema.TypeList,
+										Required: true,
+										MaxItems: 1,
+										Elem: &schema.Resource{
+											Schema: map[string]*schema.Schema{
+												"forward": {
+													Type:             schema.TypeString,
+													Required:         true,
+													ValidateDiagFunc: enum.Validate[awstypes.ItemSelection](),
+												},
+												"whitelisted_names": {
+													Type:     schema.TypeSet,
+													Optional: true,
+													Computed: true,
+													Elem:     &schema.Schema{Type: schema.TypeString},
+												},
+											},
+										},
+									},
+									"headers": {
+										Type:     schema.TypeSet,
+										Optional: true,
+										Computed: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+									"query_string": {
+										Type:     schema.TypeBool,
+										Required: true,
+									},
+									"query_string_cache_keys": {
+										Type:     schema.TypeList,
+										Optional: true,
+										Computed: true,
+										Elem:     &schema.Schema{Type: schema.TypeString},
+									},
+								},
+							},
+						},
+						"function_association": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							MaxItems: 2,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"event_type": {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.EventType](),
+									},
+									"function_arn": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+								},
+							},
+						},
+						"lambda_function_association": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							MaxItems: 4,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"event_type": {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.EventType](),
+									},
+									"include_body": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  false,
+									},
+									"lambda_arn": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+								},
+							},
+							Set: LambdaFunctionAssociationHash,
+						},
+						"max_ttl": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Computed: true,
+						},
+						"min_ttl": {
+							Type:     schema.TypeInt,
+							Optional: true,
+							Default:  0,
+						},
+						"origin_request_policy_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"realtime_log_config_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"response_headers_policy_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"smooth_streaming": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"target_origin_id": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"trusted_key_groups": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"trusted_signers": {
+							Type:     schema.TypeList,
+							Optional: true,
+							Computed: true,
+							Elem:     &schema.Schema{Type: schema.TypeString},
+						},
+						"viewer_protocol_policy": {
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.ViewerProtocolPolicy](),
+						},
+					},
+				},
+			},
+			"default_root_object": {
+				Type:     schema.TypeString,
+				Optional: true,
+			},
+			"domain_name": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"enabled": {
+				Type:     schema.TypeBool,
+				Required: true,
+			},
+			"etag": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"hosted_zone_id": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"http_version": {
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.HttpVersionHttp2,
+				ValidateDiagFunc: enum.Validate[awstypes.HttpVersion](),
+			},
+			"in_progress_validation_batches": {
+				Type:     schema.TypeInt,
+				Computed: true,
+			},
+			"is_ipv6_enabled": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+			},
+			"last_modified_time": {
+				Type:     schema.TypeString,
+				Computed: true,
+			},
+			"logging_config": {
+				Type:     schema.TypeList,
+				Optional: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"bucket": {
+							Type:     schema.TypeString,
+							Required: true,
+						},
+						"include_cookies": {
+							Type:     schema.TypeBool,
+							Optional: true,
+							Default:  false,
+						},
+						"prefix": {
+							Type:     schema.TypeString,
+							Optional: true,
+							Default:  "",
+						},
+					},
+				},
 			},
 			"ordered_cache_behavior": {
 				Type:     schema.TypeList,
@@ -101,9 +381,9 @@ func ResourceDistribution() *schema.Resource {
 										Elem: &schema.Resource{
 											Schema: map[string]*schema.Schema{
 												"forward": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringInSlice(cloudfront.ItemSelection_Values(), false),
+													Type:             schema.TypeString,
+													Required:         true,
+													ValidateDiagFunc: enum.Validate[awstypes.ItemSelection](),
 												},
 												"whitelisted_names": {
 													Type:     schema.TypeSet,
@@ -132,31 +412,6 @@ func ResourceDistribution() *schema.Resource {
 								},
 							},
 						},
-						"lambda_function_association": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							MaxItems: 4,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"event_type": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice(cloudfront.EventType_Values(), false),
-									},
-									"lambda_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"include_body": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  false,
-									},
-								},
-							},
-							Set: LambdaFunctionAssociationHash,
-						},
 						"function_association": {
 							Type:     schema.TypeSet,
 							Optional: true,
@@ -164,9 +419,9 @@ func ResourceDistribution() *schema.Resource {
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"event_type": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice(cloudfront.EventType_Values(), false),
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.EventType](),
 									},
 									"function_arn": {
 										Type:         schema.TypeString,
@@ -175,6 +430,31 @@ func ResourceDistribution() *schema.Resource {
 									},
 								},
 							},
+						},
+						"lambda_function_association": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							MaxItems: 4,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"event_type": {
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.EventType](),
+									},
+									"include_body": {
+										Type:     schema.TypeBool,
+										Optional: true,
+										Default:  false,
+									},
+									"lambda_arn": {
+										Type:         schema.TypeString,
+										Required:     true,
+										ValidateFunc: verify.ValidARN,
+									},
+								},
+							},
+							Set: LambdaFunctionAssociationHash,
 						},
 						"max_ttl": {
 							Type:     schema.TypeInt,
@@ -222,255 +502,9 @@ func ResourceDistribution() *schema.Resource {
 							Elem:     &schema.Schema{Type: schema.TypeString},
 						},
 						"viewer_protocol_policy": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(cloudfront.ViewerProtocolPolicy_Values(), false),
-						},
-					},
-				},
-			},
-			"continuous_deployment_policy_id": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-			},
-			"comment": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				ValidateFunc: validation.StringLenBetween(0, 128),
-			},
-			"custom_error_response": {
-				Type:     schema.TypeSet,
-				Optional: true,
-				Set:      CustomErrorResponseHash,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"error_caching_min_ttl": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"error_code": {
-							Type:     schema.TypeInt,
-							Required: true,
-						},
-						"response_code": {
-							Type:     schema.TypeInt,
-							Optional: true,
-						},
-						"response_page_path": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-					},
-				},
-			},
-			"default_cache_behavior": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"allowed_methods": {
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"cached_methods": {
-							Type:     schema.TypeSet,
-							Required: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"cache_policy_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"compress": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"default_ttl": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
-						},
-						"field_level_encryption_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"forwarded_values": {
-							Type:     schema.TypeList,
-							Optional: true,
-							MaxItems: 1,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"cookies": {
-										Type:     schema.TypeList,
-										Required: true,
-										MaxItems: 1,
-										Elem: &schema.Resource{
-											Schema: map[string]*schema.Schema{
-												"forward": {
-													Type:         schema.TypeString,
-													Required:     true,
-													ValidateFunc: validation.StringInSlice(cloudfront.ItemSelection_Values(), false),
-												},
-												"whitelisted_names": {
-													Type:     schema.TypeSet,
-													Optional: true,
-													Computed: true,
-													Elem:     &schema.Schema{Type: schema.TypeString},
-												},
-											},
-										},
-									},
-									"headers": {
-										Type:     schema.TypeSet,
-										Optional: true,
-										Computed: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-									"query_string": {
-										Type:     schema.TypeBool,
-										Required: true,
-									},
-									"query_string_cache_keys": {
-										Type:     schema.TypeList,
-										Optional: true,
-										Computed: true,
-										Elem:     &schema.Schema{Type: schema.TypeString},
-									},
-								},
-							},
-						},
-						"lambda_function_association": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							MaxItems: 4,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"event_type": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice(cloudfront.EventType_Values(), false),
-									},
-									"lambda_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-									"include_body": {
-										Type:     schema.TypeBool,
-										Optional: true,
-										Default:  false,
-									},
-								},
-							},
-							Set: LambdaFunctionAssociationHash,
-						},
-						"function_association": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							MaxItems: 2,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"event_type": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice(cloudfront.EventType_Values(), false),
-									},
-									"function_arn": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: verify.ValidARN,
-									},
-								},
-							},
-						},
-						"max_ttl": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Computed: true,
-						},
-						"min_ttl": {
-							Type:     schema.TypeInt,
-							Optional: true,
-							Default:  0,
-						},
-						"origin_request_policy_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"realtime_log_config_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"response_headers_policy_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"smooth_streaming": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"target_origin_id": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"trusted_key_groups": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"trusted_signers": {
-							Type:     schema.TypeList,
-							Optional: true,
-							Computed: true,
-							Elem:     &schema.Schema{Type: schema.TypeString},
-						},
-						"viewer_protocol_policy": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.StringInSlice(cloudfront.ViewerProtocolPolicy_Values(), false),
-						},
-					},
-				},
-			},
-			"default_root_object": {
-				Type:     schema.TypeString,
-				Optional: true,
-			},
-			"enabled": {
-				Type:     schema.TypeBool,
-				Required: true,
-			},
-			"http_version": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      cloudfront.HttpVersionHttp2,
-				ValidateFunc: validation.StringInSlice(cloudfront.HttpVersion_Values(), false),
-			},
-			"logging_config": {
-				Type:     schema.TypeList,
-				Optional: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"bucket": {
-							Type:     schema.TypeString,
-							Required: true,
-						},
-						"include_cookies": {
-							Type:     schema.TypeBool,
-							Optional: true,
-							Default:  false,
-						},
-						"prefix": {
-							Type:     schema.TypeString,
-							Optional: true,
-							Default:  "",
+							Type:             schema.TypeString,
+							Required:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.ViewerProtocolPolicy](),
 						},
 					},
 				},
@@ -481,11 +515,6 @@ func ResourceDistribution() *schema.Resource {
 				Set:      OriginGroupHash,
 				Elem: &schema.Resource{
 					Schema: map[string]*schema.Schema{
-						"origin_id": {
-							Type:         schema.TypeString,
-							Required:     true,
-							ValidateFunc: validation.NoZeroValues,
-						},
 						"failover_criteria": {
 							Type:     schema.TypeList,
 							Required: true,
@@ -514,6 +543,11 @@ func ResourceDistribution() *schema.Resource {
 								},
 							},
 						},
+						"origin_id": {
+							Type:         schema.TypeString,
+							Required:     true,
+							ValidateFunc: validation.NoZeroValues,
+						},
 					},
 				},
 			},
@@ -534,6 +568,23 @@ func ResourceDistribution() *schema.Resource {
 							Optional:     true,
 							Default:      10,
 							ValidateFunc: validation.IntBetween(1, 10),
+						},
+						"custom_header": {
+							Type:     schema.TypeSet,
+							Optional: true,
+							Set:      OriginCustomHeaderHash,
+							Elem: &schema.Resource{
+								Schema: map[string]*schema.Schema{
+									"name": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+									"value": {
+										Type:     schema.TypeString,
+										Required: true,
+									},
+								},
+							},
 						},
 						"custom_origin_config": {
 							Type:     schema.TypeList,
@@ -562,16 +613,16 @@ func ResourceDistribution() *schema.Resource {
 										ValidateFunc: validation.IntAtLeast(1),
 									},
 									"origin_protocol_policy": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice(cloudfront.OriginProtocolPolicy_Values(), false),
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.OriginProtocolPolicy](),
 									},
 									"origin_ssl_protocols": {
 										Type:     schema.TypeSet,
 										Required: true,
 										Elem: &schema.Schema{
-											Type:         schema.TypeString,
-											ValidateFunc: validation.StringInSlice(cloudfront.SslProtocol_Values(), false),
+											Type:             schema.TypeString,
+											ValidateDiagFunc: enum.Validate[awstypes.SslProtocol](),
 										},
 									},
 								},
@@ -581,23 +632,6 @@ func ResourceDistribution() *schema.Resource {
 							Type:         schema.TypeString,
 							Required:     true,
 							ValidateFunc: validation.NoZeroValues,
-						},
-						"custom_header": {
-							Type:     schema.TypeSet,
-							Optional: true,
-							Set:      OriginCustomHeaderHash,
-							Elem: &schema.Resource{
-								Schema: map[string]*schema.Schema{
-									"name": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-									"value": {
-										Type:     schema.TypeString,
-										Required: true,
-									},
-								},
-							},
 						},
 						"origin_access_control_id": {
 							Type:         schema.TypeString,
@@ -627,7 +661,7 @@ func ResourceDistribution() *schema.Resource {
 									"origin_shield_region": {
 										Type:         schema.TypeString,
 										Optional:     true,
-										ValidateFunc: validation.StringMatch(regionRegexp, "must be a valid AWS Region Code"),
+										ValidateFunc: verify.ValidRegionName,
 									},
 								},
 							},
@@ -649,10 +683,10 @@ func ResourceDistribution() *schema.Resource {
 				},
 			},
 			"price_class": {
-				Type:         schema.TypeString,
-				Optional:     true,
-				Default:      cloudfront.PriceClassPriceClassAll,
-				ValidateFunc: validation.StringInSlice(cloudfront.PriceClass_Values(), false),
+				Type:             schema.TypeString,
+				Optional:         true,
+				Default:          awstypes.PriceClassPriceClassAll,
+				ValidateDiagFunc: enum.Validate[awstypes.PriceClass](),
 			},
 			"restrictions": {
 				Type:     schema.TypeList,
@@ -673,9 +707,9 @@ func ResourceDistribution() *schema.Resource {
 										Elem:     &schema.Schema{Type: schema.TypeString},
 									},
 									"restriction_type": {
-										Type:         schema.TypeString,
-										Required:     true,
-										ValidateFunc: validation.StringInSlice(cloudfront.GeoRestrictionType_Values(), false),
+										Type:             schema.TypeString,
+										Required:         true,
+										ValidateDiagFunc: enum.Validate[awstypes.GeoRestrictionType](),
 									},
 								},
 							},
@@ -683,51 +717,26 @@ func ResourceDistribution() *schema.Resource {
 					},
 				},
 			},
-			"viewer_certificate": {
-				Type:     schema.TypeList,
-				Required: true,
-				MaxItems: 1,
-				Elem: &schema.Resource{
-					Schema: map[string]*schema.Schema{
-						"acm_certificate_arn": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: verify.ValidARN,
-						},
-						"cloudfront_default_certificate": {
-							Type:     schema.TypeBool,
-							Optional: true,
-						},
-						"iam_certificate_id": {
-							Type:     schema.TypeString,
-							Optional: true,
-						},
-						"minimum_protocol_version": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							Default:      cloudfront.MinimumProtocolVersionTlsv1,
-							ValidateFunc: validation.StringInSlice(cloudfront.MinimumProtocolVersion_Values(), false),
-						},
-						"ssl_support_method": {
-							Type:         schema.TypeString,
-							Optional:     true,
-							ValidateFunc: validation.StringInSlice(cloudfront.SSLSupportMethod_Values(), false),
-						},
-					},
-				},
-			},
-			"web_acl_id": {
-				Type:     schema.TypeString,
+			// retain_on_delete is a non-API attribute that may help facilitate speedy
+			// deletion of a resoruce. It's mainly here for testing purposes, so
+			// enable at your own risk.
+			"retain_on_delete": {
+				Type:     schema.TypeBool,
 				Optional: true,
+				Default:  false,
 			},
-			"caller_reference": {
-				Type:     schema.TypeString,
-				Computed: true,
+			"staging": {
+				Type:     schema.TypeBool,
+				Optional: true,
+				Default:  false,
+				ForceNew: true,
 			},
 			"status": {
 				Type:     schema.TypeString,
 				Computed: true,
 			},
+			names.AttrTags:    tftags.TagsSchema(),
+			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 			"trusted_key_groups": {
 				Type:     schema.TypeList,
 				Computed: true,
@@ -789,53 +798,48 @@ func ResourceDistribution() *schema.Resource {
 					},
 				},
 			},
-			"domain_name": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"last_modified_time": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"in_progress_validation_batches": {
-				Type:     schema.TypeInt,
-				Computed: true,
-			},
-			"etag": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			"hosted_zone_id": {
-				Type:     schema.TypeString,
-				Computed: true,
-			},
-			// retain_on_delete is a non-API attribute that may help facilitate speedy
-			// deletion of a resoruce. It's mainly here for testing purposes, so
-			// enable at your own risk.
-			"retain_on_delete": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
+			"viewer_certificate": {
+				Type:     schema.TypeList,
+				Required: true,
+				MaxItems: 1,
+				Elem: &schema.Resource{
+					Schema: map[string]*schema.Schema{
+						"acm_certificate_arn": {
+							Type:         schema.TypeString,
+							Optional:     true,
+							ValidateFunc: verify.ValidARN,
+						},
+						"cloudfront_default_certificate": {
+							Type:     schema.TypeBool,
+							Optional: true,
+						},
+						"iam_certificate_id": {
+							Type:     schema.TypeString,
+							Optional: true,
+						},
+						"minimum_protocol_version": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							Default:          awstypes.MinimumProtocolVersionTLSv1,
+							ValidateDiagFunc: enum.Validate[awstypes.MinimumProtocolVersion](),
+						},
+						"ssl_support_method": {
+							Type:             schema.TypeString,
+							Optional:         true,
+							ValidateDiagFunc: enum.Validate[awstypes.SSLSupportMethod](),
+						},
+					},
+				},
 			},
 			"wait_for_deployment": {
 				Type:     schema.TypeBool,
 				Optional: true,
 				Default:  true,
 			},
-			"is_ipv6_enabled": {
-				Type:     schema.TypeBool,
+			"web_acl_id": {
+				Type:     schema.TypeString,
 				Optional: true,
-				Default:  false,
 			},
-			"staging": {
-				Type:     schema.TypeBool,
-				Optional: true,
-				Default:  false,
-				ForceNew: true,
-			},
-
-			names.AttrTags:    tftags.TagsSchema(),
-			names.AttrTagsAll: tftags.TagsSchemaComputed(),
 		},
 
 		CustomizeDiff: verify.SetTagsDiff,
@@ -844,12 +848,12 @@ func ResourceDistribution() *schema.Resource {
 
 func resourceDistributionCreate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
+	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	input := &cloudfront.CreateDistributionWithTagsInput{
-		DistributionConfigWithTags: &cloudfront.DistributionConfigWithTags{
+		DistributionConfigWithTags: &awstypes.DistributionConfigWithTags{
 			DistributionConfig: expandDistributionConfig(d),
-			Tags:               &cloudfront.Tags{Items: []*cloudfront.Tag{}},
+			Tags:               &awstypes.Tags{Items: []awstypes.Tag{}},
 		},
 	}
 
@@ -859,20 +863,22 @@ func resourceDistributionCreate(ctx context.Context, d *schema.ResourceData, met
 
 	// ACM and IAM certificate eventual consistency.
 	// InvalidViewerCertificate: The specified SSL certificate doesn't exist, isn't in us-east-1 region, isn't valid, or doesn't include a valid certificate chain.
-	outputRaw, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 1*time.Minute, func() (interface{}, error) {
-		return conn.CreateDistributionWithTagsWithContext(ctx, input)
-	}, cloudfront.ErrCodeInvalidViewerCertificate)
+	const (
+		timeout = 1 * time.Minute
+	)
+	outputRaw, err := tfresource.RetryWhenIsA[*awstypes.InvalidViewerCertificate](ctx, timeout, func() (interface{}, error) {
+		return conn.CreateDistributionWithTags(ctx, input)
+	})
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "creating CloudFront Distribution: %s", err)
 	}
 
-	d.SetId(aws.StringValue(outputRaw.(*cloudfront.CreateDistributionWithTagsOutput).Distribution.Id))
+	d.SetId(aws.ToString(outputRaw.(*cloudfront.CreateDistributionWithTagsOutput).Distribution.Id))
 
 	if d.Get("wait_for_deployment").(bool) {
-		log.Printf("[DEBUG] Waiting until CloudFront Distribution (%s) is deployed", d.Id())
-		if err := WaitDistributionDeployed(ctx, conn, d.Id()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "waiting until CloudFront Distribution (%s) is deployed: %s", d.Id(), err)
+		if _, err := waitDistributionDeployed(ctx, conn, d.Id()); err != nil {
+			return sdkdiag.AppendErrorf(diags, "waiting for CloudFront Distribution (%s) deploy: %s", d.Id(), err)
 		}
 	}
 
@@ -881,18 +887,18 @@ func resourceDistributionCreate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
+	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
-	output, err := FindDistributionByID(ctx, conn, d.Id())
+	output, err := findDistributionByID(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
-		create.LogNotFoundRemoveState(names.CloudFront, create.ErrActionReading, ResNameDistribution, d.Id())
+		log.Printf("[WARN] CloudFront Distribution (%s) not found, removing from state", d.Id())
 		d.SetId("")
 		return diags
 	}
 
 	if err != nil {
-		return create.AppendDiagError(diags, names.CloudFront, create.ErrActionReading, ResNameDistribution, d.Id(), err)
+		return sdkdiag.AppendErrorf(diags, "reading CloudFront Distribution (%s): %s", d.Id(), err)
 	}
 
 	// Update attributes from DistributionConfig
@@ -921,42 +927,35 @@ func resourceDistributionRead(ctx context.Context, d *schema.ResourceData, meta 
 
 func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
+	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	if d.HasChangesExcept("tags", "tags_all") {
 		input := &cloudfront.UpdateDistributionInput{
-			Id:                 aws.String(d.Id()),
 			DistributionConfig: expandDistributionConfig(d),
+			Id:                 aws.String(d.Id()),
 			IfMatch:            aws.String(d.Get("etag").(string)),
 		}
 
 		// ACM and IAM certificate eventual consistency.
 		// InvalidViewerCertificate: The specified SSL certificate doesn't exist, isn't in us-east-1 region, isn't valid, or doesn't include a valid certificate chain.
-		_, err := tfresource.RetryWhenAWSErrCodeEquals(ctx, 1*time.Minute, func() (interface{}, error) {
-			return conn.UpdateDistributionWithContext(ctx, input)
-		}, cloudfront.ErrCodeInvalidViewerCertificate)
+		const (
+			timeout = 1 * time.Minute
+		)
+		_, err := tfresource.RetryWhenIsA[*awstypes.InvalidViewerCertificate](ctx, timeout, func() (interface{}, error) {
+			return conn.UpdateDistribution(ctx, input)
+		})
 
 		// Refresh our ETag if it is out of date and attempt update again.
-		if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodePreconditionFailed) {
-			getDistributionInput := &cloudfront.GetDistributionInput{
-				Id: aws.String(d.Id()),
-			}
-			var getDistributionOutput *cloudfront.GetDistributionOutput
-
-			log.Printf("[DEBUG] Refreshing CloudFront Distribution (%s) ETag", d.Id())
-			getDistributionOutput, err = conn.GetDistributionWithContext(ctx, getDistributionInput)
+		if errs.IsA[*awstypes.PreconditionFailed](err) {
+			etag, err := distroETag(ctx, conn, d.Id())
 
 			if err != nil {
-				return sdkdiag.AppendErrorf(diags, "refreshing CloudFront Distribution (%s) ETag: %s", d.Id(), err)
+				return sdkdiag.AppendFromErr(diags, err)
 			}
 
-			if getDistributionOutput == nil {
-				return sdkdiag.AppendErrorf(diags, "refreshing CloudFront Distribution (%s) ETag: empty response", d.Id())
-			}
+			input.IfMatch = aws.String(etag)
 
-			input.IfMatch = getDistributionOutput.ETag
-
-			_, err = conn.UpdateDistributionWithContext(ctx, input)
+			_, err = conn.UpdateDistribution(ctx, input)
 		}
 
 		if err != nil {
@@ -964,9 +963,8 @@ func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, met
 		}
 
 		if d.Get("wait_for_deployment").(bool) {
-			log.Printf("[DEBUG] Waiting until CloudFront Distribution (%s) is deployed", d.Id())
-			if err := WaitDistributionDeployed(ctx, conn, d.Id()); err != nil {
-				return sdkdiag.AppendErrorf(diags, "waiting until CloudFront Distribution (%s) is deployed: %s", d.Id(), err)
+			if _, err := waitDistributionDeployed(ctx, conn, d.Id()); err != nil {
+				return sdkdiag.AppendErrorf(diags, "waiting for CloudFront Distribution (%s) deploy: %s", d.Id(), err)
 			}
 		}
 	}
@@ -976,7 +974,7 @@ func resourceDistributionUpdate(ctx context.Context, d *schema.ResourceData, met
 
 func resourceDistributionDelete(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	var diags diag.Diagnostics
-	conn := meta.(*conns.AWSClient).CloudFrontConn(ctx)
+	conn := meta.(*conns.AWSClient).CloudFrontClient(ctx)
 
 	if d.Get("arn").(string) == "" {
 		diags = append(diags, resourceDistributionRead(ctx, d, meta)...)
@@ -987,13 +985,13 @@ func resourceDistributionDelete(ctx context.Context, d *schema.ResourceData, met
 			return create.AppendDiagError(diags, names.CloudFront, create.ErrActionDeleting, ResNameDistribution, d.Id(), err)
 		}
 
-		if err := WaitDistributionDeployed(ctx, conn, d.Id()); err != nil && !tfresource.NotFound(err) {
-			return sdkdiag.AppendErrorf(diags, "waiting until CloudFront Distribution (%s) is deployed: %s", d.Id(), err)
+		if _, err := waitDistributionDeployed(ctx, conn, d.Id()); err != nil && !tfresource.NotFound(err) {
+			return sdkdiag.AppendErrorf(diags, "waiting for CloudFront Distribution (%s) deploy: %s", d.Id(), err)
 		}
 	}
 
 	if err := disableDistribution(ctx, conn, d.Id()); err != nil {
-		return sdkdiag.AppendErrorf(diags, "disabling CloudFront Distribution (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	if d.Get("retain_on_delete").(bool) {
@@ -1002,127 +1000,137 @@ func resourceDistributionDelete(ctx context.Context, d *schema.ResourceData, met
 	}
 
 	err := deleteDistribution(ctx, conn, d.Id())
-	if err == nil || tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchDistribution) {
+
+	if err == nil || tfresource.NotFound(err) || errs.IsA[*awstypes.NoSuchDistribution](err) {
 		return diags
 	}
 
 	// Disable distribution if it is not yet disabled and attempt deletion again.
 	// Here we update via the deployed configuration to ensure we are not submitting an out of date
 	// configuration from the Terraform configuration, should other changes have occurred manually.
-	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeDistributionNotDisabled) {
+	if errs.IsA[*awstypes.DistributionNotDisabled](err) {
 		if err = disableDistribution(ctx, conn, d.Id()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "disabling CloudFront Distribution (%s): %s", d.Id(), err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
-		_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, 3*time.Minute, func() (interface{}, error) {
+		const (
+			timeout = 3 * time.Minute
+		)
+		_, err = tfresource.RetryWhenIsA[*awstypes.DistributionNotDisabled](ctx, timeout, func() (interface{}, error) {
 			return nil, deleteDistribution(ctx, conn, d.Id())
-		}, cloudfront.ErrCodeDistributionNotDisabled)
+		})
 	}
 
-	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodePreconditionFailed, cloudfront.ErrCodeInvalidIfMatchVersion) {
-		_, err = tfresource.RetryWhenAWSErrCodeEquals(ctx, 1*time.Minute, func() (interface{}, error) {
+	if errs.IsA[*awstypes.PreconditionFailed](err) || errs.IsA[*awstypes.InvalidIfMatchVersion](err) {
+		const (
+			timeout = 1 * time.Minute
+		)
+		_, err = tfresource.RetryWhenIsOneOf[*awstypes.PreconditionFailed, *awstypes.InvalidIfMatchVersion](ctx, timeout, func() (interface{}, error) {
 			return nil, deleteDistribution(ctx, conn, d.Id())
-		}, cloudfront.ErrCodePreconditionFailed, cloudfront.ErrCodeInvalidIfMatchVersion)
+		})
 	}
 
-	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchDistribution) {
+	if errs.IsA[*awstypes.NoSuchDistribution](err) {
 		return diags
 	}
 
-	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeDistributionNotDisabled) {
+	if errs.IsA[*awstypes.DistributionNotDisabled](err) {
 		if err = disableDistribution(ctx, conn, d.Id()); err != nil {
-			return sdkdiag.AppendErrorf(diags, "disabling CloudFront Distribution (%s): %s", d.Id(), err)
+			return sdkdiag.AppendFromErr(diags, err)
 		}
 
 		err = deleteDistribution(ctx, conn, d.Id())
 	}
 
 	if err != nil {
-		return sdkdiag.AppendErrorf(diags, "deleting CloudFront Distribution (%s): %s", d.Id(), err)
+		return sdkdiag.AppendFromErr(diags, err)
 	}
 
 	return diags
 }
 
-func deleteDistribution(ctx context.Context, conn *cloudfront.CloudFront, id string) error {
+func deleteDistribution(ctx context.Context, conn *cloudfront.Client, id string) error {
 	etag, err := distroETag(ctx, conn, id)
+
 	if err != nil {
 		return err
 	}
 
-	in := &cloudfront.DeleteDistributionInput{
+	input := &cloudfront.DeleteDistributionInput{
 		Id:      aws.String(id),
 		IfMatch: aws.String(etag),
 	}
 
-	if _, err := conn.DeleteDistributionWithContext(ctx, in); err != nil {
-		return err
+	_, err = conn.DeleteDistribution(ctx, input)
+
+	if err != nil {
+		return fmt.Errorf("deleting CloudFront Distribution (%s): %w", id, err)
 	}
 
-	if err := WaitDistributionDeleted(ctx, conn, id); err != nil {
-		return err
+	if _, err := waitDistributionDeleted(ctx, conn, id); err != nil {
+		return fmt.Errorf("waiting for CloudFront Distribution (%s) delete: %w", id, err)
 	}
 
 	return nil
 }
 
-func distroETag(ctx context.Context, conn *cloudfront.CloudFront, id string) (string, error) {
-	output, err := FindDistributionByID(ctx, conn, id)
+func distroETag(ctx context.Context, conn *cloudfront.Client, id string) (string, error) {
+	output, err := findDistributionByID(ctx, conn, id)
+
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("reading CloudFront Distribution (%s): %w", id, err)
 	}
 
-	return aws.StringValue(output.ETag), nil
+	return aws.ToString(output.ETag), nil
 }
 
-func disableDistribution(ctx context.Context, conn *cloudfront.CloudFront, id string) error {
-	out, err := FindDistributionByID(ctx, conn, id)
+func disableDistribution(ctx context.Context, conn *cloudfront.Client, id string) error {
+	output, err := findDistributionByID(ctx, conn, id)
+
 	if err != nil {
-		return err
+		return fmt.Errorf("reading CloudFront Distribution (%s): %w", id, err)
 	}
 
-	if aws.StringValue(out.Distribution.Status) == "InProgress" {
-		if err := WaitDistributionDeployed(ctx, conn, id); err != nil {
-			return err
-		}
+	if aws.ToString(output.Distribution.Status) == distributionStatusInProgress {
+		output, err = waitDistributionDeployed(ctx, conn, id)
 
-		out, err = FindDistributionByID(ctx, conn, id)
 		if err != nil {
-			return err
+			return fmt.Errorf("waiting for CloudFront Distribution (%s) deploy: %w", id, err)
 		}
 	}
 
-	if !aws.BoolValue(out.Distribution.DistributionConfig.Enabled) {
+	if !aws.ToBool(output.Distribution.DistributionConfig.Enabled) {
 		return nil
 	}
 
-	in := &cloudfront.UpdateDistributionInput{
-		DistributionConfig: out.Distribution.DistributionConfig,
+	input := &cloudfront.UpdateDistributionInput{
+		DistributionConfig: output.Distribution.DistributionConfig,
 		Id:                 aws.String(id),
-		IfMatch:            out.ETag,
+		IfMatch:            output.ETag,
 	}
-	in.DistributionConfig.Enabled = aws.Bool(false)
+	input.DistributionConfig.Enabled = aws.Bool(false)
 
-	_, err = conn.UpdateDistributionWithContext(ctx, in)
+	_, err = conn.UpdateDistribution(ctx, input)
+
 	if err != nil {
-		return err
+		return fmt.Errorf("updating CloudFront Distribution (%s): %w", id, err)
 	}
 
-	if err := WaitDistributionDeployed(ctx, conn, id); err != nil {
-		return err
+	if _, err := waitDistributionDeployed(ctx, conn, id); err != nil {
+		return fmt.Errorf("waiting for CloudFront Distribution (%s) deploy: %w", id, err)
 	}
 
 	return nil
 }
 
-func FindDistributionByID(ctx context.Context, conn *cloudfront.CloudFront, id string) (*cloudfront.GetDistributionOutput, error) {
+func findDistributionByID(ctx context.Context, conn *cloudfront.Client, id string) (*cloudfront.GetDistributionOutput, error) {
 	input := &cloudfront.GetDistributionInput{
 		Id: aws.String(id),
 	}
 
-	output, err := conn.GetDistributionWithContext(ctx, input)
+	output, err := conn.GetDistribution(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, cloudfront.ErrCodeNoSuchDistribution) {
+	if errs.IsA[*awstypes.NoSuchDistribution](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
@@ -1140,40 +1148,10 @@ func FindDistributionByID(ctx context.Context, conn *cloudfront.CloudFront, id s
 	return output, nil
 }
 
-// resourceAwsCloudFrontWebDistributionWaitUntilDeployed blocks until the
-// distribution is deployed. It currently takes exactly 15 minutes to deploy
-// but that might change in the future.
-func WaitDistributionDeployed(ctx context.Context, conn *cloudfront.CloudFront, id string) error {
-	stateConf := &retry.StateChangeConf{
-		Pending:    []string{"InProgress"},
-		Target:     []string{"Deployed"},
-		Refresh:    distributionDeployRefreshFunc(ctx, conn, id),
-		Timeout:    90 * time.Minute,
-		MinTimeout: 15 * time.Second,
-		Delay:      30 * time.Second,
-	}
-
-	_, err := stateConf.WaitForStateContext(ctx)
-	return err
-}
-
-func WaitDistributionDeleted(ctx context.Context, conn *cloudfront.CloudFront, id string) error {
-	stateConf := &retry.StateChangeConf{
-		Pending:    []string{"InProgress", "Deployed"},
-		Target:     []string{},
-		Refresh:    distributionDeleteRefreshFunc(ctx, conn, id),
-		Timeout:    90 * time.Minute,
-		MinTimeout: 15 * time.Second,
-		Delay:      15 * time.Second,
-	}
-
-	_, err := stateConf.WaitForStateContext(ctx)
-	return err
-}
-
-func distributionDeleteRefreshFunc(ctx context.Context, conn *cloudfront.CloudFront, id string) retry.StateRefreshFunc {
+func statusDistribution(ctx context.Context, conn *cloudfront.Client, id string) retry.StateRefreshFunc {
 	return func() (interface{}, string, error) {
-		out, err := FindDistributionByID(ctx, conn, id)
+		output, err := findDistributionByID(ctx, conn, id)
+
 		if tfresource.NotFound(err) {
 			return nil, "", nil
 		}
@@ -1182,25 +1160,48 @@ func distributionDeleteRefreshFunc(ctx context.Context, conn *cloudfront.CloudFr
 			return nil, "", err
 		}
 
-		if out == nil {
+		if output == nil {
 			return nil, "", nil
 		}
 
-		return out.Distribution, aws.StringValue(out.Distribution.Status), nil
+		return output.Distribution, aws.ToString(output.Distribution.Status), nil
 	}
 }
 
-func distributionDeployRefreshFunc(ctx context.Context, conn *cloudfront.CloudFront, id string) retry.StateRefreshFunc {
-	return func() (interface{}, string, error) {
-		out, err := FindDistributionByID(ctx, conn, id)
-		if err != nil {
-			return nil, "", err
-		}
-
-		if out == nil {
-			return nil, "", nil
-		}
-
-		return out.Distribution, aws.StringValue(out.Distribution.Status), nil
+func waitDistributionDeployed(ctx context.Context, conn *cloudfront.Client, id string) (*cloudfront.GetDistributionOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{distributionStatusInProgress},
+		Target:     []string{distributionStatusDeployed},
+		Refresh:    statusDistribution(ctx, conn, id),
+		Timeout:    90 * time.Minute,
+		MinTimeout: 15 * time.Second,
+		Delay:      30 * time.Second,
 	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*cloudfront.GetDistributionOutput); ok {
+		return output, err
+	}
+
+	return nil, err
+}
+
+func waitDistributionDeleted(ctx context.Context, conn *cloudfront.Client, id string) (*cloudfront.GetDistributionOutput, error) {
+	stateConf := &retry.StateChangeConf{
+		Pending:    []string{distributionStatusInProgress, distributionStatusDeployed},
+		Target:     []string{},
+		Refresh:    statusDistribution(ctx, conn, id),
+		Timeout:    90 * time.Minute,
+		MinTimeout: 15 * time.Second,
+		Delay:      15 * time.Second,
+	}
+
+	outputRaw, err := stateConf.WaitForStateContext(ctx)
+
+	if output, ok := outputRaw.(*cloudfront.GetDistributionOutput); ok {
+		return output, err
+	}
+
+	return nil, err
 }

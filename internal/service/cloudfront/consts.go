@@ -20,6 +20,11 @@ func (streamType) Values() []streamType {
 }
 
 const (
+	distributionStatusDeployed   = "Deployed"
+	distributionStatusInProgress = "InProgress"
+)
+
+const (
 	keyValueStoreStatusProvisioning = "PROVISIONING"
 	keyValueStoreStatusReady        = "READY"
 )

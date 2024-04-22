@@ -5,8 +5,10 @@ package cloudfront
 
 import (
 	"context"
+	"fmt"
 	"log"
 
+	"github.com/YakDriver/regexache"
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/cloudfront/types"
@@ -211,4 +213,31 @@ func findPublicKeyByID(ctx context.Context, conn *cloudfront.Client, id string) 
 	}
 
 	return output, nil
+}
+
+func validPublicKeyName(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexache.MustCompile(`^[0-9A-Za-z_-]+$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only alphanumeric characters, underscores and hyphens allowed in %q", k))
+	}
+	if len(value) > 128 {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot be greater than 128 characters", k))
+	}
+	return
+}
+
+func validPublicKeyNamePrefix(v interface{}, k string) (ws []string, errors []error) {
+	value := v.(string)
+	if !regexache.MustCompile(`^[0-9A-Za-z_-]+$`).MatchString(value) {
+		errors = append(errors, fmt.Errorf(
+			"only alphanumeric characters, underscores and hyphens allowed in %q", k))
+	}
+	prefixMaxLength := 128 - id.UniqueIDSuffixLength
+	if len(value) > prefixMaxLength {
+		errors = append(errors, fmt.Errorf(
+			"%q cannot be greater than %d characters", k, prefixMaxLength))
+	}
+	return
 }

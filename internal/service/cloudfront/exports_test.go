@@ -7,6 +7,7 @@ package cloudfront
 var (
 	ResourceCachePolicy                 = resourceCachePolicy
 	ResourceContinuousDeploymentPolicy  = newContinuousDeploymentPolicyResource
+	ResourceDistribution                = resourceDistribution
 	ResourceFieldLevelEncryptionConfig  = resourceFieldLevelEncryptionConfig
 	ResourceFieldLevelEncryptionProfile = resourceFieldLevelEncryptionProfile
 	ResourceFunction                    = resourceFunction
@@ -21,6 +22,7 @@ var (
 	ResourceResponseHeadersPolicy       = resourceResponseHeadersPolicy
 
 	FindCachePolicyByID                        = findCachePolicyByID
+	FindDistributionByID                       = findDistributionByID
 	FindFieldLevelEncryptionConfigByID         = findFieldLevelEncryptionConfigByID
 	FindFieldLevelEncryptionProfileByID        = findFieldLevelEncryptionProfileByID
 	FindFunctionByTwoPartKey                   = findFunctionByTwoPartKey
