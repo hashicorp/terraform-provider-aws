@@ -101,8 +101,8 @@ This resource exports the following attributes in addition to the arguments abov
 
 [Configuration options](https://developer.hashicorp.com/terraform/language/resources/syntax#operation-timeouts):
 
-* `create` - (Default `60m`)
-* `update` - (Default `180m`)
+* `create` - (Default `30m`)
+* `update` - (Default `30m`)
 
 ## Import
 
@@ -115,7 +115,7 @@ import {
 }
 ```
 
-Using `terraform import`, import BCM Data Exports Export using the `example_id_arg`. For example:
+Using `terraform import`, import BCM Data Exports Export using the `export_arn`. For example:
 
 ```console
 % terraform import aws_bcmdataexports_export.example export-id-12345678
