@@ -32,7 +32,7 @@ func TestARNTypeValueFromTerraform(t *testing.T) {
 		},
 		"valid ARN": {
 			val:      tftypes.NewValue(tftypes.String, "arn:aws:rds:us-east-1:123456789012:db:test"), // lintignore:AWSAT003,AWSAT005
-			expected: fwtypes.ARNValueMust("arn:aws:rds:us-east-1:123456789012:db:test"),             // lintignore:AWSAT003,AWSAT005
+			expected: fwtypes.ARNValue("arn:aws:rds:us-east-1:123456789012:db:test"),                 // lintignore:AWSAT003,AWSAT005
 		},
 		"invalid ARN": {
 			val:      tftypes.NewValue(tftypes.String, "not ok"),
@@ -74,13 +74,12 @@ func TestARNValidateAttribute(t *testing.T) {
 			val: fwtypes.ARNUnknown(),
 		},
 		"valid arn": {
-			val: fwtypes.ARNValueMust("arn:aws:rds:us-east-1:123456789012:db:test"), // lintignore:AWSAT003,AWSAT005
+			val: fwtypes.ARNValue("arn:aws:rds:us-east-1:123456789012:db:test"), // lintignore:AWSAT003,AWSAT005
 		},
-		// TODO: merging of ARNValue/ARNValueMust needs to happen first
-		// "invalid arn": {
-		// 	val:         fwtypes.ARNValueMust("not ok"), // lintignore:AWSAT003,AWSAT005
-		// 	expectError: true,
-		// },
+		"invalid arn": {
+			val:         fwtypes.ARNValue("not ok"), // lintignore:AWSAT003,AWSAT005
+			expectError: true,
+		},
 	}
 
 	for name, test := range tests {

@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/types/basetypes"
 	"github.com/hashicorp/terraform-plugin-go/tftypes"
-	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 )
 
 var (
@@ -58,7 +57,7 @@ func (t arnType) ValueFromString(_ context.Context, in types.String) (basetypes.
 		return ARNUnknown(), diags // Must not return validation errors.
 	}
 
-	return ARNValueMust(valueString), diags
+	return ARNValue(valueString), diags
 }
 
 func (t arnType) ValueFromTerraform(ctx context.Context, in tftypes.Value) (attr.Value, error) {
@@ -100,23 +99,22 @@ func ARNUnknown() ARN {
 	return ARN{StringValue: basetypes.NewStringUnknown()}
 }
 
-func ARNValue(value string) (ARN, diag.Diagnostics) {
-	var diags diag.Diagnostics
-
-	v, err := arn.Parse(value)
-	if err != nil {
-		diags.Append(diag.NewErrorDiagnostic("Invalid ARN", err.Error()))
-		return ARNUnknown(), diags
-	}
+// ARNValue initializes a new ARN type with the provided value
+//
+// This function does not return diagnostics, and therefore invalid ARN values
+// are not handled during construction. Invalid values will be detected by the
+// ValidateAttribute method, called by the ValidateResourceConfig RPC during
+// operations like `terraform validate`, `plan`, or `apply`.
+func ARNValue(value string) ARN {
+	// swallow any ARN parsing errors here and just pass along the
+	// zero value arn.ARN. Invalid values will be handled downstream
+	// by the ValidateAttribute method.
+	v, _ := arn.Parse(value)
 
 	return ARN{
 		StringValue: basetypes.NewStringValue(value),
 		value:       v,
-	}, diags
-}
-
-func ARNValueMust(value string) ARN {
-	return fwdiag.Must(ARNValue(value))
+	}
 }
 
 type ARN struct {
@@ -138,7 +136,7 @@ func (ARN) Type(context.Context) attr.Type {
 	return ARNType
 }
 
-// ValueARN returns the known arn.ARN value. If ARN is null or unknown, returns {}.
+// ValueARN returns the known arn.ARN value. If ARN is null, unknown, or invalid returns ARN{}.
 func (v ARN) ValueARN() arn.ARN {
 	return v.value
 }

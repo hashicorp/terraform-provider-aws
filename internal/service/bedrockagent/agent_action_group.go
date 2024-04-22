@@ -439,7 +439,7 @@ func flattenActionGroupExecutor(ctx context.Context, apiObject awstypes.ActionGr
 
 	switch v := apiObject.(type) {
 	case *awstypes.ActionGroupExecutorMemberLambda:
-		actionGroupExecutorData.Lambda = fwtypes.ARNValueMust(v.Value)
+		actionGroupExecutorData.Lambda = fwtypes.ARNValue(v.Value)
 	}
 
 	return fwtypes.NewListNestedObjectValueOfPtrMust(ctx, &actionGroupExecutorData)
