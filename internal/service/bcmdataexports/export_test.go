@@ -35,6 +35,7 @@ func TestAccBCMDataExportsExport_basic(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BCMDataExportsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -78,6 +79,7 @@ func TestAccBCMDataExportsExport_disappears(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BCMDataExportsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -105,6 +107,7 @@ func TestAccBCMDataExportsExport_tags(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BCMDataExportsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
@@ -156,6 +159,7 @@ func TestAccBCMDataExportsExport_updateTable(t *testing.T) {
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck: func() {
 			acctest.PreCheck(ctx, t)
+			acctest.PreCheckPartitionNot(t, names.USGovCloudPartitionID)
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BCMDataExportsServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
