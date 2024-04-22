@@ -45,8 +45,8 @@ data "aws_ssoadmin_instances" "test" {}
 
 resource "aws_identitystore_user" "test" {
   identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
-  display_name = "Acceptance Test"
-  user_name    = %[1]q
+  display_name      = "Acceptance Test"
+  user_name         = %[1]q
 
   name {
     family_name = "Doe"
@@ -62,8 +62,8 @@ resource "aws_identitystore_group" "test" {
 
 resource "aws_identitystore_group_membership" "test" {
   identity_store_id = tolist(data.aws_ssoadmin_instances.test.identity_store_ids)[0]
-  group_id  = aws_identitystore_group.test.group_id
-  member_id = aws_identitystore_user.test.user_id
+  group_id          = aws_identitystore_group.test.group_id
+  member_id         = aws_identitystore_user.test.user_id
 }
 
 data "aws_identitystore_group_memberships" "test" {
