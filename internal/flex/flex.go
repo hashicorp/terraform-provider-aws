@@ -5,6 +5,7 @@ package flex
 
 import (
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 	"time"
@@ -455,6 +456,28 @@ func DiffStringValueMaps(oldMap, newMap map[string]interface{}) (map[string]stri
 			unchanged[k] = v
 			// Already present, so remove from new.
 			delete(add, k)
+		}
+	}
+
+	return add, remove, unchanged
+}
+
+func DiffSlices[E any](old []E, new []E, eq func(E, E) bool) ([]E, []E, []E) {
+	// First, we're creating everything we have.
+	add := new
+
+	// Build the slices of what to remove and what is unchanged.
+	remove := make([]E, 0)
+	unchanged := make([]E, 0)
+	for _, e := range old {
+		eq := func(v E) bool { return eq(v, e) }
+		if !slices.ContainsFunc(new, eq) {
+			// Delete it!
+			remove = append(remove, e)
+		} else {
+			unchanged = append(unchanged, e)
+			// Already present, so remove from new.
+			add = slices.DeleteFunc(add, eq)
 		}
 	}
 
