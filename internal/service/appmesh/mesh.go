@@ -97,6 +97,21 @@ func resourceMeshSpecSchema() *schema.Schema {
 						},
 					},
 				},
+				"service_discovery": {
+					Type:     schema.TypeList,
+					Optional: true,
+					MinItems: 0,
+					MaxItems: 1,
+					Elem: &schema.Resource{
+						Schema: map[string]*schema.Schema{
+							"ip_preference": {
+								Type:         schema.TypeString,
+								Optional:     true,
+								ValidateFunc: validation.StringInSlice(appmesh.IpPreference_Values(), false),
+							},
+						},
+					},
+				},
 			},
 		},
 	}
