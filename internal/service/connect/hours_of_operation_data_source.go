@@ -184,15 +184,15 @@ func dataSourceGetHoursOfOperationSummaryByName(ctx context.Context, conn *conne
 		page, err := pages.NextPage(ctx)
 
 		if err != nil {
-			return nil, err
+			return result, err
 		}
 
 		for _, cf := range page.HoursOfOperationSummaryList {
+			cf := cf
 			if aws.ToString(cf.Name) == name {
 				result = &cf
 			}
 		}
-
 	}
 
 	return result, nil

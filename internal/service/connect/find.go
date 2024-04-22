@@ -19,7 +19,7 @@ func FindBotAssociationV1ByNameAndRegionWithContext(ctx context.Context, conn *c
 
 	input := &connect.ListBotsInput{
 		InstanceId: aws.String(instanceID),
-		LexVersion: awstypes.LexVersion(awstypes.LexVersionV1),
+		LexVersion: awstypes.LexVersionV1,
 		MaxResults: aws.Int32(ListBotsMaxResults),
 	}
 

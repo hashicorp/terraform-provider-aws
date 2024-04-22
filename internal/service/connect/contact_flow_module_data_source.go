@@ -117,8 +117,8 @@ func dataSourceContactFlowModuleRead(ctx context.Context, d *schema.ResourceData
 	return diags
 }
 
-func dataSourceGetContactFlowModuleSummaryByName(ctx context.Context, conn *connect.Client, instanceID, name string) (awstypes.ContactFlowModuleSummary, error) {
-	var result awstypes.ContactFlowModuleSummary
+func dataSourceGetContactFlowModuleSummaryByName(ctx context.Context, conn *connect.Client, instanceID, name string) (*awstypes.ContactFlowModuleSummary, error) {
+	var result *awstypes.ContactFlowModuleSummary
 
 	input := &connect.ListContactFlowModulesInput{
 		InstanceId: aws.String(instanceID),
@@ -135,9 +135,9 @@ func dataSourceGetContactFlowModuleSummaryByName(ctx context.Context, conn *conn
 		}
 
 		for _, cf := range page.ContactFlowModulesSummaryList {
-
+			cf := cf
 			if aws.ToString(cf.Name) == name {
-				result = cf
+				result = &cf
 			}
 		}
 	}

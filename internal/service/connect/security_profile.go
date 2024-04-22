@@ -254,7 +254,6 @@ func getSecurityProfilePermissions(ctx context.Context, conn *connect.Client, in
 		}
 
 		result = append(result, page.Permissions...)
-
 	}
 
 	return result, nil

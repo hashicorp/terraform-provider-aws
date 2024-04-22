@@ -150,7 +150,6 @@ func dataSourceGetVocabularySummaryByName(ctx context.Context, conn *connect.Cli
 				result = qs
 			}
 		}
-
 	}
 
 	return result, nil

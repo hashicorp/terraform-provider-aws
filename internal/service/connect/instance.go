@@ -15,7 +15,6 @@ import (
 	"github.com/aws/aws-sdk-go-v2/aws"
 	"github.com/aws/aws-sdk-go-v2/service/connect"
 	awstypes "github.com/aws/aws-sdk-go-v2/service/connect/types"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
@@ -275,7 +274,7 @@ func updateInstanceAttribute(ctx context.Context, conn *connect.Client, instance
 
 	_, err := conn.UpdateInstanceAttribute(ctx, input)
 
-	if tfawserr.ErrCodeEquals(err, ErrCodeAccessDeniedException) || tfawserr.ErrMessageContains(err, ErrCodeAccessDeniedException, "not authorized to update") {
+	if errs.IsA[*awstypes.AccessDeniedException](err) || errs.IsAErrorMessageContains[*awstypes.AccessDeniedException](err, "not authorized to update") {
 		return nil
 	}
 

@@ -180,7 +180,6 @@ func dataSourceGetInstanceSummaryByInstanceAlias(ctx context.Context, conn *conn
 				result = &is
 			}
 		}
-
 	}
 
 	return result, nil
