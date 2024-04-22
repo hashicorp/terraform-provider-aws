@@ -79,7 +79,7 @@ func (r *resourceJobQueue) Schema(ctx context.Context, request resource.SchemaRe
 			"compute_environments": schema.ListAttribute{
 				ElementType:        fwtypes.ARNType,
 				Optional:           true,
-				DeprecationMessage: "This parameter will be replaced by `compute_environments_order`.",
+				DeprecationMessage: "This parameter will be replaced by `compute_environment_order`.",
 			},
 			"id": framework.IDAttribute(),
 			"name": schema.StringAttribute{
