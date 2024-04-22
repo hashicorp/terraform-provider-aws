@@ -51,10 +51,6 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			TypeName: "aws_identitystore_group",
 		},
 		{
-			Factory:  ResourceGroupMembership,
-			TypeName: "aws_identitystore_group_membership",
-		},
-		{
 			Factory:  ResourceUser,
 			TypeName: "aws_identitystore_user",
 		},
