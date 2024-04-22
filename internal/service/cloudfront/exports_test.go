@@ -17,6 +17,7 @@ var (
 	ResourceOriginAccessIdentity        = resourceOriginAccessIdentity
 	ResourceOriginRequestPolicy         = resourceOriginRequestPolicy
 	ResourcePublicKey                   = resourcePublicKey
+	ResourceRealtimeLogConfig           = resourceRealtimeLogConfig
 
 	FindCachePolicyByID                        = findCachePolicyByID
 	FindFieldLevelEncryptionConfigByID         = findFieldLevelEncryptionConfigByID
@@ -29,4 +30,5 @@ var (
 	FindOriginAccessIdentityByID               = findOriginAccessIdentityByID
 	FindOriginRequestPolicyByID                = findOriginRequestPolicyByID
 	FindPublicKeyByID                          = findPublicKeyByID
+	FindRealtimeLogConfigByARN                 = findRealtimeLogConfigByARN
 )

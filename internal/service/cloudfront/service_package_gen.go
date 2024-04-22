@@ -139,8 +139,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Public Key",
 		},
 		{
-			Factory:  ResourceRealtimeLogConfig,
+			Factory:  resourceRealtimeLogConfig,
 			TypeName: "aws_cloudfront_realtime_log_config",
+			Name:     "Real-time Log Config",
 		},
 		{
 			Factory:  ResourceResponseHeadersPolicy,

@@ -4,15 +4,18 @@
 package cloudfront
 
 const (
-	StreamTypeKinesis = "Kinesis"
-
 	ResNameDistribution = "Distribution"
-	ResNamePublicKey    = "Public Key"
 )
 
-func StreamType_Values() []string {
-	return []string{
-		StreamTypeKinesis,
+type streamType string
+
+const (
+	streamTypeKinesis streamType = "Kinesis"
+)
+
+func (streamType) Values() []streamType {
+	return []streamType{
+		streamTypeKinesis,
 	}
 }
 
