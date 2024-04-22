@@ -145,8 +145,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			Name:     "Real-time Log Config",
 		},
 		{
-			Factory:  ResourceResponseHeadersPolicy,
+			Factory:  resourceResponseHeadersPolicy,
 			TypeName: "aws_cloudfront_response_headers_policy",
+			Name:     "Response Headers Policy",
 		},
 	}
 }
