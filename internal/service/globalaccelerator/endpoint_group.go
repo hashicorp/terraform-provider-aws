@@ -212,7 +212,7 @@ func resourceEndpointGroupRead(ctx context.Context, d *schema.ResourceData, meta
 	var diags diag.Diagnostics
 	conn := meta.(*conns.AWSClient).GlobalAcceleratorClient(ctx)
 
-	endpointGroup, err := FindEndpointGroupByARN(ctx, conn, d.Id())
+	endpointGroup, err := findEndpointGroupByARN(ctx, conn, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Global Accelerator endpoint group (%s) not found, removing from state", d.Id())
@@ -339,7 +339,7 @@ func resourceEndpointGroupDelete(ctx context.Context, d *schema.ResourceData, me
 	return diags
 }
 
-func FindEndpointGroupByARN(ctx context.Context, conn *globalaccelerator.Client, arn string) (*awstypes.EndpointGroup, error) {
+func findEndpointGroupByARN(ctx context.Context, conn *globalaccelerator.Client, arn string) (*awstypes.EndpointGroup, error) {
 	input := &globalaccelerator.DescribeEndpointGroupInput{
 		EndpointGroupArn: aws.String(arn),
 	}

@@ -11,8 +11,8 @@ import (
 )
 
 const (
-	ARNSeparator = "/"
-	ARNService   = "globalaccelerator"
+	arnSeparator = "/"
+	arnService   = "globalaccelerator"
 )
 
 // endpointGroupARNToListenerARN converts an endpoint group ARN to a listener ARN.
@@ -24,11 +24,11 @@ func endpointGroupARNToListenerARN(inputARN string) (string, error) {
 		return "", fmt.Errorf("parsing ARN (%s): %w", inputARN, err)
 	}
 
-	if actual, expected := parsedARN.Service, ARNService; actual != expected {
+	if actual, expected := parsedARN.Service, arnService; actual != expected {
 		return "", fmt.Errorf("expected service %s in ARN (%s), got: %s", expected, inputARN, actual)
 	}
 
-	resourceParts := strings.Split(parsedARN.Resource, ARNSeparator)
+	resourceParts := strings.Split(parsedARN.Resource, arnSeparator)
 
 	if actual, expected := len(resourceParts), 6; actual < expected {
 		return "", fmt.Errorf("expected at least %d resource parts in ARN (%s), got: %d", expected, inputARN, actual)
@@ -39,7 +39,7 @@ func endpointGroupARNToListenerARN(inputARN string) (string, error) {
 		Service:   parsedARN.Service,
 		Region:    parsedARN.Region,
 		AccountID: parsedARN.AccountID,
-		Resource:  strings.Join(resourceParts[0:4], ARNSeparator),
+		Resource:  strings.Join(resourceParts[0:4], arnSeparator),
 	}.String()
 
 	return outputARN, nil
@@ -54,11 +54,11 @@ func listenerOrEndpointGroupARNToAcceleratorARN(inputARN string) (string, error)
 		return "", fmt.Errorf("parsing ARN (%s): %w", inputARN, err)
 	}
 
-	if actual, expected := parsedARN.Service, ARNService; actual != expected {
+	if actual, expected := parsedARN.Service, arnService; actual != expected {
 		return "", fmt.Errorf("expected service %s in ARN (%s), got: %s", expected, inputARN, actual)
 	}
 
-	resourceParts := strings.Split(parsedARN.Resource, ARNSeparator)
+	resourceParts := strings.Split(parsedARN.Resource, arnSeparator)
 
 	if actual, expected := len(resourceParts), 4; actual < expected {
 		return "", fmt.Errorf("expected at least %d resource parts in ARN (%s), got: %d", expected, inputARN, actual)
@@ -69,7 +69,7 @@ func listenerOrEndpointGroupARNToAcceleratorARN(inputARN string) (string, error)
 		Service:   parsedARN.Service,
 		Region:    parsedARN.Region,
 		AccountID: parsedARN.AccountID,
-		Resource:  strings.Join(resourceParts[0:2], ARNSeparator),
+		Resource:  strings.Join(resourceParts[0:2], arnSeparator),
 	}.String()
 
 	return outputARN, nil
