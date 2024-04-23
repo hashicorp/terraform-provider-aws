@@ -186,6 +186,10 @@ func resourcePortfolioDelete(ctx context.Context, d *schema.ResourceData, meta i
 		Id: aws.String(d.Id()),
 	})
 
+	if tfawserr.ErrCodeEquals(err, servicecatalog.ErrCodeResourceNotFoundException) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting Service Catalog Portfolio (%s): %s", d.Id(), err)
 	}
