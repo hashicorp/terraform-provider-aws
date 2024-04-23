@@ -26,7 +26,6 @@ func TestAccServiceCatalogProvisionedProduct_basic(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_servicecatalog_provisioned_product.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
 	var pprod servicecatalog.ProvisionedProductDetail
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -36,7 +35,7 @@ func TestAccServiceCatalogProvisionedProduct_basic(t *testing.T) {
 		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProvisionedProductConfig_basic(rName, domain, acctest.DefaultEmailAddress, "10.1.0.0/16"),
+				Config: testAccProvisionedProductConfig_basic(rName, "10.1.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
 					resource.TestCheckResourceAttr(resourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
@@ -87,7 +86,6 @@ func TestAccServiceCatalogProvisionedProduct_update(t *testing.T) {
 	resourceName := "aws_servicecatalog_provisioned_product.test"
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
 	var pprod servicecatalog.ProvisionedProductDetail
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -97,13 +95,13 @@ func TestAccServiceCatalogProvisionedProduct_update(t *testing.T) {
 		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProvisionedProductConfig_basic(rName, domain, acctest.DefaultEmailAddress, "10.1.0.0/16"),
+				Config: testAccProvisionedProductConfig_basic(rName, "10.1.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
 				),
 			},
 			{
-				Config: testAccProvisionedProductConfig_basic(rName, domain, acctest.DefaultEmailAddress, "10.10.0.0/16"),
+				Config: testAccProvisionedProductConfig_basic(rName, "10.10.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
 					resource.TestCheckResourceAttr(resourceName, "accept_language", tfservicecatalog.AcceptLanguageEnglish),
@@ -151,7 +149,6 @@ func TestAccServiceCatalogProvisionedProduct_stackSetProvisioningPreferences(t *
 	ctx := acctest.Context(t)
 	resourceName := "aws_servicecatalog_provisioned_product.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
 	var pprod servicecatalog.ProvisionedProductDetail
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -161,7 +158,7 @@ func TestAccServiceCatalogProvisionedProduct_stackSetProvisioningPreferences(t *
 		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProvisionedProductConfig_stackSetprovisioningPreferences(rName, domain, acctest.DefaultEmailAddress, "10.1.0.0/16", 1, 2),
+				Config: testAccProvisionedProductConfig_stackSetprovisioningPreferences(rName, "10.1.0.0/16", 1, 2),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -186,7 +183,7 @@ func TestAccServiceCatalogProvisionedProduct_stackSetProvisioningPreferences(t *
 				},
 			},
 			{
-				Config: testAccProvisionedProductConfig_stackSetprovisioningPreferences(rName, domain, acctest.DefaultEmailAddress, "10.1.0.0/16", 3, 4),
+				Config: testAccProvisionedProductConfig_stackSetprovisioningPreferences(rName, "10.1.0.0/16", 3, 4),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -198,7 +195,7 @@ func TestAccServiceCatalogProvisionedProduct_stackSetProvisioningPreferences(t *
 				),
 			},
 			{
-				Config: testAccProvisionedProductConfig_basic(rName, domain, acctest.DefaultEmailAddress, "10.1.0.0/16"),
+				Config: testAccProvisionedProductConfig_basic(rName, "10.1.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
 					resource.TestCheckResourceAttr(resourceName, "name", rName),
@@ -216,7 +213,6 @@ func TestAccServiceCatalogProvisionedProduct_ProductName_update(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	productName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	productNameUpdated := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
 	var pprod servicecatalog.ProvisionedProductDetail
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -226,7 +222,7 @@ func TestAccServiceCatalogProvisionedProduct_ProductName_update(t *testing.T) {
 		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProvisionedProductConfig_productName(rName, domain, acctest.DefaultEmailAddress, "10.1.0.0/16", productName),
+				Config: testAccProvisionedProductConfig_productName(rName, "10.1.0.0/16", productName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
 					resource.TestCheckResourceAttrPair(resourceName, "product_name", "aws_servicecatalog_product.test", "name"),
@@ -235,7 +231,7 @@ func TestAccServiceCatalogProvisionedProduct_ProductName_update(t *testing.T) {
 			},
 			{
 				// update the product name, but keep provisioned product name as-is to trigger an in-place update
-				Config: testAccProvisionedProductConfig_productName(rName, domain, acctest.DefaultEmailAddress, "10.1.0.0/16", productNameUpdated),
+				Config: testAccProvisionedProductConfig_productName(rName, "10.1.0.0/16", productNameUpdated),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
 					resource.TestCheckResourceAttrPair(resourceName, "product_name", "aws_servicecatalog_product.test", "name"),
@@ -268,7 +264,6 @@ func TestAccServiceCatalogProvisionedProduct_ProvisioningArtifactName_update(t *
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	artifactName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
 	var pprod1, pprod2 servicecatalog.ProvisionedProductDetail
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -279,14 +274,14 @@ func TestAccServiceCatalogProvisionedProduct_ProvisioningArtifactName_update(t *
 		Steps: []resource.TestStep{
 			{
 
-				Config: testAccProvisionedProductConfig_basic(rName, domain, acctest.DefaultEmailAddress, "10.1.0.0/16"),
+				Config: testAccProvisionedProductConfig_basic(rName, "10.1.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod1),
 					resource.TestCheckResourceAttrPair(resourceName, "provisioning_artifact_name", productResourceName, "provisioning_artifact_parameters.0.name"),
 				),
 			},
 			{
-				Config: testAccProvisionedProductConfig_ProvisionedArtifactName_update(rName, domain, acctest.DefaultEmailAddress, "10.1.0.0/16", artifactName),
+				Config: testAccProvisionedProductConfig_ProvisionedArtifactName_update(rName, "10.1.0.0/16", artifactName),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod2),
 					resource.TestCheckResourceAttrPair(resourceName, "provisioning_artifact_name", artifactResourceName, "name"),
@@ -302,7 +297,6 @@ func TestAccServiceCatalogProvisionedProduct_computedOutputs(t *testing.T) {
 	resourceName := "aws_servicecatalog_provisioned_product.test"
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
 	var pprod servicecatalog.ProvisionedProductDetail
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -312,7 +306,7 @@ func TestAccServiceCatalogProvisionedProduct_computedOutputs(t *testing.T) {
 		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProvisionedProductConfig_computedOutputs(rName, domain, acctest.DefaultEmailAddress, "10.1.0.0/16"),
+				Config: testAccProvisionedProductConfig_computedOutputs(rName, "10.1.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
 					resource.TestCheckResourceAttr(resourceName, "outputs.#", "3"),
@@ -328,7 +322,7 @@ func TestAccServiceCatalogProvisionedProduct_computedOutputs(t *testing.T) {
 				),
 			},
 			{
-				Config: testAccProvisionedProductConfig_computedOutputs(rName, domain, acctest.DefaultEmailAddress, "10.1.0.1/16"),
+				Config: testAccProvisionedProductConfig_computedOutputs(rName, "10.1.0.1/16"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
 					resource.TestCheckResourceAttr(resourceName, "outputs.#", "3"),
@@ -352,7 +346,6 @@ func TestAccServiceCatalogProvisionedProduct_disappears(t *testing.T) {
 	resourceName := "aws_servicecatalog_provisioned_product.test"
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
 	var pprod servicecatalog.ProvisionedProductDetail
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -362,7 +355,7 @@ func TestAccServiceCatalogProvisionedProduct_disappears(t *testing.T) {
 		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProvisionedProductConfig_basic(rName, domain, acctest.DefaultEmailAddress, "10.1.0.0/16"),
+				Config: testAccProvisionedProductConfig_basic(rName, "10.1.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
 					acctest.CheckResourceDisappears(ctx, acctest.Provider, tfservicecatalog.ResourceProvisionedProduct(), resourceName),
@@ -377,7 +370,6 @@ func TestAccServiceCatalogProvisionedProduct_errorOnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
 
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t) },
@@ -386,7 +378,7 @@ func TestAccServiceCatalogProvisionedProduct_errorOnCreate(t *testing.T) {
 		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config:      testAccProvisionedProductConfig_error(rName, domain, acctest.DefaultEmailAddress, "10.1.0.0/16"),
+				Config:      testAccProvisionedProductConfig_error(rName, "10.1.0.0/16"),
 				ExpectError: regexache.MustCompile(`AmazonCloudFormationException  Unresolved resource dependencies \[MyVPC\] in the Outputs block of the template`),
 			},
 		},
@@ -397,7 +389,6 @@ func TestAccServiceCatalogProvisionedProduct_errorOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_servicecatalog_provisioned_product.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	domain := fmt.Sprintf("http://%s", acctest.RandomDomainName())
 	var pprod servicecatalog.ProvisionedProductDetail
 
 	resource.ParallelTest(t, resource.TestCase{
@@ -407,18 +398,18 @@ func TestAccServiceCatalogProvisionedProduct_errorOnUpdate(t *testing.T) {
 		CheckDestroy:             testAccCheckProvisionedProductDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProvisionedProductConfig_basic(rName, domain, acctest.DefaultEmailAddress, "10.1.0.0/16"),
+				Config: testAccProvisionedProductConfig_basic(rName, "10.1.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
 				),
 			},
 			{
-				Config:      testAccProvisionedProductConfig_error(rName, domain, acctest.DefaultEmailAddress, "10.1.0.0/16"),
+				Config:      testAccProvisionedProductConfig_error(rName, "10.1.0.0/16"),
 				ExpectError: regexache.MustCompile(`AmazonCloudFormationException  Unresolved resource dependencies \[MyVPC\] in the Outputs block of the template`),
 			},
 			{
 				// Check we can still run a complete apply after the previous update error
-				Config: testAccProvisionedProductConfig_basic(rName, domain, acctest.DefaultEmailAddress, "10.1.0.0/16"),
+				Config: testAccProvisionedProductConfig_basic(rName, "10.1.0.0/16"),
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckProvisionedProductExists(ctx, resourceName, &pprod),
 				),
@@ -579,7 +570,7 @@ data "aws_servicecatalog_launch_paths" "test" {
 `, rName)
 }
 
-func testAccProvisionedProductTemplateURLBaseConfig(rName, domain, email string) string {
+func testAccProvisionedProductTemplateURLBaseConfig(rName string) string {
 	return acctest.ConfigCompose(
 		testAccProvisionedProductPortfolioBaseConfig(rName),
 		fmt.Sprintf(`
@@ -644,8 +635,6 @@ resource "aws_servicecatalog_product" "test" {
   owner               = "ägare"
   type                = "CLOUD_FORMATION_TEMPLATE"
   support_description = %[1]q
-  support_email       = %[3]q
-  support_url         = %[2]q
 
   provisioning_artifact_parameters {
     description                 = "artefaktbeskrivning"
@@ -655,7 +644,7 @@ resource "aws_servicecatalog_product" "test" {
     type                        = "CLOUD_FORMATION_TEMPLATE"
   }
 }
-`, rName, domain, email))
+`, rName))
 }
 
 func testAccProvisionedProductTemplateURLSimpleBaseConfig(rName string) string {
@@ -709,7 +698,7 @@ resource "aws_servicecatalog_product" "test" {
 `, rName))
 }
 
-func testAccProvisionedProductPhysicalTemplateIDBaseConfig(rName, domain, email string) string {
+func testAccProvisionedProductPhysicalTemplateIDBaseConfig(rName string) string {
 	return acctest.ConfigCompose(
 		testAccProvisionedProductPortfolioBaseConfig(rName),
 		fmt.Sprintf(`
@@ -777,8 +766,6 @@ resource "aws_servicecatalog_product" "test" {
   owner               = "ägare"
   type                = "CLOUD_FORMATION_TEMPLATE"
   support_description = %[1]q
-  support_email       = %[3]q
-  support_url         = %[2]q
 
   provisioning_artifact_parameters {
     description                 = "artefaktbeskrivning"
@@ -792,11 +779,11 @@ resource "aws_servicecatalog_product" "test" {
     Name = %[1]q
   }
 }
-`, rName, domain, email))
+`, rName))
 }
 
-func testAccProvisionedProductConfig_basic(rName, domain, email, vpcCidr string) string {
-	return acctest.ConfigCompose(testAccProvisionedProductTemplateURLBaseConfig(rName, domain, email),
+func testAccProvisionedProductConfig_basic(rName, vpcCidr string) string {
+	return acctest.ConfigCompose(testAccProvisionedProductTemplateURLBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_servicecatalog_provisioned_product" "test" {
   name                       = %[1]q
@@ -822,8 +809,8 @@ resource "aws_servicecatalog_provisioned_product" "test" {
 `, rName, vpcCidr))
 }
 
-func testAccProvisionedProductConfig_computedOutputs(rName, domain, email, vpcCidr string) string {
-	return acctest.ConfigCompose(testAccProvisionedProductPhysicalTemplateIDBaseConfig(rName, domain, email),
+func testAccProvisionedProductConfig_computedOutputs(rName, vpcCidr string) string {
+	return acctest.ConfigCompose(testAccProvisionedProductPhysicalTemplateIDBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_servicecatalog_provisioned_product" "test" {
   name                       = %[1]q
@@ -844,8 +831,8 @@ resource "aws_servicecatalog_provisioned_product" "test" {
 `, rName, vpcCidr))
 }
 
-func testAccProvisionedProductConfig_stackSetprovisioningPreferences(rName, domain, email, vpcCidr string, failureToleranceCount, maxConcurrencyCount int) string {
-	return acctest.ConfigCompose(testAccProvisionedProductTemplateURLBaseConfig(rName, domain, email),
+func testAccProvisionedProductConfig_stackSetprovisioningPreferences(rName, vpcCidr string, failureToleranceCount, maxConcurrencyCount int) string {
+	return acctest.ConfigCompose(testAccProvisionedProductTemplateURLBaseConfig(rName),
 		fmt.Sprintf(`
 data "aws_region" "current" {}
 
@@ -875,8 +862,8 @@ resource "aws_servicecatalog_provisioned_product" "test" {
 `, rName, vpcCidr, failureToleranceCount, maxConcurrencyCount))
 }
 
-func testAccProvisionedProductConfig_productName(rName, domain, email, vpcCidr, productName string) string {
-	return acctest.ConfigCompose(testAccProvisionedProductTemplateURLBaseConfig(productName, domain, email),
+func testAccProvisionedProductConfig_productName(rName, vpcCidr, productName string) string {
+	return acctest.ConfigCompose(testAccProvisionedProductTemplateURLBaseConfig(productName),
 		fmt.Sprintf(`
 resource "aws_servicecatalog_provisioned_product" "test" {
   name                       = %[1]q
@@ -897,8 +884,8 @@ resource "aws_servicecatalog_provisioned_product" "test" {
 `, rName, vpcCidr))
 }
 
-func testAccProvisionedProductConfig_ProvisionedArtifactName_update(rName, domain, email, vpcCidr, artifactName string) string {
-	return acctest.ConfigCompose(testAccProvisionedProductTemplateURLBaseConfig(rName, domain, email),
+func testAccProvisionedProductConfig_ProvisionedArtifactName_update(rName, vpcCidr, artifactName string) string {
+	return acctest.ConfigCompose(testAccProvisionedProductTemplateURLBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_servicecatalog_provisioning_artifact" "test" {
   product_id   = aws_servicecatalog_product.test.id
@@ -934,8 +921,8 @@ resource "aws_servicecatalog_provisioned_product" "test" {
 // Because the `provisioning_parameter` "LeaveMeEmpty" is not empty, this configuration results in an error.
 // The `status_message` will be:
 // AmazonCloudFormationException  Unresolved resource dependencies [MyVPC] in the Outputs block of the template
-func testAccProvisionedProductConfig_error(rName, domain, email, vpcCidr string) string {
-	return acctest.ConfigCompose(testAccProvisionedProductTemplateURLBaseConfig(rName, domain, email),
+func testAccProvisionedProductConfig_error(rName, vpcCidr string) string {
+	return acctest.ConfigCompose(testAccProvisionedProductTemplateURLBaseConfig(rName),
 		fmt.Sprintf(`
 resource "aws_servicecatalog_provisioned_product" "test" {
   name                       = %[1]q
