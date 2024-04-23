@@ -1,0 +1,3 @@
+```release-note:enhancement
+resource/aws_codedeploy_deployment_config: Add `arn` attribute
+```

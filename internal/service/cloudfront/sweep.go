@@ -309,7 +309,7 @@ func sweepFunctions(region string) error {
 		for _, item := range page.FunctionList.Items {
 			name := aws.StringValue(item.Name)
 
-			output, err := FindFunctionByNameAndStage(ctx, conn, name, cloudfront.FunctionStageDevelopment)
+			output, err := findFunctionByTwoPartKey(ctx, conn, name, cloudfront.FunctionStageDevelopment)
 
 			if tfresource.NotFound(err) {
 				continue
@@ -322,7 +322,7 @@ func sweepFunctions(region string) error {
 				continue
 			}
 
-			r := ResourceFunction()
+			r := resourceFunction()
 			d := r.Data(nil)
 			d.SetId(name)
 			d.Set("etag", output.ETag)

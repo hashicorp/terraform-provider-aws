@@ -25,8 +25,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/verify"
 )
 
-// @SDKResource("aws_securityhub_standards_control")
-func ResourceStandardsControl() *schema.Resource {
+// @SDKResource("aws_securityhub_standards_control", name="Standards Control")
+func resourceStandardsControl() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceStandardsControlPut,
 		ReadWithoutTimeout:   resourceStandardsControlRead,
@@ -109,12 +109,12 @@ func resourceStandardsControlPut(ctx context.Context, d *schema.ResourceData, me
 func resourceStandardsControlRead(ctx context.Context, d *schema.ResourceData, meta interface{}) diag.Diagnostics {
 	conn := meta.(*conns.AWSClient).SecurityHubClient(ctx)
 
-	standardsSubscriptionARN, err := StandardsControlARNToStandardsSubscriptionARN(d.Id())
+	standardsSubscriptionARN, err := standardsControlARNToStandardsSubscriptionARN(d.Id())
 	if err != nil {
 		return diag.FromErr(err)
 	}
 
-	control, err := FindStandardsControlByTwoPartKey(ctx, conn, standardsSubscriptionARN, d.Id())
+	control, err := findStandardsControlByTwoPartKey(ctx, conn, standardsSubscriptionARN, d.Id())
 
 	if !d.IsNewResource() && tfresource.NotFound(err) {
 		log.Printf("[WARN] Security Hub Standards Control (%s) not found, removing from state", d.Id())
@@ -140,8 +140,8 @@ func resourceStandardsControlRead(ctx context.Context, d *schema.ResourceData, m
 	return nil
 }
 
-// StandardsControlARNToStandardsSubscriptionARN converts a security standard control ARN to a subscription ARN.
-func StandardsControlARNToStandardsSubscriptionARN(inputARN string) (string, error) {
+// standardsControlARNToStandardsSubscriptionARN converts a security standard control ARN to a subscription ARN.
+func standardsControlARNToStandardsSubscriptionARN(inputARN string) (string, error) {
 	const (
 		resourceSeparator = "/"
 		service           = "securityhub"
@@ -173,7 +173,7 @@ func StandardsControlARNToStandardsSubscriptionARN(inputARN string) (string, err
 	return outputARN, nil
 }
 
-func FindStandardsControlByTwoPartKey(ctx context.Context, conn *securityhub.Client, standardsSubscriptionARN, standardsControlARN string) (*types.StandardsControl, error) {
+func findStandardsControlByTwoPartKey(ctx context.Context, conn *securityhub.Client, standardsSubscriptionARN, standardsControlARN string) (*types.StandardsControl, error) {
 	input := &securityhub.DescribeStandardsControlsInput{
 		StandardsSubscriptionArn: aws.String(standardsSubscriptionARN),
 	}
@@ -190,11 +190,11 @@ func findStandardsControl(ctx context.Context, conn *securityhub.Client, input *
 		return nil, err
 	}
 
-	return tfresource.AssertSinglePtrResult(output)
+	return tfresource.AssertSingleValueResult(output)
 }
 
-func findStandardsControls(ctx context.Context, conn *securityhub.Client, input *securityhub.DescribeStandardsControlsInput, filter tfslices.Predicate[*types.StandardsControl]) ([]*types.StandardsControl, error) {
-	var output []*types.StandardsControl
+func findStandardsControls(ctx context.Context, conn *securityhub.Client, input *securityhub.DescribeStandardsControlsInput, filter tfslices.Predicate[*types.StandardsControl]) ([]types.StandardsControl, error) {
+	var output []types.StandardsControl
 
 	pages := securityhub.NewDescribeStandardsControlsPaginator(conn, input)
 	for pages.HasMorePages() {
@@ -212,8 +212,7 @@ func findStandardsControls(ctx context.Context, conn *securityhub.Client, input 
 		}
 
 		for _, v := range page.Controls {
-			v := v
-			if v := &v; filter(v) {
+			if filter(&v) {
 				output = append(output, v)
 			}
 		}

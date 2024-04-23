@@ -19,7 +19,7 @@ data "aws_region" "current" {}
 data "aws_caller_identity" "current" {}
 data "aws_partition" "current" {}
 
-var "distribution_id" {
+variable "distribution_id" {
   type        = "string"
   description = "The Cloudfront Distribution on which to enable the Application Layer Automatic Response."
 }

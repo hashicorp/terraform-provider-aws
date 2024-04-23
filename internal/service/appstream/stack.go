@@ -6,8 +6,8 @@ package appstream
 import (
 	"context"
 	"errors"
-	"fmt"
 	"log"
+	"strconv"
 	"time"
 
 	"github.com/aws/aws-sdk-go/aws"
@@ -769,7 +769,7 @@ func suppressAppsStreamStackUserSettings(k, old, new string, d *schema.ResourceD
 		flagDiffUserSettings = false
 	}
 
-	if count != defaultCount && (fmt.Sprintf("%d", count) == new && fmt.Sprintf("%d", defaultCount) == old) {
+	if count != defaultCount && (strconv.Itoa(count) == new && strconv.Itoa(defaultCount) == old) {
 		flagDiffUserSettings = true
 	}
 

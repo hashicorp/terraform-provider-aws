@@ -24,7 +24,7 @@ resource "aws_elasticache_serverless_cache" "example" {
       unit    = "GB"
     }
     ecpu_per_second {
-      maximum = 5
+      maximum = 5000
     }
   }
   description          = "Test Server"
@@ -47,7 +47,7 @@ resource "aws_elasticache_serverless_cache" "example" {
       unit    = "GB"
     }
     ecpu_per_second {
-      maximum = 5
+      maximum = 5000
     }
   }
   daily_snapshot_time      = "09:00"
@@ -89,12 +89,14 @@ The following arguments are optional:
 
 ### DataStorage Configuration
 
-* `maximum` - The upper limit for data storage the cache is set to use. Set as Integer.
+* `minimum` - The lower limit for data storage the cache is set to use. Must be between 1 and 5,000.
+* `maximum` - The upper limit for data storage the cache is set to use. Must be between 1 and 5,000.
 * `unit` - The unit that the storage is measured in, in GB.
 
 ### ECPUPerSecond Configuration
 
-* `maximum` - The upper limit for data storage the cache is set to use. Set as Integer.
+* `minimum` - The minimum number of ECPUs the cache can consume per second. Must be between 1,000 and 15,000,000.
+* `maximum` - The maximum number of ECPUs the cache can consume per second. Must be between 1,000 and 15,000,000.
 
 ## Attribute Reference
 

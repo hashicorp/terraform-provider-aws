@@ -48,10 +48,11 @@ from cdktf import TerraformOutput, TerraformStack
 from imports.aws.cloud9_environment_ec2 import Cloud9EnvironmentEc2
 from imports.aws.data_aws_instance import DataAwsInstance
 class MyConvertedCode(TerraformStack):
-    def __init__(self, scope, name, *, name):
+    def __init__(self, scope, name, *, imageId, name):
         super().__init__(scope, name)
         example = Cloud9EnvironmentEc2(self, "example",
             instance_type="t2.micro",
+            image_id=image_id,
             name=name
         )
         DataAwsInstance(self, "cloud9_instance",
@@ -80,10 +81,11 @@ from imports.aws.cloud9_environment_ec2 import Cloud9EnvironmentEc2
 from imports.aws.data_aws_instance import DataAwsInstance
 from imports.aws.eip import Eip
 class MyConvertedCode(TerraformStack):
-    def __init__(self, scope, name, *, name):
+    def __init__(self, scope, name, *, imageId, name):
         super().__init__(scope, name)
         example = Cloud9EnvironmentEc2(self, "example",
             instance_type="t2.micro",
+            image_id=image_id,
             name=name
         )
         cloud9_instance = DataAwsInstance(self, "cloud9_instance",
@@ -135,4 +137,4 @@ This resource exports the following attributes in addition to the arguments abov
 * `tags_all` - A map of tags assigned to the resource, including those inherited from the provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block).
 * `type` - The type of the environment (e.g., `ssh` or `ec2`).
 
-<!-- cache-key: cdktf-0.20.0 input-0be6df5cef8a430f287883ab12bb10a284a2fdea28cb4d94bc8569901fcc42d6 -->
+<!-- cache-key: cdktf-0.20.1 input-0be6df5cef8a430f287883ab12bb10a284a2fdea28cb4d94bc8569901fcc42d6 -->

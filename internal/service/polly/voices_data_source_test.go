@@ -22,7 +22,7 @@ func TestAccPollyVoicesDataSource_basic(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.PollyEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PollyEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PollyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{
@@ -50,7 +50,7 @@ func TestAccPollyVoicesDataSource_languageCode(t *testing.T) {
 			acctest.PreCheck(ctx, t)
 			acctest.PreCheckPartitionHasService(t, names.PollyEndpointID)
 		},
-		ErrorCheck:               acctest.ErrorCheck(t, names.PollyEndpointID),
+		ErrorCheck:               acctest.ErrorCheck(t, names.PollyServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
 		CheckDestroy:             nil,
 		Steps: []resource.TestStep{

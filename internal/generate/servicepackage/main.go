@@ -8,19 +8,19 @@ package main
 
 import (
 	_ "embed"
+	"errors"
 	"fmt"
 	"go/ast"
 	"go/parser"
 	"go/token"
 	"os"
+	"slices"
 	"sort"
 	"strings"
 
 	"github.com/YakDriver/regexache"
-	multierror "github.com/hashicorp/go-multierror"
 	"github.com/hashicorp/terraform-provider-aws/internal/generate/common"
 	"github.com/hashicorp/terraform-provider-aws/names/data"
-	"golang.org/x/exp/slices"
 )
 
 func main() {
@@ -60,7 +60,7 @@ func main() {
 
 		v.processDir(".")
 
-		if err := v.err.ErrorOrNil(); err != nil {
+		if err := errors.Join(v.errs...); err != nil {
 			g.Fatalf("%s", err.Error())
 		}
 
@@ -76,16 +76,9 @@ func main() {
 			SDKResources:         v.sdkResources,
 		}
 
-		if l.ClientSDKV1() != "" {
-			s.SDKVersion = "1"
+		s.SDKVersion = l.SDKVersion()
+		if l.ClientSDKV1() {
 			s.GoV1ClientTypeName = l.GoV1ClientTypeName()
-		}
-		if l.ClientSDKV2() != "" {
-			if l.ClientSDKV1() != "" {
-				s.SDKVersion = "1,2"
-			} else {
-				s.SDKVersion = "2"
-			}
 		}
 
 		sort.SliceStable(s.FrameworkDataSources, func(i, j int) bool {
@@ -140,8 +133,8 @@ var (
 )
 
 type visitor struct {
-	err *multierror.Error
-	g   *common.Generator
+	errs []error
+	g    *common.Generator
 
 	fileName     string
 	functionName string
@@ -162,7 +155,7 @@ func (v *visitor) processDir(path string) {
 	}, parser.ParseComments)
 
 	if err != nil {
-		v.err = multierror.Append(v.err, fmt.Errorf("parsing (%s): %w", path, err))
+		v.errs = append(v.errs, fmt.Errorf("parsing (%s): %w", path, err))
 
 		return
 	}
@@ -205,7 +198,7 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 
 			if attr, ok := args.Keyword["identifierAttribute"]; ok {
 				if d.TagsIdentifierAttribute != "" {
-					v.err = multierror.Append(v.err, fmt.Errorf("multiple Tags annotations: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					v.errs = append(v.errs, fmt.Errorf("multiple Tags annotations: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				}
 
 				d.TagsIdentifierAttribute = attr
@@ -232,44 +225,46 @@ func (v *visitor) processFuncDecl(funcDecl *ast.FuncDecl) {
 			switch annotationName := m[1]; annotationName {
 			case "FrameworkDataSource":
 				if slices.ContainsFunc(v.frameworkDataSources, func(d ResourceDatum) bool { return d.FactoryName == v.functionName }) {
-					v.err = multierror.Append(v.err, fmt.Errorf("duplicate Framework Data Source: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					v.errs = append(v.errs, fmt.Errorf("duplicate Framework Data Source: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				} else {
 					v.frameworkDataSources = append(v.frameworkDataSources, d)
 				}
 			case "FrameworkResource":
 				if slices.ContainsFunc(v.frameworkResources, func(d ResourceDatum) bool { return d.FactoryName == v.functionName }) {
-					v.err = multierror.Append(v.err, fmt.Errorf("duplicate Framework Resource: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					v.errs = append(v.errs, fmt.Errorf("duplicate Framework Resource: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				} else {
 					v.frameworkResources = append(v.frameworkResources, d)
 				}
 			case "SDKDataSource":
 				if len(args.Positional) == 0 {
-					v.err = multierror.Append(v.err, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 					continue
 				}
 
 				typeName := args.Positional[0]
 
 				if _, ok := v.sdkDataSources[typeName]; ok {
-					v.err = multierror.Append(v.err, fmt.Errorf("duplicate SDK Data Source (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					v.errs = append(v.errs, fmt.Errorf("duplicate SDK Data Source (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				} else {
 					v.sdkDataSources[typeName] = d
 				}
 			case "SDKResource":
 				if len(args.Positional) == 0 {
-					v.err = multierror.Append(v.err, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					v.errs = append(v.errs, fmt.Errorf("no type name: %s", fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 					continue
 				}
 
 				typeName := args.Positional[0]
 
 				if _, ok := v.sdkResources[typeName]; ok {
-					v.err = multierror.Append(v.err, fmt.Errorf("duplicate SDK Resource (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
+					v.errs = append(v.errs, fmt.Errorf("duplicate SDK Resource (%s): %s", typeName, fmt.Sprintf("%s.%s", v.packageName, v.functionName)))
 				} else {
 					v.sdkResources[typeName] = d
 				}
 			case "Tags":
 				// Handled above.
+			case "Testing":
+				// Ignored.
 			default:
 				v.g.Warnf("unknown annotation: %s", annotationName)
 			}

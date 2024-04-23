@@ -121,7 +121,7 @@ func ResourceDistributionConfiguration() *schema.Resource {
 										Optional: true,
 										ValidateFunc: validation.All(
 											validation.StringLenBetween(0, 127),
-											validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_{-][0-9A-Za-z_\s:{}-]+[0-9A-Za-z_}-]$`), "must contain only alphanumeric characters, underscores, and hyphens"),
+											validation.StringMatch(regexache.MustCompile(`^[0-9A-Za-z_{-][0-9A-Za-z_\.\s:{}-]+[0-9A-Za-z_}-]$`), "must be a valid output AMI name"),
 										),
 									},
 									"target_account_ids": {

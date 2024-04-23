@@ -8,6 +8,8 @@ description: |-
 
 # Resource: aws_iot_topic_rule
 
+Creates and manages an AWS IoT topic rule.
+
 ## Example Usage
 
 ```terraform
@@ -54,12 +56,12 @@ data "aws_iam_policy_document" "assume_role" {
   }
 }
 
-resource "aws_iam_role" "role" {
+resource "aws_iam_role" "myrole" {
   name               = "myrole"
   assume_role_policy = data.aws_iam_policy_document.assume_role.json
 }
 
-data "aws_iam_policy_document" "iam_policy_for_lambda" {
+data "aws_iam_policy_document" "mypolicy" {
   statement {
     effect    = "Allow"
     actions   = ["sns:Publish"]
@@ -67,10 +69,10 @@ data "aws_iam_policy_document" "iam_policy_for_lambda" {
   }
 }
 
-resource "aws_iam_role_policy" "iam_policy_for_lambda" {
+resource "aws_iam_role_policy" "mypolicy" {
   name   = "mypolicy"
-  role   = aws_iam_role.role.id
-  policy = data.aws_iam_policy_document.iam_policy_for_lambda.json
+  role   = aws_iam_role.myrole.id
+  policy = data.aws_iam_policy_document.mypolicy.json
 }
 ```
 
