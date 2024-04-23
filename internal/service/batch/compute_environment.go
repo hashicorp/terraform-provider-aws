@@ -538,7 +538,7 @@ func resourceComputeEnvironmentDelete(ctx context.Context, d *schema.ResourceDat
 	{
 		input := &batch.UpdateComputeEnvironmentInput{
 			ComputeEnvironment: aws.String(d.Id()),
-			State:              awstypes.CEState(awstypes.CEStateDisabled),
+			State:              awstypes.CEStateDisabled,
 		}
 
 		if _, err := conn.UpdateComputeEnvironment(ctx, input); err != nil {

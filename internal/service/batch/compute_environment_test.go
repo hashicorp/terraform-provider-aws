@@ -29,11 +29,11 @@ func TestExpandEC2ConfigurationsUpdate(t *testing.T) {
 	//lintignore:AWSAT002
 	testCases := []struct {
 		flattened []interface{}
-		expected  []*awstypes.Ec2Configuration
+		expected  []awstypes.Ec2Configuration
 	}{
 		{
 			flattened: []interface{}{},
-			expected: []*awstypes.Ec2Configuration{
+			expected: []awstypes.Ec2Configuration{
 				{
 					ImageType: aws.String("default"),
 				},
@@ -45,7 +45,7 @@ func TestExpandEC2ConfigurationsUpdate(t *testing.T) {
 					"image_type": "ECS_AL1",
 				},
 			},
-			expected: []*awstypes.Ec2Configuration{
+			expected: []awstypes.Ec2Configuration{
 				{
 					ImageType: aws.String("ECS_AL1"),
 				},
@@ -57,7 +57,7 @@ func TestExpandEC2ConfigurationsUpdate(t *testing.T) {
 					"image_id_override": "ami-deadbeef",
 				},
 			},
-			expected: []*awstypes.Ec2Configuration{
+			expected: []awstypes.Ec2Configuration{
 				{
 					ImageIdOverride: aws.String("ami-deadbeef"),
 				},
@@ -70,7 +70,7 @@ func TestExpandEC2ConfigurationsUpdate(t *testing.T) {
 					"image_type":        "ECS_AL1",
 				},
 			},
-			expected: []*awstypes.Ec2Configuration{
+			expected: []awstypes.Ec2Configuration{
 				{
 					ImageIdOverride: aws.String("ami-deadbeef"),
 					ImageType:       aws.String("ECS_AL1"),
@@ -81,7 +81,7 @@ func TestExpandEC2ConfigurationsUpdate(t *testing.T) {
 
 	for _, testCase := range testCases {
 		expanded := tfbatch.ExpandEC2ConfigurationsUpdate(testCase.flattened, "default")
-		if diff := cmp.Diff(expanded, testCase.expected); diff != "" {
+		if diff := cmp.Diff(expanded, testCase.expected, cmp.AllowUnexported(awstypes.Ec2Configuration{})); diff != "" {
 			t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 		}
 	}
@@ -150,7 +150,7 @@ func TestExpandLaunchTemplateSpecificationUpdate(t *testing.T) {
 
 	for _, testCase := range testCases {
 		expanded := tfbatch.ExpandLaunchTemplateSpecificationUpdate(testCase.flattened)
-		if diff := cmp.Diff(expanded, testCase.expected); diff != "" {
+		if diff := cmp.Diff(expanded, testCase.expected, cmp.AllowUnexported(awstypes.LaunchTemplateSpecification{})); diff != "" {
 			t.Errorf("unexpected diff (+wanted, -got): %s", diff)
 		}
 	}
