@@ -8,7 +8,7 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/globalaccelerator"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/globalaccelerator/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-plugin-testing/terraform"
@@ -24,7 +24,7 @@ func TestAccGlobalAcceleratorCrossAccountAttachment_basic(t *testing.T) {
 	resourceName := "aws_globalaccelerator_cross_account_attachment.test"
 	rName1 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rName2 := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	var v globalaccelerator.Attachment
+	var v awstypes.Attachment
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -66,7 +66,7 @@ func TestAccGlobalAcceleratorCrossAccountAttachment_principals(t *testing.T) {
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 	rAccountID1 := sdkacctest.RandStringFromCharSet(12, "012346789")
 	rAccountID2 := sdkacctest.RandStringFromCharSet(12, "012346789")
-	var v globalaccelerator.Attachment
+	var v awstypes.Attachment
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -135,7 +135,7 @@ func TestAccGlobalAcceleratorCrossAccountAttachment_disappears(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_globalaccelerator_cross_account_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	var v globalaccelerator.Attachment
+	var v awstypes.Attachment
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -159,7 +159,7 @@ func TestAccGlobalAcceleratorCrossAccountAttachment_tags(t *testing.T) {
 	ctx := acctest.Context(t)
 	resourceName := "aws_globalaccelerator_cross_account_attachment.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
-	var v globalaccelerator.Attachment
+	var v awstypes.Attachment
 
 	resource.ParallelTest(t, resource.TestCase{
 		PreCheck:                 func() { acctest.PreCheck(ctx, t); testAccPreCheck(ctx, t) },
@@ -204,7 +204,7 @@ func TestAccGlobalAcceleratorCrossAccountAttachment_tags(t *testing.T) {
 
 func testAccCheckCrossAccountAttachmentDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_globalaccelerator_cross_account_attachment" {
@@ -228,14 +228,14 @@ func testAccCheckCrossAccountAttachmentDestroy(ctx context.Context) resource.Tes
 	}
 }
 
-func testAccCheckCrossAccountAttachmentExists(ctx context.Context, n string, v *globalaccelerator.Attachment) resource.TestCheckFunc {
+func testAccCheckCrossAccountAttachmentExists(ctx context.Context, n string, v *awstypes.Attachment) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
 		rs, ok := s.RootModule().Resources[n]
 		if !ok {
 			return fmt.Errorf("Not found: %s", n)
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).GlobalAcceleratorClient(ctx)
 
 		output, err := tfglobalaccelerator.FindCrossAccountAttachmentByARN(ctx, conn, rs.Primary.ID)
 

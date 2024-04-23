@@ -7,9 +7,9 @@ import (
 	"context"
 	"fmt"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/service/globalaccelerator"
-	"github.com/hashicorp/aws-sdk-go-base/v2/awsv1shim/v2/tfawserr"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	"github.com/aws/aws-sdk-go-v2/service/globalaccelerator"
+	awstypes "github.com/aws/aws-sdk-go-v2/service/globalaccelerator/types"
 	"github.com/hashicorp/terraform-plugin-framework-timetypes/timetypes"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
@@ -18,6 +18,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/id"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/retry"
+	"github.com/hashicorp/terraform-provider-aws/internal/errs"
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/fwdiag"
 	"github.com/hashicorp/terraform-provider-aws/internal/flex"
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
@@ -98,7 +99,7 @@ func (r *crossAccountAttachmentResource) Create(ctx context.Context, request res
 		return
 	}
 
-	conn := r.Meta().GlobalAcceleratorConn(ctx)
+	conn := r.Meta().GlobalAcceleratorClient(ctx)
 
 	input := &globalaccelerator.CreateCrossAccountAttachmentInput{}
 	response.Diagnostics.Append(fwflex.Expand(ctx, data, input)...)
@@ -109,7 +110,7 @@ func (r *crossAccountAttachmentResource) Create(ctx context.Context, request res
 	input.IdempotencyToken = aws.String(id.UniqueId())
 	input.Tags = getTagsIn(ctx)
 
-	output, err := conn.CreateCrossAccountAttachmentWithContext(ctx, input)
+	output, err := conn.CreateCrossAccountAttachment(ctx, input)
 
 	if err != nil {
 		response.Diagnostics.AddError("creating Global Accelerator Cross-account Attachment", err.Error())
@@ -139,7 +140,7 @@ func (r *crossAccountAttachmentResource) Read(ctx context.Context, request resou
 		return
 	}
 
-	conn := r.Meta().GlobalAcceleratorConn(ctx)
+	conn := r.Meta().GlobalAcceleratorClient(ctx)
 
 	output, err := findCrossAccountAttachmentByARN(ctx, conn, data.ID.ValueString())
 
@@ -180,7 +181,7 @@ func (r *crossAccountAttachmentResource) Update(ctx context.Context, request res
 		return
 	}
 
-	conn := r.Meta().GlobalAcceleratorConn(ctx)
+	conn := r.Meta().GlobalAcceleratorClient(ctx)
 
 	if !new.Name.Equal(old.Name) ||
 		!new.Principals.Equal(old.Principals) ||
@@ -195,7 +196,7 @@ func (r *crossAccountAttachmentResource) Update(ctx context.Context, request res
 
 		if !new.Principals.Equal(old.Principals) {
 			oldPrincipals, newPrincipals := fwflex.ExpandFrameworkStringValueSet(ctx, old.Principals), fwflex.ExpandFrameworkStringValueSet(ctx, new.Principals)
-			input.AddPrincipals, input.RemovePrincipals = aws.StringSlice(newPrincipals.Difference(oldPrincipals)), aws.StringSlice(oldPrincipals.Difference(newPrincipals))
+			input.AddPrincipals, input.RemovePrincipals = newPrincipals.Difference(oldPrincipals), oldPrincipals.Difference(newPrincipals)
 		}
 
 		if !new.Resources.Equal(old.Resources) {
@@ -215,21 +216,21 @@ func (r *crossAccountAttachmentResource) Update(ctx context.Context, request res
 				return v1.EndpointID.Equal(v2.EndpointID) && v1.Region.Equal(v2.Region)
 			})
 
-			input.AddResources = tfslices.ApplyToAll(add, func(v *resourceModel) *globalaccelerator.Resource {
-				return &globalaccelerator.Resource{
+			input.AddResources = tfslices.ApplyToAll(add, func(v *resourceModel) awstypes.Resource {
+				return awstypes.Resource{
 					EndpointId: fwflex.StringFromFramework(ctx, v.EndpointID),
 					Region:     fwflex.StringFromFramework(ctx, v.Region),
 				}
 			})
-			input.RemoveResources = tfslices.ApplyToAll(remove, func(v *resourceModel) *globalaccelerator.Resource {
-				return &globalaccelerator.Resource{
+			input.RemoveResources = tfslices.ApplyToAll(remove, func(v *resourceModel) awstypes.Resource {
+				return awstypes.Resource{
 					EndpointId: fwflex.StringFromFramework(ctx, v.EndpointID),
 					Region:     fwflex.StringFromFramework(ctx, v.Region),
 				}
 			})
 		}
 
-		output, err := conn.UpdateCrossAccountAttachmentWithContext(ctx, input)
+		output, err := conn.UpdateCrossAccountAttachment(ctx, input)
 
 		if err != nil {
 			response.Diagnostics.AddError(fmt.Sprintf("updating Global Accelerator Cross-account Attachment (%s)", new.ID.ValueString()), err.Error())
@@ -252,13 +253,13 @@ func (r *crossAccountAttachmentResource) Delete(ctx context.Context, request res
 		return
 	}
 
-	conn := r.Meta().GlobalAcceleratorConn(ctx)
+	conn := r.Meta().GlobalAcceleratorClient(ctx)
 
-	_, err := conn.DeleteCrossAccountAttachmentWithContext(ctx, &globalaccelerator.DeleteCrossAccountAttachmentInput{
+	_, err := conn.DeleteCrossAccountAttachment(ctx, &globalaccelerator.DeleteCrossAccountAttachmentInput{
 		AttachmentArn: fwflex.StringFromFramework(ctx, data.ID),
 	})
 
-	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeAttachmentNotFoundException) {
+	if errs.IsA[*awstypes.AttachmentNotFoundException](err) {
 		return
 	}
 
@@ -273,18 +274,14 @@ func (r *crossAccountAttachmentResource) ModifyPlan(ctx context.Context, request
 	r.SetTagsAll(ctx, request, response)
 }
 
-func findCrossAccountAttachmentByARN(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, arn string) (*globalaccelerator.Attachment, error) {
+func findCrossAccountAttachmentByARN(ctx context.Context, conn *globalaccelerator.Client, arn string) (*awstypes.Attachment, error) {
 	input := &globalaccelerator.DescribeCrossAccountAttachmentInput{
 		AttachmentArn: aws.String(arn),
 	}
 
-	return findCrossAccountAttachment(ctx, conn, input)
-}
+	output, err := conn.DescribeCrossAccountAttachment(ctx, input)
 
-func findCrossAccountAttachment(ctx context.Context, conn *globalaccelerator.GlobalAccelerator, input *globalaccelerator.DescribeCrossAccountAttachmentInput) (*globalaccelerator.Attachment, error) {
-	output, err := conn.DescribeCrossAccountAttachmentWithContext(ctx, input)
-
-	if tfawserr.ErrCodeEquals(err, globalaccelerator.ErrCodeAttachmentNotFoundException) {
+	if errs.IsA[*awstypes.AttachmentNotFoundException](err) {
 		return nil, &retry.NotFoundError{
 			LastError:   err,
 			LastRequest: input,
