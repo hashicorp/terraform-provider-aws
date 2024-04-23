@@ -335,10 +335,6 @@ func findAcceleratorByARN(ctx context.Context, conn *globalaccelerator.Client, a
 		AcceleratorArn: aws.String(arn),
 	}
 
-	return findAccelerator(ctx, conn, input)
-}
-
-func findAccelerator(ctx context.Context, conn *globalaccelerator.Client, input *globalaccelerator.DescribeAcceleratorInput) (*awstypes.Accelerator, error) {
 	output, err := conn.DescribeAccelerator(ctx, input)
 
 	if errs.IsA[*awstypes.AcceleratorNotFoundException](err) {
@@ -364,10 +360,6 @@ func findAcceleratorAttributesByARN(ctx context.Context, conn *globalaccelerator
 		AcceleratorArn: aws.String(arn),
 	}
 
-	return findAcceleratorAttributes(ctx, conn, input)
-}
-
-func findAcceleratorAttributes(ctx context.Context, conn *globalaccelerator.Client, input *globalaccelerator.DescribeAcceleratorAttributesInput) (*awstypes.AcceleratorAttributes, error) {
 	output, err := conn.DescribeAcceleratorAttributes(ctx, input)
 
 	if errs.IsA[*awstypes.AcceleratorNotFoundException](err) {

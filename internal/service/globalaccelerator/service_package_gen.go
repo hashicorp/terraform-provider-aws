@@ -15,7 +15,8 @@ type servicePackage struct{}
 func (p *servicePackage) FrameworkDataSources(ctx context.Context) []*types.ServicePackageFrameworkDataSource {
 	return []*types.ServicePackageFrameworkDataSource{
 		{
-			Factory: newDataSourceAccelerator,
+			Factory: newAcceleratorDataSource,
+			Name:    "Accelerator",
 		},
 	}
 }
