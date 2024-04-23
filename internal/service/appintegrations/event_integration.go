@@ -185,6 +185,10 @@ func resourceEventIntegrationDelete(ctx context.Context, d *schema.ResourceData,
 		Name: aws.String(name),
 	})
 
+	if errs.IsA[*awstypes.ResourceNotFoundException](err) {
+		return diags
+	}
+
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "deleting EventIntegration (%s): %s", d.Id(), err)
 	}
