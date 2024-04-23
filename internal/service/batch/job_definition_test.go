@@ -948,10 +948,10 @@ func testAccCheckJobDefinitionAttributes(jd *awstypes.JobDefinition, compare *aw
 					return fmt.Errorf("Bad Job Definition Retry Strategy\n\t expected: %v\n\tgot: %v\n", compare.RetryStrategy.EvaluateOnExit, jd.RetryStrategy.EvaluateOnExit)
 				}
 				if compare.ContainerProperties != nil && compare.ContainerProperties.Command != nil && !reflect.DeepEqual(compare.ContainerProperties, jd.ContainerProperties) {
-					return fmt.Errorf("Bad Job Definition Container Properties\n\t expected: %s\n\tgot: %s\n", compare.ContainerProperties, jd.ContainerProperties)
+					return fmt.Errorf("Bad Job Definition Container Properties\n\t expected: %v\n\tgot: %vs\n", compare.ContainerProperties, jd.ContainerProperties)
 				}
 				if compare.NodeProperties != nil && compare.NodeProperties.NumNodes != nil && !reflect.DeepEqual(compare.NodeProperties, jd.NodeProperties) {
-					return fmt.Errorf("Bad Job Definition Node Properties\n\t expected: %s\n\tgot: %s\n", compare.NodeProperties, jd.NodeProperties)
+					return fmt.Errorf("Bad Job Definition Node Properties\n\t expected: %v\n\tgot: %v\n", compare.NodeProperties, jd.NodeProperties)
 				}
 			}
 		}

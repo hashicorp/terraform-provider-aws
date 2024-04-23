@@ -26,7 +26,7 @@ import (
 
 // @SDKResource("aws_batch_scheduling_policy", name="Scheduling Policy")
 // @Tags(identifierAttribute="arn")
-// @Testing(existsType="github.com/aws/aws-sdk-go/service/batch.SchedulingPolicyDetail")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/batch/types.SchedulingPolicyDetail")
 func ResourceSchedulingPolicy() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceSchedulingPolicyCreate,

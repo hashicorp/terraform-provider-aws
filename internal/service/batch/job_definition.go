@@ -34,7 +34,7 @@ import (
 
 // @SDKResource("aws_batch_job_definition", name="Job Definition")
 // @Tags(identifierAttribute="arn")
-// @Testing(existsType="github.com/aws/aws-sdk-go/service/batch.JobDefinition", importIgnore="deregister_on_new_revision")
+// @Testing(existsType="github.com/aws/aws-sdk-go-v2/service/batch/types.JobDefinition", importIgnore="deregister_on_new_revision")
 func ResourceJobDefinition() *schema.Resource {
 	return &schema.Resource{
 		CreateWithoutTimeout: resourceJobDefinitionCreate,

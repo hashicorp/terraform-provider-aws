@@ -5,7 +5,7 @@ package batch_test
 import (
 	"testing"
 
-	"github.com/aws/aws-sdk-go/service/batch"
+	"github.com/aws/aws-sdk-go-v2/service/batch/types"
 	sdkacctest "github.com/hashicorp/terraform-plugin-testing/helper/acctest"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
@@ -14,7 +14,7 @@ import (
 
 func TestAccBatchJobQueue_tags(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v batch.JobQueueDetail
+	var v types.JobQueueDetail
 	resourceName := "aws_batch_job_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -84,7 +84,7 @@ func TestAccBatchJobQueue_tags_null(t *testing.T) {
 	t.Skip("Tags with null values are not correctly handled with the Plugin Framework")
 
 	ctx := acctest.Context(t)
-	var v batch.JobQueueDetail
+	var v types.JobQueueDetail
 	resourceName := "aws_batch_job_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -117,7 +117,7 @@ func TestAccBatchJobQueue_tags_null(t *testing.T) {
 
 func TestAccBatchJobQueue_tags_AddOnUpdate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v batch.JobQueueDetail
+	var v types.JobQueueDetail
 	resourceName := "aws_batch_job_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -153,7 +153,7 @@ func TestAccBatchJobQueue_tags_AddOnUpdate(t *testing.T) {
 
 func TestAccBatchJobQueue_tags_EmptyTag_OnCreate(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v batch.JobQueueDetail
+	var v types.JobQueueDetail
 	resourceName := "aws_batch_job_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -194,7 +194,7 @@ func TestAccBatchJobQueue_tags_EmptyTag_OnCreate(t *testing.T) {
 
 func TestAccBatchJobQueue_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v batch.JobQueueDetail
+	var v types.JobQueueDetail
 	resourceName := "aws_batch_job_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -245,7 +245,7 @@ func TestAccBatchJobQueue_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 
 func TestAccBatchJobQueue_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v batch.JobQueueDetail
+	var v types.JobQueueDetail
 	resourceName := "aws_batch_job_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -282,7 +282,7 @@ func TestAccBatchJobQueue_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
 
 func TestAccBatchJobQueue_tags_DefaultTags_providerOnly(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v batch.JobQueueDetail
+	var v types.JobQueueDetail
 	resourceName := "aws_batch_job_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -366,7 +366,7 @@ func TestAccBatchJobQueue_tags_DefaultTags_providerOnly(t *testing.T) {
 
 func TestAccBatchJobQueue_tags_DefaultTags_nonOverlapping(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v batch.JobQueueDetail
+	var v types.JobQueueDetail
 	resourceName := "aws_batch_job_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -438,7 +438,7 @@ func TestAccBatchJobQueue_tags_DefaultTags_nonOverlapping(t *testing.T) {
 
 func TestAccBatchJobQueue_tags_DefaultTags_overlapping(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v batch.JobQueueDetail
+	var v types.JobQueueDetail
 	resourceName := "aws_batch_job_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -510,7 +510,7 @@ func TestAccBatchJobQueue_tags_DefaultTags_overlapping(t *testing.T) {
 
 func TestAccBatchJobQueue_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v batch.JobQueueDetail
+	var v types.JobQueueDetail
 	resourceName := "aws_batch_job_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -553,7 +553,7 @@ func TestAccBatchJobQueue_tags_DefaultTags_updateToProviderOnly(t *testing.T) {
 
 func TestAccBatchJobQueue_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v batch.JobQueueDetail
+	var v types.JobQueueDetail
 	resourceName := "aws_batch_job_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -596,7 +596,7 @@ func TestAccBatchJobQueue_tags_DefaultTags_updateToResourceOnly(t *testing.T) {
 
 func TestAccBatchJobQueue_tags_DefaultTags_emptyResourceTag(t *testing.T) {
 	ctx := acctest.Context(t)
-	var v batch.JobQueueDetail
+	var v types.JobQueueDetail
 	resourceName := "aws_batch_job_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -632,7 +632,7 @@ func TestAccBatchJobQueue_tags_DefaultTags_nullOverlappingResourceTag(t *testing
 	t.Skip("Tags with null values are not correctly handled with the Plugin Framework")
 
 	ctx := acctest.Context(t)
-	var v batch.JobQueueDetail
+	var v types.JobQueueDetail
 	resourceName := "aws_batch_job_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
@@ -667,7 +667,7 @@ func TestAccBatchJobQueue_tags_DefaultTags_nullNonOverlappingResourceTag(t *test
 	t.Skip("Tags with null values are not correctly handled with the Plugin Framework")
 
 	ctx := acctest.Context(t)
-	var v batch.JobQueueDetail
+	var v types.JobQueueDetail
 	resourceName := "aws_batch_job_queue.test"
 	rName := sdkacctest.RandomWithPrefix(acctest.ResourcePrefix)
 
