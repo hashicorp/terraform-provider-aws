@@ -62,8 +62,9 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceCustomRoutingEndpointGroup,
+			Factory:  resourceCustomRoutingEndpointGroup,
 			TypeName: "aws_globalaccelerator_custom_routing_endpoint_group",
+			Name:     "Custom Routing Endpoint Group",
 		},
 		{
 			Factory:  resourceCustomRoutingListener,
