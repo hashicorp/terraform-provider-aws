@@ -75,7 +75,13 @@ func testAccKnowledgeBase_rds(t *testing.T) {
 		},
 		ErrorCheck:               acctest.ErrorCheck(t, names.BedrockAgentServiceID),
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
-		CheckDestroy:             testAccCheckKnowledgeBaseDestroy(ctx),
+		ExternalProviders: map[string]resource.ExternalProvider{
+			"null": {
+				Source:            "hashicorp/null",
+				VersionConstraint: "3.2.2",
+			},
+		},
+		CheckDestroy: testAccCheckKnowledgeBaseDestroy(ctx),
 		Steps: []resource.TestStep{
 			{
 				Config: testAccKnowledgeBaseConfig_rds(rName, foundationModel),
@@ -535,10 +541,27 @@ resource "aws_bedrockagent_knowledge_base" "test" {
 }
 
 func testAccKnowledgeBase_rdsBase(rName, model string) string {
-	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 0), fmt.Sprintf(`
+	return fmt.Sprintf(`
 data "aws_partition" "current" {}
 data "aws_region" "current" {}
-provider "aws" {}
+resource "aws_default_vpc" "test" {}
+
+resource "aws_iam_role" "test" {
+  name               = %[1]q
+  path               = "/service-role/"
+  assume_role_policy = <<POLICY
+{
+	"Version": "2012-10-17",
+	"Statement": [{
+		"Action": "sts:AssumeRole",
+		"Principal": {
+		"Service": "bedrock.amazonaws.com"
+		},
+		"Effect": "Allow"
+	}]
+}
+POLICY
+}
 
 # See https://docs.aws.amazon.com/bedrock/latest/userguide/kb-permissions.html.
 resource "aws_iam_role_policy" "test" {
@@ -580,8 +603,9 @@ resource "aws_iam_role_policy_attachment" "secrets_manager_read_write" {
   policy_arn = "arn:${data.aws_partition.current.partition}:iam::${data.aws_partition.current.partition}:policy/SecretsManagerReadWrite"
 }
 
+
 resource "aws_rds_cluster" "this" {
-  cluster_identifier          = "test"
+  cluster_identifier          = %[1]q
   engine                      = "aurora-postgresql"
   engine_mode                 = "provisioned"
   engine_version              = "15.4"
@@ -590,6 +614,7 @@ resource "aws_rds_cluster" "this" {
   manage_master_user_password = true
   enable_http_endpoint        = true
   vpc_security_group_ids      = [aws_security_group.db_sg.id]
+  skip_final_snapshot         = true
 
   serverlessv2_scaling_configuration {
     max_capacity = 1.0
@@ -605,9 +630,9 @@ resource "aws_rds_cluster_instance" "this" {
 }
 
 resource "aws_security_group" "db_sg" {
-  name        = "test"
+  name        = %[1]q
   description = "Allow PostgreSQL traffic"
-  vpc_id      = aws_vpc.test.id
+  vpc_id      = aws_default_vpc.test.id
 
   ingress {
     from_port   = 5432
@@ -624,28 +649,30 @@ resource "aws_security_group" "db_sg" {
   }
 }
 
-data "aws_secretsmanager_secret_version" "example" {
-  secret_id = tolist(aws_rds_cluster.this.master_user_secret)[0].secret_arn
+data "aws_secretsmanager_secret_version" "this" {
+  secret_id     = aws_rds_cluster.this.master_user_secret[0].secret_arn
+  version_stage = "AWSCURRENT"
+  depends_on    = [aws_rds_cluster.this]
 }
 
 resource "null_resource" "db_setup" {
-  depends_on = [aws_rds_cluster_instance.this]
+  depends_on = [aws_rds_cluster_instance.this, aws_rds_cluster.this, data.aws_secretsmanager_secret_version.this]
 
   provisioner "local-exec" {
     command = <<EOT
-		psql -h ${aws_rds_cluster.this.endpoint} -U ${aws_rds_cluster.this.master_username} -d ${aws_rds_cluster.this.database_name} -c "CREATE EXTENSION IF NOT EXISTS vector;"
-		psql -h ${aws_rds_cluster.this.endpoint} -U ${aws_rds_cluster.this.master_username} -d ${aws_rds_cluster.this.database_name} -c "CREATE SCHEMA IF NOT EXISTS  bedrock_integration;"
-		psql -h ${aws_rds_cluster.this.endpoint} -U ${aws_rds_cluster.this.master_username} -d ${aws_rds_cluster.this.database_name} -c "CREATE ROLE  bedrock_user WITH PASSWORD $PGPASSWORD LOGIN;"
-		psql -h ${aws_rds_cluster.this.endpoint} -U ${aws_rds_cluster.this.master_username} -d ${aws_rds_cluster.this.database_name} -c "GRANT ALL ON SCHEMA bedrock_integration TO bedrock_user;"
-		psql -h ${aws_rds_cluster.this.endpoint} -U ${aws_rds_cluster.this.master_username} -d ${aws_rds_cluster.this.database_name} -c "CREATE TABLE bedrock_integration.bedrock_kb (id uuid PRIMARY KEY, embedding vector(1536), chunks text, metadata json);"
-		psql -h ${aws_rds_cluster.this.endpoint} -U ${aws_rds_cluster.this.master_username} -d ${aws_rds_cluster.this.database_name} -c "CREATE INDEX ON bedrock_integration.bedrock_kb USING hnsw (embedding vector_cosine_ops);"
-	  EOT
-    environment = {
-      PGPASSWORD = jsondecode(data.aws_secretsmanager_secret_version.example.secret_string)["password"]
-    }
+    	sleep 60
+      export PGPASSWORD=$(aws secretsmanager get-secret-value --secret-id '${aws_rds_cluster.this.master_user_secret[0].secret_arn}' --version-stage AWSCURRENT --region us-west-2 --query SecretString --output text | jq -r '."password"')
+      psql -h ${aws_rds_cluster.this.endpoint} -U ${aws_rds_cluster.this.master_username} -d ${aws_rds_cluster.this.database_name} -c "CREATE EXTENSION IF NOT EXISTS vector;"
+      psql -h ${aws_rds_cluster.this.endpoint} -U ${aws_rds_cluster.this.master_username} -d ${aws_rds_cluster.this.database_name} -c "CREATE SCHEMA IF NOT EXISTS bedrock_integration;"
+      psql -h ${aws_rds_cluster.this.endpoint} -U ${aws_rds_cluster.this.master_username} -d ${aws_rds_cluster.this.database_name} -c "CREATE SCHEMA IF NOT EXISTS bedrock_new;"
+      psql -h ${aws_rds_cluster.this.endpoint} -U ${aws_rds_cluster.this.master_username} -d ${aws_rds_cluster.this.database_name} -c "CREATE ROLE bedrock_user WITH PASSWORD '$PGPASSWORD' LOGIN;"
+      psql -h ${aws_rds_cluster.this.endpoint} -U ${aws_rds_cluster.this.master_username} -d ${aws_rds_cluster.this.database_name} -c "GRANT ALL ON SCHEMA bedrock_integration TO bedrock_user;"
+      psql -h ${aws_rds_cluster.this.endpoint} -U ${aws_rds_cluster.this.master_username} -d ${aws_rds_cluster.this.database_name} -c "CREATE TABLE bedrock_integration.bedrock_kb (id uuid PRIMARY KEY, embedding vector(1536), chunks text, metadata json);"
+      psql -h ${aws_rds_cluster.this.endpoint} -U ${aws_rds_cluster.this.master_username} -d ${aws_rds_cluster.this.database_name} -c "CREATE INDEX ON bedrock_integration.bedrock_kb USING hnsw (embedding vector_cosine_ops);"
+    EOT
   }
 }
-`, rName, model))
+`, rName, model)
 }
 
 func testAccKnowledgeBaseConfig_rds(rName, model string) string {

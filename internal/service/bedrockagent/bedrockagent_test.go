@@ -16,7 +16,7 @@ func TestAccBedrockAgent_serial(t *testing.T) {
 		"KnowledgeBase": {
 			"basic":      testAccKnowledgeBase_basic,
 			"disappears": testAccKnowledgeBase_disappears,
-			"reds":       testAccKnowledgeBase_rds,
+			"rds":        testAccKnowledgeBase_rds,
 			"update":     testAccKnowledgeBase_update,
 			"tags":       testAccKnowledgeBase_tags,
 		},
