@@ -569,6 +569,8 @@ service/route53:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_route53_(?!resolver_)'
 service/route53domains:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_route53domains_'
+service/route53profiles:
+  - '((\*|-)\s*`?|(data|resource)\s+"?)aws_route53profiles_'
 service/route53recoverycluster:
   - '((\*|-)\s*`?|(data|resource)\s+"?)aws_route53recoverycluster_'
 service/route53recoverycontrolconfig:

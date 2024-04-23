@@ -776,6 +776,67 @@ rules:
           patterns:
             - pattern-regex: "(?i)Route53Domains"
     severity: WARNING
+  - id: route53profiles-in-func-name
+    languages:
+      - go
+    message: Do not use "Route53Profiles" in func name inside route53profiles package
+    paths:
+      include:
+        - internal/service/route53profiles
+      exclude:
+        - internal/service/route53profiles/list_pages_gen.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Route53Profiles"
+      - focus-metavariable: $NAME
+      - pattern-not: func $NAME($T *testing.T) { ... }
+    severity: WARNING
+  - id: route53profiles-in-test-name
+    languages:
+      - go
+    message: Include "Route53Profiles" in test name
+    paths:
+      include:
+        - internal/service/route53profiles/*_test.go
+    patterns:
+      - pattern: func $NAME( ... ) { ... }
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-not-regex: "^TestAccRoute53Profiles"
+            - pattern-regex: ^TestAcc.*
+    severity: WARNING
+  - id: route53profiles-in-const-name
+    languages:
+      - go
+    message: Do not use "Route53Profiles" in const name inside route53profiles package
+    paths:
+      include:
+        - internal/service/route53profiles
+    patterns:
+      - pattern: const $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Route53Profiles"
+    severity: WARNING
+  - id: route53profiles-in-var-name
+    languages:
+      - go
+    message: Do not use "Route53Profiles" in var name inside route53profiles package
+    paths:
+      include:
+        - internal/service/route53profiles
+    patterns:
+      - pattern: var $NAME = ...
+      - metavariable-pattern:
+          metavariable: $NAME
+          patterns:
+            - pattern-regex: "(?i)Route53Profiles"
+    severity: WARNING
   - id: route53recoverycontrolconfig-in-func-name
     languages:
       - go
