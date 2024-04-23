@@ -828,6 +828,11 @@ func TestAccCloudFormationStackSet_autoDeploymentDisabled(t *testing.T) {
 }
 
 // https://github.com/hashicorp/terraform-provider-aws/issues/32536.
+// Prerequisites:
+// * Organizations root account
+// * Organization member account
+// * Deleegated administrator not configured
+// Authenticate with member account as target account and root account as alternate.
 func TestAccCloudFormationStackSet_delegatedAdministrator(t *testing.T) {
 	ctx := acctest.Context(t)
 	providers := make(map[string]*schema.Provider)
