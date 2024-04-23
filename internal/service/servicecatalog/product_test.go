@@ -308,11 +308,11 @@ func testAccProductConfig_tags0(rName string) string {
 data "aws_partition" "current" {}
 
 resource "aws_servicecatalog_product" "test" {
-  description         = %[1]q
-  distributor         = "distributör"
-  name                = %[1]q
-  owner               = "ägare"
-  type                = "CLOUD_FORMATION_TEMPLATE"
+  description = %[1]q
+  distributor = "distributör"
+  name        = %[1]q
+  owner       = "ägare"
+  type        = "CLOUD_FORMATION_TEMPLATE"
 
   provisioning_artifact_parameters {
     description                 = "artefaktbeskrivning"
@@ -330,11 +330,11 @@ func testAccProductConfig_tags1(rName, tagKey1, tagValue1 string) string {
 data "aws_partition" "current" {}
 
 resource "aws_servicecatalog_product" "test" {
-  description         = %[1]q
-  distributor         = "distributör"
-  name                = %[1]q
-  owner               = "ägare"
-  type                = "CLOUD_FORMATION_TEMPLATE"
+  description = %[1]q
+  distributor = "distributör"
+  name        = %[1]q
+  owner       = "ägare"
+  type        = "CLOUD_FORMATION_TEMPLATE"
 
   provisioning_artifact_parameters {
     description                 = "artefaktbeskrivning"
@@ -356,11 +356,11 @@ func testAccProductConfig_tags2(rName, tagKey1, tagValue1, tagKey2, tagValue2 st
 data "aws_partition" "current" {}
 
 resource "aws_servicecatalog_product" "test" {
-  description         = %[1]q
-  distributor         = "distributör"
-  name                = %[1]q
-  owner               = "ägare"
-  type                = "CLOUD_FORMATION_TEMPLATE"
+  description = %[1]q
+  distributor = "distributör"
+  name        = %[1]q
+  owner       = "ägare"
+  type        = "CLOUD_FORMATION_TEMPLATE"
 
   provisioning_artifact_parameters {
     description                 = "artefaktbeskrivning"
@@ -383,11 +383,11 @@ func testAccProductConfig_tagsNull(rName, tagKey1 string) string {
 data "aws_partition" "current" {}
 
 resource "aws_servicecatalog_product" "test" {
-  description         = %[1]q
-  distributor         = "distributör"
-  name                = %[1]q
-  owner               = "ägare"
-  type                = "CLOUD_FORMATION_TEMPLATE"
+  description = %[1]q
+  distributor = "distributör"
+  name        = %[1]q
+  owner       = "ägare"
+  type        = "CLOUD_FORMATION_TEMPLATE"
 
   provisioning_artifact_parameters {
     description                 = "artefaktbeskrivning"

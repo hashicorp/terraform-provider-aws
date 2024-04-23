@@ -682,7 +682,7 @@ resource "aws_s3_object" "test" {
 
     Resources = {
       MyS3Bucket = {
-        Type      = "AWS::S3::Bucket"
+        Type = "AWS::S3::Bucket"
         Properties = {
           BucketName = { Ref = "BucketName" }
         }
@@ -692,11 +692,11 @@ resource "aws_s3_object" "test" {
 }
 
 resource "aws_servicecatalog_product" "test" {
-  description         = %[1]q
-  distributor         = "distributör"
-  name                = %[1]q
-  owner               = "ägare"
-  type                = "CLOUD_FORMATION_TEMPLATE"
+  description = %[1]q
+  distributor = "distributör"
+  name        = %[1]q
+  owner       = "ägare"
+  type        = "CLOUD_FORMATION_TEMPLATE"
 
   provisioning_artifact_parameters {
     description                 = "artefaktbeskrivning"
@@ -816,7 +816,7 @@ resource "aws_servicecatalog_provisioned_product" "test" {
 
   # Leave this here to test tag behavior on Update
   tags = {
-	Name = %[1]q
+    Name = %[1]q
   }
 }
 `, rName, vpcCidr))
@@ -925,7 +925,7 @@ resource "aws_servicecatalog_provisioned_product" "test" {
 
   # Leave this here to test tag behavior on Update
   tags = {
-	Name = %[1]q
+    Name = %[1]q
   }
 }
 `, rName, vpcCidr, artifactName))
@@ -971,7 +971,7 @@ resource "aws_servicecatalog_provisioned_product" "test" {
   }
 
   tags = {
-	version = %[3]q
+    version = %[3]q
   }
 }
 `, rName, bucketName, tagValue))
@@ -992,12 +992,12 @@ resource "aws_servicecatalog_provisioned_product" "test" {
   }
 
   tags = {
-	version = %[3]q
+    version = %[3]q
   }
 }
 
 resource "aws_s3_bucket" "conflict" {
-	  bucket = %[2]q
+  bucket = %[2]q
 }
 `, rName, conflictingBucketName, tagValue))
 }
