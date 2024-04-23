@@ -125,7 +125,7 @@ func resourceCustomRoutingEndpointGroupCreate(ctx context.Context, d *schema.Res
 
 	d.SetId(aws.StringValue(output.EndpointGroup.EndpointGroupArn))
 
-	acceleratorARN, err := ListenerOrEndpointGroupARNToAcceleratorARN(d.Id())
+	acceleratorARN, err := listenerOrEndpointGroupARNToAcceleratorARN(d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
@@ -171,7 +171,7 @@ func resourceCustomRoutingEndpointGroupRead(ctx context.Context, d *schema.Resou
 		return sdkdiag.AppendErrorf(diags, "reading Global Accelerator Custom Routing Endpoint Group (%s): %s", d.Id(), err)
 	}
 
-	listenerARN, err := EndpointGroupARNToListenerARN(d.Id())
+	listenerARN, err := endpointGroupARNToListenerARN(d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
@@ -207,7 +207,7 @@ func resourceCustomRoutingEndpointGroupDelete(ctx context.Context, d *schema.Res
 		return sdkdiag.AppendErrorf(diags, "deleting Global Accelerator Custom Routing Endpoint Group (%s): %s", d.Id(), err)
 	}
 
-	acceleratorARN, err := ListenerOrEndpointGroupARNToAcceleratorARN(d.Id())
+	acceleratorARN, err := listenerOrEndpointGroupARNToAcceleratorARN(d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)

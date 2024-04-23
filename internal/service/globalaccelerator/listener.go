@@ -127,7 +127,7 @@ func resourceListenerRead(ctx context.Context, d *schema.ResourceData, meta inte
 		return sdkdiag.AppendErrorf(diags, "reading Global Accelerator Listener (%s): %s", d.Id(), err)
 	}
 
-	acceleratorARN, err := ListenerOrEndpointGroupARNToAcceleratorARN(d.Id())
+	acceleratorARN, err := listenerOrEndpointGroupARNToAcceleratorARN(d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)

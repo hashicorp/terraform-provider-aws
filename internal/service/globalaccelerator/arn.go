@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/aws/aws-sdk-go/aws/arn"
+	"github.com/aws/aws-sdk-go-v2/aws/arn"
 )
 
 const (
@@ -15,9 +15,9 @@ const (
 	ARNService   = "globalaccelerator"
 )
 
-// EndpointGroupARNToListenerARN converts an endpoint group ARN to a listener ARN.
+// endpointGroupARNToListenerARN converts an endpoint group ARN to a listener ARN.
 // See https://docs.aws.amazon.com/service-authorization/latest/reference/list_awsglobalaccelerator.html#awsglobalaccelerator-resources-for-iam-policies.
-func EndpointGroupARNToListenerARN(inputARN string) (string, error) {
+func endpointGroupARNToListenerARN(inputARN string) (string, error) {
 	parsedARN, err := arn.Parse(inputARN)
 
 	if err != nil {
@@ -45,9 +45,9 @@ func EndpointGroupARNToListenerARN(inputARN string) (string, error) {
 	return outputARN, nil
 }
 
-// ListenerOrEndpointGroupARNToAcceleratorARN converts a listener or endpoint group ARN to an accelerator ARN.
+// listenerOrEndpointGroupARNToAcceleratorARN converts a listener or endpoint group ARN to an accelerator ARN.
 // See https://docs.aws.amazon.com/service-authorization/latest/reference/list_awsglobalaccelerator.html#awsglobalaccelerator-resources-for-iam-policies.
-func ListenerOrEndpointGroupARNToAcceleratorARN(inputARN string) (string, error) {
+func listenerOrEndpointGroupARNToAcceleratorARN(inputARN string) (string, error) {
 	parsedARN, err := arn.Parse(inputARN)
 
 	if err != nil {

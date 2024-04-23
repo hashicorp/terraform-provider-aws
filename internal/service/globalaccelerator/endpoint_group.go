@@ -195,7 +195,7 @@ func resourceEndpointGroupCreate(ctx context.Context, d *schema.ResourceData, me
 
 	d.SetId(aws.StringValue(resp.EndpointGroup.EndpointGroupArn))
 
-	acceleratorARN, err := ListenerOrEndpointGroupARNToAcceleratorARN(d.Id())
+	acceleratorARN, err := listenerOrEndpointGroupARNToAcceleratorARN(d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
@@ -225,7 +225,7 @@ func resourceEndpointGroupRead(ctx context.Context, d *schema.ResourceData, meta
 		return sdkdiag.AppendErrorf(diags, "reading Global Accelerator Endpoint Group (%s): %s", d.Id(), err)
 	}
 
-	listenerARN, err := EndpointGroupARNToListenerARN(d.Id())
+	listenerARN, err := endpointGroupARNToListenerARN(d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
@@ -301,7 +301,7 @@ func resourceEndpointGroupUpdate(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "updating Global Accelerator Endpoint Group (%s): %s", d.Id(), err)
 	}
 
-	acceleratorARN, err := ListenerOrEndpointGroupARNToAcceleratorARN(d.Id())
+	acceleratorARN, err := listenerOrEndpointGroupARNToAcceleratorARN(d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
@@ -332,7 +332,7 @@ func resourceEndpointGroupDelete(ctx context.Context, d *schema.ResourceData, me
 		return sdkdiag.AppendErrorf(diags, "deleting Global Accelerator Endpoint Group (%s): %s", d.Id(), err)
 	}
 
-	acceleratorARN, err := ListenerOrEndpointGroupARNToAcceleratorARN(d.Id())
+	acceleratorARN, err := listenerOrEndpointGroupARNToAcceleratorARN(d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)

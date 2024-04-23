@@ -112,7 +112,7 @@ func resourceCustomRoutingListenerRead(ctx context.Context, d *schema.ResourceDa
 		return sdkdiag.AppendErrorf(diags, "reading Global Accelerator Custom Routing Listener (%s): %s", d.Id(), err)
 	}
 
-	acceleratorARN, err := ListenerOrEndpointGroupARNToAcceleratorARN(d.Id())
+	acceleratorARN, err := listenerOrEndpointGroupARNToAcceleratorARN(d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendFromErr(diags, err)
