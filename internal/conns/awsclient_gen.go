@@ -160,15 +160,6 @@ import (
 	wellarchitected_sdkv2 "github.com/aws/aws-sdk-go-v2/service/wellarchitected"
 	workspaces_sdkv2 "github.com/aws/aws-sdk-go-v2/service/workspaces"
 	xray_sdkv2 "github.com/aws/aws-sdk-go-v2/service/xray"
-<<<<<<< HEAD
-	acmpca_sdkv1 "github.com/aws/aws-sdk-go/service/acmpca"
-	amplify_sdkv1 "github.com/aws/aws-sdk-go/service/amplify"
-	apigateway_sdkv1 "github.com/aws/aws-sdk-go/service/apigateway"
-	apigatewayv2_sdkv1 "github.com/aws/aws-sdk-go/service/apigatewayv2"
-	appconfig_sdkv1 "github.com/aws/aws-sdk-go/service/appconfig"
-=======
-	appintegrationsservice_sdkv1 "github.com/aws/aws-sdk-go/service/appintegrationsservice"
->>>>>>> main
 	applicationautoscaling_sdkv1 "github.com/aws/aws-sdk-go/service/applicationautoscaling"
 	applicationinsights_sdkv1 "github.com/aws/aws-sdk-go/service/applicationinsights"
 	appmesh_sdkv1 "github.com/aws/aws-sdk-go/service/appmesh"
