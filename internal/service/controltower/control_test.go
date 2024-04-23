@@ -24,6 +24,7 @@ func TestAccControlTowerControl_serial(t *testing.T) {
 	testCases := map[string]map[string]func(t *testing.T){
 		"Control": {
 			acctest.CtBasic: testAccControl_basic,
+			"parameters":    testAccControl_parameter,
 			"disappears":    testAccControl_disappears,
 		},
 	}
@@ -53,6 +54,35 @@ func testAccControl_basic(t *testing.T) {
 				Check: resource.ComposeTestCheckFunc(
 					testAccCheckControlExists(ctx, resourceName, &control),
 					resource.TestCheckResourceAttrSet(resourceName, "control_identifier"),
+				),
+			},
+		},
+	})
+}
+
+func testAccControl_parameter(t *testing.T) {
+	ctx := acctest.Context(t)
+	var control types.EnabledControlSummary
+
+	resourceName := "aws_controltower_control.test"
+	controlName := "TXGPJWIFOIGP" // CT.MULTISERVICE.PV.1
+	ouName := "Security"
+	resource.Test(t, resource.TestCase{
+		PreCheck: func() {
+			acctest.PreCheck(ctx, t)
+			acctest.PreCheckOrganizationManagementAccount(ctx, t)
+			testAccPreCheck(ctx, t)
+		},
+		ErrorCheck:               acctest.ErrorCheck(t, names.ControlTowerServiceID),
+		CheckDestroy:             testAccCheckControlDestroy(ctx),
+		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		Steps: []resource.TestStep{
+			{
+				Config: testAccControlConfig_parameter(controlName, ouName),
+				Check: resource.ComposeTestCheckFunc(
+					testAccCheckControlExists(ctx, resourceName, &control),
+					resource.TestCheckResourceAttrSet(resourceName, "control_identifier"),
+					resource.TestCheckResourceAttr(resourceName, "parameters.0.key", "AllowedRegions"),
 				),
 			},
 		},
@@ -153,6 +183,32 @@ resource "aws_controltower_control" "test" {
     for x in data.aws_organizations_organizational_units.test.children :
     x.arn if x.name == "%[2]s"
   ][0]
+}
+`, controlName, ouName)
+}
+
+func testAccControlConfig_parameter(controlName string, ouName string) string {
+	return fmt.Sprintf(`
+data "aws_region" "current" {}
+
+data "aws_partition" "current" {}
+
+data "aws_organizations_organization" "test" {}
+
+data "aws_organizations_organizational_units" "test" {
+  parent_id = data.aws_organizations_organization.test.roots[0].id
+}
+
+resource "aws_controltower_control" "test" {
+  control_identifier = "arn:${data.aws_partition.current.partition}:controltower:${data.aws_region.current.name}::control/%[1]s"
+  target_identifier = [
+    for x in data.aws_organizations_organizational_units.test.children :
+    x.arn if x.name == "%[2]s"
+  ][0]
+  parameters {
+    key   = "AllowedRegions"
+    value = jsonencode(["eu-central-1", "us-west-1"])
+  }
 }
 `, controlName, ouName)
 }
