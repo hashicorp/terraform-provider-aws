@@ -53,7 +53,7 @@ func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePacka
 			},
 		},
 		{
-			Factory:  ResourceCustomRoutingAccelerator,
+			Factory:  resourceCustomRoutingAccelerator,
 			TypeName: "aws_globalaccelerator_custom_routing_accelerator",
 			Name:     "Custom Routing Accelerator",
 			Tags: &types.ServicePackageResourceTags{

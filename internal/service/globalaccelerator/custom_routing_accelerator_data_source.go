@@ -140,7 +140,7 @@ func dataSourceCustomRoutingAcceleratorRead(ctx context.Context, d *schema.Resou
 	}
 	d.Set("name", accelerator.Name)
 
-	acceleratorAttributes, err := FindCustomRoutingAcceleratorAttributesByARN(ctx, conn, d.Id())
+	acceleratorAttributes, err := findCustomRoutingAcceleratorAttributesByARN(ctx, conn, d.Id())
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Global Accelerator Custom Routing Accelerator (%s) attributes: %s", d.Id(), err)
