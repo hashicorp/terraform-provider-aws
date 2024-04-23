@@ -532,7 +532,7 @@ resource "aws_globalaccelerator_endpoint_group" "test" {
 `, rName)
 }
 
-func testAccEndpointGroupConfig_albClientIP(rName string, clientIP bool, weight int) string {
+func testAccEndpointGroupConfig_baseALB(rName string) string {
 	return acctest.ConfigCompose(acctest.ConfigVPCWithSubnets(rName, 2), fmt.Sprintf(`
 resource "aws_lb" "test" {
   name            = %[1]q
@@ -578,7 +578,11 @@ resource "aws_internet_gateway" "test" {
     Name = %[1]q
   }
 }
+`, rName))
+}
 
+func testAccEndpointGroupConfig_albClientIP(rName string, clientIP bool, weight int) string {
+	return acctest.ConfigCompose(testAccEndpointGroupConfig_baseALB(rName), fmt.Sprintf(`
 resource "aws_globalaccelerator_accelerator" "test" {
   name            = %[1]q
   ip_address_type = "IPV4"

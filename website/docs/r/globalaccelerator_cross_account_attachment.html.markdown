@@ -26,10 +26,11 @@ resource "aws_globalaccelerator_cross_account_attachment" "example" {
 resource "aws_globalaccelerator_cross_account_attachment" "example" {
   name       = "example-cross-account-attachment"
   principals = ["123456789012"]
-  resources = [
-    { endpoint_id = "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/my-load-balancer/50dc6c495c0c9188", region = "us-west-2" },
-    { endpoint_id = "arn:aws:elasticloadbalancing:us-east-1:123456789012:loadbalancer/app/my-other-load-balancer/50dc6c495c0c9189", region = "us-east-1" }
-  ]
+
+  resource {
+    endpoint_id = "arn:aws:elasticloadbalancing:us-west-2:123456789012:loadbalancer/app/my-load-balancer/50dc6c495c0c9188"
+    region      = "us-west-2"
+  }
 }
 ```
 
@@ -42,7 +43,9 @@ The following arguments are required:
 The following arguments are optional:
 
 * `principals` - (Optional) List of AWS account IDs that are allowed to associate resources with the accelerator.
-* `resources` - (Optional) List of resources to be associated with the accelerator. Each resource is specified as a map with keys `endpoint_id` and `region`. The `region` field is optional.
+* `resource` - (Optional) List of resources to be associated with the accelerator.
+    * `endpoint_id` - (Optional) The endpoint ID for the endpoint that is specified as a AWS resource.
+    * `region` - (Optional) The AWS Region where a shared endpoint resource is located.
 * `tags` - (Optional) A map of tags to assign to the resource. If configured with a provider [`default_tags` configuration block](https://registry.terraform.io/providers/hashicorp/aws/latest/docs#default_tags-configuration-block) present, tags with matching keys will overwrite those defined at the provider-level.
 
 ## Attribute Reference

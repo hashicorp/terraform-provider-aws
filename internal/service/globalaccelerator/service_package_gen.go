@@ -24,7 +24,10 @@ func (p *servicePackage) FrameworkResources(ctx context.Context) []*types.Servic
 	return []*types.ServicePackageFrameworkResource{
 		{
 			Factory: newCrossAccountAttachmentResource,
-			Name:    "Cross Account Attachment",
+			Name:    "Cross-account Attachment",
+			Tags: &types.ServicePackageResourceTags{
+				IdentifierAttribute: "id",
+			},
 		},
 	}
 }

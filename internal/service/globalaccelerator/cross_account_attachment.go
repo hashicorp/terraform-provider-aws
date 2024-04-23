@@ -23,6 +23,7 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/framework"
 	fwflex "github.com/hashicorp/terraform-provider-aws/internal/framework/flex"
 	fwtypes "github.com/hashicorp/terraform-provider-aws/internal/framework/types"
+	tfslices "github.com/hashicorp/terraform-provider-aws/internal/slices"
 	tftags "github.com/hashicorp/terraform-provider-aws/internal/tags"
 	"github.com/hashicorp/terraform-provider-aws/internal/tfresource"
 	"github.com/hashicorp/terraform-provider-aws/names"
@@ -189,7 +190,7 @@ func (r *crossAccountAttachmentResource) Update(ctx context.Context, request res
 		}
 
 		if !new.Name.Equal(old.Name) {
-			input.Name = aws.String(new.Name.ValueString())
+			input.Name = fwflex.StringFromFramework(ctx, new.Name)
 		}
 
 		if !new.Principals.Equal(old.Principals) {
@@ -214,15 +215,18 @@ func (r *crossAccountAttachmentResource) Update(ctx context.Context, request res
 				return v1.EndpointID.Equal(v2.EndpointID) && v1.Region.Equal(v2.Region)
 			})
 
-			response.Diagnostics.Append(fwflex.Expand(ctx, add, input.AddResources)...)
-			if response.Diagnostics.HasError() {
-				return
-			}
-
-			response.Diagnostics.Append(fwflex.Expand(ctx, remove, input.RemoveResources)...)
-			if response.Diagnostics.HasError() {
-				return
-			}
+			input.AddResources = tfslices.ApplyToAll(add, func(v *resourceModel) *globalaccelerator.Resource {
+				return &globalaccelerator.Resource{
+					EndpointId: fwflex.StringFromFramework(ctx, v.EndpointID),
+					Region:     fwflex.StringFromFramework(ctx, v.Region),
+				}
+			})
+			input.RemoveResources = tfslices.ApplyToAll(remove, func(v *resourceModel) *globalaccelerator.Resource {
+				return &globalaccelerator.Resource{
+					EndpointId: fwflex.StringFromFramework(ctx, v.EndpointID),
+					Region:     fwflex.StringFromFramework(ctx, v.Region),
+				}
+			})
 		}
 
 		output, err := conn.UpdateCrossAccountAttachmentWithContext(ctx, input)
