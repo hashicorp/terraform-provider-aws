@@ -120,7 +120,7 @@ func TestAccIAMOpenIDConnectProvider_clientIDListOrder(t *testing.T) {
 
 func testAccCheckOpenIDConnectProviderDestroy(ctx context.Context) resource.TestCheckFunc {
 	return func(s *terraform.State) error {
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
 		for _, rs := range s.RootModule().Resources {
 			if rs.Type != "aws_iam_openid_connect_provider" {
@@ -155,7 +155,7 @@ func testAccCheckOpenIDConnectProviderExists(ctx context.Context, n string /*, v
 			return fmt.Errorf("No IAM OIDC Provider ID is set")
 		}
 
-		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMConn(ctx)
+		conn := acctest.Provider.Meta().(*conns.AWSClient).IAMClient(ctx)
 
 		_, err := tfiam.FindOpenIDConnectProviderByARN(ctx, conn, rs.Primary.ID)
 

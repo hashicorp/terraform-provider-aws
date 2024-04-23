@@ -5,11 +5,11 @@ AWS frequently launches new services, and Terraform support is frequently desire
 
 ## Perform Service Design
 
-Before adding a new service to the provider its a good idea to familiarize yourself with the primary workflows practitioners are likely to want to accomplish with the provider to ensure the provider design can solve for this. Its not always necessary to cover 100% of the AWS service offering to unblock most workflows.
+Before adding a new service to the provider it's a good idea to familiarize yourself with the primary workflows practitioners are likely to want to accomplish with the provider to ensure the provider design can solve this. It's not always necessary to cover 100% of the AWS service offering to unblock most workflows.
 
-You should have an idea of what resources and data sources should be added, their dependencies and relative importance in relation to the workflow. This should give you an idea of the order in which resources to be added. It's important to note that generally, we like to review and merge resources in isolation, and avoid combining multiple new resources in one Pull Request.
+You should have an idea of what resources and data sources should be added, their dependencies and relative importance concerning the workflow. This should give you an idea of the order in which resources are to be added. It's important to note that generally, we like to review and merge resources in isolation, and avoid combining multiple new resources in one Pull Request.
 
-Using the AWS API documentation as a reference, identify the various API's which correspond to the CRUD operations which consist of the management surface for that resource. These will be the set of API's called from the new resource. The API's model attributes will correspond to your resource schema.
+Using the AWS API documentation as a reference, identify the various APIs that correspond to the CRUD operations which consist of the management surface for that resource. These will be the set of APIs called from the new resource. The API's model attributes will correspond to your resource schema.
 
 From there begin to map out the list of resources you would like to implement, and note your plan on the GitHub issue relating to the service (or create one if one does not exist) for the community and maintainers to feedback.
 
@@ -68,7 +68,7 @@ Once the service client has been added, implement the first [resource](./add-a-n
 
 ## Adding a Custom Service Client
 
-If an AWS service must be created in a non-standard way, for example the service API's endpoint must be accessed via a single AWS Region, then:
+If an AWS service must be created in a non-standard way, for example, the service API's endpoint must be accessed via a single AWS Region, then:
 
 1. Add an `x` in the **SkipClientGenerate** column for the service in [`names/data/names_data.csv`](https://github.com/hashicorp/terraform-provider-aws/blob/main/names/README.md)
 
@@ -134,7 +134,7 @@ If an AWS service must be created in a non-standard way, for example the service
 
 ## Customizing a new Service Client
 
-If an AWS service must be customized after creation, for example retry handling must be changed, then:
+If an AWS service must be customized after creation, for example, retry handling must be changed, then:
 
 1. Add a file `internal/<service>/service_package.go` that contains an API client customization function, for example:
 
@@ -156,7 +156,7 @@ If an AWS service must be customized after creation, for example retry handling 
     func (p *servicePackage) CustomizeConn(ctx context.Context, conn *chime_sdkv1.Chime) (*chime_sdkv1.Chime, error) {
     	conn.Handlers.Retry.PushBack(func(r *request_sdkv1.Request) {
     		// When calling CreateVoiceConnector across multiple resources,
-    		// the API can randomly return a BadRequestException without explanation
+    		// the API can randomly return a BadRequestException without an explanation
     		if r.Operation.Name == "CreateVoiceConnector" {
     			if tfawserr.ErrMessageContains(r.Error, chime_sdkv1.ErrCodeBadRequestException, "Service received a bad request") {
     				r.Retryable = aws_sdkv1.Bool(true)

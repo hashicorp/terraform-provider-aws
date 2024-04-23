@@ -30,7 +30,7 @@ When done creating the resource using the Framework run `make gen` to remove the
 
 Terraform Plugin Framework introduced `null` values, which differ from `zero` values. Since the Plugin SDKv2 marked both `null` and `zero` values as the same, it will be necessary to use the [State Upgrader](https://developer.hashicorp.com/terraform/plugin/framework/migrating/resources/state-upgrade).
 
-An example to a resource with an upgraded stated, while migrating, can be found [here](https://github.com/hashicorp/terraform-provider-aws/blob/88447d09f85dc737597243b31c5d0c8e212d055b/internal/service/batch/job_queue.go#L330).
+An example of a resource with an upgraded state, while migrating, can be found [here](https://github.com/hashicorp/terraform-provider-aws/blob/88447d09f85dc737597243b31c5d0c8e212d055b/internal/service/batch/job_queue.go#L330).
 
 ### Custom Types
 
@@ -88,7 +88,7 @@ func (r *resourceExampleResource) ModifyPlan(ctx context.Context, request resour
 Transparent Tagging that is used in SDKv2 also applies to the Framework by using the `@Tags` decorator when defining the resource.
 
 ```go
-// @FrameworkResource(name="Example Resource")
+// @FrameworkResource("aws_service_example", name="Example Resource")
 // @Tags(identifierAttribute="arn")
 func newResourceExampleResrouce(_ context.Context) (resource.ResourceWithConfigure, error) {
 	r := resourceExampleResource{}
@@ -98,7 +98,7 @@ func newResourceExampleResrouce(_ context.Context) (resource.ResourceWithConfigu
 
 ## Testing
 
-It is important to not cause any state diffs that result in breaking changes. Testing will check that the diff before, and after, the migration present no changes.
+It is important to not cause any state diffs that result in breaking changes. Testing will check that the diff before and after the migration presents no changes.
 
 !!! tip
     `VersionConstraint` should be set to the most recently published version of the AWS Provider.

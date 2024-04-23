@@ -228,12 +228,8 @@ func waitSSEUpdated(ctx context.Context, conn *dynamodb.DynamoDB, tableName stri
 }
 
 func waitReplicaSSEUpdated(ctx context.Context, client *conns.AWSClient, region string, tableName string, timeout time.Duration) (*dynamodb.TableDescription, error) {
-	sess, err := conns.NewSessionForRegion(&client.DynamoDBConn(ctx).Config, region, client.TerraformVersion)
-	if err != nil {
-		return nil, fmt.Errorf("creating session for region %q: %w", region, err)
-	}
+	conn := client.DynamoDBConnForRegion(ctx, region)
 
-	conn := dynamodb.New(sess)
 	stateConf := &retry.StateChangeConf{
 		Delay:   30 * time.Second,
 		Pending: []string{dynamodb.SSEStatusDisabling, dynamodb.SSEStatusEnabling, dynamodb.SSEStatusUpdating},

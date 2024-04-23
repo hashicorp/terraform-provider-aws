@@ -12,8 +12,8 @@ import (
 	"github.com/hashicorp/terraform-provider-aws/internal/errs/sdkdiag"
 )
 
-// @SDKDataSource("aws_redshiftserverless_namespace")
-func DataSourceNamespace() *schema.Resource {
+// @SDKDataSource("aws_redshiftserverless_namespace", name="Namespace")
+func dataSourceNamespace() *schema.Resource {
 	return &schema.Resource{
 		ReadWithoutTimeout: dataSourceNamespaceRead,
 
@@ -69,8 +69,7 @@ func dataSourceNamespaceRead(ctx context.Context, d *schema.ResourceData, meta i
 	conn := meta.(*conns.AWSClient).RedshiftServerlessConn(ctx)
 
 	namespaceName := d.Get("namespace_name").(string)
-
-	resource, err := FindNamespaceByName(ctx, conn, namespaceName)
+	resource, err := findNamespaceByName(ctx, conn, namespaceName)
 
 	if err != nil {
 		return sdkdiag.AppendErrorf(diags, "reading Redshift Serverless Namespace (%s): %s", namespaceName, err)

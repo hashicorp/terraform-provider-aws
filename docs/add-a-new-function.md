@@ -1,16 +1,13 @@
 # Adding a New Function
 
-!!! tip
-    Provider-defined function support is in technical preview and offered without compatibility promises until Terraform 1.8 is generally available.
-
-Provider defined functions were introduced with Terraform 1.8, enabling provider developers to expose functions specific to a given cloud provider or use case.
-Functions in the AWS provider provide utility that is valuable when paired with AWS resources.
+Provider-defined functions were introduced with Terraform 1.8, enabling provider developers to expose functions specific to a given cloud provider or use case.
+Functions in the AWS provider provide a utility that is valuable when paired with AWS resources.
 
 See the Terraform Plugin Framework [Function documentation](https://developer.hashicorp.com/terraform/plugin/framework/functions) for additional details.
 
 ## Prerequisites
 
-The only prerequisite for creating a function is ensuring the desired functionality is appropriate for a provider defined function.
+The only prerequisite for creating a function is ensuring the desired functionality is appropriate for a provider-defined function.
 Functions must be reproducible across executions ("pure" functions), where the same input always results in the same output.
 This requirement precludes the use of network calls, so operations requiring an AWS API call should instead consider utilizing a [data source](add-a-new-datasource.md).
 Data manipulation tasks tend to be the most common use cases.
@@ -19,21 +16,38 @@ Data manipulation tasks tend to be the most common use cases.
 
 ### Fork the provider and create a feature branch
 
-For a new function use a branch named `f-{function name}`, for example `f-arn_parse`.
+For a new function use a branch named `f-{function name}`, for example, `f-arn_parse`.
 See [Raising a Pull Request](raising-a-pull-request.md) for more details.
 
-### Create and name the function
+### Generate function scaffolding
 
-The function name should be descriptive of it's functionality and succinct.
-Existing examples include `arn_parse` for decomposing ARN strings and `arn_build` for constructing them.
+The `skaff function` subcommand can be used to generate an outline for the new function.
 
-At this time [skaff](skaff.md) does not support creation of new functions.
-New functions can be created by copying the format of an existing function inside `internal/functions`.
+First, install `skaff` and navigate to the directory where provider functions are defined (`internal/function`).
+
+```console
+make skaff
+```
+
+```console
+cd internal/function
+```
+
+Next, run the `skaff function` subcommand.
+The name and description flags are required.
+The name argument should be camel cased (ie. `FooBar`), and the generator will handle converting the name to snake case where appropriate.
+
+```console
+skaff function -n Example -d "Makes some output from an input."
+```
+
+This will generate files storing the function definition, unit tests, and registry documentation.
+The following steps describe how to complete the function implementation.
 
 ### Fill out the function parameter(s) and return value
 
 The function struct's `Definition` method will document the expected parameters and return value.
-Parameter names and return values should be specified in `camel_case`.
+Parameter names and return values should be specified in `snake_case`.
 
 ```go
 func (f exampleFunction) Definition(ctx context.Context, req function.DefinitionRequest, resp *function.DefinitionResponse) {
@@ -62,6 +76,10 @@ func (f exampleFunction) Run(ctx context.Context, req function.RunRequest, resp 
 		return
 	}
 
+	//
+	// Function logic goes here
+	//
+
 	resp.Error = function.ConcatFuncErrors(resp.Result.Set(ctx, data))
 }
 ```
@@ -69,7 +87,7 @@ func (f exampleFunction) Run(ctx context.Context, req function.RunRequest, resp 
 ### Register function to the provider
 
 Once the function is implemented, it must be registered to the provider to be used.
-As only Terraform Plugin Framework supports provider defined functions, registration occurs on the Plugin Framework provider inside `internal/provider/fwprovider/provider.go`.
+As only Terraform Plugin Framework supports provider-defined functions, registration occurs on the Plugin Framework provider inside `internal/provider/fwprovider/provider.go`.
 Add the `New*` factory function in the `Functions` method to register it.
 
 ```go
@@ -95,9 +113,12 @@ An example outline is included below:
 package function_test
 
 import (
+	"fmt"
 	"testing"
 
+	"github.com/hashicorp/go-version"
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
+	"github.com/hashicorp/terraform-plugin-testing/tfversion"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 )
 
@@ -106,9 +127,12 @@ func TestExampleFunction_basic(t *testing.T) {
 
 	resource.UnitTest(t, resource.TestCase{
 		ProtoV5ProviderFactories: acctest.ProtoV5ProviderFactories,
+		TerraformVersionChecks: []tfversion.TerraformVersionCheck{
+			tfversion.SkipBelow(version.Must(version.NewVersion("1.8.0"))),
+		},
 		Steps: []resource.TestStep{
 			{
-				Config: testExampleFunctionConfig(),
+				Config: testExampleFunctionConfig("foo"),
 				Check: resource.ComposeAggregateTestCheckFunc(
 					resource.TestCheckOutput("test", "foo"),
 				),
@@ -117,24 +141,25 @@ func TestExampleFunction_basic(t *testing.T) {
 	})
 }
 
-func testExampleFunctionConfig() string {
-	return `
+func testExampleFunctionConfig(arg string) string {
+	return fmt.Sprintf(`
 output "test" {
-  value = provider::aws::example("foo")
-}`
+  value = provider::aws::example(%[1]q)
+}`, arg)
 }
 ```
 
 With Terraform 1.8+ installed, individual tests can be run like:
 
 ```console
-go test -run='^TestExample' -v ./internal/function/
+go test -run='^TestExampleFunction' -v ./internal/function/
 ```
 
 ### Create documentation for the resource
 
-Add a file covering the use of the new function in `website/docs/functions/<function name>.html.markdown`.
-This documentation will appear on the [Terraform Registry](https://registry.terraform.io/providers/hashicorp/aws/latest) when the function is made available in a provider release.
+`skaff` will have generated framed out registry documentation in `website/docs/functions/<function name>.html.markdown`.
+The `Example Usage`, `Signature`, and `Arguments` sections should all be updated with the appropriate content.
+Once released, this documentation will appear on the [Terraform Registry](https://registry.terraform.io/providers/hashicorp/aws/latest).
 
 ### Raise a pull request
 

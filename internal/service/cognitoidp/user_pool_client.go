@@ -42,7 +42,6 @@ import (
 // @FrameworkResource(name="User Pool Client")
 func newUserPoolClientResource(context.Context) (resource.ResourceWithConfigure, error) {
 	r := &userPoolClientResource{}
-	r.SetMigratedFromPluginSDK(true)
 
 	return r, nil
 }

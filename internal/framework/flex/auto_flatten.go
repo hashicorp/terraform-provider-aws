@@ -89,6 +89,10 @@ func (flattener autoFlattener) convert(ctx context.Context, vFrom, vTo reflect.V
 	case reflect.Struct:
 		diags.Append(flattener.struct_(ctx, vFrom, false, tTo, vTo)...)
 		return diags
+
+	case reflect.Interface:
+		// Smithy union type handling not yet implemented. Silently skip.
+		return diags
 	}
 
 	tflog.Info(ctx, "AutoFlex Flatten; incompatible types", map[string]interface{}{
@@ -494,6 +498,10 @@ func (flattener autoFlattener) slice(ctx context.Context, vFrom reflect.Value, t
 			diags.Append(flattener.sliceOfStructNestedObjectCollection(ctx, vFrom, tTo, vTo)...)
 			return diags
 		}
+
+	case reflect.Interface:
+		// Smithy union type handling not yet implemented. Silently skip.
+		return diags
 	}
 
 	tflog.Info(ctx, "AutoFlex Flatten; incompatible types", map[string]interface{}{
@@ -561,6 +569,54 @@ func (flattener autoFlattener) map_(ctx context.Context, vFrom reflect.Value, tT
 				}
 
 				to, d := tTo.ValueFromMap(ctx, map_)
+				diags.Append(d...)
+				if diags.HasError() {
+					return diags
+				}
+
+				vTo.Set(reflect.ValueOf(to))
+				return diags
+			}
+
+		case reflect.Map:
+			switch tTo := tTo.(type) {
+			case basetypes.MapTypable:
+				//
+				// map[string]map[string]string -> types.Map(OfMap[types.String]).
+				//
+				if vFrom.IsNil() {
+					to, d := tTo.ValueFromMap(ctx, types.MapNull(types.MapType{ElemType: types.StringType}))
+					diags.Append(d...)
+					if diags.HasError() {
+						return diags
+					}
+
+					vTo.Set(reflect.ValueOf(to))
+					return diags
+				}
+
+				from := vFrom.Interface().(map[string]map[string]string)
+				elements := make(map[string]attr.Value, len(from))
+				for k, v := range from {
+					innerElements := make(map[string]attr.Value, len(v))
+					for ik, iv := range v {
+						innerElements[ik] = types.StringValue(iv)
+					}
+					innerMap, d := fwtypes.NewMapValueOf[types.String](ctx, innerElements)
+					diags.Append(d...)
+					if diags.HasError() {
+						return diags
+					}
+
+					elements[k] = innerMap
+				}
+				map_, d := fwtypes.NewMapValueOf[fwtypes.MapValueOf[types.String]](ctx, elements)
+				diags.Append(d...)
+				if diags.HasError() {
+					return diags
+				}
+
+				to, d := tTo.ValueFromMap(ctx, map_.MapValue)
 				diags.Append(d...)
 				if diags.HasError() {
 					return diags

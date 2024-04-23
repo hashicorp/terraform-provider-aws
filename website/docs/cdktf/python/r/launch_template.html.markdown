@@ -170,7 +170,7 @@ Each `block_device_mappings` supports the following:
 The `ebs` block supports the following:
 
 * `delete_on_termination` - (Optional) Whether the volume should be destroyed on instance termination.
-  See [Preserving Amazon EBS Volumes on Instance Termination](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/terminating-instances.html#preserving-volumes-on-termination) for more information.
+  See [Preserving Amazon EBS Volumes on Instance Termination](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/preserving-volumes-on-termination.html) for more information.
 * `encrypted` - (Optional) Enables [EBS encryption](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EBSEncryption.html) on the volume.
   Cannot be used with `snapshot_id`.
 * `iops` - (Optional) The amount of provisioned [IOPS](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ebs-io-characteristics.html).
@@ -518,4 +518,4 @@ Using `terraform import`, import Launch Templates using the `id`. For example:
 % terraform import aws_launch_template.web lt-12345678
 ```
 
-<!-- cache-key: cdktf-0.20.1 input-740500aac22d15b6b6233d6f4556ea72a049c35bfa06ee3b2a9bc0de4c406a93 -->
+<!-- cache-key: cdktf-0.20.1 input-6dafc1b3aa9aeb3c0d519e7966a1099ae41e87ab70a181738865462566ce6e67 -->

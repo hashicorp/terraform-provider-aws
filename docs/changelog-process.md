@@ -1,6 +1,6 @@
 # Changelog Process
 
-HashiCorp’s open-source projects have always maintained user-friendly, readable `CHANGELOG.md` that allow users to tell at a glance whether a release should have any effect on them, and to gauge the risk of an upgrade.
+HashiCorp’s open-source projects have always maintained user-friendly, readable `CHANGELOG.md` that allows users to tell at a glance whether a release should have any effect on them, and to gauge the risk of an upgrade.
 
 We use [go-changelog](https://github.com/hashicorp/go-changelog) to generate the changelog from files created in the `.changelog/` directory.
 It is important that when you raise your pull request, there is a changelog entry which describes the changes your contribution makes.
@@ -56,7 +56,7 @@ aws_workspaces_workspace
 
 #### New full-length documentation guides (e.g., EKS Getting Started Guide, IAM Policy Documents with Terraform)
 
-A new full length documentation entry gives the title of the documentation added, using the `release-note:new-guide` header.
+A new full-length documentation entry gives the title of the documentation added, using the `release-note:new-guide` header.
 
 ``````
 ```release-note:new-guide
@@ -66,7 +66,7 @@ Custom Service Endpoint Configuration
 
 #### Resource and provider bug fixes
 
-A new bug entry should use the `release-note:bug` header and have a prefix indicating the resource or data source it corresponds to, a colon, then followed by a brief summary. Use a `provider` prefix for provider level fixes.
+A new bug entry should use the `release-note:bug` header and have a prefix indicating the resource or data source it corresponds to, a colon, then followed by a brief summary. Use a `provider` prefix for provider-level fixes.
 
 ``````
 ```release-note:bug
@@ -76,7 +76,7 @@ resource/aws_glue_classifier: Fix quote_symbol being optional
 
 #### Resource and provider enhancements
 
-A new enhancement entry should use the `release-note:enhancement` header and have a prefix indicating the resource or data source it corresponds to, a colon, then followed by a brief summary. Use a `provider` prefix for provider level enhancements.
+A new enhancement entry should use the `release-note:enhancement` header and have a prefix indicating the resource or data source it corresponds to, a colon, then followed by a brief summary. Use a `provider` prefix for provider-level enhancements.
 
 ``````
 ```release-note:enhancement
@@ -86,7 +86,7 @@ resource/aws_eip: Add network_border_group argument
 
 #### Deprecations
 
-A deprecation entry should use the `release-note:note` header and have a prefix indicating the resource or data source it corresponds to, a colon, then followed by a brief summary. Use a `provider` prefix for provider level changes.
+A deprecation entry should use the `release-note:note` header and have a prefix indicating the resource or data source it corresponds to, a colon, then followed by a brief summary. Use a `provider` prefix for provider-level changes.
 
 ``````
 ```release-note:note
@@ -96,7 +96,7 @@ resource/aws_dx_gateway_association: The vpn_gateway_id attribute is being depre
 
 #### Breaking changes and removals
 
-A breaking-change entry should use the `release-note:breaking-change` header and have a prefix indicating the resource or data source it corresponds to, a colon, then followed by a brief summary. Use a `provider` prefix for provider level changes.
+A breaking-change entry should use the `release-note:breaking-change` header and have a prefix indicating the resource or data source it corresponds to, a colon, then followed by a brief summary. Use a `provider` prefix for provider-level changes.
 
 ``````
 ```release-note:breaking-change
