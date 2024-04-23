@@ -6,7 +6,7 @@ require (
 	github.com/ProtonMail/go-crypto v1.1.0-alpha.2
 	github.com/YakDriver/go-version v0.1.0
 	github.com/YakDriver/regexache v0.23.0
-	github.com/aws/aws-sdk-go v1.51.25
+	github.com/aws/aws-sdk-go v1.51.26
 	github.com/aws/aws-sdk-go-v2 v1.26.1
 	github.com/aws/aws-sdk-go-v2/config v1.27.11
 	github.com/aws/aws-sdk-go-v2/credentials v1.17.11
@@ -31,7 +31,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/batch v1.37.0
 	github.com/aws/aws-sdk-go-v2/service/bcmdataexports v1.3.4
 	github.com/aws/aws-sdk-go-v2/service/bedrock v1.7.7
-	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.6.0
+	github.com/aws/aws-sdk-go-v2/service/bedrockagent v1.7.0
 	github.com/aws/aws-sdk-go-v2/service/budgets v1.22.4
 	github.com/aws/aws-sdk-go-v2/service/chimesdkmediapipelines v1.15.5
 	github.com/aws/aws-sdk-go-v2/service/chimesdkvoice v1.14.4
@@ -119,7 +119,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/oam v1.10.1
 	github.com/aws/aws-sdk-go-v2/service/opensearchserverless v1.11.4
 	github.com/aws/aws-sdk-go-v2/service/osis v1.8.4
-	github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.9.4
+	github.com/aws/aws-sdk-go-v2/service/paymentcryptography v1.10.0
 	github.com/aws/aws-sdk-go-v2/service/pcaconnectorad v1.5.4
 	github.com/aws/aws-sdk-go-v2/service/pipes v1.11.4
 	github.com/aws/aws-sdk-go-v2/service/polly v1.39.6
@@ -130,7 +130,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/rds v1.77.1
 	github.com/aws/aws-sdk-go-v2/service/redshift v1.44.0
 	github.com/aws/aws-sdk-go-v2/service/redshiftdata v1.25.4
-	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.17.4
+	github.com/aws/aws-sdk-go-v2/service/redshiftserverless v1.17.5
 	github.com/aws/aws-sdk-go-v2/service/rekognition v1.40.0
 	github.com/aws/aws-sdk-go-v2/service/resourceexplorer2 v1.10.5
 	github.com/aws/aws-sdk-go-v2/service/resourcegroups v1.22.0
@@ -161,7 +161,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/synthetics v1.24.4
 	github.com/aws/aws-sdk-go-v2/service/timestreamwrite v1.25.5
 	github.com/aws/aws-sdk-go-v2/service/transcribe v1.36.4
-	github.com/aws/aws-sdk-go-v2/service/transfer v1.46.0
+	github.com/aws/aws-sdk-go-v2/service/transfer v1.47.0
 	github.com/aws/aws-sdk-go-v2/service/verifiedpermissions v1.13.1
 	github.com/aws/aws-sdk-go-v2/service/vpclattice v1.7.5
 	github.com/aws/aws-sdk-go-v2/service/wellarchitected v1.30.0
