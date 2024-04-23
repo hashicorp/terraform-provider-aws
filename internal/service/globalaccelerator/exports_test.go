@@ -5,7 +5,9 @@ package globalaccelerator
 
 // Exports for use in tests only.
 var (
+	ResourceAccelerator            = resourceAccelerator
 	ResourceCrossAccountAttachment = newCrossAccountAttachmentResource
 
+	FindAcceleratorByARN            = findAcceleratorByARN
 	FindCrossAccountAttachmentByARN = findCrossAccountAttachmentByARN
 )

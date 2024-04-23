@@ -44,7 +44,7 @@ func (p *servicePackage) SDKDataSources(ctx context.Context) []*types.ServicePac
 func (p *servicePackage) SDKResources(ctx context.Context) []*types.ServicePackageSDKResource {
 	return []*types.ServicePackageSDKResource{
 		{
-			Factory:  ResourceAccelerator,
+			Factory:  resourceAccelerator,
 			TypeName: "aws_globalaccelerator_accelerator",
 			Name:     "Accelerator",
 			Tags: &types.ServicePackageResourceTags{
