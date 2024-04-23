@@ -213,7 +213,7 @@ func ResourceAppImageConfig() *schema.Resource {
 						"kernel_spec": {
 							Type:     schema.TypeList,
 							Required: true,
-							MaxItems: 1,
+							MaxItems: 5,
 							Elem: &schema.Resource{
 								Schema: map[string]*schema.Schema{
 									"display_name": {
