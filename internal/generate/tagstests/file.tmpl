@@ -51,6 +51,9 @@ import (
 	"github.com/hashicorp/terraform-plugin-testing/helper/resource"
 	"github.com/hashicorp/terraform-provider-aws/internal/acctest"
 	"github.com/hashicorp/terraform-provider-aws/names"
+	{{ range .GoImports -}}
+	{{ if .Alias }}{{ .Alias }} {{ end }}"{{ .Path }}"
+	{{ end }}
 )
 
 {{ if .Serialize }}
@@ -173,6 +176,9 @@ func {{ template "testname" . }}_tags_AddOnUpdate(t *testing.T) {
 }
 
 func {{ template "testname" . }}_tags_EmptyTag_OnCreate(t *testing.T) {
+{{- if .SkipEmptyTags }}
+	t.Skip("Resource {{ .Name }} does not support empty tags")
+{{ end }}
 	{{- template "Init" . }}
 
 	resource.{{ if .Serialize }}Test{{ else }}ParallelTest{{ end }}(t, resource.TestCase{
@@ -200,6 +206,9 @@ func {{ template "testname" . }}_tags_EmptyTag_OnCreate(t *testing.T) {
 }
 
 func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
+{{- if .SkipEmptyTags }}
+	t.Skip("Resource {{ .Name }} does not support empty tags")
+{{ end }}
 	{{- template "Init" . }}
 
 	resource.{{ if .Serialize }}Test{{ else }}ParallelTest{{ end }}(t, resource.TestCase{
@@ -237,6 +246,9 @@ func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Add(t *testing.T) {
 }
 
 func {{ template "testname" . }}_tags_EmptyTag_OnUpdate_Replace(t *testing.T) {
+{{- if .SkipEmptyTags }}
+	t.Skip("Resource {{ .Name }} does not support empty tags")
+{{ end }}
 	{{- template "Init" . }}
 
 	resource.{{ if .Serialize }}Test{{ else }}ParallelTest{{ end }}(t, resource.TestCase{
@@ -500,6 +512,9 @@ func {{ template "testname" . }}_tags_DefaultTags_updateToResourceOnly(t *testin
 }
 
 func {{ template "testname" . }}_tags_DefaultTags_emptyResourceTag(t *testing.T) {
+{{- if .SkipEmptyTags }}
+	t.Skip("Resource {{ .Name }} does not support empty tags")
+{{ end }}
 	{{- template "Init" . }}
 
 	resource.{{ if .Serialize }}Test{{ else }}ParallelTest{{ end }}(t, resource.TestCase{
