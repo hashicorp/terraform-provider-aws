@@ -661,7 +661,7 @@ resource "null_resource" "db_setup" {
   provisioner "local-exec" {
     command = <<EOT
     	sleep 60
-      export PGPASSWORD=$(aws secretsmanager get-secret-value --secret-id '${aws_rds_cluster.this.master_user_secret[0].secret_arn}' --version-stage AWSCURRENT --region us-west-2 --query SecretString --output text | jq -r '."password"')
+      export PGPASSWORD=$(aws secretsmanager get-secret-value --secret-id '${aws_rds_cluster.this.master_user_secret[0].secret_arn}' --version-stage AWSCURRENT --region ${data.aws_region.current.name} --query SecretString --output text | jq -r '."password"')
       psql -h ${aws_rds_cluster.this.endpoint} -U ${aws_rds_cluster.this.master_username} -d ${aws_rds_cluster.this.database_name} -c "CREATE EXTENSION IF NOT EXISTS vector;"
       psql -h ${aws_rds_cluster.this.endpoint} -U ${aws_rds_cluster.this.master_username} -d ${aws_rds_cluster.this.database_name} -c "CREATE SCHEMA IF NOT EXISTS bedrock_integration;"
       psql -h ${aws_rds_cluster.this.endpoint} -U ${aws_rds_cluster.this.master_username} -d ${aws_rds_cluster.this.database_name} -c "CREATE SCHEMA IF NOT EXISTS bedrock_new;"
