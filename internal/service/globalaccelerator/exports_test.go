@@ -7,10 +7,12 @@ package globalaccelerator
 var (
 	ResourceAccelerator            = resourceAccelerator
 	ResourceCrossAccountAttachment = newCrossAccountAttachmentResource
+	ResourceCustomRoutingListener  = resourceCustomRoutingListener
 	ResourceEndpointGroup          = resourceEndpointGroup
 	ResourceListener               = resourceListener
 
 	FindAcceleratorByARN            = findAcceleratorByARN
 	FindCrossAccountAttachmentByARN = findCrossAccountAttachmentByARN
+	FindCustomRoutingListenerByARN  = findCustomRoutingListenerByARN
 	FindListenerByARN               = findListenerByARN
 )
